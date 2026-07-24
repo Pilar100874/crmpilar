@@ -1144,6 +1144,51 @@ export type Database = {
           },
         ]
       }
+      apresentacoes_empresa: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          duracao_padrao_imagem: number
+          estabelecimento_id: string
+          id: string
+          itens: Json
+          nome: string
+          transicao: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          duracao_padrao_imagem?: number
+          estabelecimento_id: string
+          id?: string
+          itens?: Json
+          nome: string
+          transicao?: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          duracao_padrao_imagem?: number
+          estabelecimento_id?: string
+          id?: string
+          itens?: Json
+          nome?: string
+          transicao?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       arquivos_precos_importados: {
         Row: {
           caminho_armazenamento: string | null
