@@ -41,6 +41,24 @@ export default function TvSignageDispositivos() {
     setDevices(d || []); setGrupos(g || []); setDashboards(dsh || []); setPlaylists(pls || []);
   };
 
+  // Considera offline se sem heartbeat há mais de 90s (app fechado, desinstalado, sem rede)
+  const OFFLINE_MS = 90_000;
+  const effectiveStatus = (d: any): string => {
+    if (d.bloqueado) return "bloqueado";
+    if (d.status === "erro") return "erro";
+    if (!d.ultima_comunicacao) return "offline";
+    const age = Date.now() - new Date(d.ultima_comunicacao).getTime();
+    if (age > OFFLINE_MS) return "offline";
+    return d.status || "offline";
+  };
+
+  // Re-renderiza periodicamente para atualizar status derivado do tempo
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setTick((t) => t + 1), 15000);
+    return () => clearInterval(iv);
+  }, []);
+
   useEffect(() => {
     carregar();
     const ch = supabase.channel("tv-devices-list")
@@ -51,7 +69,7 @@ export default function TvSignageDispositivos() {
 
   const filtrados = devices.filter((d) => {
     const matchBusca = !busca || `${d.nome} ${d.codigo} ${d.local || ""}`.toLowerCase().includes(busca.toLowerCase());
-    const matchStatus = statusFiltro === "todos" || d.status === statusFiltro;
+    const matchStatus = statusFiltro === "todos" || effectiveStatus(d) === statusFiltro;
     const matchGrupo = grupoFiltro === "todos" || d.grupo_id === grupoFiltro;
     return matchBusca && matchStatus && matchGrupo;
   });
@@ -124,9 +142,9 @@ export default function TvSignageDispositivos() {
 
   const stats = {
     total: devices.length,
-    online: devices.filter((d) => d.status === "online").length,
-    offline: devices.filter((d) => d.status === "offline").length,
-    problemas: devices.filter((d) => d.status === "erro" || d.status === "bloqueado").length,
+    online: devices.filter((d) => effectiveStatus(d) === "online").length,
+    offline: devices.filter((d) => effectiveStatus(d) === "offline").length,
+    problemas: devices.filter((d) => { const s = effectiveStatus(d); return s === "erro" || s === "bloqueado"; }).length,
   };
 
   const StatCard = ({ icon: Icon, label, value, tone }: any) => (
@@ -250,7 +268,7 @@ export default function TvSignageDispositivos() {
                 <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{d.nome}</h3>
                 <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground">{d.codigo}</code>
               </div>
-              {statusBadge(d.status)}
+              {statusBadge(effectiveStatus(d))}
             </div>
             <div className="space-y-1.5 text-xs text-muted-foreground mb-3">
               {d.local && <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{d.local}</span></div>}
@@ -296,7 +314,7 @@ export default function TvSignageDispositivos() {
                   <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{d.codigo}</code></TableCell>
                   <TableCell className="text-muted-foreground text-sm">{d.local || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{d.grupo?.nome || "—"}</TableCell>
-                  <TableCell>{statusBadge(d.status)}</TableCell>
+                  <TableCell>{statusBadge(effectiveStatus(d))}</TableCell>
                   <TableCell className="text-sm">{d.playlist?.nome ? `▶ ${d.playlist.nome}` : d.dashboard?.nome || "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {d.ultima_comunicacao ? formatDistanceToNow(new Date(d.ultima_comunicacao), { addSuffix: true, locale: ptBR }) : "Nunca"}
