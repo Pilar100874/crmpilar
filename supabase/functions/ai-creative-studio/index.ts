@@ -1985,6 +1985,12 @@ Deno.serve(async (req) => {
       }
 
       case "generate_image": {
+        // Revisão de português no prompt (ortografia + concordância verbal)
+        try {
+          if (typeof params.prompt === "string" && params.prompt.trim() && params.revisePt !== false) {
+            params.prompt = await revisarPortugues(params.prompt);
+          }
+        } catch (_e) { /* falha aberto */ }
         const model = validateModel(params.model || "google/gemini-2.5-flash-image", "image");
         const refImages = (params.imageUrls || []) as string[];
         const imageRoles = (params.imageRoles || []) as string[];
