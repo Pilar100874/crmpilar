@@ -24,9 +24,15 @@ interface Apresentacao {
 
 export default function TvApresentacaoEmpresa() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const id = params.get("id");
   const rotateMs = parseInt(params.get("rotate") || "0"); // rotate through multiple presentations (comma-sep in ids?)
   useFullscreen(true);
+
+  const closePreview = useCallback(() => {
+    try { window.close(); } catch {}
+    navigate(-1);
+  }, [navigate]);
 
   const [apresentacao, setApresentacao] = useState<Apresentacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
