@@ -126,12 +126,27 @@ export default function MarketingApresentacoes() {
     carregar();
   };
 
+  const [usoDashboards, setUsoDashboards] = useState<{ id: string; nome: string }[]>([]);
+
+  const abrirExcluir = async (a: Apresentacao) => {
+    setToDelete(a);
+    setUsoDashboards([]);
+    try {
+      const { data } = await supabase
+        .from("tv_dashboards")
+        .select("id, nome, rota_interna")
+        .ilike("rota_interna", `%/tv/apresentacao%${a.id}%`);
+      setUsoDashboards((data || []).map((d: any) => ({ id: d.id, nome: d.nome })));
+    } catch {}
+  };
+
   const excluir = async () => {
     if (!toDelete) return;
     const { error } = await supabase.from("apresentacoes_empresa").delete().eq("id", toDelete.id);
     if (error) return toast.error("Erro ao excluir");
-    toast.success("Excluída");
+    toast.success(usoDashboards.length ? "Excluída — dashboards vinculados irão parar de exibir" : "Excluída");
     setToDelete(null);
+    setUsoDashboards([]);
     carregar();
   };
 
@@ -211,7 +226,7 @@ export default function MarketingApresentacoes() {
                 <Button size="sm" variant="outline" onClick={() => duplicar(a)}>
                   <Copy className="w-3.5 h-3.5 mr-1" /> Nova versão
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setToDelete(a)}>
+                <Button size="sm" variant="ghost" onClick={() => abrirExcluir(a)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -340,10 +355,14 @@ export default function MarketingApresentacoes() {
 
       <DeleteConfirmDialog
         open={!!toDelete}
-        onOpenChange={(o) => !o && setToDelete(null)}
+        onOpenChange={(o) => { if (!o) { setToDelete(null); setUsoDashboards([]); } }}
         onConfirm={excluir}
-        title="Excluir apresentação?"
-        description={`Tem certeza que deseja excluir "${toDelete?.nome}" (v${toDelete?.versao})?`}
+        title={usoDashboards.length ? "⚠️ Apresentação em uso — excluir mesmo assim?" : "Excluir apresentação?"}
+        description={
+          usoDashboards.length
+            ? `"${toDelete?.nome}" (v${toDelete?.versao}) está sendo usada em ${usoDashboards.length} dashboard(s) do Gerenciador de Telas: ${usoDashboards.map(d => d.nome).join(", ")}. Ao excluir, essas telas deixarão de exibir esta apresentação. Confirma?`
+            : `Tem certeza que deseja excluir "${toDelete?.nome}" (v${toDelete?.versao})?`
+        }
       />
     </div>
   );
