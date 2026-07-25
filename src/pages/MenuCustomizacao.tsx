@@ -672,7 +672,12 @@ export default function MenuCustomizacao() {
             )}
           </div>
         )}
-        {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+        {showAfter && (
+          <div className="absolute -bottom-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+            <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↓ Depois</span>
+          </div>
+        )}
       </div>
     );
   };
