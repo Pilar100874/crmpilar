@@ -14,6 +14,7 @@ export interface MenuCustomization {
   version: 1;
   roots: CustomNode[];
   adminRoots?: CustomNode[];
+  baseline?: { roots: CustomNode[]; adminRoots: CustomNode[] };
 }
 
 export type SystemAction =
