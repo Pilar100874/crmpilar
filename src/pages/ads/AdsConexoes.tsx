@@ -164,9 +164,12 @@ export default function AdsConexoes() {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
+                        <Button size="sm" variant="default" className="w-full" onClick={() => setWizardPlatform(p.id)}>
+                          <Wand2 className="h-3.5 w-3.5 mr-1.5" /> Assistente de conexão
+                        </Button>
                         {!hasApp && (
-                          <Button size="sm" variant="secondary" className="w-full" onClick={() => setTab("apps")}>
-                            <Key className="h-3.5 w-3.5 mr-1.5" /> Cadastrar chaves do app
+                          <Button size="sm" variant="ghost" className="w-full" onClick={() => setTab("apps")}>
+                            <Key className="h-3.5 w-3.5 mr-1.5" /> Cadastro avançado
                           </Button>
                         )}
                         <Button
