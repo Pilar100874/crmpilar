@@ -269,6 +269,8 @@ export default function MenuCustomizacao() {
         version: 1,
         roots: mainRoots,
         adminRoots,
+        userFooterRoots: userRoots,
+        systemFooterRoots: systemRoots,
         ...(baseline ? { baseline } : {}),
       };
       await saveCustomization(payload);
@@ -291,11 +293,15 @@ export default function MenuCustomizacao() {
       const newBaseline = {
         roots: JSON.parse(JSON.stringify(mainRoots)),
         adminRoots: JSON.parse(JSON.stringify(adminRoots)),
+        userFooterRoots: JSON.parse(JSON.stringify(userRoots)),
+        systemFooterRoots: JSON.parse(JSON.stringify(systemRoots)),
       };
       const payload: MenuCustomization = {
         version: 1,
         roots: mainRoots,
         adminRoots,
+        userFooterRoots: userRoots,
+        systemFooterRoots: systemRoots,
         baseline: newBaseline,
       };
       await saveCustomization(payload);
@@ -323,17 +329,23 @@ export default function MenuCustomizacao() {
           version: 1,
           roots: JSON.parse(JSON.stringify(baseline.roots)),
           adminRoots: JSON.parse(JSON.stringify(baseline.adminRoots)),
+          userFooterRoots: JSON.parse(JSON.stringify(baseline.userFooterRoots ?? initialUserFooterTree())),
+          systemFooterRoots: JSON.parse(JSON.stringify(baseline.systemFooterRoots ?? initialSystemFooterTree())),
           baseline,
         };
         await saveCustomization(payload);
         setMainRoots(payload.roots);
         setAdminRoots(payload.adminRoots!);
+        setUserRoots(payload.userFooterRoots!);
+        setSystemRoots(payload.systemFooterRoots!);
         setDirty(false);
         toast.success("Menus restaurados ao padrão definido.");
       } else {
         await clearCustomization();
         setMainRoots(initialFromBase(menuItems).roots);
         setAdminRoots(initialAdminFooterTree());
+        setUserRoots(initialUserFooterTree());
+        setSystemRoots(initialSystemFooterTree());
         setBaseline(null);
         setDirty(false);
         toast.success("Menus restaurados ao padrão de fábrica.");
@@ -343,6 +355,7 @@ export default function MenuCustomizacao() {
     } finally {
       setSaving(false);
     }
+
   };
 
   // Drag state
