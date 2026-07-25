@@ -177,10 +177,10 @@ export function initialAdminFooterTree(): CustomNode[] {
 }
 
 /** Aplica customização ao Admin do rodapé (segunda árvore). */
-export function applyAdminFooterCustomization(): MenuItem[] {
+export function applyAdminFooterCustomization(base: MenuItem[] = []): MenuItem[] {
   const custom = loadCustomization();
   const roots = custom?.adminRoots ?? initialAdminFooterTree();
-  const programs = extractPrograms([]); // pega system/footer pools
+  const programs = extractPrograms(base); // inclui menu principal + system/footer pools
   const nodeToItems = (nodes: CustomNode[]): any[] => {
     const out: any[] = [];
     const IconsMap = LucideIcons as unknown as Record<string, any>;
