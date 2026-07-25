@@ -18,6 +18,7 @@ import {
   ExternalLink, MessagesSquare, PieChart, Lightbulb, Search, Save,
 } from "lucide-react";
 import { PROGRAMAS_DISPONIVEIS, EXEMPLOS_COMANDOS_VOZ } from "@/lib/voz/programasDisponiveis";
+import { GatilhoLivePreview } from "@/components/voz/GatilhoLivePreview";
 
 type TipoAcao =
   | "abrir_programa"
