@@ -82,6 +82,22 @@ export default function MenuCustomizacao() {
   const [renameValue, setRenameValue] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Path | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const admin = await isSystemAdmin();
+      setIsAdmin(admin);
+      setCheckingAdmin(false);
+      const remote = await fetchRemoteCustomization();
+      if (remote) {
+        setState(remote);
+        setDirty(false);
+      }
+    })();
+  }, []);
 
   const programs = useMemo(() => extractPrograms(menuItems), []);
 
