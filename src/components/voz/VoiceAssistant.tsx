@@ -562,32 +562,6 @@ export default function VoiceAssistant() {
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                  {/* Desambiguação: opções quando o match não é claro */}
-                  {ambiguas && ambiguas.length > 0 && (
-                    <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
-                          Qual tela você quer abrir?
-                        </div>
-                        <button onClick={() => setAmbiguas(null)} className="p-1 hover:bg-background rounded">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <div className="space-y-1">
-                        {ambiguas.map((r) => (
-                          <button
-                            key={r.path}
-                            onClick={() => { navigate(r.path); setAmbiguas(null); setOpen(false); }}
-                            className="w-full text-left text-sm px-2.5 py-1.5 rounded border bg-background hover:bg-primary/10 transition"
-                          >
-                            <div className="font-medium">{r.titulo}</div>
-                            <div className="text-[11px] text-muted-foreground">{r.path}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Fluxo de RELATÓRIOS */}
                   {relatorioMode && (
                     <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-3 space-y-2">
@@ -714,6 +688,32 @@ export default function VoiceAssistant() {
                     <div className="flex justify-start">
                       <div className="text-sm bg-muted rounded-2xl rounded-bl-sm px-3 py-1.5 flex items-center gap-2">
                         <Loader2 className="h-3 w-3 animate-spin" /> pensando…
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Desambiguação: opções quando o match não é claro — aparece no final do chat */}
+                  {ambiguas && ambiguas.length > 0 && (
+                    <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                          Não tenho certeza. Qual tela você quer abrir?
+                        </div>
+                        <button onClick={() => setAmbiguas(null)} className="p-1 hover:bg-background rounded">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        {ambiguas.map((r) => (
+                          <button
+                            key={r.path}
+                            onClick={() => { navigate(r.path); setAmbiguas(null); setOpen(false); }}
+                            className="w-full text-left text-sm px-2.5 py-1.5 rounded border bg-background hover:bg-primary/10 transition"
+                          >
+                            <div className="font-medium">{r.titulo}</div>
+                            <div className="text-[11px] text-muted-foreground">{r.path}</div>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
