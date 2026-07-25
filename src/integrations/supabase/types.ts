@@ -1281,6 +1281,7 @@ export type Database = {
           auth_user_id: string
           created_at: string
           ferramentas_desativadas: string[]
+          frases_customizadas: Json
           id: string
           responder_por_voz: boolean
           updated_at: string
@@ -1292,6 +1293,7 @@ export type Database = {
           auth_user_id: string
           created_at?: string
           ferramentas_desativadas?: string[]
+          frases_customizadas?: Json
           id?: string
           responder_por_voz?: boolean
           updated_at?: string
@@ -1303,6 +1305,7 @@ export type Database = {
           auth_user_id?: string
           created_at?: string
           ferramentas_desativadas?: string[]
+          frases_customizadas?: Json
           id?: string
           responder_por_voz?: boolean
           updated_at?: string

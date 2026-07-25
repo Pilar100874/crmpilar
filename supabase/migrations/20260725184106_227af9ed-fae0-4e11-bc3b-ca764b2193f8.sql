@@ -1,0 +1,1 @@
+ALTER TABLE public.assistente_voz_config ADD COLUMN IF NOT EXISTS frases_customizadas JSONB NOT NULL DEFAULT '{}'::jsonb;
