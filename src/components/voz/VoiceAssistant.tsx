@@ -33,11 +33,29 @@ const GATILHOS_RELATORIOS = [
   "menu de relatorios", "mostrar relatorios", "ver relatorios", "abrir relatorios",
 ];
 
+// Frases de navegação de histórico (voltar / avançar)
+const GATILHOS_VOLTAR = [
+  "voltar", "volta", "voltar tela", "voltar para tela anterior",
+  "tela anterior", "pagina anterior", "página anterior", "voltar pagina",
+];
+const GATILHOS_AVANCAR = [
+  "avancar", "avançar", "avanca", "avança", "proxima tela", "próxima tela",
+  "tela posterior", "voltar para tela posterior", "pagina posterior",
+  "página posterior", "ir para frente", "avancar tela", "avançar tela",
+];
+// Gerar PDF do relatório aberto
+const GATILHOS_PDF = [
+  "gerar pdf", "gerar pdf do relatorio", "gerar pdf do relatório",
+  "exportar pdf", "baixar pdf", "salvar pdf", "pdf",
+];
+
 const SUGESTOES_ABRIR = [
   "Abrir dashboard",
   "Abrir orçamentos",
   "Abrir logística",
   "Abrir empresas",
+  "Voltar",
+  "Avançar",
 ];
 
 type RelatorioVoz = {
