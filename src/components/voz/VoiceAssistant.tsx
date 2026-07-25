@@ -409,17 +409,11 @@ export default function VoiceAssistant() {
 
       // 0) Navegação de histórico: voltar / avançar
       if (GATILHOS_VOLTAR.some(g => t.includes(g))) {
-        const resposta = "Voltando para a tela anterior.";
-        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
-        if (cfg.responder_por_voz) falar(resposta);
-        setTimeout(() => { navigate(-1); setOpen(false); }, 250);
+        await executarNavegacaoHistorico(-1, texto);
         return;
       }
       if (GATILHOS_AVANCAR.some(g => t.includes(g))) {
-        const resposta = "Avançando para a próxima tela.";
-        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
-        if (cfg.responder_por_voz) falar(resposta);
-        setTimeout(() => { navigate(1); setOpen(false); }, 250);
+        await executarNavegacaoHistorico(1, texto);
         return;
       }
 
