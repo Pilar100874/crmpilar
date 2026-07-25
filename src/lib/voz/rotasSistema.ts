@@ -172,12 +172,9 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/softphone", titulo: "Softphone", aliases: ["telefone", "ramal"] },
   { path: "/politicas-internas", titulo: "Políticas Internas" },
   { path: "/quality-assurance", titulo: "Quality Assurance", aliases: ["qa", "controle de qualidade"] },
-  { path: "/listas?tab=prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao"] },
-  { path: "/listas?tab=prospeccao-claude-code", titulo: "Prospecção Claude Code" },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },
 
   // ============ Sub-telas: Controle de Veículos ============
-  { path: "/controle-veiculos", titulo: "Controle de Veículos - Dashboard", aliases: ["dashboard controle de veiculos", "painel controle de veiculos"] },
   { path: "/controle-veiculos/veiculos", titulo: "Controle de Veículos - Veículos", aliases: ["cadastro de veiculos", "veiculos controle", "veiculos do controle"] },
   { path: "/controle-veiculos/motoristas", titulo: "Controle de Veículos - Motoristas", aliases: ["cadastro de motoristas", "motoristas"] },
   { path: "/controle-veiculos/saida", titulo: "Controle de Veículos - Saída", aliases: ["saida de veiculo", "registrar saida de veiculo"] },
