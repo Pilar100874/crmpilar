@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Users, Eye, Loader2, MessageSquare } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { fetchWhatsappSessions, WhatsappSessionOption } from "@/lib/whatsapp/sessionUsage";
 
 interface Props {
   config: any;
@@ -37,6 +38,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const [preview, setPreview] = useState<VendedorRow[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [sessoes, setSessoes] = useState<WhatsappSessionOption[]>([]);
+  const [loadingSessoes, setLoadingSessoes] = useState(false);
 
   // ---------- Cascata: público → subfiltro → entidade ----------
   const audiencia: string = config.audiencia || "vendedores";
@@ -51,6 +54,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const usarMensagemPreDefinida = !!config.usarMensagemPreDefinida;
   const preDefinidaVar = config.preDefinidaVar || "last_mensagem_pre_definida";
   const enviarContato = !!config.enviarContato;
+  const sessaoSelecionada = config.whatsappSessionId || "__first__";
 
   const derivarFiltroTipo = (aud: string, sub: string) => {
     if (aud === "especifico") return "especifico";
@@ -101,6 +105,13 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         .eq("tipo", "gerente")
         .order("nome");
       setGerentes(((us as any) || []).map((u: any) => ({ id: u.id, nome: u.nome || u.email || u.id })));
+
+      setLoadingSessoes(true);
+      try {
+        setSessoes(await fetchWhatsappSessions(eid));
+      } finally {
+        setLoadingSessoes(false);
+      }
     })();
   }, []);
 
@@ -641,6 +652,36 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </DialogContent>
       </Dialog>
 
+
+      <div className="space-y-2 border-t pt-3">
+        <Label className="text-xs font-semibold">Sessão de WhatsApp (canal de envio)</Label>
+        <Select
+          value={sessaoSelecionada}
+          onValueChange={(v) => {
+            const val = v === "__first__" ? null : v;
+            handleConfigChange("whatsappSessionId", val);
+            const sessao = sessoes.find((s) => s.id === val);
+            handleConfigChange("whatsappSessionName", sessao?.session_name || null);
+          }}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder={loadingSessoes ? "Carregando sessões..." : "Selecionar sessão"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__first__" className="text-xs">Primeira sessão disponível</SelectItem>
+            {sessoes.map((sessao) => (
+              <SelectItem key={sessao.id} value={sessao.id} className="text-xs">
+                {sessao.session_name}
+                {sessao.phone_number ? ` — ${sessao.phone_number}` : ""}
+                {sessao.status && sessao.status !== "WORKING" ? ` (${sessao.status})` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-[11px] text-muted-foreground">
+          Este canal será usado para a mensagem principal, textos antes/depois, contato compartilhado e resumos.
+        </p>
+      </div>
 
       {/* Mensagem */}
       <div className="space-y-2 border-t pt-3">
