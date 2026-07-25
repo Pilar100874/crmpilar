@@ -712,7 +712,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v =>
     v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
+    v.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (v as any).telefone_sms?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const unidadeNomeById = React.useMemo(() => {
