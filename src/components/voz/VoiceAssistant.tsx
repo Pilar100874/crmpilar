@@ -393,7 +393,33 @@ export default function VoiceAssistant() {
     try {
       const t = norm(texto);
 
+      // 0) Navegação de histórico: voltar / avançar
+      if (GATILHOS_VOLTAR.some(g => t === g || t === g + " tela")) {
+        const resposta = "Voltando para a tela anterior.";
+        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        if (cfg.responder_por_voz) falar(resposta);
+        setTimeout(() => { navigate(-1); setOpen(false); }, 250);
+        return;
+      }
+      if (GATILHOS_AVANCAR.some(g => t === g || t === g + " tela")) {
+        const resposta = "Avançando para a próxima tela.";
+        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        if (cfg.responder_por_voz) falar(resposta);
+        setTimeout(() => { navigate(1); setOpen(false); }, 250);
+        return;
+      }
+
+      // 0b) Gerar PDF do relatório aberto (wizard escuta o evento)
+      if (relatorioMode === "resultado" && GATILHOS_PDF.some(g => t === g || t.includes(g))) {
+        window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio"));
+        const resposta = "Gerando PDF do relatório.";
+        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        if (cfg.responder_por_voz) falar(resposta);
+        return;
+      }
+
       // 1) Gatilho de "mostrar relatórios" → abre lista de grupos
+
       if (GATILHOS_RELATORIOS.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
         setRelatorioMode("grupos");
         setGrupoSelecionado(null);
