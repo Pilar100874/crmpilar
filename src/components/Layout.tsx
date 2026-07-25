@@ -1485,29 +1485,8 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Ícones no rodapé */}
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
+            {/* Botões de sistema (travar/tema/sair) — parte 1: renderizados abaixo, após o menu do usuário */}
 
-            {/* Botão de travar/destravar - só aparece em telas maiores que 1024px */}
-            {!systemInMain.has("lock") && (!isSmallScreen || menuOpen || menuLocked) && (
-
-              <button
-                onClick={handleToggleLock}
-                className={`${
-                  menuLocked 
-                    ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
-                    : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-                } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors duration-100`}
-                title={menuLocked ? "Destravar menu" : "Travar menu"}
-              >
-                {menuLocked ? (
-                  <Pin className="w-5 h-5" />
-                ) : (
-                  <>
-                    <PinOff className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm font-medium">Travar Menu</span>
-                  </>
-                )}
-              </button>
-            )}
 
             {/* Menu de usuário como submenu */}
             {menuLocked ? (
