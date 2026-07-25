@@ -93,6 +93,9 @@ export default function AssistenteVozConfig() {
           <TabsTrigger value="relatorios">
             <FileBarChart className="w-4 h-4 mr-2" /> Relatórios por voz
           </TabsTrigger>
+          <TabsTrigger value="snapshots">
+            <Save className="w-4 h-4 mr-2" /> Snapshots
+          </TabsTrigger>
           <TabsTrigger value="config">
             <Settings2 className="w-4 h-4 mr-2" /> Configurações
           </TabsTrigger>
