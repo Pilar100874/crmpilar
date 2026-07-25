@@ -62,6 +62,51 @@ const GATILHOS_PDF = [
   "exportar pdf", "baixar pdf", "salvar pdf", "pdf",
 ];
 
+// Extrai "título" e "nome do arquivo" a partir da fala do usuário.
+// Ex.: "gerar pdf com título Vendas de Julho e arquivo vendas_julho"
+//      "gerar pdf chamado relatorio_final"
+//      "gerar pdf com o nome de arquivo clientes_ativos titulo Clientes Ativos"
+function extrairTituloEArquivoPdf(fala: string): { titulo?: string; nomeArquivo?: string } {
+  const src = " " + fala.trim() + " ";
+  const lower = src.toLowerCase();
+
+  // âncoras (início da captura) e onde termina cada captura
+  const anchors: Array<{ key: "titulo" | "arquivo"; re: RegExp }> = [
+    { key: "titulo",  re: /\b(?:com\s+(?:o\s+)?)?(?:t[ií]tulo|titulo\s+de|com\s+t[ií]tulo)\s+/i },
+    { key: "arquivo", re: /\b(?:com\s+(?:o\s+)?)?(?:nome\s+(?:do\s+)?arquivo|arquivo|chamado|chamada|salvar\s+como|nome)\s+/i },
+  ];
+
+  const hits: Array<{ key: "titulo" | "arquivo"; start: number; contentStart: number }> = [];
+  for (const a of anchors) {
+    const m = lower.match(a.re);
+    if (m && m.index !== undefined) {
+      hits.push({ key: a.key, start: m.index, contentStart: m.index + m[0].length });
+    }
+  }
+  hits.sort((a, b) => a.start - b.start);
+
+  const out: { titulo?: string; nomeArquivo?: string } = {};
+  for (let i = 0; i < hits.length; i++) {
+    const h = hits[i];
+    const end = i + 1 < hits.length ? hits[i + 1].start : src.length;
+    let valor = src.slice(h.contentStart, end).trim();
+    valor = valor.replace(/[.,;:!?]+$/g, "").trim();
+    if (!valor) continue;
+    if (h.key === "titulo" && !out.titulo) out.titulo = valor;
+    if (h.key === "arquivo" && !out.nomeArquivo) {
+      // sanitize filename
+      const clean = valor
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/\.pdf$/i, "")
+        .replace(/[^a-zA-Z0-9_\- ]+/g, "")
+        .trim()
+        .replace(/\s+/g, "_");
+      if (clean) out.nomeArquivo = clean;
+    }
+  }
+  return out;
+}
+
 const SUGESTOES_ABRIR = [
   "Abrir dashboard",
   "Abrir orçamentos",
