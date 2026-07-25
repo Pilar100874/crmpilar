@@ -154,6 +154,7 @@ export default function VoiceAssistant() {
   const [isRecording, setIsRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [wakeListening, setWakeListening] = useState(false);
+  const [wakeUnavailable, setWakeUnavailable] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [history, setHistory] = useState<LogItem[]>([]);
   const [ambiguas, setAmbiguas] = useState<RotaSistema[] | null>(null);
@@ -186,6 +187,9 @@ export default function VoiceAssistant() {
   const wakeRetriesRef = useRef(0);
   const wakeHeartbeatRef = useRef<any>(null);
   const shouldWakeRef = useRef(false);
+  const wakeNetworkWarnedRef = useRef(false);
+  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingStopRef = useRef(false);
 
   const hasWebSpeech = useMemo(
     () => typeof window !== "undefined" &&
@@ -256,7 +260,7 @@ export default function VoiceAssistant() {
       rec.interimResults = true;
       const target = norm(cfg.wake_word || WAKE_DEFAULT);
 
-      rec.onstart = () => { setWakeListening(true); wakeRetriesRef.current = 0; };
+      rec.onstart = () => { setWakeListening(true); setWakeUnavailable(false); wakeRetriesRef.current = 0; };
       rec.onresult = (e: any) => {
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const txt = norm(e.results[i][0]?.transcript || "");
@@ -289,7 +293,7 @@ export default function VoiceAssistant() {
               setRelatorioAtual(null);
               setResultadoRelatorio("");
               setOpen(true);
-              startDictation();
+              startDictation(6500);
             }, 250);
             return;
           }
@@ -298,10 +302,23 @@ export default function VoiceAssistant() {
       rec.onerror = (ev: any) => {
         // no-speech / aborted são normais — só reinicia
         const fatal = ev?.error === "not-allowed" || ev?.error === "service-not-allowed";
+        const network = ev?.error === "network";
         if (fatal) {
           shouldWakeRef.current = false;
           setWakeListening(false);
           toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
+        }
+        if (network) {
+          shouldWakeRef.current = false;
+          wakeRecogRef.current = null;
+          setWakeListening(false);
+          setWakeUnavailable(true);
+          if (wakeHeartbeatRef.current) { clearInterval(wakeHeartbeatRef.current); wakeHeartbeatRef.current = null; }
+          try { rec.abort?.(); } catch {}
+          if (!wakeNetworkWarnedRef.current) {
+            wakeNetworkWarnedRef.current = true;
+            toast.warning('A escuta "ei Pilar" está indisponível neste navegador. Use o microfone ou segure Espaço.');
+          }
         }
       };
       rec.onend = () => {
@@ -323,7 +340,7 @@ export default function VoiceAssistant() {
 
   // Efeito: liga/desliga wake conforme config e estado do painel
   useEffect(() => {
-    if (cfg.wake_word_ativo && !isRecording && !processing) {
+    if (cfg.wake_word_ativo && !wakeUnavailable && !isRecording && !processing) {
       startWake();
       // heartbeat: se por algum motivo parar sem onend, reinicia a cada 20s
       wakeHeartbeatRef.current = setInterval(() => {
@@ -333,7 +350,7 @@ export default function VoiceAssistant() {
       stopWake();
     }
     return () => stopWake();
-  }, [cfg.wake_word_ativo, cfg.wake_word, isRecording, processing, startWake, stopWake]);
+  }, [cfg.wake_word_ativo, cfg.wake_word, wakeUnavailable, isRecording, processing, startWake, stopWake]);
 
   // ---------- Chime ----------
   const playChime = () => {
@@ -351,9 +368,10 @@ export default function VoiceAssistant() {
     } catch {}
   };
 
-  // ---------- Ditado (Web Speech como STT primário) ----------
-  const startDictation = useCallback(async () => {
+  // ---------- Ditado (gravação local + transcrição no backend) ----------
+  const startDictation = useCallback(async (autoStopMs = 0) => {
     if (isRecording || processing) return;
+    pendingStopRef.current = false;
     setInterimText("");
 
     // Libera o microfone do wake word — Chrome só permite 1 SpeechRecognition ativo por vez
@@ -365,86 +383,58 @@ export default function VoiceAssistant() {
     // pausa maior para o Chrome liberar o mic antes de reabrir
     await new Promise((r) => setTimeout(r, 350));
 
-    // 1) tenta Web Speech (rápido, sem upload)
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SR) {
-      const tryStart = async (attempt = 0): Promise<boolean> => {
-        try {
-          const rec = new SR();
-          rec.lang = "pt-BR";
-          rec.continuous = true;
-          rec.interimResults = true;
-          let finalTxt = "";
-          let lastInterim = "";
-          rec.onresult = (e: any) => {
-            let interim = "";
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-              const t = e.results[i][0]?.transcript || "";
-              if (e.results[i].isFinal) finalTxt += t + " ";
-              else interim += t;
-            }
-            lastInterim = interim;
-            setInterimText((finalTxt + interim).trim());
-          };
-          rec.onerror = (ev: any) => {
-            const err = ev?.error;
-            if (err === "no-speech") { return; }
-            if (err === "not-allowed" || err === "service-not-allowed") {
-              toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
-              setIsRecording(false);
-              return;
-            }
-            if (err === "aborted") { return; }
-            console.warn("[voz] SR erro:", err);
-          };
-          rec.onend = () => {
-            setIsRecording(false);
-            dictationRef.current = null;
-            const txt = (finalTxt + " " + lastInterim).trim();
-            setInterimText("");
-            if (txt) processarTexto(txt);
-            else toast.info("Não escutei nada. Fale novamente ou digite abaixo.");
-          };
-          rec.start();
-          dictationRef.current = rec;
-          setIsRecording(true);
-          return true;
-        } catch (err: any) {
-          // InvalidStateError: já existe uma instância viva — espera e tenta 1x mais
-          if (attempt < 1 && (err?.name === "InvalidStateError" || String(err?.message || "").includes("already started"))) {
-            await new Promise((r) => setTimeout(r, 500));
-            return tryStart(attempt + 1);
-          }
-          console.warn("[voz] SR start falhou, indo p/ MediaRecorder", err);
-          return false;
-        }
-      };
-      const ok = await tryStart();
-      if (ok) return;
-    }
-
-
-    // 2) Fallback: grava e envia pra Whisper (edge function)
+    // Web Speech estava encerrando sem transcript em alguns navegadores/ambientes.
+    // Para o comando manual usamos gravação real do microfone e transcrição no backend.
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const rec = new MediaRecorder(stream);
       chunksRef.current = [];
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       rec.onstop = async () => {
+        if (recordingTimeoutRef.current) { clearTimeout(recordingTimeoutRef.current); recordingTimeoutRef.current = null; }
         stream.getTracks().forEach((t) => t.stop());
+        mediaRecRef.current = null;
+        setInterimText("");
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        if (blob.size < 1200) { setIsRecording(false); return; }
+        if (blob.size < 1200) {
+          setIsRecording(false);
+          toast.info("Áudio muito curto. Segure o Espaço por mais tempo ou toque no microfone e fale.");
+          return;
+        }
         await transcreverEProcessar(blob);
       };
-      rec.start();
+      rec.onerror = () => {
+        setIsRecording(false);
+        stream.getTracks().forEach((t) => t.stop());
+        toast.error("Não consegui gravar o áudio do microfone.");
+      };
+      rec.start(250);
       mediaRecRef.current = rec;
       setIsRecording(true);
+      setInterimText(autoStopMs > 0 ? "Ouvindo… fale o comando agora." : "Ouvindo…");
+      if (autoStopMs > 0) {
+        recordingTimeoutRef.current = setTimeout(() => {
+          if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
+            try { mediaRecRef.current.stop(); } catch {}
+          }
+        }, autoStopMs);
+      }
+      if (pendingStopRef.current) {
+        setTimeout(() => {
+          if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
+            try { mediaRecRef.current.stop(); } catch {}
+          }
+        }, 250);
+      }
     } catch {
+      setIsRecording(false);
       toast.error("Sem acesso ao microfone");
     }
   }, [isRecording, processing, interimText]);
 
   const stopDictation = () => {
+    pendingStopRef.current = true;
+    if (recordingTimeoutRef.current) { clearTimeout(recordingTimeoutRef.current); recordingTimeoutRef.current = null; }
     try { dictationRef.current?.stop?.(); } catch {}
     if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
       try { mediaRecRef.current.stop(); } catch {}
@@ -683,6 +673,7 @@ export default function VoiceAssistant() {
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space" || isTyping(e.target)) return;
+      pendingStopRef.current = true;
       if (isRecording) { e.preventDefault(); stopDictation(); }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -719,7 +710,8 @@ export default function VoiceAssistant() {
           wakeListening && "ring-4 ring-primary/40 animate-pulse"
         )}
         title={
-          wakeListening ? `Escutando "${cfg.wake_word}"…` :
+        wakeListening ? `Escutando "${cfg.wake_word}"…` :
+          wakeUnavailable ? "Use o microfone ou Espaço" :
           cfg.wake_word_ativo ? "Ativando escuta…" : "Assistente por voz"
         }
       >
@@ -750,7 +742,7 @@ export default function VoiceAssistant() {
                   <div className="text-[11px] text-muted-foreground truncate">
                     {wakeListening ? (
                       <span className="flex items-center gap-1"><Radio className="h-2.5 w-2.5 text-green-500" /> escutando "{cfg.wake_word}"</span>
-                    ) : cfg.wake_word_ativo ? "ativando escuta…" : "escuta desativada"}
+                    ) : wakeUnavailable ? "escuta por frase indisponível" : cfg.wake_word_ativo ? "ativando escuta…" : "escuta desativada"}
                   </div>
                 </div>
               </div>
@@ -779,14 +771,14 @@ export default function VoiceAssistant() {
                     <Label>Ativação por voz ("{cfg.wake_word}")</Label>
                     <p className="text-xs text-muted-foreground">Escuta contínua em background. Diga a palavra para abrir.</p>
                   </div>
-                  <Switch checked={cfg.wake_word_ativo} onCheckedChange={(v) => salvarConfig({ wake_word_ativo: v })} />
+                  <Switch checked={cfg.wake_word_ativo} onCheckedChange={(v) => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; salvarConfig({ wake_word_ativo: v }); }} />
                 </div>
                 <div>
                   <Label className="text-xs">Palavra de ativação</Label>
                   <Input
                     value={cfg.wake_word}
                     onChange={(e) => setCfg({ ...cfg, wake_word: e.target.value })}
-                    onBlur={() => salvarConfig({ wake_word: cfg.wake_word })}
+                    onBlur={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; salvarConfig({ wake_word: cfg.wake_word }); }}
                     placeholder="ei pilar"
                     className="mt-1"
                   />
@@ -991,7 +983,7 @@ export default function VoiceAssistant() {
                     />
                     <Button
                       size="icon"
-                      onClick={isRecording ? stopDictation : startDictation}
+                      onClick={() => { if (isRecording) stopDictation(); else startDictation(); }}
                       disabled={processing}
                       className={cn(
                         "h-12 w-12 rounded-full shrink-0",
