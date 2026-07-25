@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { matchRotaPorFala } from "@/lib/voz/rotasSistema";
+import { matchRotaPorFala, matchRotaComCandidatos, type RotaSistema } from "@/lib/voz/rotasSistema";
 
 type Config = {
   wake_word_ativo: boolean;
@@ -23,7 +23,6 @@ type Config = {
 };
 
 type LogItem = { user: string; assistant: string; ts: number };
-type CustomCmd = { id: string; frase_gatilho: string; tipo_acao: string; payload: any; ativo: boolean };
 
 const WAKE_DEFAULT = "ei pilar";
 
@@ -58,9 +57,7 @@ export default function VoiceAssistant() {
   const [wakeListening, setWakeListening] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [history, setHistory] = useState<LogItem[]>([]);
-  const [customCmds, setCustomCmds] = useState<CustomCmd[]>([]);
-  const [popupResult, setPopupResult] = useState<{ titulo: string; texto: string } | null>(null);
-  const [pendingConfirm, setPendingConfirm] = useState<any>(null);
+  const [ambiguas, setAmbiguas] = useState<RotaSistema[] | null>(null);
   const [manualText, setManualText] = useState("");
 
   // === Fluxo de RELATÓRIOS ===
@@ -109,12 +106,6 @@ export default function VoiceAssistant() {
       const { data: usuario } = await supabase.from("usuarios")
         .select("estabelecimento_id").eq("auth_user_id", u.user.id).maybeSingle();
       if (usuario?.estabelecimento_id) {
-        const { data: cmds } = await supabase.from("assistente_voz_comandos")
-          .select("id, frase_gatilho, tipo_acao, payload, ativo")
-          .eq("estabelecimento_id", usuario.estabelecimento_id)
-          .eq("ativo", true);
-        setCustomCmds((cmds as any) || []);
-
         const { data: rels } = await supabase.from("relatorios_voz")
           .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo")
           .eq("estabelecimento_id", usuario.estabelecimento_id)
@@ -391,13 +382,24 @@ export default function VoiceAssistant() {
         return;
       }
 
-      // 3) Abrir tela por título (match local instantâneo)
-      const rotaMatch = matchRotaPorFala(texto);
-      if (rotaMatch) {
-        const resposta = `Abrindo ${rotaMatch.titulo}.`;
+      // 3) Abrir tela por título (match local instantâneo com desambiguação)
+      const { escolhida, topN } = matchRotaComCandidatos(texto);
+      if (escolhida) {
+        const resposta = `Abrindo ${escolhida.titulo}.`;
         setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        setAmbiguas(null);
         if (cfg.responder_por_voz) falar(resposta);
-        setTimeout(() => { navigate(rotaMatch.path); setOpen(false); }, 350);
+        setTimeout(() => { navigate(escolhida.path); setOpen(false); }, 350);
+        return;
+      }
+
+      // 3b) Ambíguo? mostra opções (sem inventar)
+      const candidatosBons = topN.filter((c) => c.score >= 40).map((c) => c.rota);
+      if (candidatosBons.length > 0) {
+        const resposta = "Não tenho certeza. Escolha uma tela abaixo:";
+        setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        setAmbiguas(candidatosBons.slice(0, 5));
+        if (cfg.responder_por_voz) falar(resposta);
         return;
       }
 
@@ -405,6 +407,7 @@ export default function VoiceAssistant() {
       const resposta =
         `Não entendi. Só respondo a duas coisas: "abrir <nome da tela>" ou "relatórios" para ver a lista.`;
       setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+      setAmbiguas(null);
       if (cfg.responder_por_voz) falar(resposta);
     } catch (e: any) {
       toast.error(e.message);
@@ -443,12 +446,6 @@ export default function VoiceAssistant() {
       audioRef.current = audio;
       audio.play().catch(() => {});
     } catch {}
-  };
-
-  const executarConfirmacao = async () => {
-    if (!pendingConfirm) return;
-    toast.success("Ação confirmada.");
-    setPendingConfirm(null);
   };
 
   // Push-to-talk com barra de espaço enquanto painel aberto
@@ -565,14 +562,29 @@ export default function VoiceAssistant() {
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                  {/* Popup result */}
-                  {popupResult && (
-                    <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-3 relative">
-                      <button onClick={() => setPopupResult(null)} className="absolute top-1 right-1 p-1 hover:bg-background rounded">
-                        <X className="h-3 w-3" />
-                      </button>
-                      <div className="text-xs font-semibold text-primary mb-1">{popupResult.titulo}</div>
-                      <div className="text-sm whitespace-pre-wrap">{popupResult.texto}</div>
+                  {/* Desambiguação: opções quando o match não é claro */}
+                  {ambiguas && ambiguas.length > 0 && (
+                    <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                          Qual tela você quer abrir?
+                        </div>
+                        <button onClick={() => setAmbiguas(null)} className="p-1 hover:bg-background rounded">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        {ambiguas.map((r) => (
+                          <button
+                            key={r.path}
+                            onClick={() => { navigate(r.path); setAmbiguas(null); setOpen(false); }}
+                            className="w-full text-left text-sm px-2.5 py-1.5 rounded border bg-background hover:bg-primary/10 transition"
+                          >
+                            <div className="font-medium">{r.titulo}</div>
+                            <div className="text-[11px] text-muted-foreground">{r.path}</div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -645,7 +657,7 @@ export default function VoiceAssistant() {
                   )}
 
                   {/* Home — 2 intenções */}
-                  {history.length === 0 && !isRecording && !processing && !popupResult && !relatorioMode && (
+                  {history.length === 0 && !isRecording && !processing && !ambiguas && !relatorioMode && (
                     <div className="space-y-3">
                       <div className="text-center py-2">
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diga "{cfg.wake_word}" ou toque no mic</div>
@@ -677,20 +689,6 @@ export default function VoiceAssistant() {
                         </button>
                       </div>
 
-                      {customCmds.length > 0 && (
-                        <div>
-                          <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-                            <Zap className="h-3 w-3" /> SEUS GATILHOS ({customCmds.length})
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {customCmds.slice(0, 8).map((c) => (
-                              <button key={c.id} onClick={() => processarTexto(c.frase_gatilho)}
-                                className="text-xs px-2.5 py-1 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 transition"
-                              >{c.frase_gatilho}</button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -720,12 +718,6 @@ export default function VoiceAssistant() {
                     </div>
                   )}
 
-                  {pendingConfirm && (
-                    <div className="border border-yellow-500/40 bg-yellow-500/10 rounded-lg p-2 flex gap-2">
-                      <Button size="sm" onClick={executarConfirmacao}>Confirmar</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setPendingConfirm(null)}>Cancelar</Button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Composer */}
