@@ -920,6 +920,11 @@ export default function Layout({ children }: LayoutProps) {
                     else if (item.system === "theme") toggleTheme();
                     else if (item.system === "logout") handleLogout();
                     else if (item.system === "admin") navigate("/admin");
+                    else if (item.system === "profile") navigate("/perfil");
+                    else if (item.system === "share-screen") navigate("/compartilhar-tela");
+                    else if (item.system === "open-ticket") window.dispatchEvent(new CustomEvent("open-support-ticket"));
+                    else if (item.system === "pwa-update") setShowPwaUpdateDialog(true);
+                    else if (item.system === "change-password") setShowChangePasswordDialog(true);
                   };
                   const label =
                     item.system === "lock"
