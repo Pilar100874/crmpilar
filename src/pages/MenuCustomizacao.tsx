@@ -626,6 +626,11 @@ export default function MenuCustomizacao() {
             <span className="text-sm font-medium flex-1 truncate">{node.title}</span>
           )}
           <Badge variant="secondary" className="text-[10px]">{node.children.length}</Badge>
+          {showInside && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/20 border border-primary rounded-full px-2 py-0.5 shrink-0">
+              ⤵ Dentro
+            </span>
+          )}
           <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
             <Button
               size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6"
