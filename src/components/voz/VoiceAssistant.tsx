@@ -645,19 +645,29 @@ export default function VoiceAssistant() {
     } catch {}
   };
 
-  // Push-to-talk com barra de espaço enquanto painel aberto
+  // Push-to-talk com barra de espaço enquanto painel aberto (segurar para falar)
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !isRecording && !processing &&
-          !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
-        e.preventDefault();
-        startDictation();
-      }
-      if (e.code === "Escape") setOpen(false);
+    const isTyping = (t: EventTarget | null) =>
+      t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement ||
+      (t instanceof HTMLElement && t.isContentEditable);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Escape") { setOpen(false); return; }
+      if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
+      if (isRecording || processing) return;
+      e.preventDefault();
+      startDictation();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || isTyping(e.target)) return;
+      if (isRecording) { e.preventDefault(); stopDictation(); }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [open, isRecording, processing, startDictation]);
 
   // Sempre abre limpo, na aba do chat
