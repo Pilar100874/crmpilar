@@ -636,8 +636,16 @@ export default function Layout({ children }: LayoutProps) {
     return null;
   }
 
+  // Aplica personalização de menu (localStorage) se existir
+  const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
+  useEffect(() => {
+    const handler = () => setCustomizedItems(applyMenuCustomization(menuItems));
+    window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
+    return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
+  }, []);
+
   // Filtra os menus baseado nas permissões
-  const visibleMenus = menuItems
+  const visibleMenus = customizedItems
     .filter((item) => {
       if (item.id === "Admin") {
         return isAdmin;
