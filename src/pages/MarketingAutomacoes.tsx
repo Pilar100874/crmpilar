@@ -41,6 +41,8 @@ export default function MarketingAutomacoes() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [automacaoToDelete, setAutomacaoToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [historicoOpen, setHistoricoOpen] = useState(false);
+  const [historicoAutomacao, setHistoricoAutomacao] = useState<any>(null);
 
   useEffect(() => {
     loadAutomacoes();
