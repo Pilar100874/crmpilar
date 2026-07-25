@@ -7,6 +7,8 @@ import {
   fetchRemoteCustomization,
   initialAdminFooterTree,
   initialFromBase,
+  initialUserFooterTree,
+  initialSystemFooterTree,
   loadCustomization,
   MenuCustomization,
   saveCustomization,
@@ -20,7 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
-import { Lock, LayoutList } from "lucide-react";
+import { Lock, LayoutList, User as UserIcon, Cog } from "lucide-react";
 import {
   ChevronDown,
   ChevronRight,
@@ -39,9 +41,10 @@ import {
 } from "lucide-react";
 import { MenuIconPicker, resolveMenuIcon } from "@/components/menu/MenuIconPicker";
 
-type TreeKey = "main" | "admin";
+type TreeKey = "main" | "admin" | "user" | "system";
 type Path = number[];
 type DropPos = "before" | "after" | "inside";
+
 
 function cloneTree(roots: CustomNode[]): CustomNode[] {
   return JSON.parse(JSON.stringify(roots));
@@ -83,6 +86,12 @@ export default function MenuCustomizacao() {
   const [adminRoots, setAdminRoots] = useState<CustomNode[]>(
     () => (loadCustomization()?.adminRoots) || initialAdminFooterTree()
   );
+  const [userRoots, setUserRoots] = useState<CustomNode[]>(
+    () => (loadCustomization()?.userFooterRoots) || initialUserFooterTree()
+  );
+  const [systemRoots, setSystemRoots] = useState<CustomNode[]>(
+    () => (loadCustomization()?.systemFooterRoots) || initialSystemFooterTree()
+  );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -91,7 +100,7 @@ export default function MenuCustomizacao() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [baseline, setBaseline] = useState<{ roots: CustomNode[]; adminRoots: CustomNode[] } | null>(
+  const [baseline, setBaseline] = useState<{ roots: CustomNode[]; adminRoots: CustomNode[]; userFooterRoots?: CustomNode[]; systemFooterRoots?: CustomNode[] } | null>(
     () => loadCustomization()?.baseline ?? null
   );
 
@@ -104,6 +113,8 @@ export default function MenuCustomizacao() {
       if (remote) {
         setMainRoots(remote.roots);
         setAdminRoots(remote.adminRoots ?? initialAdminFooterTree());
+        setUserRoots(remote.userFooterRoots ?? initialUserFooterTree());
+        setSystemRoots(remote.systemFooterRoots ?? initialSystemFooterTree());
         setBaseline(remote.baseline ?? null);
         setDirty(false);
       }
@@ -116,8 +127,11 @@ export default function MenuCustomizacao() {
     const s = new Set<string>();
     collectIds(mainRoots, s);
     collectIds(adminRoots, s);
+    collectIds(userRoots, s);
+    collectIds(systemRoots, s);
     return s;
-  }, [mainRoots, adminRoots]);
+  }, [mainRoots, adminRoots, userRoots, systemRoots]);
+
 
   const [poolSearch, setPoolSearch] = useState("");
 
@@ -160,8 +174,11 @@ export default function MenuCustomizacao() {
 
   const setTree = (tree: TreeKey, updater: (roots: CustomNode[]) => CustomNode[]) => {
     if (tree === "main") setMainRoots((r) => updater(r));
-    else setAdminRoots((r) => updater(r));
+    else if (tree === "admin") setAdminRoots((r) => updater(r));
+    else if (tree === "user") setUserRoots((r) => updater(r));
+    else setSystemRoots((r) => updater(r));
   };
+
 
   const mutate = (tree: TreeKey, fn: (roots: CustomNode[]) => void) => {
     if (!isAdmin) {
@@ -228,8 +245,9 @@ export default function MenuCustomizacao() {
   };
 
   const doDelete = (tree: TreeKey, path: Path) => {
-    const roots = tree === "main" ? mainRoots : adminRoots;
+    const roots = tree === "main" ? mainRoots : tree === "admin" ? adminRoots : tree === "user" ? userRoots : systemRoots;
     const node = getNode(roots, path);
+
     if (node.kind !== "container") {
       setConfirmDelete(null);
       return;
@@ -251,6 +269,8 @@ export default function MenuCustomizacao() {
         version: 1,
         roots: mainRoots,
         adminRoots,
+        userFooterRoots: userRoots,
+        systemFooterRoots: systemRoots,
         ...(baseline ? { baseline } : {}),
       };
       await saveCustomization(payload);
@@ -273,11 +293,15 @@ export default function MenuCustomizacao() {
       const newBaseline = {
         roots: JSON.parse(JSON.stringify(mainRoots)),
         adminRoots: JSON.parse(JSON.stringify(adminRoots)),
+        userFooterRoots: JSON.parse(JSON.stringify(userRoots)),
+        systemFooterRoots: JSON.parse(JSON.stringify(systemRoots)),
       };
       const payload: MenuCustomization = {
         version: 1,
         roots: mainRoots,
         adminRoots,
+        userFooterRoots: userRoots,
+        systemFooterRoots: systemRoots,
         baseline: newBaseline,
       };
       await saveCustomization(payload);
@@ -305,17 +329,23 @@ export default function MenuCustomizacao() {
           version: 1,
           roots: JSON.parse(JSON.stringify(baseline.roots)),
           adminRoots: JSON.parse(JSON.stringify(baseline.adminRoots)),
+          userFooterRoots: JSON.parse(JSON.stringify(baseline.userFooterRoots ?? initialUserFooterTree())),
+          systemFooterRoots: JSON.parse(JSON.stringify(baseline.systemFooterRoots ?? initialSystemFooterTree())),
           baseline,
         };
         await saveCustomization(payload);
         setMainRoots(payload.roots);
         setAdminRoots(payload.adminRoots!);
+        setUserRoots(payload.userFooterRoots!);
+        setSystemRoots(payload.systemFooterRoots!);
         setDirty(false);
         toast.success("Menus restaurados ao padrão definido.");
       } else {
         await clearCustomization();
         setMainRoots(initialFromBase(menuItems).roots);
         setAdminRoots(initialAdminFooterTree());
+        setUserRoots(initialUserFooterTree());
+        setSystemRoots(initialSystemFooterTree());
         setBaseline(null);
         setDirty(false);
         toast.success("Menus restaurados ao padrão de fábrica.");
@@ -325,6 +355,7 @@ export default function MenuCustomizacao() {
     } finally {
       setSaving(false);
     }
+
   };
 
   // Drag state
@@ -472,7 +503,7 @@ export default function MenuCustomizacao() {
   // Human-friendly summary of where the drop will land, per tree.
   const getDropSummary = (tree: TreeKey): { text: string; kind: "before" | "after" | "inside" | "end" } | null => {
     if (!dragging || !dropHint || dropHint.tree !== tree) return null;
-    const roots = tree === "main" ? mainRoots : adminRoots;
+    const roots = tree === "main" ? mainRoots : tree === "admin" ? adminRoots : tree === "user" ? userRoots : systemRoots;
     if (dropHint.path === null) return { text: "no final da lista", kind: "end" };
     const target = getNode(roots, dropHint.path);
     const name =
@@ -808,7 +839,7 @@ export default function MenuCustomizacao() {
               <Folder className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Personalizar Menus
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl">
-              Arraste itens entre <strong>Menu principal</strong> e <strong>Admin (rodapé)</strong>.
+              Arraste programas livremente entre <strong>Menu principal</strong>, <strong>Admin (rodapé)</strong>, <strong>Menu do usuário</strong> e <strong>Sistema (rodapé)</strong>. Nenhum item aparece em dois menus ao mesmo tempo — ao arrastar para outro menu, ele é removido do anterior.
               Uma linha azul indica onde o item será solto; solte sobre uma pasta para colocar dentro dela.
             </p>
           </div>
@@ -853,26 +884,45 @@ export default function MenuCustomizacao() {
         </div>
       )}
 
-      {/* Desktop / large tablet: 3 columns */}
-      <div className="hidden lg:grid grid-cols-[1fr_1fr_360px] gap-4">
+      {/* Desktop / large tablet: 4 trees + pool */}
+      <div className="hidden xl:grid grid-cols-[1fr_1fr_1fr_1fr_320px] gap-3">
         {renderTreeCard("main", "Menu principal (lateral)", LayoutGrid, mainRoots)}
         {renderTreeCard("admin", "Menu Admin (rodapé)", Shield, adminRoots)}
+        {renderTreeCard("user", "Menu do usuário (rodapé)", UserIcon, userRoots)}
+        {renderTreeCard("system", "Sistema (rodapé)", Cog, systemRoots)}
         {renderPoolCard()}
+      </div>
+
+      {/* Large tablet fallback: 2x2 + pool below */}
+      <div className="hidden lg:grid xl:hidden grid-cols-2 gap-3">
+        {renderTreeCard("main", "Menu principal", LayoutGrid, mainRoots)}
+        {renderTreeCard("admin", "Admin (rodapé)", Shield, adminRoots)}
+        {renderTreeCard("user", "Usuário (rodapé)", UserIcon, userRoots)}
+        {renderTreeCard("system", "Sistema (rodapé)", Cog, systemRoots)}
+        <div className="col-span-2">{renderPoolCard()}</div>
       </div>
 
       {/* Mobile & tablet: tabs */}
       <div className="lg:hidden">
         <Tabs defaultValue="main" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger value="main" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+          <TabsList className="grid w-full grid-cols-5 h-auto">
+            <TabsTrigger value="main" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
               <LayoutGrid className="w-4 h-4" />
               <span>Menu</span>
             </TabsTrigger>
-            <TabsTrigger value="admin" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+            <TabsTrigger value="admin" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
               <Shield className="w-4 h-4" />
               <span>Admin</span>
             </TabsTrigger>
-            <TabsTrigger value="pool" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+            <TabsTrigger value="user" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
+              <UserIcon className="w-4 h-4" />
+              <span>Usuário</span>
+            </TabsTrigger>
+            <TabsTrigger value="system" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
+              <Cog className="w-4 h-4" />
+              <span>Sistema</span>
+            </TabsTrigger>
+            <TabsTrigger value="pool" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
               <LayoutList className="w-4 h-4" />
               <span>Programas</span>
             </TabsTrigger>
@@ -883,9 +933,16 @@ export default function MenuCustomizacao() {
           <TabsContent value="admin" className="mt-3">
             {renderTreeCard("admin", "Menu Admin (rodapé)", Shield, adminRoots)}
           </TabsContent>
+          <TabsContent value="user" className="mt-3">
+            {renderTreeCard("user", "Menu do usuário (rodapé)", UserIcon, userRoots)}
+          </TabsContent>
+          <TabsContent value="system" className="mt-3">
+            {renderTreeCard("system", "Sistema (rodapé)", Cog, systemRoots)}
+          </TabsContent>
           <TabsContent value="pool" className="mt-3">
             {renderPoolCard()}
           </TabsContent>
+
         </Tabs>
       </div>
 

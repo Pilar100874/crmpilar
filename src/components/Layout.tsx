@@ -64,7 +64,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
-import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization } from "@/lib/menuCustomization";
+import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization, applyUserFooterCustomization, applySystemFooterCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
@@ -646,15 +646,21 @@ export default function Layout({ children }: LayoutProps) {
   // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
   const [adminFooterItems, setAdminFooterItems] = useState(() => applyAdminFooterCustomization(menuItems));
+  const [userFooterItems, setUserFooterItems] = useState(() => applyUserFooterCustomization(menuItems));
+  const [systemFooterItems, setSystemFooterItems] = useState(() => applySystemFooterCustomization(menuItems));
   useEffect(() => {
     const handler = () => {
       setCustomizedItems(applyMenuCustomization(menuItems));
       setAdminFooterItems(applyAdminFooterCustomization(menuItems));
+      setUserFooterItems(applyUserFooterCustomization(menuItems));
+      setSystemFooterItems(applySystemFooterCustomization(menuItems));
     };
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
     fetchRemoteCustomization().then(() => {
       setCustomizedItems(applyMenuCustomization(menuItems));
       setAdminFooterItems(applyAdminFooterCustomization(menuItems));
+      setUserFooterItems(applyUserFooterCustomization(menuItems));
+      setSystemFooterItems(applySystemFooterCustomization(menuItems));
     });
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
@@ -700,8 +706,16 @@ export default function Layout({ children }: LayoutProps) {
   );
   const mainPlacedIds = getPlacedProgramIds(visibleMenus);
   const adminPlacedIds = getPlacedProgramIds(adminFooterItems);
-  // União: um programa é "posicionado" se está no menu principal OU no Admin (rodapé) customizado
-  const placedProgramIds = new Set<string>([...mainPlacedIds, ...adminPlacedIds]);
+  const userFooterPlacedIds = getPlacedProgramIds(userFooterItems);
+  const systemFooterPlacedIds = getPlacedProgramIds(systemFooterItems);
+  // União de todos os 4 menus — usado para deduplicar itens legado hardcoded
+  const placedProgramIds = new Set<string>([
+    ...mainPlacedIds,
+    ...adminPlacedIds,
+    ...userFooterPlacedIds,
+    ...systemFooterPlacedIds,
+  ]);
+
 
 
 
@@ -775,6 +789,98 @@ export default function Layout({ children }: LayoutProps) {
       );
     });
   };
+
+  // Executor centralizado das ações de sistema (lock/theme/logout/etc.)
+  const runSystemAction = (sys?: string) => {
+    switch (sys) {
+      case "lock": handleToggleLock(); break;
+      case "theme": toggleTheme(); break;
+      case "logout": handleLogout(); break;
+      case "admin": navigate("/admin"); break;
+      case "profile": navigate("/perfil"); break;
+      case "share-screen": navigate("/compartilhar-tela"); break;
+      case "open-ticket": window.dispatchEvent(new CustomEvent("open-support-ticket")); break;
+      case "pwa-update": setShowPwaUpdateDialog(true); break;
+      case "change-password": setShowChangePasswordDialog(true); break;
+    }
+  };
+
+  // Renderiza itens do "Menu do usuário (rodapé)" customizado, com suporte a submenus.
+  const renderUserFooterItems = (items: any[], onClose: () => void, locked: boolean): any => {
+    const textClass = locked ? "text-sidebar-foreground/70" : "text-sidebar-foreground/60";
+    const hoverBg = locked ? "hover:bg-sidebar-accent/50" : "hover:bg-sidebar-accent/30";
+    return items.map((it: any) => {
+      if (it.subItems && it.subItems.length > 0) {
+        return (
+          <div key={it.id} className="pt-1">
+            <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">{it.title}</div>
+            <div className="ml-2 space-y-1 border-l border-sidebar-border/40 pl-2">
+              {renderUserFooterItems(it.subItems, onClose, locked)}
+            </div>
+          </div>
+        );
+      }
+      const Icon = it.icon || LucideIcons.Circle;
+      const cls = `flex items-center gap-3 px-3 ${locked ? "py-2.5" : "py-2"} rounded-md transition-colors ${textClass} hover:text-sidebar-foreground ${hoverBg} w-full text-left`;
+      const isSystemHash = it.system && (!it.url || it.url.startsWith("#"));
+      if (isSystemHash) {
+        return (
+          <button key={it.id} onClick={() => { onClose(); runSystemAction(it.system); }} className={cls}>
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      return (
+        <NavLink key={it.id} to={it.url || "#"} onClick={onClose} className={cls}>
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">{it.title}</span>
+        </NavLink>
+      );
+    });
+  };
+
+  // Renderiza a tira de botões de sistema no rodapé (lock/theme/logout customizáveis).
+  const renderSystemFooterButtons = () => {
+    return systemFooterItems.map((it: any) => {
+      if (it.subItems) return null;
+      // Oculta "Travar" nos casos originais (telas pequenas sem menu aberto)
+      if (it.system === "lock" && isSmallScreen && !menuOpen && !menuLocked) return null;
+      const Icon = it.icon || LucideIcons.Circle;
+      const displayIcon = it.system === "theme"
+        ? (isDarkMode ? Sun : Moon)
+        : it.system === "lock"
+          ? (menuLocked ? Pin : PinOff)
+          : Icon;
+      const displayTitle = it.system === "theme"
+        ? (isDarkMode ? "Modo Claro" : "Modo Escuro")
+        : it.system === "lock"
+          ? (menuLocked ? "Destravar menu" : "Travar Menu")
+          : it.title;
+      const onClick = () => {
+        if (it.system) runSystemAction(it.system);
+        else if (it.url && it.url.startsWith("/")) navigate(it.url);
+      };
+      if (menuLocked) {
+        const IconCmp: any = displayIcon;
+        return (
+          <button key={it.id} type="button" onClick={onClick} title={displayTitle}
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors">
+            <IconCmp className="w-5 h-5" />
+          </button>
+        );
+      }
+      const IconCmp: any = displayIcon;
+      return (
+        <button key={it.id} type="button" onClick={onClick} title={displayTitle}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50">
+          <IconCmp className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-medium">{displayTitle}</span>
+        </button>
+      );
+    });
+  };
+
 
   if (soloMode) {
     return (
@@ -1379,29 +1485,8 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Ícones no rodapé */}
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
+            {/* Botões de sistema (travar/tema/sair) — parte 1: renderizados abaixo, após o menu do usuário */}
 
-            {/* Botão de travar/destravar - só aparece em telas maiores que 1024px */}
-            {!systemInMain.has("lock") && (!isSmallScreen || menuOpen || menuLocked) && (
-
-              <button
-                onClick={handleToggleLock}
-                className={`${
-                  menuLocked 
-                    ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
-                    : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-                } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors duration-100`}
-                title={menuLocked ? "Destravar menu" : "Travar menu"}
-              >
-                {menuLocked ? (
-                  <Pin className="w-5 h-5" />
-                ) : (
-                  <>
-                    <PinOff className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm font-medium">Travar Menu</span>
-                  </>
-                )}
-              </button>
-            )}
 
             {/* Menu de usuário como submenu */}
             {menuLocked ? (
@@ -1434,70 +1519,10 @@ export default function Layout({ children }: LayoutProps) {
                       </h3>
                       
                       <div className="space-y-1">
-                        {!placedProgramIds.has("user-perfil") && (
-                        <NavLink
-                          to="/perfil"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <UserIcon className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Perfil</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("user-share-screen") && (
-                        <NavLink
-                          to="/compartilhar-tela"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <Monitor className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Compartilhar ou Ver Tela</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("user-open-ticket") && (
-                        <button
-                          onClick={() => {
-                            setOpenSubmenuId(null);
-                            window.dispatchEvent(new CustomEvent("open-support-ticket"));
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <LifeBuoy className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Abrir Ticket de Suporte</span>
-                        </button>
-                        )}
-                        {!placedProgramIds.has("user-pwa-update") && (
-                        <button
-                          onClick={() => {
-                            setOpenSubmenuId(null);
-                            setShowPwaUpdateDialog(true);
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <RefreshCw className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Atualizar Sistema (PWA)</span>
-                        </button>
-                        )}
-
-                        
-                        {!placedProgramIds.has("user-change-password") && (
-                        <button
-                          onClick={() => {
-                            setOpenSubmenuId(null);
-                            setShowChangePasswordDialog(true);
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <KeyRound className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Alterar Senha</span>
-                        </button>
-                        )}
-
+                        {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), true)}
                         {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/70")}
-
-
-
                       </div>
+
                     </div>
                   </div>
                 )}
@@ -1530,113 +1555,18 @@ export default function Layout({ children }: LayoutProps) {
                 
                 {openSubmenuId === "UserMenu" && (
                   <div className="mt-1 ml-8 space-y-1">
-                    {!placedProgramIds.has("user-perfil") && (
-                    <NavLink
-                      to="/perfil"
-                      onClick={() => setOpenSubmenuId(null)}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                    >
-                      <UserIcon className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm">Perfil</span>
-                    </NavLink>
-                    )}
-                    {!placedProgramIds.has("user-share-screen") && (
-                    <NavLink
-                      to="/compartilhar-tela"
-                      onClick={() => setOpenSubmenuId(null)}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                    >
-                      <Monitor className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm">Compartilhar ou Ver Tela</span>
-                    </NavLink>
-                    )}
-                    {!placedProgramIds.has("user-open-ticket") && (
-                    <button
-                      onClick={() => {
-                        setOpenSubmenuId(null);
-                        window.dispatchEvent(new CustomEvent("open-support-ticket"));
-                      }}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                    >
-                      <LifeBuoy className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm">Abrir Ticket de Suporte</span>
-                    </button>
-                    )}
-                    {!placedProgramIds.has("user-pwa-update") && (
-                    <button
-                      onClick={() => {
-                        setOpenSubmenuId(null);
-                        setShowPwaUpdateDialog(true);
-                      }}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                    >
-                      <RefreshCw className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm">Atualizar Sistema (PWA)</span>
-                    </button>
-                    )}
-                    {!placedProgramIds.has("user-change-password") && (
-                    <button
-                      onClick={() => {
-                        setOpenSubmenuId(null);
-                        setShowChangePasswordDialog(true);
-                      }}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                    >
-                      <KeyRound className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm">Alterar Senha</span>
-                    </button>
-                    )}
-
+                    {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), false)}
                     {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/60")}
+
                     
                   </div>
                 )}
               </div>
             )}
 
-            {/* Toggle Dia/Noite */}
-            {!systemInMain.has("theme") && (menuLocked ? (
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-              >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-              >
-                {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
-                <span className="text-sm font-medium">{isDarkMode ? "Modo Claro" : "Modo Escuro"}</span>
-              </button>
-            ))}
+            {/* Tira de botões de sistema (travar/tema/sair) — totalmente customizável */}
+            {renderSystemFooterButtons()}
 
-            {/* Botão Sair - sempre abaixo do menu do usuário */}
-            {!systemInMain.has("logout") && (menuLocked ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title="Sair"
-              >
-                <LogOut className="w-6 h-6" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title="Sair"
-              >
-                <LogOut className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium">Sair</span>
-              </button>
-            ))}
 
           </div>
         </div>
