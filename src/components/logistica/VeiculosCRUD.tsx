@@ -744,7 +744,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   return (
     <div className="space-y-4 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-xl">
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-2xl">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -754,6 +754,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               className="pl-9"
             />
           </div>
+          <Select value={comunicacaoFilter} onValueChange={(val) => setComunicacaoFilter(val as any)}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <Radio className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Comunicação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="online">Online</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+              <SelectItem value="sem_sinal">Sem sinal</SelectItem>
+              <SelectItem value="offline">Offline</SelectItem>
+            </SelectContent>
+          </Select>
           <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} />
         </div>
         <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
