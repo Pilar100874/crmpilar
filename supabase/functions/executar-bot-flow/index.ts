@@ -495,7 +495,7 @@ async function executeBroadcast(
           cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
         }
         if (cPhone) {
-          await supabase.functions.invoke("send-agent-message", {
+          const { data: rc, error: rcErr } = await supabase.functions.invoke("send-agent-message", {
             body: {
               estabelecimento_id: estabelecimentoId, telefone: d.phone,
               contact: { nome: cNome, whatsapp: cPhone },
@@ -505,10 +505,17 @@ async function executeBroadcast(
               origem: `${origem}_contato`,
             },
           });
+          if (rcErr || (rc as any)?.success === false) {
+            console.warn("[broadcast] falha enviar contato p/", d.phone, rcErr?.message || (rc as any)?.error);
+          }
+        } else {
+          console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
         }
       }
     } catch (e) {
+      console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
       ok = false;
+
     }
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
