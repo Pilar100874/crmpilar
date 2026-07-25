@@ -352,13 +352,22 @@ export default function VoiceAssistant() {
     if (isRecording || processing) return;
     setInterimText("");
 
+    // Libera o microfone do wake word — Chrome só permite 1 SpeechRecognition ativo por vez
+    shouldWakeRef.current = false;
+    try { wakeRecogRef.current?.abort?.(); } catch {}
+    try { wakeRecogRef.current?.stop?.(); } catch {}
+    wakeRecogRef.current = null;
+    setWakeListening(false);
+    // pequena pausa para o Chrome liberar o mic antes de reabrir
+    await new Promise((r) => setTimeout(r, 200));
+
     // 1) tenta Web Speech (rápido, sem upload)
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SR) {
       try {
         const rec = new SR();
         rec.lang = "pt-BR";
-        rec.continuous = false;
+        rec.continuous = true;
         rec.interimResults = true;
         let finalTxt = "";
         rec.onresult = (e: any) => {
@@ -373,6 +382,7 @@ export default function VoiceAssistant() {
         rec.onerror = (ev: any) => {
           if (ev?.error === "no-speech") { setIsRecording(false); return; }
           if (ev?.error === "not-allowed") { toast.error("Sem permissão de microfone"); setIsRecording(false); }
+          if (ev?.error === "aborted") { setIsRecording(false); }
         };
         rec.onend = () => {
           setIsRecording(false);
@@ -380,13 +390,14 @@ export default function VoiceAssistant() {
           const txt = finalTxt.trim() || interimText.trim();
           setInterimText("");
           if (txt) processarTexto(txt);
+          else toast.info("Não escutei nada. Fale novamente ou digite abaixo.");
         };
         rec.start();
         dictationRef.current = rec;
         setIsRecording(true);
         return;
-      } catch {
-        // cai para MediaRecorder abaixo
+      } catch (err) {
+        console.warn("[voz] SR start falhou, tentando MediaRecorder", err);
       }
     }
 
@@ -634,19 +645,29 @@ export default function VoiceAssistant() {
     } catch {}
   };
 
-  // Push-to-talk com barra de espaço enquanto painel aberto
+  // Push-to-talk com barra de espaço enquanto painel aberto (segurar para falar)
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !isRecording && !processing &&
-          !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
-        e.preventDefault();
-        startDictation();
-      }
-      if (e.code === "Escape") setOpen(false);
+    const isTyping = (t: EventTarget | null) =>
+      t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement ||
+      (t instanceof HTMLElement && t.isContentEditable);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Escape") { setOpen(false); return; }
+      if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
+      if (isRecording || processing) return;
+      e.preventDefault();
+      startDictation();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || isTyping(e.target)) return;
+      if (isRecording) { e.preventDefault(); stopDictation(); }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [open, isRecording, processing, startDictation]);
 
   // Sempre abre limpo, na aba do chat
