@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { matchRotaPorFala, matchRotaComCandidatos, type RotaSistema } from "@/lib/voz/rotasSistema";
+import { frasesEfetivas } from "@/lib/voz/frasesGatilho";
 import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
 
 type Config = {
