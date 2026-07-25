@@ -12,6 +12,7 @@ interface PosicaoPayload {
   velocidade?: number;
   direcao?: number;
   dataHora?: string;
+  ignicao?: boolean;
   token?: string;
 }
 
@@ -159,6 +160,38 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
     return { error: 'Vehicle not found', status: 404 };
   }
 
+  // Fallback: se velocidade não veio ou veio 0, calcula pela posição anterior
+  let velocidadeFinal = payload.velocidade || 0;
+  const dataHoraAtual = payload.dataHora || new Date().toISOString();
+  if (!payload.velocidade || payload.velocidade === 0) {
+    const { data: ultima } = await supabase
+      .from('veiculo_posicoes')
+      .select('lat, lng, data_hora')
+      .eq('veiculo_id', veiculoInfo.id)
+      .order('data_hora', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (ultima) {
+      const dtMs = new Date(dataHoraAtual).getTime() - new Date(ultima.data_hora).getTime();
+      if (dtMs > 2000 && dtMs < 15 * 60 * 1000) {
+        // Haversine (metros)
+        const R = 6371000;
+        const toRad = (v: number) => (v * Math.PI) / 180;
+        const dLat = toRad(payload.lat - ultima.lat);
+        const dLng = toRad(payload.lng - ultima.lng);
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRad(ultima.lat)) * Math.cos(toRad(payload.lat)) * Math.sin(dLng / 2) ** 2;
+        const dist = 2 * R * Math.asin(Math.sqrt(a));
+        // Ignora ruído de GPS (< 8 m)
+        if (dist >= 8) {
+          const kmh = (dist / (dtMs / 1000)) * 3.6;
+          if (kmh < 250) velocidadeFinal = kmh;
+        }
+      }
+    }
+  }
+
   // Insert position
   const { data: posicao, error: posicaoError } = await supabase
     .from('veiculo_posicoes')
@@ -166,9 +199,10 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
       veiculo_id: veiculoInfo.id,
       lat: payload.lat,
       lng: payload.lng,
-      velocidade: payload.velocidade || 0,
+      velocidade: velocidadeFinal,
       direcao: payload.direcao,
-      data_hora: payload.dataHora || new Date().toISOString()
+      ignicao: typeof payload.ignicao === 'boolean' ? payload.ignicao : null,
+      data_hora: dataHoraAtual
     })
     .select()
     .single();
@@ -184,7 +218,7 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
     status: 200,
     veiculoId: veiculoInfo.id,
     estabelecimentoId: veiculoInfo.estabelecimento_id, // Return estabelecimento_id from vehicle
-    velocidade: payload.velocidade || 0
+    velocidade: velocidadeFinal
   };
 }
 
@@ -585,8 +619,27 @@ Deno.serve(async (req) => {
         };
         
         console.log('Converted Traccar Client payload:', payload);
+      } else if (rawPayload.source === 'gt06-bridge-status' && rawPayload.imei) {
+        // Status-only (heartbeat) — atualiza última posição do veículo apenas com ignição
+        const veiculoInfo = await findVeiculoInfo(supabase, String(rawPayload.imei));
+        if (veiculoInfo && typeof rawPayload.ignition === 'boolean') {
+          const { data: ultima } = await supabase
+            .from('veiculo_posicoes')
+            .select('id')
+            .eq('veiculo_id', veiculoInfo.id)
+            .order('data_hora', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (ultima) {
+            await supabase.from('veiculo_posicoes').update({ ignicao: rawPayload.ignition }).eq('id', ultima.id);
+          }
+        }
+        return new Response(
+          JSON.stringify({ status: 'ok', kind: 'status' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       } else if (rawPayload.source === 'gt06-bridge' && rawPayload.imei) {
-        // GT06 Bridge format (J6/JM01/JM-VL03/GT06N via TCP bridge no Railway)
+        // GT06 Bridge format (J6/JM01/JM-VL03/GT06N/J16 via TCP bridge no Railway)
         if (typeof rawPayload.latitude !== 'number' || typeof rawPayload.longitude !== 'number') {
           return new Response(
             JSON.stringify({ status: 'error', message: 'Invalid GT06 bridge format: missing latitude/longitude' }),
@@ -600,6 +653,7 @@ Deno.serve(async (req) => {
           velocidade: typeof rawPayload.speed_kmh === 'number' ? rawPayload.speed_kmh : 0,
           direcao: typeof rawPayload.heading === 'number' ? rawPayload.heading : undefined,
           dataHora: rawPayload.timestamp || new Date().toISOString(),
+          ignicao: typeof rawPayload.ignition === 'boolean' ? rawPayload.ignition : undefined,
           token: rawPayload.token,
         };
         console.log('Converted GT06 bridge payload:', payload);

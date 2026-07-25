@@ -20,6 +20,7 @@ export interface VeiculoPosicao {
   lng: number;
   velocidade: number;
   direcao?: number;
+  ignicao?: boolean | null;
   data_hora: string;
   created_at: string;
 }

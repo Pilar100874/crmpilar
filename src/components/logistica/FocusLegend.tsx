@@ -14,6 +14,7 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
   const telefone = veiculo.motorista_atual?.telefone;
   const wa = telefone ? formatWhatsappNumber(telefone) : null;
   const vel = veiculo.ultima_posicao ? Math.round(veiculo.ultima_posicao.velocidade) : null;
+  const ign = veiculo.ultima_posicao?.ignicao;
 
   return (
     <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto">
@@ -43,6 +44,14 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
           <div className="flex items-center gap-1 text-muted-foreground border-l pl-3">
             <Gauge className="h-3.5 w-3.5" />
             {vel} km/h
+          </div>
+        )}
+        {typeof ign === 'boolean' && (
+          <div
+            className={`flex items-center gap-1 border-l pl-3 font-medium ${ign ? 'text-emerald-600' : 'text-muted-foreground'}`}
+            title="Sensor de ignição"
+          >
+            {ign ? '🔑 Ligado' : '⏻ Desligado'}
           </div>
         )}
         <button

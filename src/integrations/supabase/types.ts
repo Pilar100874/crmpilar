@@ -22305,6 +22305,7 @@ export type Database = {
           data_hora: string
           direcao: number | null
           id: string
+          ignicao: boolean | null
           lat: number
           lng: number
           veiculo_id: string
@@ -22315,6 +22316,7 @@ export type Database = {
           data_hora?: string
           direcao?: number | null
           id?: string
+          ignicao?: boolean | null
           lat: number
           lng: number
           veiculo_id: string
@@ -22325,6 +22327,7 @@ export type Database = {
           data_hora?: string
           direcao?: number | null
           id?: string
+          ignicao?: boolean | null
           lat?: number
           lng?: number
           veiculo_id?: string
