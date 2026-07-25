@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save } from "lucide-react";
+import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw } from "lucide-react";
 import { ROTAS_SISTEMA } from "@/lib/voz/rotasSistema";
+import { GRUPOS_FRASES, FRASES_PADRAO, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
 import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 
@@ -22,8 +23,11 @@ export default function AssistenteVozConfig() {
     responder_por_voz: true,
     voz: "alloy",
     wake_word: "ei pilar",
+    frases_customizadas: {} as Record<string, string[]>,
   });
   const [busca, setBusca] = useState("");
+  const [buscaFrase, setBuscaFrase] = useState("");
+  const [novaFrase, setNovaFrase] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -90,6 +94,9 @@ export default function AssistenteVozConfig() {
           <TabsTrigger value="telas">
             <ExternalLink className="w-4 h-4 mr-2" /> Telas por voz
           </TabsTrigger>
+          <TabsTrigger value="frases">
+            <MessageCircle className="w-4 h-4 mr-2" /> Frases por voz
+          </TabsTrigger>
           <TabsTrigger value="relatorios">
             <FileBarChart className="w-4 h-4 mr-2" /> Relatórios por voz
           </TabsTrigger>
@@ -152,6 +159,126 @@ export default function AssistenteVozConfig() {
             )}
           </div>
         </TabsContent>
+
+        {/* ======================= FRASES ======================= */}
+        <TabsContent value="frases" className="space-y-3">
+          <Card className="p-3">
+            <p className="text-sm text-muted-foreground mb-2">
+              Estas são as <b>frases (apelidos)</b> que o Pilar reconhece para ações rápidas: voltar, avançar,
+              gerar PDF e abrir a lista de relatórios. Você pode adicionar novos apelidos ou remover extras.
+              Os apelidos padrão vêm marcados como <Badge variant="secondary" className="text-[10px] mx-1">padrão</Badge>
+              e não podem ser removidos — se quiser desabilitar um padrão, cadastre um sinônimo específico e nos avise.
+            </p>
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-2 top-2.5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar frase…"
+                value={buscaFrase}
+                onChange={(e) => setBuscaFrase(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </Card>
+
+          <div className="grid gap-3">
+            {GRUPOS_FRASES.map((grupo) => {
+              const custom: string[] = (config?.frases_customizadas?.[grupo.id] as string[]) || [];
+              const padrao = FRASES_PADRAO[grupo.id];
+              const q = buscaFrase.trim().toLowerCase();
+              const filtro = (s: string) => !q || s.toLowerCase().includes(q);
+              const padraoFiltrado = padrao.filter(filtro);
+              const customFiltrado = custom.filter(filtro);
+
+              const salvarFrases = async (novoArr: string[]) => {
+                const dedup = Array.from(new Set(novoArr.map((s) => s.trim()).filter(Boolean)));
+                const frases_customizadas = { ...(config.frases_customizadas || {}), [grupo.id]: dedup };
+                await salvarConfig({ frases_customizadas });
+              };
+
+              const adicionar = async () => {
+                const v = (novaFrase[grupo.id] || "").trim();
+                if (!v) return;
+                // não duplica um padrão
+                if (padrao.some((p) => p.toLowerCase() === v.toLowerCase())) {
+                  toast.info("Esse apelido já existe como padrão.");
+                  setNovaFrase({ ...novaFrase, [grupo.id]: "" });
+                  return;
+                }
+                await salvarFrases([...custom, v]);
+                setNovaFrase({ ...novaFrase, [grupo.id]: "" });
+              };
+
+              return (
+                <Card key={grupo.id} className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div>
+                      <div className="font-medium">{grupo.titulo}</div>
+                      <div className="text-xs text-muted-foreground">{grupo.descricao}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        Ex.: diga <b>"{grupo.exemplo}"</b>
+                      </div>
+                    </div>
+                    {custom.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => salvarFrases([])}
+                        title="Remover todos os apelidos personalizados"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> Limpar
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 mb-3">
+                    <Input
+                      placeholder={`Adicionar novo apelido para "${grupo.titulo}"…`}
+                      value={novaFrase[grupo.id] || ""}
+                      onChange={(e) => setNovaFrase({ ...novaFrase, [grupo.id]: e.target.value })}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); adicionar(); } }}
+                    />
+                    <Button onClick={adicionar} disabled={!(novaFrase[grupo.id] || "").trim()}>
+                      <Plus className="w-4 h-4 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {padraoFiltrado.map((f) => (
+                      <span
+                        key={`p-${f}`}
+                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-muted text-foreground"
+                        title="Apelido padrão do sistema"
+                      >
+                        "{f}"
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0">padrão</Badge>
+                      </span>
+                    ))}
+                    {customFiltrado.map((f) => (
+                      <span
+                        key={`c-${f}`}
+                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-primary/10 text-primary"
+                      >
+                        "{f}"
+                        <button
+                          onClick={() => salvarFrases(custom.filter((x) => x !== f))}
+                          className="hover:bg-primary/20 rounded p-0.5"
+                          title="Remover apelido"
+                        >
+                          <XIcon className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                    {padraoFiltrado.length === 0 && customFiltrado.length === 0 && (
+                      <span className="text-xs text-muted-foreground">Nenhuma frase para "{buscaFrase}".</span>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+
 
         {/* ======================= RELATÓRIOS ======================= */}
         <TabsContent value="relatorios" className="pt-2">

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { matchRotaPorFala, matchRotaComCandidatos, type RotaSistema } from "@/lib/voz/rotasSistema";
+import { frasesEfetivas } from "@/lib/voz/frasesGatilho";
 import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
 
 type Config = {
@@ -170,6 +171,11 @@ export default function VoiceAssistant() {
     voz: "alloy",
     wake_word: WAKE_DEFAULT,
   });
+  const [frasesCustom, setFrasesCustom] = useState<Record<string, string[]>>({});
+  const gVoltar = useMemo(() => frasesEfetivas("voltar", frasesCustom), [frasesCustom]);
+  const gAvancar = useMemo(() => frasesEfetivas("avancar", frasesCustom), [frasesCustom]);
+  const gPdf = useMemo(() => frasesEfetivas("pdf", frasesCustom), [frasesCustom]);
+  const gRelatorios = useMemo(() => frasesEfetivas("relatorios", frasesCustom), [frasesCustom]);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -200,6 +206,9 @@ export default function VoiceAssistant() {
           voz: data.voz || "alloy",
           wake_word: data.wake_word || WAKE_DEFAULT,
         });
+        if (data.frases_customizadas && typeof data.frases_customizadas === "object") {
+          setFrasesCustom(data.frases_customizadas as Record<string, string[]>);
+        }
       }
       const { data: usuario } = await supabase.from("usuarios")
         .select("estabelecimento_id").eq("auth_user_id", u.user.id).maybeSingle();
@@ -506,17 +515,17 @@ export default function VoiceAssistant() {
       const t = norm(texto);
 
       // 0) Navegação de histórico: voltar / avançar
-      if (GATILHOS_VOLTAR.some(g => t.includes(g))) {
+      if (gVoltar.some(g => t.includes(g))) {
         await executarNavegacaoHistorico(-1, texto);
         return;
       }
-      if (GATILHOS_AVANCAR.some(g => t.includes(g))) {
+      if (gAvancar.some(g => t.includes(g))) {
         await executarNavegacaoHistorico(1, texto);
         return;
       }
 
       // 0b) Gerar PDF do relatório aberto (wizard escuta o evento)
-      if (relatorioMode === "resultado" && GATILHOS_PDF.some(g => t === g || t.includes(g))) {
+      if (relatorioMode === "resultado" && gPdf.some(g => t === g || t.includes(g))) {
         const opcoes = extrairOpcoesPdf(texto);
         window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio", { detail: opcoes }));
         const partes: string[] = [];
@@ -534,7 +543,7 @@ export default function VoiceAssistant() {
 
       // 1) Gatilho de "mostrar relatórios" → abre lista de grupos
 
-      if (GATILHOS_RELATORIOS.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
+      if (gRelatorios.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
         setRelatorioMode("grupos");
         setGrupoSelecionado(null);
         const resposta = relatorios.length === 0
