@@ -448,7 +448,50 @@ export default function MarketingAutomacoes() {
                       : `Agendada para ${cfg.horario}`}
                   </p>
                 )}
-                <p className="text-[11px] text-muted-foreground/80 mt-1">
+
+                {(() => {
+                  const s = getLastSendSummary(automacao);
+                  if (!s.when && !s.message && s.totalDestinatarios == null) return null;
+                  return (
+                    <div className="mt-3 rounded-lg border bg-muted/30 p-2.5 space-y-1.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Último envio
+                      </p>
+                      {s.when && (
+                        <p className="text-[11px] sm:text-xs text-foreground flex items-center gap-1.5">
+                          <Clock className="w-3 h-3 shrink-0 text-muted-foreground" />
+                          {s.when.toLocaleDateString("pt-BR")} às {s.when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                      {s.message && (
+                        <p className="text-[11px] sm:text-xs text-foreground flex items-start gap-1.5">
+                          <MessageSquare className="w-3 h-3 shrink-0 text-muted-foreground mt-0.5" />
+                          <span className="line-clamp-2 italic">"{s.message}"</span>
+                        </p>
+                      )}
+                      {(s.totalDestinatarios != null || s.contatos.length > 0) && (
+                        <p className="text-[11px] sm:text-xs text-foreground flex items-start gap-1.5">
+                          <Users className="w-3 h-3 shrink-0 text-muted-foreground mt-0.5" />
+                          <span className="min-w-0">
+                            {s.totalDestinatarios != null && (
+                              <span className="font-medium">
+                                {s.totalEnviados ?? 0}/{s.totalDestinatarios} enviados
+                                {s.totalFalhas ? ` · ${s.totalFalhas} falhas` : ""}
+                              </span>
+                            )}
+                            {s.contatos.length > 0 && (
+                              <span className="block text-muted-foreground truncate">
+                                {s.contatos.join(", ")}{s.totalDestinatarios && s.totalDestinatarios > s.contatos.length ? "…" : ""}
+                              </span>
+                            )}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                <p className="text-[11px] text-muted-foreground/80 mt-2">
                   Criada {formatDistanceToNow(new Date(automacao.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
               </CardHeader>
