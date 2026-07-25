@@ -418,6 +418,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             tipo_chip: formData.tipo_chip || 'm2m',
             tracker_model_id: formData.tracker_model_id || null,
             apn_operadora: opSel?.apn || null,
+            celular: formData.celular || null,
           } as any)
           .eq('id', veiculoId);
       }
