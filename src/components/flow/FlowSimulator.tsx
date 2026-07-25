@@ -3133,11 +3133,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 addBotMessage(`📇 Cartão de contato: *${cNome || cPhone}* (wa.me/${cPhone})`, node.id);
                 if (useReal) {
                   try {
-                    await executarBlocoWhatsapp(
-                      { telefone: phone, mensagem: "", contact: { nome: cNome, whatsapp: cPhone } },
+                    const rc: any = await executarBlocoWhatsapp(
+                      { telefone: phone, contact: { nome: cNome, whatsapp: cPhone } },
                       { variaveis: perCtx, workflow_tipo: "bot", origem: "broadcast_vendedores_contato" },
                     );
-                  } catch {}
+                    if (!rc?.ok) addSystemMessage(`⚠️ Falha ao enviar contato para ${phone}: ${rc?.erro || rc?.response?.[0]?.erro || "erro desconhecido"}`);
+                  } catch (e: any) {
+                    addSystemMessage(`⚠️ Erro no envio de contato para ${phone}: ${e?.message || e}`);
+                  }
                 }
               }
             }
@@ -3227,22 +3230,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               addBotMessage(`[${rotulo}]\n${parte1}`, node.id);
               if (useReal && telefoneReal) {
                 try {
-                  await executarBlocoWhatsapp(
+                  const r: any = await executarBlocoWhatsapp(
                     { telefone: telefoneReal, mensagem: parte1 },
                     { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
                   );
-                } catch {}
+                  if (!r?.ok) addSystemMessage(`⚠️ Falha resumo p/ ${telefoneReal}: ${r?.erro || r?.response?.[0]?.erro || "erro"}`);
+                } catch (e: any) { addSystemMessage(`⚠️ Erro resumo p/ ${telefoneReal}: ${e?.message || e}`); }
               }
 
               if (mediaUrlPre) {
                 addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
                 if (useReal && telefoneReal) {
                   try {
-                    await executarBlocoWhatsapp(
-                      { telefone: telefoneReal, mensagem: "", mediaUrl: mediaUrlPre },
+                    const r: any = await executarBlocoWhatsapp(
+                      { telefone: telefoneReal, mediaUrl: mediaUrlPre },
                       { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
                     );
-                  } catch {}
+                    if (!r?.ok) addSystemMessage(`⚠️ Falha mídia p/ ${telefoneReal}: ${r?.erro || "erro"}`);
+                  } catch (e: any) { addSystemMessage(`⚠️ Erro mídia p/ ${telefoneReal}: ${e?.message || e}`); }
                 }
               }
 
@@ -3250,11 +3255,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 addBotMessage(depoisMask, node.id);
                 if (useReal && telefoneReal) {
                   try {
-                    await executarBlocoWhatsapp(
+                    const r: any = await executarBlocoWhatsapp(
                       { telefone: telefoneReal, mensagem: depoisMask },
                       { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
                     );
-                  } catch {}
+                    if (!r?.ok) addSystemMessage(`⚠️ Falha depois p/ ${telefoneReal}: ${r?.erro || "erro"}`);
+                  } catch (e: any) { addSystemMessage(`⚠️ Erro depois p/ ${telefoneReal}: ${e?.message || e}`); }
                 }
               }
 
@@ -3262,11 +3268,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               addBotMessage(stats, node.id);
               if (useReal && telefoneReal) {
                 try {
-                  await executarBlocoWhatsapp(
+                  const r: any = await executarBlocoWhatsapp(
                     { telefone: telefoneReal, mensagem: stats },
                     { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
                   );
-                } catch {}
+                  if (!r?.ok) addSystemMessage(`⚠️ Falha stats p/ ${telefoneReal}: ${r?.erro || "erro"}`);
+                } catch (e: any) { addSystemMessage(`⚠️ Erro stats p/ ${telefoneReal}: ${e?.message || e}`); }
               }
             };
 

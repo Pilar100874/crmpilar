@@ -98,7 +98,10 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
     .map((t) => interpolar(t, ctx.variaveis).replace(/\D/g, ""))
     .filter(Boolean);
   const mensagem = interpolar(cfg?.message ?? cfg?.mensagem ?? cfg?.texto, ctx.variaveis);
-  if (!telefones.length || !mensagem) return { ok: false, erro: "Telefone/mensagem vazio" };
+  const _mediaUrlCheck = interpolar(cfg?.mediaUrl ?? cfg?.imagem ?? cfg?.arquivo_url ?? "", ctx.variaveis);
+  const _hasContact = !!(cfg?.contact && cfg.contact.whatsapp);
+  if (!telefones.length) return { ok: false, erro: "Telefone vazio" };
+  if (!mensagem && !_mediaUrlCheck && !_hasContact) return { ok: false, erro: "Mensagem/mídia/contato vazio" };
   const estabelecimento_id = await resolveEstab(ctx);
   const whatsappSessionId = cfg?.whatsappSessionId || null;
   const whatsappSessionName = cfg?.whatsappSessionName || null;
