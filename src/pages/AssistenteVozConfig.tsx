@@ -9,11 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw, Pencil } from "lucide-react";
+import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw, Pencil, FlaskConical } from "lucide-react";
 import { ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
 import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
 import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
+import VozTesterPanel from "@/components/voz/VozTesterPanel";
 
 const VOZES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "coral", "sage"];
 
@@ -105,6 +106,9 @@ export default function AssistenteVozConfig() {
           <TabsTrigger value="frases">
             <MessageCircle className="w-4 h-4 mr-2" /> Frases por voz
           </TabsTrigger>
+          <TabsTrigger value="testar">
+            <FlaskConical className="w-4 h-4 mr-2" /> Testar
+          </TabsTrigger>
           <TabsTrigger value="relatorios">
             <FileBarChart className="w-4 h-4 mr-2" /> Relatórios por voz
           </TabsTrigger>
@@ -115,6 +119,12 @@ export default function AssistenteVozConfig() {
             <Settings2 className="w-4 h-4 mr-2" /> Configurações
           </TabsTrigger>
         </TabsList>
+
+        {/* ======================= TESTAR ======================= */}
+        <TabsContent value="testar" className="space-y-3">
+          <VozTesterPanel />
+        </TabsContent>
+
 
         {/* ======================= TELAS ======================= */}
         <TabsContent value="telas" className="space-y-3">
