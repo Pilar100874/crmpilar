@@ -71,7 +71,7 @@ export default function AssistenteVozConfig() {
       return (
         r.titulo.toLowerCase().includes(q) ||
         tCustom.toLowerCase().includes(q) ||
-        r.path.toLowerCase().includes(q) ||
+        
         (r.aliases || []).some((a) => a.toLowerCase().includes(q)) ||
         (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q))
       );
