@@ -839,7 +839,7 @@ export default function MenuCustomizacao() {
               <Folder className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Personalizar Menus
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl">
-              Arraste itens entre <strong>Menu principal</strong> e <strong>Admin (rodapé)</strong>.
+              Arraste programas livremente entre <strong>Menu principal</strong>, <strong>Admin (rodapé)</strong>, <strong>Menu do usuário</strong> e <strong>Sistema (rodapé)</strong>. Nenhum item aparece em dois menus ao mesmo tempo — ao arrastar para outro menu, ele é removido do anterior.
               Uma linha azul indica onde o item será solto; solte sobre uma pasta para colocar dentro dela.
             </p>
           </div>
