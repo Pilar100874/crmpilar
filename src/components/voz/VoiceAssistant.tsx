@@ -209,14 +209,14 @@ export default function VoiceAssistant() {
       <button
         onClick={() => setOpen(true)}
         className={cn(
-          "fixed bottom-24 right-6 z-[650] h-14 w-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105",
+          "fixed bottom-16 right-4 z-[1000] h-10 w-10 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105",
           wakeListening
             ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground ring-4 ring-primary/30 animate-pulse"
             : "bg-primary text-primary-foreground"
         )}
         title={wakeListening ? `Escutando "${cfg.wake_word}"...` : "Assistente por voz"}
       >
-        <Mic className="h-6 w-6" />
+        <Mic className="h-5 w-5" />
       </button>
 
       {/* Painel */}
