@@ -309,15 +309,13 @@ export default function VoiceAssistant() {
           toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
         }
         if (network) {
-          shouldWakeRef.current = false;
-          wakeRecogRef.current = null;
-          setWakeListening(false);
-          setWakeUnavailable(true);
-          if (wakeHeartbeatRef.current) { clearInterval(wakeHeartbeatRef.current); wakeHeartbeatRef.current = null; }
+          // network é transitório no Chrome — não desabilita permanentemente.
+          // Deixa o onend reiniciar com backoff; agenda também uma tentativa em 15s.
           try { rec.abort?.(); } catch {}
+          setTimeout(() => { if (shouldWakeRef.current && !wakeRecogRef.current) startWake(); }, 15000);
           if (!wakeNetworkWarnedRef.current) {
             wakeNetworkWarnedRef.current = true;
-            toast.warning('A escuta "ei Pilar" está indisponível neste navegador. Use o microfone ou segure Espaço.');
+            console.warn('[Pilar] wake word network error — retentando em background');
           }
         }
       };
@@ -791,7 +789,7 @@ export default function VoiceAssistant() {
                   </div>
                   <Switch checked={cfg.responder_por_voz} onCheckedChange={(v) => salvarConfig({ responder_por_voz: v })} />
                 </div>
-                <Button variant="outline" className="w-full" onClick={() => { stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
+                <Button variant="outline" className="w-full" onClick={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
                   <Radio className="h-4 w-4 mr-2" /> Reiniciar escuta
                 </Button>
               </div>
