@@ -653,7 +653,15 @@ export default function Layout({ children }: LayoutProps) {
 
   // Filtra os menus baseado nas permissões
   const visibleMenus = customizedItems
+  // Filtra os menus baseado nas permissões
+  const visibleMenus = customizedItems
     .filter((item) => {
+      // Itens do sistema (trava, admin, tema, sair) — o admin decide se aparecem no menu principal
+      if (item.system) {
+        if (item.system === "admin") return isAdmin;
+        return true;
+      }
+
       if (item.id === "Admin") {
         return isAdmin;
       }
@@ -677,13 +685,13 @@ export default function Layout({ children }: LayoutProps) {
 
       return permission?.view === true;
     })
-    .map((item) => {
-      // Não filtra subitens por permissão para garantir visibilidade do submenu
-      if (item.subItems) {
-        return item;
-      }
-      return item;
-    });
+    .map((item) => item);
+
+  // Ids de itens de sistema já posicionados no menu principal (para esconder no rodapé)
+  const systemInMain = new Set<string>(
+    visibleMenus.map((i) => i.system).filter(Boolean) as string[]
+  );
+
 
   if (soloMode) {
     return (
