@@ -102,10 +102,33 @@ export default function RelatoriosVozConfig() {
       prompt_geracao: r.prompt_geracao, tipo_saida: r.tipo_saida,
       aliases: r.aliases || [], parametros: r.parametros || [],
       ativo: r.ativo,
+      tipo_fonte: r.tipo_fonte ?? "tabela",
+      tabela_base: r.tabela_base ?? "",
+      api_endpoint_id: r.api_endpoint_id ?? null,
+      campos_exibicao: Array.isArray(r.campos_exibicao) ? r.campos_exibicao : [],
+      filtros_disponiveis: Array.isArray(r.filtros_disponiveis) ? r.filtros_disponiveis : [],
+      ordenacao: r.ordenacao ?? { coluna: "", direcao: "desc" },
+      limite_padrao: r.limite_padrao ?? 100,
     });
     setAliasInput("");
     setDialogOpen(true);
   };
+
+  const addFiltro = () => setForm(f => ({
+    ...f,
+    filtros_disponiveis: [...(f.filtros_disponiveis || []), {
+      chave: `filtro_${(f.filtros_disponiveis?.length || 0) + 1}`,
+      rotulo: "", coluna: "", tipo: "text", operador: "ilike", obrigatorio: false, opcoes: [],
+    }],
+  }));
+  const updFiltro = (i: number, patch: Partial<FiltroSchema>) => setForm(f => ({
+    ...f,
+    filtros_disponiveis: (f.filtros_disponiveis || []).map((x, idx) => idx === i ? { ...x, ...patch } : x),
+  }));
+  const rmFiltro = (i: number) => setForm(f => ({
+    ...f,
+    filtros_disponiveis: (f.filtros_disponiveis || []).filter((_, idx) => idx !== i),
+  }));
 
   const addAlias = () => {
     const v = aliasInput.trim().toLowerCase();
