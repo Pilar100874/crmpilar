@@ -269,6 +269,10 @@ export default function VoiceAssistant() {
             txt.includes("oi pilar") ||
             /\bpilar\b/.test(txt);
           if (matched) {
+            // Impede que o onend do wake reagende um novo start enquanto
+            // o ditado está tomando controle do microfone.
+            shouldWakeRef.current = false;
+            try { rec.abort?.(); } catch {}
             try { rec.stop(); } catch {}
             wakeRecogRef.current = null;
             setWakeListening(false);
@@ -286,7 +290,7 @@ export default function VoiceAssistant() {
               setResultadoRelatorio("");
               setOpen(true);
               startDictation();
-            }, 150);
+            }, 250);
             return;
           }
         }
