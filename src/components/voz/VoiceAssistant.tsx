@@ -654,10 +654,18 @@ export default function VoiceAssistant() {
                         </div>
                       )}
 
-                      {relatorioMode === "resultado" && (
-                        <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
-                          {resultadoRelatorio}
-                        </div>
+                      {relatorioMode === "resultado" && relatorioAtual && (
+                        (relatorioAtual.tipo_fonte === "tabela" && relatorioAtual.tabela_base) || relatorioAtual.tipo_fonte === "api" ? (
+                          <RelatorioVozWizard
+                            relatorio={relatorioAtual as any}
+                            onFechar={() => { setRelatorioMode(null); setRelatorioAtual(null); }}
+                            onFalar={(t) => cfg.responder_por_voz && falar(t)}
+                          />
+                        ) : (
+                          <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+                            {resultadoRelatorio}
+                          </div>
+                        )
                       )}
                     </div>
                   )}
