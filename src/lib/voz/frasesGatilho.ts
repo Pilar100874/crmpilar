@@ -1,7 +1,11 @@
 // Frases (aliases) que disparam ações do Assistente de Voz "Pilar".
 // Cada grupo tem um conjunto padrão (embutido no sistema) e pode ser
-// estendido pelo usuário via tela de configuração — os extras ficam
-// armazenados em assistente_voz_config.frases_customizadas (JSONB).
+// estendido/editado/reduzido pelo usuário via tela de configuração.
+// Os overrides ficam em assistente_voz_config.frases_customizadas (JSONB):
+//   { voltar: string[], "voltar:removidos": string[], ... }
+//   Para rotas: { "rota:/x": string[], "rota:/x:removidos": string[] }
+
+import type { RotaSistema } from "@/lib/voz/rotasSistema";
 
 export type FraseGrupoId = "voltar" | "avancar" | "pdf" | "relatorios";
 
@@ -71,19 +75,50 @@ export const FRASES_PADRAO: Record<FraseGrupoId, string[]> = {
   ],
 };
 
-const norm = (s: string) =>
+export const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-/** Retorna a lista final (padrão + customizadas do usuário) sem duplicatas. */
+function mergeAliases(padrao: string[], extras: string[], removidos: string[]): string[] {
+  const rm = new Set(removidos.map(norm));
+  const out = new Map<string, string>();
+  for (const f of [...padrao, ...extras]) {
+    const k = norm(f);
+    if (!k || rm.has(k)) continue;
+    if (!out.has(k)) out.set(k, f);
+  }
+  return Array.from(out.values());
+}
+
+/** Retorna a lista final (padrão + customizadas – removidas) sem duplicatas. */
 export function frasesEfetivas(
   grupo: FraseGrupoId,
   customizadas?: Record<string, string[]> | null,
 ): string[] {
   const extras = Array.isArray(customizadas?.[grupo]) ? customizadas![grupo] : [];
-  const set = new Map<string, string>();
-  for (const f of [...FRASES_PADRAO[grupo], ...extras]) {
-    const k = norm(f);
-    if (k && !set.has(k)) set.set(k, f);
-  }
-  return Array.from(set.values());
+  const removidos = Array.isArray(customizadas?.[`${grupo}:removidos`])
+    ? customizadas![`${grupo}:removidos`]
+    : [];
+  return mergeAliases(FRASES_PADRAO[grupo], extras, removidos);
+}
+
+export function aliasesEfetivosRota(
+  rota: RotaSistema,
+  customizadas?: Record<string, string[]> | null,
+): string[] {
+  const extras = Array.isArray(customizadas?.[`rota:${rota.path}`])
+    ? customizadas![`rota:${rota.path}`]
+    : [];
+  const removidos = Array.isArray(customizadas?.[`rota:${rota.path}:removidos`])
+    ? customizadas![`rota:${rota.path}:removidos`]
+    : [];
+  return mergeAliases(rota.aliases || [], extras, removidos);
+}
+
+/** Clona a lista de rotas aplicando aliases customizados por rota. */
+export function rotasEfetivas(
+  rotas: RotaSistema[],
+  customizadas?: Record<string, string[]> | null,
+): RotaSistema[] {
+  if (!customizadas) return rotas;
+  return rotas.map((r) => ({ ...r, aliases: aliasesEfetivosRota(r, customizadas) }));
 }
