@@ -22347,7 +22347,6 @@ export type Database = {
         Row: {
           apn_operadora: string | null
           ativo: boolean | null
-          celular: string | null
           created_at: string
           descricao: string | null
           estabelecimento_id: string | null
@@ -22370,7 +22369,6 @@ export type Database = {
         Insert: {
           apn_operadora?: string | null
           ativo?: boolean | null
-          celular?: string | null
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string | null
@@ -22393,7 +22391,6 @@ export type Database = {
         Update: {
           apn_operadora?: string | null
           ativo?: boolean | null
-          celular?: string | null
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string | null

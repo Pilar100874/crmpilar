@@ -1,1 +1,0 @@
-ALTER TABLE public.veiculos ADD COLUMN IF NOT EXISTS celular text;
