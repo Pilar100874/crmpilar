@@ -218,7 +218,7 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
     status: 200,
     veiculoId: veiculoInfo.id,
     estabelecimentoId: veiculoInfo.estabelecimento_id, // Return estabelecimento_id from vehicle
-    velocidade: payload.velocidade || 0
+    velocidade: velocidadeFinal
   };
 }
 
