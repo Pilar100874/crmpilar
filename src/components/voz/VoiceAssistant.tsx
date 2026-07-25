@@ -188,6 +188,10 @@ export default function VoiceAssistant() {
   const wakeHeartbeatRef = useRef<any>(null);
   const shouldWakeRef = useRef(false);
   const wakeNetworkWarnedRef = useRef(false);
+  const wakeFallbackStreamRef = useRef<MediaStream | null>(null);
+  const wakeFallbackRecRef = useRef<MediaRecorder | null>(null);
+  const wakeFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wakeFallbackBusyRef = useRef(false);
   const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingStopRef = useRef(false);
 
@@ -239,18 +243,161 @@ export default function VoiceAssistant() {
   };
 
   // ---------- Wake word robusto ----------
+  const textoTemWake = useCallback((texto: string) => {
+    const txt = norm(texto);
+    const target = norm(cfg.wake_word || WAKE_DEFAULT);
+    return (
+      txt.includes(target) ||
+      txt.includes("ei pilar") ||
+      txt.includes("e pilar") ||
+      txt.includes("aí pilar") ||
+      txt.includes("ai pilar") ||
+      txt.includes("hey pilar") ||
+      txt.includes("oi pilar") ||
+      /\bpilar\b/.test(txt)
+    );
+  }, [cfg.wake_word]);
+
+  const stopWakeFallback = useCallback(() => {
+    if (wakeFallbackTimerRef.current) {
+      clearTimeout(wakeFallbackTimerRef.current);
+      wakeFallbackTimerRef.current = null;
+    }
+    try {
+      if (wakeFallbackRecRef.current && wakeFallbackRecRef.current.state !== "inactive") {
+        wakeFallbackRecRef.current.stop();
+      }
+    } catch {}
+    wakeFallbackRecRef.current = null;
+    wakeFallbackBusyRef.current = false;
+    if (wakeFallbackStreamRef.current) {
+      wakeFallbackStreamRef.current.getTracks().forEach((track) => track.stop());
+      wakeFallbackStreamRef.current = null;
+    }
+  }, []);
+
+  function abrirPainelPorWake() {
+    playChime();
+    setTimeout(() => {
+      setShowConfig(false);
+      setHistory([]);
+      setAmbiguas(null);
+      setInterimText("");
+      setManualText("");
+      setRelatorioMode(null);
+      setGrupoSelecionado(null);
+      setRelatorioAtual(null);
+      setResultadoRelatorio("");
+      setOpen(true);
+      startDictation(6500);
+    }, 250);
+  }
+
+  const transcreverWakeFallback = useCallback(async (blob: Blob) => {
+    if (!shouldWakeRef.current || blob.size < 1200) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const fd = new FormData();
+      fd.append("file", blob, "wake.webm");
+      const headers: Record<string, string> = {};
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+      const trResp = await fetch(
+        `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/assistente-voz-transcribe`,
+        { method: "POST", headers, body: fd }
+      );
+      if (!trResp.ok) return;
+      const trJson = await trResp.json();
+      const texto = String(trJson.text || "");
+      if (!textoTemWake(texto)) return;
+      shouldWakeRef.current = false;
+      stopWakeFallback();
+      setWakeListening(false);
+      abrirPainelPorWake();
+    } catch {
+      // Mantém a escuta ativa; falhas pontuais de transcrição não devem travar o wake word.
+    }
+  }, [stopWakeFallback, textoTemWake]);
+
+  const startWakeFallback = useCallback(async () => {
+    if (wakeFallbackStreamRef.current || isRecording || processing) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      wakeFallbackStreamRef.current = stream;
+      setWakeListening(true);
+      setWakeUnavailable(false);
+
+      const scheduleNextChunk = (delay = 300) => {
+        if (wakeFallbackTimerRef.current) clearTimeout(wakeFallbackTimerRef.current);
+        wakeFallbackTimerRef.current = setTimeout(captureChunk, delay);
+      };
+
+      const captureChunk = () => {
+        const currentStream = wakeFallbackStreamRef.current;
+        if (!shouldWakeRef.current || !currentStream || isRecording || processing) return;
+        if (wakeFallbackBusyRef.current) {
+          scheduleNextChunk(600);
+          return;
+        }
+
+        try {
+          const chunks: Blob[] = [];
+          const rec = new MediaRecorder(currentStream);
+          wakeFallbackBusyRef.current = true;
+          wakeFallbackRecRef.current = rec;
+          rec.ondataavailable = (event) => {
+            if (event.data.size > 0) chunks.push(event.data);
+          };
+          rec.onstop = async () => {
+            wakeFallbackRecRef.current = null;
+            const blob = new Blob(chunks, { type: "audio/webm" });
+            await transcreverWakeFallback(blob);
+            wakeFallbackBusyRef.current = false;
+            if (shouldWakeRef.current && wakeFallbackStreamRef.current) scheduleNextChunk(450);
+          };
+          rec.onerror = () => {
+            wakeFallbackRecRef.current = null;
+            wakeFallbackBusyRef.current = false;
+            if (shouldWakeRef.current && wakeFallbackStreamRef.current) scheduleNextChunk(900);
+          };
+          rec.start(250);
+          setTimeout(() => {
+            if (wakeFallbackRecRef.current && wakeFallbackRecRef.current.state !== "inactive") {
+              try { wakeFallbackRecRef.current.stop(); } catch {}
+            }
+          }, 2600);
+        } catch {
+          wakeFallbackBusyRef.current = false;
+          scheduleNextChunk(1200);
+        }
+      };
+
+      scheduleNextChunk(250);
+    } catch (error: any) {
+      setWakeListening(false);
+      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+        setWakeUnavailable(true);
+        toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
+      }
+    }
+  }, [isRecording, processing, transcreverWakeFallback]);
+
   const stopWake = useCallback(() => {
     shouldWakeRef.current = false;
+    stopWakeFallback();
     try { wakeRecogRef.current?.abort?.(); } catch {}
     try { wakeRecogRef.current?.stop?.(); } catch {}
     wakeRecogRef.current = null;
     if (wakeHeartbeatRef.current) { clearInterval(wakeHeartbeatRef.current); wakeHeartbeatRef.current = null; }
     setWakeListening(false);
-  }, []);
+  }, [stopWakeFallback]);
 
   const startWake = useCallback(() => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
+    if (!SR) {
+      shouldWakeRef.current = true;
+      startWakeFallback();
+      return;
+    }
     if (wakeRecogRef.current) return; // já rodando
     shouldWakeRef.current = true;
     try {
@@ -266,13 +413,7 @@ export default function VoiceAssistant() {
           const txt = norm(e.results[i][0]?.transcript || "");
           if (!txt) continue;
           // aceita "ei pilar", "hey pilar", "oi pilar", "pilar" isolado
-          const matched =
-            txt.includes(target) ||
-            txt.includes("ei pilar") ||
-            txt.includes("hey pilar") ||
-            txt.includes("oi pilar") ||
-            /\bpilar\b/.test(txt);
-          if (matched) {
+          if (textoTemWake(txt)) {
             // Impede que o onend do wake reagende um novo start enquanto
             // o ditado está tomando controle do microfone.
             shouldWakeRef.current = false;
@@ -280,21 +421,7 @@ export default function VoiceAssistant() {
             try { rec.stop(); } catch {}
             wakeRecogRef.current = null;
             setWakeListening(false);
-            // beep + abre e grava
-            playChime();
-            setTimeout(() => {
-              setShowConfig(false);
-              setHistory([]);
-              setAmbiguas(null);
-              setInterimText("");
-              setManualText("");
-              setRelatorioMode(null);
-              setGrupoSelecionado(null);
-              setRelatorioAtual(null);
-              setResultadoRelatorio("");
-              setOpen(true);
-              startDictation(6500);
-            }, 250);
+            abrirPainelPorWake();
             return;
           }
         }
@@ -310,8 +437,9 @@ export default function VoiceAssistant() {
         }
         if (network) {
           // network é transitório no Chrome — não desabilita permanentemente.
-          // Deixa o onend reiniciar com backoff; agenda também uma tentativa em 15s.
+          // Deixa o onend reiniciar com backoff e ativa fallback por gravação/transcrição.
           try { rec.abort?.(); } catch {}
+          startWakeFallback();
           setTimeout(() => { if (shouldWakeRef.current && !wakeRecogRef.current) startWake(); }, 15000);
           if (!wakeNetworkWarnedRef.current) {
             wakeNetworkWarnedRef.current = true;
@@ -331,10 +459,11 @@ export default function VoiceAssistant() {
       rec.start();
       wakeRecogRef.current = rec;
     } catch (e) {
-      // se falhar, tenta de novo mais tarde
+      // se falhar, tenta fallback e depois tenta de novo mais tarde
+      startWakeFallback();
       setTimeout(() => { if (shouldWakeRef.current) startWake(); }, 1500);
     }
-  }, [cfg.wake_word]);
+  }, [cfg.wake_word, startWakeFallback, textoTemWake]);
 
   // Efeito: liga/desliga wake conforme config e estado do painel
   useEffect(() => {
