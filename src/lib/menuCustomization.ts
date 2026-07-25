@@ -92,9 +92,18 @@ export interface ProgramLeaf {
   title: string;
   url: string;
   icon: any;
+  system?: "lock" | "admin" | "theme" | "logout";
   originContainerId?: string;
   originContainerTitle?: string;
 }
+
+// Itens do rodapé do menu que também podem ser posicionados no menu principal
+export const SYSTEM_PROGRAMS: ProgramLeaf[] = [
+  { id: "system-lock", title: "Travar menu", url: "#system-lock", icon: LucideIcons.Lock, system: "lock" },
+  { id: "system-admin", title: "Admin", url: "/admin", icon: LucideIcons.Shield, system: "admin" },
+  { id: "system-theme", title: "Modo escuro / claro", url: "#system-theme", icon: LucideIcons.Moon, system: "theme" },
+  { id: "system-logout", title: "Sair", url: "#system-logout", icon: LucideIcons.LogOut, system: "logout" },
+];
 
 export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
   const map = new Map<string, ProgramLeaf>();
@@ -117,8 +126,13 @@ export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
       }
     }
   }
+  // Adiciona programas de sistema (rodapé) ao pool
+  for (const sp of SYSTEM_PROGRAMS) {
+    if (!map.has(sp.id)) map.set(sp.id, sp);
+  }
   return map;
 }
+
 
 export function initialFromBase(base: MenuItem[]): MenuCustomization {
   const roots: CustomNode[] = base.map((item) => {
