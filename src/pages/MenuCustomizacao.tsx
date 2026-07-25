@@ -86,6 +86,12 @@ export default function MenuCustomizacao() {
   const [adminRoots, setAdminRoots] = useState<CustomNode[]>(
     () => (loadCustomization()?.adminRoots) || initialAdminFooterTree()
   );
+  const [userRoots, setUserRoots] = useState<CustomNode[]>(
+    () => (loadCustomization()?.userFooterRoots) || initialUserFooterTree()
+  );
+  const [systemRoots, setSystemRoots] = useState<CustomNode[]>(
+    () => (loadCustomization()?.systemFooterRoots) || initialSystemFooterTree()
+  );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -94,7 +100,7 @@ export default function MenuCustomizacao() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [baseline, setBaseline] = useState<{ roots: CustomNode[]; adminRoots: CustomNode[] } | null>(
+  const [baseline, setBaseline] = useState<{ roots: CustomNode[]; adminRoots: CustomNode[]; userFooterRoots?: CustomNode[]; systemFooterRoots?: CustomNode[] } | null>(
     () => loadCustomization()?.baseline ?? null
   );
 
@@ -107,6 +113,8 @@ export default function MenuCustomizacao() {
       if (remote) {
         setMainRoots(remote.roots);
         setAdminRoots(remote.adminRoots ?? initialAdminFooterTree());
+        setUserRoots(remote.userFooterRoots ?? initialUserFooterTree());
+        setSystemRoots(remote.systemFooterRoots ?? initialSystemFooterTree());
         setBaseline(remote.baseline ?? null);
         setDirty(false);
       }
@@ -119,8 +127,11 @@ export default function MenuCustomizacao() {
     const s = new Set<string>();
     collectIds(mainRoots, s);
     collectIds(adminRoots, s);
+    collectIds(userRoots, s);
+    collectIds(systemRoots, s);
     return s;
-  }, [mainRoots, adminRoots]);
+  }, [mainRoots, adminRoots, userRoots, systemRoots]);
+
 
   const [poolSearch, setPoolSearch] = useState("");
 
