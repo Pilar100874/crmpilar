@@ -1541,6 +1541,7 @@ export default function Layout({ children }: LayoutProps) {
 
                     {isAdmin && (
                       <>
+                        {!placedProgramIds.has("Admin Macros") && (
                         <NavLink
                           to="/macros"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1549,6 +1550,8 @@ export default function Layout({ children }: LayoutProps) {
                           <Zap className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Macros</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Tickets") && (
                         <NavLink
                           to="/admin/support-tickets"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1557,6 +1560,8 @@ export default function Layout({ children }: LayoutProps) {
                           <LifeBuoy className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Tickets de Suporte</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Apps") && (
                         <NavLink
                           to="/admin/apps"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1565,6 +1570,8 @@ export default function Layout({ children }: LayoutProps) {
                           <AppWindow className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Apps</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Telas Customizadas") && (
                         <NavLink
                           to="/admin/telas-customizadas"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1573,6 +1580,8 @@ export default function Layout({ children }: LayoutProps) {
                           <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Tela Customizada</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Politicas Internas") && (
                         <NavLink
                           to="/politicas-internas"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1581,8 +1590,10 @@ export default function Layout({ children }: LayoutProps) {
                           <LucideIcons.BookOpen className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Políticas Internas</span>
                         </NavLink>
+                        )}
                       </>
                     )}
+
                     
                   </div>
                 )}
