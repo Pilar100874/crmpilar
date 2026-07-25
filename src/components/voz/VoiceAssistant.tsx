@@ -179,21 +179,11 @@ export default function VoiceAssistant() {
   const gRelatorios = useMemo(() => frasesEfetivas("relatorios", frasesCustom), [frasesCustom]);
   const rotasCustom = useMemo(() => rotasEfetivas(ROTAS_SISTEMA, frasesCustom), [frasesCustom]);
 
-  const mediaRecRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wakeRecogRef = useRef<any>(null);
   const dictationRef = useRef<any>(null);
-  const wakeRetriesRef = useRef(0);
-  const wakeHeartbeatRef = useRef<any>(null);
   const shouldWakeRef = useRef(false);
-  const wakeNetworkWarnedRef = useRef(false);
-  const wakeFallbackStreamRef = useRef<MediaStream | null>(null);
-  const wakeFallbackRecRef = useRef<MediaRecorder | null>(null);
-  const wakeFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wakeFallbackBusyRef = useRef(false);
-  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingStopRef = useRef(false);
+  const finalTranscriptRef = useRef("");
 
   const hasWebSpeech = useMemo(
     () => typeof window !== "undefined" &&
@@ -242,7 +232,7 @@ export default function VoiceAssistant() {
     }, { onConflict: "auth_user_id" });
   };
 
-  // ---------- Wake word robusto ----------
+  // ---------- Wake word (Web Speech nativo, simples) ----------
   const textoTemWake = useCallback((texto: string) => {
     const txt = norm(texto);
     const target = norm(cfg.wake_word || WAKE_DEFAULT);
@@ -250,235 +240,12 @@ export default function VoiceAssistant() {
       txt.includes(target) ||
       txt.includes("ei pilar") ||
       txt.includes("e pilar") ||
-      txt.includes("aí pilar") ||
-      txt.includes("ai pilar") ||
       txt.includes("hey pilar") ||
       txt.includes("oi pilar") ||
       /\bpilar\b/.test(txt)
     );
   }, [cfg.wake_word]);
 
-  const stopWakeFallback = useCallback(() => {
-    if (wakeFallbackTimerRef.current) {
-      clearTimeout(wakeFallbackTimerRef.current);
-      wakeFallbackTimerRef.current = null;
-    }
-    try {
-      if (wakeFallbackRecRef.current && wakeFallbackRecRef.current.state !== "inactive") {
-        wakeFallbackRecRef.current.stop();
-      }
-    } catch {}
-    wakeFallbackRecRef.current = null;
-    wakeFallbackBusyRef.current = false;
-    if (wakeFallbackStreamRef.current) {
-      wakeFallbackStreamRef.current.getTracks().forEach((track) => track.stop());
-      wakeFallbackStreamRef.current = null;
-    }
-  }, []);
-
-  function abrirPainelPorWake() {
-    playChime();
-    setTimeout(() => {
-      setShowConfig(false);
-      setHistory([]);
-      setAmbiguas(null);
-      setInterimText("");
-      setManualText("");
-      setRelatorioMode(null);
-      setGrupoSelecionado(null);
-      setRelatorioAtual(null);
-      setResultadoRelatorio("");
-      setOpen(true);
-      startDictation(6500);
-    }, 250);
-  }
-
-  const transcreverWakeFallback = useCallback(async (blob: Blob) => {
-    if (!shouldWakeRef.current || blob.size < 1200) return;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const fd = new FormData();
-      fd.append("file", blob, "wake.webm");
-      const headers: Record<string, string> = {};
-      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
-      const trResp = await fetch(
-        `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/assistente-voz-transcribe`,
-        { method: "POST", headers, body: fd }
-      );
-      if (!trResp.ok) return;
-      const trJson = await trResp.json();
-      const texto = String(trJson.text || "");
-      if (!textoTemWake(texto)) return;
-      shouldWakeRef.current = false;
-      stopWakeFallback();
-      setWakeListening(false);
-      abrirPainelPorWake();
-    } catch {
-      // Mantém a escuta ativa; falhas pontuais de transcrição não devem travar o wake word.
-    }
-  }, [stopWakeFallback, textoTemWake]);
-
-  const startWakeFallback = useCallback(async () => {
-    if (wakeFallbackStreamRef.current || isRecording || processing) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      wakeFallbackStreamRef.current = stream;
-      setWakeListening(true);
-      setWakeUnavailable(false);
-
-      const scheduleNextChunk = (delay = 300) => {
-        if (wakeFallbackTimerRef.current) clearTimeout(wakeFallbackTimerRef.current);
-        wakeFallbackTimerRef.current = setTimeout(captureChunk, delay);
-      };
-
-      const captureChunk = () => {
-        const currentStream = wakeFallbackStreamRef.current;
-        if (!shouldWakeRef.current || !currentStream || isRecording || processing) return;
-        if (wakeFallbackBusyRef.current) {
-          scheduleNextChunk(600);
-          return;
-        }
-
-        try {
-          const chunks: Blob[] = [];
-          const rec = new MediaRecorder(currentStream);
-          wakeFallbackBusyRef.current = true;
-          wakeFallbackRecRef.current = rec;
-          rec.ondataavailable = (event) => {
-            if (event.data.size > 0) chunks.push(event.data);
-          };
-          rec.onstop = async () => {
-            wakeFallbackRecRef.current = null;
-            const blob = new Blob(chunks, { type: "audio/webm" });
-            await transcreverWakeFallback(blob);
-            wakeFallbackBusyRef.current = false;
-            if (shouldWakeRef.current && wakeFallbackStreamRef.current) scheduleNextChunk(450);
-          };
-          rec.onerror = () => {
-            wakeFallbackRecRef.current = null;
-            wakeFallbackBusyRef.current = false;
-            if (shouldWakeRef.current && wakeFallbackStreamRef.current) scheduleNextChunk(900);
-          };
-          rec.start(250);
-          setTimeout(() => {
-            if (wakeFallbackRecRef.current && wakeFallbackRecRef.current.state !== "inactive") {
-              try { wakeFallbackRecRef.current.stop(); } catch {}
-            }
-          }, 2600);
-        } catch {
-          wakeFallbackBusyRef.current = false;
-          scheduleNextChunk(1200);
-        }
-      };
-
-      scheduleNextChunk(250);
-    } catch (error: any) {
-      setWakeListening(false);
-      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
-        setWakeUnavailable(true);
-        toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
-      }
-    }
-  }, [isRecording, processing, transcreverWakeFallback]);
-
-  const stopWake = useCallback(() => {
-    shouldWakeRef.current = false;
-    stopWakeFallback();
-    try { wakeRecogRef.current?.abort?.(); } catch {}
-    try { wakeRecogRef.current?.stop?.(); } catch {}
-    wakeRecogRef.current = null;
-    if (wakeHeartbeatRef.current) { clearInterval(wakeHeartbeatRef.current); wakeHeartbeatRef.current = null; }
-    setWakeListening(false);
-  }, [stopWakeFallback]);
-
-  const startWake = useCallback(() => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      shouldWakeRef.current = true;
-      startWakeFallback();
-      return;
-    }
-    if (wakeRecogRef.current) return; // já rodando
-    shouldWakeRef.current = true;
-    try {
-      const rec = new SR();
-      rec.lang = "pt-BR";
-      rec.continuous = true;
-      rec.interimResults = true;
-
-      rec.onstart = () => { setWakeListening(true); setWakeUnavailable(false); wakeRetriesRef.current = 0; };
-      rec.onresult = (e: any) => {
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const txt = norm(e.results[i][0]?.transcript || "");
-          if (!txt) continue;
-          // aceita "ei pilar", "hey pilar", "oi pilar", "pilar" isolado
-          if (textoTemWake(txt)) {
-            // Impede que o onend do wake reagende um novo start enquanto
-            // o ditado está tomando controle do microfone.
-            shouldWakeRef.current = false;
-            try { rec.abort?.(); } catch {}
-            try { rec.stop(); } catch {}
-            wakeRecogRef.current = null;
-            setWakeListening(false);
-            abrirPainelPorWake();
-            return;
-          }
-        }
-      };
-      rec.onerror = (ev: any) => {
-        // no-speech / aborted são normais — só reinicia
-        const fatal = ev?.error === "not-allowed" || ev?.error === "service-not-allowed";
-        const network = ev?.error === "network";
-        if (fatal) {
-          shouldWakeRef.current = false;
-          setWakeListening(false);
-          toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
-        }
-        if (network) {
-          // network é transitório no Chrome — não desabilita permanentemente.
-          // Deixa o onend reiniciar com backoff e ativa fallback por gravação/transcrição.
-          try { rec.abort?.(); } catch {}
-          startWakeFallback();
-          setTimeout(() => { if (shouldWakeRef.current && !wakeRecogRef.current) startWake(); }, 15000);
-          if (!wakeNetworkWarnedRef.current) {
-            wakeNetworkWarnedRef.current = true;
-            console.warn('[Pilar] wake word network error — retentando em background');
-          }
-        }
-      };
-      rec.onend = () => {
-        wakeRecogRef.current = null;
-        setWakeListening(false);
-        if (!shouldWakeRef.current) return;
-        // reinicia com backoff — evita loop apertado que trava o Chrome
-        wakeRetriesRef.current = Math.min(wakeRetriesRef.current + 1, 6);
-        const delay = Math.min(800 * wakeRetriesRef.current, 4000);
-        setTimeout(() => { if (shouldWakeRef.current) startWake(); }, delay);
-      };
-      rec.start();
-      wakeRecogRef.current = rec;
-    } catch (e) {
-      // se falhar, tenta fallback e depois tenta de novo mais tarde
-      startWakeFallback();
-      setTimeout(() => { if (shouldWakeRef.current) startWake(); }, 1500);
-    }
-  }, [cfg.wake_word, startWakeFallback, textoTemWake]);
-
-  // Efeito: liga/desliga wake conforme config e estado do painel
-  useEffect(() => {
-    if (cfg.wake_word_ativo && !wakeUnavailable && !isRecording && !processing) {
-      startWake();
-      // heartbeat: se por algum motivo parar sem onend, reinicia a cada 20s
-      wakeHeartbeatRef.current = setInterval(() => {
-        if (shouldWakeRef.current && !wakeRecogRef.current) startWake();
-      }, 20000);
-    } else {
-      stopWake();
-    }
-    return () => stopWake();
-  }, [cfg.wake_word_ativo, cfg.wake_word, wakeUnavailable, isRecording, processing, startWake, stopWake]);
-
-  // ---------- Chime ----------
   const playChime = () => {
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -494,100 +261,141 @@ export default function VoiceAssistant() {
     } catch {}
   };
 
-  // ---------- Ditado (gravação local + transcrição no backend) ----------
-  const startDictation = useCallback(async (autoStopMs = 0) => {
-    if (isRecording || processing) return;
-    pendingStopRef.current = false;
-    setInterimText("");
+  function abrirPainelPorWake() {
+    playChime();
+    setTimeout(() => {
+      setShowConfig(false);
+      setHistory([]);
+      setAmbiguas(null);
+      setInterimText("");
+      setManualText("");
+      setRelatorioMode(null);
+      setGrupoSelecionado(null);
+      setRelatorioAtual(null);
+      setResultadoRelatorio("");
+      setOpen(true);
+      startDictation();
+    }, 200);
+  }
 
-    // Libera o microfone do wake word — Chrome só permite 1 SpeechRecognition ativo por vez
+  const stopWake = useCallback(() => {
     shouldWakeRef.current = false;
     try { wakeRecogRef.current?.abort?.(); } catch {}
     try { wakeRecogRef.current?.stop?.(); } catch {}
     wakeRecogRef.current = null;
     setWakeListening(false);
-    // pausa maior para o Chrome liberar o mic antes de reabrir
-    await new Promise((r) => setTimeout(r, 350));
+  }, []);
 
-    // Web Speech estava encerrando sem transcript em alguns navegadores/ambientes.
-    // Para o comando manual usamos gravação real do microfone e transcrição no backend.
+  const startWake = useCallback(() => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    if (wakeRecogRef.current) return;
+    shouldWakeRef.current = true;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
-      chunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      rec.onstop = async () => {
-        if (recordingTimeoutRef.current) { clearTimeout(recordingTimeoutRef.current); recordingTimeoutRef.current = null; }
-        stream.getTracks().forEach((t) => t.stop());
-        mediaRecRef.current = null;
-        setInterimText("");
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        if (blob.size < 1200) {
-          setIsRecording(false);
-          toast.info("Áudio muito curto. Segure o Espaço por mais tempo ou toque no microfone e fale.");
-          return;
+      const rec = new SR();
+      rec.lang = "pt-BR";
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.onstart = () => setWakeListening(true);
+      rec.onresult = (e: any) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const txt = e.results[i][0]?.transcript || "";
+          if (textoTemWake(txt)) {
+            shouldWakeRef.current = false;
+            try { rec.stop(); } catch {}
+            wakeRecogRef.current = null;
+            setWakeListening(false);
+            abrirPainelPorWake();
+            return;
+          }
         }
-        await transcreverEProcessar(blob);
       };
-      rec.onerror = () => {
+      rec.onerror = (ev: any) => {
+        if (ev?.error === "not-allowed" || ev?.error === "service-not-allowed") {
+          shouldWakeRef.current = false;
+          setWakeListening(false);
+          setWakeUnavailable(true);
+        }
+      };
+      rec.onend = () => {
+        wakeRecogRef.current = null;
+        setWakeListening(false);
+        if (shouldWakeRef.current) {
+          setTimeout(() => { if (shouldWakeRef.current) startWake(); }, 400);
+        }
+      };
+      rec.start();
+      wakeRecogRef.current = rec;
+    } catch {
+      setTimeout(() => { if (shouldWakeRef.current) startWake(); }, 800);
+    }
+  }, [textoTemWake]);
+
+  useEffect(() => {
+    if (cfg.wake_word_ativo && !wakeUnavailable && !isRecording && !processing) {
+      startWake();
+    } else {
+      stopWake();
+    }
+    return () => stopWake();
+  }, [cfg.wake_word_ativo, cfg.wake_word, wakeUnavailable, isRecording, processing, startWake, stopWake]);
+
+  // ---------- Ditado (Web Speech nativo, transcrição em tempo real) ----------
+  const startDictation = useCallback(() => {
+    if (isRecording || processing) return;
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Seu navegador não suporta reconhecimento de voz. Use o Chrome ou Edge.");
+      return;
+    }
+    // libera o wake antes de abrir o ditado
+    shouldWakeRef.current = false;
+    try { wakeRecogRef.current?.abort?.(); } catch {}
+    try { wakeRecogRef.current?.stop?.(); } catch {}
+    wakeRecogRef.current = null;
+    setWakeListening(false);
+
+    finalTranscriptRef.current = "";
+    setInterimText("");
+    try {
+      const rec = new SR();
+      rec.lang = "pt-BR";
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.onstart = () => { setIsRecording(true); setInterimText("Ouvindo…"); };
+      rec.onresult = (e: any) => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          if (r.isFinal) finalTranscriptRef.current += r[0].transcript + " ";
+          else interim += r[0].transcript;
+        }
+        setInterimText((finalTranscriptRef.current + interim).trim() || "Ouvindo…");
+      };
+      rec.onerror = (ev: any) => {
         setIsRecording(false);
-        stream.getTracks().forEach((t) => t.stop());
-        toast.error("Não consegui gravar o áudio do microfone.");
+        setInterimText("");
+        dictationRef.current = null;
+        if (ev?.error === "not-allowed") toast.error("Permissão de microfone negada.");
       };
-      rec.start(250);
-      mediaRecRef.current = rec;
-      setIsRecording(true);
-      setInterimText(autoStopMs > 0 ? "Ouvindo… fale o comando agora." : "Ouvindo…");
-      if (autoStopMs > 0) {
-        recordingTimeoutRef.current = setTimeout(() => {
-          if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
-            try { mediaRecRef.current.stop(); } catch {}
-          }
-        }, autoStopMs);
-      }
-      if (pendingStopRef.current) {
-        setTimeout(() => {
-          if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
-            try { mediaRecRef.current.stop(); } catch {}
-          }
-        }, 250);
-      }
+      rec.onend = () => {
+        setIsRecording(false);
+        dictationRef.current = null;
+        const texto = finalTranscriptRef.current.trim();
+        setInterimText("");
+        if (texto) processarTexto(texto);
+      };
+      rec.start();
+      dictationRef.current = rec;
     } catch {
       setIsRecording(false);
-      toast.error("Sem acesso ao microfone");
+      toast.error("Não consegui iniciar o microfone.");
     }
-  }, [isRecording, processing, interimText]);
+  }, [isRecording, processing]);
 
   const stopDictation = () => {
-    pendingStopRef.current = true;
-    if (recordingTimeoutRef.current) { clearTimeout(recordingTimeoutRef.current); recordingTimeoutRef.current = null; }
     try { dictationRef.current?.stop?.(); } catch {}
-    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
-      try { mediaRecRef.current.stop(); } catch {}
-    }
     setIsRecording(false);
-  };
-
-  const transcreverEProcessar = async (blob: Blob) => {
-    setProcessing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const fd = new FormData();
-      fd.append("file", blob, "recording.webm");
-      const trResp = await fetch(
-        `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/assistente-voz-transcribe`,
-        { method: "POST", headers: { Authorization: `Bearer ${session?.access_token}` }, body: fd }
-      );
-      const trJson = await trResp.json();
-      if (!trResp.ok) throw new Error(trJson.error || "Falha na transcrição");
-      const texto = (trJson.text || "").trim();
-      if (!texto) { toast.error("Não entendi"); return; }
-      await processarTexto(texto);
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setProcessing(false);
-    }
   };
 
   // ---------- Gerar relatório ----------
@@ -799,7 +607,6 @@ export default function VoiceAssistant() {
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space" || isTyping(e.target)) return;
-      pendingStopRef.current = true;
       if (isRecording) { e.preventDefault(); stopDictation(); }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -897,14 +704,14 @@ export default function VoiceAssistant() {
                     <Label>Ativação por voz ("{cfg.wake_word}")</Label>
                     <p className="text-xs text-muted-foreground">Escuta contínua em background. Diga a palavra para abrir.</p>
                   </div>
-                  <Switch checked={cfg.wake_word_ativo} onCheckedChange={(v) => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; salvarConfig({ wake_word_ativo: v }); }} />
+                  <Switch checked={cfg.wake_word_ativo} onCheckedChange={(v) => { setWakeUnavailable(false); salvarConfig({ wake_word_ativo: v }); }} />
                 </div>
                 <div>
                   <Label className="text-xs">Palavra de ativação</Label>
                   <Input
                     value={cfg.wake_word}
                     onChange={(e) => setCfg({ ...cfg, wake_word: e.target.value })}
-                    onBlur={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; salvarConfig({ wake_word: cfg.wake_word }); }}
+                    onBlur={() => { setWakeUnavailable(false); salvarConfig({ wake_word: cfg.wake_word }); }}
                     placeholder="ei pilar"
                     className="mt-1"
                   />
@@ -917,7 +724,7 @@ export default function VoiceAssistant() {
                   </div>
                   <Switch checked={cfg.responder_por_voz} onCheckedChange={(v) => salvarConfig({ responder_por_voz: v })} />
                 </div>
-                <Button variant="outline" className="w-full" onClick={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
+                <Button variant="outline" className="w-full" onClick={() => { setWakeUnavailable(false); stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
                   <Radio className="h-4 w-4 mr-2" /> Reiniciar escuta
                 </Button>
               </div>
