@@ -760,14 +760,14 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Tipo</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>Rastreador</TableHead>
+              <TableHead>Telefone (SIM)</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[180px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredVeiculos.map(veiculo => {
-              const modelId = (veiculo as any).tracker_model_id as string | undefined;
-              const model = modelId ? trackerModels.find(m => m.id === modelId) : null;
+              const model = trackerModels.find(m => m.id === (veiculo as any).tracker_model_id);
               return (
               <TableRow key={veiculo.id}>
                 <TableCell className="font-mono font-medium">{veiculo.placa}</TableCell>
@@ -787,6 +787,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
+                </TableCell>
+                <TableCell className="font-mono text-xs">
+                  {(veiculo as any).telefone_sms || <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
                   <Badge variant={veiculo.ativo ? 'default' : 'secondary'}>
@@ -848,7 +851,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             })}
             {filteredVeiculos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   {loading ? 'Carregando...' : 'Nenhum veículo encontrado'}
                 </TableCell>
               </TableRow>
