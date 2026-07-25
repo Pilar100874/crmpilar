@@ -38,6 +38,7 @@ import {
   FileText,
   Shield,
   LayoutGrid,
+  BookmarkCheck,
 } from "lucide-react";
 import { MenuIconPicker, resolveMenuIcon } from "@/components/menu/MenuIconPicker";
 
