@@ -93,6 +93,7 @@ export interface ProgramLeaf {
   url: string;
   icon: any;
   system?: "lock" | "admin" | "theme" | "logout";
+  footerAdmin?: boolean;
   originContainerId?: string;
   originContainerTitle?: string;
 }
@@ -103,6 +104,15 @@ export const SYSTEM_PROGRAMS: ProgramLeaf[] = [
   { id: "system-admin", title: "Admin", url: "/admin", icon: LucideIcons.Shield, system: "admin" },
   { id: "system-theme", title: "Modo escuro / claro", url: "#system-theme", icon: LucideIcons.Moon, system: "theme" },
   { id: "system-logout", title: "Sair", url: "#system-logout", icon: LucideIcons.LogOut, system: "logout" },
+];
+
+// Itens do menu Admin do rodapé — podem ser movidos para o menu principal
+export const FOOTER_ADMIN_PROGRAMS: ProgramLeaf[] = [
+  { id: "Admin Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap, footerAdmin: true },
+  { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy, footerAdmin: true },
+  { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: LucideIcons.AppWindow, footerAdmin: true },
+  { id: "Admin Telas Customizadas", title: "Tela Customizada", url: "/admin/telas-customizadas", icon: LucideIcons.LayoutGrid, footerAdmin: true },
+  { id: "Admin Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen, footerAdmin: true },
 ];
 
 export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
@@ -130,8 +140,23 @@ export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
   for (const sp of SYSTEM_PROGRAMS) {
     if (!map.has(sp.id)) map.set(sp.id, sp);
   }
+  // Adiciona programas do Admin do rodapé ao pool
+  for (const sp of FOOTER_ADMIN_PROGRAMS) {
+    if (!map.has(sp.id)) map.set(sp.id, { ...sp, originContainerId: "Admin", originContainerTitle: "Admin (rodapé)" });
+  }
   return map;
 }
+
+/** IDs de programas atualmente posicionados no menu principal (após customização). */
+export function getPlacedProgramIds(items: MenuItem[]): Set<string> {
+  const out = new Set<string>();
+  for (const it of items) {
+    if (it.url) out.add(it.id);
+    if (it.subItems) for (const s of it.subItems) out.add(s.id);
+  }
+  return out;
+}
+
 
 
 export function initialFromBase(base: MenuItem[]): MenuCustomization {
