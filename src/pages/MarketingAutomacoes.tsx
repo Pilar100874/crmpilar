@@ -130,6 +130,40 @@ export default function MarketingAutomacoes() {
     return labels[tipo] || tipo;
   };
 
+  const getLastSendSummary = (automacao: any) => {
+    const cfg = automacao.config || {};
+    const res = cfg.last_execution_result || {};
+    const when = cfg.last_executed_at ? new Date(cfg.last_executed_at) : null;
+
+    // Conteúdo da mensagem (tenta várias origens comuns)
+    const vars = { ...(cfg.variaveis || {}), ...(cfg.variaveis_custom || {}) };
+    const message =
+      vars.mensagem || vars.message || vars.texto || vars.text || vars.body ||
+      cfg.mensagem || cfg.push_config?.mensagem || cfg.push_config?.body || "";
+
+    // Destinatários (bot broadcast retorna totais no trace)
+    let totalEnviados: number | null = null;
+    let totalFalhas: number | null = null;
+    let totalDestinatarios: number | null = null;
+    const contatos: string[] = [];
+    const trace: any[] = res?.details?.trace || [];
+    for (const t of trace) {
+      if (t?.broadcast) {
+        totalDestinatarios = (totalDestinatarios ?? 0) + (t.broadcast.total || 0);
+        totalEnviados = (totalEnviados ?? 0) + (t.broadcast.enviados || 0);
+        totalFalhas = (totalFalhas ?? 0) + (t.broadcast.falhas || 0);
+        for (const d of t.broadcast.detalhes || []) {
+          const nome = d?.nome || d?.name || d?.telefone || d?.phone;
+          if (nome && contatos.length < 4) contatos.push(String(nome));
+        }
+      }
+    }
+
+    return { when, message: String(message || "").trim(), totalEnviados, totalFalhas, totalDestinatarios, contatos, tipo: res?.type };
+  };
+
+
+
   const handleRename = async () => {
     if (!renameName.trim()) {
       toast.error("Por favor, informe um nome");
