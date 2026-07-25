@@ -227,6 +227,80 @@ serve(async (req) => {
       })
       .eq("id", automationId);
 
+    // Extrai itens de conteúdo (texto/imagem/video/etc) e destinatários do resultado
+    const items: any[] = [];
+    const recipients: any[] = [];
+    let totalDest = 0, enviados = 0, falhas = 0;
+
+    const vars = allVars;
+    const msgFromVars =
+      vars.mensagem || vars.message || vars.texto || vars.text || vars.body || "";
+
+    if (metodo === "bot") {
+      const trace: any[] = (result as any)?.details?.trace || [];
+      for (const t of trace) {
+        if (t?.broadcast) {
+          totalDest += t.broadcast.total || 0;
+          enviados += t.broadcast.enviados || 0;
+          falhas += t.broadcast.falhas || 0;
+          for (const d of t.broadcast.detalhes || []) {
+            recipients.push({
+              nome: d?.nome || d?.name || null,
+              telefone: d?.telefone || d?.phone || null,
+              email: d?.email || null,
+              status: d?.status || (d?.ok ? "enviado" : "falha"),
+              motivo: d?.motivo || d?.error || null,
+            });
+          }
+        }
+        if (t?.type) {
+          const nodeCfg = t?.config || {};
+          const kind = t.type;
+          if (kind === "enviar_mensagem" || kind === "message" || kind === "mensagem") {
+            items.push({ tipo: "texto", conteudo: nodeCfg.mensagem || nodeCfg.text || msgFromVars });
+          } else if (kind === "enviar_imagem" || kind === "image") {
+            items.push({ tipo: "imagem", url: nodeCfg.mediaUrl || nodeCfg.url, legenda: nodeCfg.caption || nodeCfg.legenda });
+          } else if (kind === "enviar_video" || kind === "video") {
+            items.push({ tipo: "video", url: nodeCfg.mediaUrl || nodeCfg.url, legenda: nodeCfg.caption || nodeCfg.legenda });
+          } else if (kind === "enviar_audio" || kind === "audio") {
+            items.push({ tipo: "audio", url: nodeCfg.mediaUrl || nodeCfg.url });
+          } else if (kind === "enviar_arquivo" || kind === "file" || kind === "document") {
+            items.push({ tipo: "arquivo", url: nodeCfg.mediaUrl || nodeCfg.url, nome: nodeCfg.fileName });
+          } else if (kind === "broadcast" || kind === "envio_massa") {
+            if (nodeCfg.mensagem) items.push({ tipo: "texto", conteudo: nodeCfg.mensagem });
+          }
+        }
+      }
+    } else if (metodo === "push") {
+      items.push({
+        tipo: "push",
+        titulo: config.push_config?.titulo || config.push_config?.title,
+        conteudo: config.push_config?.mensagem || config.push_config?.body,
+      });
+    } else if (metodo === "webhook") {
+      items.push({ tipo: "webhook", url: (result as any).url, conteudo: JSON.stringify(vars) });
+    }
+
+    if (items.length === 0 && msgFromVars) {
+      items.push({ tipo: "texto", conteudo: msgFromVars });
+    }
+
+    try {
+      await supabase.from("marketing_automation_execution_logs").insert({
+        automation_id: automationId,
+        estabelecimento_id: automation.estabelecimento_id,
+        executed_at: new Date().toISOString(),
+        metodo,
+        status: "ok",
+        items,
+        recipients,
+        totals: { total: totalDest, enviados, falhas },
+        raw_result: result,
+      });
+    } catch (logErr) {
+      console.error("Falha ao gravar log de execução:", logErr);
+    }
+
     return new Response(JSON.stringify({ success: true, result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
