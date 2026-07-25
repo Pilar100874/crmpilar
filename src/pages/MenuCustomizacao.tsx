@@ -470,16 +470,16 @@ export default function MenuCustomizacao() {
             setDragging({ kind: "node", tree, path });
             e.dataTransfer.effectAllowed = "move";
           }}
-          className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted/40 group border border-transparent"
-          style={{ marginLeft: depth * 20 }}
+          className="flex items-center gap-1.5 py-2 px-2 rounded-lg hover:bg-muted/40 group border border-transparent"
+          style={{ marginLeft: depth * 16 }}
         >
-          <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 cursor-grab" />
+          <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 cursor-grab hidden sm:block" />
           <MenuIconPicker
             value={(node as any).iconName ?? null}
             onChange={setIcon}
             trigger={
               <button
-                className="p-0.5 rounded hover:bg-muted"
+                className="p-1 rounded hover:bg-muted"
                 title="Alterar ícone"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -488,12 +488,13 @@ export default function MenuCustomizacao() {
             }
           />
           <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
-          <Badge variant="outline" className="text-[10px]">programa</Badge>
-          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move(tree, path, -1)}><ArrowUp className="w-3 h-3" /></Button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move(tree, path, 1)}><ArrowDown className="w-3 h-3" /></Button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => outdent(tree, path)} disabled={path.length <= 1}><ArrowLeft className="w-3 h-3" /></Button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => indent(tree, path)}><ArrowRight className="w-3 h-3" /></Button>
+          <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">programa</Badge>
+          <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, -1)} title="Subir"><ArrowUp className="w-3.5 h-3.5" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, 1)} title="Descer"><ArrowDown className="w-3.5 h-3.5" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => outdent(tree, path)} disabled={path.length <= 1} title="Sair da pasta"><ArrowLeft className="w-3.5 h-3.5" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => indent(tree, path)} title="Aninhar na pasta acima"><ArrowRight className="w-3.5 h-3.5" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 text-destructive" onClick={() => removeAtWithConfirm(tree, path)} title="Remover do menu"><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
         </div>
       );
