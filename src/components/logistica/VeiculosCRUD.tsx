@@ -766,7 +766,14 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </TableRow>
           </TableHeader>
           <TableBody>
-...
+            {filteredVeiculos.map(veiculo => {
+              const model = trackerModels.find(m => m.id === (veiculo as any).tracker_model_id);
+              return (
+              <TableRow key={veiculo.id}>
+                <TableCell className="font-mono font-medium">{veiculo.placa}</TableCell>
+                <TableCell>{veiculo.descricao || '-'}</TableCell>
+                <TableCell>{veiculo.motorista || '-'}</TableCell>
+                <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
                 <TableCell>{unidadeNomeById[(veiculo as any).logistica_grupo_id] || '-'}</TableCell>
                 <TableCell>
                   {model ? (
@@ -780,6 +787,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
+                </TableCell>
+                <TableCell className="font-mono text-xs">
+                  {(veiculo as any).telefone_sms || <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
                   <Badge variant={veiculo.ativo ? 'default' : 'secondary'}>
