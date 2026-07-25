@@ -117,13 +117,14 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
 
   const colunas = dados.length ? Object.keys(dados[0]) : [];
 
-  const gerarPdf = useCallback(() => {
+  const gerarPdf = useCallback((opts?: { titulo?: string; nomeArquivo?: string }) => {
     if (!dados.length) { toast.error("Nenhum dado para exportar"); return; }
     try {
       const doc = new jsPDF({ orientation: "landscape" });
       const cols = Object.keys(dados[0]);
+      const titulo = (opts?.titulo && opts.titulo.trim()) || relatorio.nome;
       doc.setFontSize(14);
-      doc.text(relatorio.nome, 14, 15);
+      doc.text(titulo, 14, 15);
       doc.setFontSize(9);
       doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} · ${dados.length} registro(s)`, 14, 21);
       autoTable(doc, {
@@ -133,17 +134,23 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [30, 30, 30] },
       });
-      const nome = `${relatorio.nome.replace(/[^a-z0-9]+/gi, "_")}_${Date.now()}.pdf`;
+      const base = (opts?.nomeArquivo && opts.nomeArquivo.trim())
+        || `${relatorio.nome.replace(/[^a-z0-9]+/gi, "_")}_${Date.now()}`;
+      const nome = base.toLowerCase().endsWith(".pdf") ? base : `${base}.pdf`;
       doc.save(nome);
-      toast.success("PDF gerado");
+      toast.success(`PDF gerado: ${nome}`);
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar PDF");
     }
   }, [dados, relatorio.nome]);
 
-  // Escuta comando de voz "gerar pdf"
+  // Escuta comando de voz "gerar pdf" (com título/arquivo opcionais)
   useEffect(() => {
-    const handler = () => { if (step === "resultado") gerarPdf(); };
+    const handler = (e: Event) => {
+      if (step !== "resultado") return;
+      const detail = (e as CustomEvent).detail as { titulo?: string; nomeArquivo?: string } | undefined;
+      gerarPdf(detail);
+    };
     window.addEventListener("voz:gerar-pdf-relatorio", handler);
     return () => window.removeEventListener("voz:gerar-pdf-relatorio", handler);
   }, [step, gerarPdf]);
