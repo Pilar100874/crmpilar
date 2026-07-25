@@ -193,6 +193,7 @@ export default function VoiceAssistant() {
   const lastDictationRequestRef = useRef<DictationRequestOptions>({});
   const wakeRestartTimerRef = useRef<number | null>(null);
   const requestDictationRef = useRef<(options?: DictationRequestOptions) => void>(() => {});
+  const processarTextoRef = useRef<(texto: string) => void | Promise<void>>(() => {});
   const finalTranscriptRef = useRef("");
   const liveTranscriptRef = useRef("");
   const wakeBufferRef = useRef("");
@@ -375,7 +376,7 @@ export default function VoiceAssistant() {
         try {
           const texto = await transcreverAudioFallback(new Blob(chunks, { type: "audio/webm" }));
           setInterimText("");
-          if (texto) processarTexto(texto);
+          if (texto) processarTextoRef.current(texto);
           else toast.error("Não escutei nada. Fale novamente ou digite abaixo.");
         } catch (e: any) {
           setInterimText("");
