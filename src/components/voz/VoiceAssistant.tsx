@@ -352,13 +352,22 @@ export default function VoiceAssistant() {
     if (isRecording || processing) return;
     setInterimText("");
 
+    // Libera o microfone do wake word — Chrome só permite 1 SpeechRecognition ativo por vez
+    shouldWakeRef.current = false;
+    try { wakeRecogRef.current?.abort?.(); } catch {}
+    try { wakeRecogRef.current?.stop?.(); } catch {}
+    wakeRecogRef.current = null;
+    setWakeListening(false);
+    // pequena pausa para o Chrome liberar o mic antes de reabrir
+    await new Promise((r) => setTimeout(r, 200));
+
     // 1) tenta Web Speech (rápido, sem upload)
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SR) {
       try {
         const rec = new SR();
         rec.lang = "pt-BR";
-        rec.continuous = false;
+        rec.continuous = true;
         rec.interimResults = true;
         let finalTxt = "";
         rec.onresult = (e: any) => {
@@ -373,6 +382,7 @@ export default function VoiceAssistant() {
         rec.onerror = (ev: any) => {
           if (ev?.error === "no-speech") { setIsRecording(false); return; }
           if (ev?.error === "not-allowed") { toast.error("Sem permissão de microfone"); setIsRecording(false); }
+          if (ev?.error === "aborted") { setIsRecording(false); }
         };
         rec.onend = () => {
           setIsRecording(false);
@@ -380,13 +390,14 @@ export default function VoiceAssistant() {
           const txt = finalTxt.trim() || interimText.trim();
           setInterimText("");
           if (txt) processarTexto(txt);
+          else toast.info("Não escutei nada. Fale novamente ou digite abaixo.");
         };
         rec.start();
         dictationRef.current = rec;
         setIsRecording(true);
         return;
-      } catch {
-        // cai para MediaRecorder abaixo
+      } catch (err) {
+        console.warn("[voz] SR start falhou, tentando MediaRecorder", err);
       }
     }
 
