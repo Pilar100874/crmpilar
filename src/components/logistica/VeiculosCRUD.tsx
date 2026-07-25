@@ -913,6 +913,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                     <span className="truncate">{veiculo.motorista}</span>
                   </div>
                 )}
+                {(veiculo as any).celular && (
+                  <div className="min-w-0">
+                    <span className="text-muted-foreground">Celular: </span>
+                    <span className="truncate">{(veiculo as any).celular}</span>
+                  </div>
+                )}
                 {veiculo.tipo_veiculo && (
                   <div className="min-w-0">
                     <span className="text-muted-foreground">Tipo: </span>
