@@ -710,12 +710,30 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
-  const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v =>
-    v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (v as any).telefone_sms?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getVeiculoComunicacaoStatus = (v: Veiculo): 'sem_sinal' | 'online' | 'inativo' | 'offline' => {
+    const modelId = (v as any).tracker_model_id as string | undefined;
+    if (!modelId) return 'sem_sinal';
+    const last = ultimasPosicoes[v.id];
+    if (!last) return 'sem_sinal';
+    const diffMin = (Date.now() - new Date(last).getTime()) / 60000;
+    if (diffMin <= 30) return 'online';
+    if (diffMin <= 24 * 60) return 'inativo';
+    return 'offline';
+  };
+
+  const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v => {
+    const matchesSearch =
+      v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (v as any).telefone_sms?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    if (comunicacaoFilter === 'todos') return true;
+    const status = getVeiculoComunicacaoStatus(v);
+    return status === comunicacaoFilter;
+  });
 
   const unidadeNomeById = React.useMemo(() => {
     const map: Record<string, string> = {};
