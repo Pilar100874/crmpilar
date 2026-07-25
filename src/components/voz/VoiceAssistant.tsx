@@ -580,7 +580,7 @@ export default function VoiceAssistant() {
       }
 
       // 3b) Ambíguo? mostra opções (sem inventar)
-      const candidatosBons = topN.filter((c) => c.score >= 40).map((c) => c.rota);
+      const candidatosBons = topN.filter((c) => c.score >= 25).map((c) => c.rota);
       if (candidatosBons.length > 0) {
         const resposta = "Não tenho certeza. Escolha uma tela abaixo:";
         setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
