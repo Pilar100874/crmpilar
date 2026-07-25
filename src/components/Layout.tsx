@@ -111,7 +111,9 @@ export interface MenuItem {
   url?: string;
   icon: any;
   subItems?: SubMenuItem[];
+  system?: "lock" | "admin" | "theme" | "logout";
 }
+
 
 export const menuItems: MenuItem[] = [
   { 
