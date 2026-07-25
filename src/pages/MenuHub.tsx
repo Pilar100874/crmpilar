@@ -7,7 +7,7 @@ import {
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
   ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
   Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
-  ChevronRight,
+  ChevronRight, Mic,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
@@ -118,6 +118,7 @@ const ADMIN_ITEM: MenuItem = {
   icon: Shield,
   subItems: [
     { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
+    { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Mic },
     { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
     { id: "Admin Macros", title: "Macros", url: "/macros", icon: Zap },
     { id: "Admin Config", title: "Configurações", url: "/config", icon: Settings },
@@ -234,7 +235,7 @@ export default function MenuHub() {
   };
 
   const rootItems: MenuItem[] = [
-    ...menuItems,
+    ...menuItems.filter((item) => item.id !== "Admin"),
     ...EXTRA_ITEMS,
     ...(isAdmin ? [ADMIN_ITEM] : []),
   ];
