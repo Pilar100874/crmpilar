@@ -243,6 +243,7 @@ export const menuItems: MenuItem[] = [
       { id: "Admin Macros", title: "Macros", url: "/macros", icon: Zap },
       { id: "Admin Telas Customizadas", title: "Tela Customizada", url: "/admin/telas-customizadas", icon: LucideIcons.LayoutGrid },
       { id: "Admin Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen },
+      { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
     ],
   },
 ];
