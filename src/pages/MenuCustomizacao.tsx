@@ -686,10 +686,11 @@ export default function MenuCustomizacao() {
     const Icon = icon;
     const endActive =
       dragging && dropHint && dropHint.tree === tree && dropHint.path === null;
+    const summary = getDropSummary(tree);
     return (
       <Card
         className={`p-0 overflow-hidden border-2 flex flex-col transition ${
-          dragging ? "border-primary/30" : ""
+          dragging && dropHint?.tree === tree ? "border-primary shadow-lg" : dragging ? "border-primary/30" : ""
         }`}
       >
         <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-b bg-muted/40">
@@ -702,6 +703,12 @@ export default function MenuCustomizacao() {
             <Plus className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Nova pasta</span>
           </Button>
         </div>
+        {summary && (
+          <div className="px-3 sm:px-4 py-2 bg-primary/10 border-b border-primary/30 text-xs sm:text-sm text-primary font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
+            Soltar {summary.text}
+          </div>
+        )}
         <ScrollArea className="h-[50vh] lg:h-[62vh]">
           <div className="p-2 sm:p-3">
             {roots.map((r, i) => renderNode(tree, r, [i], 0))}
