@@ -17,9 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
-import { Lock } from "lucide-react";
+import { Lock, LayoutList, PlusCircle } from "lucide-react";
 import {
   ChevronDown,
   ChevronRight,
