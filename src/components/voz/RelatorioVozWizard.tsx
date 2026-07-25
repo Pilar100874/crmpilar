@@ -117,38 +117,139 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
 
   const colunas = dados.length ? Object.keys(dados[0]) : [];
 
-  const gerarPdf = useCallback((opts?: { titulo?: string; nomeArquivo?: string }) => {
+  const gerarPdf = useCallback((opts?: {
+    titulo?: string;
+    nomeArquivo?: string;
+    capa?: boolean;
+    sumario?: boolean;
+  }) => {
     if (!dados.length) { toast.error("Nenhum dado para exportar"); return; }
     try {
       const doc = new jsPDF({ orientation: "landscape" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
       const cols = Object.keys(dados[0]);
       const titulo = (opts?.titulo && opts.titulo.trim()) || relatorio.nome;
+      const geradoEm = new Date().toLocaleString("pt-BR");
+      const comCapa = !!opts?.capa;
+      const comSumario = !!opts?.sumario;
+
+      // ---------- Capa ----------
+      if (comCapa) {
+        doc.setFillColor(30, 30, 30);
+        doc.rect(0, 0, pageW, pageH, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(28);
+        doc.text(titulo, pageW / 2, pageH / 2 - 20, { align: "center" });
+        doc.setFontSize(13);
+        doc.text(`Relatório: ${relatorio.nome}`, pageW / 2, pageH / 2 - 6, { align: "center" });
+        doc.setFontSize(11);
+        doc.text(`${dados.length} registro(s)`, pageW / 2, pageH / 2 + 6, { align: "center" });
+        doc.text(`Gerado em ${geradoEm}`, pageW / 2, pageH / 2 + 14, { align: "center" });
+
+        // Filtros aplicados (se houver)
+        const filtrosTxt = Object.entries(valores)
+          .filter(([, v]) => v !== undefined && v !== "" && v !== null)
+          .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`);
+        if (filtrosTxt.length) {
+          doc.setFontSize(9);
+          doc.text("Filtros aplicados:", pageW / 2, pageH / 2 + 28, { align: "center" });
+          filtrosTxt.slice(0, 8).forEach((line, i) => {
+            doc.text(line, pageW / 2, pageH / 2 + 34 + i * 5, { align: "center" });
+          });
+        }
+        doc.setTextColor(0, 0, 0);
+        doc.addPage();
+      }
+
+      // ---------- Reservar página do sumário ----------
+      // Adiciona uma página em branco que será preenchida depois com o sumário.
+      const sumarioPageNum = comSumario ? doc.getNumberOfPages() : null;
+      if (comSumario) doc.addPage();
+
+      // ---------- Tabela ----------
+      const primeiraPaginaTabela = doc.getNumberOfPages();
+      const paginasTabela: Array<{ pagina: number; primeiraLinha: number }> = [];
+      let ultimaPaginaRegistrada = -1;
+
       doc.setFontSize(14);
       doc.text(titulo, 14, 15);
       doc.setFontSize(9);
-      doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} · ${dados.length} registro(s)`, 14, 21);
+      doc.text(`Gerado em ${geradoEm} · ${dados.length} registro(s)`, 14, 21);
+
       autoTable(doc, {
         startY: 26,
         head: [cols],
         body: dados.map(r => cols.map(c => r[c] != null ? String(r[c]) : "-")),
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [30, 30, 30] },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 0) {
+            // Marca o primeiro dataset de cada página
+            const pageAtual = (doc as any).internal.getCurrentPageInfo?.().pageNumber ?? doc.getNumberOfPages();
+            if (pageAtual !== ultimaPaginaRegistrada) {
+              paginasTabela.push({ pagina: pageAtual, primeiraLinha: data.row.index + 1 });
+              ultimaPaginaRegistrada = pageAtual;
+            }
+          }
+        },
       });
+
+      // ---------- Preencher sumário ----------
+      if (comSumario && sumarioPageNum) {
+        doc.setPage(sumarioPageNum);
+        doc.setFontSize(18);
+        doc.text("Sumário", 14, 20);
+        doc.setFontSize(10);
+        const linhas: Array<[string, string]> = [];
+        if (comCapa) linhas.push(["Capa", "1"]);
+        linhas.push(["Sumário", String(sumarioPageNum)]);
+        paginasTabela.forEach((p, idx) => {
+          const label = idx === 0
+            ? `${relatorio.nome} — registros a partir de #${p.primeiraLinha}`
+            : `Continuação — registros a partir de #${p.primeiraLinha}`;
+          linhas.push([label, String(p.pagina)]);
+        });
+        autoTable(doc, {
+          startY: 28,
+          head: [["Seção", "Página"]],
+          body: linhas,
+          styles: { fontSize: 10, cellPadding: 3 },
+          headStyles: { fillColor: [30, 30, 30] },
+          columnStyles: { 1: { halign: "right", cellWidth: 30 } },
+        });
+      }
+
+      // ---------- Rodapé com numeração ----------
+      const total = doc.getNumberOfPages();
+      for (let i = 1; i <= total; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Página ${i} de ${total}`, pageW - 14, pageH - 6, { align: "right" });
+        doc.setTextColor(0, 0, 0);
+      }
+
       const base = (opts?.nomeArquivo && opts.nomeArquivo.trim())
         || `${relatorio.nome.replace(/[^a-z0-9]+/gi, "_")}_${Date.now()}`;
       const nome = base.toLowerCase().endsWith(".pdf") ? base : `${base}.pdf`;
       doc.save(nome);
-      toast.success(`PDF gerado: ${nome}`);
+      const extras: string[] = [];
+      if (comCapa) extras.push("capa");
+      if (comSumario) extras.push("sumário");
+      toast.success(`PDF gerado${extras.length ? ` (com ${extras.join(" e ")})` : ""}: ${nome}`);
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar PDF");
     }
-  }, [dados, relatorio.nome]);
+  }, [dados, relatorio.nome, valores]);
 
-  // Escuta comando de voz "gerar pdf" (com título/arquivo opcionais)
+  // Escuta comando de voz "gerar pdf" (com título/arquivo/capa/sumário opcionais)
   useEffect(() => {
     const handler = (e: Event) => {
       if (step !== "resultado") return;
-      const detail = (e as CustomEvent).detail as { titulo?: string; nomeArquivo?: string } | undefined;
+      const detail = (e as CustomEvent).detail as {
+        titulo?: string; nomeArquivo?: string; capa?: boolean; sumario?: boolean;
+      } | undefined;
       gerarPdf(detail);
     };
     window.addEventListener("voz:gerar-pdf-relatorio", handler);

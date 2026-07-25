@@ -62,39 +62,51 @@ const GATILHOS_PDF = [
   "exportar pdf", "baixar pdf", "salvar pdf", "pdf",
 ];
 
-// Extrai "título" e "nome do arquivo" a partir da fala do usuário.
-// Ex.: "gerar pdf com título Vendas de Julho e arquivo vendas_julho"
-//      "gerar pdf chamado relatorio_final"
-//      "gerar pdf com o nome de arquivo clientes_ativos titulo Clientes Ativos"
-function extrairTituloEArquivoPdf(fala: string): { titulo?: string; nomeArquivo?: string } {
+// Extrai título, nome do arquivo e flags (capa / sumário) a partir da fala.
+// Ex.: "gerar pdf com capa e sumário título Vendas de Julho arquivo vendas_julho"
+//      "gerar pdf com índice chamado relatorio_final"
+//      "gerar pdf sem capa sem sumario"
+function extrairOpcoesPdf(fala: string): {
+  titulo?: string; nomeArquivo?: string; capa?: boolean; sumario?: boolean;
+} {
   const src = " " + fala.trim() + " ";
   const lower = src.toLowerCase();
 
-  // âncoras (início da captura) e onde termina cada captura
-  const anchors: Array<{ key: "titulo" | "arquivo"; re: RegExp }> = [
+  // Flags de capa / sumário
+  const temCapa    = /\b(com\s+capa|inclu(?:ir|a|indo)\s+capa|adicionar\s+capa)\b/i.test(lower);
+  const semCapa    = /\b(sem\s+capa|n[aã]o\s+.*capa)\b/i.test(lower);
+  const temSumario = /\b(com\s+(?:sum[aá]rio|[ií]ndice|indice|toc)|inclu(?:ir|a|indo)\s+(?:sum[aá]rio|[ií]ndice)|adicionar\s+(?:sum[aá]rio|[ií]ndice))\b/i.test(lower);
+  const semSumario = /\b(sem\s+(?:sum[aá]rio|[ií]ndice)|n[aã]o\s+.*(?:sum[aá]rio|[ií]ndice))\b/i.test(lower);
+
+  // Âncoras para capturar título/arquivo (capa/sumário também servem só como delimitadores)
+  const anchors: Array<{ key: "titulo" | "arquivo" | "_stop"; re: RegExp }> = [
     { key: "titulo",  re: /\b(?:com\s+(?:o\s+)?)?(?:t[ií]tulo|titulo\s+de|com\s+t[ií]tulo)\s+/i },
     { key: "arquivo", re: /\b(?:com\s+(?:o\s+)?)?(?:nome\s+(?:do\s+)?arquivo|arquivo|chamado|chamada|salvar\s+como|nome)\s+/i },
+    { key: "_stop",   re: /\b(?:com|sem|inclu(?:ir|a|indo)|adicionar)\s+(?:capa|sum[aá]rio|[ií]ndice|indice|toc)\b/i },
   ];
 
-  const hits: Array<{ key: "titulo" | "arquivo"; start: number; contentStart: number }> = [];
+  const hits: Array<{ key: "titulo" | "arquivo" | "_stop"; start: number; contentStart: number }> = [];
   for (const a of anchors) {
-    const m = lower.match(a.re);
-    if (m && m.index !== undefined) {
+    const re = new RegExp(a.re.source, "gi");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(lower)) !== null) {
       hits.push({ key: a.key, start: m.index, contentStart: m.index + m[0].length });
     }
   }
   hits.sort((a, b) => a.start - b.start);
 
-  const out: { titulo?: string; nomeArquivo?: string } = {};
+  const out: { titulo?: string; nomeArquivo?: string; capa?: boolean; sumario?: boolean } = {};
   for (let i = 0; i < hits.length; i++) {
     const h = hits[i];
+    if (h.key === "_stop") continue;
     const end = i + 1 < hits.length ? hits[i + 1].start : src.length;
     let valor = src.slice(h.contentStart, end).trim();
     valor = valor.replace(/[.,;:!?]+$/g, "").trim();
+    // Remove conector residual no fim ("e", "com")
+    valor = valor.replace(/\s+(?:e|com|sem)$/i, "").trim();
     if (!valor) continue;
     if (h.key === "titulo" && !out.titulo) out.titulo = valor;
     if (h.key === "arquivo" && !out.nomeArquivo) {
-      // sanitize filename
       const clean = valor
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/\.pdf$/i, "")
@@ -104,6 +116,12 @@ function extrairTituloEArquivoPdf(fala: string): { titulo?: string; nomeArquivo?
       if (clean) out.nomeArquivo = clean;
     }
   }
+
+  if (temCapa && !semCapa) out.capa = true;
+  else if (semCapa) out.capa = false;
+  if (temSumario && !semSumario) out.sumario = true;
+  else if (semSumario) out.sumario = false;
+
   return out;
 }
 
@@ -499,15 +517,15 @@ export default function VoiceAssistant() {
 
       // 0b) Gerar PDF do relatório aberto (wizard escuta o evento)
       if (relatorioMode === "resultado" && GATILHOS_PDF.some(g => t === g || t.includes(g))) {
-        const { titulo, nomeArquivo } = extrairTituloEArquivoPdf(texto);
-        window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio", {
-          detail: { titulo, nomeArquivo },
-        }));
+        const opcoes = extrairOpcoesPdf(texto);
+        window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio", { detail: opcoes }));
         const partes: string[] = [];
-        if (titulo) partes.push(`título "${titulo}"`);
-        if (nomeArquivo) partes.push(`arquivo "${nomeArquivo}"`);
+        if (opcoes.capa) partes.push("capa");
+        if (opcoes.sumario) partes.push("sumário");
+        if (opcoes.titulo) partes.push(`título "${opcoes.titulo}"`);
+        if (opcoes.nomeArquivo) partes.push(`arquivo "${opcoes.nomeArquivo}"`);
         const resposta = partes.length
-          ? `Gerando PDF com ${partes.join(" e ")}.`
+          ? `Gerando PDF com ${partes.join(", ")}.`
           : "Gerando PDF do relatório.";
         setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
         if (cfg.responder_por_voz) falar(resposta);
