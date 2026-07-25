@@ -114,6 +114,12 @@ export default function VoiceAssistant() {
           .eq("estabelecimento_id", usuario.estabelecimento_id)
           .eq("ativo", true);
         setCustomCmds((cmds as any) || []);
+
+        const { data: rels } = await supabase.from("relatorios_voz")
+          .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo")
+          .eq("estabelecimento_id", usuario.estabelecimento_id)
+          .eq("ativo", true);
+        setRelatorios((rels as any) || []);
       }
     })();
   }, []);
