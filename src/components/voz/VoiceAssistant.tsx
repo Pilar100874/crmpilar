@@ -498,6 +498,12 @@ export default function VoiceAssistant() {
     setIsRecording(false);
   };
 
+  const fecharPainel = useCallback(() => {
+    stopDictation();
+    spaceHeldRef.current = false;
+    setOpen(false);
+  }, [limparTimersDitado]);
+
   // ---------- Gerar relatório ----------
   const gerarRelatorio = async (r: RelatorioVoz) => {
     setRelatorioAtual(r);
@@ -698,14 +704,17 @@ export default function VoiceAssistant() {
       t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement ||
       (t instanceof HTMLElement && t.isContentEditable);
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Escape" && open) { setOpen(false); return; }
+      if (e.code === "Escape" && open) { fecharPainel(); return; }
       if (e.code !== "Space" || isTyping(e.target)) return;
       e.preventDefault();
       e.stopPropagation();
       if (e.repeat) return;
       if (processing) return;
       spaceHeldRef.current = true;
-      if (isRecording) return;
+      if (isRecording) {
+        if (!open) setOpen(true);
+        return;
+      }
       if (!open) {
         setShowConfig(false);
         setHistory([]);
@@ -738,7 +747,7 @@ export default function VoiceAssistant() {
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp, true);
     };
-  }, [open, isRecording, processing, requestDictation]);
+  }, [fecharPainel, open, isRecording, processing, requestDictation]);
 
   // Sempre abre limpo, na aba do chat
   const abrirLimpo = useCallback(() => {
