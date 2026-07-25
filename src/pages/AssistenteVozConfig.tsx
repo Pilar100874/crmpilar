@@ -190,7 +190,11 @@ export default function AssistenteVozConfig() {
     if (error) { toast.error(error.message); return; }
     toast.success("Comando removido");
     setConfirmDel(null);
-    carregar();
+    setTimeout(() => {
+      if (document.body.style.pointerEvents === "none") document.body.style.pointerEvents = "";
+      document.body.removeAttribute("data-scroll-locked");
+      carregar();
+    }, 150);
   };
 
   const salvarConfig = async (patch: any) => {
