@@ -134,7 +134,7 @@ export const menuItems: MenuItem[] = [
     title: "Dashboards", 
     icon: LayoutDashboard,
     subItems: [
-      { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
+      { id: "Dashboard", title: "Painel Principal", url: "/dashboard", icon: LayoutDashboard },
       { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: Users },
       { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LayoutDashboard },
       { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: Activity },
@@ -150,12 +150,12 @@ export const menuItems: MenuItem[] = [
     title: "Chats", 
     icon: MessageSquare,
     subItems: [
-      { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
+      { id: "Painel Chats", title: "Painel de Chats", url: "/atendimento", icon: MessageSquare },
       { id: "Agentes IA", title: "Agentes IA", url: "/agentes-chat", icon: LucideIcons.Bot },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "Monitor de Funcionários", title: "Monitor de Funcionários", url: "/monitor-funcionarios", icon: Monitor },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
-      { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: Settings },
+      { id: "Config Atendimento", title: "Configurações de Chats", url: "/atendimento-config", icon: Settings },
     ]
   },
   {
@@ -164,7 +164,7 @@ export const menuItems: MenuItem[] = [
     icon: Megaphone,
     subItems: [
       { id: "Calendario Painel", title: "Calendário", url: "/calendario", icon: Megaphone },
-      { id: "Config Calendario", title: "Configurações", url: "/calendario/configuracoes", icon: Settings },
+      { id: "Config Calendario", title: "Configurações do Calendário", url: "/calendario/configuracoes", icon: Settings },
     ]
   },
   { 
@@ -206,7 +206,7 @@ export const menuItems: MenuItem[] = [
     title: "Editores",
     icon: LucideIcons.FileText,
     subItems: [
-      { id: "Editores Hub", title: "Início", url: "/editores", icon: LucideIcons.LayoutGrid },
+      { id: "Editores Hub", title: "Editores - Início", url: "/editores", icon: LucideIcons.LayoutGrid },
       { id: "Editores Modelos", title: "Modelos de Documento", url: "/editores/modelos", icon: LucideIcons.FileText },
       { id: "Editores Gerar", title: "Gerar Documento", url: "/editores/gerar", icon: LucideIcons.FilePlus },
       { id: "Editores Documentos", title: "Documentos Gerados", url: "/editores/documentos", icon: LucideIcons.Files },
@@ -228,7 +228,7 @@ export const menuItems: MenuItem[] = [
     icon: LucideIcons.ShoppingBag,
     subItems: [
       { id: "Ecommerce Site", title: "Abrir Loja Virtual", url: "/ecommerce", icon: LucideIcons.ExternalLink },
-      { id: "Ecommerce Config", title: "Configurações", url: "/ecommerce-config", icon: LucideIcons.Settings },
+      { id: "Ecommerce Config", title: "Configurações do E-commerce", url: "/ecommerce-config", icon: LucideIcons.Settings },
     ]
   },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
@@ -238,9 +238,9 @@ export const menuItems: MenuItem[] = [
     title: "TV",
     icon: LucideIcons.Tv,
     subItems: [
-      { id: "TV Vendas", title: "Dashboard Vendas", url: "/tv/vendas", icon: FileBarChart },
-      { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
-      { id: "TV Câmeras", title: "Mosaico de Câmeras", url: "/tv/cameras", icon: LucideIcons.Camera },
+      { id: "TV Vendas", title: "TV Vendas", url: "/tv/vendas", icon: FileBarChart },
+      { id: "TV Veículos", title: "TV Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
+      { id: "TV Câmeras", title: "TV Câmeras", url: "/tv/cameras", icon: LucideIcons.Camera },
       { id: "TV Signage", title: "Gerenciador de Telas Remotas", url: "/tv-signage", icon: LucideIcons.MonitorPlay },
     ]
   },
@@ -252,7 +252,7 @@ export const menuItems: MenuItem[] = [
     title: "Admin",
     icon: LucideIcons.Shield,
     subItems: [
-      { id: "Admin Config", title: "Configurações", url: "/config", icon: Settings },
+      { id: "Admin Config", title: "Admin - Configurações", url: "/config", icon: Settings },
       { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Brain },
       { id: "Admin Relatorios Voz", title: "Relatórios por Voz", url: "/admin/relatorios-voz", icon: LucideIcons.FileBarChart },
       { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
