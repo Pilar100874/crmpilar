@@ -650,11 +650,9 @@ export default function Layout({ children }: LayoutProps) {
     return null;
   }
 
+  // Filtra os menus baseado nas permissões
+  const visibleMenus = customizedItems
 
-  // Filtra os menus baseado nas permissões
-  const visibleMenus = customizedItems
-  // Filtra os menus baseado nas permissões
-  const visibleMenus = customizedItems
     .filter((item) => {
       // Itens do sistema (trava, admin, tema, sair) — o admin decide se aparecem no menu principal
       if (item.system) {
