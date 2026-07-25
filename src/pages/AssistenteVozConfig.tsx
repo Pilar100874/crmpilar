@@ -135,31 +135,117 @@ export default function AssistenteVozConfig() {
           </Card>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            {rotasFiltradas.map((r) => (
-              <Card key={r.path} className="p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{r.titulo}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{r.path}</div>
+            {rotasFiltradas.map((r) => {
+              const chaveExtras = `rota:${r.path}`;
+              const chaveRem = `rota:${r.path}:removidos`;
+              const extras: string[] = (config?.frases_customizadas?.[chaveExtras] as string[]) || [];
+              const removidos: string[] = (config?.frases_customizadas?.[chaveRem] as string[]) || [];
+              const padrao = r.aliases || [];
+              const isRemovido = (a: string) => removidos.some((x) => x.toLowerCase() === a.toLowerCase());
+              const inputAtual = novoAliasRota[r.path] || "";
+              const adicionar = async () => {
+                const v = inputAtual.trim();
+                if (!v) return;
+                await salvarChave(chaveExtras, [...extras, v]);
+                // se estava removido, remove da lista de removidos
+                if (isRemovido(v)) {
+                  await salvarChave(chaveRem, removidos.filter((x) => x.toLowerCase() !== v.toLowerCase()));
+                }
+                setNovoAliasRota({ ...novoAliasRota, [r.path]: "" });
+              };
+              const excluirCustom = async (a: string) =>
+                salvarChave(chaveExtras, extras.filter((x) => x !== a));
+              const editarCustom = async (a: string) => {
+                const novo = window.prompt("Editar apelido:", a);
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarChave(chaveExtras, extras.map((x) => (x === a ? v : x)));
+              };
+              const ocultarPadrao = async (a: string) =>
+                salvarChave(chaveRem, [...removidos, a]);
+              const restaurarPadrao = async (a: string) =>
+                salvarChave(chaveRem, removidos.filter((x) => x.toLowerCase() !== a.toLowerCase()));
+              const editarPadrao = async (a: string) => {
+                const novo = window.prompt("Editar apelido (o padrão será ocultado e o novo salvo):", a);
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarChave(chaveRem, [...removidos, a]);
+                await salvarChave(chaveExtras, [...extras, v]);
+              };
+              return (
+                <Card key={r.path} className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{r.titulo}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{r.path}</div>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      <Mic className="w-3 h-3 mr-1" /> voz
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="text-[10px] shrink-0">
-                    <Mic className="w-3 h-3 mr-1" /> voz
-                  </Badge>
-                </div>
-                {r.aliases && r.aliases.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {r.aliases.map((a) => (
-                      <span
-                        key={a}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
-                      >
-                        "{a}"
-                      </span>
-                    ))}
+
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Adicionar apelido…"
+                      value={inputAtual}
+                      onChange={(e) => setNovoAliasRota({ ...novoAliasRota, [r.path]: e.target.value })}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); adicionar(); } }}
+                      className="h-8 text-xs"
+                    />
+                    <Button size="sm" onClick={adicionar} disabled={!inputAtual.trim()}>
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                )}
-              </Card>
-            ))}
+
+                  {(padrao.length > 0 || extras.length > 0) && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {padrao.map((a) => {
+                        const removido = isRemovido(a);
+                        return (
+                          <span
+                            key={`p-${a}`}
+                            className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded ${removido ? "bg-muted line-through text-muted-foreground" : "bg-primary/10 text-primary"}`}
+                          >
+                            "{a}"
+                            <Badge variant="secondary" className="text-[9px] px-1 py-0">padrão</Badge>
+                            {!removido ? (
+                              <>
+                                <button title="Editar" onClick={() => editarPadrao(a)} className="hover:bg-primary/20 rounded p-0.5">
+                                  <Pencil className="w-2.5 h-2.5" />
+                                </button>
+                                <button title="Ocultar" onClick={() => ocultarPadrao(a)} className="hover:bg-destructive/20 rounded p-0.5">
+                                  <XIcon className="w-2.5 h-2.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <button title="Restaurar" onClick={() => restaurarPadrao(a)} className="hover:bg-primary/20 rounded p-0.5">
+                                <RotateCcw className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </span>
+                        );
+                      })}
+                      {extras.map((a) => (
+                        <span
+                          key={`c-${a}`}
+                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-accent/30 text-foreground"
+                        >
+                          "{a}"
+                          <button title="Editar" onClick={() => editarCustom(a)} className="hover:bg-primary/20 rounded p-0.5">
+                            <Pencil className="w-2.5 h-2.5" />
+                          </button>
+                          <button title="Excluir" onClick={() => excluirCustom(a)} className="hover:bg-destructive/20 rounded p-0.5">
+                            <XIcon className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
             {rotasFiltradas.length === 0 && (
               <Card className="p-6 text-center text-sm text-muted-foreground sm:col-span-2">
                 Nenhuma tela encontrada com "{busca}".
@@ -167,6 +253,7 @@ export default function AssistenteVozConfig() {
             )}
           </div>
         </TabsContent>
+
 
         {/* ======================= FRASES ======================= */}
         <TabsContent value="frases" className="space-y-3">
