@@ -64,7 +64,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
-import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization } from "@/lib/menuCustomization";
+import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization, applyUserFooterCustomization, applySystemFooterCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
