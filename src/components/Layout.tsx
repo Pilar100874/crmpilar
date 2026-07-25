@@ -645,11 +645,17 @@ export default function Layout({ children }: LayoutProps) {
 
   // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
+  const [adminFooterItems, setAdminFooterItems] = useState(() => applyAdminFooterCustomization());
   useEffect(() => {
-    const handler = () => setCustomizedItems(applyMenuCustomization(menuItems));
+    const handler = () => {
+      setCustomizedItems(applyMenuCustomization(menuItems));
+      setAdminFooterItems(applyAdminFooterCustomization());
+    };
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
-    // Busca personalização remota (compartilhada pelo admin do estabelecimento)
-    fetchRemoteCustomization().then(() => setCustomizedItems(applyMenuCustomization(menuItems)));
+    fetchRemoteCustomization().then(() => {
+      setCustomizedItems(applyMenuCustomization(menuItems));
+      setAdminFooterItems(applyAdminFooterCustomization());
+    });
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
 
@@ -661,7 +667,6 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = customizedItems
 
     .filter((item) => {
-      // Itens do sistema (trava, admin, tema, sair) — o admin decide se aparecem no menu principal
       if (item.system) {
         if (item.system === "admin") return isAdmin;
         return true;
@@ -671,7 +676,6 @@ export default function Layout({ children }: LayoutProps) {
         return isAdmin;
       }
 
-      // Menus que sempre devem aparecer para usuários autenticados
       const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Controle de Visitantes", "Livro de Ocorrência", "Câmeras", "Editores"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
@@ -679,7 +683,6 @@ export default function Layout({ children }: LayoutProps) {
 
       const permission = allowedMenus[item.id];
 
-      // Se o menu tem subitems, verifica se pelo menos um tem permissão
       if (item.subItems) {
         const hasSubItemPermission = item.subItems.some((subItem) => {
           const subPermission = allowedMenus[subItem.id];
@@ -692,12 +695,13 @@ export default function Layout({ children }: LayoutProps) {
     })
     .map((item) => item);
 
-  // Ids de itens de sistema já posicionados no menu principal (para esconder no rodapé)
   const systemInMain = new Set<string>(
     visibleMenus.map((i) => i.system).filter(Boolean) as string[]
   );
-  // Ids de programas do Admin (rodapé) posicionados no menu principal — escondê-los no dropdown Admin do rodapé
-  const placedProgramIds = getPlacedProgramIds(visibleMenus);
+  const mainPlacedIds = getPlacedProgramIds(visibleMenus);
+  const adminPlacedIds = getPlacedProgramIds(adminFooterItems);
+  // União: um programa é "posicionado" se está no menu principal OU no Admin (rodapé) customizado
+  const placedProgramIds = new Set<string>([...mainPlacedIds, ...adminPlacedIds]);
 
 
 
