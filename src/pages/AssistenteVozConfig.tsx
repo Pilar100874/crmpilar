@@ -9,9 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw } from "lucide-react";
-import { ROTAS_SISTEMA } from "@/lib/voz/rotasSistema";
-import { GRUPOS_FRASES, FRASES_PADRAO, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
+import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw, Pencil } from "lucide-react";
+import { ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
+import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
 import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 
@@ -28,6 +28,7 @@ export default function AssistenteVozConfig() {
   const [busca, setBusca] = useState("");
   const [buscaFrase, setBuscaFrase] = useState("");
   const [novaFrase, setNovaFrase] = useState<Record<string, string>>({});
+  const [novoAliasRota, setNovoAliasRota] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
