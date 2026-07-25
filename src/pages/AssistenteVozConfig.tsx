@@ -92,6 +92,7 @@ export default function AssistenteVozConfig() {
   const [editing, setEditing] = useState<Partial<Comando> | null>(null);
   const [confirmDel, setConfirmDel] = useState<Comando | null>(null);
   const [buscaPrograma, setBuscaPrograma] = useState("");
+  const [testando, setTestando] = useState(false);
 
   // Confirmação "Salvar telas do usuário antes de rodar?"
   const [savePrompt, setSavePrompt] = useState<null | { onDecide: (v: "salvar" | "continuar" | "cancelar") => void }>(null);
