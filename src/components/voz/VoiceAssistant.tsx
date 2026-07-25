@@ -504,7 +504,7 @@ export default function VoiceAssistant() {
     };
   }, [requestDictation]);
 
-  const stopDictation = () => {
+  const stopDictation = (processNow = true) => {
     const texto = finalTranscriptRef.current.trim() || liveTranscriptRef.current.trim();
     pendingDictationRef.current = false;
     if (dictationStartTimerRef.current) {
@@ -514,14 +514,16 @@ export default function VoiceAssistant() {
     limparTimersDitado();
     try { dictationRef.current?.stop?.(); } catch {}
     setIsRecording(false);
-    if (texto) {
+    if (processNow && texto) {
+      finalTranscriptRef.current = "";
+      liveTranscriptRef.current = "";
       setInterimText("");
       processarTexto(texto);
     }
   };
 
   const fecharPainel = useCallback(() => {
-    stopDictation();
+    stopDictation(false);
     spaceHeldRef.current = false;
     setOpen(false);
   }, [limparTimersDitado]);
