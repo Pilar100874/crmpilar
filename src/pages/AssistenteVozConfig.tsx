@@ -647,6 +647,15 @@ export default function AssistenteVozConfig() {
                 <Switch checked={editing.ativo ?? true} onCheckedChange={(v) => setEditing({ ...editing, ativo: v })} />
                 <span className="text-sm">Ativo</span>
               </div>
+
+              <GatilhoLivePreview
+                tipo={editing.tipo_acao}
+                payload={editing.payload}
+                frase={editing.frase_gatilho || ""}
+                resposta={editing.resposta_falada}
+                provedorLabel={PROVEDORES_CONVERSA.find((p) => p.id === editing.payload?.provedor)?.label}
+              />
+
             </div>
           )}
           <DialogFooter>
