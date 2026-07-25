@@ -65,6 +65,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [ultimasPosicoes, setUltimasPosicoes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [comunicacaoFilter, setComunicacaoFilter] = useState<'todos' | 'online' | 'inativo' | 'sem_sinal' | 'offline'>('todos');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
