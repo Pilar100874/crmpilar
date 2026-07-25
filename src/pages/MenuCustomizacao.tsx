@@ -469,6 +469,21 @@ export default function MenuCustomizacao() {
     return pathsEqual(dropHint.path as Path, path) && dropHint.pos === pos;
   };
 
+  // Human-friendly summary of where the drop will land, per tree.
+  const getDropSummary = (tree: TreeKey): { text: string; kind: "before" | "after" | "inside" | "end" } | null => {
+    if (!dragging || !dropHint || dropHint.tree !== tree) return null;
+    const roots = tree === "main" ? mainRoots : adminRoots;
+    if (dropHint.path === null) return { text: "no final da lista", kind: "end" };
+    const target = getNode(roots, dropHint.path);
+    const name =
+      target?.kind === "container"
+        ? target.title
+        : programs.get((target as any)?.programId)?.title || "item";
+    if (dropHint.pos === "before") return { text: `antes de "${name}"`, kind: "before" };
+    if (dropHint.pos === "after") return { text: `depois de "${name}"`, kind: "after" };
+    return { text: `dentro da pasta "${name}"`, kind: "inside" };
+  };
+
   const renderNode = (tree: TreeKey, node: CustomNode, path: Path, depth: number) => {
     const key = pathKey(tree, path);
     const isExpanded = expanded[key] ?? depth < 1;
@@ -513,7 +528,12 @@ export default function MenuCustomizacao() {
       const Icon = OverrideIcon || p?.icon || FileText;
       return (
         <div key={key} className="relative">
-          {showBefore && <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+          {showBefore && (
+            <div className="absolute -top-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+              <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↑ Antes</span>
+            </div>
+          )}
           <div
             {...dragHandlers}
             className="flex items-center gap-1.5 py-2 px-2 rounded-lg hover:bg-muted/40 group border border-transparent cursor-grab active:cursor-grabbing"
@@ -537,7 +557,12 @@ export default function MenuCustomizacao() {
             />
             <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
           </div>
-          {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+          {showAfter && (
+            <div className="absolute -bottom-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+              <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↓ Depois</span>
+            </div>
+          )}
         </div>
       );
     }
@@ -545,12 +570,17 @@ export default function MenuCustomizacao() {
     const FolderIconResolved = resolveMenuIcon((node as any).iconName) || Folder;
     return (
       <div key={key} className="relative">
-        {showBefore && <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+        {showBefore && (
+          <div className="absolute -top-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+            <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↑ Antes</span>
+          </div>
+        )}
         <div
           {...dragHandlers}
-          className={`flex items-center gap-1.5 py-2 px-2 rounded-lg group border cursor-grab active:cursor-grabbing transition ${
+          className={`flex items-center gap-1.5 py-2 px-2 rounded-lg group border-2 cursor-grab active:cursor-grabbing transition ${
             showInside
-              ? "border-primary bg-primary/10 ring-2 ring-primary/40"
+              ? "border-primary bg-primary/15 ring-4 ring-primary/30 shadow-lg scale-[1.01]"
               : "border-dashed border-transparent hover:bg-muted/40 hover:border-primary/30"
           }`}
           style={{ marginLeft: depth * 16 }}
@@ -596,6 +626,11 @@ export default function MenuCustomizacao() {
             <span className="text-sm font-medium flex-1 truncate">{node.title}</span>
           )}
           <Badge variant="secondary" className="text-[10px]">{node.children.length}</Badge>
+          {showInside && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/20 border border-primary rounded-full px-2 py-0.5 shrink-0">
+              ⤵ Dentro
+            </span>
+          )}
           <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
             <Button
               size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6"
@@ -637,7 +672,12 @@ export default function MenuCustomizacao() {
             )}
           </div>
         )}
-        {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+        {showAfter && (
+          <div className="absolute -bottom-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+            <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↓ Depois</span>
+          </div>
+        )}
       </div>
     );
   };
@@ -646,10 +686,11 @@ export default function MenuCustomizacao() {
     const Icon = icon;
     const endActive =
       dragging && dropHint && dropHint.tree === tree && dropHint.path === null;
+    const summary = getDropSummary(tree);
     return (
       <Card
         className={`p-0 overflow-hidden border-2 flex flex-col transition ${
-          dragging ? "border-primary/30" : ""
+          dragging && dropHint?.tree === tree ? "border-primary shadow-lg" : dragging ? "border-primary/30" : ""
         }`}
       >
         <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-b bg-muted/40">
@@ -662,6 +703,12 @@ export default function MenuCustomizacao() {
             <Plus className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Nova pasta</span>
           </Button>
         </div>
+        {summary && (
+          <div className="px-3 sm:px-4 py-2 bg-primary/10 border-b border-primary/30 text-xs sm:text-sm text-primary font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
+            Soltar {summary.text}
+          </div>
+        )}
         <ScrollArea className="h-[50vh] lg:h-[62vh]">
           <div className="p-2 sm:p-3">
             {roots.map((r, i) => renderNode(tree, r, [i], 0))}
@@ -669,8 +716,12 @@ export default function MenuCustomizacao() {
             <div
               onDragOver={(e) => { if (dragging) { e.preventDefault(); e.stopPropagation(); setDropHint({ tree, path: null, pos: "end" }); } }}
               onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(tree); }}
-              className={`mt-2 rounded-lg border-2 border-dashed py-4 text-center text-xs transition ${
-                endActive ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground/60"
+              className={`mt-2 rounded-lg border-2 border-dashed py-4 text-center text-xs font-medium transition ${
+                endActive
+                  ? "border-primary bg-primary/15 text-primary ring-4 ring-primary/20 animate-pulse"
+                  : dragging
+                    ? "border-primary/40 bg-primary/5 text-primary/70"
+                    : "border-transparent text-muted-foreground/60"
               }`}
             >
               {roots.length === 0
