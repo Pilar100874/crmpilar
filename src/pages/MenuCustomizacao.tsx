@@ -39,6 +39,7 @@ import {
   Shield,
   LayoutGrid,
 } from "lucide-react";
+import { MenuIconPicker, resolveMenuIcon } from "@/components/menu/MenuIconPicker";
 
 type TreeKey = "main" | "admin";
 type Path = number[];
