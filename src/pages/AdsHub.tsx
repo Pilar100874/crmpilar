@@ -39,6 +39,7 @@ import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSet
 import { AdsCommandPalette } from '@/components/ads/AdsCommandPalette';
 import { AdsShortcutsDialog } from '@/components/ads/AdsShortcutsDialog';
 import { AdsOnboardingTour } from '@/components/ads/AdsOnboardingTour';
+import { AdsSetupChecklistCard } from '@/components/ads/AdsSetupChecklistCard';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
