@@ -195,6 +195,7 @@ export default function VoiceAssistant() {
   const requestDictationRef = useRef<(options?: DictationRequestOptions) => void>(() => {});
   const finalTranscriptRef = useRef("");
   const liveTranscriptRef = useRef("");
+  const wakeBufferRef = useRef("");
 
   const hasWebSpeech = useMemo(
     () => typeof window !== "undefined" &&
@@ -272,21 +273,27 @@ export default function VoiceAssistant() {
     } catch {}
   };
 
+  const limparPainel = useCallback(() => {
+    setShowConfig(false);
+    setHistory([]);
+    setAmbiguas(null);
+    setInterimText("");
+    setManualText("");
+    setRelatorioMode(null);
+    setGrupoSelecionado(null);
+    setRelatorioAtual(null);
+    setResultadoRelatorio("");
+  }, []);
+
   function abrirPainelPorWake() {
+    shouldWakeRef.current = false;
+    wakeBufferRef.current = "";
+    limparPainel();
+    setOpen(true);
     playChime();
     setTimeout(() => {
-      setShowConfig(false);
-      setHistory([]);
-      setAmbiguas(null);
-      setInterimText("");
-      setManualText("");
-      setRelatorioMode(null);
-      setGrupoSelecionado(null);
-      setRelatorioAtual(null);
-      setResultadoRelatorio("");
-      setOpen(true);
       requestDictationRef.current({ source: "wake" });
-    }, 250);
+    }, 350);
   }
 
   const limparTimersDitado = useCallback(() => {
@@ -324,6 +331,7 @@ export default function VoiceAssistant() {
     if (!SR) return;
     if (wakeRecogRef.current) return;
     shouldWakeRef.current = true;
+    setWakeListening(true);
     try {
       const rec = new SR();
       rec.lang = "pt-BR";
@@ -331,15 +339,21 @@ export default function VoiceAssistant() {
       rec.interimResults = true;
       rec.onstart = () => setWakeListening(true);
       rec.onresult = (e: any) => {
+        const partes: string[] = [];
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const txt = e.results[i][0]?.transcript || "";
-          if (textoTemWake(txt)) {
-            shouldWakeRef.current = false;
-            setWakeListening(false);
-            abrirPainelPorWake();
-            try { rec.stop(); } catch {}
-            return;
-          }
+          if (txt) partes.push(txt);
+        }
+        const textoAtual = partes.join(" ").trim();
+        if (!textoAtual) return;
+        wakeBufferRef.current = `${wakeBufferRef.current} ${textoAtual}`.trim().slice(-140);
+        if (textoTemWake(textoAtual) || textoTemWake(wakeBufferRef.current)) {
+          shouldWakeRef.current = false;
+          setWakeListening(false);
+          abrirPainelPorWake();
+          try { rec.abort?.(); } catch {}
+          try { rec.stop?.(); } catch {}
+          return;
         }
       };
       rec.onerror = (ev: any) => {
@@ -351,23 +365,26 @@ export default function VoiceAssistant() {
       };
       rec.onend = () => {
         wakeRecogRef.current = null;
-        setWakeListening(false);
         if (shouldWakeRef.current) {
+          setWakeListening(true);
           wakeRestartTimerRef.current = window.setTimeout(() => {
             wakeRestartTimerRef.current = null;
             if (shouldWakeRef.current) startWake();
-          }, 400);
+          }, 900);
+        } else {
+          setWakeListening(false);
         }
       };
       rec.start();
       wakeRecogRef.current = rec;
     } catch {
+      setWakeListening(Boolean(shouldWakeRef.current));
       wakeRestartTimerRef.current = window.setTimeout(() => {
         wakeRestartTimerRef.current = null;
         if (shouldWakeRef.current) startWake();
-      }, 800);
+      }, 1200);
     }
-  }, [textoTemWake]);
+  }, [limparPainel, textoTemWake]);
 
   useEffect(() => {
     if (cfg.wake_word_ativo && !wakeUnavailable && !isRecording && !processing) {
@@ -474,7 +491,7 @@ export default function VoiceAssistant() {
       pendingDictationRef.current = false;
       wakeRecogRef.current = null;
       startDictationNow();
-    }, tinhaWakeAtivo ? 650 : 120);
+    }, tinhaWakeAtivo ? 180 : 80);
   }, [isRecording, processing, startDictationNow]);
 
   useEffect(() => {
@@ -487,7 +504,8 @@ export default function VoiceAssistant() {
     };
   }, [requestDictation]);
 
-  const stopDictation = () => {
+  const stopDictation = (processNow = true) => {
+    const texto = finalTranscriptRef.current.trim() || liveTranscriptRef.current.trim();
     pendingDictationRef.current = false;
     if (dictationStartTimerRef.current) {
       window.clearTimeout(dictationStartTimerRef.current);
@@ -496,10 +514,16 @@ export default function VoiceAssistant() {
     limparTimersDitado();
     try { dictationRef.current?.stop?.(); } catch {}
     setIsRecording(false);
+    if (processNow && texto) {
+      finalTranscriptRef.current = "";
+      liveTranscriptRef.current = "";
+      setInterimText("");
+      processarTexto(texto);
+    }
   };
 
   const fecharPainel = useCallback(() => {
-    stopDictation();
+    stopDictation(false);
     spaceHeldRef.current = false;
     setOpen(false);
   }, [limparTimersDitado]);
