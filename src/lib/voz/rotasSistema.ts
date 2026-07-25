@@ -82,7 +82,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/ponto/aprovacoes", titulo: "Ponto - Aprovações", aliases: ["aprovacoes do ponto"] },
 
   // ============ Menu Principal - Controle de Veículos ============
-  { path: "/controle-veiculos", titulo: "Controle de Veículos", aliases: ["cv", "controle dos veiculos"] },
+  { path: "/controle-veiculos", titulo: "Controle de Veículos", aliases: ["cv", "controle dos veiculos", "dashboard controle de veiculos", "painel controle de veiculos"] },
 
   // ============ Menu Principal - Controle de Visitantes ============
   { path: "/controle-visitantes", titulo: "Controle de Visitantes", aliases: ["visitantes"] },
@@ -160,7 +160,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/listas?tab=vinculos-segmento-prospect-usuario", titulo: "Vínculo Segmento Prospect x Gerente", aliases: ["vinculo segmento prospect", "segmento prospect gerente"] },
   { path: "/listas?tab=mapa-clientes", titulo: "Mapa de Clientes", aliases: ["mapa dos clientes", "mapa de empresas"] },
   { path: "/listas?tab=prospeccao-b2b", titulo: "Prospecção B2B", aliases: ["prospeccao b2b", "prospectar b2b"] },
-  { path: "/listas?tab=prospeccao-empresas", titulo: "Prospecção Empresas IA", aliases: ["prospeccao empresas ia", "wizard prospeccao"] },
+  { path: "/listas?tab=prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao", "prospeccao empresas", "prospeccao empresas ia", "wizard prospeccao"] },
   { path: "/listas?tab=prospeccao-vendedores", titulo: "Prospecção Representantes IA", aliases: ["prospeccao representantes", "prospectar representantes", "prospeccao vendedores"] },
   { path: "/listas?tab=config-ia-prospec", titulo: "Configurar IAs de Prospecção", aliases: ["configurar ias prospeccao", "config ia prospeccao"] },
   { path: "/listas?tab=prospeccao-claude-code", titulo: "Dados para IA (MCP)", aliases: ["dados para ia", "mcp dados", "disponibilizar dados ia"] },
@@ -172,12 +172,9 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/softphone", titulo: "Softphone", aliases: ["telefone", "ramal"] },
   { path: "/politicas-internas", titulo: "Políticas Internas" },
   { path: "/quality-assurance", titulo: "Quality Assurance", aliases: ["qa", "controle de qualidade"] },
-  { path: "/listas?tab=prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao"] },
-  { path: "/listas?tab=prospeccao-claude-code", titulo: "Prospecção Claude Code" },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },
 
   // ============ Sub-telas: Controle de Veículos ============
-  { path: "/controle-veiculos", titulo: "Controle de Veículos - Dashboard", aliases: ["dashboard controle de veiculos", "painel controle de veiculos"] },
   { path: "/controle-veiculos/veiculos", titulo: "Controle de Veículos - Veículos", aliases: ["cadastro de veiculos", "veiculos controle", "veiculos do controle"] },
   { path: "/controle-veiculos/motoristas", titulo: "Controle de Veículos - Motoristas", aliases: ["cadastro de motoristas", "motoristas"] },
   { path: "/controle-veiculos/saida", titulo: "Controle de Veículos - Saída", aliases: ["saida de veiculo", "registrar saida de veiculo"] },
