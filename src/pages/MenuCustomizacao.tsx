@@ -528,7 +528,12 @@ export default function MenuCustomizacao() {
       const Icon = OverrideIcon || p?.icon || FileText;
       return (
         <div key={key} className="relative">
-          {showBefore && <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+          {showBefore && (
+            <div className="absolute -top-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+              <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↑ Antes</span>
+            </div>
+          )}
           <div
             {...dragHandlers}
             className="flex items-center gap-1.5 py-2 px-2 rounded-lg hover:bg-muted/40 group border border-transparent cursor-grab active:cursor-grabbing"
@@ -552,7 +557,12 @@ export default function MenuCustomizacao() {
             />
             <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
           </div>
-          {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+          {showAfter && (
+            <div className="absolute -bottom-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+              <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↓ Depois</span>
+            </div>
+          )}
         </div>
       );
     }
@@ -560,12 +570,17 @@ export default function MenuCustomizacao() {
     const FolderIconResolved = resolveMenuIcon((node as any).iconName) || Folder;
     return (
       <div key={key} className="relative">
-        {showBefore && <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+        {showBefore && (
+          <div className="absolute -top-1 left-0 right-0 z-10 pointer-events-none flex items-center gap-2" style={{ marginLeft: depth * 16 }}>
+            <div className="h-1.5 flex-1 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)] animate-pulse" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background border border-primary/40 rounded-full px-2 py-0.5 shadow-sm">↑ Antes</span>
+          </div>
+        )}
         <div
           {...dragHandlers}
-          className={`flex items-center gap-1.5 py-2 px-2 rounded-lg group border cursor-grab active:cursor-grabbing transition ${
+          className={`flex items-center gap-1.5 py-2 px-2 rounded-lg group border-2 cursor-grab active:cursor-grabbing transition ${
             showInside
-              ? "border-primary bg-primary/10 ring-2 ring-primary/40"
+              ? "border-primary bg-primary/15 ring-4 ring-primary/30 shadow-lg scale-[1.01]"
               : "border-dashed border-transparent hover:bg-muted/40 hover:border-primary/30"
           }`}
           style={{ marginLeft: depth * 16 }}
