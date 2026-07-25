@@ -159,6 +159,20 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
                 </div>
               </div>
 
+              {typeof veiculo.ultima_posicao.ignicao === 'boolean' && (
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${veiculo.ultima_posicao.ignicao ? 'bg-emerald-500/15' : 'bg-muted'}`}>
+                    <span className="text-base">{veiculo.ultima_posicao.ignicao ? '🔑' : '⏻'}</span>
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Ignição</p>
+                    <p className={`font-medium text-sm ${veiculo.ultima_posicao.ignicao ? 'text-emerald-600' : ''}`}>
+                      {veiculo.ultima_posicao.ignicao ? 'Ligada' : 'Desligada'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {veiculo.ultima_posicao.direcao !== undefined && (
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
