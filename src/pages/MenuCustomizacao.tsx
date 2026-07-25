@@ -701,7 +701,7 @@ export default function MenuCustomizacao() {
           className="h-9 text-sm"
         />
         <p className="text-[11px] text-muted-foreground mt-2 hidden sm:block">
-          Arraste até um dos menus (a linha azul mostra onde vai cair) ou toque em <strong>+ Menu</strong> / <strong>+ Admin</strong>.
+          Arraste um programa até o menu desejado. A linha azul mostra onde ele vai cair.
         </p>
       </div>
       <ScrollArea className="h-[50vh] lg:h-[62vh]">
