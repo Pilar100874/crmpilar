@@ -65,22 +65,55 @@ interface TabItem {
   platform?: string;
 }
 
-// Menu reagrupado — grupos lógicos, itens antigos ainda acessíveis via ids
-const tabItems: TabItem[] = [
-  { id: 'wizard', label: 'Wizard de Setup', icon: Sparkles, description: 'Assistente guiado para configurar tudo passo a passo' },
-  { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
-  { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
-  { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Frequência de execução das automações' },
-  { id: 'connections', label: 'Conexões', icon: Key, description: 'Contas de anúncio + Apps do Desenvolvedor' },
-  { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
-  { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Alertas de performance' },
-  { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
-  { id: 'google', label: 'Google Ads', icon: GoogleIcon, description: 'Dashboard Google Ads', platform: 'google' },
-  { id: 'meta', label: 'Meta Ads', icon: MetaIcon, description: 'Dashboard Meta Ads (Facebook/Instagram)', platform: 'meta' },
-  { id: 'tiktok', label: 'TikTok Ads', icon: TikTokIcon, description: 'Dashboard TikTok Ads', platform: 'tiktok' },
-  { id: 'mercadolivre', label: 'Mercado Livre Ads', icon: MercadoLivreIcon, description: 'Dashboard Mercado Livre Ads', platform: 'mercado_livre' },
-  { id: 'amazon', label: 'Amazon Ads', icon: AmazonIcon, description: 'Dashboard Amazon Ads', platform: 'amazon' },
+interface TabGroup {
+  id: string;
+  label: string;
+  items: TabItem[];
+}
+
+// Menu agrupado em seções lógicas
+const tabGroups: TabGroup[] = [
+  {
+    id: "start",
+    label: "Comece aqui",
+    items: [
+      { id: 'wizard', label: 'Assistente de Setup', icon: Sparkles, description: 'Configuração guiada passo a passo' },
+      { id: 'connections', label: 'Conectar plataformas', icon: Key, description: 'Conecte suas contas de Google, Meta e TikTok Ads' },
+    ],
+  },
+  {
+    id: "operate",
+    label: "Operar",
+    items: [
+      { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
+      { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
+      { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Frequência de execução das automações' },
+    ],
+  },
+  {
+    id: "analyze",
+    label: "Analisar",
+    items: [
+      { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
+      { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Alertas de performance' },
+      { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
+    ],
+  },
+  {
+    id: "platforms",
+    label: "Por plataforma",
+    items: [
+      { id: 'google', label: 'Google Ads', icon: GoogleIcon, description: 'Dashboard Google Ads', platform: 'google' },
+      { id: 'meta', label: 'Meta Ads', icon: MetaIcon, description: 'Dashboard Meta Ads (Facebook/Instagram)', platform: 'meta' },
+      { id: 'tiktok', label: 'TikTok Ads', icon: TikTokIcon, description: 'Dashboard TikTok Ads', platform: 'tiktok' },
+      { id: 'mercadolivre', label: 'Mercado Livre Ads', icon: MercadoLivreIcon, description: 'Dashboard Mercado Livre Ads', platform: 'mercado_livre' },
+      { id: 'amazon', label: 'Amazon Ads', icon: AmazonIcon, description: 'Dashboard Amazon Ads', platform: 'amazon' },
+    ],
+  },
 ];
+
+const tabItems: TabItem[] = tabGroups.flatMap((g) => g.items);
+
 
 const AdsHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState(() => {
