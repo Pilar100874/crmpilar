@@ -23,7 +23,6 @@ type Config = {
 };
 
 type LogItem = { user: string; assistant: string; ts: number };
-type CustomCmd = { id: string; frase_gatilho: string; tipo_acao: string; payload: any; ativo: boolean };
 
 const WAKE_DEFAULT = "ei pilar";
 
@@ -58,9 +57,7 @@ export default function VoiceAssistant() {
   const [wakeListening, setWakeListening] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [history, setHistory] = useState<LogItem[]>([]);
-  const [customCmds, setCustomCmds] = useState<CustomCmd[]>([]);
-  const [popupResult, setPopupResult] = useState<{ titulo: string; texto: string } | null>(null);
-  const [pendingConfirm, setPendingConfirm] = useState<any>(null);
+  const [ambiguas, setAmbiguas] = useState<RotaSistema[] | null>(null);
   const [manualText, setManualText] = useState("");
 
   // === Fluxo de RELATÓRIOS ===
@@ -109,12 +106,6 @@ export default function VoiceAssistant() {
       const { data: usuario } = await supabase.from("usuarios")
         .select("estabelecimento_id").eq("auth_user_id", u.user.id).maybeSingle();
       if (usuario?.estabelecimento_id) {
-        const { data: cmds } = await supabase.from("assistente_voz_comandos")
-          .select("id, frase_gatilho, tipo_acao, payload, ativo")
-          .eq("estabelecimento_id", usuario.estabelecimento_id)
-          .eq("ativo", true);
-        setCustomCmds((cmds as any) || []);
-
         const { data: rels } = await supabase.from("relatorios_voz")
           .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo")
           .eq("estabelecimento_id", usuario.estabelecimento_id)
