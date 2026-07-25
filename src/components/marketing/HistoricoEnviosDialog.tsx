@@ -136,80 +136,112 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                         </div>
                       </div>
 
-                      {/* Conteúdo enviado */}
-                      {log.items?.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            Conteúdo enviado ({log.items.length})
-                          </p>
-                          <div className="space-y-2">
-                            {log.items.map((it, idx) => (
-                              <div key={idx} className="flex gap-3 rounded-md bg-muted/40 p-2.5">
-                                <div className="mt-0.5 text-muted-foreground shrink-0">{iconFor(it.tipo)}</div>
-                                <div className="flex-1 min-w-0 space-y-1">
-                                  <p className="text-[10px] uppercase text-muted-foreground">{it.tipo}</p>
-                                  {it.titulo && <p className="text-sm font-medium">{it.titulo}</p>}
-                                  {it.url && (it.tipo === "imagem" ? (
-                                    <img src={it.url} alt="" className="max-h-40 rounded border object-cover" />
-                                  ) : it.tipo === "video" ? (
-                                    <video src={it.url} controls className="max-h-40 rounded border" />
-                                  ) : it.tipo === "audio" ? (
-                                    <audio src={it.url} controls className="w-full" />
-                                  ) : (
-                                    <a href={it.url} target="_blank" rel="noreferrer" className="text-xs text-primary underline break-all">
-                                      {it.nome || it.url}
-                                    </a>
-                                  ))}
-                                  {(it.conteudo || it.legenda) && (
-                                    <p className="text-xs whitespace-pre-wrap break-words">{it.conteudo || it.legenda}</p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                      {/* Prévia + botão para ver detalhes */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="text-xs text-muted-foreground flex items-center gap-3">
+                          <span className="inline-flex items-center gap-1">
+                            <MessageSquare className="w-3.5 h-3.5" /> {log.items?.length ?? 0} itens
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Users className="w-3.5 h-3.5" /> {enviados}/{total}{falhas ? ` · ${falhas} falhas` : ""}
+                          </span>
                         </div>
-                      )}
-
-                      {/* Destinatários */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-                            <Users className="w-3 h-3" />
-                            Destinatários {total > 0 && `(${enviados}/${total}${falhas ? ` · ${falhas} falhas` : ""})`}
-                          </p>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setDetalhe(log)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            Ver o que foi enviado
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setExpanded((p) => ({ ...p, [log.id]: !p[log.id] }))}
+                            className="h-7 px-2 text-xs"
+                          >
+                            {expanded[log.id] ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          </Button>
                         </div>
-                        {log.recipients?.length > 0 ? (
-                          <div className="max-h-40 overflow-y-auto rounded-md border">
-                            <table className="w-full text-xs">
-                              <tbody>
-                                {log.recipients.map((r, i) => (
-                                  <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
-                                    <td className="px-2 py-1.5">{r.nome || "—"}</td>
-                                    <td className="px-2 py-1.5 text-muted-foreground">{r.telefone || r.email || "—"}</td>
-                                    <td className="px-2 py-1.5 text-right">
-                                      {r.status === "enviado" || r.status === "ok" ? (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline" />
-                                      ) : (
-                                        <span className="text-destructive" title={r.motivo || ""}>
-                                          <XCircle className="w-3.5 h-3.5 inline" />
-                                        </span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-muted-foreground italic">Sem destinatários registrados.</p>
-                        )}
                       </div>
+
+                      {expanded[log.id] && (
+                        <>
+                          {log.items?.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                Conteúdo enviado ({log.items.length})
+                              </p>
+                              <div className="space-y-2">
+                                {log.items.map((it, idx) => (
+                                  <div key={idx} className="flex gap-3 rounded-md bg-muted/40 p-2.5">
+                                    <div className="mt-0.5 text-muted-foreground shrink-0">{iconFor(it.tipo)}</div>
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                      <p className="text-[10px] uppercase text-muted-foreground">{it.tipo}</p>
+                                      {it.titulo && <p className="text-sm font-medium">{it.titulo}</p>}
+                                      {it.url && (it.tipo === "imagem" ? (
+                                        <img src={it.url} alt="" className="max-h-40 rounded border object-cover" />
+                                      ) : it.tipo === "video" ? (
+                                        <video src={it.url} controls className="max-h-40 rounded border" />
+                                      ) : it.tipo === "audio" ? (
+                                        <audio src={it.url} controls className="w-full" />
+                                      ) : (
+                                        <a href={it.url} target="_blank" rel="noreferrer" className="text-xs text-primary underline break-all">
+                                          {it.nome || it.url}
+                                        </a>
+                                      ))}
+                                      {(it.conteudo || it.legenda) && (
+                                        <p className="text-xs whitespace-pre-wrap break-words">{it.conteudo || it.legenda}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                              <Users className="w-3 h-3" />
+                              Destinatários {total > 0 && `(${enviados}/${total}${falhas ? ` · ${falhas} falhas` : ""})`}
+                            </p>
+                            {log.recipients?.length > 0 ? (
+                              <div className="max-h-40 overflow-y-auto rounded-md border">
+                                <table className="w-full text-xs">
+                                  <tbody>
+                                    {log.recipients.map((r, i) => (
+                                      <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
+                                        <td className="px-2 py-1.5">{r.nome || "—"}</td>
+                                        <td className="px-2 py-1.5 text-muted-foreground">{r.telefone || r.email || "—"}</td>
+                                        <td className="px-2 py-1.5 text-right">
+                                          {r.status === "enviado" || r.status === "ok" ? (
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline" />
+                                          ) : (
+                                            <span className="text-destructive" title={r.motivo || ""}>
+                                              <XCircle className="w-3.5 h-3.5 inline" />
+                                            </span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground italic">Sem destinatários registrados.</p>
+                            )}
+                          </div>
+                        </>
+                      )}
 
                       {log.error_message && (
                         <p className="text-xs text-destructive">{log.error_message}</p>
                       )}
                     </div>
                   </div>
+
                 );
               })}
             </div>
