@@ -182,15 +182,20 @@ export function applyAdminFooterCustomization(): MenuItem[] {
   const programs = extractPrograms([]); // pega system/footer pools
   const nodeToItems = (nodes: CustomNode[]): any[] => {
     const out: any[] = [];
+    const IconsMap = LucideIcons as unknown as Record<string, any>;
     for (const n of nodes) {
       if (n.kind === "program") {
         const p = programs.get(n.programId);
-        if (p) out.push({ id: p.id, title: p.title, url: p.url, icon: p.icon, ...(p.system ? { system: p.system } : {}) });
+        if (p) {
+          const icon = (n.iconName && IconsMap[n.iconName]) || p.icon;
+          out.push({ id: p.id, title: p.title, url: p.url, icon, ...(p.system ? { system: p.system } : {}) });
+        }
       } else {
+        const icon = (n.iconName && IconsMap[n.iconName]) || LucideIcons.Folder;
         out.push({
           id: n.id,
           title: n.title,
-          icon: LucideIcons.Folder,
+          icon,
           subItems: nodeToItems(n.children),
         });
       }
