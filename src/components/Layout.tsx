@@ -899,7 +899,54 @@ export default function Layout({ children }: LayoutProps) {
               </>
                
               {visibleMenus.map((item) => {
+                // Itens do rodapé posicionados no menu principal
+                if (item.system) {
+                  const handleClick = () => {
+                    if (item.system === "lock") toggleMenuLock();
+                    else if (item.system === "theme") toggleTheme();
+                    else if (item.system === "logout") handleLogout();
+                    else if (item.system === "admin") navigate("/admin");
+                  };
+                  const label =
+                    item.system === "lock"
+                      ? (menuLocked ? "Destravar menu" : "Travar menu")
+                      : item.system === "theme"
+                      ? (isDarkMode ? "Modo Claro" : "Modo Escuro")
+                      : item.title;
+                  const Icon =
+                    item.system === "theme"
+                      ? (isDarkMode ? Sun : Moon)
+                      : item.system === "lock"
+                      ? (menuLocked ? LockKeyholeOpen ?? Lock : Lock)
+                      : item.icon;
+                  if (menuLocked) {
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={handleClick}
+                        title={label}
+                        className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      >
+                        <Icon className="w-6 h-6" />
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={handleClick}
+                      title={label}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </button>
+                  );
+                }
                 if (item.subItems && item.subItems.length > 0) {
+
                   const isMenuOpen = openSubmenuId === item.id;
                   // Destaca apenas se o submenu está aberto
                   const shouldHighlight = isMenuOpen;
