@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Info, Key, Link2, CheckCircle2, AlertCircle, Loader2, Zap, Copy, Check, ExternalLink, Settings } from "lucide-react";
+import { Info, Key, Link2, CheckCircle2, AlertCircle, Loader2, Zap, Copy, Check, ExternalLink, Settings, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import AdsPlatformApps from "./AdsPlatformApps";
 import AdsCredentials from "./AdsCredentials";
+import PlatformConnectWizard from "@/components/ads/PlatformConnectWizard";
 
 const REDIRECT_URI = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ads-oauth-callback`;
 
