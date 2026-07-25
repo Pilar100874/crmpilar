@@ -171,7 +171,7 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">{dados.length} registro(s)</div>
           <div className="flex gap-1">
-            <Button size="sm" variant="outline" onClick={gerarPdf} disabled={!dados.length}>
+            <Button size="sm" variant="outline" onClick={() => gerarPdf()} disabled={!dados.length}>
               <FileDown className="h-3 w-3 mr-1" /> PDF
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setStep("filtros")}>
