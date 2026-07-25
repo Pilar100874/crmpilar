@@ -20,10 +20,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
 import { Lock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { toast } from "@/lib/toast-config";
 import {
   ChevronDown,
   ChevronRight,
