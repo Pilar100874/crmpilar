@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Play, Save, RotateCcw, ChevronRight, Database } from "lucide-react";
+import { Loader2, Play, Save, RotateCcw, ChevronRight, Database, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 
 export type FiltroSchema = {
   chave: string;
@@ -114,7 +117,39 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
 
   const colunas = dados.length ? Object.keys(dados[0]) : [];
 
+  const gerarPdf = useCallback(() => {
+    if (!dados.length) { toast.error("Nenhum dado para exportar"); return; }
+    try {
+      const doc = new jsPDF({ orientation: "landscape" });
+      const cols = Object.keys(dados[0]);
+      doc.setFontSize(14);
+      doc.text(relatorio.nome, 14, 15);
+      doc.setFontSize(9);
+      doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} · ${dados.length} registro(s)`, 14, 21);
+      autoTable(doc, {
+        startY: 26,
+        head: [cols],
+        body: dados.map(r => cols.map(c => r[c] != null ? String(r[c]) : "-")),
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [30, 30, 30] },
+      });
+      const nome = `${relatorio.nome.replace(/[^a-z0-9]+/gi, "_")}_${Date.now()}.pdf`;
+      doc.save(nome);
+      toast.success("PDF gerado");
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao gerar PDF");
+    }
+  }, [dados, relatorio.nome]);
+
+  // Escuta comando de voz "gerar pdf"
+  useEffect(() => {
+    const handler = () => { if (step === "resultado") gerarPdf(); };
+    window.addEventListener("voz:gerar-pdf-relatorio", handler);
+    return () => window.removeEventListener("voz:gerar-pdf-relatorio", handler);
+  }, [step, gerarPdf]);
+
   if (step === "executando") {
+
     return (
       <div className="p-6 flex flex-col items-center gap-3 text-sm">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -128,10 +163,16 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">{dados.length} registro(s)</div>
-          <Button size="sm" variant="ghost" onClick={() => setStep("filtros")}>
-            <RotateCcw className="h-3 w-3 mr-1" /> Mudar filtros
-          </Button>
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" onClick={gerarPdf} disabled={!dados.length}>
+              <FileDown className="h-3 w-3 mr-1" /> PDF
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setStep("filtros")}>
+              <RotateCcw className="h-3 w-3 mr-1" /> Mudar filtros
+            </Button>
+          </div>
         </div>
+
         {dados.length === 0 ? (
           <div className="text-center text-xs text-muted-foreground py-6">Nenhum dado encontrado.</div>
         ) : (
