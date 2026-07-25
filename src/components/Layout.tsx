@@ -645,16 +645,16 @@ export default function Layout({ children }: LayoutProps) {
 
   // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
-  const [adminFooterItems, setAdminFooterItems] = useState(() => applyAdminFooterCustomization());
+  const [adminFooterItems, setAdminFooterItems] = useState(() => applyAdminFooterCustomization(menuItems));
   useEffect(() => {
     const handler = () => {
       setCustomizedItems(applyMenuCustomization(menuItems));
-      setAdminFooterItems(applyAdminFooterCustomization());
+      setAdminFooterItems(applyAdminFooterCustomization(menuItems));
     };
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
     fetchRemoteCustomization().then(() => {
       setCustomizedItems(applyMenuCustomization(menuItems));
-      setAdminFooterItems(applyAdminFooterCustomization());
+      setAdminFooterItems(applyAdminFooterCustomization(menuItems));
     });
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
