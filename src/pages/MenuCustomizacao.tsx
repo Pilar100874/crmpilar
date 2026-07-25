@@ -536,7 +536,6 @@ export default function MenuCustomizacao() {
               }
             />
             <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
-            <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">programa</Badge>
           </div>
           {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
         </div>
