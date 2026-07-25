@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { matchRotaPorFala, matchRotaComCandidatos, type RotaSistema } from "@/lib/voz/rotasSistema";
+import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
 
 type Config = {
   wake_word_ativo: boolean;
