@@ -25,6 +25,7 @@ type Config = {
 };
 
 type LogItem = { user: string; assistant: string; ts: number };
+type DictationRequestOptions = { holdToTalk?: boolean; source?: "wake" | "space" | "button" };
 
 const WAKE_DEFAULT = "ei pilar";
 
@@ -185,7 +186,13 @@ export default function VoiceAssistant() {
   const shouldWakeRef = useRef(false);
   const pendingDictationRef = useRef(false);
   const dictationStartTimerRef = useRef<number | null>(null);
-  const requestDictationRef = useRef<() => void>(() => {});
+  const dictationHardStopTimerRef = useRef<number | null>(null);
+  const dictationSilenceTimerRef = useRef<number | null>(null);
+  const dictationStartedAtRef = useRef(0);
+  const spaceHeldRef = useRef(false);
+  const lastDictationRequestRef = useRef<DictationRequestOptions>({});
+  const wakeRestartTimerRef = useRef<number | null>(null);
+  const requestDictationRef = useRef<(options?: DictationRequestOptions) => void>(() => {});
   const finalTranscriptRef = useRef("");
   const liveTranscriptRef = useRef("");
 
@@ -278,12 +285,34 @@ export default function VoiceAssistant() {
       setRelatorioAtual(null);
       setResultadoRelatorio("");
       setOpen(true);
-      requestDictationRef.current();
+      requestDictationRef.current({ source: "wake" });
     }, 250);
   }
 
+  const limparTimersDitado = useCallback(() => {
+    if (dictationHardStopTimerRef.current) {
+      window.clearTimeout(dictationHardStopTimerRef.current);
+      dictationHardStopTimerRef.current = null;
+    }
+    if (dictationSilenceTimerRef.current) {
+      window.clearTimeout(dictationSilenceTimerRef.current);
+      dictationSilenceTimerRef.current = null;
+    }
+  }, []);
+
+  const agendarParadaDitado = useCallback((delay: number) => {
+    if (dictationSilenceTimerRef.current) window.clearTimeout(dictationSilenceTimerRef.current);
+    dictationSilenceTimerRef.current = window.setTimeout(() => {
+      try { dictationRef.current?.stop?.(); } catch {}
+    }, delay);
+  }, []);
+
   const stopWake = useCallback(() => {
     shouldWakeRef.current = false;
+    if (wakeRestartTimerRef.current) {
+      window.clearTimeout(wakeRestartTimerRef.current);
+      wakeRestartTimerRef.current = null;
+    }
     try { wakeRecogRef.current?.abort?.(); } catch {}
     try { wakeRecogRef.current?.stop?.(); } catch {}
     wakeRecogRef.current = null;
@@ -324,13 +353,19 @@ export default function VoiceAssistant() {
         wakeRecogRef.current = null;
         setWakeListening(false);
         if (shouldWakeRef.current) {
-          setTimeout(() => { if (shouldWakeRef.current) startWake(); }, 400);
+          wakeRestartTimerRef.current = window.setTimeout(() => {
+            wakeRestartTimerRef.current = null;
+            if (shouldWakeRef.current) startWake();
+          }, 400);
         }
       };
       rec.start();
       wakeRecogRef.current = rec;
     } catch {
-      setTimeout(() => { if (shouldWakeRef.current) startWake(); }, 800);
+      wakeRestartTimerRef.current = window.setTimeout(() => {
+        wakeRestartTimerRef.current = null;
+        if (shouldWakeRef.current) startWake();
+      }, 800);
     }
   }, [textoTemWake]);
 
@@ -355,12 +390,26 @@ export default function VoiceAssistant() {
     finalTranscriptRef.current = "";
     liveTranscriptRef.current = "";
     setInterimText("");
+    limparTimersDitado();
     try {
       const rec = new SR();
+      const holdToTalk = Boolean(lastDictationRequestRef.current.holdToTalk);
       rec.lang = "pt-BR";
-      rec.continuous = false;
+      rec.continuous = true;
       rec.interimResults = true;
-      rec.onstart = () => { setIsRecording(true); setInterimText("Ouvindo…"); };
+      rec.onstart = () => {
+        dictationStartedAtRef.current = Date.now();
+        setIsRecording(true);
+        setInterimText("Ouvindo…");
+        dictationHardStopTimerRef.current = window.setTimeout(() => {
+          try { rec.stop(); } catch {}
+        }, holdToTalk ? 30000 : 9000);
+        if (holdToTalk && !spaceHeldRef.current) {
+          agendarParadaDitado(1400);
+        } else if (!holdToTalk) {
+          agendarParadaDitado(6500);
+        }
+      };
       rec.onresult = (e: any) => {
         let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -370,14 +419,17 @@ export default function VoiceAssistant() {
         }
         liveTranscriptRef.current = (finalTranscriptRef.current + interim).trim();
         setInterimText(liveTranscriptRef.current || "Ouvindo…");
+        if (liveTranscriptRef.current && !holdToTalk) agendarParadaDitado(1400);
       };
       rec.onerror = (ev: any) => {
+        limparTimersDitado();
         setIsRecording(false);
         setInterimText("");
         dictationRef.current = null;
-        if (ev?.error === "not-allowed") toast.error("Permissão de microfone negada.");
+        if (ev?.error === "not-allowed" || ev?.error === "service-not-allowed") toast.error("Permissão de microfone negada.");
       };
       rec.onend = () => {
+        limparTimersDitado();
         setIsRecording(false);
         dictationRef.current = null;
         const texto = finalTranscriptRef.current.trim() || liveTranscriptRef.current.trim();
@@ -402,10 +454,11 @@ export default function VoiceAssistant() {
       }
       toast.error("Não consegui iniciar o microfone.");
     }
-  }, [isRecording, processing]);
+  }, [agendarParadaDitado, isRecording, limparTimersDitado, processing]);
 
-  const requestDictation = useCallback(() => {
+  const requestDictation = useCallback((options: DictationRequestOptions = {}) => {
     if (isRecording || processing) return;
+    lastDictationRequestRef.current = options;
     pendingDictationRef.current = true;
     shouldWakeRef.current = false;
 
@@ -440,6 +493,7 @@ export default function VoiceAssistant() {
       window.clearTimeout(dictationStartTimerRef.current);
       dictationStartTimerRef.current = null;
     }
+    limparTimersDitado();
     try { dictationRef.current?.stop?.(); } catch {}
     setIsRecording(false);
   };
@@ -645,13 +699,13 @@ export default function VoiceAssistant() {
       (t instanceof HTMLElement && t.isContentEditable);
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Escape" && open) { setOpen(false); return; }
-      if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
+      if (e.code !== "Space" || isTyping(e.target)) return;
       e.preventDefault();
+      e.stopPropagation();
+      if (e.repeat) return;
       if (processing) return;
-      if (isRecording) {
-        stopDictation();
-        return;
-      }
+      spaceHeldRef.current = true;
+      if (isRecording) return;
       if (!open) {
         setShowConfig(false);
         setHistory([]);
@@ -664,11 +718,25 @@ export default function VoiceAssistant() {
         setResultadoRelatorio("");
         setOpen(true);
       }
-      requestDictation();
+      requestDictation({ holdToTalk: true, source: "space" });
     };
-    window.addEventListener("keydown", onKeyDown);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || isTyping(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (!spaceHeldRef.current) return;
+      spaceHeldRef.current = false;
+      const elapsed = Date.now() - dictationStartedAtRef.current;
+      const delay = Math.max(0, 900 - elapsed);
+      window.setTimeout(() => {
+        if (!spaceHeldRef.current && dictationRef.current) stopDictation();
+      }, delay);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
     };
   }, [open, isRecording, processing, requestDictation]);
 
