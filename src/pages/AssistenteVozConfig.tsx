@@ -155,9 +155,14 @@ export default function AssistenteVozConfig() {
 
         {/* ======================= RELATÓRIOS ======================= */}
         <TabsContent value="relatorios" className="pt-2">
-          {/* Reaproveita a página completa de Relatórios por Voz */}
           <div className="-mx-4 sm:-mx-6">
             <RelatoriosVozConfig />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="snapshots" className="pt-2">
+          <div className="-mx-4 sm:-mx-6">
+            <RelatoriosVozSnapshots />
           </div>
         </TabsContent>
 
