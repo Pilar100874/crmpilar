@@ -790,6 +790,98 @@ export default function Layout({ children }: LayoutProps) {
     });
   };
 
+  // Executor centralizado das ações de sistema (lock/theme/logout/etc.)
+  const runSystemAction = (sys?: string) => {
+    switch (sys) {
+      case "lock": handleToggleLock(); break;
+      case "theme": toggleTheme(); break;
+      case "logout": handleLogout(); break;
+      case "admin": navigate("/admin"); break;
+      case "profile": navigate("/perfil"); break;
+      case "share-screen": navigate("/compartilhar-tela"); break;
+      case "open-ticket": window.dispatchEvent(new CustomEvent("open-support-ticket")); break;
+      case "pwa-update": setShowPwaUpdateDialog(true); break;
+      case "change-password": setShowChangePasswordDialog(true); break;
+    }
+  };
+
+  // Renderiza itens do "Menu do usuário (rodapé)" customizado, com suporte a submenus.
+  const renderUserFooterItems = (items: any[], onClose: () => void, locked: boolean): any => {
+    const textClass = locked ? "text-sidebar-foreground/70" : "text-sidebar-foreground/60";
+    const hoverBg = locked ? "hover:bg-sidebar-accent/50" : "hover:bg-sidebar-accent/30";
+    return items.map((it: any) => {
+      if (it.subItems && it.subItems.length > 0) {
+        return (
+          <div key={it.id} className="pt-1">
+            <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/40">{it.title}</div>
+            <div className="ml-2 space-y-1 border-l border-sidebar-border/40 pl-2">
+              {renderUserFooterItems(it.subItems, onClose, locked)}
+            </div>
+          </div>
+        );
+      }
+      const Icon = it.icon || LucideIcons.Circle;
+      const cls = `flex items-center gap-3 px-3 ${locked ? "py-2.5" : "py-2"} rounded-md transition-colors ${textClass} hover:text-sidebar-foreground ${hoverBg} w-full text-left`;
+      const isSystemHash = it.system && (!it.url || it.url.startsWith("#"));
+      if (isSystemHash) {
+        return (
+          <button key={it.id} onClick={() => { onClose(); runSystemAction(it.system); }} className={cls}>
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      return (
+        <NavLink key={it.id} to={it.url || "#"} onClick={onClose} className={cls}>
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">{it.title}</span>
+        </NavLink>
+      );
+    });
+  };
+
+  // Renderiza a tira de botões de sistema no rodapé (lock/theme/logout customizáveis).
+  const renderSystemFooterButtons = () => {
+    return systemFooterItems.map((it: any) => {
+      if (it.subItems) return null;
+      // Oculta "Travar" nos casos originais (telas pequenas sem menu aberto)
+      if (it.system === "lock" && isSmallScreen && !menuOpen && !menuLocked) return null;
+      const Icon = it.icon || LucideIcons.Circle;
+      const displayIcon = it.system === "theme"
+        ? (isDarkMode ? Sun : Moon)
+        : it.system === "lock"
+          ? (menuLocked ? Pin : PinOff)
+          : Icon;
+      const displayTitle = it.system === "theme"
+        ? (isDarkMode ? "Modo Claro" : "Modo Escuro")
+        : it.system === "lock"
+          ? (menuLocked ? "Destravar menu" : "Travar Menu")
+          : it.title;
+      const onClick = () => {
+        if (it.system) runSystemAction(it.system);
+        else if (it.url && it.url.startsWith("/")) navigate(it.url);
+      };
+      if (menuLocked) {
+        const IconCmp: any = displayIcon;
+        return (
+          <button key={it.id} type="button" onClick={onClick} title={displayTitle}
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors">
+            <IconCmp className="w-5 h-5" />
+          </button>
+        );
+      }
+      const IconCmp: any = displayIcon;
+      return (
+        <button key={it.id} type="button" onClick={onClick} title={displayTitle}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50">
+          <IconCmp className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-medium">{displayTitle}</span>
+        </button>
+      );
+    });
+  };
+
+
   if (soloMode) {
     return (
       <div className="min-h-screen bg-background text-foreground">
