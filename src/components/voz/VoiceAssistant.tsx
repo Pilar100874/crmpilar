@@ -338,26 +338,32 @@ export default function VoiceAssistant() {
   // ---------- Gerar relatório ----------
   const gerarRelatorio = async (r: RelatorioVoz) => {
     setRelatorioAtual(r);
+    setOpen(true);
+    // Se o relatório tem schema determinístico (tabela_base ou API), abre o wizard
+    const temSchema = (r.tipo_fonte === "tabela" && !!r.tabela_base) || r.tipo_fonte === "api";
+    if (temSchema) {
+      setRelatorioMode("resultado"); // wizard cuida do próprio fluxo
+      setResultadoRelatorio(""); // limpa qualquer resultado antigo em texto
+      return;
+    }
+    // Fallback legado (relatório sem schema): usa geração por prompt
     setRelatorioMode("gerando");
     setResultadoRelatorio("");
-    setOpen(true);
     if (cfg.responder_por_voz) falar(`Gerando ${r.nome}.`);
     try {
       const promptSistema =
         `Você é um analista. Gere o relatório "${r.nome}" (grupo: ${r.grupo}, tipo: ${r.tipo_saida}). ` +
-        `Instruções do usuário: ${r.prompt_geracao}. ` +
-        `Responda em português, formatado em Markdown com títulos, tabelas e/ou bullets conforme apropriado. ` +
-        `Se não tiver dados reais disponíveis, indique claramente e sugira quais fontes seriam necessárias.`;
+        `Instruções: ${r.prompt_geracao}. Responda em Markdown em português. ` +
+        `Se não tiver dados reais, indique claramente.`;
       const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
         body: { transcricao: promptSistema, messages: [] },
       });
       if (chatResp.error) throw new Error(chatResp.error.message);
-      const resposta = chatResp.data?.resposta || "Não foi possível gerar o relatório.";
-      setResultadoRelatorio(resposta);
+      setResultadoRelatorio(chatResp.data?.resposta || "Não foi possível gerar o relatório.");
       setRelatorioMode("resultado");
     } catch (e: any) {
       toast.error(e.message);
-      setResultadoRelatorio(`Erro ao gerar: ${e.message}`);
+      setResultadoRelatorio(`Erro: ${e.message}`);
       setRelatorioMode("resultado");
     }
   };
