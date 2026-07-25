@@ -242,7 +242,8 @@ export default function TvDashboardVeiculos() {
 
           if (ultimaPosicao) {
             const minutosDesdeUltima = differenceInMinutes(new Date(), new Date(ultimaPosicao.data_hora));
-            if (minutosDesdeUltima < 10) {
+            // Mesmo limiar do cadastro de veículos (30 min = Online)
+            if (minutosDesdeUltima <= 30) {
               status = ultimaPosicao.velocidade > 5 ? 'movendo' : 'parado';
             }
           }
