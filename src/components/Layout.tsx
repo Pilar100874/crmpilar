@@ -504,7 +504,7 @@ export default function Layout({ children }: LayoutProps) {
 
   // Close any open submenu whenever the route changes. On mobile/tablet, also collapse menu.
   useEffect(() => {
-    setOpenSubmenuId(null);
+    setOpenSubmenuId(location.pathname.startsWith("/admin") ? "Admin" : null);
     if (window.innerWidth <= 1024) {
       setMenuOpen(false);
     }
