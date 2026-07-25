@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import NovaAutomacaoDialog from "@/components/marketing/NovaAutomacaoDialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Progress } from "@/components/ui/progress";
+import HistoricoEnviosDialog from "@/components/marketing/HistoricoEnviosDialog";
 
 export default function MarketingAutomacoes() {
   const { openSubmenu } = useLayout();
