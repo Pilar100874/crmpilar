@@ -7,8 +7,8 @@ const KEY = "menu_customization_v1";
 export const MENU_CUSTOMIZATION_EVENT = "menu-customization-changed";
 
 export type CustomNode =
-  | { kind: "program"; programId: string }
-  | { kind: "container"; id: string; title: string; children: CustomNode[] };
+  | { kind: "program"; programId: string; iconName?: string }
+  | { kind: "container"; id: string; title: string; iconName?: string; children: CustomNode[] };
 
 export interface MenuCustomization {
   version: 1;
@@ -182,15 +182,20 @@ export function applyAdminFooterCustomization(): MenuItem[] {
   const programs = extractPrograms([]); // pega system/footer pools
   const nodeToItems = (nodes: CustomNode[]): any[] => {
     const out: any[] = [];
+    const IconsMap = LucideIcons as unknown as Record<string, any>;
     for (const n of nodes) {
       if (n.kind === "program") {
         const p = programs.get(n.programId);
-        if (p) out.push({ id: p.id, title: p.title, url: p.url, icon: p.icon, ...(p.system ? { system: p.system } : {}) });
+        if (p) {
+          const icon = (n.iconName && IconsMap[n.iconName]) || p.icon;
+          out.push({ id: p.id, title: p.title, url: p.url, icon, ...(p.system ? { system: p.system } : {}) });
+        }
       } else {
+        const icon = (n.iconName && IconsMap[n.iconName]) || LucideIcons.Folder;
         out.push({
           id: n.id,
           title: n.title,
-          icon: LucideIcons.Folder,
+          icon,
           subItems: nodeToItems(n.children),
         });
       }
@@ -261,10 +266,14 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
   for (const b of base) baseIconById.set(b.id, b.icon);
 
   const result: MenuItem[] = [];
+  const IconsMap = LucideIcons as unknown as Record<string, any>;
   for (const root of custom.roots) {
     if (root.kind === "program") {
       const p = programs.get(root.programId);
-      if (p) result.push({ id: p.id, title: p.title, url: p.url, icon: p.icon, ...(p.system ? { system: p.system } : {}) });
+      if (p) {
+        const icon = (root.iconName && IconsMap[root.iconName]) || p.icon;
+        result.push({ id: p.id, title: p.title, url: p.url, icon, ...(p.system ? { system: p.system } : {}) });
+      }
       continue;
     }
     const subItems: any[] = [];
@@ -272,15 +281,17 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
       for (const n of nodes) {
         if (n.kind === "program") {
           const p = programs.get(n.programId);
-          if (p)
+          if (p) {
+            const icon = (n.iconName && IconsMap[n.iconName]) || p.icon;
             subItems.push({
               id: p.id,
               title: p.title,
               url: p.url,
-              icon: p.icon,
+              icon,
               ...(p.system ? { system: p.system } : {}),
               ...(groupName ? { group: groupName } : {}),
             });
+          }
         } else {
           const nextGroup = groupName ? `${groupName} · ${n.title}` : n.title;
           pushGroup(n.children, nextGroup);
@@ -291,6 +302,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
 
     const baseId = root.id.startsWith("c-") ? root.id.slice(2) : root.id;
     const icon =
+      (root.iconName && IconsMap[root.iconName]) ||
       baseIconById.get(baseId) ||
       (subItems[0]?.icon) ||
       LucideIcons.Folder;
@@ -301,7 +313,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
         id: only.id,
         title: root.title || only.title,
         url: only.url,
-        icon: only.icon,
+        icon: root.iconName && IconsMap[root.iconName] ? IconsMap[root.iconName] : only.icon,
         ...(only.system ? { system: only.system } : {}),
       });
     } else {
