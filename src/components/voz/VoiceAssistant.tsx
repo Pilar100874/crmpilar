@@ -454,8 +454,16 @@ export default function VoiceAssistant() {
 
       // 0b) Gerar PDF do relatório aberto (wizard escuta o evento)
       if (relatorioMode === "resultado" && GATILHOS_PDF.some(g => t === g || t.includes(g))) {
-        window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio"));
-        const resposta = "Gerando PDF do relatório.";
+        const { titulo, nomeArquivo } = extrairTituloEArquivoPdf(texto);
+        window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio", {
+          detail: { titulo, nomeArquivo },
+        }));
+        const partes: string[] = [];
+        if (titulo) partes.push(`título "${titulo}"`);
+        if (nomeArquivo) partes.push(`arquivo "${nomeArquivo}"`);
+        const resposta = partes.length
+          ? `Gerando PDF com ${partes.join(" e ")}.`
+          : "Gerando PDF do relatório.";
         setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
         if (cfg.responder_por_voz) falar(resposta);
         return;
