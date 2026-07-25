@@ -254,7 +254,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "Admin Config", title: "Admin - Configurações", url: "/config", icon: Settings },
       { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Brain },
-      { id: "Admin Relatorios Voz", title: "Relatórios por Voz", url: "/admin/relatorios-voz", icon: LucideIcons.FileBarChart },
+      
       { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
 
     ],
