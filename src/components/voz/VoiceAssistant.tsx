@@ -42,6 +42,8 @@ const SUGESTOES_ABRIR = [
 type RelatorioVoz = {
   id: string; nome: string; grupo: string; descricao: string | null;
   prompt_geracao: string; tipo_saida: string; aliases: string[]; ativo: boolean;
+  tabela_base?: string | null; tipo_fonte?: "tabela" | "api";
+  filtros_disponiveis?: any[]; campos_exibicao?: any[];
 };
 
 // util: normaliza texto (remove acentos, minúsculas)
