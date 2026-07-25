@@ -81,6 +81,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     placa: '',
     descricao: '',
     motorista: '',
+    celular: '',
     tipo_veiculo: '',
     logistica_grupo_id: '',
     traccar_device_id: '',
@@ -259,6 +260,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         placa: veiculo.placa,
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
+        celular: (veiculo as any).celular || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
         logistica_grupo_id: (veiculo as any).logistica_grupo_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
@@ -278,6 +280,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         placa: '',
         descricao: '',
         motorista: '',
+        celular: '',
         tipo_veiculo: '',
         logistica_grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
@@ -415,6 +418,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             tipo_chip: formData.tipo_chip || 'm2m',
             tracker_model_id: formData.tracker_model_id || null,
             apn_operadora: opSel?.apn || null,
+            celular: formData.celular || null,
           } as any)
           .eq('id', veiculoId);
       }
@@ -1003,6 +1007,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   value={formData.descricao}
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder={isPessoa ? 'Ex: Vendedor externo' : 'Ex: Fiorino Branca'}
+                />
+              </div>
+              <div>
+                <Label>Celular {isPessoa ? '(WhatsApp)' : 'do motorista'}</Label>
+                <Input
+                  inputMode="tel"
+                  placeholder="(11) 91234-5678"
+                  value={formData.celular}
+                  onChange={(e) => {
+                    const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    let m = d;
+                    if (d.length > 2 && d.length <= 6) m = `(${d.slice(0,2)}) ${d.slice(2)}`;
+                    else if (d.length > 6 && d.length <= 10) m = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+                    else if (d.length > 10) m = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+                    else if (d.length > 0) m = `(${d}`;
+                    setFormData(prev => ({ ...prev, celular: m }));
+                  }}
                 />
               </div>
               <div>
