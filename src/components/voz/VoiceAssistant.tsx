@@ -382,13 +382,24 @@ export default function VoiceAssistant() {
         return;
       }
 
-      // 3) Abrir tela por título (match local instantâneo)
-      const rotaMatch = matchRotaPorFala(texto);
-      if (rotaMatch) {
-        const resposta = `Abrindo ${rotaMatch.titulo}.`;
+      // 3) Abrir tela por título (match local instantâneo com desambiguação)
+      const { escolhida, topN } = matchRotaComCandidatos(texto);
+      if (escolhida) {
+        const resposta = `Abrindo ${escolhida.titulo}.`;
         setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        setAmbiguas(null);
         if (cfg.responder_por_voz) falar(resposta);
-        setTimeout(() => { navigate(rotaMatch.path); setOpen(false); }, 350);
+        setTimeout(() => { navigate(escolhida.path); setOpen(false); }, 350);
+        return;
+      }
+
+      // 3b) Ambíguo? mostra opções (sem inventar)
+      const candidatosBons = topN.filter((c) => c.score >= 40).map((c) => c.rota);
+      if (candidatosBons.length > 0) {
+        const resposta = "Não tenho certeza. Escolha uma tela abaixo:";
+        setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        setAmbiguas(candidatosBons.slice(0, 5));
+        if (cfg.responder_por_voz) falar(resposta);
         return;
       }
 
@@ -396,6 +407,7 @@ export default function VoiceAssistant() {
       const resposta =
         `Não entendi. Só respondo a duas coisas: "abrir <nome da tela>" ou "relatórios" para ver a lista.`;
       setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+      setAmbiguas(null);
       if (cfg.responder_por_voz) falar(resposta);
     } catch (e: any) {
       toast.error(e.message);
@@ -434,12 +446,6 @@ export default function VoiceAssistant() {
       audioRef.current = audio;
       audio.play().catch(() => {});
     } catch {}
-  };
-
-  const executarConfirmacao = async () => {
-    if (!pendingConfirm) return;
-    toast.success("Ação confirmada.");
-    setPendingConfirm(null);
   };
 
   // Push-to-talk com barra de espaço enquanto painel aberto
