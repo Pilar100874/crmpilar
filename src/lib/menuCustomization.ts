@@ -104,8 +104,9 @@ export interface ProgramLeaf {
   title: string;
   url: string;
   icon: any;
-  system?: "lock" | "admin" | "theme" | "logout";
+  system?: SystemAction;
   footerAdmin?: boolean;
+  footerUser?: boolean;
   originContainerId?: string;
   originContainerTitle?: string;
 }
@@ -116,6 +117,15 @@ export const SYSTEM_PROGRAMS: ProgramLeaf[] = [
   { id: "system-admin", title: "Admin", url: "/admin", icon: LucideIcons.Shield, system: "admin" },
   { id: "system-theme", title: "Modo escuro / claro", url: "#system-theme", icon: LucideIcons.Moon, system: "theme" },
   { id: "system-logout", title: "Sair", url: "#system-logout", icon: LucideIcons.LogOut, system: "logout" },
+];
+
+// Itens do menu do usuário (rodapé) — podem ser movidos para o menu principal ou para o Admin do rodapé
+export const FOOTER_USER_PROGRAMS: ProgramLeaf[] = [
+  { id: "user-perfil", title: "Perfil", url: "/perfil", icon: LucideIcons.User, system: "profile", footerUser: true },
+  { id: "user-share-screen", title: "Compartilhar ou Ver Tela", url: "/compartilhar-tela", icon: LucideIcons.Monitor, system: "share-screen", footerUser: true },
+  { id: "user-open-ticket", title: "Abrir Ticket de Suporte", url: "#action-open-ticket", icon: LucideIcons.LifeBuoy, system: "open-ticket", footerUser: true },
+  { id: "user-pwa-update", title: "Atualizar Sistema (PWA)", url: "#action-pwa-update", icon: LucideIcons.RefreshCw, system: "pwa-update", footerUser: true },
+  { id: "user-change-password", title: "Alterar Senha", url: "#action-change-password", icon: LucideIcons.KeyRound, system: "change-password", footerUser: true },
 ];
 
 // Itens do menu Admin do rodapé — podem ser movidos para o menu principal
@@ -148,16 +158,48 @@ export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
       }
     }
   }
-  // Adiciona programas de sistema (rodapé) ao pool
   for (const sp of SYSTEM_PROGRAMS) {
     if (!map.has(sp.id)) map.set(sp.id, sp);
   }
-  // Adiciona programas do Admin do rodapé ao pool
+  for (const sp of FOOTER_USER_PROGRAMS) {
+    if (!map.has(sp.id)) map.set(sp.id, { ...sp, originContainerId: "UserMenu", originContainerTitle: "Menu do usuário (rodapé)" });
+  }
   for (const sp of FOOTER_ADMIN_PROGRAMS) {
     if (!map.has(sp.id)) map.set(sp.id, { ...sp, originContainerId: "Admin", originContainerTitle: "Admin (rodapé)" });
   }
   return map;
 }
+
+/** Constrói a árvore padrão do "Admin do rodapé" quando ainda não há customização. */
+export function initialAdminFooterTree(): CustomNode[] {
+  return FOOTER_ADMIN_PROGRAMS.map((p) => ({ kind: "program", programId: p.id } as CustomNode));
+}
+
+/** Aplica customização ao Admin do rodapé (segunda árvore). */
+export function applyAdminFooterCustomization(): MenuItem[] {
+  const custom = loadCustomization();
+  const roots = custom?.adminRoots ?? initialAdminFooterTree();
+  const programs = extractPrograms([]); // pega system/footer pools
+  const nodeToItems = (nodes: CustomNode[]): any[] => {
+    const out: any[] = [];
+    for (const n of nodes) {
+      if (n.kind === "program") {
+        const p = programs.get(n.programId);
+        if (p) out.push({ id: p.id, title: p.title, url: p.url, icon: p.icon, ...(p.system ? { system: p.system } : {}) });
+      } else {
+        out.push({
+          id: n.id,
+          title: n.title,
+          icon: LucideIcons.Folder,
+          subItems: nodeToItems(n.children),
+        });
+      }
+    }
+    return out;
+  };
+  return nodeToItems(roots);
+}
+
 
 /** IDs de programas atualmente posicionados no menu principal (após customização). */
 export function getPlacedProgramIds(items: MenuItem[]): Set<string> {
