@@ -619,8 +619,27 @@ Deno.serve(async (req) => {
         };
         
         console.log('Converted Traccar Client payload:', payload);
+      } else if (rawPayload.source === 'gt06-bridge-status' && rawPayload.imei) {
+        // Status-only (heartbeat) — atualiza última posição do veículo apenas com ignição
+        const veiculoInfo = await findVeiculoInfo(supabase, String(rawPayload.imei));
+        if (veiculoInfo && typeof rawPayload.ignition === 'boolean') {
+          const { data: ultima } = await supabase
+            .from('veiculo_posicoes')
+            .select('id')
+            .eq('veiculo_id', veiculoInfo.id)
+            .order('data_hora', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (ultima) {
+            await supabase.from('veiculo_posicoes').update({ ignicao: rawPayload.ignition }).eq('id', ultima.id);
+          }
+        }
+        return new Response(
+          JSON.stringify({ status: 'ok', kind: 'status' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       } else if (rawPayload.source === 'gt06-bridge' && rawPayload.imei) {
-        // GT06 Bridge format (J6/JM01/JM-VL03/GT06N via TCP bridge no Railway)
+        // GT06 Bridge format (J6/JM01/JM-VL03/GT06N/J16 via TCP bridge no Railway)
         if (typeof rawPayload.latitude !== 'number' || typeof rawPayload.longitude !== 'number') {
           return new Response(
             JSON.stringify({ status: 'error', message: 'Invalid GT06 bridge format: missing latitude/longitude' }),
@@ -634,6 +653,7 @@ Deno.serve(async (req) => {
           velocidade: typeof rawPayload.speed_kmh === 'number' ? rawPayload.speed_kmh : 0,
           direcao: typeof rawPayload.heading === 'number' ? rawPayload.heading : undefined,
           dataHora: rawPayload.timestamp || new Date().toISOString(),
+          ignicao: typeof rawPayload.ignition === 'boolean' ? rawPayload.ignition : undefined,
           token: rawPayload.token,
         };
         console.log('Converted GT06 bridge payload:', payload);
