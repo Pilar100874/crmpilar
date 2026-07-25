@@ -184,14 +184,23 @@ export function initialAdminFooterTree(): CustomNode[] {
   return FOOTER_ADMIN_PROGRAMS.map((p) => ({ kind: "program", programId: p.id } as CustomNode));
 }
 
-/** Aplica customização ao Admin do rodapé (segunda árvore). */
-export function applyAdminFooterCustomization(base: MenuItem[] = []): MenuItem[] {
-  const custom = loadCustomization();
-  const roots = custom?.adminRoots ?? initialAdminFooterTree();
-  const programs = extractPrograms(base); // inclui menu principal + system/footer pools
+/** Constrói a árvore padrão do "Menu do usuário (rodapé)". */
+export function initialUserFooterTree(): CustomNode[] {
+  return FOOTER_USER_PROGRAMS.map((p) => ({ kind: "program", programId: p.id } as CustomNode));
+}
+
+/** Constrói a árvore padrão dos botões de sistema (rodapé): travar/tema/sair. */
+export function initialSystemFooterTree(): CustomNode[] {
+  return SYSTEM_PROGRAMS
+    .filter((p) => p.system !== "admin") // Admin não fica na tira de sistema por padrão
+    .map((p) => ({ kind: "program", programId: p.id } as CustomNode));
+}
+
+function renderTreeToMenuItems(base: MenuItem[], roots: CustomNode[]): any[] {
+  const programs = extractPrograms(base);
+  const IconsMap = LucideIcons as unknown as Record<string, any>;
   const nodeToItems = (nodes: CustomNode[]): any[] => {
     const out: any[] = [];
-    const IconsMap = LucideIcons as unknown as Record<string, any>;
     for (const n of nodes) {
       if (n.kind === "program") {
         const p = programs.get(n.programId);
@@ -201,18 +210,35 @@ export function applyAdminFooterCustomization(base: MenuItem[] = []): MenuItem[]
         }
       } else {
         const icon = (n.iconName && IconsMap[n.iconName]) || LucideIcons.Folder;
-        out.push({
-          id: n.id,
-          title: n.title,
-          icon,
-          subItems: nodeToItems(n.children),
-        });
+        out.push({ id: n.id, title: n.title, icon, subItems: nodeToItems(n.children) });
       }
     }
     return out;
   };
   return nodeToItems(roots);
 }
+
+/** Aplica customização ao Admin do rodapé (segunda árvore). */
+export function applyAdminFooterCustomization(base: MenuItem[] = []): MenuItem[] {
+  const custom = loadCustomization();
+  const roots = custom?.adminRoots ?? initialAdminFooterTree();
+  return renderTreeToMenuItems(base, roots);
+}
+
+/** Aplica customização ao Menu do usuário (rodapé). */
+export function applyUserFooterCustomization(base: MenuItem[] = []): MenuItem[] {
+  const custom = loadCustomization();
+  const roots = custom?.userFooterRoots ?? initialUserFooterTree();
+  return renderTreeToMenuItems(base, roots);
+}
+
+/** Aplica customização à tira de botões de sistema (travar / tema / sair). */
+export function applySystemFooterCustomization(base: MenuItem[] = []): MenuItem[] {
+  const custom = loadCustomization();
+  const roots = custom?.systemFooterRoots ?? initialSystemFooterTree();
+  return renderTreeToMenuItems(base, roots);
+}
+
 
 
 /** IDs de programas atualmente posicionados no menu principal (após customização). */
