@@ -171,6 +171,11 @@ export default function VoiceAssistant() {
     voz: "alloy",
     wake_word: WAKE_DEFAULT,
   });
+  const [frasesCustom, setFrasesCustom] = useState<Record<string, string[]>>({});
+  const gVoltar = useMemo(() => frasesEfetivas("voltar", frasesCustom), [frasesCustom]);
+  const gAvancar = useMemo(() => frasesEfetivas("avancar", frasesCustom), [frasesCustom]);
+  const gPdf = useMemo(() => frasesEfetivas("pdf", frasesCustom), [frasesCustom]);
+  const gRelatorios = useMemo(() => frasesEfetivas("relatorios", frasesCustom), [frasesCustom]);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
