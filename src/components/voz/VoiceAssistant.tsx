@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Mic, MicOff, X, Loader2, Settings, Volume2, VolumeX,
@@ -84,6 +84,7 @@ const norm = (s: string) =>
 
 export default function VoiceAssistant() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -399,6 +400,41 @@ export default function VoiceAssistant() {
     }
   };
 
+  // ---------- Navegação de histórico (voltar/avançar) ----------
+  const executarNavegacaoHistorico = async (direcao: number, textoOriginal: string) => {
+    const isBack = direcao < 0;
+
+    // Pré-verificação rápida para "voltar"
+    if (isBack && window.history.length <= 1) {
+      const resposta = "Não há tela anterior no histórico.";
+      setHistory(h => [...h, { user: textoOriginal, assistant: resposta, ts: Date.now() }].slice(-10));
+      if (cfg.responder_por_voz) falar(resposta);
+      return;
+    }
+
+    const resposta = isBack ? "Voltando para a tela anterior." : "Avançando para a próxima tela.";
+    setHistory(h => [...h, { user: textoOriginal, assistant: resposta, ts: Date.now() }].slice(-10));
+    if (cfg.responder_por_voz) falar(resposta);
+
+    const startPath = location.pathname + location.search;
+    navigate(direcao);
+
+    // Aguarda e verifica se a navegação realmente ocorreu
+    await new Promise(r => setTimeout(r, 400));
+    const currentPath = window.location.pathname + window.location.search;
+
+    if (currentPath === startPath) {
+      const falha = isBack
+        ? "Não foi possível voltar: não há histórico anterior."
+        : "Não foi possível avançar: não há próxima tela no histórico.";
+      setHistory(h => [...h, { user: textoOriginal, assistant: falha, ts: Date.now() }].slice(-10));
+      if (cfg.responder_por_voz) falar(falha);
+      // mantém o painel aberto para o usuário ver a mensagem
+    } else {
+      setOpen(false);
+    }
+  };
+
   // ---------- Processa texto ----------
   // Apenas 2 intenções: (1) ABRIR TELA (por título) e (2) RELATÓRIOS.
   const processarTexto = async (texto: string) => {
@@ -408,17 +444,11 @@ export default function VoiceAssistant() {
 
       // 0) Navegação de histórico: voltar / avançar
       if (GATILHOS_VOLTAR.some(g => t.includes(g))) {
-        const resposta = "Voltando para a tela anterior.";
-        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
-        if (cfg.responder_por_voz) falar(resposta);
-        setTimeout(() => { navigate(-1); setOpen(false); }, 250);
+        await executarNavegacaoHistorico(-1, texto);
         return;
       }
       if (GATILHOS_AVANCAR.some(g => t.includes(g))) {
-        const resposta = "Avançando para a próxima tela.";
-        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
-        if (cfg.responder_por_voz) falar(resposta);
-        setTimeout(() => { navigate(1); setOpen(false); }, 250);
+        await executarNavegacaoHistorico(1, texto);
         return;
       }
 
