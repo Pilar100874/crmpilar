@@ -1519,70 +1519,10 @@ export default function Layout({ children }: LayoutProps) {
                       </h3>
                       
                       <div className="space-y-1">
-                        {!placedProgramIds.has("user-perfil") && (
-                        <NavLink
-                          to="/perfil"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <UserIcon className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Perfil</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("user-share-screen") && (
-                        <NavLink
-                          to="/compartilhar-tela"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <Monitor className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Compartilhar ou Ver Tela</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("user-open-ticket") && (
-                        <button
-                          onClick={() => {
-                            setOpenSubmenuId(null);
-                            window.dispatchEvent(new CustomEvent("open-support-ticket"));
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <LifeBuoy className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Abrir Ticket de Suporte</span>
-                        </button>
-                        )}
-                        {!placedProgramIds.has("user-pwa-update") && (
-                        <button
-                          onClick={() => {
-                            setOpenSubmenuId(null);
-                            setShowPwaUpdateDialog(true);
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <RefreshCw className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Atualizar Sistema (PWA)</span>
-                        </button>
-                        )}
-
-                        
-                        {!placedProgramIds.has("user-change-password") && (
-                        <button
-                          onClick={() => {
-                            setOpenSubmenuId(null);
-                            setShowChangePasswordDialog(true);
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                        >
-                          <KeyRound className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Alterar Senha</span>
-                        </button>
-                        )}
-
+                        {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), true)}
                         {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/70")}
-
-
-
                       </div>
+
                     </div>
                   </div>
                 )}
