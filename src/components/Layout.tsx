@@ -1564,49 +1564,9 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             )}
 
-            {/* Toggle Dia/Noite */}
-            {!systemInMain.has("theme") && (menuLocked ? (
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-              >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-              >
-                {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
-                <span className="text-sm font-medium">{isDarkMode ? "Modo Claro" : "Modo Escuro"}</span>
-              </button>
-            ))}
+            {/* Tira de botões de sistema (travar/tema/sair) — totalmente customizável */}
+            {renderSystemFooterButtons()}
 
-            {/* Botão Sair - sempre abaixo do menu do usuário */}
-            {!systemInMain.has("logout") && (menuLocked ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title="Sair"
-              >
-                <LogOut className="w-6 h-6" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                title="Sair"
-              >
-                <LogOut className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium">Sair</span>
-              </button>
-            ))}
 
           </div>
         </div>
