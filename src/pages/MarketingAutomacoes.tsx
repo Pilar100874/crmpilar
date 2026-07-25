@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles } from "lucide-react";
+import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, MessageSquare, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -129,6 +129,40 @@ export default function MarketingAutomacoes() {
     };
     return labels[tipo] || tipo;
   };
+
+  const getLastSendSummary = (automacao: any) => {
+    const cfg = automacao.config || {};
+    const res = cfg.last_execution_result || {};
+    const when = cfg.last_executed_at ? new Date(cfg.last_executed_at) : null;
+
+    // Conteúdo da mensagem (tenta várias origens comuns)
+    const vars = { ...(cfg.variaveis || {}), ...(cfg.variaveis_custom || {}) };
+    const message =
+      vars.mensagem || vars.message || vars.texto || vars.text || vars.body ||
+      cfg.mensagem || cfg.push_config?.mensagem || cfg.push_config?.body || "";
+
+    // Destinatários (bot broadcast retorna totais no trace)
+    let totalEnviados: number | null = null;
+    let totalFalhas: number | null = null;
+    let totalDestinatarios: number | null = null;
+    const contatos: string[] = [];
+    const trace: any[] = res?.details?.trace || [];
+    for (const t of trace) {
+      if (t?.broadcast) {
+        totalDestinatarios = (totalDestinatarios ?? 0) + (t.broadcast.total || 0);
+        totalEnviados = (totalEnviados ?? 0) + (t.broadcast.enviados || 0);
+        totalFalhas = (totalFalhas ?? 0) + (t.broadcast.falhas || 0);
+        for (const d of t.broadcast.detalhes || []) {
+          const nome = d?.nome || d?.name || d?.telefone || d?.phone;
+          if (nome && contatos.length < 4) contatos.push(String(nome));
+        }
+      }
+    }
+
+    return { when, message: String(message || "").trim(), totalEnviados, totalFalhas, totalDestinatarios, contatos, tipo: res?.type };
+  };
+
+
 
   const handleRename = async () => {
     if (!renameName.trim()) {
@@ -414,7 +448,50 @@ export default function MarketingAutomacoes() {
                       : `Agendada para ${cfg.horario}`}
                   </p>
                 )}
-                <p className="text-[11px] text-muted-foreground/80 mt-1">
+
+                {(() => {
+                  const s = getLastSendSummary(automacao);
+                  if (!s.when && !s.message && s.totalDestinatarios == null) return null;
+                  return (
+                    <div className="mt-3 rounded-lg border bg-muted/30 p-2.5 space-y-1.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Último envio
+                      </p>
+                      {s.when && (
+                        <p className="text-[11px] sm:text-xs text-foreground flex items-center gap-1.5">
+                          <Clock className="w-3 h-3 shrink-0 text-muted-foreground" />
+                          {s.when.toLocaleDateString("pt-BR")} às {s.when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                      {s.message && (
+                        <p className="text-[11px] sm:text-xs text-foreground flex items-start gap-1.5">
+                          <MessageSquare className="w-3 h-3 shrink-0 text-muted-foreground mt-0.5" />
+                          <span className="line-clamp-2 italic">"{s.message}"</span>
+                        </p>
+                      )}
+                      {(s.totalDestinatarios != null || s.contatos.length > 0) && (
+                        <p className="text-[11px] sm:text-xs text-foreground flex items-start gap-1.5">
+                          <Users className="w-3 h-3 shrink-0 text-muted-foreground mt-0.5" />
+                          <span className="min-w-0">
+                            {s.totalDestinatarios != null && (
+                              <span className="font-medium">
+                                {s.totalEnviados ?? 0}/{s.totalDestinatarios} enviados
+                                {s.totalFalhas ? ` · ${s.totalFalhas} falhas` : ""}
+                              </span>
+                            )}
+                            {s.contatos.length > 0 && (
+                              <span className="block text-muted-foreground truncate">
+                                {s.contatos.join(", ")}{s.totalDestinatarios && s.totalDestinatarios > s.contatos.length ? "…" : ""}
+                              </span>
+                            )}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                <p className="text-[11px] text-muted-foreground/80 mt-2">
                   Criada {formatDistanceToNow(new Date(automacao.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
               </CardHeader>
