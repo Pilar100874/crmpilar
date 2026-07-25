@@ -1530,6 +1530,7 @@ export default function Layout({ children }: LayoutProps) {
                 
                 {openSubmenuId === "UserMenu" && (
                   <div className="mt-1 ml-8 space-y-1">
+                    {!placedProgramIds.has("user-perfil") && (
                     <NavLink
                       to="/perfil"
                       onClick={() => setOpenSubmenuId(null)}
@@ -1538,7 +1539,8 @@ export default function Layout({ children }: LayoutProps) {
                       <UserIcon className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Perfil</span>
                     </NavLink>
-                    
+                    )}
+                    {!placedProgramIds.has("user-share-screen") && (
                     <NavLink
                       to="/compartilhar-tela"
                       onClick={() => setOpenSubmenuId(null)}
@@ -1547,7 +1549,8 @@ export default function Layout({ children }: LayoutProps) {
                       <Monitor className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Compartilhar ou Ver Tela</span>
                     </NavLink>
-
+                    )}
+                    {!placedProgramIds.has("user-open-ticket") && (
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
@@ -1558,7 +1561,8 @@ export default function Layout({ children }: LayoutProps) {
                       <LifeBuoy className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Abrir Ticket de Suporte</span>
                     </button>
-
+                    )}
+                    {!placedProgramIds.has("user-pwa-update") && (
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
@@ -1569,10 +1573,8 @@ export default function Layout({ children }: LayoutProps) {
                       <RefreshCw className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Atualizar Sistema (PWA)</span>
                     </button>
-
-
-
-                    
+                    )}
+                    {!placedProgramIds.has("user-change-password") && (
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
@@ -1583,62 +1585,9 @@ export default function Layout({ children }: LayoutProps) {
                       <KeyRound className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Alterar Senha</span>
                     </button>
-
-                    {isAdmin && (
-                      <>
-                        {!placedProgramIds.has("Admin Macros") && (
-                        <NavLink
-                          to="/macros"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <Zap className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Macros</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Tickets") && (
-                        <NavLink
-                          to="/admin/support-tickets"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <LifeBuoy className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Tickets de Suporte</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Apps") && (
-                        <NavLink
-                          to="/admin/apps"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <AppWindow className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Apps</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Telas Customizadas") && (
-                        <NavLink
-                          to="/admin/telas-customizadas"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Tela Customizada</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Politicas Internas") && (
-                        <NavLink
-                          to="/politicas-internas"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <LucideIcons.BookOpen className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Políticas Internas</span>
-                        </NavLink>
-                        )}
-                      </>
                     )}
 
+                    {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/60")}
                     
                   </div>
                 )}
