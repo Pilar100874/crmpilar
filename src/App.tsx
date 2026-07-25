@@ -491,6 +491,7 @@ const App = () => (
               <Route path="/admin/telas-customizadas" element={<TelasCustomizadas />} />
               <Route path="/politicas-internas" element={<PoliticasInternas />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
+              <Route path="/admin/menu-customizacao" element={<MenuCustomizacao />} />
               <Route path="/tela-customizada/:id" element={<TelaCustomizadaView />} />
               <Route path="/config/push" element={<ConfigNotificacoesPush />} />
               <Route path="/meus-tickets" element={<MeusTickets />} />
