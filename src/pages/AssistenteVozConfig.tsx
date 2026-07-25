@@ -94,6 +94,9 @@ export default function AssistenteVozConfig() {
           <TabsTrigger value="telas">
             <ExternalLink className="w-4 h-4 mr-2" /> Telas por voz
           </TabsTrigger>
+          <TabsTrigger value="frases">
+            <MessageCircle className="w-4 h-4 mr-2" /> Frases por voz
+          </TabsTrigger>
           <TabsTrigger value="relatorios">
             <FileBarChart className="w-4 h-4 mr-2" /> Relatórios por voz
           </TabsTrigger>
