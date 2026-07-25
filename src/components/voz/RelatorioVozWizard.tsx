@@ -163,10 +163,16 @@ export default function RelatorioVozWizard({ relatorio, onFechar, onFalar }: Pro
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">{dados.length} registro(s)</div>
-          <Button size="sm" variant="ghost" onClick={() => setStep("filtros")}>
-            <RotateCcw className="h-3 w-3 mr-1" /> Mudar filtros
-          </Button>
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" onClick={gerarPdf} disabled={!dados.length}>
+              <FileDown className="h-3 w-3 mr-1" /> PDF
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setStep("filtros")}>
+              <RotateCcw className="h-3 w-3 mr-1" /> Mudar filtros
+            </Button>
+          </div>
         </div>
+
         {dados.length === 0 ? (
           <div className="text-center text-xs text-muted-foreground py-6">Nenhum dado encontrado.</div>
         ) : (
