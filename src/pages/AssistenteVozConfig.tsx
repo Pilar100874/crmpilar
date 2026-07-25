@@ -11,7 +11,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw, Pencil, FlaskConical } from "lucide-react";
 import { ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
-import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
+import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, tituloEfetivoRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
 import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 import VozTesterPanel from "@/components/voz/VozTesterPanel";
@@ -66,13 +66,16 @@ export default function AssistenteVozConfig() {
   const rotasFiltradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
     if (!q) return ROTAS_SISTEMA;
-    return ROTAS_SISTEMA.filter(
-      (r) =>
+    return ROTAS_SISTEMA.filter((r) => {
+      const tCustom = ((config.frases_customizadas || {})[`rota:${r.path}:titulo`] as string[])?.[0] || "";
+      return (
         r.titulo.toLowerCase().includes(q) ||
+        tCustom.toLowerCase().includes(q) ||
         r.path.toLowerCase().includes(q) ||
         (r.aliases || []).some((a) => a.toLowerCase().includes(q)) ||
-        (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q)),
-    );
+        (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q))
+      );
+    });
   }, [busca, config.frases_customizadas]);
 
   return (
@@ -184,12 +187,47 @@ export default function AssistenteVozConfig() {
                 await salvarChave(chaveRem, [...removidos, a]);
                 await salvarChave(chaveExtras, [...extras, v]);
               };
+              const chaveTitulo = `rota:${r.path}:titulo`;
+              const { titulo: tituloAtual, original: tituloOriginal, customizado: tituloCustom } =
+                tituloEfetivoRota(r, config?.frases_customizadas || {});
+              const editarTitulo = async () => {
+                const novo = window.prompt(
+                  "Renomear esta tela para o Pilar (será usado como apelido principal). O nome original continua funcionando.",
+                  tituloAtual,
+                );
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarChave(chaveTitulo, [v]);
+              };
+              const restaurarTitulo = async () => salvarChave(chaveTitulo, []);
               return (
                 <Card key={r.path} className="p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{r.titulo}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{r.path}</div>
+                      <button
+                        onClick={editarTitulo}
+                        title="Clique para renomear (este nome também é um apelido de voz)"
+                        className={`group inline-flex items-center gap-1 max-w-full text-left px-2 py-1 rounded-md font-semibold truncate transition-colors ${
+                          tituloCustom
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25"
+                            : "bg-primary/15 text-primary hover:bg-primary/25"
+                        }`}
+                      >
+                        <Mic className="w-3 h-3 shrink-0 opacity-70" />
+                        <span className="truncate">{tituloAtual}</span>
+                        <Pencil className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-70" />
+                      </button>
+                      {tituloCustom && (
+                        <button
+                          onClick={restaurarTitulo}
+                          title={`Restaurar nome original: "${tituloOriginal}"`}
+                          className="ml-1 inline-flex items-center text-[10px] text-muted-foreground hover:text-foreground"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5 mr-0.5" /> original: "{tituloOriginal}"
+                        </button>
+                      )}
+                      <div className="text-[11px] text-muted-foreground truncate mt-0.5">{r.path}</div>
                     </div>
                     <Badge variant="outline" className="text-[10px] shrink-0">
                       <Mic className="w-3 h-3 mr-1" /> voz
