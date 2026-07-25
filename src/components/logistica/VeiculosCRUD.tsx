@@ -778,6 +778,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <TableCell className="font-mono font-medium">{veiculo.placa}</TableCell>
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
+                <TableCell>{(veiculo as any).celular || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
                 <TableCell>{unidadeNomeById[(veiculo as any).logistica_grupo_id] || '-'}</TableCell>
                 <TableCell>
