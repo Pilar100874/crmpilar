@@ -262,9 +262,10 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
 
   const missing: MenuItem[] = [];
   for (const [id, p] of programs) {
-    // Programas de sistema não aparecem por padrão no menu principal — só se o admin arrastar
-    if (p.system) continue;
+    // Programas de sistema e do Admin (rodapé) não aparecem por padrão no menu principal — só se o admin arrastar
+    if (p.system || p.footerAdmin) continue;
     if (!placed.has(id)) missing.push({ id, title: p.title, url: p.url, icon: p.icon });
+
   }
   return [...result, ...missing];
 
