@@ -23,8 +23,11 @@ export default function AssistenteVozConfig() {
     responder_por_voz: true,
     voz: "alloy",
     wake_word: "ei pilar",
+    frases_customizadas: {} as Record<string, string[]>,
   });
   const [busca, setBusca] = useState("");
+  const [buscaFrase, setBuscaFrase] = useState("");
+  const [novaFrase, setNovaFrase] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
