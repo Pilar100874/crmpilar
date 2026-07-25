@@ -7,8 +7,8 @@ const KEY = "menu_customization_v1";
 export const MENU_CUSTOMIZATION_EVENT = "menu-customization-changed";
 
 export type CustomNode =
-  | { kind: "program"; programId: string }
-  | { kind: "container"; id: string; title: string; children: CustomNode[] };
+  | { kind: "program"; programId: string; iconName?: string }
+  | { kind: "container"; id: string; title: string; iconName?: string; children: CustomNode[] };
 
 export interface MenuCustomization {
   version: 1;
