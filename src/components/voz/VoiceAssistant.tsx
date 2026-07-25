@@ -689,20 +689,6 @@ export default function VoiceAssistant() {
                         </button>
                       </div>
 
-                      {customCmds.length > 0 && (
-                        <div>
-                          <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-                            <Zap className="h-3 w-3" /> SEUS GATILHOS ({customCmds.length})
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {customCmds.slice(0, 8).map((c) => (
-                              <button key={c.id} onClick={() => processarTexto(c.frase_gatilho)}
-                                className="text-xs px-2.5 py-1 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 transition"
-                              >{c.frase_gatilho}</button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -732,12 +718,6 @@ export default function VoiceAssistant() {
                     </div>
                   )}
 
-                  {pendingConfirm && (
-                    <div className="border border-yellow-500/40 bg-yellow-500/10 rounded-lg p-2 flex gap-2">
-                      <Button size="sm" onClick={executarConfirmacao}>Confirmar</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setPendingConfirm(null)}>Cancelar</Button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Composer */}
