@@ -251,9 +251,25 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/ecommerce-config/lgpd", titulo: "E-commerce Config - LGPD", aliases: ["lgpd da loja"] },
   { path: "/ecommerce-rules", titulo: "E-commerce - Regras", aliases: ["regras do ecommerce", "regras da loja"] },
 
-  // ============ Sub-telas: Marketing ============
-  { path: "/marketing/auto-video-wizard", titulo: "Marketing - Auto Vídeo Wizard", aliases: ["auto video", "wizard de video"] },
+  // ============ Sub-telas: Marketing (abas do hub) ============
+  { path: "/marketing?tab=strategy-engine", titulo: "Marketing - Motor de Estratégia", aliases: ["motor de estrategia", "estrategia de marketing", "agentes de marketing"] },
+  { path: "/marketing?tab=ai-studio", titulo: "Marketing - AI Creative Studio", aliases: ["ai studio", "creative studio", "estudio criativo", "estudio de ia"] },
+  { path: "/marketing?tab=auto-video-wizard", titulo: "Marketing - Assistente de Vídeo", aliases: ["assistente de video", "wizard de video", "auto video"] },
+  { path: "/marketing?tab=video-editor", titulo: "Marketing - Editor de Vídeo", aliases: ["editor de video", "timeline de video"] },
+  { path: "/marketing?tab=config-apis", titulo: "Marketing - Config APIs", aliases: ["config apis marketing", "chaves de api marketing"] },
+  { path: "/marketing?tab=envio-massa", titulo: "Marketing - Envio em Massa", aliases: ["envio em massa", "disparo em massa", "disparos em massa"] },
   { path: "/marketing?tab=mensagens-grupo", titulo: "Marketing - Mensagens Pré Definidas", aliases: ["mensagens pre definidas", "mensagens pre definida", "mensagem pre definida", "mensagens por grupo de produtos"] },
+  { path: "/marketing?tab=apresentacoes", titulo: "Marketing - Apresentação", aliases: ["apresentacao", "apresentacoes de marketing", "apresentacao tv"] },
+  { path: "/marketing?tab=galeria", titulo: "Marketing - Galeria", aliases: ["galeria de marketing", "galeria de midias"] },
+  { path: "/marketing?tab=catalogo", titulo: "Marketing - Catálogo", aliases: ["catalogo de marketing", "catalogo pdf de produtos"] },
+  { path: "/marketing?tab=automacoes", titulo: "Marketing - Automações", aliases: ["automacoes de marketing"] },
+  { path: "/marketing?tab=campanhas", titulo: "Marketing - Campanhas", aliases: ["campanhas de marketing"] },
+  { path: "/marketing?tab=page-builder", titulo: "Marketing - Page Builder", aliases: ["page builder", "construtor de paginas", "construtor de sites", "criar site", "criar pagina"] },
+  { path: "/marketing?tab=canvas", titulo: "Marketing - Canvas", aliases: ["canvas de marketing", "canvas editor"] },
+  { path: "/marketing?tab=integrations", titulo: "Marketing - Integrações", aliases: ["integracoes de marketing", "integracoes google ms sql"] },
+  { path: "/marketing?tab=conectores-sociais", titulo: "Marketing - Conectores de Redes Sociais", aliases: ["conectores redes sociais", "conectar instagram", "conectar facebook", "conectar tiktok", "conectar linkedin"] },
+  { path: "/marketing?tab=links-sociais", titulo: "Marketing - Links das Redes Sociais", aliases: ["links redes sociais", "links sociais marketing"] },
+
 
   // ============ Sub-telas: Ponto (extras) ============
   { path: "/ponto/portal", titulo: "Ponto - Portal do Funcionário", aliases: ["portal do funcionario"] },
