@@ -56,6 +56,12 @@ export default function AssistenteVozConfig() {
     else toast.success("Configuração salva");
   };
 
+  const salvarChave = async (chave: string, valores: string[]) => {
+    const dedup = Array.from(new Set(valores.map((s) => s.trim()).filter(Boolean)));
+    const frases_customizadas = { ...(config.frases_customizadas || {}), [chave]: dedup };
+    await salvarConfig({ frases_customizadas });
+  };
+
   const rotasFiltradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
     if (!q) return ROTAS_SISTEMA;
@@ -63,9 +69,10 @@ export default function AssistenteVozConfig() {
       (r) =>
         r.titulo.toLowerCase().includes(q) ||
         r.path.toLowerCase().includes(q) ||
-        (r.aliases || []).some((a) => a.toLowerCase().includes(q)),
+        (r.aliases || []).some((a) => a.toLowerCase().includes(q)) ||
+        (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q)),
     );
-  }, [busca]);
+  }, [busca, config.frases_customizadas]);
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-4">
