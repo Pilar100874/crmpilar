@@ -251,7 +251,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
             <div class="text-sm">
               <p class="font-bold">${veiculo.placa}</p>
               <p>${veiculo.descricao || 'Sem descrição'}</p>
-              <p>Velocidade: ${veiculo.ultima_posicao?.velocidade || 0} km/h</p>
+              <p>Velocidade: ${Math.round(veiculo.ultima_posicao?.velocidade || 0)} km/h</p>
+              ${typeof veiculo.ultima_posicao?.ignicao === 'boolean'
+                ? `<p>Ignição: <strong style="color:${veiculo.ultima_posicao.ignicao ? '#059669' : '#6b7280'}">${veiculo.ultima_posicao.ignicao ? '🔑 Ligado' : '⏻ Desligado'}</strong></p>`
+                : ''}
             </div>
           `);
 
