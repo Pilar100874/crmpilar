@@ -104,6 +104,14 @@ export const VeiculoMarker: React.FC<VeiculoMarkerProps> = ({ veiculo, onClick }
               <span className="text-gray-500">Velocidade:</span>
               <span>{Math.round(velocidade)} km/h</span>
             </div>
+            {typeof veiculo.ultima_posicao.ignicao === 'boolean' && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Ignição:</span>
+                <span className={veiculo.ultima_posicao.ignicao ? 'text-emerald-600 font-medium' : ''}>
+                  {veiculo.ultima_posicao.ignicao ? '🔑 Ligado' : '⏻ Desligado'}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-500">Última atualização:</span>
               <span>{format(new Date(data_hora), "HH:mm", { locale: ptBR })}</span>
