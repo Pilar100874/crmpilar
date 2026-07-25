@@ -666,6 +666,16 @@ export default function MarketingAutomacoes() {
         itemName={automacaoToDelete?.name}
         isLoading={isDeleting}
       />
+
+      <HistoricoEnviosDialog
+        open={historicoOpen}
+        onOpenChange={(o) => {
+          setHistoricoOpen(o);
+          if (!o) setHistoricoAutomacao(null);
+        }}
+        automationId={historicoAutomacao?.id ?? null}
+        automationName={historicoAutomacao?.name}
+      />
     </div>
   );
 }
