@@ -81,6 +81,7 @@ import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import AdminApps from "./pages/AdminApps";
 import PoliticasInternas from "./pages/PoliticasInternas";
 import AssistenteVozConfig from "./pages/AssistenteVozConfig";
+import RelatoriosVozConfig from "./pages/RelatoriosVozConfig";
 import MenuCustomizacao from "./pages/MenuCustomizacao";
 import TelasCustomizadas from "./pages/TelasCustomizadas";
 import TelaCustomizadaView from "./pages/TelaCustomizadaView";
