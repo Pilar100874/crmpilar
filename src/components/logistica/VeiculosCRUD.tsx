@@ -760,20 +760,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Tipo</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>Rastreador</TableHead>
+              <TableHead>Telefone (SIM)</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[180px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVeiculos.map(veiculo => {
-              const modelId = (veiculo as any).tracker_model_id as string | undefined;
-              const model = modelId ? trackerModels.find(m => m.id === modelId) : null;
-              return (
-              <TableRow key={veiculo.id}>
-                <TableCell className="font-mono font-medium">{veiculo.placa}</TableCell>
-                <TableCell>{veiculo.descricao || '-'}</TableCell>
-                <TableCell>{veiculo.motorista || '-'}</TableCell>
-                <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
+...
                 <TableCell>{unidadeNomeById[(veiculo as any).logistica_grupo_id] || '-'}</TableCell>
                 <TableCell>
                   {model ? (
