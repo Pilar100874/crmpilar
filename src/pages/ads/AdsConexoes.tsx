@@ -30,6 +30,7 @@ export default function AdsConexoes() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [wizardPlatform, setWizardPlatform] = useState<PlatformKey | null>(null);
 
   const loadStatus = async () => {
     setLoading(true);
