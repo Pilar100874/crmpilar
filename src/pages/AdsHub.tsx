@@ -39,6 +39,7 @@ import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSet
 import { AdsCommandPalette } from '@/components/ads/AdsCommandPalette';
 import { AdsShortcutsDialog } from '@/components/ads/AdsShortcutsDialog';
 import { AdsOnboardingTour } from '@/components/ads/AdsOnboardingTour';
+import { AdsSetupChecklistCard } from '@/components/ads/AdsSetupChecklistCard';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
@@ -65,22 +66,55 @@ interface TabItem {
   platform?: string;
 }
 
-// Menu reagrupado — grupos lógicos, itens antigos ainda acessíveis via ids
-const tabItems: TabItem[] = [
-  { id: 'wizard', label: 'Wizard de Setup', icon: Sparkles, description: 'Assistente guiado para configurar tudo passo a passo' },
-  { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
-  { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
-  { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Frequência de execução das automações' },
-  { id: 'connections', label: 'Conexões', icon: Key, description: 'Contas de anúncio + Apps do Desenvolvedor' },
-  { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
-  { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Alertas de performance' },
-  { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
-  { id: 'google', label: 'Google Ads', icon: GoogleIcon, description: 'Dashboard Google Ads', platform: 'google' },
-  { id: 'meta', label: 'Meta Ads', icon: MetaIcon, description: 'Dashboard Meta Ads (Facebook/Instagram)', platform: 'meta' },
-  { id: 'tiktok', label: 'TikTok Ads', icon: TikTokIcon, description: 'Dashboard TikTok Ads', platform: 'tiktok' },
-  { id: 'mercadolivre', label: 'Mercado Livre Ads', icon: MercadoLivreIcon, description: 'Dashboard Mercado Livre Ads', platform: 'mercado_livre' },
-  { id: 'amazon', label: 'Amazon Ads', icon: AmazonIcon, description: 'Dashboard Amazon Ads', platform: 'amazon' },
+interface TabGroup {
+  id: string;
+  label: string;
+  items: TabItem[];
+}
+
+// Menu agrupado em seções lógicas
+const tabGroups: TabGroup[] = [
+  {
+    id: "start",
+    label: "Comece aqui",
+    items: [
+      { id: 'wizard', label: 'Assistente de Setup', icon: Sparkles, description: 'Configuração guiada passo a passo' },
+      { id: 'connections', label: 'Conectar plataformas', icon: Key, description: 'Conecte suas contas de Google, Meta e TikTok Ads' },
+    ],
+  },
+  {
+    id: "operate",
+    label: "Operar",
+    items: [
+      { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
+      { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
+      { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Frequência de execução das automações' },
+    ],
+  },
+  {
+    id: "analyze",
+    label: "Analisar",
+    items: [
+      { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
+      { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Alertas de performance' },
+      { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
+    ],
+  },
+  {
+    id: "platforms",
+    label: "Por plataforma",
+    items: [
+      { id: 'google', label: 'Google Ads', icon: GoogleIcon, description: 'Dashboard Google Ads', platform: 'google' },
+      { id: 'meta', label: 'Meta Ads', icon: MetaIcon, description: 'Dashboard Meta Ads (Facebook/Instagram)', platform: 'meta' },
+      { id: 'tiktok', label: 'TikTok Ads', icon: TikTokIcon, description: 'Dashboard TikTok Ads', platform: 'tiktok' },
+      { id: 'mercadolivre', label: 'Mercado Livre Ads', icon: MercadoLivreIcon, description: 'Dashboard Mercado Livre Ads', platform: 'mercado_livre' },
+      { id: 'amazon', label: 'Amazon Ads', icon: AmazonIcon, description: 'Dashboard Amazon Ads', platform: 'amazon' },
+    ],
+  },
 ];
+
+const tabItems: TabItem[] = tabGroups.flatMap((g) => g.items);
+
 
 const AdsHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -149,7 +183,18 @@ const AdsHub: React.FC = () => {
 
     switch (activeTab) {
       case 'dashboard':
-        return <AdsDashboard />;
+        return (
+          <div className="space-y-4">
+            {estabelecimentoId && (
+              <AdsSetupChecklistCard
+                estabelecimentoId={estabelecimentoId}
+                onGoToWizard={() => setActiveTab('wizard')}
+                onNavigate={setActiveTab}
+              />
+            )}
+            <AdsDashboard />
+          </div>
+        );
       case 'campaigns':
         return <AdsCampaigns />;
       case 'reports':
@@ -178,6 +223,7 @@ const AdsHub: React.FC = () => {
         return <AdsDashboard />;
     }
   };
+
 
   // For dashboard tab, render the AdsDashboard directly without card wrapper
   if (activeTab === 'dashboard') {
@@ -283,37 +329,46 @@ const AdsHub: React.FC = () => {
                   return menuButton;
                 })()}
                 
-                {tabItems.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
-                  
-                  const menuButton = (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={cn(
-                        "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
-                        isActive && "is-active",
-                        isMenuCollapsed && "justify-center"
-                      )}
-                    >
-                      <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                        {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
-                      </span>
-                      {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
-                    </button>
-                  );
-                  if (isMenuCollapsed) {
-                    return (
-                      <Tooltip key={tab.id}>
-                        <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                        <TooltipContent side="right">{tab.label}</TooltipContent>
-                      </Tooltip>
-                    );
-                  }
-                  return menuButton;
-                })}
+                {tabGroups.map((group) => (
+                  <div key={group.id} className="mt-2 first:mt-0">
+                    {!isMenuCollapsed && (
+                      <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                        {group.label}
+                      </div>
+                    )}
+                    {group.items.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
+                      const menuButton = (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={cn(
+                            "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
+                            isActive && "is-active",
+                            isMenuCollapsed && "justify-center"
+                          )}
+                        >
+                          <span className={cn("shrink-0", !isActive && "opacity-70")}>
+                            {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                          </span>
+                          {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
+                        </button>
+                      );
+                      if (isMenuCollapsed) {
+                        return (
+                          <Tooltip key={tab.id}>
+                            <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
+                            <TooltipContent side="right">{tab.label}</TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+                      return menuButton;
+                    })}
+                  </div>
+                ))}
+
               </TooltipProvider>
             </div>
 
@@ -435,37 +490,46 @@ const AdsHub: React.FC = () => {
                 return menuButton;
               })()}
               
-              {tabItems.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
-                
-                const menuButton = (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
-                      isActive && "is-active",
-                      isMenuCollapsed && "justify-center"
-                    )}
-                  >
-                    <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                      {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
-                    </span>
-                    {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
-                  </button>
-                );
-                if (isMenuCollapsed) {
-                  return (
-                    <Tooltip key={tab.id}>
-                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                      <TooltipContent side="right">{tab.label}</TooltipContent>
-                    </Tooltip>
-                  );
-                }
-                return menuButton;
-              })}
+              {tabGroups.map((group) => (
+                <div key={group.id} className="mt-2 first:mt-0">
+                  {!isMenuCollapsed && (
+                    <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {group.label}
+                    </div>
+                  )}
+                  {group.items.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
+                    const menuButton = (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                          "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
+                          isActive && "is-active",
+                          isMenuCollapsed && "justify-center"
+                        )}
+                      >
+                        <span className={cn("shrink-0", !isActive && "opacity-70")}>
+                          {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                        </span>
+                        {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
+                      </button>
+                    );
+                    if (isMenuCollapsed) {
+                      return (
+                        <Tooltip key={tab.id}>
+                          <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
+                          <TooltipContent side="right">{tab.label}</TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+                    return menuButton;
+                  })}
+                </div>
+              ))}
+
             </TooltipProvider>
           </div>
 
