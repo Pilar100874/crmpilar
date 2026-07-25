@@ -902,7 +902,7 @@ export default function Layout({ children }: LayoutProps) {
                 // Itens do rodapé posicionados no menu principal
                 if (item.system) {
                   const handleClick = () => {
-                    if (item.system === "lock") toggleMenuLock();
+                    if (item.system === "lock") handleToggleLock();
                     else if (item.system === "theme") toggleTheme();
                     else if (item.system === "logout") handleLogout();
                     else if (item.system === "admin") navigate("/admin");
@@ -916,9 +916,8 @@ export default function Layout({ children }: LayoutProps) {
                   const Icon =
                     item.system === "theme"
                       ? (isDarkMode ? Sun : Moon)
-                      : item.system === "lock"
-                      ? (menuLocked ? LockKeyholeOpen ?? Lock : Lock)
                       : item.icon;
+
                   if (menuLocked) {
                     return (
                       <button
