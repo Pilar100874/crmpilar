@@ -12,6 +12,7 @@ interface PosicaoPayload {
   velocidade?: number;
   direcao?: number;
   dataHora?: string;
+  ignicao?: boolean;
   token?: string;
 }
 
