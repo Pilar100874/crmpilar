@@ -579,24 +579,26 @@ export default function MenuCustomizacao() {
     const Icon = icon;
     return (
       <Card
-        className="p-0 overflow-hidden border-2"
+        className="p-0 overflow-hidden border-2 flex flex-col"
         onDragOver={(e) => dragging && e.preventDefault()}
         onDrop={(e) => onDropOn(tree, null, e)}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Icon className="w-4 h-4 text-primary" /> {title}
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-b bg-muted/40">
+          <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base min-w-0">
+            <Icon className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">{title}</span>
+            <Badge variant="secondary" className="text-[10px]">{roots.length}</Badge>
           </h2>
-          <Button size="sm" variant="outline" onClick={() => addContainer(tree, null)}>
-            <Plus className="w-4 h-4 mr-1" /> Nova pasta
+          <Button size="sm" variant="outline" onClick={() => addContainer(tree, null)} className="shrink-0">
+            <Plus className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Nova pasta</span>
           </Button>
         </div>
-        <ScrollArea className="h-[62vh]">
-          <div className="p-3">
+        <ScrollArea className="h-[50vh] lg:h-[62vh]">
+          <div className="p-2 sm:p-3">
             {roots.map((r, i) => renderNode(tree, r, [i], 0))}
             {roots.length === 0 && (
-              <div className="text-sm text-muted-foreground text-center py-12 border-2 border-dashed rounded-lg">
-                Vazio — arraste programas para cá.
+              <div className="text-sm text-muted-foreground text-center py-10 border-2 border-dashed rounded-lg">
+                Vazio — adicione programas aqui.
               </div>
             )}
           </div>
@@ -605,41 +607,123 @@ export default function MenuCustomizacao() {
     );
   };
 
+  const renderPoolCard = () => (
+    <Card className="p-0 overflow-hidden border-2 flex flex-col">
+      <div className="px-3 sm:px-4 py-2.5 border-b bg-muted/40">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+            <FileText className="w-4 h-4 text-primary" /> Programas disponíveis
+          </h2>
+          <Badge variant="secondary" className="text-[10px]">{unplaced.length}</Badge>
+        </div>
+        <Input
+          value={poolSearch}
+          onChange={(e) => setPoolSearch(e.target.value)}
+          placeholder="Buscar programa..."
+          className="h-9 text-sm"
+        />
+        <p className="text-[11px] text-muted-foreground mt-2 hidden sm:block">
+          Arraste para um dos menus, ou toque nos botões <strong>+ Menu</strong> / <strong>+ Admin</strong>.
+        </p>
+      </div>
+      <ScrollArea className="h-[50vh] lg:h-[62vh]">
+        <div className="p-2 sm:p-3 space-y-4">
+          {groupedUnplaced.length === 0 && (
+            <div className="text-xs text-muted-foreground italic text-center py-8">
+              {poolSearch ? "Nenhum programa encontrado." : "Todos os programas já estão em algum menu."}
+            </div>
+          )}
+          {groupedUnplaced.map(([origem, items]) => (
+            <div key={origem}>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-1">
+                {origem}
+                <span className="ml-1 text-muted-foreground/60">({items.length})</span>
+              </div>
+              <div className="space-y-1">
+                {items.map((p) => {
+                  const Icon = p.icon || FileText;
+                  return (
+                    <div
+                      key={p.id}
+                      draggable
+                      onDragStart={() => setDragging({ kind: "program", programId: p.id })}
+                      className="flex items-center gap-2 py-2 px-2 rounded-md border bg-background hover:bg-primary/5 hover:border-primary/40 transition-colors"
+                      title={p.title}
+                    >
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0 hidden sm:block cursor-grab" />
+                      <Icon className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-xs sm:text-sm flex-1 truncate">{p.title}</span>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-[10px]"
+                          onClick={() => addProgramInto("main", null, p.id)}
+                          title="Adicionar ao Menu principal"
+                        >
+                          <PlusCircle className="w-3 h-3 sm:mr-1" /> <span className="hidden sm:inline">Menu</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-[10px]"
+                          onClick={() => addProgramInto("admin", null, p.id)}
+                          title="Adicionar ao Admin (rodapé)"
+                        >
+                          <PlusCircle className="w-3 h-3 sm:mr-1" /> <span className="hidden sm:inline">Admin</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </Card>
+  );
+
   return (
-    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto">
-      <div className="mb-6 rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-[1600px] mx-auto pb-24">
+      <div className="mb-4 sm:mb-6 rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 sm:p-5">
         <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Folder className="w-6 h-6 text-primary" /> Personalizar Menus
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Folder className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Personalizar Menus
             </h1>
-            <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
-              Você pode organizar dois menus: o <strong>Menu principal</strong> (lateral) e o
-              submenu <strong>Admin (rodapé)</strong>. Arraste programas de um menu para o outro,
-              crie pastas e subpastas com quantos níveis quiser.
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl">
+              Organize o <strong>Menu principal</strong> (lateral) e o <strong>Admin (rodapé)</strong>.
+              Arraste no desktop ou use os botões <strong>+ Menu</strong> / <strong>+ Admin</strong> no celular.
             </p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {baseline ? "Restaurar padrão salvo" : "Restaurar padrão"}
+          <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+            <Button size="sm" variant="outline" onClick={handleReset} disabled={!isAdmin || saving} className="flex-1 sm:flex-initial">
+              <RotateCcw className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">{baseline ? "Restaurar padrão salvo" : "Restaurar padrão"}</span>
+              <span className="sm:hidden ml-1">Restaurar</span>
             </Button>
             <Button
+              size="sm"
               variant="outline"
               onClick={handleSetAsDefault}
               disabled={!isAdmin || saving}
               title="Salva o arranjo atual como o novo padrão a ser restaurado depois"
+              className="flex-1 sm:flex-initial"
             >
-              <BookmarkCheck className="w-4 h-4 mr-2" /> Definir atual como padrão
+              <BookmarkCheck className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Definir atual como padrão</span>
+              <span className="sm:hidden ml-1">Definir padrão</span>
             </Button>
-            <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving} className="shadow-sm">
-              <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : dirty ? "Salvar alterações" : "Salvar"}
+            <Button size="sm" onClick={handleSave} disabled={!isAdmin || !dirty || saving} className="shadow-sm flex-1 sm:flex-initial">
+              <Save className="w-4 h-4 sm:mr-2" />
+              <span>{saving ? "Salvando..." : dirty ? "Salvar" : "Salvo"}</span>
             </Button>
           </div>
         </div>
         {baseline && (
           <div className="mt-2 text-[11px] text-muted-foreground">
-            Padrão personalizado ativo — "Restaurar padrão" volta para o arranjo que você definiu.
+            Padrão personalizado ativo — "Restaurar padrão" volta para o arranjo definido.
           </div>
         )}
         {dirty && <div className="mt-3 text-xs text-primary font-medium">● Alterações não salvas</div>}
@@ -649,69 +733,45 @@ export default function MenuCustomizacao() {
         <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
           <Lock className="w-4 h-4 mt-0.5 shrink-0" />
           <div>
-            <strong>Modo somente leitura.</strong> Apenas administradores podem alterar a estrutura dos menus.
+            <strong>Modo somente leitura.</strong> Apenas administradores podem alterar os menus.
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_340px] gap-4">
+      {/* Desktop / large tablet: 3 columns */}
+      <div className="hidden lg:grid grid-cols-[1fr_1fr_360px] gap-4">
         {renderTreeCard("main", "Menu principal (lateral)", LayoutGrid, mainRoots)}
         {renderTreeCard("admin", "Menu Admin (rodapé)", Shield, adminRoots)}
+        {renderPoolCard()}
+      </div>
 
-        <Card className="p-0 overflow-hidden border-2">
-          <div className="px-4 py-3 border-b bg-muted/40">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary" /> Programas disponíveis
-              </h2>
-              <Badge variant="secondary" className="text-[10px]">{unplaced.length}</Badge>
-            </div>
-            <Input
-              value={poolSearch}
-              onChange={(e) => setPoolSearch(e.target.value)}
-              placeholder="Buscar programa..."
-              className="h-8 text-sm"
-            />
-            <p className="text-[11px] text-muted-foreground mt-2">
-              Arraste para qualquer um dos dois menus (ou entre eles).
-            </p>
-          </div>
-          <ScrollArea className="h-[62vh]">
-            <div className="p-3 space-y-4">
-              {groupedUnplaced.length === 0 && (
-                <div className="text-xs text-muted-foreground italic text-center py-8">
-                  {poolSearch ? "Nenhum programa encontrado." : "Todos os programas já estão em algum menu."}
-                </div>
-              )}
-              {groupedUnplaced.map(([origem, items]) => (
-                <div key={origem}>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-1">
-                    {origem}
-                    <span className="ml-1 text-muted-foreground/60">({items.length})</span>
-                  </div>
-                  <div className="space-y-1">
-                    {items.map((p) => {
-                      const Icon = p.icon || FileText;
-                      return (
-                        <div
-                          key={p.id}
-                          draggable
-                          onDragStart={() => setDragging({ kind: "program", programId: p.id })}
-                          className="flex items-center gap-2 py-1.5 px-2 rounded-md border bg-background hover:bg-primary/5 hover:border-primary/40 cursor-grab transition-colors"
-                          title={p.title}
-                        >
-                          <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
-                          <span className="text-xs flex-1 truncate">{p.title}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
+      {/* Mobile & tablet: tabs */}
+      <div className="lg:hidden">
+        <Tabs defaultValue="main" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="main" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+              <LayoutGrid className="w-4 h-4" />
+              <span>Menu</span>
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+              <Shield className="w-4 h-4" />
+              <span>Admin</span>
+            </TabsTrigger>
+            <TabsTrigger value="pool" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+              <LayoutList className="w-4 h-4" />
+              <span>Programas</span>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="main" className="mt-3">
+            {renderTreeCard("main", "Menu principal (lateral)", LayoutGrid, mainRoots)}
+          </TabsContent>
+          <TabsContent value="admin" className="mt-3">
+            {renderTreeCard("admin", "Menu Admin (rodapé)", Shield, adminRoots)}
+          </TabsContent>
+          <TabsContent value="pool" className="mt-3">
+            {renderPoolCard()}
+          </TabsContent>
+        </Tabs>
       </div>
 
       <DeleteConfirmDialog
