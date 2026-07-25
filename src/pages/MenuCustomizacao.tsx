@@ -245,8 +245,9 @@ export default function MenuCustomizacao() {
   };
 
   const doDelete = (tree: TreeKey, path: Path) => {
-    const roots = tree === "main" ? mainRoots : adminRoots;
+    const roots = tree === "main" ? mainRoots : tree === "admin" ? adminRoots : tree === "user" ? userRoots : systemRoots;
     const node = getNode(roots, path);
+
     if (node.kind !== "container") {
       setConfirmDelete(null);
       return;
