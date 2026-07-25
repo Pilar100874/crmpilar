@@ -114,11 +114,30 @@ export function aliasesEfetivosRota(
   return mergeAliases(rota.aliases || [], extras, removidos);
 }
 
-/** Clona a lista de rotas aplicando aliases customizados por rota. */
+/** Retorna o título efetivo da rota — customizado pelo usuário ou o original. */
+export function tituloEfetivoRota(
+  rota: RotaSistema,
+  customizadas?: Record<string, string[]> | null,
+): { titulo: string; original: string; customizado: boolean } {
+  const custom = customizadas?.[`rota:${rota.path}:titulo`];
+  const primeiro = Array.isArray(custom) ? (custom[0] || "").trim() : "";
+  if (primeiro) return { titulo: primeiro, original: rota.titulo, customizado: true };
+  return { titulo: rota.titulo, original: rota.titulo, customizado: false };
+}
+
+/** Clona a lista de rotas aplicando aliases e título customizados por rota.
+ *  Ao renomear o título, o título original é preservado como apelido. */
 export function rotasEfetivas(
   rotas: RotaSistema[],
   customizadas?: Record<string, string[]> | null,
 ): RotaSistema[] {
   if (!customizadas) return rotas;
-  return rotas.map((r) => ({ ...r, aliases: aliasesEfetivosRota(r, customizadas) }));
+  return rotas.map((r) => {
+    const aliases = aliasesEfetivosRota(r, customizadas);
+    const { titulo, original, customizado } = tituloEfetivoRota(r, customizadas);
+    const aliasesFinais = customizado
+      ? Array.from(new Set([original, ...aliases]))
+      : aliases;
+    return { ...r, titulo, aliases: aliasesFinais };
+  });
 }
