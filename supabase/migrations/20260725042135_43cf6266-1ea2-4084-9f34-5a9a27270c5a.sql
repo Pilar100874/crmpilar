@@ -1,0 +1,2 @@
+ALTER TABLE public.assistente_voz_comandos DROP CONSTRAINT IF EXISTS assistente_voz_comandos_tipo_acao_check;
+ALTER TABLE public.assistente_voz_comandos ADD CONSTRAINT assistente_voz_comandos_tipo_acao_check CHECK (tipo_acao = ANY (ARRAY['navegar','consultar_metrica','responder','disparar_bot','comando_tv','abrir_programa','popup_tela','conversa']));
