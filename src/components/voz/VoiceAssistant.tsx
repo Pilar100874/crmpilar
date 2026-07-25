@@ -26,14 +26,24 @@ type LogItem = { user: string; assistant: string; ts: number };
 type CustomCmd = { id: string; frase_gatilho: string; tipo_acao: string; payload: any; ativo: boolean };
 
 const WAKE_DEFAULT = "ei pilar";
-const QUICK_SUGGESTIONS = [
-  "Abrir dashboard",
-  "Quantos veículos estão online?",
-  "Ir para orçamentos",
-  "Quantas empresas cadastradas?",
-  "Abrir logística",
-  "Quantos atendimentos abertos?",
+
+// Palavras que ativam o modo "listar relatórios"
+const GATILHOS_RELATORIOS = [
+  "relatorios", "relatorio", "meus relatorios", "lista de relatorios",
+  "menu de relatorios", "mostrar relatorios", "ver relatorios", "abrir relatorios",
 ];
+
+const SUGESTOES_ABRIR = [
+  "Abrir dashboard",
+  "Abrir orçamentos",
+  "Abrir logística",
+  "Abrir empresas",
+];
+
+type RelatorioVoz = {
+  id: string; nome: string; grupo: string; descricao: string | null;
+  prompt_geracao: string; tipo_saida: string; aliases: string[]; ativo: boolean;
+};
 
 // util: normaliza texto (remove acentos, minúsculas)
 const norm = (s: string) =>
