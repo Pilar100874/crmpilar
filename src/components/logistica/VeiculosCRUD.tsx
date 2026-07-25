@@ -280,6 +280,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         placa: '',
         descricao: '',
         motorista: '',
+        celular: '',
         tipo_veiculo: '',
         logistica_grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
