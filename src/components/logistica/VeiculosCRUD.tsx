@@ -81,6 +81,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     placa: '',
     descricao: '',
     motorista: '',
+    celular: '',
     tipo_veiculo: '',
     logistica_grupo_id: '',
     traccar_device_id: '',
