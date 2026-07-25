@@ -141,7 +141,7 @@ serve(async (req) => {
     }
     const toNumberOnly = String(customerPhone).replace(/\D/g, "");
 
-    // ===== Resolve número (prioridade: override do atendente > bot > padrão) =====
+    // ===== Resolve número (prioridade: sessão explícita do bloco > bot > padrão) =====
     let numero: any = null;
     const resolveEvolutionSession = async (session: any) => {
       const scopedEstabelecimentoId = conversation?.estabelecimento_id || estabelecimento_id || session?.estabelecimento_id;
@@ -163,19 +163,8 @@ serve(async (req) => {
       };
     };
 
-    // Prioridade máxima: sessão Evolution vinculada ao bot em execução.
-    if (botFlowId) {
-      const { data: session } = await supabase
-        .from("whatsapp_sessions")
-        .select("id, session_name, estabelecimento_id, status")
-        .eq("bot_flow_id", botFlowId)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      numero = await resolveEvolutionSession(session);
-    }
-    // Sessão Evolution explicitamente escolhida no bloco/workflow.
-    if (!numero && whatsappSessionId) {
+    // Sessão Evolution explicitamente escolhida no bloco/workflow deve ganhar do vínculo do bot.
+    if (whatsappSessionId) {
       const { data: session } = await supabase
         .from("whatsapp_sessions")
         .select("id, session_name, estabelecimento_id, status")
@@ -194,6 +183,18 @@ serve(async (req) => {
       if (scopedEstabelecimentoId) q = q.eq("estabelecimento_id", scopedEstabelecimentoId);
       const { data: sessions } = await q;
       numero = await resolveEvolutionSession(sessions?.[0]);
+    }
+
+    // Se o bloco não escolheu sessão, usa a sessão vinculada ao bot em execução.
+    if (!numero && botFlowId) {
+      const { data: session } = await supabase
+        .from("whatsapp_sessions")
+        .select("id, session_name, estabelecimento_id, status")
+        .eq("bot_flow_id", botFlowId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      numero = await resolveEvolutionSession(session);
     }
 
     if (!numero && whatsappNumeroId) {
@@ -287,6 +288,8 @@ serve(async (req) => {
       success: sendResult.ok,
       invalid_number: !!sendResult.invalid,
       reason: sendResult.reason || null,
+      provider: numero.provider || null,
+      session: numero.session_name || numero.nome || null,
     }), {
       status: sendResult.ok ? 200 : (sendResult.invalid ? 422 : 502),
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -337,6 +340,14 @@ function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: st
   return { invalid: false };
 }
 
+function failureReason(bodyTxt: string, status: number): string {
+  const lower = (bodyTxt || "").toLowerCase();
+  if (lower.includes("connection closed") || lower.includes("session closed") || lower.includes("socket closed")) return "sessao_desconectada";
+  if (lower.includes("not connected") || lower.includes("disconnected")) return "sessao_desconectada";
+  if (lower.includes("unauthorized") || lower.includes("forbidden")) return "credenciais_invalidas";
+  return `http_${status}`;
+}
+
 async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
   if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -349,8 +360,7 @@ async function sendEvolutionText(toNumberOnly: string, text: string, sessionName
   console.log("[AGENT][EVO] sendText:", res.status, bodyTxt.slice(0, 200));
   const inv = detectInvalidFromText(bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
-  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
 }
 
 async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
@@ -385,8 +395,7 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
   console.log("[AGENT][EVO] sendMedia:", res.status, bodyTxt.slice(0, 200));
   const inv = detectInvalidFromText(bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
-  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
 }
 
 /* ===== Cloud API senders ===== */
@@ -461,8 +470,7 @@ async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: stri
   console.log("[AGENT][EVO] sendContact:", res.status, bodyTxt.slice(0, 200));
   const inv = detectInvalidFromText(bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
-  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
 }
 
 async function sendCloudContact(phoneNumberId: string, accessToken: string, to: string, contact: { nome?: string; whatsapp: string }): Promise<SendOut> {

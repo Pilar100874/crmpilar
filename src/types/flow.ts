@@ -818,6 +818,8 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       message: "",
       usarMensagemPreDefinida: false,
       preDefinidaVar: "last_mensagem_pre_definida",
+      whatsappSessionId: null,
+      whatsappSessionName: null,
       enviarContato: false,
       contatoTipo: "gerente_do_vendedor",
       contatoNome: "",
