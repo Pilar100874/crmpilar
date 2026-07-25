@@ -92,9 +92,18 @@ export interface ProgramLeaf {
   title: string;
   url: string;
   icon: any;
+  system?: "lock" | "admin" | "theme" | "logout";
   originContainerId?: string;
   originContainerTitle?: string;
 }
+
+// Itens do rodapé do menu que também podem ser posicionados no menu principal
+export const SYSTEM_PROGRAMS: ProgramLeaf[] = [
+  { id: "system-lock", title: "Travar menu", url: "#system-lock", icon: LucideIcons.Lock, system: "lock" },
+  { id: "system-admin", title: "Admin", url: "/admin", icon: LucideIcons.Shield, system: "admin" },
+  { id: "system-theme", title: "Modo escuro / claro", url: "#system-theme", icon: LucideIcons.Moon, system: "theme" },
+  { id: "system-logout", title: "Sair", url: "#system-logout", icon: LucideIcons.LogOut, system: "logout" },
+];
 
 export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
   const map = new Map<string, ProgramLeaf>();
@@ -117,8 +126,13 @@ export function extractPrograms(base: MenuItem[]): Map<string, ProgramLeaf> {
       }
     }
   }
+  // Adiciona programas de sistema (rodapé) ao pool
+  for (const sp of SYSTEM_PROGRAMS) {
+    if (!map.has(sp.id)) map.set(sp.id, sp);
+  }
   return map;
 }
+
 
 export function initialFromBase(base: MenuItem[]): MenuCustomization {
   const roots: CustomNode[] = base.map((item) => {
@@ -171,7 +185,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
   for (const root of custom.roots) {
     if (root.kind === "program") {
       const p = programs.get(root.programId);
-      if (p) result.push({ id: p.id, title: p.title, url: p.url, icon: p.icon });
+      if (p) result.push({ id: p.id, title: p.title, url: p.url, icon: p.icon, ...(p.system ? { system: p.system } : {}) });
       continue;
     }
     const subItems: any[] = [];
@@ -185,6 +199,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
               title: p.title,
               url: p.url,
               icon: p.icon,
+              ...(p.system ? { system: p.system } : {}),
               ...(groupName ? { group: groupName } : {}),
             });
         } else {
@@ -208,6 +223,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
         title: root.title || only.title,
         url: only.url,
         icon: only.icon,
+        ...(only.system ? { system: only.system } : {}),
       });
     } else {
       result.push({
@@ -221,7 +237,10 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
 
   const missing: MenuItem[] = [];
   for (const [id, p] of programs) {
+    // Programas de sistema não aparecem por padrão no menu principal — só se o admin arrastar
+    if (p.system) continue;
     if (!placed.has(id)) missing.push({ id, title: p.title, url: p.url, icon: p.icon });
   }
   return [...result, ...missing];
+
 }

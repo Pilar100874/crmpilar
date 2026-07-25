@@ -103,7 +103,9 @@ interface SubMenuItem {
   url: string;
   icon: any;
   group?: string;
+  system?: "lock" | "admin" | "theme" | "logout";
 }
+
 
 export interface MenuItem {
   id: string;
@@ -111,7 +113,9 @@ export interface MenuItem {
   url?: string;
   icon: any;
   subItems?: SubMenuItem[];
+  system?: "lock" | "admin" | "theme" | "logout";
 }
+
 
 export const menuItems: MenuItem[] = [
   { 
@@ -646,10 +650,16 @@ export default function Layout({ children }: LayoutProps) {
     return null;
   }
 
-
   // Filtra os menus baseado nas permissões
   const visibleMenus = customizedItems
+
     .filter((item) => {
+      // Itens do sistema (trava, admin, tema, sair) — o admin decide se aparecem no menu principal
+      if (item.system) {
+        if (item.system === "admin") return isAdmin;
+        return true;
+      }
+
       if (item.id === "Admin") {
         return isAdmin;
       }
@@ -673,13 +683,13 @@ export default function Layout({ children }: LayoutProps) {
 
       return permission?.view === true;
     })
-    .map((item) => {
-      // Não filtra subitens por permissão para garantir visibilidade do submenu
-      if (item.subItems) {
-        return item;
-      }
-      return item;
-    });
+    .map((item) => item);
+
+  // Ids de itens de sistema já posicionados no menu principal (para esconder no rodapé)
+  const systemInMain = new Set<string>(
+    visibleMenus.map((i) => i.system).filter(Boolean) as string[]
+  );
+
 
   if (soloMode) {
     return (
@@ -889,7 +899,53 @@ export default function Layout({ children }: LayoutProps) {
               </>
                
               {visibleMenus.map((item) => {
+                // Itens do rodapé posicionados no menu principal
+                if (item.system) {
+                  const handleClick = () => {
+                    if (item.system === "lock") handleToggleLock();
+                    else if (item.system === "theme") toggleTheme();
+                    else if (item.system === "logout") handleLogout();
+                    else if (item.system === "admin") navigate("/admin");
+                  };
+                  const label =
+                    item.system === "lock"
+                      ? (menuLocked ? "Destravar menu" : "Travar menu")
+                      : item.system === "theme"
+                      ? (isDarkMode ? "Modo Claro" : "Modo Escuro")
+                      : item.title;
+                  const Icon =
+                    item.system === "theme"
+                      ? (isDarkMode ? Sun : Moon)
+                      : item.icon;
+
+                  if (menuLocked) {
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={handleClick}
+                        title={label}
+                        className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      >
+                        <Icon className="w-6 h-6" />
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={handleClick}
+                      title={label}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </button>
+                  );
+                }
                 if (item.subItems && item.subItems.length > 0) {
+
                   const isMenuOpen = openSubmenuId === item.id;
                   // Destaca apenas se o submenu está aberto
                   const shouldHighlight = isMenuOpen;
@@ -1235,7 +1291,8 @@ export default function Layout({ children }: LayoutProps) {
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
 
             {/* Botão de travar/destravar - só aparece em telas maiores que 1024px */}
-            {(!isSmallScreen || menuOpen || menuLocked) && (
+            {!systemInMain.has("lock") && (!isSmallScreen || menuOpen || menuLocked) && (
+
               <button
                 onClick={handleToggleLock}
                 className={`${
@@ -1523,7 +1580,7 @@ export default function Layout({ children }: LayoutProps) {
             )}
 
             {/* Toggle Dia/Noite */}
-            {menuLocked ? (
+            {!systemInMain.has("theme") && (menuLocked ? (
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -1542,10 +1599,10 @@ export default function Layout({ children }: LayoutProps) {
                 {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
                 <span className="text-sm font-medium">{isDarkMode ? "Modo Claro" : "Modo Escuro"}</span>
               </button>
-            )}
+            ))}
 
             {/* Botão Sair - sempre abaixo do menu do usuário */}
-            {menuLocked ? (
+            {!systemInMain.has("logout") && (menuLocked ? (
               <button
                 type="button"
                 onClick={handleLogout}
@@ -1564,7 +1621,8 @@ export default function Layout({ children }: LayoutProps) {
                 <LogOut className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm font-medium">Sair</span>
               </button>
-            )}
+            ))}
+
           </div>
         </div>
         )}
