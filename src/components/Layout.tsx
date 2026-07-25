@@ -64,6 +64,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
+import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
@@ -243,6 +244,7 @@ export const menuItems: MenuItem[] = [
       { id: "Admin Macros", title: "Macros", url: "/macros", icon: Zap },
       { id: "Admin Telas Customizadas", title: "Tela Customizada", url: "/admin/telas-customizadas", icon: LucideIcons.LayoutGrid },
       { id: "Admin Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen },
+      { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
     ],
   },
 ];
@@ -634,8 +636,16 @@ export default function Layout({ children }: LayoutProps) {
     return null;
   }
 
+  // Aplica personalização de menu (localStorage) se existir
+  const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
+  useEffect(() => {
+    const handler = () => setCustomizedItems(applyMenuCustomization(menuItems));
+    window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
+    return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
+  }, []);
+
   // Filtra os menus baseado nas permissões
-  const visibleMenus = menuItems
+  const visibleMenus = customizedItems
     .filter((item) => {
       if (item.id === "Admin") {
         return isAdmin;
