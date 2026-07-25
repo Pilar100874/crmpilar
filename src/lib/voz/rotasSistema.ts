@@ -70,16 +70,17 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Menu Principal - Controle de Ponto ============
   { path: "/ponto", titulo: "Controle de Ponto", aliases: ["ponto", "dashboard rh", "dashboard do rh", "rh"] },
-  { path: "/ponto/funcionarios", titulo: "Ponto - Funcionários", aliases: ["funcionarios do ponto"] },
-  { path: "/ponto/registro", titulo: "Ponto - Registro via App", aliases: ["registro de ponto", "registro via app"] },
-  { path: "/ponto/tratamento", titulo: "Ponto - Tratamento", aliases: ["tratamento de ponto"] },
-  { path: "/ponto/ajustes", titulo: "Ponto - Ajustes", aliases: ["ajustes de ponto"] },
-  { path: "/ponto/espelho", titulo: "Ponto - Espelho de Ponto", aliases: ["espelho de ponto", "espelho do ponto"] },
-  { path: "/ponto/exportacao", titulo: "Ponto - Exportação Domínio", aliases: ["exportacao dominio", "exportacao do ponto"] },
-  { path: "/ponto/alertas", titulo: "Ponto - Antifraude", aliases: ["antifraude do ponto", "alertas do ponto"] },
-  { path: "/ponto/auditoria", titulo: "Ponto - Auditoria", aliases: ["auditoria do ponto"] },
-  { path: "/ponto/config", titulo: "Ponto - Configurações", aliases: ["configuracoes do ponto", "config do ponto"] },
-  { path: "/ponto/aprovacoes", titulo: "Ponto - Aprovações", aliases: ["aprovacoes do ponto"] },
+  { path: "/ponto/funcionarios", titulo: "Funcionários do Ponto", aliases: ["funcionarios do ponto", "ponto - funcionarios"] },
+  { path: "/ponto/registro", titulo: "Registro via App", aliases: ["registro de ponto", "registro via app", "ponto - registro via app"] },
+  { path: "/ponto/tratamento", titulo: "Tratamento de Ponto", aliases: ["tratamento de ponto", "ponto - tratamento"] },
+  { path: "/ponto/ajustes", titulo: "Ajustes de Ponto", aliases: ["ajustes de ponto", "ponto - ajustes"] },
+  { path: "/ponto/espelho", titulo: "Espelho de Ponto", aliases: ["espelho de ponto", "espelho do ponto", "ponto - espelho de ponto"] },
+  { path: "/ponto/exportacao", titulo: "Exportação Domínio", aliases: ["exportacao dominio", "exportacao do ponto", "ponto - exportacao dominio"] },
+  { path: "/ponto/alertas", titulo: "Antifraude do Ponto", aliases: ["antifraude do ponto", "alertas do ponto", "ponto - antifraude"] },
+  { path: "/ponto/auditoria", titulo: "Auditoria do Ponto", aliases: ["auditoria do ponto", "ponto - auditoria"] },
+  { path: "/ponto/config", titulo: "Configurações do Ponto", aliases: ["configuracoes do ponto", "config do ponto", "ponto - configuracoes"] },
+  { path: "/ponto/aprovacoes", titulo: "Aprovações do Ponto", aliases: ["aprovacoes do ponto", "ponto - aprovacoes"] },
+
 
   // ============ Menu Principal - Controle de Veículos ============
   { path: "/controle-veiculos", titulo: "Controle de Veículos", aliases: ["cv", "controle dos veiculos", "dashboard controle de veiculos", "painel controle de veiculos"] },
