@@ -9756,6 +9756,33 @@ export type Database = {
           },
         ]
       }
+      menu_customizacoes: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          payload: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          payload: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          payload?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: string[] | null

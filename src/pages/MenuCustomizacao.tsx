@@ -5,11 +5,13 @@ import {
   clearCustomization,
   CustomNode,
   extractPrograms,
+  fetchRemoteCustomization,
   initialFromBase,
   loadCustomization,
   MenuCustomization,
   saveCustomization,
 } from "@/lib/menuCustomization";
+import { isSystemAdmin } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -17,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
+import { Lock } from "lucide-react";
 import {
   ChevronDown,
   ChevronRight,
@@ -79,6 +82,22 @@ export default function MenuCustomizacao() {
   const [renameValue, setRenameValue] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Path | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const admin = await isSystemAdmin();
+      setIsAdmin(admin);
+      setCheckingAdmin(false);
+      const remote = await fetchRemoteCustomization();
+      if (remote) {
+        setState(remote);
+        setDirty(false);
+      }
+    })();
+  }, []);
 
   const programs = useMemo(() => extractPrograms(menuItems), []);
 
@@ -99,6 +118,10 @@ export default function MenuCustomizacao() {
   );
 
   const mutate = (fn: (roots: CustomNode[]) => void) => {
+    if (!isAdmin) {
+      toast.error("Somente administradores podem alterar o menu.");
+      return;
+    }
     setState((prev) => {
       const roots = cloneTree(prev.roots);
       fn(roots);
@@ -228,18 +251,34 @@ export default function MenuCustomizacao() {
     setConfirmDelete(null);
   };
 
-  const handleSave = () => {
-    saveCustomization(state);
-    setDirty(false);
-    toast.success("Menu personalizado salvo. Recarregue a página para ver na barra lateral.");
+  const handleSave = async () => {
+    if (!isAdmin) return;
+    try {
+      setSaving(true);
+      await saveCustomization(state);
+      setDirty(false);
+      toast.success("Menu salvo no banco. A configuração vale para todos os usuários deste estabelecimento.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao salvar menu.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    if (!window.confirm("Restaurar menu padrão? Sua personalização será apagada.")) return;
-    clearCustomization();
-    setState(initialFromBase(menuItems));
-    setDirty(false);
-    toast.success("Menu restaurado ao padrão.");
+  const handleReset = async () => {
+    if (!isAdmin) return;
+    if (!window.confirm("Restaurar menu padrão para todos os usuários deste estabelecimento?")) return;
+    try {
+      setSaving(true);
+      await clearCustomization();
+      setState(initialFromBase(menuItems));
+      setDirty(false);
+      toast.success("Menu restaurado ao padrão.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao restaurar menu.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Drag and drop between any node -> container
@@ -411,17 +450,29 @@ export default function MenuCustomizacao() {
           <h1 className="text-2xl font-bold">Personalizar Menu Principal</h1>
           <p className="text-sm text-muted-foreground">
             Reorganize, crie pastas e subpastas arrastando ou usando os botões. Programas não podem ser excluídos.
+            A configuração é salva no banco e compartilhada com todos os usuários do estabelecimento.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
+          <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
             <RotateCcw className="w-4 h-4 mr-2" /> Restaurar padrão
           </Button>
-          <Button onClick={handleSave} disabled={!dirty}>
-            <Save className="w-4 h-4 mr-2" /> Salvar
+          <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving}>
+            <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
           </Button>
         </div>
       </div>
+
+      {!checkingAdmin && !isAdmin && (
+        <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+          <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+          <div>
+            <strong>Modo somente leitura.</strong> Apenas administradores podem alterar a estrutura do menu.
+            Você está vendo a configuração atual definida pelo admin do estabelecimento.
+          </div>
+        </div>
+      )}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
         <Card

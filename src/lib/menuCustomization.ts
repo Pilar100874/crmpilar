@@ -1,5 +1,7 @@
 import * as LucideIcons from "lucide-react";
 import type { MenuItem } from "@/components/Layout";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 const KEY = "menu_customization_v1";
 export const MENU_CUSTOMIZATION_EVENT = "menu-customization-changed";
@@ -13,6 +15,7 @@ export interface MenuCustomization {
   roots: CustomNode[];
 }
 
+// ---- Local cache (mirrors remote, used for instant sidebar render) ----
 export function loadCustomization(): MenuCustomization | null {
   try {
     const raw = localStorage.getItem(KEY);
@@ -25,14 +28,63 @@ export function loadCustomization(): MenuCustomization | null {
   }
 }
 
-export function saveCustomization(c: MenuCustomization) {
-  localStorage.setItem(KEY, JSON.stringify(c));
+function writeCache(c: MenuCustomization | null) {
+  if (c) localStorage.setItem(KEY, JSON.stringify(c));
+  else localStorage.removeItem(KEY);
   window.dispatchEvent(new Event(MENU_CUSTOMIZATION_EVENT));
 }
 
-export function clearCustomization() {
-  localStorage.removeItem(KEY);
-  window.dispatchEvent(new Event(MENU_CUSTOMIZATION_EVENT));
+// ---- Remote sync (per estabelecimento; admin writes, everyone reads) ----
+export async function fetchRemoteCustomization(): Promise<MenuCustomization | null> {
+  try {
+    const estId = await getEstabelecimentoId();
+    if (!estId) return null;
+    const { data, error } = await supabase
+      .from("menu_customizacoes")
+      .select("payload")
+      .eq("estabelecimento_id", estId)
+      .maybeSingle();
+    if (error) throw error;
+    const payload = (data?.payload as unknown as MenuCustomization) || null;
+    if (payload && payload.version === 1 && Array.isArray(payload.roots)) {
+      writeCache(payload);
+      return payload;
+    }
+    return null;
+  } catch (e) {
+    console.warn("fetchRemoteCustomization failed", e);
+    return null;
+  }
+}
+
+export async function saveCustomization(c: MenuCustomization): Promise<void> {
+  const estId = await getEstabelecimentoId();
+  if (!estId) throw new Error("Estabelecimento não identificado");
+  const { data: authData } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("menu_customizacoes")
+    .upsert(
+      {
+        estabelecimento_id: estId,
+        payload: c as any,
+        updated_by: authData.user?.id ?? null,
+      },
+      { onConflict: "estabelecimento_id" }
+    );
+  if (error) throw error;
+  writeCache(c);
+}
+
+export async function clearCustomization(): Promise<void> {
+  const estId = await getEstabelecimentoId();
+  if (estId) {
+    const { error } = await supabase
+      .from("menu_customizacoes")
+      .delete()
+      .eq("estabelecimento_id", estId);
+    if (error) throw error;
+  }
+  writeCache(null);
 }
 
 export interface ProgramLeaf {
@@ -167,7 +219,6 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
     }
   }
 
-  // Never lose programs
   const missing: MenuItem[] = [];
   for (const [id, p] of programs) {
     if (!placed.has(id)) missing.push({ id, title: p.title, url: p.url, icon: p.icon });

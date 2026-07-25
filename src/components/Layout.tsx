@@ -64,7 +64,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
-import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT } from "@/lib/menuCustomization";
+import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
@@ -636,11 +636,13 @@ export default function Layout({ children }: LayoutProps) {
     return null;
   }
 
-  // Aplica personalização de menu (localStorage) se existir
+  // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
   useEffect(() => {
     const handler = () => setCustomizedItems(applyMenuCustomization(menuItems));
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
+    // Busca personalização remota (compartilhada pelo admin do estabelecimento)
+    fetchRemoteCustomization().then(() => setCustomizedItems(applyMenuCustomization(menuItems)));
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
 
