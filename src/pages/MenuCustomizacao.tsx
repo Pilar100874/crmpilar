@@ -617,15 +617,29 @@ export default function MenuCustomizacao() {
               crie pastas e subpastas com quantos níveis quiser.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
-              <RotateCcw className="w-4 h-4 mr-2" /> Restaurar padrão
+              <RotateCcw className="w-4 h-4 mr-2" />
+              {baseline ? "Restaurar padrão salvo" : "Restaurar padrão"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSetAsDefault}
+              disabled={!isAdmin || saving}
+              title="Salva o arranjo atual como o novo padrão a ser restaurado depois"
+            >
+              <BookmarkCheck className="w-4 h-4 mr-2" /> Definir atual como padrão
             </Button>
             <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving} className="shadow-sm">
               <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : dirty ? "Salvar alterações" : "Salvar"}
             </Button>
           </div>
         </div>
+        {baseline && (
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            Padrão personalizado ativo — "Restaurar padrão" volta para o arranjo que você definiu.
+          </div>
+        )}
         {dirty && <div className="mt-3 text-xs text-primary font-medium">● Alterações não salvas</div>}
       </div>
 
