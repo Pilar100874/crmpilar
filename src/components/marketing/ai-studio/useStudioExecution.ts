@@ -1631,7 +1631,7 @@ export function useStudioExecution() {
         const correctionSourceProvider = correctionInputVideo?._provider;
         const correctionSourceProviderVideoId = correctionInputVideo?._providerVideoId;
 
-        let videoPrompt = combinedInput || 'Uma cena cinematográfica';
+        let videoPrompt = await revisarTextoUsuarioPT(combinedInput || 'Uma cena cinematográfica');
         if (videoScriptDirective) {
           videoPrompt = `${videoScriptDirective}\n\n${videoPrompt}`;
         }
