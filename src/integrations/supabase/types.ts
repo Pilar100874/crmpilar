@@ -18811,6 +18811,62 @@ export type Database = {
           },
         ]
       }
+      relatorios_voz: {
+        Row: {
+          aliases: string[]
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          grupo: string
+          id: string
+          nome: string
+          parametros: Json
+          prompt_geracao: string
+          tipo_saida: string
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          grupo?: string
+          id?: string
+          nome: string
+          parametros?: Json
+          prompt_geracao: string
+          tipo_saida?: string
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          grupo?: string
+          id?: string
+          nome?: string
+          parametros?: Json
+          prompt_geracao?: string
+          tipo_saida?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_voz_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_preview_jobs: {
         Row: {
           created_at: string

@@ -26,14 +26,24 @@ type LogItem = { user: string; assistant: string; ts: number };
 type CustomCmd = { id: string; frase_gatilho: string; tipo_acao: string; payload: any; ativo: boolean };
 
 const WAKE_DEFAULT = "ei pilar";
-const QUICK_SUGGESTIONS = [
-  "Abrir dashboard",
-  "Quantos veículos estão online?",
-  "Ir para orçamentos",
-  "Quantas empresas cadastradas?",
-  "Abrir logística",
-  "Quantos atendimentos abertos?",
+
+// Palavras que ativam o modo "listar relatórios"
+const GATILHOS_RELATORIOS = [
+  "relatorios", "relatorio", "meus relatorios", "lista de relatorios",
+  "menu de relatorios", "mostrar relatorios", "ver relatorios", "abrir relatorios",
 ];
+
+const SUGESTOES_ABRIR = [
+  "Abrir dashboard",
+  "Abrir orçamentos",
+  "Abrir logística",
+  "Abrir empresas",
+];
+
+type RelatorioVoz = {
+  id: string; nome: string; grupo: string; descricao: string | null;
+  prompt_geracao: string; tipo_saida: string; aliases: string[]; ativo: boolean;
+};
 
 // util: normaliza texto (remove acentos, minúsculas)
 const norm = (s: string) =>
@@ -52,6 +62,13 @@ export default function VoiceAssistant() {
   const [popupResult, setPopupResult] = useState<{ titulo: string; texto: string } | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<any>(null);
   const [manualText, setManualText] = useState("");
+
+  // === Fluxo de RELATÓRIOS ===
+  const [relatorios, setRelatorios] = useState<RelatorioVoz[]>([]);
+  const [relatorioMode, setRelatorioMode] = useState<null | "grupos" | "lista" | "gerando" | "resultado">(null);
+  const [grupoSelecionado, setGrupoSelecionado] = useState<string | null>(null);
+  const [relatorioAtual, setRelatorioAtual] = useState<RelatorioVoz | null>(null);
+  const [resultadoRelatorio, setResultadoRelatorio] = useState<string>("");
   const [cfg, setCfg] = useState<Config>({
     wake_word_ativo: true, // padrão ON — usuário reclamou que não dispara
     responder_por_voz: true,
@@ -97,6 +114,12 @@ export default function VoiceAssistant() {
           .eq("estabelecimento_id", usuario.estabelecimento_id)
           .eq("ativo", true);
         setCustomCmds((cmds as any) || []);
+
+        const { data: rels } = await supabase.from("relatorios_voz")
+          .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo")
+          .eq("estabelecimento_id", usuario.estabelecimento_id)
+          .eq("ativo", true);
+        setRelatorios((rels as any) || []);
       }
     })();
   }, []);
@@ -309,11 +332,66 @@ export default function VoiceAssistant() {
     }
   };
 
+  // ---------- Gerar relatório ----------
+  const gerarRelatorio = async (r: RelatorioVoz) => {
+    setRelatorioAtual(r);
+    setRelatorioMode("gerando");
+    setResultadoRelatorio("");
+    setOpen(true);
+    if (cfg.responder_por_voz) falar(`Gerando ${r.nome}.`);
+    try {
+      const promptSistema =
+        `Você é um analista. Gere o relatório "${r.nome}" (grupo: ${r.grupo}, tipo: ${r.tipo_saida}). ` +
+        `Instruções do usuário: ${r.prompt_geracao}. ` +
+        `Responda em português, formatado em Markdown com títulos, tabelas e/ou bullets conforme apropriado. ` +
+        `Se não tiver dados reais disponíveis, indique claramente e sugira quais fontes seriam necessárias.`;
+      const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
+        body: { transcricao: promptSistema, messages: [] },
+      });
+      if (chatResp.error) throw new Error(chatResp.error.message);
+      const resposta = chatResp.data?.resposta || "Não foi possível gerar o relatório.";
+      setResultadoRelatorio(resposta);
+      setRelatorioMode("resultado");
+    } catch (e: any) {
+      toast.error(e.message);
+      setResultadoRelatorio(`Erro ao gerar: ${e.message}`);
+      setRelatorioMode("resultado");
+    }
+  };
+
   // ---------- Processa texto ----------
+  // Apenas 2 intenções: (1) ABRIR TELA (por título) e (2) RELATÓRIOS.
   const processarTexto = async (texto: string) => {
     setProcessing(true);
     try {
-      // 1) Match local por título de tela — abre instantaneamente sem chamar IA
+      const t = norm(texto);
+
+      // 1) Gatilho de "mostrar relatórios" → abre lista de grupos
+      if (GATILHOS_RELATORIOS.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
+        setRelatorioMode("grupos");
+        setGrupoSelecionado(null);
+        const resposta = relatorios.length === 0
+          ? "Você ainda não tem relatórios cadastrados. Cadastre em Admin > Relatórios por Voz."
+          : "Escolha um grupo de relatórios.";
+        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        if (cfg.responder_por_voz) falar(resposta);
+        return;
+      }
+
+      // 2) Relatório específico pelo nome/alias
+      const rel = relatorios.find(r => {
+        if (norm(r.nome) === t) return true;
+        if (r.aliases?.some(a => norm(a) === t)) return true;
+        // parcial: "gerar vendas por vendedor"
+        return r.aliases?.some(a => t.includes(norm(a))) || t.includes(norm(r.nome));
+      });
+      if (rel) {
+        setHistory(h => [...h, { user: texto, assistant: `Gerando ${rel.nome}…`, ts: Date.now() }].slice(-10));
+        await gerarRelatorio(rel);
+        return;
+      }
+
+      // 3) Abrir tela por título (match local instantâneo)
       const rotaMatch = matchRotaPorFala(texto);
       if (rotaMatch) {
         const resposta = `Abrindo ${rotaMatch.titulo}.`;
@@ -323,28 +401,11 @@ export default function VoiceAssistant() {
         return;
       }
 
-      const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
-        body: { transcricao: texto, messages: history.slice(-4).flatMap((h) => [
-          { role: "user", content: h.user }, { role: "assistant", content: h.assistant },
-        ]) },
-      });
-      if (chatResp.error) throw new Error(chatResp.error.message);
-      const { resposta, acao } = chatResp.data;
-
-      setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
-
-      // Executa ação
-      if (acao?.tipo === "navegar_para" && acao.path) {
-        setTimeout(() => { navigate(acao.path); setOpen(false); }, 500);
-      } else if (acao?.tipo === "popup_tela") {
-        setPopupResult({ titulo: acao.titulo || "Resultado", texto: acao.texto || resposta });
-      } else if (acao?.tipo === "iniciar_conversa") {
-        // apenas mantém painel aberto
-      } else if (acao?.tipo === "confirmar_disparo_bot" || acao?.tipo === "confirmar_comando_tv") {
-        setPendingConfirm(acao);
-      }
-
-      if (cfg.responder_por_voz && resposta) falar(resposta);
+      // 4) Nada reconhecido — resposta guiada, sem alucinação
+      const resposta =
+        `Não entendi. Só respondo a duas coisas: "abrir <nome da tela>" ou "relatórios" para ver a lista.`;
+      setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+      if (cfg.responder_por_voz) falar(resposta);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -515,26 +576,107 @@ export default function VoiceAssistant() {
                     </div>
                   )}
 
-                  {/* Histórico */}
-                  {history.length === 0 && !isRecording && !processing && !popupResult && (
+                  {/* Fluxo de RELATÓRIOS */}
+                  {relatorioMode && (
+                    <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-xs font-semibold text-primary flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          {relatorioMode === "grupos" && "Escolha um grupo"}
+                          {relatorioMode === "lista" && `Grupo: ${grupoSelecionado}`}
+                          {relatorioMode === "gerando" && `Gerando: ${relatorioAtual?.nome}…`}
+                          {relatorioMode === "resultado" && (relatorioAtual?.nome || "Relatório")}
+                        </div>
+                        <button
+                          onClick={() => { setRelatorioMode(null); setGrupoSelecionado(null); setRelatorioAtual(null); setResultadoRelatorio(""); }}
+                          className="p-1 hover:bg-background rounded"
+                        ><X className="h-3 w-3" /></button>
+                      </div>
+
+                      {relatorioMode === "grupos" && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {Array.from(new Set(relatorios.map(r => r.grupo))).sort().map(g => (
+                            <button key={g}
+                              onClick={() => { setGrupoSelecionado(g); setRelatorioMode("lista"); }}
+                              className="text-xs px-2.5 py-1 rounded-full border bg-background hover:bg-primary/10 transition"
+                            >{g} ({relatorios.filter(r => r.grupo === g).length})</button>
+                          ))}
+                          {relatorios.length === 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              Nenhum relatório cadastrado.{" "}
+                              <button className="underline" onClick={() => { navigate("/admin/relatorios-voz"); setOpen(false); }}>
+                                Cadastrar agora
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {relatorioMode === "lista" && grupoSelecionado && (
+                        <div className="space-y-1">
+                          {relatorios.filter(r => r.grupo === grupoSelecionado).map(r => (
+                            <button key={r.id}
+                              onClick={() => gerarRelatorio(r)}
+                              className="w-full text-left text-sm px-2.5 py-1.5 rounded border bg-background hover:bg-primary/10 transition"
+                            >
+                              <div className="font-medium">{r.nome}</div>
+                              {r.descricao && <div className="text-[11px] text-muted-foreground">{r.descricao}</div>}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => { setRelatorioMode("grupos"); setGrupoSelecionado(null); }}
+                            className="text-xs text-muted-foreground hover:text-foreground pl-1"
+                          >← voltar aos grupos</button>
+                        </div>
+                      )}
+
+                      {relatorioMode === "gerando" && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Aguarde…
+                        </div>
+                      )}
+
+                      {relatorioMode === "resultado" && (
+                        <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+                          {resultadoRelatorio}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Home — 2 intenções */}
+                  {history.length === 0 && !isRecording && !processing && !popupResult && !relatorioMode && (
                     <div className="space-y-3">
                       <div className="text-center py-2">
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diga "{cfg.wake_word}" ou toque no mic</div>
+                        <div className="text-[11px] text-muted-foreground mt-1">Só entendo 2 comandos: <b>abrir &lt;tela&gt;</b> ou <b>relatórios</b></div>
                       </div>
+
                       <div>
                         <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-                          <HelpCircle className="h-3 w-3" /> EXEMPLOS
+                          <ChevronRight className="h-3 w-3" /> ABRIR TELA
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {QUICK_SUGGESTIONS.map((s) => (
-                            <button
-                              key={s}
-                              onClick={() => processarTexto(s)}
+                          {SUGESTOES_ABRIR.map((s) => (
+                            <button key={s} onClick={() => processarTexto(s)}
                               className="text-xs px-2.5 py-1 rounded-full border bg-muted/40 hover:bg-muted transition"
                             >{s}</button>
                           ))}
                         </div>
                       </div>
+
+                      <div>
+                        <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> RELATÓRIOS
+                        </div>
+                        <button
+                          onClick={() => processarTexto("relatorios")}
+                          className="w-full text-sm px-3 py-2 rounded border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 transition font-medium"
+                        >
+                          📊 Ver meus relatórios ({relatorios.length})
+                        </button>
+                      </div>
+
                       {customCmds.length > 0 && (
                         <div>
                           <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
@@ -542,9 +684,7 @@ export default function VoiceAssistant() {
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {customCmds.slice(0, 8).map((c) => (
-                              <button
-                                key={c.id}
-                                onClick={() => processarTexto(c.frase_gatilho)}
+                              <button key={c.id} onClick={() => processarTexto(c.frase_gatilho)}
                                 className="text-xs px-2.5 py-1 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 transition"
                               >{c.frase_gatilho}</button>
                             ))}

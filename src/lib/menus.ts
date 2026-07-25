@@ -72,6 +72,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Configurações", label: "Configurações", category: "Sistema" },
   { id: "Admin", label: "Admin (Categoria)", category: "Sistema" },
   { id: "Admin Assistente Voz", label: "Assistente de Voz", category: "Sistema" },
+  { id: "Admin Relatorios Voz", label: "Relatórios por Voz", category: "Sistema" },
   { id: "Admin Menu Customizacao", label: "Personalizar Menu", category: "Sistema" },
   { id: "Macros", label: "Macros", category: "Sistema" },
   { id: "Avisos", label: "Avisos", category: "Sistema" },
