@@ -38,6 +38,7 @@ import {
   FileText,
   Shield,
   LayoutGrid,
+  BookmarkCheck,
 } from "lucide-react";
 import { MenuIconPicker, resolveMenuIcon } from "@/components/menu/MenuIconPicker";
 
@@ -92,6 +93,9 @@ export default function MenuCustomizacao() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [baseline, setBaseline] = useState<{ roots: CustomNode[]; adminRoots: CustomNode[] } | null>(
+    () => loadCustomization()?.baseline ?? null
+  );
 
   useEffect(() => {
     (async () => {
@@ -102,6 +106,7 @@ export default function MenuCustomizacao() {
       if (remote) {
         setMainRoots(remote.roots);
         setAdminRoots(remote.adminRoots ?? initialAdminFooterTree());
+        setBaseline(remote.baseline ?? null);
         setDirty(false);
       }
     })();
@@ -283,7 +288,12 @@ export default function MenuCustomizacao() {
     if (!isAdmin) return;
     try {
       setSaving(true);
-      const payload: MenuCustomization = { version: 1, roots: mainRoots, adminRoots };
+      const payload: MenuCustomization = {
+        version: 1,
+        roots: mainRoots,
+        adminRoots,
+        ...(baseline ? { baseline } : {}),
+      };
       await saveCustomization(payload);
       setDirty(false);
       toast.success("Menu salvo. Vale para todos os usuários do estabelecimento.");
@@ -294,16 +304,63 @@ export default function MenuCustomizacao() {
     }
   };
 
-  const handleReset = async () => {
+  const handleSetAsDefault = async () => {
     if (!isAdmin) return;
-    if (!window.confirm("Restaurar menus padrão para todos os usuários deste estabelecimento?")) return;
+    if (!window.confirm(
+      "Definir o arranjo atual como novo padrão? A partir de agora, 'Restaurar padrão' voltará para este arranjo."
+    )) return;
     try {
       setSaving(true);
-      await clearCustomization();
-      setMainRoots(initialFromBase(menuItems).roots);
-      setAdminRoots(initialAdminFooterTree());
+      const newBaseline = {
+        roots: JSON.parse(JSON.stringify(mainRoots)),
+        adminRoots: JSON.parse(JSON.stringify(adminRoots)),
+      };
+      const payload: MenuCustomization = {
+        version: 1,
+        roots: mainRoots,
+        adminRoots,
+        baseline: newBaseline,
+      };
+      await saveCustomization(payload);
+      setBaseline(newBaseline);
       setDirty(false);
-      toast.success("Menus restaurados ao padrão.");
+      toast.success("Arranjo atual definido como novo padrão.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao definir padrão.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!isAdmin) return;
+    const usingBaseline = !!baseline;
+    const msg = usingBaseline
+      ? "Restaurar menus para o padrão definido por você?"
+      : "Restaurar menus para o padrão de fábrica (para todos os usuários deste estabelecimento)?";
+    if (!window.confirm(msg)) return;
+    try {
+      setSaving(true);
+      if (usingBaseline && baseline) {
+        const payload: MenuCustomization = {
+          version: 1,
+          roots: JSON.parse(JSON.stringify(baseline.roots)),
+          adminRoots: JSON.parse(JSON.stringify(baseline.adminRoots)),
+          baseline,
+        };
+        await saveCustomization(payload);
+        setMainRoots(payload.roots);
+        setAdminRoots(payload.adminRoots!);
+        setDirty(false);
+        toast.success("Menus restaurados ao padrão definido.");
+      } else {
+        await clearCustomization();
+        setMainRoots(initialFromBase(menuItems).roots);
+        setAdminRoots(initialAdminFooterTree());
+        setBaseline(null);
+        setDirty(false);
+        toast.success("Menus restaurados ao padrão de fábrica.");
+      }
     } catch (e: any) {
       toast.error(e?.message || "Erro ao restaurar menus.");
     } finally {
@@ -560,15 +617,29 @@ export default function MenuCustomizacao() {
               crie pastas e subpastas com quantos níveis quiser.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
-              <RotateCcw className="w-4 h-4 mr-2" /> Restaurar padrão
+              <RotateCcw className="w-4 h-4 mr-2" />
+              {baseline ? "Restaurar padrão salvo" : "Restaurar padrão"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSetAsDefault}
+              disabled={!isAdmin || saving}
+              title="Salva o arranjo atual como o novo padrão a ser restaurado depois"
+            >
+              <BookmarkCheck className="w-4 h-4 mr-2" /> Definir atual como padrão
             </Button>
             <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving} className="shadow-sm">
               <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : dirty ? "Salvar alterações" : "Salvar"}
             </Button>
           </div>
         </div>
+        {baseline && (
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            Padrão personalizado ativo — "Restaurar padrão" volta para o arranjo que você definiu.
+          </div>
+        )}
         {dirty && <div className="mt-3 text-xs text-primary font-medium">● Alterações não salvas</div>}
       </div>
 
