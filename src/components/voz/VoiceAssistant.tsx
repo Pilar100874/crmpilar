@@ -515,17 +515,17 @@ export default function VoiceAssistant() {
       const t = norm(texto);
 
       // 0) Navegação de histórico: voltar / avançar
-      if (GATILHOS_VOLTAR.some(g => t.includes(g))) {
+      if (gVoltar.some(g => t.includes(g))) {
         await executarNavegacaoHistorico(-1, texto);
         return;
       }
-      if (GATILHOS_AVANCAR.some(g => t.includes(g))) {
+      if (gAvancar.some(g => t.includes(g))) {
         await executarNavegacaoHistorico(1, texto);
         return;
       }
 
       // 0b) Gerar PDF do relatório aberto (wizard escuta o evento)
-      if (relatorioMode === "resultado" && GATILHOS_PDF.some(g => t === g || t.includes(g))) {
+      if (relatorioMode === "resultado" && gPdf.some(g => t === g || t.includes(g))) {
         const opcoes = extrairOpcoesPdf(texto);
         window.dispatchEvent(new CustomEvent("voz:gerar-pdf-relatorio", { detail: opcoes }));
         const partes: string[] = [];
@@ -543,7 +543,7 @@ export default function VoiceAssistant() {
 
       // 1) Gatilho de "mostrar relatórios" → abre lista de grupos
 
-      if (GATILHOS_RELATORIOS.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
+      if (gRelatorios.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
         setRelatorioMode("grupos");
         setGrupoSelecionado(null);
         const resposta = relatorios.length === 0
