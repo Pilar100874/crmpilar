@@ -185,7 +185,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
   for (const root of custom.roots) {
     if (root.kind === "program") {
       const p = programs.get(root.programId);
-      if (p) result.push({ id: p.id, title: p.title, url: p.url, icon: p.icon });
+      if (p) result.push({ id: p.id, title: p.title, url: p.url, icon: p.icon, ...(p.system ? { system: p.system } : {}) });
       continue;
     }
     const subItems: any[] = [];
@@ -199,6 +199,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
               title: p.title,
               url: p.url,
               icon: p.icon,
+              ...(p.system ? { system: p.system } : {}),
               ...(groupName ? { group: groupName } : {}),
             });
         } else {
@@ -222,6 +223,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
         title: root.title || only.title,
         url: only.url,
         icon: only.icon,
+        ...(only.system ? { system: only.system } : {}),
       });
     } else {
       result.push({
@@ -235,7 +237,10 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
 
   const missing: MenuItem[] = [];
   for (const [id, p] of programs) {
+    // Programas de sistema não aparecem por padrão no menu principal — só se o admin arrastar
+    if (p.system) continue;
     if (!placed.has(id)) missing.push({ id, title: p.title, url: p.url, icon: p.icon });
   }
   return [...result, ...missing];
+
 }
