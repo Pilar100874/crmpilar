@@ -13,7 +13,19 @@ export type CustomNode =
 export interface MenuCustomization {
   version: 1;
   roots: CustomNode[];
+  adminRoots?: CustomNode[];
 }
+
+export type SystemAction =
+  | "lock"
+  | "admin"
+  | "theme"
+  | "logout"
+  | "profile"
+  | "share-screen"
+  | "open-ticket"
+  | "pwa-update"
+  | "change-password";
 
 // ---- Local cache (mirrors remote, used for instant sidebar render) ----
 export function loadCustomization(): MenuCustomization | null {
