@@ -736,26 +736,7 @@ export default function MenuCustomizacao() {
                       <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <Icon className="w-4 h-4 text-primary shrink-0" />
                       <span className="text-xs sm:text-sm flex-1 truncate">{p.title}</span>
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-[10px]"
-                          onClick={() => addProgramInto("main", null, p.id)}
-                          title="Adicionar ao Menu principal"
-                        >
-                          <PlusCircle className="w-3 h-3 sm:mr-1" /> <span className="hidden sm:inline">Menu</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-[10px]"
-                          onClick={() => addProgramInto("admin", null, p.id)}
-                          title="Adicionar ao Admin (rodapé)"
-                        >
-                          <PlusCircle className="w-3 h-3 sm:mr-1" /> <span className="hidden sm:inline">Admin</span>
-                        </Button>
-                      </div>
+
                     </div>
                   );
                 })}
