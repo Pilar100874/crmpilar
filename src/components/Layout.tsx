@@ -103,7 +103,9 @@ interface SubMenuItem {
   url: string;
   icon: any;
   group?: string;
+  system?: "lock" | "admin" | "theme" | "logout";
 }
+
 
 export interface MenuItem {
   id: string;
