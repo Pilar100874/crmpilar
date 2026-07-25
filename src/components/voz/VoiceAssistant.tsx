@@ -84,6 +84,7 @@ const norm = (s: string) =>
 
 export default function VoiceAssistant() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
