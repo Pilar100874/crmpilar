@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink } from "lucide-react";
+import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save } from "lucide-react";
 import { ROTAS_SISTEMA } from "@/lib/voz/rotasSistema";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
+import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 
 const VOZES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "coral", "sage"];
 
