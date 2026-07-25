@@ -14,8 +14,16 @@ export interface MenuCustomization {
   version: 1;
   roots: CustomNode[];
   adminRoots?: CustomNode[];
-  baseline?: { roots: CustomNode[]; adminRoots: CustomNode[] };
+  userFooterRoots?: CustomNode[];
+  systemFooterRoots?: CustomNode[];
+  baseline?: {
+    roots: CustomNode[];
+    adminRoots: CustomNode[];
+    userFooterRoots?: CustomNode[];
+    systemFooterRoots?: CustomNode[];
+  };
 }
+
 
 export type SystemAction =
   | "lock"
