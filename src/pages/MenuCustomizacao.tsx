@@ -494,7 +494,7 @@ export default function MenuCustomizacao() {
             <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, 1)} title="Descer"><ArrowDown className="w-3.5 h-3.5" /></Button>
             <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => outdent(tree, path)} disabled={path.length <= 1} title="Sair da pasta"><ArrowLeft className="w-3.5 h-3.5" /></Button>
             <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => indent(tree, path)} title="Aninhar na pasta acima"><ArrowRight className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 text-destructive" onClick={() => removeAtWithConfirm(tree, path)} title="Remover do menu"><Trash2 className="w-3.5 h-3.5" /></Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 text-destructive" onClick={() => mutate(tree, (roots) => { removeAt(roots, path); })} title="Remover do menu"><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
         </div>
       );
