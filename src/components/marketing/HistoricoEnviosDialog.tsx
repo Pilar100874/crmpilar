@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, MessageSquare, Image as ImageIcon, Video, FileText, Music, Bell, Webhook, Users, CheckCircle2, XCircle } from "lucide-react";
+import { Clock, MessageSquare, Image as ImageIcon, Video, FileText, Music, Bell, Webhook, Users, CheckCircle2, XCircle, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "@/lib/toast-config";
+
 
 interface Props {
   open: boolean;
