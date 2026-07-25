@@ -143,9 +143,12 @@ export default function RelatoriosVozConfig() {
   };
 
   const salvar = async () => {
-    if (!form.nome.trim() || !form.prompt_geracao.trim()) {
-      toast.error("Nome e prompt são obrigatórios");
-      return;
+    if (!form.nome.trim()) { toast.error("Nome é obrigatório"); return; }
+    if (form.tipo_fonte === "tabela" && !form.tabela_base?.trim()) {
+      toast.error("Configure a tabela base na aba 'Fonte de dados'"); return;
+    }
+    if (form.tipo_fonte === "api" && !form.api_endpoint_id) {
+      toast.error("Selecione a API na aba 'Fonte de dados'"); return;
     }
     const estabelecimento_id = await getEstabelecimentoId();
     if (!estabelecimento_id) { toast.error("Estabelecimento não encontrado"); return; }
