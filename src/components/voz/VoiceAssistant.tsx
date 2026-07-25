@@ -308,9 +308,9 @@ export default function VoiceAssistant() {
         wakeRecogRef.current = null;
         setWakeListening(false);
         if (!shouldWakeRef.current) return;
-        // reinicia com backoff curto
-        wakeRetriesRef.current = Math.min(wakeRetriesRef.current + 1, 5);
-        const delay = Math.min(300 * wakeRetriesRef.current, 2000);
+        // reinicia com backoff — evita loop apertado que trava o Chrome
+        wakeRetriesRef.current = Math.min(wakeRetriesRef.current + 1, 6);
+        const delay = Math.min(800 * wakeRetriesRef.current, 4000);
         setTimeout(() => { if (shouldWakeRef.current) startWake(); }, delay);
       };
       rec.start();
