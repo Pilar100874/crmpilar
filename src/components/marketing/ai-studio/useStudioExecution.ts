@@ -1251,7 +1251,7 @@ export function useStudioExecution() {
           scene: 'Insira o produto original na cena com a pessoa, preservando a embalagem exatamente como na referência.',
         };
         const modePrompt = modeDescriptions[config.compositeMode] || modeDescriptions.clothing;
-        const userPrompt = config.prompt || combinedInput || '';
+        const userPrompt = await revisarTextoUsuarioPT(config.prompt || combinedInput || '');
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         const hasProductComp = inputs.some((i) => i?._referenceRole === 'produto');
         if (hasProductComp) {
