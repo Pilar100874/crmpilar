@@ -458,7 +458,19 @@ export default function MenuCustomizacao() {
           <button onClick={() => toggle(tree, path)} className="p-0.5">
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
-          <Folder className="w-4 h-4 text-primary" />
+          <MenuIconPicker
+            value={(node as any).iconName ?? null}
+            onChange={setIcon}
+            trigger={
+              <button
+                className="p-0.5 rounded hover:bg-muted"
+                title="Alterar ícone da pasta"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FolderIconResolved className="w-4 h-4 text-primary" />
+              </button>
+            }
+          />
           {renaming === key ? (
             <Input
               autoFocus
