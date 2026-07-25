@@ -5,14 +5,21 @@ import {
   clearCustomization,
   CustomNode,
   extractPrograms,
+  fetchRemoteCustomization,
   initialFromBase,
   loadCustomization,
   MenuCustomization,
   saveCustomization,
 } from "@/lib/menuCustomization";
+import { isSystemAdmin } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "@/lib/toast-config";
+import { Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
