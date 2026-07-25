@@ -607,7 +607,6 @@ export default function VoiceAssistant() {
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space" || isTyping(e.target)) return;
-      pendingStopRef.current = true;
       if (isRecording) { e.preventDefault(); stopDictation(); }
     };
     window.addEventListener("keydown", onKeyDown);
