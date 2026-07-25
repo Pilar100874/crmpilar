@@ -1010,6 +1010,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 />
               </div>
               <div>
+                <Label>Celular {isPessoa ? '(WhatsApp)' : 'do motorista'}</Label>
+                <Input
+                  inputMode="tel"
+                  placeholder="(11) 91234-5678"
+                  value={formData.celular}
+                  onChange={(e) => {
+                    const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    let m = d;
+                    if (d.length > 2 && d.length <= 6) m = `(${d.slice(0,2)}) ${d.slice(2)}`;
+                    else if (d.length > 6 && d.length <= 10) m = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+                    else if (d.length > 10) m = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+                    else if (d.length > 0) m = `(${d}`;
+                    setFormData(prev => ({ ...prev, celular: m }));
+                  }}
+                />
+              </div>
+              <div>
                 <Label>Grupo</Label>
                 <Select
                   value={formData.logistica_grupo_id || '__none__'}
