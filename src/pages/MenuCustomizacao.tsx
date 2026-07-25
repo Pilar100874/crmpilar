@@ -92,6 +92,9 @@ export default function MenuCustomizacao() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [baseline, setBaseline] = useState<{ roots: CustomNode[]; adminRoots: CustomNode[] } | null>(
+    () => loadCustomization()?.baseline ?? null
+  );
 
   useEffect(() => {
     (async () => {
@@ -102,6 +105,7 @@ export default function MenuCustomizacao() {
       if (remote) {
         setMainRoots(remote.roots);
         setAdminRoots(remote.adminRoots ?? initialAdminFooterTree());
+        setBaseline(remote.baseline ?? null);
         setDirty(false);
       }
     })();
