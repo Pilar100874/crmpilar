@@ -1580,7 +1580,7 @@ export default function Layout({ children }: LayoutProps) {
             )}
 
             {/* Toggle Dia/Noite */}
-            {menuLocked ? (
+            {!systemInMain.has("theme") && (menuLocked ? (
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -1599,10 +1599,10 @@ export default function Layout({ children }: LayoutProps) {
                 {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
                 <span className="text-sm font-medium">{isDarkMode ? "Modo Claro" : "Modo Escuro"}</span>
               </button>
-            )}
+            ))}
 
             {/* Botão Sair - sempre abaixo do menu do usuário */}
-            {menuLocked ? (
+            {!systemInMain.has("logout") && (menuLocked ? (
               <button
                 type="button"
                 onClick={handleLogout}
@@ -1621,7 +1621,8 @@ export default function Layout({ children }: LayoutProps) {
                 <LogOut className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm font-medium">Sair</span>
               </button>
-            )}
+            ))}
+
           </div>
         </div>
         )}
