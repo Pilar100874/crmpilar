@@ -137,6 +137,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Menu Principal - Admin ============
   { path: "/admin/assistente-voz", titulo: "Assistente de Voz", aliases: ["config assistente de voz", "configuracao do assistente de voz"] },
   { path: "/admin/relatorios-voz", titulo: "Relatórios por Voz", aliases: ["relatorios por voz", "relatorios de voz"] },
+  { path: "/admin/relatorios-voz/snapshots", titulo: "Snapshots de Relatórios", aliases: ["snapshots", "snapshots de relatorios", "relatorios salvos"] },
   { path: "/admin/menu-customizacao", titulo: "Personalizar Menu", aliases: ["customizar menu", "personalizacao de menu", "menu customizacao"] },
 
   // ============ Outras rotas úteis (fora do menu principal, mas acessíveis por voz) ============

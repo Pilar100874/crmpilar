@@ -18545,6 +18545,59 @@ export type Database = {
           },
         ]
       }
+      relatorio_snapshots: {
+        Row: {
+          created_at: string
+          dados: Json
+          estabelecimento_id: string | null
+          expira_em: string
+          filtros_aplicados: Json
+          id: string
+          nome: string
+          permanente: boolean
+          relatorio_voz_id: string | null
+          total_registros: number
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          dados?: Json
+          estabelecimento_id?: string | null
+          expira_em?: string
+          filtros_aplicados?: Json
+          id?: string
+          nome: string
+          permanente?: boolean
+          relatorio_voz_id?: string | null
+          total_registros?: number
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          dados?: Json
+          estabelecimento_id?: string | null
+          expira_em?: string
+          filtros_aplicados?: Json
+          id?: string
+          nome?: string
+          permanente?: boolean
+          relatorio_voz_id?: string | null
+          total_registros?: number
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorio_snapshots_relatorio_voz_id_fkey"
+            columns: ["relatorio_voz_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios_voz"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       relatorios: {
         Row: {
           conexao_id: string | null
@@ -18814,50 +18867,81 @@ export type Database = {
       relatorios_voz: {
         Row: {
           aliases: string[]
+          api_endpoint_id: string | null
           ativo: boolean
+          campos_exibicao: Json
           created_at: string
           created_by: string | null
           descricao: string | null
           estabelecimento_id: string
+          filtros_disponiveis: Json
           grupo: string
           id: string
+          joins: Json
+          limite_padrao: number
           nome: string
+          ordenacao: Json
           parametros: Json
           prompt_geracao: string
+          tabela_base: string | null
+          tipo_fonte: string
           tipo_saida: string
           updated_at: string
         }
         Insert: {
           aliases?: string[]
+          api_endpoint_id?: string | null
           ativo?: boolean
+          campos_exibicao?: Json
           created_at?: string
           created_by?: string | null
           descricao?: string | null
           estabelecimento_id: string
+          filtros_disponiveis?: Json
           grupo?: string
           id?: string
+          joins?: Json
+          limite_padrao?: number
           nome: string
+          ordenacao?: Json
           parametros?: Json
           prompt_geracao: string
+          tabela_base?: string | null
+          tipo_fonte?: string
           tipo_saida?: string
           updated_at?: string
         }
         Update: {
           aliases?: string[]
+          api_endpoint_id?: string | null
           ativo?: boolean
+          campos_exibicao?: Json
           created_at?: string
           created_by?: string | null
           descricao?: string | null
           estabelecimento_id?: string
+          filtros_disponiveis?: Json
           grupo?: string
           id?: string
+          joins?: Json
+          limite_padrao?: number
           nome?: string
+          ordenacao?: Json
           parametros?: Json
           prompt_geracao?: string
+          tabela_base?: string | null
+          tipo_fonte?: string
           tipo_saida?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "relatorios_voz_api_endpoint_id_fkey"
+            columns: ["api_endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "api_endpoints"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "relatorios_voz_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
@@ -23834,6 +23918,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }
+      cleanup_relatorio_snapshots_expirados: { Args: never; Returns: number }
       clear_entity_dependency: {
         Args: { p_dep_key: string; p_entity: string; p_id: string }
         Returns: number

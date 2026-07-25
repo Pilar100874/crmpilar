@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { matchRotaPorFala, matchRotaComCandidatos, type RotaSistema } from "@/lib/voz/rotasSistema";
+import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
 
 type Config = {
   wake_word_ativo: boolean;
@@ -42,6 +43,8 @@ const SUGESTOES_ABRIR = [
 type RelatorioVoz = {
   id: string; nome: string; grupo: string; descricao: string | null;
   prompt_geracao: string; tipo_saida: string; aliases: string[]; ativo: boolean;
+  tabela_base?: string | null; tipo_fonte?: "tabela" | "api";
+  filtros_disponiveis?: any[]; campos_exibicao?: any[];
 };
 
 // util: normaliza texto (remove acentos, minúsculas)
@@ -107,7 +110,7 @@ export default function VoiceAssistant() {
         .select("estabelecimento_id").eq("auth_user_id", u.user.id).maybeSingle();
       if (usuario?.estabelecimento_id) {
         const { data: rels } = await supabase.from("relatorios_voz")
-          .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo")
+          .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo, tipo_fonte, tabela_base, api_endpoint_id, filtros_disponiveis, campos_exibicao")
           .eq("estabelecimento_id", usuario.estabelecimento_id)
           .eq("ativo", true);
         setRelatorios((rels as any) || []);
@@ -335,26 +338,32 @@ export default function VoiceAssistant() {
   // ---------- Gerar relatório ----------
   const gerarRelatorio = async (r: RelatorioVoz) => {
     setRelatorioAtual(r);
+    setOpen(true);
+    // Se o relatório tem schema determinístico (tabela_base ou API), abre o wizard
+    const temSchema = (r.tipo_fonte === "tabela" && !!r.tabela_base) || r.tipo_fonte === "api";
+    if (temSchema) {
+      setRelatorioMode("resultado"); // wizard cuida do próprio fluxo
+      setResultadoRelatorio(""); // limpa qualquer resultado antigo em texto
+      return;
+    }
+    // Fallback legado (relatório sem schema): usa geração por prompt
     setRelatorioMode("gerando");
     setResultadoRelatorio("");
-    setOpen(true);
     if (cfg.responder_por_voz) falar(`Gerando ${r.nome}.`);
     try {
       const promptSistema =
         `Você é um analista. Gere o relatório "${r.nome}" (grupo: ${r.grupo}, tipo: ${r.tipo_saida}). ` +
-        `Instruções do usuário: ${r.prompt_geracao}. ` +
-        `Responda em português, formatado em Markdown com títulos, tabelas e/ou bullets conforme apropriado. ` +
-        `Se não tiver dados reais disponíveis, indique claramente e sugira quais fontes seriam necessárias.`;
+        `Instruções: ${r.prompt_geracao}. Responda em Markdown em português. ` +
+        `Se não tiver dados reais, indique claramente.`;
       const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
         body: { transcricao: promptSistema, messages: [] },
       });
       if (chatResp.error) throw new Error(chatResp.error.message);
-      const resposta = chatResp.data?.resposta || "Não foi possível gerar o relatório.";
-      setResultadoRelatorio(resposta);
+      setResultadoRelatorio(chatResp.data?.resposta || "Não foi possível gerar o relatório.");
       setRelatorioMode("resultado");
     } catch (e: any) {
       toast.error(e.message);
-      setResultadoRelatorio(`Erro ao gerar: ${e.message}`);
+      setResultadoRelatorio(`Erro: ${e.message}`);
       setRelatorioMode("resultado");
     }
   };
@@ -645,10 +654,18 @@ export default function VoiceAssistant() {
                         </div>
                       )}
 
-                      {relatorioMode === "resultado" && (
-                        <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
-                          {resultadoRelatorio}
-                        </div>
+                      {relatorioMode === "resultado" && relatorioAtual && (
+                        (relatorioAtual.tipo_fonte === "tabela" && relatorioAtual.tabela_base) || relatorioAtual.tipo_fonte === "api" ? (
+                          <RelatorioVozWizard
+                            relatorio={relatorioAtual as any}
+                            onFechar={() => { setRelatorioMode(null); setRelatorioAtual(null); }}
+                            onFalar={(t) => cfg.responder_por_voz && falar(t)}
+                          />
+                        ) : (
+                          <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+                            {resultadoRelatorio}
+                          </div>
+                        )
                       )}
                     </div>
                   )}

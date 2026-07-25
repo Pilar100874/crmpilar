@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink } from "lucide-react";
+import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save } from "lucide-react";
 import { ROTAS_SISTEMA } from "@/lib/voz/rotasSistema";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
+import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 
 const VOZES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "coral", "sage"];
 
@@ -92,6 +93,9 @@ export default function AssistenteVozConfig() {
           <TabsTrigger value="relatorios">
             <FileBarChart className="w-4 h-4 mr-2" /> Relatórios por voz
           </TabsTrigger>
+          <TabsTrigger value="snapshots">
+            <Save className="w-4 h-4 mr-2" /> Snapshots
+          </TabsTrigger>
           <TabsTrigger value="config">
             <Settings2 className="w-4 h-4 mr-2" /> Configurações
           </TabsTrigger>
@@ -151,9 +155,14 @@ export default function AssistenteVozConfig() {
 
         {/* ======================= RELATÓRIOS ======================= */}
         <TabsContent value="relatorios" className="pt-2">
-          {/* Reaproveita a página completa de Relatórios por Voz */}
           <div className="-mx-4 sm:-mx-6">
             <RelatoriosVozConfig />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="snapshots" className="pt-2">
+          <div className="-mx-4 sm:-mx-6">
+            <RelatoriosVozSnapshots />
           </div>
         </TabsContent>
 
