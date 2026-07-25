@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Target, 
   Palette, 
@@ -89,8 +90,20 @@ const tabItems: TabItem[] = [
 ];
 
 const MarketingHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('ai-studio');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const validTabs = tabItems.map((tab) => tab.id);
+
+  const [activeTab, setActiveTab] = useState(() => (
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'ai-studio'
+  ));
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam, validTabs]);
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;

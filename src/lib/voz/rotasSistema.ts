@@ -171,8 +171,8 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/softphone", titulo: "Softphone", aliases: ["telefone", "ramal"] },
   { path: "/politicas-internas", titulo: "Políticas Internas" },
   { path: "/quality-assurance", titulo: "Quality Assurance", aliases: ["qa", "controle de qualidade"] },
-  { path: "/prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao"] },
-  { path: "/prospeccao-claude-code", titulo: "Prospecção Claude Code" },
+  { path: "/listas?tab=prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao"] },
+  { path: "/listas?tab=prospeccao-claude-code", titulo: "Prospecção Claude Code" },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },
 
   // ============ Sub-telas: Controle de Veículos ============
@@ -255,7 +255,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Sub-telas: Marketing ============
   { path: "/marketing/auto-video-wizard", titulo: "Marketing - Auto Vídeo Wizard", aliases: ["auto video", "wizard de video"] },
-  { path: "/mensagens-grupo", titulo: "Marketing - Mensagens Pré Definidas", aliases: ["mensagens pre definidas", "mensagens por grupo de produtos"] },
+  { path: "/marketing?tab=mensagens-grupo", titulo: "Marketing - Mensagens Pré Definidas", aliases: ["mensagens pre definidas", "mensagens pre definida", "mensagem pre definida", "mensagens por grupo de produtos"] },
 
   // ============ Sub-telas: Ponto (extras) ============
   { path: "/ponto/portal", titulo: "Ponto - Portal do Funcionário", aliases: ["portal do funcionario"] },
