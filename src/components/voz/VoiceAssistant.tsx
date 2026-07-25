@@ -62,6 +62,13 @@ export default function VoiceAssistant() {
   const [popupResult, setPopupResult] = useState<{ titulo: string; texto: string } | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<any>(null);
   const [manualText, setManualText] = useState("");
+
+  // === Fluxo de RELATÓRIOS ===
+  const [relatorios, setRelatorios] = useState<RelatorioVoz[]>([]);
+  const [relatorioMode, setRelatorioMode] = useState<null | "grupos" | "lista" | "gerando" | "resultado">(null);
+  const [grupoSelecionado, setGrupoSelecionado] = useState<string | null>(null);
+  const [relatorioAtual, setRelatorioAtual] = useState<RelatorioVoz | null>(null);
+  const [resultadoRelatorio, setResultadoRelatorio] = useState<string>("");
   const [cfg, setCfg] = useState<Config>({
     wake_word_ativo: true, // padrão ON — usuário reclamou que não dispara
     responder_por_voz: true,
