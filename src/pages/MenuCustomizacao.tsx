@@ -251,18 +251,34 @@ export default function MenuCustomizacao() {
     setConfirmDelete(null);
   };
 
-  const handleSave = () => {
-    saveCustomization(state);
-    setDirty(false);
-    toast.success("Menu personalizado salvo. Recarregue a página para ver na barra lateral.");
+  const handleSave = async () => {
+    if (!isAdmin) return;
+    try {
+      setSaving(true);
+      await saveCustomization(state);
+      setDirty(false);
+      toast.success("Menu salvo no banco. A configuração vale para todos os usuários deste estabelecimento.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao salvar menu.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    if (!window.confirm("Restaurar menu padrão? Sua personalização será apagada.")) return;
-    clearCustomization();
-    setState(initialFromBase(menuItems));
-    setDirty(false);
-    toast.success("Menu restaurado ao padrão.");
+  const handleReset = async () => {
+    if (!isAdmin) return;
+    if (!window.confirm("Restaurar menu padrão para todos os usuários deste estabelecimento?")) return;
+    try {
+      setSaving(true);
+      await clearCustomization();
+      setState(initialFromBase(menuItems));
+      setDirty(false);
+      toast.success("Menu restaurado ao padrão.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao restaurar menu.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Drag and drop between any node -> container
