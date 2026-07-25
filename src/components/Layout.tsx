@@ -646,15 +646,21 @@ export default function Layout({ children }: LayoutProps) {
   // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
   const [adminFooterItems, setAdminFooterItems] = useState(() => applyAdminFooterCustomization(menuItems));
+  const [userFooterItems, setUserFooterItems] = useState(() => applyUserFooterCustomization(menuItems));
+  const [systemFooterItems, setSystemFooterItems] = useState(() => applySystemFooterCustomization(menuItems));
   useEffect(() => {
     const handler = () => {
       setCustomizedItems(applyMenuCustomization(menuItems));
       setAdminFooterItems(applyAdminFooterCustomization(menuItems));
+      setUserFooterItems(applyUserFooterCustomization(menuItems));
+      setSystemFooterItems(applySystemFooterCustomization(menuItems));
     };
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
     fetchRemoteCustomization().then(() => {
       setCustomizedItems(applyMenuCustomization(menuItems));
       setAdminFooterItems(applyAdminFooterCustomization(menuItems));
+      setUserFooterItems(applyUserFooterCustomization(menuItems));
+      setSystemFooterItems(applySystemFooterCustomization(menuItems));
     });
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
@@ -700,8 +706,16 @@ export default function Layout({ children }: LayoutProps) {
   );
   const mainPlacedIds = getPlacedProgramIds(visibleMenus);
   const adminPlacedIds = getPlacedProgramIds(adminFooterItems);
-  // União: um programa é "posicionado" se está no menu principal OU no Admin (rodapé) customizado
-  const placedProgramIds = new Set<string>([...mainPlacedIds, ...adminPlacedIds]);
+  const userFooterPlacedIds = getPlacedProgramIds(userFooterItems);
+  const systemFooterPlacedIds = getPlacedProgramIds(systemFooterItems);
+  // União de todos os 4 menus — usado para deduplicar itens legado hardcoded
+  const placedProgramIds = new Set<string>([
+    ...mainPlacedIds,
+    ...adminPlacedIds,
+    ...userFooterPlacedIds,
+    ...systemFooterPlacedIds,
+  ]);
+
 
 
 
