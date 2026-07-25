@@ -705,6 +705,77 @@ export default function Layout({ children }: LayoutProps) {
 
 
 
+  // Renderiza dinamicamente os itens (com subgrupos) do menu Admin (rodapé) customizado
+  const renderAdminFooter = (
+    items: any[],
+    onNavigate: () => void,
+    textClass: string,
+    depth = 0
+  ): any => {
+    return items.map((it) => {
+      if (it.subItems && it.subItems.length > 0) {
+        return (
+          <div key={it.id} className="pt-1">
+            <div className={`px-3 py-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/40`}>
+              {it.title}
+            </div>
+            <div className="ml-2 space-y-1 border-l border-sidebar-border/40 pl-2">
+              {renderAdminFooter(it.subItems, onNavigate, textClass, depth + 1)}
+            </div>
+          </div>
+        );
+      }
+      const Icon = it.icon || LucideIcons.Circle;
+      if (it.system === "open-ticket") {
+        return (
+          <button
+            key={it.id}
+            onClick={() => { onNavigate(); window.dispatchEvent(new CustomEvent("open-support-ticket")); }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      if (it.system === "pwa-update") {
+        return (
+          <button
+            key={it.id}
+            onClick={() => { onNavigate(); setShowPwaUpdateDialog(true); }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      if (it.system === "change-password") {
+        return (
+          <button
+            key={it.id}
+            onClick={() => { onNavigate(); setShowChangePasswordDialog(true); }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      return (
+        <NavLink
+          key={it.id}
+          to={it.url || "#"}
+          onClick={onNavigate}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+        >
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">{it.title}</span>
+        </NavLink>
+      );
+    });
+  };
+
   if (soloMode) {
     return (
       <div className="min-h-screen bg-background text-foreground">
