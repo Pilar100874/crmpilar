@@ -196,6 +196,11 @@ export default function VoiceAssistant() {
   const finalTranscriptRef = useRef("");
   const liveTranscriptRef = useRef("");
   const wakeBufferRef = useRef("");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const mediaChunksRef = useRef<Blob[]>([]);
+  const fallbackTimerRef = useRef<number | null>(null);
+  const usingAudioFallbackRef = useRef(false);
 
   const hasWebSpeech = useMemo(
     () => typeof window !== "undefined" &&
@@ -314,6 +319,81 @@ export default function VoiceAssistant() {
     }, delay);
   }, []);
 
+  const stopAudioFallback = useCallback(() => {
+    if (fallbackTimerRef.current) {
+      window.clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    try {
+      if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
+    } catch {}
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+    mediaRecorderRef.current = null;
+    usingAudioFallbackRef.current = false;
+  }, []);
+
+  const transcreverAudioFallback = useCallback(async (blob: Blob) => {
+    if (!blob.size) return "";
+    const form = new FormData();
+    form.append("file", blob, "pilar-audio.webm");
+    const { data, error } = await supabase.functions.invoke("assistente-voz-transcribe", { body: form });
+    if (error) throw new Error(error.message || "Falha na transcrição de áudio");
+    return String(data?.text || data?.transcription || data?.transcript || data?.resposta || "").trim();
+  }, []);
+
+  const startAudioFallback = useCallback(async (durationMs = 6500) => {
+    if (usingAudioFallbackRef.current || isRecording || processing) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      toast.error("Não consegui acessar o microfone deste navegador.");
+      return;
+    }
+
+    try {
+      shouldWakeRef.current = false;
+      try { wakeRecogRef.current?.abort?.(); } catch {}
+      try { wakeRecogRef.current?.stop?.(); } catch {}
+      setWakeListening(false);
+      usingAudioFallbackRef.current = true;
+      mediaChunksRef.current = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm" });
+      mediaRecorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data?.size) mediaChunksRef.current.push(event.data);
+      };
+      recorder.onstop = async () => {
+        const chunks = mediaChunksRef.current;
+        mediaChunksRef.current = [];
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+        usingAudioFallbackRef.current = false;
+        setIsRecording(false);
+        setInterimText("Transcrevendo áudio…");
+        try {
+          const texto = await transcreverAudioFallback(new Blob(chunks, { type: "audio/webm" }));
+          setInterimText("");
+          if (texto) processarTexto(texto);
+          else toast.error("Não escutei nada. Fale novamente ou digite abaixo.");
+        } catch (e: any) {
+          setInterimText("");
+          toast.error(e.message || "Não consegui transcrever o áudio.");
+        }
+      };
+      recorder.start(250);
+      setIsRecording(true);
+      setInterimText("Ouvindo por áudio…");
+      fallbackTimerRef.current = window.setTimeout(() => stopAudioFallback(), durationMs);
+    } catch (e: any) {
+      usingAudioFallbackRef.current = false;
+      setIsRecording(false);
+      setInterimText("");
+      toast.error(e?.message || "Permissão de microfone negada.");
+    }
+  }, [isRecording, processing, stopAudioFallback, transcreverAudioFallback]);
+
   const stopWake = useCallback(() => {
     shouldWakeRef.current = false;
     if (wakeRestartTimerRef.current) {
@@ -400,7 +480,7 @@ export default function VoiceAssistant() {
     if (isRecording || processing) return;
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      toast.error("Seu navegador não suporta reconhecimento de voz. Use o Chrome ou Edge.");
+      startAudioFallback(lastDictationRequestRef.current.holdToTalk ? 8000 : 6500);
       return;
     }
 
@@ -444,6 +524,7 @@ export default function VoiceAssistant() {
         setInterimText("");
         dictationRef.current = null;
         if (ev?.error === "not-allowed" || ev?.error === "service-not-allowed") toast.error("Permissão de microfone negada.");
+        else startAudioFallback(6500);
       };
       rec.onend = () => {
         limparTimersDitado();
@@ -452,6 +533,7 @@ export default function VoiceAssistant() {
         const texto = finalTranscriptRef.current.trim() || liveTranscriptRef.current.trim();
         setInterimText("");
         if (texto) processarTexto(texto);
+        else startAudioFallback(6500);
       };
       rec.start();
       dictationRef.current = rec;
@@ -469,9 +551,9 @@ export default function VoiceAssistant() {
         }, 650);
         return;
       }
-      toast.error("Não consegui iniciar o microfone.");
+      startAudioFallback(6500);
     }
-  }, [agendarParadaDitado, isRecording, limparTimersDitado, processing]);
+  }, [agendarParadaDitado, isRecording, limparTimersDitado, processing, startAudioFallback]);
 
   const requestDictation = useCallback((options: DictationRequestOptions = {}) => {
     if (isRecording || processing) return;
@@ -512,6 +594,7 @@ export default function VoiceAssistant() {
       dictationStartTimerRef.current = null;
     }
     limparTimersDitado();
+    stopAudioFallback();
     try { dictationRef.current?.stop?.(); } catch {}
     setIsRecording(false);
     if (processNow && texto) {
@@ -526,7 +609,7 @@ export default function VoiceAssistant() {
     stopDictation(false);
     spaceHeldRef.current = false;
     setOpen(false);
-  }, [limparTimersDitado]);
+  }, [limparTimersDitado, stopAudioFallback]);
 
   // ---------- Gerar relatório ----------
   const gerarRelatorio = async (r: RelatorioVoz) => {
