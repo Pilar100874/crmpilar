@@ -112,10 +112,45 @@ export default function MenuCustomizacao() {
     return s;
   }, [state]);
 
+  const [poolSearch, setPoolSearch] = useState("");
+
   const unplaced = useMemo(
     () => Array.from(programs.values()).filter((p) => !placedIds.has(p.id)),
     [placedIds, programs]
   );
+
+  const filteredUnplaced = useMemo(() => {
+    const q = poolSearch.trim().toLowerCase();
+    if (!q) return unplaced;
+    return unplaced.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        (p.originContainerTitle || "").toLowerCase().includes(q)
+    );
+  }, [unplaced, poolSearch]);
+
+  // Agrupa a piscina de programas por origem para uma "sequência única" organizada
+  const groupedUnplaced = useMemo(() => {
+    const groups = new Map<string, typeof filteredUnplaced>();
+    for (const p of filteredUnplaced) {
+      const key = p.originContainerTitle || (p.system ? "Sistema (rodapé)" : "Menu principal");
+      if (!groups.has(key)) groups.set(key, [] as any);
+      (groups.get(key) as any).push(p);
+    }
+    // Coloca "Admin" e "Admin (rodapé)" no topo, depois Sistema, depois o resto alfabético
+    const order = (k: string) => {
+      if (k === "Admin") return 0;
+      if (k === "Admin (rodapé)") return 1;
+      if (k.startsWith("Sistema")) return 2;
+      return 3;
+    };
+    return Array.from(groups.entries()).sort((a, b) => {
+      const oa = order(a[0]);
+      const ob = order(b[0]);
+      if (oa !== ob) return oa - ob;
+      return a[0].localeCompare(b[0]);
+    });
+  }, [filteredUnplaced]);
 
   const mutate = (fn: (roots: CustomNode[]) => void) => {
     if (!isAdmin) {
@@ -444,23 +479,31 @@ export default function MenuCustomizacao() {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Personalizar Menu Principal</h1>
-          <p className="text-sm text-muted-foreground">
-            Reorganize, crie pastas e subpastas arrastando ou usando os botões. Programas não podem ser excluídos.
-            A configuração é salva no banco e compartilhada com todos os usuários do estabelecimento.
-          </p>
+    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
+      <div className="mb-6 rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
+        <div className="flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Folder className="w-6 h-6 text-primary" />
+              Personalizar Menu Principal
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+              Arraste programas para dentro do menu, crie pastas e subpastas, renomeie e reordene.
+              A configuração é salva no banco e vale para todos os usuários do estabelecimento.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
+              <RotateCcw className="w-4 h-4 mr-2" /> Restaurar padrão
+            </Button>
+            <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving} className="shadow-sm">
+              <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : dirty ? "Salvar alterações" : "Salvar"}
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
-            <RotateCcw className="w-4 h-4 mr-2" /> Restaurar padrão
-          </Button>
-          <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving}>
-            <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
-          </Button>
-        </div>
+        {dirty && (
+          <div className="mt-3 text-xs text-primary font-medium">● Alterações não salvas</div>
+        )}
       </div>
 
       {!checkingAdmin && !isAdmin && (
@@ -474,50 +517,81 @@ export default function MenuCustomizacao() {
       )}
 
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
         <Card
-          className="p-3"
+          className="p-0 overflow-hidden border-2"
           onDragOver={(e) => dragging && e.preventDefault()}
           onDrop={(e) => onDropOn(null, e)}
         >
-          <div className="flex items-center justify-between mb-3 px-2">
-            <h2 className="font-semibold">Estrutura do menu</h2>
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Folder className="w-4 h-4 text-primary" /> Estrutura do menu
+            </h2>
             <Button size="sm" variant="outline" onClick={() => addContainer(null)}>
               <Plus className="w-4 h-4 mr-1" /> Nova pasta na raiz
             </Button>
           </div>
-          <ScrollArea className="h-[70vh]">
-            <div className="pr-2">
+          <ScrollArea className="h-[72vh]">
+            <div className="p-3">
               {state.roots.map((r, i) => renderNode(r, [i], 0))}
               {state.roots.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-8">Menu vazio — arraste programas aqui.</div>
+                <div className="text-sm text-muted-foreground text-center py-12 border-2 border-dashed rounded-lg">
+                  Menu vazio — arraste programas da direita para cá.
+                </div>
               )}
             </div>
           </ScrollArea>
         </Card>
 
-        <Card className="p-3">
-          <div className="mb-3 px-2">
-            <h2 className="font-semibold">Programas disponíveis</h2>
-            <p className="text-xs text-muted-foreground">Arraste para dentro do menu.</p>
+        <Card className="p-0 overflow-hidden border-2">
+          <div className="px-4 py-3 border-b bg-muted/40">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" /> Programas disponíveis
+              </h2>
+              <Badge variant="secondary" className="text-[10px]">{unplaced.length}</Badge>
+            </div>
+            <Input
+              value={poolSearch}
+              onChange={(e) => setPoolSearch(e.target.value)}
+              placeholder="Buscar programa..."
+              className="h-8 text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Arraste para o menu ou para uma pasta. Programas ficam agrupados pela origem.
+            </p>
           </div>
-          <ScrollArea className="h-[70vh]">
-            <div className="space-y-1 pr-2">
-              {unplaced.length === 0 && (
-                <div className="text-xs text-muted-foreground italic px-2 py-4">
-                  Todos os programas já estão no menu.
+          <ScrollArea className="h-[68vh]">
+            <div className="p-3 space-y-4">
+              {groupedUnplaced.length === 0 && (
+                <div className="text-xs text-muted-foreground italic text-center py-8">
+                  {poolSearch ? "Nenhum programa encontrado." : "Todos os programas já estão no menu."}
                 </div>
               )}
-              {unplaced.map((p) => (
-                <div
-                  key={p.id}
-                  draggable
-                  onDragStart={() => setDragging({ kind: "program", programId: p.id })}
-                  className="flex items-center gap-2 py-1.5 px-2 rounded border bg-background hover:bg-muted/40 cursor-grab"
-                >
-                  <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs flex-1 truncate">{p.title}</span>
+              {groupedUnplaced.map(([origem, items]) => (
+                <div key={origem}>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-1">
+                    {origem}
+                    <span className="ml-1 text-muted-foreground/60">({items.length})</span>
+                  </div>
+                  <div className="space-y-1">
+                    {items.map((p) => {
+                      const Icon = p.icon || FileText;
+                      return (
+                        <div
+                          key={p.id}
+                          draggable
+                          onDragStart={() => setDragging({ kind: "program", programId: p.id })}
+                          className="flex items-center gap-2 py-1.5 px-2 rounded-md border bg-background hover:bg-primary/5 hover:border-primary/40 cursor-grab transition-colors"
+                          title={p.title}
+                        >
+                          <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span className="text-xs flex-1 truncate">{p.title}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ))}
             </div>
