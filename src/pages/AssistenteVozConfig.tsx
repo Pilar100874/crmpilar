@@ -106,6 +106,9 @@ export default function AssistenteVozConfig() {
           <TabsTrigger value="frases">
             <MessageCircle className="w-4 h-4 mr-2" /> Frases por voz
           </TabsTrigger>
+          <TabsTrigger value="testar">
+            <FlaskConical className="w-4 h-4 mr-2" /> Testar
+          </TabsTrigger>
           <TabsTrigger value="relatorios">
             <FileBarChart className="w-4 h-4 mr-2" /> Relatórios por voz
           </TabsTrigger>
@@ -116,6 +119,12 @@ export default function AssistenteVozConfig() {
             <Settings2 className="w-4 h-4 mr-2" /> Configurações
           </TabsTrigger>
         </TabsList>
+
+        {/* ======================= TESTAR ======================= */}
+        <TabsContent value="testar" className="space-y-3">
+          <VozTesterPanel />
+        </TabsContent>
+
 
         {/* ======================= TELAS ======================= */}
         <TabsContent value="telas" className="space-y-3">
