@@ -9281,6 +9281,59 @@ export type Database = {
           },
         ]
       }
+      marketing_automation_execution_logs: {
+        Row: {
+          automation_id: string
+          created_at: string
+          error_message: string | null
+          estabelecimento_id: string
+          executed_at: string
+          id: string
+          items: Json
+          metodo: string | null
+          raw_result: Json | null
+          recipients: Json
+          status: string
+          totals: Json
+        }
+        Insert: {
+          automation_id: string
+          created_at?: string
+          error_message?: string | null
+          estabelecimento_id: string
+          executed_at?: string
+          id?: string
+          items?: Json
+          metodo?: string | null
+          raw_result?: Json | null
+          recipients?: Json
+          status?: string
+          totals?: Json
+        }
+        Update: {
+          automation_id?: string
+          created_at?: string
+          error_message?: string | null
+          estabelecimento_id?: string
+          executed_at?: string
+          id?: string
+          items?: Json
+          metodo?: string | null
+          raw_result?: Json | null
+          recipients?: Json
+          status?: string
+          totals?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_automation_execution_logs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_automations: {
         Row: {
           active: boolean
