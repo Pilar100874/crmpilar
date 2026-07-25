@@ -118,6 +118,10 @@ export default function MenuCustomizacao() {
   );
 
   const mutate = (fn: (roots: CustomNode[]) => void) => {
+    if (!isAdmin) {
+      toast.error("Somente administradores podem alterar o menu.");
+      return;
+    }
     setState((prev) => {
       const roots = cloneTree(prev.roots);
       fn(roots);
