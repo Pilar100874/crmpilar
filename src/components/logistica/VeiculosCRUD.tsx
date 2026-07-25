@@ -761,6 +761,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Placa</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Motorista</TableHead>
+              <TableHead>Celular</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>Rastreador</TableHead>
@@ -777,6 +778,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <TableCell className="font-mono font-medium">{veiculo.placa}</TableCell>
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
+                <TableCell>{(veiculo as any).celular || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
                 <TableCell>{unidadeNomeById[(veiculo as any).logistica_grupo_id] || '-'}</TableCell>
                 <TableCell>
@@ -909,6 +911,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   <div className="min-w-0">
                     <span className="text-muted-foreground">Motorista: </span>
                     <span className="truncate">{veiculo.motorista}</span>
+                  </div>
+                )}
+                {(veiculo as any).celular && (
+                  <div className="min-w-0">
+                    <span className="text-muted-foreground">Celular: </span>
+                    <span className="truncate">{(veiculo as any).celular}</span>
                   </div>
                 )}
                 {veiculo.tipo_veiculo && (
