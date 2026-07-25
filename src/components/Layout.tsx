@@ -64,7 +64,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
-import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds } from "@/lib/menuCustomization";
+import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
@@ -97,13 +97,24 @@ interface MenuPermissions {
   delete: boolean;
 }
 
+export type MenuSystemAction =
+  | "lock"
+  | "admin"
+  | "theme"
+  | "logout"
+  | "profile"
+  | "share-screen"
+  | "open-ticket"
+  | "pwa-update"
+  | "change-password";
+
 interface SubMenuItem {
   id: string;
   title: string;
   url: string;
   icon: any;
   group?: string;
-  system?: "lock" | "admin" | "theme" | "logout";
+  system?: MenuSystemAction;
 }
 
 
@@ -113,7 +124,7 @@ export interface MenuItem {
   url?: string;
   icon: any;
   subItems?: SubMenuItem[];
-  system?: "lock" | "admin" | "theme" | "logout";
+  system?: MenuSystemAction;
 }
 
 
@@ -634,11 +645,17 @@ export default function Layout({ children }: LayoutProps) {
 
   // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
+  const [adminFooterItems, setAdminFooterItems] = useState(() => applyAdminFooterCustomization());
   useEffect(() => {
-    const handler = () => setCustomizedItems(applyMenuCustomization(menuItems));
+    const handler = () => {
+      setCustomizedItems(applyMenuCustomization(menuItems));
+      setAdminFooterItems(applyAdminFooterCustomization());
+    };
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
-    // Busca personalização remota (compartilhada pelo admin do estabelecimento)
-    fetchRemoteCustomization().then(() => setCustomizedItems(applyMenuCustomization(menuItems)));
+    fetchRemoteCustomization().then(() => {
+      setCustomizedItems(applyMenuCustomization(menuItems));
+      setAdminFooterItems(applyAdminFooterCustomization());
+    });
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
 
@@ -650,7 +667,6 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = customizedItems
 
     .filter((item) => {
-      // Itens do sistema (trava, admin, tema, sair) — o admin decide se aparecem no menu principal
       if (item.system) {
         if (item.system === "admin") return isAdmin;
         return true;
@@ -660,7 +676,6 @@ export default function Layout({ children }: LayoutProps) {
         return isAdmin;
       }
 
-      // Menus que sempre devem aparecer para usuários autenticados
       const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Controle de Visitantes", "Livro de Ocorrência", "Câmeras", "Editores"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
@@ -668,7 +683,6 @@ export default function Layout({ children }: LayoutProps) {
 
       const permission = allowedMenus[item.id];
 
-      // Se o menu tem subitems, verifica se pelo menos um tem permissão
       if (item.subItems) {
         const hasSubItemPermission = item.subItems.some((subItem) => {
           const subPermission = allowedMenus[subItem.id];
@@ -681,14 +695,86 @@ export default function Layout({ children }: LayoutProps) {
     })
     .map((item) => item);
 
-  // Ids de itens de sistema já posicionados no menu principal (para esconder no rodapé)
   const systemInMain = new Set<string>(
     visibleMenus.map((i) => i.system).filter(Boolean) as string[]
   );
-  // Ids de programas do Admin (rodapé) posicionados no menu principal — escondê-los no dropdown Admin do rodapé
-  const placedProgramIds = getPlacedProgramIds(visibleMenus);
+  const mainPlacedIds = getPlacedProgramIds(visibleMenus);
+  const adminPlacedIds = getPlacedProgramIds(adminFooterItems);
+  // União: um programa é "posicionado" se está no menu principal OU no Admin (rodapé) customizado
+  const placedProgramIds = new Set<string>([...mainPlacedIds, ...adminPlacedIds]);
 
 
+
+  // Renderiza dinamicamente os itens (com subgrupos) do menu Admin (rodapé) customizado
+  const renderAdminFooter = (
+    items: any[],
+    onNavigate: () => void,
+    textClass: string,
+    depth = 0
+  ): any => {
+    return items.map((it) => {
+      if (it.subItems && it.subItems.length > 0) {
+        return (
+          <div key={it.id} className="pt-1">
+            <div className={`px-3 py-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/40`}>
+              {it.title}
+            </div>
+            <div className="ml-2 space-y-1 border-l border-sidebar-border/40 pl-2">
+              {renderAdminFooter(it.subItems, onNavigate, textClass, depth + 1)}
+            </div>
+          </div>
+        );
+      }
+      const Icon = it.icon || LucideIcons.Circle;
+      if (it.system === "open-ticket") {
+        return (
+          <button
+            key={it.id}
+            onClick={() => { onNavigate(); window.dispatchEvent(new CustomEvent("open-support-ticket")); }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      if (it.system === "pwa-update") {
+        return (
+          <button
+            key={it.id}
+            onClick={() => { onNavigate(); setShowPwaUpdateDialog(true); }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      if (it.system === "change-password") {
+        return (
+          <button
+            key={it.id}
+            onClick={() => { onNavigate(); setShowChangePasswordDialog(true); }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{it.title}</span>
+          </button>
+        );
+      }
+      return (
+        <NavLink
+          key={it.id}
+          to={it.url || "#"}
+          onClick={onNavigate}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${textClass} hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left`}
+        >
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">{it.title}</span>
+        </NavLink>
+      );
+    });
+  };
 
   if (soloMode) {
     return (
@@ -905,6 +991,11 @@ export default function Layout({ children }: LayoutProps) {
                     else if (item.system === "theme") toggleTheme();
                     else if (item.system === "logout") handleLogout();
                     else if (item.system === "admin") navigate("/admin");
+                    else if (item.system === "profile") navigate("/perfil");
+                    else if (item.system === "share-screen") navigate("/compartilhar-tela");
+                    else if (item.system === "open-ticket") window.dispatchEvent(new CustomEvent("open-support-ticket"));
+                    else if (item.system === "pwa-update") setShowPwaUpdateDialog(true);
+                    else if (item.system === "change-password") setShowChangePasswordDialog(true);
                   };
                   const label =
                     item.system === "lock"
@@ -1343,6 +1434,7 @@ export default function Layout({ children }: LayoutProps) {
                       </h3>
                       
                       <div className="space-y-1">
+                        {!placedProgramIds.has("user-perfil") && (
                         <NavLink
                           to="/perfil"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1351,7 +1443,8 @@ export default function Layout({ children }: LayoutProps) {
                           <UserIcon className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Perfil</span>
                         </NavLink>
-                        
+                        )}
+                        {!placedProgramIds.has("user-share-screen") && (
                         <NavLink
                           to="/compartilhar-tela"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1360,7 +1453,8 @@ export default function Layout({ children }: LayoutProps) {
                           <Monitor className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Compartilhar ou Ver Tela</span>
                         </NavLink>
-
+                        )}
+                        {!placedProgramIds.has("user-open-ticket") && (
                         <button
                           onClick={() => {
                             setOpenSubmenuId(null);
@@ -1371,7 +1465,8 @@ export default function Layout({ children }: LayoutProps) {
                           <LifeBuoy className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Abrir Ticket de Suporte</span>
                         </button>
-
+                        )}
+                        {!placedProgramIds.has("user-pwa-update") && (
                         <button
                           onClick={() => {
                             setOpenSubmenuId(null);
@@ -1382,9 +1477,10 @@ export default function Layout({ children }: LayoutProps) {
                           <RefreshCw className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Atualizar Sistema (PWA)</span>
                         </button>
-
+                        )}
 
                         
+                        {!placedProgramIds.has("user-change-password") && (
                         <button
                           onClick={() => {
                             setOpenSubmenuId(null);
@@ -1395,61 +1491,10 @@ export default function Layout({ children }: LayoutProps) {
                           <KeyRound className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Alterar Senha</span>
                         </button>
-
-                        {isAdmin && (
-                          <>
-                            {!placedProgramIds.has("Admin Macros") && (
-                            <NavLink
-                              to="/macros"
-                              onClick={() => setOpenSubmenuId(null)}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                            >
-                              <Zap className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm">Macros</span>
-                            </NavLink>
-                            )}
-                            {!placedProgramIds.has("Admin Tickets") && (
-                            <NavLink
-                              to="/admin/support-tickets"
-                              onClick={() => setOpenSubmenuId(null)}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                            >
-                              <LifeBuoy className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm">Tickets de Suporte</span>
-                            </NavLink>
-                            )}
-                            {!placedProgramIds.has("Admin Apps") && (
-                            <NavLink
-                              to="/admin/apps"
-                              onClick={() => setOpenSubmenuId(null)}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                            >
-                              <AppWindow className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm">Apps</span>
-                            </NavLink>
-                            )}
-                            {!placedProgramIds.has("Admin Telas Customizadas") && (
-                            <NavLink
-                              to="/admin/telas-customizadas"
-                              onClick={() => setOpenSubmenuId(null)}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                            >
-                              <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm">Tela Customizada</span>
-                            </NavLink>
-                            )}
-                            {!placedProgramIds.has("Admin Politicas Internas") && (
-                            <NavLink
-                              to="/politicas-internas"
-                              onClick={() => setOpenSubmenuId(null)}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                            >
-                              <LucideIcons.BookOpen className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm">Políticas Internas</span>
-                            </NavLink>
-                            )}
-                          </>
                         )}
+
+                        {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/70")}
+
 
 
                       </div>
@@ -1485,6 +1530,7 @@ export default function Layout({ children }: LayoutProps) {
                 
                 {openSubmenuId === "UserMenu" && (
                   <div className="mt-1 ml-8 space-y-1">
+                    {!placedProgramIds.has("user-perfil") && (
                     <NavLink
                       to="/perfil"
                       onClick={() => setOpenSubmenuId(null)}
@@ -1493,7 +1539,8 @@ export default function Layout({ children }: LayoutProps) {
                       <UserIcon className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Perfil</span>
                     </NavLink>
-                    
+                    )}
+                    {!placedProgramIds.has("user-share-screen") && (
                     <NavLink
                       to="/compartilhar-tela"
                       onClick={() => setOpenSubmenuId(null)}
@@ -1502,7 +1549,8 @@ export default function Layout({ children }: LayoutProps) {
                       <Monitor className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Compartilhar ou Ver Tela</span>
                     </NavLink>
-
+                    )}
+                    {!placedProgramIds.has("user-open-ticket") && (
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
@@ -1513,7 +1561,8 @@ export default function Layout({ children }: LayoutProps) {
                       <LifeBuoy className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Abrir Ticket de Suporte</span>
                     </button>
-
+                    )}
+                    {!placedProgramIds.has("user-pwa-update") && (
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
@@ -1524,10 +1573,8 @@ export default function Layout({ children }: LayoutProps) {
                       <RefreshCw className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Atualizar Sistema (PWA)</span>
                     </button>
-
-
-
-                    
+                    )}
+                    {!placedProgramIds.has("user-change-password") && (
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
@@ -1538,62 +1585,9 @@ export default function Layout({ children }: LayoutProps) {
                       <KeyRound className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Alterar Senha</span>
                     </button>
-
-                    {isAdmin && (
-                      <>
-                        {!placedProgramIds.has("Admin Macros") && (
-                        <NavLink
-                          to="/macros"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <Zap className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Macros</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Tickets") && (
-                        <NavLink
-                          to="/admin/support-tickets"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <LifeBuoy className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Tickets de Suporte</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Apps") && (
-                        <NavLink
-                          to="/admin/apps"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <AppWindow className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Apps</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Telas Customizadas") && (
-                        <NavLink
-                          to="/admin/telas-customizadas"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Tela Customizada</span>
-                        </NavLink>
-                        )}
-                        {!placedProgramIds.has("Admin Politicas Internas") && (
-                        <NavLink
-                          to="/politicas-internas"
-                          onClick={() => setOpenSubmenuId(null)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                        >
-                          <LucideIcons.BookOpen className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm">Políticas Internas</span>
-                        </NavLink>
-                        )}
-                      </>
                     )}
 
+                    {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/60")}
                     
                   </div>
                 )}
