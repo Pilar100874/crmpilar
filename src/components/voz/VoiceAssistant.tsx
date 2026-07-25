@@ -704,14 +704,14 @@ export default function VoiceAssistant() {
                     <Label>Ativação por voz ("{cfg.wake_word}")</Label>
                     <p className="text-xs text-muted-foreground">Escuta contínua em background. Diga a palavra para abrir.</p>
                   </div>
-                  <Switch checked={cfg.wake_word_ativo} onCheckedChange={(v) => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; salvarConfig({ wake_word_ativo: v }); }} />
+                  <Switch checked={cfg.wake_word_ativo} onCheckedChange={(v) => { setWakeUnavailable(false); salvarConfig({ wake_word_ativo: v }); }} />
                 </div>
                 <div>
                   <Label className="text-xs">Palavra de ativação</Label>
                   <Input
                     value={cfg.wake_word}
                     onChange={(e) => setCfg({ ...cfg, wake_word: e.target.value })}
-                    onBlur={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; salvarConfig({ wake_word: cfg.wake_word }); }}
+                    onBlur={() => { setWakeUnavailable(false); salvarConfig({ wake_word: cfg.wake_word }); }}
                     placeholder="ei pilar"
                     className="mt-1"
                   />
@@ -724,7 +724,7 @@ export default function VoiceAssistant() {
                   </div>
                   <Switch checked={cfg.responder_por_voz} onCheckedChange={(v) => salvarConfig({ responder_por_voz: v })} />
                 </div>
-                <Button variant="outline" className="w-full" onClick={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
+                <Button variant="outline" className="w-full" onClick={() => { setWakeUnavailable(false); stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
                   <Radio className="h-4 w-4 mr-2" /> Reiniciar escuta
                 </Button>
               </div>
