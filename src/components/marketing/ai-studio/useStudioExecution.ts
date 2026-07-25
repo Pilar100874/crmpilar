@@ -214,6 +214,38 @@ export function useStudioExecution() {
     return result;
   };
 
+  // ✍️ Revisa ortografia/gramática (pt-BR) de textos escritos pelo usuário antes
+  // de enviá-los para geração de imagem ou vídeo. Preserva estrutura, símbolos,
+  // emojis, quebras de linha e sentido. Em falha, devolve o texto original.
+  const revisarTextoUsuarioPT = async (texto: string): Promise<string> => {
+    const original = (texto || '').trim();
+    if (!original || original.length < 3) return texto;
+    try {
+      const systemPrompt = [
+        'Você é um revisor rigoroso de português do Brasil.',
+        'Corrija APENAS erros de ortografia, acentuação, concordância, regência e pontuação.',
+        'NÃO altere o sentido, o estilo, o tom, a ordem das frases nem adicione/remova conteúdo.',
+        'Preserve EXATAMENTE: quebras de linha, espaços, emojis, símbolos, colchetes, aspas, números, nomes próprios, marcas e termos técnicos em outros idiomas.',
+        'A saída será usada como prompt para geração visual (imagem/vídeo) — tolerância ZERO a erros de grafia, especialmente quando houver identidade visual da marca.',
+        'Responda somente com o texto corrigido, sem comentários, sem explicações, sem prefixos, sem aspas envolvendo a resposta.',
+        'Se o texto já estiver correto, devolva-o inalterado.',
+      ].join(' ');
+      const corrigido = await callStudio('generate_text', {
+        prompt: original,
+        systemPrompt,
+        model: 'google/gemini-2.5-flash',
+      }, 30000);
+      const out = typeof corrigido === 'string' ? corrigido.trim() : '';
+      if (!out) return texto;
+      // Salvaguarda: descarta respostas absurdamente longas (provável alucinação).
+      if (out.length > original.length * 3 + 200) return texto;
+      return out;
+    } catch (err) {
+      console.warn('[Studio][spellcheck] revisão falhou, usando texto original:', err);
+      return texto;
+    }
+  };
+
   const waitForStudioDelay = (ms: number) => new Promise<void>((resolve, reject) => {
     const globalSignal = abortRef.current?.signal;
     if (globalSignal?.aborted) {
@@ -884,7 +916,7 @@ export function useStudioExecution() {
         const promptLower = (combinedInput || '').toLowerCase();
         const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
         
-        let enrichedPrompt = combinedInput || 'Uma cena bonita';
+        let enrichedPrompt = await revisarTextoUsuarioPT(combinedInput || 'Uma cena bonita');
 
         // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
         const viCheck = await getActiveVisualIdentity(imgEstabId);
@@ -1178,7 +1210,7 @@ export function useStudioExecution() {
         const editEstabId = localStorage.getItem('estabelecimentoId') || '';
         const editDefaults = getStudioDefaults(editEstabId);
         const editLangSuffix = getLanguagePromptSuffix(editDefaults.defaultLanguage || 'pt-BR');
-        const editPromptText = config.editPrompt || combinedInput || 'Melhore esta imagem';
+        const editPromptText = await revisarTextoUsuarioPT(config.editPrompt || combinedInput || 'Melhore esta imagem');
         let editPromptWithLang = `${editPromptText}\n\n[IDIOMA] Todos os textos na imagem devem estar ${editLangSuffix}.`;
 
         // Inject Visual Identity for image edit
@@ -1219,7 +1251,7 @@ export function useStudioExecution() {
           scene: 'Insira o produto original na cena com a pessoa, preservando a embalagem exatamente como na referência.',
         };
         const modePrompt = modeDescriptions[config.compositeMode] || modeDescriptions.clothing;
-        const userPrompt = config.prompt || combinedInput || '';
+        const userPrompt = await revisarTextoUsuarioPT(config.prompt || combinedInput || '');
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         const hasProductComp = inputs.some((i) => i?._referenceRole === 'produto');
         if (hasProductComp) {
@@ -1599,7 +1631,7 @@ export function useStudioExecution() {
         const correctionSourceProvider = correctionInputVideo?._provider;
         const correctionSourceProviderVideoId = correctionInputVideo?._providerVideoId;
 
-        let videoPrompt = combinedInput || 'Uma cena cinematográfica';
+        let videoPrompt = await revisarTextoUsuarioPT(combinedInput || 'Uma cena cinematográfica');
         if (videoScriptDirective) {
           videoPrompt = `${videoScriptDirective}\n\n${videoPrompt}`;
         }
