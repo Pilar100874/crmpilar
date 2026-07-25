@@ -469,6 +469,21 @@ export default function MenuCustomizacao() {
     return pathsEqual(dropHint.path as Path, path) && dropHint.pos === pos;
   };
 
+  // Human-friendly summary of where the drop will land, per tree.
+  const getDropSummary = (tree: TreeKey): { text: string; kind: "before" | "after" | "inside" | "end" } | null => {
+    if (!dragging || !dropHint || dropHint.tree !== tree) return null;
+    const roots = tree === "main" ? mainRoots : adminRoots;
+    if (dropHint.path === null) return { text: "no final da lista", kind: "end" };
+    const target = getNode(roots, dropHint.path);
+    const name =
+      target?.kind === "container"
+        ? target.title
+        : programs.get((target as any)?.programId)?.title || "item";
+    if (dropHint.pos === "before") return { text: `antes de "${name}"`, kind: "before" };
+    if (dropHint.pos === "after") return { text: `depois de "${name}"`, kind: "after" };
+    return { text: `dentro da pasta "${name}"`, kind: "inside" };
+  };
+
   const renderNode = (tree: TreeKey, node: CustomNode, path: Path, depth: number) => {
     const key = pathKey(tree, path);
     const isExpanded = expanded[key] ?? depth < 1;
