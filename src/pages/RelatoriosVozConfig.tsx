@@ -19,6 +19,16 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Plus, Pencil, Trash2, Mic, Sparkles, FileBarChart, X } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+type FiltroSchema = {
+  chave: string;
+  rotulo: string;
+  coluna: string;
+  tipo: "text" | "number" | "date" | "date_range" | "enum" | "boolean";
+  operador?: "eq" | "ilike" | "gte" | "lte" | "in";
+  obrigatorio?: boolean;
+  opcoes?: string[];
+};
+
 type Relatorio = {
   id: string;
   nome: string;
@@ -29,6 +39,13 @@ type Relatorio = {
   aliases: string[];
   parametros: any[];
   ativo: boolean;
+  tipo_fonte?: "tabela" | "api";
+  tabela_base?: string | null;
+  api_endpoint_id?: string | null;
+  campos_exibicao?: any[];
+  filtros_disponiveis?: FiltroSchema[];
+  ordenacao?: { coluna?: string; direcao?: "asc" | "desc" };
+  limite_padrao?: number;
 };
 
 const TIPOS = [
@@ -41,14 +58,11 @@ const TIPOS = [
 const GRUPOS_SUGERIDOS = ["Vendas", "Financeiro", "Estoque", "Atendimento", "Logística", "RH", "Marketing", "Geral"];
 
 const emptyForm: Omit<Relatorio, "id"> = {
-  nome: "",
-  grupo: "Vendas",
-  descricao: "",
-  prompt_geracao: "",
-  tipo_saida: "texto",
-  aliases: [],
-  parametros: [],
-  ativo: true,
+  nome: "", grupo: "Vendas", descricao: "", prompt_geracao: "",
+  tipo_saida: "tabela", aliases: [], parametros: [], ativo: true,
+  tipo_fonte: "tabela", tabela_base: "", api_endpoint_id: null,
+  campos_exibicao: [], filtros_disponiveis: [],
+  ordenacao: { coluna: "", direcao: "desc" }, limite_padrao: 100,
 };
 
 export default function RelatoriosVozConfig() {
