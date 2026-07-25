@@ -362,48 +362,67 @@ export default function VoiceAssistant() {
     try { wakeRecogRef.current?.stop?.(); } catch {}
     wakeRecogRef.current = null;
     setWakeListening(false);
-    // pequena pausa para o Chrome liberar o mic antes de reabrir
-    await new Promise((r) => setTimeout(r, 200));
+    // pausa maior para o Chrome liberar o mic antes de reabrir
+    await new Promise((r) => setTimeout(r, 350));
 
     // 1) tenta Web Speech (rápido, sem upload)
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SR) {
-      try {
-        const rec = new SR();
-        rec.lang = "pt-BR";
-        rec.continuous = true;
-        rec.interimResults = true;
-        let finalTxt = "";
-        rec.onresult = (e: any) => {
-          let interim = "";
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            const t = e.results[i][0]?.transcript || "";
-            if (e.results[i].isFinal) finalTxt += t + " ";
-            else interim += t;
+      const tryStart = async (attempt = 0): Promise<boolean> => {
+        try {
+          const rec = new SR();
+          rec.lang = "pt-BR";
+          rec.continuous = true;
+          rec.interimResults = true;
+          let finalTxt = "";
+          let lastInterim = "";
+          rec.onresult = (e: any) => {
+            let interim = "";
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+              const t = e.results[i][0]?.transcript || "";
+              if (e.results[i].isFinal) finalTxt += t + " ";
+              else interim += t;
+            }
+            lastInterim = interim;
+            setInterimText((finalTxt + interim).trim());
+          };
+          rec.onerror = (ev: any) => {
+            const err = ev?.error;
+            if (err === "no-speech") { return; }
+            if (err === "not-allowed" || err === "service-not-allowed") {
+              toast.error("Permissão de microfone negada. Ative nas configurações do navegador.");
+              setIsRecording(false);
+              return;
+            }
+            if (err === "aborted") { return; }
+            console.warn("[voz] SR erro:", err);
+          };
+          rec.onend = () => {
+            setIsRecording(false);
+            dictationRef.current = null;
+            const txt = (finalTxt + " " + lastInterim).trim();
+            setInterimText("");
+            if (txt) processarTexto(txt);
+            else toast.info("Não escutei nada. Fale novamente ou digite abaixo.");
+          };
+          rec.start();
+          dictationRef.current = rec;
+          setIsRecording(true);
+          return true;
+        } catch (err: any) {
+          // InvalidStateError: já existe uma instância viva — espera e tenta 1x mais
+          if (attempt < 1 && (err?.name === "InvalidStateError" || String(err?.message || "").includes("already started"))) {
+            await new Promise((r) => setTimeout(r, 500));
+            return tryStart(attempt + 1);
           }
-          setInterimText((finalTxt + interim).trim());
-        };
-        rec.onerror = (ev: any) => {
-          if (ev?.error === "no-speech") { setIsRecording(false); return; }
-          if (ev?.error === "not-allowed") { toast.error("Sem permissão de microfone"); setIsRecording(false); }
-          if (ev?.error === "aborted") { setIsRecording(false); }
-        };
-        rec.onend = () => {
-          setIsRecording(false);
-          dictationRef.current = null;
-          const txt = finalTxt.trim() || interimText.trim();
-          setInterimText("");
-          if (txt) processarTexto(txt);
-          else toast.info("Não escutei nada. Fale novamente ou digite abaixo.");
-        };
-        rec.start();
-        dictationRef.current = rec;
-        setIsRecording(true);
-        return;
-      } catch (err) {
-        console.warn("[voz] SR start falhou, tentando MediaRecorder", err);
-      }
+          console.warn("[voz] SR start falhou, indo p/ MediaRecorder", err);
+          return false;
+        }
+      };
+      const ok = await tryStart();
+      if (ok) return;
     }
+
 
     // 2) Fallback: grava e envia pra Whisper (edge function)
     try {
