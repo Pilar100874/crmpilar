@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Info, Key, Link2, CheckCircle2, AlertCircle, Loader2, Zap, Copy, Check, ExternalLink, Settings } from "lucide-react";
+import { Info, Key, Link2, CheckCircle2, AlertCircle, Loader2, Zap, Copy, Check, ExternalLink, Settings, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import AdsPlatformApps from "./AdsPlatformApps";
 import AdsCredentials from "./AdsCredentials";
+import PlatformConnectWizard from "@/components/ads/PlatformConnectWizard";
 
 const REDIRECT_URI = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ads-oauth-callback`;
 
@@ -29,6 +30,7 @@ export default function AdsConexoes() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [wizardPlatform, setWizardPlatform] = useState<PlatformKey | null>(null);
 
   const loadStatus = async () => {
     setLoading(true);
@@ -162,9 +164,12 @@ export default function AdsConexoes() {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
+                        <Button size="sm" variant="default" className="w-full" onClick={() => setWizardPlatform(p.id)}>
+                          <Wand2 className="h-3.5 w-3.5 mr-1.5" /> Assistente de conexão
+                        </Button>
                         {!hasApp && (
-                          <Button size="sm" variant="secondary" className="w-full" onClick={() => setTab("apps")}>
-                            <Key className="h-3.5 w-3.5 mr-1.5" /> Cadastrar chaves do app
+                          <Button size="sm" variant="ghost" className="w-full" onClick={() => setTab("apps")}>
+                            <Key className="h-3.5 w-3.5 mr-1.5" /> Cadastro avançado
                           </Button>
                         )}
                         <Button
@@ -207,6 +212,13 @@ export default function AdsConexoes() {
           <AdsPlatformApps />
         </TabsContent>
       </Tabs>
+
+      <PlatformConnectWizard
+        open={!!wizardPlatform}
+        onOpenChange={(v) => !v && setWizardPlatform(null)}
+        platform={wizardPlatform}
+        onChanged={loadStatus}
+      />
     </div>
   );
 }
