@@ -30,10 +30,6 @@ import {
   RotateCcw,
   Save,
   Trash2,
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
   GripVertical,
   Folder,
   FileText,
@@ -45,6 +41,7 @@ import { MenuIconPicker, resolveMenuIcon } from "@/components/menu/MenuIconPicke
 
 type TreeKey = "main" | "admin";
 type Path = number[];
+type DropPos = "before" | "after" | "inside";
 
 function cloneTree(roots: CustomNode[]): CustomNode[] {
   return JSON.parse(JSON.stringify(roots));
@@ -62,15 +59,15 @@ function removeAt(roots: CustomNode[], path: Path): CustomNode {
   const sibs = getSiblings(roots, path);
   return sibs.splice(path[path.length - 1], 1)[0];
 }
-function insertAt(roots: CustomNode[], parentPath: Path | null, index: number, node: CustomNode) {
-  if (!parentPath || parentPath.length === 0) {
-    roots.splice(index, 0, node);
-    return;
-  }
-  let container: any = { children: roots };
-  for (const idx of parentPath) container = container.children[idx];
-  if (container.kind !== "container") return;
-  container.children.splice(index, 0, node);
+function pathsEqual(a: Path, b: Path) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+function isAncestor(a: Path, b: Path) {
+  if (a.length >= b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 function collectIds(roots: CustomNode[], out: Set<string>) {
   for (const n of roots) {
@@ -197,44 +194,6 @@ export default function MenuCustomizacao() {
     setRenaming(null);
   };
 
-  const move = (tree: TreeKey, path: Path, delta: number) => {
-    mutate(tree, (roots) => {
-      const sibs = getSiblings(roots, path);
-      const i = path[path.length - 1];
-      const j = i + delta;
-      if (j < 0 || j >= sibs.length) return;
-      [sibs[i], sibs[j]] = [sibs[j], sibs[i]];
-    });
-  };
-  const indent = (tree: TreeKey, path: Path) => {
-    mutate(tree, (roots) => {
-      const sibs = getSiblings(roots, path);
-      const i = path[path.length - 1];
-      if (i === 0) return;
-      const prev = sibs[i - 1];
-      if (prev.kind !== "container") {
-        toast.error("O item anterior precisa ser uma pasta para aninhar.");
-        return;
-      }
-      const [node] = sibs.splice(i, 1);
-      prev.children.push(node);
-    });
-  };
-  const outdent = (tree: TreeKey, path: Path) => {
-    if (path.length <= 1) return;
-    mutate(tree, (roots) => {
-      const parentPath = path.slice(0, -1);
-      const grandParentPath = parentPath.slice(0, -1);
-      const sibs = getSiblings(roots, path);
-      const i = path[path.length - 1];
-      const [node] = sibs.splice(i, 1);
-      const targetSibs =
-        grandParentPath.length === 0 ? roots : getSiblings(roots, [...grandParentPath, 0]);
-      const parentIdx = parentPath[parentPath.length - 1];
-      targetSibs.splice(parentIdx + 1, 0, node);
-    });
-  };
-
   const addContainer = (tree: TreeKey, path: Path | null) => {
     const title = window.prompt("Nome da nova pasta / submenu:");
     if (!title || !title.trim()) return;
@@ -272,7 +231,6 @@ export default function MenuCustomizacao() {
     const roots = tree === "main" ? mainRoots : adminRoots;
     const node = getNode(roots, path);
     if (node.kind !== "container") {
-      toast.error("Programas não podem ser excluídos, apenas pastas.");
       setConfirmDelete(null);
       return;
     }
@@ -369,83 +327,146 @@ export default function MenuCustomizacao() {
     }
   };
 
-  // Drag state — inclui árvore de origem para permitir mover entre menus
+  // Drag state
   const [dragging, setDragging] = useState<
     | { kind: "node"; tree: TreeKey; path: Path }
     | { kind: "program"; programId: string }
     | null
   >(null);
+  const [dropHint, setDropHint] = useState<
+    | { tree: TreeKey; path: Path; pos: DropPos }
+    | { tree: TreeKey; path: null; pos: "end" }
+    | null
+  >(null);
 
-  const onDropOn = (destTree: TreeKey, targetPath: Path | null, e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!dragging) return;
+  const clearDrag = () => {
+    setDragging(null);
+    setDropHint(null);
+  };
+
+  // Determine drop position based on mouse Y and whether target is a container
+  const computeDropPos = (e: React.DragEvent<HTMLElement>, isContainer: boolean): DropPos => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const h = rect.height;
+    if (isContainer) {
+      if (y < h * 0.28) return "before";
+      if (y > h * 0.72) return "after";
+      return "inside";
+    }
+    return y < h / 2 ? "before" : "after";
+  };
+
+  const performDrop = (destTree: TreeKey) => {
+    if (!dragging || !dropHint || dropHint.tree !== destTree) return clearDrag();
+
+    // Compute insertion parent path and index
+    const resolveInsertion = (
+      roots: CustomNode[],
+      hint: typeof dropHint
+    ): { parentPath: Path | null; index: number } | null => {
+      if (!hint) return null;
+      if (hint.path === null) {
+        return { parentPath: null, index: roots.length };
+      }
+      const target = getNode(roots, hint.path);
+      if (hint.pos === "inside") {
+        if (!target || target.kind !== "container") return null;
+        return { parentPath: hint.path, index: (target as any).children.length };
+      }
+      const parentPath = hint.path.length > 1 ? hint.path.slice(0, -1) : null;
+      const lastIdx = hint.path[hint.path.length - 1];
+      return { parentPath, index: hint.pos === "before" ? lastIdx : lastIdx + 1 };
+    };
 
     if (dragging.kind === "program") {
-      addProgramInto(destTree, targetPath, dragging.programId);
-      setDragging(null);
+      mutate(destTree, (roots) => {
+        const ins = resolveInsertion(roots, dropHint);
+        if (!ins) return;
+        const newNode: CustomNode = { kind: "program", programId: dragging.programId };
+        if (!ins.parentPath) roots.splice(ins.index, 0, newNode);
+        else (getNode(roots, ins.parentPath) as any).children.splice(ins.index, 0, newNode);
+      });
+      clearDrag();
       return;
     }
 
-    // node — pode ser mesma árvore ou entre árvores
-    if (dragging.tree === destTree) {
-      const src = dragging.path;
-      if (targetPath && src.length <= targetPath.length && src.every((v, i) => v === targetPath[i])) {
-        return setDragging(null);
-      }
+    // Move node
+    const srcTree = dragging.tree;
+    const srcPath = dragging.path;
+
+    // Prevent dropping into itself/descendant when same tree
+    if (
+      srcTree === destTree &&
+      dropHint.path &&
+      (pathsEqual(srcPath, dropHint.path) || isAncestor(srcPath, dropHint.path))
+    ) {
+      return clearDrag();
+    }
+
+    if (srcTree === destTree) {
       mutate(destTree, (roots) => {
-        const node = removeAt(roots, src);
-        const adjusted: Path | null = targetPath ? [...targetPath] : null;
-        if (adjusted) {
-          for (let i = 0; i < src.length; i++) {
-            if (i >= adjusted.length) break;
-            const samePrefix = src.slice(0, i).every((v, k) => v === adjusted[k]);
-            if (samePrefix && src[i] < adjusted[i]) adjusted[i] -= 1;
+        const ins = resolveInsertion(roots, dropHint);
+        if (!ins) return;
+        // Adjust for removal shifting indices when src is before insertion in same parent chain
+        const insPathCandidate: Path = ins.parentPath ? [...ins.parentPath, ins.index] : [ins.index];
+        const node = removeAt(roots, srcPath);
+        // Recompute insertion after removal
+        const adjParent = ins.parentPath ? [...ins.parentPath] : null;
+        let adjIndex = ins.index;
+        // If src was under same parent path prefix and before insertion, decrement
+        if (adjParent) {
+          const samePrefix =
+            srcPath.length > adjParent.length &&
+            adjParent.every((v, i) => v === srcPath[i]);
+          if (samePrefix && srcPath[adjParent.length] < adjIndex) adjIndex -= 1;
+          // Also adjust ancestor indices in adjParent itself
+          for (let i = 0; i < adjParent.length; i++) {
+            const samePref = srcPath.slice(0, i).every((v, k) => v === adjParent[k]);
+            if (samePref && srcPath.length > i && srcPath[i] < adjParent[i]) adjParent[i] -= 1;
           }
+        } else {
+          if (srcPath.length === 1 && srcPath[0] < adjIndex) adjIndex -= 1;
         }
-        if (!adjusted || adjusted.length === 0) roots.push(node);
+        if (!adjParent) roots.splice(adjIndex, 0, node);
         else {
-          const target = getNode(roots, adjusted);
-          if (target && target.kind === "container") target.children.push(node);
-          else {
-            const parent = adjusted.slice(0, -1);
-            const idx = adjusted[adjusted.length - 1] + 1;
-            insertAt(roots, parent.length ? parent : null, idx, node);
-          }
+          const parent = getNode(roots, adjParent);
+          if (parent && parent.kind === "container") (parent as any).children.splice(adjIndex, 0, node);
+          else roots.push(node);
         }
+        void insPathCandidate;
       });
     } else {
-      // Mover entre árvores: remove da origem e insere no destino
-      if (!isAdmin) {
-        toast.error("Somente administradores podem alterar o menu.");
-        return setDragging(null);
-      }
+      // Cross-tree move
       let removed: CustomNode | null = null;
-      setTree(dragging.tree, (prev) => {
+      setTree(srcTree, (prev) => {
         const roots = cloneTree(prev);
-        removed = removeAt(roots, dragging.path);
+        removed = removeAt(roots, srcPath);
         return roots;
       });
-      // Aguarda micro-tick? Como setState é assíncrono, usamos snapshot direto:
       setTree(destTree, (prev) => {
         if (!removed) return prev;
         const roots = cloneTree(prev);
-        if (!targetPath || targetPath.length === 0) {
+        const ins = resolveInsertion(roots, dropHint);
+        if (!ins) {
           roots.push(removed);
+        } else if (!ins.parentPath) {
+          roots.splice(ins.index, 0, removed);
         } else {
-          const target = getNode(roots, targetPath);
-          if (target && target.kind === "container") target.children.push(removed);
-          else {
-            const parent = targetPath.slice(0, -1);
-            const idx = targetPath[targetPath.length - 1] + 1;
-            insertAt(roots, parent.length ? parent : null, idx, removed);
-          }
+          const parent = getNode(roots, ins.parentPath);
+          if (parent && parent.kind === "container") (parent as any).children.splice(ins.index, 0, removed);
+          else roots.push(removed);
         }
         return roots;
       });
       setDirty(true);
     }
-    setDragging(null);
+    clearDrag();
+  };
+
+  const dropIndicator = (tree: TreeKey, path: Path, pos: DropPos) => {
+    if (!dropHint || dropHint.tree !== tree || dropHint.path === null) return false;
+    return pathsEqual(dropHint.path as Path, path) && dropHint.pos === pos;
   };
 
   const renderNode = (tree: TreeKey, node: CustomNode, path: Path, depth: number) => {
@@ -458,63 +479,90 @@ export default function MenuCustomizacao() {
         else delete (n as any).iconName;
       });
     };
+
+    const showBefore = dropIndicator(tree, path, "before");
+    const showAfter = dropIndicator(tree, path, "after");
+    const showInside = node.kind === "container" && dropIndicator(tree, path, "inside");
+
+    const dragHandlers = {
+      draggable: true,
+      onDragStart: (e: React.DragEvent) => {
+        setDragging({ kind: "node", tree, path });
+        e.dataTransfer.effectAllowed = "move";
+        try { e.dataTransfer.setData("text/plain", key); } catch { /* noop */ }
+      },
+      onDragEnd: () => clearDrag(),
+      onDragOver: (e: React.DragEvent<HTMLElement>) => {
+        if (!dragging) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "move";
+        const pos = computeDropPos(e, node.kind === "container");
+        setDropHint({ tree, path, pos });
+      },
+      onDrop: (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        performDrop(tree);
+      },
+    };
+
     if (node.kind === "program") {
       const p = programs.get(node.programId);
       const OverrideIcon = resolveMenuIcon((node as any).iconName);
       const Icon = OverrideIcon || p?.icon || FileText;
       return (
-        <div
-          key={key}
-          draggable
-          onDragStart={(e) => {
-            setDragging({ kind: "node", tree, path });
-            e.dataTransfer.effectAllowed = "move";
-          }}
-          className="flex items-center gap-1.5 py-2 px-2 rounded-lg hover:bg-muted/40 group border border-transparent"
-          style={{ marginLeft: depth * 16 }}
-        >
-          <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 cursor-grab hidden sm:block" />
-          <MenuIconPicker
-            value={(node as any).iconName ?? null}
-            onChange={setIcon}
-            trigger={
-              <button
-                className="p-1 rounded hover:bg-muted"
-                title="Alterar ícone"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Icon className="w-4 h-4 text-primary/80" />
-              </button>
-            }
-          />
-          <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
-          <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">programa</Badge>
-          <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, -1)} title="Subir"><ArrowUp className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, 1)} title="Descer"><ArrowDown className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => outdent(tree, path)} disabled={path.length <= 1} title="Sair da pasta"><ArrowLeft className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => indent(tree, path)} title="Aninhar na pasta acima"><ArrowRight className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 text-destructive" onClick={() => mutate(tree, (roots) => { removeAt(roots, path); })} title="Remover do menu"><Trash2 className="w-3.5 h-3.5" /></Button>
+        <div key={key} className="relative">
+          {showBefore && <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
+          <div
+            {...dragHandlers}
+            className="flex items-center gap-1.5 py-2 px-2 rounded-lg hover:bg-muted/40 group border border-transparent cursor-grab active:cursor-grabbing"
+            style={{ marginLeft: depth * 16 }}
+          >
+            <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 shrink-0" />
+            <MenuIconPicker
+              value={(node as any).iconName ?? null}
+              onChange={setIcon}
+              trigger={
+                <button
+                  className="p-1 rounded hover:bg-muted"
+                  title="Alterar ícone"
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  draggable={false}
+                >
+                  <Icon className="w-4 h-4 text-primary/80" />
+                </button>
+              }
+            />
+            <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
+            <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">programa</Badge>
           </div>
+          {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
         </div>
       );
     }
+
     const FolderIconResolved = resolveMenuIcon((node as any).iconName) || Folder;
     return (
-      <div key={key}>
+      <div key={key} className="relative">
+        {showBefore && <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
         <div
-          draggable
-          onDragStart={(e) => {
-            setDragging({ kind: "node", tree, path });
-            e.dataTransfer.effectAllowed = "move";
-          }}
-          onDragOver={(e) => dragging && e.preventDefault()}
-          onDrop={(e) => onDropOn(tree, path, e)}
-          className="flex items-center gap-1.5 py-2 px-2 rounded-lg hover:bg-muted/40 group border border-dashed border-transparent hover:border-primary/30"
+          {...dragHandlers}
+          className={`flex items-center gap-1.5 py-2 px-2 rounded-lg group border cursor-grab active:cursor-grabbing transition ${
+            showInside
+              ? "border-primary bg-primary/10 ring-2 ring-primary/40"
+              : "border-dashed border-transparent hover:bg-muted/40 hover:border-primary/30"
+          }`}
           style={{ marginLeft: depth * 16 }}
         >
-          <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 cursor-grab hidden sm:block" />
-          <button onClick={() => toggle(tree, path)} className="p-1 rounded hover:bg-muted">
+          <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 shrink-0" />
+          <button
+            onClick={(e) => { e.stopPropagation(); toggle(tree, path); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            draggable={false}
+            className="p-1 rounded hover:bg-muted"
+          >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
           <MenuIconPicker
@@ -525,6 +573,8 @@ export default function MenuCustomizacao() {
                 className="p-1 rounded hover:bg-muted"
                 title="Alterar ícone da pasta"
                 onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                draggable={false}
               >
                 <FolderIconResolved className="w-4 h-4 text-primary" />
               </button>
@@ -541,19 +591,34 @@ export default function MenuCustomizacao() {
                 if (e.key === "Escape") setRenaming(null);
               }}
               className="h-8 text-sm flex-1"
+              onMouseDown={(e) => e.stopPropagation()}
             />
           ) : (
             <span className="text-sm font-medium flex-1 truncate">{node.title}</span>
           )}
           <Badge variant="secondary" className="text-[10px]">{node.children.length}</Badge>
-          <div className="flex gap-0.5 flex-wrap justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => startRename(tree, path, node.title)} title="Renomear"><Pencil className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => addContainer(tree, path)} title="Nova subpasta"><FolderPlus className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, -1)} title="Subir"><ArrowUp className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6" onClick={() => move(tree, path, 1)} title="Descer"><ArrowDown className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => outdent(tree, path)} disabled={path.length <= 1} title="Sair"><ArrowLeft className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 hidden sm:inline-flex" onClick={() => indent(tree, path)} title="Aninhar"><ArrowRight className="w-3.5 h-3.5" /></Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 text-destructive" onClick={() => setConfirmDelete({ tree, path })} title="Excluir pasta"><Trash2 className="w-3.5 h-3.5" /></Button>
+          <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
+            <Button
+              size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6"
+              onMouseDown={(e) => e.stopPropagation()}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); startRename(tree, path, node.title); }}
+              title="Renomear"
+            ><Pencil className="w-3.5 h-3.5" /></Button>
+            <Button
+              size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6"
+              onMouseDown={(e) => e.stopPropagation()}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); addContainer(tree, path); }}
+              title="Nova subpasta"
+            ><FolderPlus className="w-3.5 h-3.5" /></Button>
+            <Button
+              size="icon" variant="ghost" className="h-8 w-8 md:h-6 md:w-6 text-destructive"
+              onMouseDown={(e) => e.stopPropagation()}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete({ tree, path }); }}
+              title="Excluir pasta"
+            ><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
         </div>
         {isExpanded && (
@@ -561,27 +626,32 @@ export default function MenuCustomizacao() {
             {node.children.map((c, i) => renderNode(tree, c, [...path, i], depth + 1))}
             {node.children.length === 0 && (
               <div
-                onDragOver={(e) => dragging && e.preventDefault()}
-                onDrop={(e) => onDropOn(tree, path, e)}
-                className="text-xs text-muted-foreground italic py-3 px-3 border border-dashed rounded-lg my-1 text-center"
+                onDragOver={(e) => { if (dragging) { e.preventDefault(); e.stopPropagation(); setDropHint({ tree, path, pos: "inside" }); } }}
+                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(tree); }}
+                className={`text-xs italic py-3 px-3 border-2 border-dashed rounded-lg my-1 text-center transition ${
+                  showInside ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground"
+                }`}
                 style={{ marginLeft: (depth + 1) * 16 }}
               >
-                Arraste programas ou pastas aqui
+                Solte aqui dentro desta pasta
               </div>
             )}
           </div>
         )}
+        {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
       </div>
     );
   };
 
   const renderTreeCard = (tree: TreeKey, title: string, icon: any, roots: CustomNode[]) => {
     const Icon = icon;
+    const endActive =
+      dragging && dropHint && dropHint.tree === tree && dropHint.path === null;
     return (
       <Card
-        className="p-0 overflow-hidden border-2 flex flex-col"
-        onDragOver={(e) => dragging && e.preventDefault()}
-        onDrop={(e) => onDropOn(tree, null, e)}
+        className={`p-0 overflow-hidden border-2 flex flex-col transition ${
+          dragging ? "border-primary/30" : ""
+        }`}
       >
         <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-b bg-muted/40">
           <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base min-w-0">
@@ -596,11 +666,20 @@ export default function MenuCustomizacao() {
         <ScrollArea className="h-[50vh] lg:h-[62vh]">
           <div className="p-2 sm:p-3">
             {roots.map((r, i) => renderNode(tree, r, [i], 0))}
-            {roots.length === 0 && (
-              <div className="text-sm text-muted-foreground text-center py-10 border-2 border-dashed rounded-lg">
-                Vazio — adicione programas aqui.
-              </div>
-            )}
+            {/* End-of-list drop zone */}
+            <div
+              onDragOver={(e) => { if (dragging) { e.preventDefault(); e.stopPropagation(); setDropHint({ tree, path: null, pos: "end" }); } }}
+              onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(tree); }}
+              className={`mt-2 rounded-lg border-2 border-dashed py-4 text-center text-xs transition ${
+                endActive ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground/60"
+              }`}
+            >
+              {roots.length === 0
+                ? "Solte um programa aqui para começar"
+                : endActive
+                  ? "Solte no final da lista"
+                  : "— fim —"}
+            </div>
           </div>
         </ScrollArea>
       </Card>
@@ -623,7 +702,7 @@ export default function MenuCustomizacao() {
           className="h-9 text-sm"
         />
         <p className="text-[11px] text-muted-foreground mt-2 hidden sm:block">
-          Arraste para um dos menus, ou toque nos botões <strong>+ Menu</strong> / <strong>+ Admin</strong>.
+          Arraste até um dos menus (a linha azul mostra onde vai cair) ou toque em <strong>+ Menu</strong> / <strong>+ Admin</strong>.
         </p>
       </div>
       <ScrollArea className="h-[50vh] lg:h-[62vh]">
@@ -646,11 +725,16 @@ export default function MenuCustomizacao() {
                     <div
                       key={p.id}
                       draggable
-                      onDragStart={() => setDragging({ kind: "program", programId: p.id })}
-                      className="flex items-center gap-2 py-2 px-2 rounded-md border bg-background hover:bg-primary/5 hover:border-primary/40 transition-colors"
+                      onDragStart={(e) => {
+                        setDragging({ kind: "program", programId: p.id });
+                        e.dataTransfer.effectAllowed = "copy";
+                        try { e.dataTransfer.setData("text/plain", p.id); } catch { /* noop */ }
+                      }}
+                      onDragEnd={() => clearDrag()}
+                      className="flex items-center gap-2 py-2 px-2 rounded-md border bg-background hover:bg-primary/5 hover:border-primary/40 transition-colors cursor-grab active:cursor-grabbing"
                       title={p.title}
                     >
-                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0 hidden sm:block cursor-grab" />
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <Icon className="w-4 h-4 text-primary shrink-0" />
                       <span className="text-xs sm:text-sm flex-1 truncate">{p.title}</span>
                       <div className="flex gap-1 shrink-0">
@@ -693,8 +777,8 @@ export default function MenuCustomizacao() {
               <Folder className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Personalizar Menus
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl">
-              Organize o <strong>Menu principal</strong> (lateral) e o <strong>Admin (rodapé)</strong>.
-              Arraste no desktop ou use os botões <strong>+ Menu</strong> / <strong>+ Admin</strong> no celular.
+              Arraste itens entre <strong>Menu principal</strong> e <strong>Admin (rodapé)</strong>.
+              Uma linha azul indica onde o item será solto; solte sobre uma pasta para colocar dentro dela.
             </p>
           </div>
           <div className="flex gap-2 flex-wrap w-full sm:w-auto">
