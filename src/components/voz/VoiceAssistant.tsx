@@ -110,7 +110,7 @@ export default function VoiceAssistant() {
         .select("estabelecimento_id").eq("auth_user_id", u.user.id).maybeSingle();
       if (usuario?.estabelecimento_id) {
         const { data: rels } = await supabase.from("relatorios_voz")
-          .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo")
+          .select("id, nome, grupo, descricao, prompt_geracao, tipo_saida, aliases, ativo, tipo_fonte, tabela_base, api_endpoint_id, filtros_disponiveis, campos_exibicao")
           .eq("estabelecimento_id", usuario.estabelecimento_id)
           .eq("ativo", true);
         setRelatorios((rels as any) || []);
