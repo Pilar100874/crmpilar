@@ -174,8 +174,11 @@ export default function MenuCustomizacao() {
 
   const setTree = (tree: TreeKey, updater: (roots: CustomNode[]) => CustomNode[]) => {
     if (tree === "main") setMainRoots((r) => updater(r));
-    else setAdminRoots((r) => updater(r));
+    else if (tree === "admin") setAdminRoots((r) => updater(r));
+    else if (tree === "user") setUserRoots((r) => updater(r));
+    else setSystemRoots((r) => updater(r));
   };
+
 
   const mutate = (tree: TreeKey, fn: (roots: CustomNode[]) => void) => {
     if (!isAdmin) {
