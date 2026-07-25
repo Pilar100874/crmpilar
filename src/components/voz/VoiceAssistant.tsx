@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { matchRotaPorFala } from "@/lib/voz/rotasSistema";
 
 type Config = {
   wake_word_ativo: boolean;
@@ -312,6 +313,16 @@ export default function VoiceAssistant() {
   const processarTexto = async (texto: string) => {
     setProcessing(true);
     try {
+      // 1) Match local por título de tela — abre instantaneamente sem chamar IA
+      const rotaMatch = matchRotaPorFala(texto);
+      if (rotaMatch) {
+        const resposta = `Abrindo ${rotaMatch.titulo}.`;
+        setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        if (cfg.responder_por_voz) falar(resposta);
+        setTimeout(() => { navigate(rotaMatch.path); setOpen(false); }, 350);
+        return;
+      }
+
       const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
         body: { transcricao: texto, messages: history.slice(-4).flatMap((h) => [
           { role: "user", content: h.user }, { role: "assistant", content: h.assistant },
