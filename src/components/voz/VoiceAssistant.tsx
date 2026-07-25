@@ -183,7 +183,11 @@ export default function VoiceAssistant() {
   const wakeRecogRef = useRef<any>(null);
   const dictationRef = useRef<any>(null);
   const shouldWakeRef = useRef(false);
+  const pendingDictationRef = useRef(false);
+  const dictationStartTimerRef = useRef<number | null>(null);
+  const requestDictationRef = useRef<() => void>(() => {});
   const finalTranscriptRef = useRef("");
+  const liveTranscriptRef = useRef("");
 
   const hasWebSpeech = useMemo(
     () => typeof window !== "undefined" &&
@@ -274,8 +278,8 @@ export default function VoiceAssistant() {
       setRelatorioAtual(null);
       setResultadoRelatorio("");
       setOpen(true);
-      startDictation();
-    }, 200);
+      requestDictationRef.current();
+    }, 250);
   }
 
   const stopWake = useCallback(() => {
@@ -302,10 +306,9 @@ export default function VoiceAssistant() {
           const txt = e.results[i][0]?.transcript || "";
           if (textoTemWake(txt)) {
             shouldWakeRef.current = false;
-            try { rec.stop(); } catch {}
-            wakeRecogRef.current = null;
             setWakeListening(false);
             abrirPainelPorWake();
+            try { rec.stop(); } catch {}
             return;
           }
         }
@@ -341,21 +344,16 @@ export default function VoiceAssistant() {
   }, [cfg.wake_word_ativo, cfg.wake_word, wakeUnavailable, isRecording, processing, startWake, stopWake]);
 
   // ---------- Ditado (Web Speech nativo, transcrição em tempo real) ----------
-  const startDictation = useCallback(() => {
+  const startDictationNow = useCallback(() => {
     if (isRecording || processing) return;
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       toast.error("Seu navegador não suporta reconhecimento de voz. Use o Chrome ou Edge.");
       return;
     }
-    // libera o wake antes de abrir o ditado
-    shouldWakeRef.current = false;
-    try { wakeRecogRef.current?.abort?.(); } catch {}
-    try { wakeRecogRef.current?.stop?.(); } catch {}
-    wakeRecogRef.current = null;
-    setWakeListening(false);
 
     finalTranscriptRef.current = "";
+    liveTranscriptRef.current = "";
     setInterimText("");
     try {
       const rec = new SR();
@@ -370,7 +368,8 @@ export default function VoiceAssistant() {
           if (r.isFinal) finalTranscriptRef.current += r[0].transcript + " ";
           else interim += r[0].transcript;
         }
-        setInterimText((finalTranscriptRef.current + interim).trim() || "Ouvindo…");
+        liveTranscriptRef.current = (finalTranscriptRef.current + interim).trim();
+        setInterimText(liveTranscriptRef.current || "Ouvindo…");
       };
       rec.onerror = (ev: any) => {
         setIsRecording(false);
@@ -381,19 +380,66 @@ export default function VoiceAssistant() {
       rec.onend = () => {
         setIsRecording(false);
         dictationRef.current = null;
-        const texto = finalTranscriptRef.current.trim();
+        const texto = finalTranscriptRef.current.trim() || liveTranscriptRef.current.trim();
         setInterimText("");
         if (texto) processarTexto(texto);
       };
       rec.start();
       dictationRef.current = rec;
-    } catch {
+    } catch (e: any) {
       setIsRecording(false);
+      const erro = String(e?.name || e?.message || "");
+      if (erro.includes("InvalidState")) {
+        pendingDictationRef.current = true;
+        if (dictationStartTimerRef.current) window.clearTimeout(dictationStartTimerRef.current);
+        dictationStartTimerRef.current = window.setTimeout(() => {
+          dictationStartTimerRef.current = null;
+          if (!pendingDictationRef.current) return;
+          pendingDictationRef.current = false;
+          startDictationNow();
+        }, 650);
+        return;
+      }
       toast.error("Não consegui iniciar o microfone.");
     }
   }, [isRecording, processing]);
 
+  const requestDictation = useCallback(() => {
+    if (isRecording || processing) return;
+    pendingDictationRef.current = true;
+    shouldWakeRef.current = false;
+
+    const tinhaWakeAtivo = Boolean(wakeRecogRef.current);
+    try { wakeRecogRef.current?.abort?.(); } catch {}
+    try { wakeRecogRef.current?.stop?.(); } catch {}
+    setWakeListening(false);
+
+    if (dictationStartTimerRef.current) window.clearTimeout(dictationStartTimerRef.current);
+    dictationStartTimerRef.current = window.setTimeout(() => {
+      dictationStartTimerRef.current = null;
+      if (!pendingDictationRef.current) return;
+      pendingDictationRef.current = false;
+      wakeRecogRef.current = null;
+      startDictationNow();
+    }, tinhaWakeAtivo ? 650 : 120);
+  }, [isRecording, processing, startDictationNow]);
+
+  useEffect(() => {
+    requestDictationRef.current = requestDictation;
+    return () => {
+      if (dictationStartTimerRef.current) {
+        window.clearTimeout(dictationStartTimerRef.current);
+        dictationStartTimerRef.current = null;
+      }
+    };
+  }, [requestDictation]);
+
   const stopDictation = () => {
+    pendingDictationRef.current = false;
+    if (dictationStartTimerRef.current) {
+      window.clearTimeout(dictationStartTimerRef.current);
+      dictationStartTimerRef.current = null;
+    }
     try { dictationRef.current?.stop?.(); } catch {}
     setIsRecording(false);
   };
@@ -592,30 +638,39 @@ export default function VoiceAssistant() {
     } catch {}
   };
 
-  // Push-to-talk com barra de espaço enquanto painel aberto (segurar para falar)
+  // Espaço global: abre o Pilar e inicia/paralisa o ditado para navegar por voz.
   useEffect(() => {
-    if (!open) return;
     const isTyping = (t: EventTarget | null) =>
       t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement ||
       (t instanceof HTMLElement && t.isContentEditable);
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Escape") { setOpen(false); return; }
+      if (e.code === "Escape" && open) { setOpen(false); return; }
       if (e.code !== "Space" || e.repeat || isTyping(e.target)) return;
-      if (isRecording || processing) return;
       e.preventDefault();
-      startDictation();
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || isTyping(e.target)) return;
-      if (isRecording) { e.preventDefault(); stopDictation(); }
+      if (processing) return;
+      if (isRecording) {
+        stopDictation();
+        return;
+      }
+      if (!open) {
+        setShowConfig(false);
+        setHistory([]);
+        setAmbiguas(null);
+        setInterimText("");
+        setManualText("");
+        setRelatorioMode(null);
+        setGrupoSelecionado(null);
+        setRelatorioAtual(null);
+        setResultadoRelatorio("");
+        setOpen(true);
+      }
+      requestDictation();
     };
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
     };
-  }, [open, isRecording, processing, startDictation]);
+  }, [open, isRecording, processing, requestDictation]);
 
   // Sempre abre limpo, na aba do chat
   const abrirLimpo = useCallback(() => {
@@ -916,7 +971,7 @@ export default function VoiceAssistant() {
                     />
                     <Button
                       size="icon"
-                      onClick={() => { if (isRecording) stopDictation(); else startDictation(); }}
+                      onClick={() => { if (isRecording) stopDictation(); else requestDictation(); }}
                       disabled={processing}
                       className={cn(
                         "h-12 w-12 rounded-full shrink-0",
@@ -935,7 +990,7 @@ export default function VoiceAssistant() {
                     </Button>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>Segure <kbd className="px-1 rounded bg-muted">espaço</kbd> para falar</span>
+                    <span>Pressione <kbd className="px-1 rounded bg-muted">espaço</kbd> para falar/parar</span>
                     <span className="flex items-center gap-1">
                       {wakeListening && <><span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /> escuta ativa</>}
                     </span>
