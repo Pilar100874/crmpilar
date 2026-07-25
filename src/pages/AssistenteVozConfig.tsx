@@ -150,7 +150,14 @@ export default function AssistenteVozConfig() {
     if (error) { toast.error(error.message); return; }
     toast.success("Salvo");
     setEditing(null);
-    carregar();
+    // Fix Radix: body pode ficar com pointer-events:none quando dialogs fecham após await
+    setTimeout(() => {
+      if (document.body.style.pointerEvents === "none") {
+        document.body.style.pointerEvents = "";
+      }
+      document.body.removeAttribute("data-scroll-locked");
+      carregar();
+    }, 150);
   };
 
   const salvarComando = async () => {
