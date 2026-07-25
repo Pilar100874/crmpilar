@@ -503,7 +503,7 @@ export default function MenuCustomizacao() {
   // Human-friendly summary of where the drop will land, per tree.
   const getDropSummary = (tree: TreeKey): { text: string; kind: "before" | "after" | "inside" | "end" } | null => {
     if (!dragging || !dropHint || dropHint.tree !== tree) return null;
-    const roots = tree === "main" ? mainRoots : adminRoots;
+    const roots = tree === "main" ? mainRoots : tree === "admin" ? adminRoots : tree === "user" ? userRoots : systemRoots;
     if (dropHint.path === null) return { text: "no final da lista", kind: "end" };
     const target = getNode(roots, dropHint.path);
     const name =
