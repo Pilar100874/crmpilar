@@ -14,8 +14,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Pencil, Trash2, Mic, Sparkles, FileBarChart } from "lucide-react";
+import { Plus, Pencil, Trash2, Mic, Sparkles, FileBarChart, X } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 type Relatorio = {
