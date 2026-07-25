@@ -160,6 +160,38 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
     return { error: 'Vehicle not found', status: 404 };
   }
 
+  // Fallback: se velocidade não veio ou veio 0, calcula pela posição anterior
+  let velocidadeFinal = payload.velocidade || 0;
+  const dataHoraAtual = payload.dataHora || new Date().toISOString();
+  if (!payload.velocidade || payload.velocidade === 0) {
+    const { data: ultima } = await supabase
+      .from('veiculo_posicoes')
+      .select('lat, lng, data_hora')
+      .eq('veiculo_id', veiculoInfo.id)
+      .order('data_hora', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (ultima) {
+      const dtMs = new Date(dataHoraAtual).getTime() - new Date(ultima.data_hora).getTime();
+      if (dtMs > 2000 && dtMs < 15 * 60 * 1000) {
+        // Haversine (metros)
+        const R = 6371000;
+        const toRad = (v: number) => (v * Math.PI) / 180;
+        const dLat = toRad(payload.lat - ultima.lat);
+        const dLng = toRad(payload.lng - ultima.lng);
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRad(ultima.lat)) * Math.cos(toRad(payload.lat)) * Math.sin(dLng / 2) ** 2;
+        const dist = 2 * R * Math.asin(Math.sqrt(a));
+        // Ignora ruído de GPS (< 8 m)
+        if (dist >= 8) {
+          const kmh = (dist / (dtMs / 1000)) * 3.6;
+          if (kmh < 250) velocidadeFinal = kmh;
+        }
+      }
+    }
+  }
+
   // Insert position
   const { data: posicao, error: posicaoError } = await supabase
     .from('veiculo_posicoes')
@@ -167,9 +199,10 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
       veiculo_id: veiculoInfo.id,
       lat: payload.lat,
       lng: payload.lng,
-      velocidade: payload.velocidade || 0,
+      velocidade: velocidadeFinal,
       direcao: payload.direcao,
-      data_hora: payload.dataHora || new Date().toISOString()
+      ignicao: typeof payload.ignicao === 'boolean' ? payload.ignicao : null,
+      data_hora: dataHoraAtual
     })
     .select()
     .single();
