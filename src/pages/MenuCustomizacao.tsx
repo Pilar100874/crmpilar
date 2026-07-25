@@ -716,8 +716,12 @@ export default function MenuCustomizacao() {
             <div
               onDragOver={(e) => { if (dragging) { e.preventDefault(); e.stopPropagation(); setDropHint({ tree, path: null, pos: "end" }); } }}
               onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(tree); }}
-              className={`mt-2 rounded-lg border-2 border-dashed py-4 text-center text-xs transition ${
-                endActive ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground/60"
+              className={`mt-2 rounded-lg border-2 border-dashed py-4 text-center text-xs font-medium transition ${
+                endActive
+                  ? "border-primary bg-primary/15 text-primary ring-4 ring-primary/20 animate-pulse"
+                  : dragging
+                    ? "border-primary/40 bg-primary/5 text-primary/70"
+                    : "border-transparent text-muted-foreground/60"
               }`}
             >
               {roots.length === 0
