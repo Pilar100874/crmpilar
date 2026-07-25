@@ -243,12 +243,8 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "Admin Config", title: "Configurações", url: "/config", icon: Settings },
       { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Brain },
-      { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
-      { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
-      { id: "Admin Macros", title: "Macros", url: "/macros", icon: Zap },
-      { id: "Admin Telas Customizadas", title: "Tela Customizada", url: "/admin/telas-customizadas", icon: LucideIcons.LayoutGrid },
-      { id: "Admin Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen },
       { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
+
     ],
   },
 ];
