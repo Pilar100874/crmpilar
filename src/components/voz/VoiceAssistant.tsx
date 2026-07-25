@@ -36,12 +36,25 @@ const GATILHOS_RELATORIOS = [
 // Frases de navegação de histórico (voltar / avançar)
 const GATILHOS_VOLTAR = [
   "voltar", "volta", "voltar tela", "voltar para tela anterior",
-  "tela anterior", "pagina anterior", "página anterior", "voltar pagina",
+  "voltar para a tela anterior", "ir para tela anterior",
+  "ir para a tela anterior", "tela anterior", "pagina anterior",
+  "página anterior", "voltar pagina", "voltar página",
+  "voltar para pagina anterior", "voltar para página anterior",
+  "voltar uma tela", "voltar uma pagina", "voltar uma página",
+  "retornar", "retornar tela", "retornar para tela anterior",
+  "retornar para a tela anterior", "ir para trás", "voltar atrás",
 ];
 const GATILHOS_AVANCAR = [
   "avancar", "avançar", "avanca", "avança", "proxima tela", "próxima tela",
-  "tela posterior", "voltar para tela posterior", "pagina posterior",
-  "página posterior", "ir para frente", "avancar tela", "avançar tela",
+  "próxima página", "proxima pagina", "tela posterior",
+  "voltar para tela posterior", "ir para tela posterior",
+  "ir para a tela posterior", "pagina posterior", "página posterior",
+  "ir para frente", "avancar tela", "avançar tela",
+  "avançar uma tela", "avançar uma pagina", "avançar uma página",
+  "ir para próxima tela", "ir para proxima tela", "ir para próxima página",
+  "ir para proxima pagina", "tela seguinte", "pagina seguinte",
+  "página seguinte", "passar tela", "passar pagina", "passar página",
+  "passar para frente", "seguir em frente", "seguir tela",
 ];
 // Gerar PDF do relatório aberto
 const GATILHOS_PDF = [
@@ -394,14 +407,14 @@ export default function VoiceAssistant() {
       const t = norm(texto);
 
       // 0) Navegação de histórico: voltar / avançar
-      if (GATILHOS_VOLTAR.some(g => t === g || t === g + " tela")) {
+      if (GATILHOS_VOLTAR.some(g => t.includes(g))) {
         const resposta = "Voltando para a tela anterior.";
         setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
         if (cfg.responder_por_voz) falar(resposta);
         setTimeout(() => { navigate(-1); setOpen(false); }, 250);
         return;
       }
-      if (GATILHOS_AVANCAR.some(g => t === g || t === g + " tela")) {
+      if (GATILHOS_AVANCAR.some(g => t.includes(g))) {
         const resposta = "Avançando para a próxima tela.";
         setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
         if (cfg.responder_por_voz) falar(resposta);
