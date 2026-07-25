@@ -916,7 +916,7 @@ export function useStudioExecution() {
         const promptLower = (combinedInput || '').toLowerCase();
         const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
         
-        let enrichedPrompt = combinedInput || 'Uma cena bonita';
+        let enrichedPrompt = await revisarTextoUsuarioPT(combinedInput || 'Uma cena bonita');
 
         // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
         const viCheck = await getActiveVisualIdentity(imgEstabId);
