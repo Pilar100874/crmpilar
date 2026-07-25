@@ -57,6 +57,9 @@ const iconFor = (tipo: string) => {
 export default function HistoricoEnviosDialog({ open, onOpenChange, automationId, automationName }: Props) {
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<LogRow[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [detalhe, setDetalhe] = useState<LogRow | null>(null);
+
 
   useEffect(() => {
     if (!open || !automationId) return;
