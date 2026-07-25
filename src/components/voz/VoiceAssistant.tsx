@@ -405,7 +405,6 @@ export default function VoiceAssistant() {
       rec.lang = "pt-BR";
       rec.continuous = true;
       rec.interimResults = true;
-      const target = norm(cfg.wake_word || WAKE_DEFAULT);
 
       rec.onstart = () => { setWakeListening(true); setWakeUnavailable(false); wakeRetriesRef.current = 0; };
       rec.onresult = (e: any) => {
