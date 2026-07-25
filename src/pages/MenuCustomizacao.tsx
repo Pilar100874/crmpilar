@@ -20,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
-import { Lock, LayoutList, PlusCircle } from "lucide-react";
+import { Lock, LayoutList } from "lucide-react";
 import {
   ChevronDown,
   ChevronRight,
@@ -536,7 +536,6 @@ export default function MenuCustomizacao() {
               }
             />
             <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
-            <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">programa</Badge>
           </div>
           {showAfter && <div className="absolute -bottom-0.5 left-0 right-0 h-1 bg-primary rounded-full pointer-events-none z-10" style={{ marginLeft: depth * 16 }} />}
         </div>
@@ -702,7 +701,7 @@ export default function MenuCustomizacao() {
           className="h-9 text-sm"
         />
         <p className="text-[11px] text-muted-foreground mt-2 hidden sm:block">
-          Arraste até um dos menus (a linha azul mostra onde vai cair) ou toque em <strong>+ Menu</strong> / <strong>+ Admin</strong>.
+          Arraste um programa até o menu desejado. A linha azul mostra onde ele vai cair.
         </p>
       </div>
       <ScrollArea className="h-[50vh] lg:h-[62vh]">
@@ -737,26 +736,7 @@ export default function MenuCustomizacao() {
                       <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <Icon className="w-4 h-4 text-primary shrink-0" />
                       <span className="text-xs sm:text-sm flex-1 truncate">{p.title}</span>
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-[10px]"
-                          onClick={() => addProgramInto("main", null, p.id)}
-                          title="Adicionar ao Menu principal"
-                        >
-                          <PlusCircle className="w-3 h-3 sm:mr-1" /> <span className="hidden sm:inline">Menu</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-[10px]"
-                          onClick={() => addProgramInto("admin", null, p.id)}
-                          title="Adicionar ao Admin (rodapé)"
-                        >
-                          <PlusCircle className="w-3 h-3 sm:mr-1" /> <span className="hidden sm:inline">Admin</span>
-                        </Button>
-                      </div>
+
                     </div>
                   );
                 })}
