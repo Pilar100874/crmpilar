@@ -209,6 +209,36 @@ Deno.serve(async (req) => {
       } else if (cmdMatch.tipo_acao === 'comando_tv' && p.comando) {
         acao = { tipo: 'confirmar_comando_tv', comando: p.comando };
         resposta = cmdMatch.resposta_falada || `Confirma o comando "${p.comando}" nas TVs?`;
+      } else if (cmdMatch.tipo_acao === 'abrir_programa' && p.path) {
+        acao = { tipo: 'navegar_para', path: p.path, instrucao: p.instrucao || null };
+        resposta = cmdMatch.resposta_falada || `Abrindo ${p.label || p.path}.`;
+      } else if (cmdMatch.tipo_acao === 'popup_tela' && p.prompt) {
+        // resolve o prompt via IA e devolve pro front mostrar em popup
+        const aiKey = Deno.env.get('LOVABLE_API_KEY');
+        let textoPopup = '';
+        try {
+          const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'google/gemini-3.6-flash',
+              messages: [
+                { role: 'system', content: 'Responda de forma direta e curta em PT-BR, adequada para leitura em voz alta.' },
+                { role: 'user', content: p.prompt },
+              ],
+            }),
+          });
+          const j = await r.json();
+          textoPopup = j?.choices?.[0]?.message?.content || '';
+        } catch {}
+        acao = { tipo: 'popup_tela', titulo: cmdMatch.frase_gatilho, texto: textoPopup, mostrar_grafico: !!p.mostrar_grafico };
+        resposta = cmdMatch.resposta_falada || textoPopup.slice(0, 200);
+      } else if (cmdMatch.tipo_acao === 'conversa') {
+        acao = { tipo: 'iniciar_conversa', contexto: p.contexto || '', provedor: p.provedor || 'interno', resumir: p.resumir !== false };
+        resposta = cmdMatch.resposta_falada || 'Pronto, pode falar. Estou ouvindo.';
+      } else if (cmdMatch.tipo_acao === 'responder') {
+        acao = null;
+        resposta = cmdMatch.resposta_falada || 'Ok.';
       }
       await sb.from('assistente_voz_log').insert({
         auth_user_id: user.id, estabelecimento_id: estabId,
