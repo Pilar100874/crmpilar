@@ -212,6 +212,13 @@ export default function AdsConexoes() {
           <AdsPlatformApps />
         </TabsContent>
       </Tabs>
+
+      <PlatformConnectWizard
+        open={!!wizardPlatform}
+        onOpenChange={(v) => !v && setWizardPlatform(null)}
+        platform={wizardPlatform}
+        onChanged={loadStatus}
+      />
     </div>
   );
 }
