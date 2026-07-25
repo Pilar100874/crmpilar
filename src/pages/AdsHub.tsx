@@ -477,37 +477,46 @@ const AdsHub: React.FC = () => {
                 return menuButton;
               })()}
               
-              {tabItems.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
-                
-                const menuButton = (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
-                      isActive && "is-active",
-                      isMenuCollapsed && "justify-center"
-                    )}
-                  >
-                    <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                      {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
-                    </span>
-                    {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
-                  </button>
-                );
-                if (isMenuCollapsed) {
-                  return (
-                    <Tooltip key={tab.id}>
-                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                      <TooltipContent side="right">{tab.label}</TooltipContent>
-                    </Tooltip>
-                  );
-                }
-                return menuButton;
-              })}
+              {tabGroups.map((group) => (
+                <div key={group.id} className="mt-2 first:mt-0">
+                  {!isMenuCollapsed && (
+                    <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {group.label}
+                    </div>
+                  )}
+                  {group.items.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
+                    const menuButton = (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                          "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
+                          isActive && "is-active",
+                          isMenuCollapsed && "justify-center"
+                        )}
+                      >
+                        <span className={cn("shrink-0", !isActive && "opacity-70")}>
+                          {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                        </span>
+                        {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
+                      </button>
+                    );
+                    if (isMenuCollapsed) {
+                      return (
+                        <Tooltip key={tab.id}>
+                          <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
+                          <TooltipContent side="right">{tab.label}</TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+                    return menuButton;
+                  })}
+                </div>
+              ))}
+
             </TooltipProvider>
           </div>
 
