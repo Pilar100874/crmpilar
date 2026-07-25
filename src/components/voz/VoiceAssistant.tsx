@@ -43,7 +43,6 @@ const GATILHOS_VOLTAR = [
   "voltar uma tela", "voltar uma pagina", "voltar uma página",
   "retornar", "retornar tela", "retornar para tela anterior",
   "retornar para a tela anterior", "ir para trás", "voltar atrás",
-  "pagina anterior", "página anterior",
 ];
 const GATILHOS_AVANCAR = [
   "avancar", "avançar", "avanca", "avança", "proxima tela", "próxima tela",
