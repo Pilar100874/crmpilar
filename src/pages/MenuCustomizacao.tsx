@@ -393,9 +393,17 @@ export default function MenuCustomizacao() {
   const renderNode = (tree: TreeKey, node: CustomNode, path: Path, depth: number) => {
     const key = pathKey(tree, path);
     const isExpanded = expanded[key] ?? depth < 1;
+    const setIcon = (iconName: string | null) => {
+      mutate(tree, (roots) => {
+        const n = getNode(roots, path);
+        if (iconName) (n as any).iconName = iconName;
+        else delete (n as any).iconName;
+      });
+    };
     if (node.kind === "program") {
       const p = programs.get(node.programId);
-      const Icon = p?.icon || FileText;
+      const OverrideIcon = resolveMenuIcon((node as any).iconName);
+      const Icon = OverrideIcon || p?.icon || FileText;
       return (
         <div
           key={key}
@@ -408,7 +416,19 @@ export default function MenuCustomizacao() {
           style={{ marginLeft: depth * 20 }}
         >
           <GripVertical className="w-3.5 h-3.5 text-muted-foreground opacity-60 cursor-grab" />
-          <Icon className="w-4 h-4 text-primary/80" />
+          <MenuIconPicker
+            value={(node as any).iconName ?? null}
+            onChange={setIcon}
+            trigger={
+              <button
+                className="p-0.5 rounded hover:bg-muted"
+                title="Alterar ícone"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Icon className="w-4 h-4 text-primary/80" />
+              </button>
+            }
+          />
           <span className="text-sm flex-1 truncate">{p?.title || `(programa ausente: ${node.programId})`}</span>
           <Badge variant="outline" className="text-[10px]">programa</Badge>
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
@@ -420,6 +440,7 @@ export default function MenuCustomizacao() {
         </div>
       );
     }
+    const FolderIconResolved = resolveMenuIcon((node as any).iconName) || Folder;
     return (
       <div key={key}>
         <div
