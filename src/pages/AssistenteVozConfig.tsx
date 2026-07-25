@@ -66,13 +66,16 @@ export default function AssistenteVozConfig() {
   const rotasFiltradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
     if (!q) return ROTAS_SISTEMA;
-    return ROTAS_SISTEMA.filter(
-      (r) =>
+    return ROTAS_SISTEMA.filter((r) => {
+      const tCustom = ((config.frases_customizadas || {})[`rota:${r.path}:titulo`] as string[])?.[0] || "";
+      return (
         r.titulo.toLowerCase().includes(q) ||
+        tCustom.toLowerCase().includes(q) ||
         r.path.toLowerCase().includes(q) ||
         (r.aliases || []).some((a) => a.toLowerCase().includes(q)) ||
-        (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q)),
-    );
+        (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q))
+      );
+    });
   }, [busca, config.frases_customizadas]);
 
   return (
