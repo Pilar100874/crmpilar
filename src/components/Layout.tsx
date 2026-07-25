@@ -632,10 +632,6 @@ export default function Layout({ children }: LayoutProps) {
     navigate("/");
   };
 
-  if (!user || isLoading) {
-    return null;
-  }
-
   // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
   useEffect(() => {
@@ -645,6 +641,11 @@ export default function Layout({ children }: LayoutProps) {
     fetchRemoteCustomization().then(() => setCustomizedItems(applyMenuCustomization(menuItems)));
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
+
+  if (!user || isLoading) {
+    return null;
+  }
+
 
   // Filtra os menus baseado nas permissões
   const visibleMenus = customizedItems
