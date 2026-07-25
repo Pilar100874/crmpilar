@@ -774,6 +774,10 @@ export default function VoiceAssistant() {
     }
   };
 
+  useEffect(() => {
+    processarTextoRef.current = processarTexto;
+  }, [processarTexto]);
+
   const falar = async (texto: string) => {
     // 1) tenta TTS nativa (rápido, gratuito)
     try {
@@ -818,8 +822,8 @@ export default function VoiceAssistant() {
       e.stopPropagation();
       if (e.repeat) return;
       if (processing) return;
-      spaceHeldRef.current = true;
       if (isRecording) {
+        stopDictation();
         if (!open) setOpen(true);
         return;
       }
@@ -835,19 +839,12 @@ export default function VoiceAssistant() {
         setResultadoRelatorio("");
         setOpen(true);
       }
-      requestDictation({ holdToTalk: true, source: "space" });
+      requestDictation({ holdToTalk: false, source: "space" });
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space" || isTyping(e.target)) return;
       e.preventDefault();
       e.stopPropagation();
-      if (!spaceHeldRef.current) return;
-      spaceHeldRef.current = false;
-      const elapsed = Date.now() - dictationStartedAtRef.current;
-      const delay = Math.max(0, 900 - elapsed);
-      window.setTimeout(() => {
-        if (!spaceHeldRef.current && dictationRef.current) stopDictation();
-      }, delay);
     };
     window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("keyup", onKeyUp, true);
