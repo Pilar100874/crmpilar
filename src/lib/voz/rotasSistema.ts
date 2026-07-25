@@ -155,6 +155,113 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/prospeccao-empresas", titulo: "Prospecção de Empresas", aliases: ["prospeccao"] },
   { path: "/prospeccao-claude-code", titulo: "Prospecção Claude Code" },
   { path: "/bot-builder", titulo: "Bot Builder", aliases: ["construtor de bots"] },
+
+  // ============ Sub-telas: Controle de Veículos ============
+  { path: "/controle-veiculos", titulo: "Controle de Veículos - Dashboard", aliases: ["dashboard controle de veiculos", "painel controle de veiculos"] },
+  { path: "/controle-veiculos/veiculos", titulo: "Controle de Veículos - Veículos", aliases: ["cadastro de veiculos", "veiculos controle", "veiculos do controle"] },
+  { path: "/controle-veiculos/motoristas", titulo: "Controle de Veículos - Motoristas", aliases: ["cadastro de motoristas", "motoristas"] },
+  { path: "/controle-veiculos/saida", titulo: "Controle de Veículos - Saída", aliases: ["saida de veiculo", "registrar saida de veiculo"] },
+  { path: "/controle-veiculos/entrada", titulo: "Controle de Veículos - Entrada", aliases: ["entrada de veiculo", "registrar entrada de veiculo"] },
+  { path: "/controle-veiculos/movimentacoes", titulo: "Controle de Veículos - Movimentações", aliases: ["movimentacoes de veiculos"] },
+  { path: "/controle-veiculos/defeitos", titulo: "Controle de Veículos - Defeitos", aliases: ["defeitos de veiculos"] },
+  { path: "/controle-veiculos/tipos-defeito", titulo: "Controle de Veículos - Tipos de Defeito", aliases: ["tipos de defeito"] },
+  { path: "/controle-veiculos/manutencao", titulo: "Controle de Veículos - Manutenção", aliases: ["manutencao de veiculos"] },
+  { path: "/controle-veiculos/vistoria-config", titulo: "Controle de Veículos - Configuração de Vistoria", aliases: ["config vistoria", "configuracao de vistoria"] },
+  { path: "/controle-veiculos/ajudantes", titulo: "Controle de Veículos - Ajudantes", aliases: ["ajudantes de veiculos"] },
+  { path: "/controle-veiculos/cameras", titulo: "Controle de Veículos - Câmeras", aliases: ["cameras dos veiculos", "cameras controle veiculos"] },
+  { path: "/controle-veiculos/historico-imagens", titulo: "Controle de Veículos - Histórico de Imagens", aliases: ["historico de imagens veiculos"] },
+
+  // ============ Sub-telas: Controle de Visitantes ============
+  { path: "/controle-visitantes/entrada", titulo: "Visitantes - Entrada", aliases: ["entrada de visitantes", "registrar visitante"] },
+  { path: "/controle-visitantes/presentes", titulo: "Visitantes - Presentes", aliases: ["visitantes presentes"] },
+  { path: "/controle-visitantes/autorizacoes", titulo: "Visitantes - Autorizações", aliases: ["autorizacoes de visita"] },
+  { path: "/controle-visitantes/relatorios", titulo: "Visitantes - Relatórios", aliases: ["relatorios de visitantes"] },
+  { path: "/controle-visitantes/visitantes", titulo: "Visitantes - Cadastro de Visitantes", aliases: ["cadastro de visitantes"] },
+  { path: "/controle-visitantes/contatos", titulo: "Visitantes - Contatos", aliases: ["contatos de visitantes"] },
+
+  // ============ Sub-telas: Livro de Ocorrência ============
+  { path: "/livro-ocorrencia/ocorrencias", titulo: "Livro - Ocorrências", aliases: ["ocorrencias da portaria"] },
+  { path: "/livro-ocorrencia/encomendas", titulo: "Livro - Encomendas", aliases: ["encomendas da portaria"] },
+
+  // ============ Sub-telas: Câmeras ============
+  { path: "/cameras/ao-vivo", titulo: "Câmeras Ao Vivo", aliases: ["cameras ao vivo"] },
+  { path: "/cameras/grupos", titulo: "Câmeras - Grupos", aliases: ["grupos de cameras"] },
+  { path: "/cameras/cameras", titulo: "Câmeras - Cadastro", aliases: ["cadastro de cameras"] },
+
+  // ============ Sub-telas: Gerenciador de Telas Remotas (TV Signage) ============
+  { path: "/tv-signage/dispositivos", titulo: "Telas Remotas - Dispositivos", aliases: ["dispositivos das telas remotas", "dispositivos tv signage"] },
+  { path: "/tv-signage/dashboards", titulo: "Telas Remotas - Dashboards", aliases: ["dashboards das telas remotas"] },
+  { path: "/tv-signage/playlists", titulo: "Telas Remotas - Playlists", aliases: ["playlists de telas remotas"] },
+  { path: "/tv-signage/grupos", titulo: "Telas Remotas - Grupos", aliases: ["grupos de telas remotas"] },
+  { path: "/tv-signage/comandos", titulo: "Telas Remotas - Comandos", aliases: ["comandos das telas remotas"] },
+  { path: "/tv-signage/eventos", titulo: "Telas Remotas - Eventos", aliases: ["eventos das telas remotas"] },
+  { path: "/tv-signage/workflows", titulo: "Telas Remotas - Workflows", aliases: ["workflows das telas remotas"] },
+  { path: "/tv-signage/api", titulo: "Telas Remotas - API", aliases: ["api das telas remotas"] },
+
+  // ============ Sub-telas: Ads ============
+  { path: "/ads/campaigns", titulo: "Ads - Campanhas", aliases: ["campanhas de anuncios", "campanhas ads"] },
+  { path: "/ads/reports", titulo: "Ads - Relatórios", aliases: ["relatorios de ads", "relatorios de anuncios"] },
+  { path: "/ads/alerts", titulo: "Ads - Alertas", aliases: ["alertas de ads"] },
+  { path: "/ads/credentials", titulo: "Ads - Conexões", aliases: ["conexoes de ads", "credenciais de ads"] },
+  { path: "/ads/logs", titulo: "Ads - Logs", aliases: ["logs de ads"] },
+  { path: "/ads/automation", titulo: "Ads - Automação", aliases: ["automacao de ads", "automacoes de ads"] },
+  { path: "/ads/scheduler", titulo: "Ads - Agendador", aliases: ["agendador de ads"] },
+  { path: "/ads/platform-apps", titulo: "Ads - Aplicativos de Plataforma", aliases: ["aplicativos de ads"] },
+  { path: "/ads/wizard", titulo: "Ads - Assistente de Configuração", aliases: ["wizard de ads", "assistente ads"] },
+
+  // ============ Sub-telas: E-commerce (loja) ============
+  { path: "/ecommerce/catalogo", titulo: "E-commerce - Catálogo", aliases: ["catalogo", "catalogo da loja", "catalogo ecommerce", "catalogo do ecommerce"] },
+  { path: "/ecommerce/carrinho", titulo: "E-commerce - Carrinho", aliases: ["carrinho da loja"] },
+  { path: "/ecommerce/orcamento", titulo: "E-commerce - Solicitar Orçamento", aliases: ["solicitar orcamento na loja"] },
+  { path: "/ecommerce/wishlist", titulo: "E-commerce - Lista de Desejos", aliases: ["wishlist", "lista de desejos"] },
+  { path: "/ecommerce/checkout", titulo: "E-commerce - Checkout", aliases: ["checkout"] },
+  { path: "/ecommerce/b2b", titulo: "E-commerce - B2B", aliases: ["b2b da loja"] },
+  { path: "/ecommerce/conta", titulo: "E-commerce - Minha Conta", aliases: ["minha conta na loja"] },
+
+  // ============ Sub-telas: E-commerce (configurações) ============
+  { path: "/ecommerce-config/branding", titulo: "E-commerce Config - Branding", aliases: ["branding da loja"] },
+  { path: "/ecommerce-config/conteudos", titulo: "E-commerce Config - Conteúdos", aliases: ["conteudos da loja"] },
+  { path: "/ecommerce-config/anuncios", titulo: "E-commerce Config - Anúncios", aliases: ["anuncios da loja"] },
+  { path: "/ecommerce-config/rodape", titulo: "E-commerce Config - Rodapé", aliases: ["rodape da loja"] },
+  { path: "/ecommerce-config/homepage", titulo: "E-commerce Config - Homepage", aliases: ["homepage da loja"] },
+  { path: "/ecommerce-config/funcionalidades", titulo: "E-commerce Config - Funcionalidades", aliases: ["funcionalidades da loja"] },
+  { path: "/ecommerce-config/volume-pricing", titulo: "E-commerce Config - Preço por Volume", aliases: ["preco por volume"] },
+  { path: "/ecommerce-config/cupons", titulo: "E-commerce Config - Cupons", aliases: ["cupons da loja"] },
+  { path: "/ecommerce-config/b2b", titulo: "E-commerce Config - B2B", aliases: ["config b2b da loja"] },
+  { path: "/ecommerce-config/newsletter", titulo: "E-commerce Config - Newsletter", aliases: ["newsletter da loja"] },
+  { path: "/ecommerce-config/mapa-calor", titulo: "E-commerce Config - Mapa de Calor", aliases: ["mapa de calor da loja"] },
+  { path: "/ecommerce-config/denuncias", titulo: "E-commerce Config - Denúncias", aliases: ["denuncias da loja"] },
+  { path: "/ecommerce-config/lgpd", titulo: "E-commerce Config - LGPD", aliases: ["lgpd da loja"] },
+  { path: "/ecommerce-rules", titulo: "E-commerce - Regras", aliases: ["regras do ecommerce", "regras da loja"] },
+
+  // ============ Sub-telas: Marketing ============
+  { path: "/marketing/auto-video-wizard", titulo: "Marketing - Auto Vídeo Wizard", aliases: ["auto video", "wizard de video"] },
+  { path: "/mensagens-grupo", titulo: "Marketing - Mensagens Pré Definidas", aliases: ["mensagens pre definidas", "mensagens por grupo de produtos"] },
+
+  // ============ Sub-telas: Ponto (extras) ============
+  { path: "/ponto/portal", titulo: "Ponto - Portal do Funcionário", aliases: ["portal do funcionario"] },
+  { path: "/ponto/mapa", titulo: "Ponto - Mapa de Equipes", aliases: ["mapa das equipes de ponto"] },
+  { path: "/ponto/fora-geofence", titulo: "Ponto - Fora da Geofence", aliases: ["fora da geofence"] },
+  { path: "/ponto/qrcode", titulo: "Ponto - QR Code Totem", aliases: ["qr code totem do ponto"] },
+  { path: "/ponto/fechamento", titulo: "Ponto - Fechamento", aliases: ["fechamento do ponto"] },
+  { path: "/ponto/pre-fechamento", titulo: "Ponto - Pré Fechamento", aliases: ["pre fechamento do ponto"] },
+  { path: "/ponto/banco-horas", titulo: "Ponto - Banco de Horas", aliases: ["banco de horas"] },
+  { path: "/ponto/ferias", titulo: "Ponto - Férias", aliases: ["ferias do ponto"] },
+  { path: "/ponto/afd", titulo: "Ponto - AFD", aliases: ["arquivo afd"] },
+  { path: "/ponto/esocial", titulo: "Ponto - eSocial", aliases: ["esocial do ponto"] },
+  { path: "/ponto/importacao", titulo: "Ponto - Importação", aliases: ["importacao de ponto"] },
+  { path: "/ponto/dashboard-executivo", titulo: "Ponto - Dashboard Executivo", aliases: ["dashboard executivo do ponto"] },
+  { path: "/ponto/anomalias", titulo: "Ponto - Anomalias", aliases: ["anomalias do ponto"] },
+  { path: "/ponto/compliance", titulo: "Ponto - Compliance", aliases: ["compliance do ponto"] },
+  { path: "/ponto/sobreaviso", titulo: "Ponto - Sobreaviso", aliases: ["sobreaviso"] },
+  { path: "/ponto/dsr", titulo: "Ponto - DSR", aliases: ["dsr do ponto"] },
+  { path: "/ponto/lgpd", titulo: "Ponto - LGPD", aliases: ["lgpd do ponto"] },
+  { path: "/ponto/acordos-coletivos", titulo: "Ponto - Acordos Coletivos", aliases: ["acordos coletivos"] },
+  { path: "/ponto/compensacao", titulo: "Ponto - Compensação", aliases: ["compensacao do ponto"] },
+  { path: "/ponto/notificacoes", titulo: "Ponto - Notificações", aliases: ["notificacoes do ponto"] },
+  { path: "/ponto/simulador", titulo: "Ponto - Simulador", aliases: ["simulador do ponto"] },
+  { path: "/ponto/predicoes", titulo: "Ponto - Predições", aliases: ["predicoes do ponto"] },
+  { path: "/ponto/manual", titulo: "Ponto - Manual", aliases: ["manual do ponto"] },
 ];
 
 // ---------- Fuzzy matching ----------
