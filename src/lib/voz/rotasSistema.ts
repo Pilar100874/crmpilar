@@ -333,13 +333,24 @@ export function matchRotaComCandidatos(fala: string): {
   escolhida: RotaSistema | null;
   topN: Array<{ rota: RotaSistema; score: number }>;
 } {
+  return matchRotaComCandidatosEm(ROTAS_SISTEMA, fala);
+}
+
+/** Igual ao anterior, mas usa a lista de rotas passada (permite injetar aliases customizados). */
+export function matchRotaComCandidatosEm(
+  rotas: RotaSistema[],
+  fala: string,
+): {
+  escolhida: RotaSistema | null;
+  topN: Array<{ rota: RotaSistema; score: number }>;
+} {
   const falaTokens = tokens(fala);
   if (falaTokens.length === 0) return { escolhida: null, topN: [] };
   const falaNorm = normalizar(fala);
 
   const candidatos: Candidato[] = [];
 
-  for (const rota of ROTAS_SISTEMA) {
+  for (const rota of rotas) {
     const variantes = [rota.titulo, ...(rota.aliases || [])];
     let melhorScoreRota = 0;
     let melhorFonte = "";
@@ -358,15 +369,12 @@ export function matchRotaComCandidatos(fala: string): {
       const compartilhados = candTokens.filter((t) => falaTokens.includes(t)).length;
       score += compartilhados * 25;
 
-      // cobertura do candidato pelos tokens da fala (evita match parcial ruim)
       if (compartilhados > 0 && candTokens.length > 0) {
         const cobertura = compartilhados / candTokens.length;
         score += Math.round(cobertura * 30);
-        // exige cobertura mínima do título quando são mais de 1 token
         if (candTokens.length >= 2 && cobertura < 0.5) score -= 25;
       }
 
-      // penalidade se a fala tem MUITAS palavras extras não usadas
       const naoCasados = falaTokens.filter((t) => !candTokens.includes(t)).length;
       if (naoCasados > 2) score -= naoCasados * 4;
 
@@ -389,9 +397,6 @@ export function matchRotaComCandidatos(fala: string): {
   const primeiro = candidatos[0];
   const segundo = candidatos[1];
 
-  // Regras de precisão:
-  // - score mínimo alto
-  // - margem clara sobre o 2º colocado (evita "similar por engano")
   const MIN_SCORE = 60;
   const MIN_MARGEM = 15;
 

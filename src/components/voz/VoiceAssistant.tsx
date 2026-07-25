@@ -13,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { matchRotaPorFala, matchRotaComCandidatos, type RotaSistema } from "@/lib/voz/rotasSistema";
-import { frasesEfetivas } from "@/lib/voz/frasesGatilho";
+import { matchRotaPorFala, matchRotaComCandidatos, matchRotaComCandidatosEm, ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
+import { frasesEfetivas, rotasEfetivas } from "@/lib/voz/frasesGatilho";
 import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
 
 type Config = {
@@ -176,6 +176,7 @@ export default function VoiceAssistant() {
   const gAvancar = useMemo(() => frasesEfetivas("avancar", frasesCustom), [frasesCustom]);
   const gPdf = useMemo(() => frasesEfetivas("pdf", frasesCustom), [frasesCustom]);
   const gRelatorios = useMemo(() => frasesEfetivas("relatorios", frasesCustom), [frasesCustom]);
+  const rotasCustom = useMemo(() => rotasEfetivas(ROTAS_SISTEMA, frasesCustom), [frasesCustom]);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -568,7 +569,7 @@ export default function VoiceAssistant() {
       }
 
       // 3) Abrir tela por título (match local instantâneo com desambiguação)
-      const { escolhida, topN } = matchRotaComCandidatos(texto);
+      const { escolhida, topN } = matchRotaComCandidatosEm(rotasCustom, texto);
       if (escolhida) {
         const resposta = `Abrindo ${escolhida.titulo}.`;
         setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));

@@ -9,9 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw } from "lucide-react";
-import { ROTAS_SISTEMA } from "@/lib/voz/rotasSistema";
-import { GRUPOS_FRASES, FRASES_PADRAO, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
+import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw, Pencil } from "lucide-react";
+import { ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
+import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
 import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 
@@ -28,6 +28,7 @@ export default function AssistenteVozConfig() {
   const [busca, setBusca] = useState("");
   const [buscaFrase, setBuscaFrase] = useState("");
   const [novaFrase, setNovaFrase] = useState<Record<string, string>>({});
+  const [novoAliasRota, setNovoAliasRota] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -55,6 +56,12 @@ export default function AssistenteVozConfig() {
     else toast.success("Configuração salva");
   };
 
+  const salvarChave = async (chave: string, valores: string[]) => {
+    const dedup = Array.from(new Set(valores.map((s) => s.trim()).filter(Boolean)));
+    const frases_customizadas = { ...(config.frases_customizadas || {}), [chave]: dedup };
+    await salvarConfig({ frases_customizadas });
+  };
+
   const rotasFiltradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
     if (!q) return ROTAS_SISTEMA;
@@ -62,9 +69,10 @@ export default function AssistenteVozConfig() {
       (r) =>
         r.titulo.toLowerCase().includes(q) ||
         r.path.toLowerCase().includes(q) ||
-        (r.aliases || []).some((a) => a.toLowerCase().includes(q)),
+        (r.aliases || []).some((a) => a.toLowerCase().includes(q)) ||
+        (((config.frases_customizadas || {})[`rota:${r.path}`] as string[]) || []).some((a) => a.toLowerCase().includes(q)),
     );
-  }, [busca]);
+  }, [busca, config.frases_customizadas]);
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-4">
@@ -127,31 +135,117 @@ export default function AssistenteVozConfig() {
           </Card>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            {rotasFiltradas.map((r) => (
-              <Card key={r.path} className="p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{r.titulo}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{r.path}</div>
+            {rotasFiltradas.map((r) => {
+              const chaveExtras = `rota:${r.path}`;
+              const chaveRem = `rota:${r.path}:removidos`;
+              const extras: string[] = (config?.frases_customizadas?.[chaveExtras] as string[]) || [];
+              const removidos: string[] = (config?.frases_customizadas?.[chaveRem] as string[]) || [];
+              const padrao = r.aliases || [];
+              const isRemovido = (a: string) => removidos.some((x) => x.toLowerCase() === a.toLowerCase());
+              const inputAtual = novoAliasRota[r.path] || "";
+              const adicionar = async () => {
+                const v = inputAtual.trim();
+                if (!v) return;
+                await salvarChave(chaveExtras, [...extras, v]);
+                // se estava removido, remove da lista de removidos
+                if (isRemovido(v)) {
+                  await salvarChave(chaveRem, removidos.filter((x) => x.toLowerCase() !== v.toLowerCase()));
+                }
+                setNovoAliasRota({ ...novoAliasRota, [r.path]: "" });
+              };
+              const excluirCustom = async (a: string) =>
+                salvarChave(chaveExtras, extras.filter((x) => x !== a));
+              const editarCustom = async (a: string) => {
+                const novo = window.prompt("Editar apelido:", a);
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarChave(chaveExtras, extras.map((x) => (x === a ? v : x)));
+              };
+              const ocultarPadrao = async (a: string) =>
+                salvarChave(chaveRem, [...removidos, a]);
+              const restaurarPadrao = async (a: string) =>
+                salvarChave(chaveRem, removidos.filter((x) => x.toLowerCase() !== a.toLowerCase()));
+              const editarPadrao = async (a: string) => {
+                const novo = window.prompt("Editar apelido (o padrão será ocultado e o novo salvo):", a);
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarChave(chaveRem, [...removidos, a]);
+                await salvarChave(chaveExtras, [...extras, v]);
+              };
+              return (
+                <Card key={r.path} className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{r.titulo}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{r.path}</div>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      <Mic className="w-3 h-3 mr-1" /> voz
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="text-[10px] shrink-0">
-                    <Mic className="w-3 h-3 mr-1" /> voz
-                  </Badge>
-                </div>
-                {r.aliases && r.aliases.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {r.aliases.map((a) => (
-                      <span
-                        key={a}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
-                      >
-                        "{a}"
-                      </span>
-                    ))}
+
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Adicionar apelido…"
+                      value={inputAtual}
+                      onChange={(e) => setNovoAliasRota({ ...novoAliasRota, [r.path]: e.target.value })}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); adicionar(); } }}
+                      className="h-8 text-xs"
+                    />
+                    <Button size="sm" onClick={adicionar} disabled={!inputAtual.trim()}>
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                )}
-              </Card>
-            ))}
+
+                  {(padrao.length > 0 || extras.length > 0) && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {padrao.map((a) => {
+                        const removido = isRemovido(a);
+                        return (
+                          <span
+                            key={`p-${a}`}
+                            className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded ${removido ? "bg-muted line-through text-muted-foreground" : "bg-primary/10 text-primary"}`}
+                          >
+                            "{a}"
+                            <Badge variant="secondary" className="text-[9px] px-1 py-0">padrão</Badge>
+                            {!removido ? (
+                              <>
+                                <button title="Editar" onClick={() => editarPadrao(a)} className="hover:bg-primary/20 rounded p-0.5">
+                                  <Pencil className="w-2.5 h-2.5" />
+                                </button>
+                                <button title="Ocultar" onClick={() => ocultarPadrao(a)} className="hover:bg-destructive/20 rounded p-0.5">
+                                  <XIcon className="w-2.5 h-2.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <button title="Restaurar" onClick={() => restaurarPadrao(a)} className="hover:bg-primary/20 rounded p-0.5">
+                                <RotateCcw className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </span>
+                        );
+                      })}
+                      {extras.map((a) => (
+                        <span
+                          key={`c-${a}`}
+                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-accent/30 text-foreground"
+                        >
+                          "{a}"
+                          <button title="Editar" onClick={() => editarCustom(a)} className="hover:bg-primary/20 rounded p-0.5">
+                            <Pencil className="w-2.5 h-2.5" />
+                          </button>
+                          <button title="Excluir" onClick={() => excluirCustom(a)} className="hover:bg-destructive/20 rounded p-0.5">
+                            <XIcon className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
             {rotasFiltradas.length === 0 && (
               <Card className="p-6 text-center text-sm text-muted-foreground sm:col-span-2">
                 Nenhuma tela encontrada com "{busca}".
@@ -159,6 +253,7 @@ export default function AssistenteVozConfig() {
             )}
           </div>
         </TabsContent>
+
 
         {/* ======================= FRASES ======================= */}
         <TabsContent value="frases" className="space-y-3">
@@ -183,29 +278,46 @@ export default function AssistenteVozConfig() {
           <div className="grid gap-3">
             {GRUPOS_FRASES.map((grupo) => {
               const custom: string[] = (config?.frases_customizadas?.[grupo.id] as string[]) || [];
+              const removidos: string[] = (config?.frases_customizadas?.[`${grupo.id}:removidos`] as string[]) || [];
               const padrao = FRASES_PADRAO[grupo.id];
               const q = buscaFrase.trim().toLowerCase();
               const filtro = (s: string) => !q || s.toLowerCase().includes(q);
               const padraoFiltrado = padrao.filter(filtro);
               const customFiltrado = custom.filter(filtro);
+              const isRemovido = (a: string) => removidos.some((x) => x.toLowerCase() === a.toLowerCase());
 
-              const salvarFrases = async (novoArr: string[]) => {
-                const dedup = Array.from(new Set(novoArr.map((s) => s.trim()).filter(Boolean)));
-                const frases_customizadas = { ...(config.frases_customizadas || {}), [grupo.id]: dedup };
-                await salvarConfig({ frases_customizadas });
-              };
+              const salvarCustom = (arr: string[]) => salvarChave(grupo.id, arr);
+              const salvarRem = (arr: string[]) => salvarChave(`${grupo.id}:removidos`, arr);
 
               const adicionar = async () => {
                 const v = (novaFrase[grupo.id] || "").trim();
                 if (!v) return;
-                // não duplica um padrão
-                if (padrao.some((p) => p.toLowerCase() === v.toLowerCase())) {
+                if (padrao.some((p) => p.toLowerCase() === v.toLowerCase()) && !isRemovido(v)) {
                   toast.info("Esse apelido já existe como padrão.");
                   setNovaFrase({ ...novaFrase, [grupo.id]: "" });
                   return;
                 }
-                await salvarFrases([...custom, v]);
+                await salvarCustom([...custom, v]);
+                if (isRemovido(v)) {
+                  await salvarRem(removidos.filter((x) => x.toLowerCase() !== v.toLowerCase()));
+                }
                 setNovaFrase({ ...novaFrase, [grupo.id]: "" });
+              };
+
+              const editarCustom = async (a: string) => {
+                const novo = window.prompt("Editar apelido:", a);
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarCustom(custom.map((x) => (x === a ? v : x)));
+              };
+              const editarPadrao = async (a: string) => {
+                const novo = window.prompt("Editar apelido (o padrão será ocultado e o novo salvo):", a);
+                if (novo == null) return;
+                const v = novo.trim();
+                if (!v) return;
+                await salvarRem([...removidos, a]);
+                await salvarCustom([...custom, v]);
               };
 
               return (
@@ -218,14 +330,14 @@ export default function AssistenteVozConfig() {
                         Ex.: diga <b>"{grupo.exemplo}"</b>
                       </div>
                     </div>
-                    {custom.length > 0 && (
+                    {(custom.length > 0 || removidos.length > 0) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => salvarFrases([])}
-                        title="Remover todos os apelidos personalizados"
+                        onClick={async () => { await salvarCustom([]); await salvarRem([]); }}
+                        title="Restaurar padrões e remover personalizações"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> Limpar
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> Restaurar
                       </Button>
                     )}
                   </div>
@@ -243,25 +355,45 @@ export default function AssistenteVozConfig() {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5">
-                    {padraoFiltrado.map((f) => (
-                      <span
-                        key={`p-${f}`}
-                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-muted text-foreground"
-                        title="Apelido padrão do sistema"
-                      >
-                        "{f}"
-                        <Badge variant="secondary" className="text-[9px] px-1 py-0">padrão</Badge>
-                      </span>
-                    ))}
+                    {padraoFiltrado.map((f) => {
+                      const removido = isRemovido(f);
+                      return (
+                        <span
+                          key={`p-${f}`}
+                          className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded ${removido ? "bg-muted line-through text-muted-foreground" : "bg-muted text-foreground"}`}
+                          title="Apelido padrão do sistema"
+                        >
+                          "{f}"
+                          <Badge variant="secondary" className="text-[9px] px-1 py-0">padrão</Badge>
+                          {!removido ? (
+                            <>
+                              <button title="Editar" onClick={() => editarPadrao(f)} className="hover:bg-primary/20 rounded p-0.5">
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button title="Ocultar padrão" onClick={() => salvarRem([...removidos, f])} className="hover:bg-destructive/20 rounded p-0.5">
+                                <XIcon className="w-3 h-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <button title="Restaurar" onClick={() => salvarRem(removidos.filter((x) => x.toLowerCase() !== f.toLowerCase()))} className="hover:bg-primary/20 rounded p-0.5">
+                              <RotateCcw className="w-3 h-3" />
+                            </button>
+                          )}
+                        </span>
+                      );
+                    })}
                     {customFiltrado.map((f) => (
                       <span
                         key={`c-${f}`}
                         className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-primary/10 text-primary"
                       >
                         "{f}"
+                        <button title="Editar" onClick={() => editarCustom(f)} className="hover:bg-primary/20 rounded p-0.5">
+                          <Pencil className="w-3 h-3" />
+                        </button>
                         <button
-                          onClick={() => salvarFrases(custom.filter((x) => x !== f))}
-                          className="hover:bg-primary/20 rounded p-0.5"
+                          onClick={() => salvarCustom(custom.filter((x) => x !== f))}
+                          className="hover:bg-destructive/20 rounded p-0.5"
                           title="Remover apelido"
                         >
                           <XIcon className="w-3 h-3" />
@@ -273,6 +405,7 @@ export default function AssistenteVozConfig() {
                     )}
                   </div>
                 </Card>
+
               );
             })}
           </div>

@@ -142,6 +142,18 @@ export default function RelatoriosVozConfig() {
     setForm(f => ({ ...f, aliases: f.aliases.filter(x => x !== a) }));
   };
 
+  const editAlias = (a: string) => {
+    const novo = window.prompt("Editar alias:", a);
+    if (novo == null) return;
+    const v = novo.trim().toLowerCase();
+    if (!v) return;
+    setForm(f => {
+      const outros = f.aliases.filter(x => x !== a);
+      if (outros.includes(v)) return { ...f, aliases: outros };
+      return { ...f, aliases: outros.concat(v) };
+    });
+  };
+
   const salvar = async () => {
     if (!form.nome.trim()) { toast.error("Nome é obrigatório"); return; }
     if (form.tipo_fonte === "tabela" && !form.tabela_base?.trim()) {
@@ -331,10 +343,15 @@ export default function RelatoriosVozConfig() {
                 {form.aliases.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {form.aliases.map(a => (
-                      <button key={a} onClick={() => removeAlias(a)}
-                        className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive">
-                        "{a}" ✕
-                      </button>
+                      <span key={a} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        "{a}"
+                        <button type="button" title="Editar" onClick={() => editAlias(a)} className="hover:bg-primary/20 rounded p-0.5">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button type="button" title="Excluir" onClick={() => removeAlias(a)} className="hover:bg-destructive/20 rounded p-0.5 text-destructive">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
                     ))}
                   </div>
                 )}
