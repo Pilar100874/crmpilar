@@ -463,12 +463,26 @@ export default function VoiceAssistant() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, isRecording, processing, startDictation]);
 
+  // Sempre abre limpo, na aba do chat
+  const abrirLimpo = useCallback(() => {
+    setShowConfig(false);
+    setHistory([]);
+    setAmbiguas(null);
+    setInterimText("");
+    setManualText("");
+    setRelatorioMode(null);
+    setGrupoSelecionado(null);
+    setRelatorioAtual(null);
+    setResultadoRelatorio("");
+    setOpen(true);
+  }, []);
+
   // ---------- UI ----------
   return (
     <>
       {/* Botão flutuante */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={abrirLimpo}
         className={cn(
           "fixed bottom-16 right-4 z-[1000] h-12 w-12 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110",
           "bg-gradient-to-br from-primary via-primary/90 to-primary/70 text-primary-foreground",
