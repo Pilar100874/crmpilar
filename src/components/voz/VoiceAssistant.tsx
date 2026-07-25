@@ -789,7 +789,7 @@ export default function VoiceAssistant() {
                   </div>
                   <Switch checked={cfg.responder_por_voz} onCheckedChange={(v) => salvarConfig({ responder_por_voz: v })} />
                 </div>
-                <Button variant="outline" className="w-full" onClick={() => { stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
+                <Button variant="outline" className="w-full" onClick={() => { setWakeUnavailable(false); wakeNetworkWarnedRef.current = false; stopWake(); setTimeout(startWake, 300); toast.success("Escuta reiniciada"); }}>
                   <Radio className="h-4 w-4 mr-2" /> Reiniciar escuta
                 </Button>
               </div>
