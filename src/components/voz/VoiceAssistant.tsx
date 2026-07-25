@@ -332,11 +332,66 @@ export default function VoiceAssistant() {
     }
   };
 
+  // ---------- Gerar relatório ----------
+  const gerarRelatorio = async (r: RelatorioVoz) => {
+    setRelatorioAtual(r);
+    setRelatorioMode("gerando");
+    setResultadoRelatorio("");
+    setOpen(true);
+    if (cfg.responder_por_voz) falar(`Gerando ${r.nome}.`);
+    try {
+      const promptSistema =
+        `Você é um analista. Gere o relatório "${r.nome}" (grupo: ${r.grupo}, tipo: ${r.tipo_saida}). ` +
+        `Instruções do usuário: ${r.prompt_geracao}. ` +
+        `Responda em português, formatado em Markdown com títulos, tabelas e/ou bullets conforme apropriado. ` +
+        `Se não tiver dados reais disponíveis, indique claramente e sugira quais fontes seriam necessárias.`;
+      const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
+        body: { transcricao: promptSistema, messages: [] },
+      });
+      if (chatResp.error) throw new Error(chatResp.error.message);
+      const resposta = chatResp.data?.resposta || "Não foi possível gerar o relatório.";
+      setResultadoRelatorio(resposta);
+      setRelatorioMode("resultado");
+    } catch (e: any) {
+      toast.error(e.message);
+      setResultadoRelatorio(`Erro ao gerar: ${e.message}`);
+      setRelatorioMode("resultado");
+    }
+  };
+
   // ---------- Processa texto ----------
+  // Apenas 2 intenções: (1) ABRIR TELA (por título) e (2) RELATÓRIOS.
   const processarTexto = async (texto: string) => {
     setProcessing(true);
     try {
-      // 1) Match local por título de tela — abre instantaneamente sem chamar IA
+      const t = norm(texto);
+
+      // 1) Gatilho de "mostrar relatórios" → abre lista de grupos
+      if (GATILHOS_RELATORIOS.some(g => t === g || t.startsWith(g + " ") || t.endsWith(" " + g))) {
+        setRelatorioMode("grupos");
+        setGrupoSelecionado(null);
+        const resposta = relatorios.length === 0
+          ? "Você ainda não tem relatórios cadastrados. Cadastre em Admin > Relatórios por Voz."
+          : "Escolha um grupo de relatórios.";
+        setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+        if (cfg.responder_por_voz) falar(resposta);
+        return;
+      }
+
+      // 2) Relatório específico pelo nome/alias
+      const rel = relatorios.find(r => {
+        if (norm(r.nome) === t) return true;
+        if (r.aliases?.some(a => norm(a) === t)) return true;
+        // parcial: "gerar vendas por vendedor"
+        return r.aliases?.some(a => t.includes(norm(a))) || t.includes(norm(r.nome));
+      });
+      if (rel) {
+        setHistory(h => [...h, { user: texto, assistant: `Gerando ${rel.nome}…`, ts: Date.now() }].slice(-10));
+        await gerarRelatorio(rel);
+        return;
+      }
+
+      // 3) Abrir tela por título (match local instantâneo)
       const rotaMatch = matchRotaPorFala(texto);
       if (rotaMatch) {
         const resposta = `Abrindo ${rotaMatch.titulo}.`;
@@ -346,28 +401,11 @@ export default function VoiceAssistant() {
         return;
       }
 
-      const chatResp = await supabase.functions.invoke("assistente-voz-chat", {
-        body: { transcricao: texto, messages: history.slice(-4).flatMap((h) => [
-          { role: "user", content: h.user }, { role: "assistant", content: h.assistant },
-        ]) },
-      });
-      if (chatResp.error) throw new Error(chatResp.error.message);
-      const { resposta, acao } = chatResp.data;
-
-      setHistory((h) => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
-
-      // Executa ação
-      if (acao?.tipo === "navegar_para" && acao.path) {
-        setTimeout(() => { navigate(acao.path); setOpen(false); }, 500);
-      } else if (acao?.tipo === "popup_tela") {
-        setPopupResult({ titulo: acao.titulo || "Resultado", texto: acao.texto || resposta });
-      } else if (acao?.tipo === "iniciar_conversa") {
-        // apenas mantém painel aberto
-      } else if (acao?.tipo === "confirmar_disparo_bot" || acao?.tipo === "confirmar_comando_tv") {
-        setPendingConfirm(acao);
-      }
-
-      if (cfg.responder_por_voz && resposta) falar(resposta);
+      // 4) Nada reconhecido — resposta guiada, sem alucinação
+      const resposta =
+        `Não entendi. Só respondo a duas coisas: "abrir <nome da tela>" ou "relatórios" para ver a lista.`;
+      setHistory(h => [...h, { user: texto, assistant: resposta, ts: Date.now() }].slice(-10));
+      if (cfg.responder_por_voz) falar(resposta);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
