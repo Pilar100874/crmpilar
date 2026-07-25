@@ -112,10 +112,45 @@ export default function MenuCustomizacao() {
     return s;
   }, [state]);
 
+  const [poolSearch, setPoolSearch] = useState("");
+
   const unplaced = useMemo(
     () => Array.from(programs.values()).filter((p) => !placedIds.has(p.id)),
     [placedIds, programs]
   );
+
+  const filteredUnplaced = useMemo(() => {
+    const q = poolSearch.trim().toLowerCase();
+    if (!q) return unplaced;
+    return unplaced.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        (p.originContainerTitle || "").toLowerCase().includes(q)
+    );
+  }, [unplaced, poolSearch]);
+
+  // Agrupa a piscina de programas por origem para uma "sequência única" organizada
+  const groupedUnplaced = useMemo(() => {
+    const groups = new Map<string, typeof filteredUnplaced>();
+    for (const p of filteredUnplaced) {
+      const key = p.originContainerTitle || (p.system ? "Sistema (rodapé)" : "Menu principal");
+      if (!groups.has(key)) groups.set(key, [] as any);
+      (groups.get(key) as any).push(p);
+    }
+    // Coloca "Admin" e "Admin (rodapé)" no topo, depois Sistema, depois o resto alfabético
+    const order = (k: string) => {
+      if (k === "Admin") return 0;
+      if (k === "Admin (rodapé)") return 1;
+      if (k.startsWith("Sistema")) return 2;
+      return 3;
+    };
+    return Array.from(groups.entries()).sort((a, b) => {
+      const oa = order(a[0]);
+      const ob = order(b[0]);
+      if (oa !== ob) return oa - ob;
+      return a[0].localeCompare(b[0]);
+    });
+  }, [filteredUnplaced]);
 
   const mutate = (fn: (roots: CustomNode[]) => void) => {
     if (!isAdmin) {
