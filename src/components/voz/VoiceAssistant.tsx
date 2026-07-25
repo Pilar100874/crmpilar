@@ -206,6 +206,9 @@ export default function VoiceAssistant() {
           voz: data.voz || "alloy",
           wake_word: data.wake_word || WAKE_DEFAULT,
         });
+        if (data.frases_customizadas && typeof data.frases_customizadas === "object") {
+          setFrasesCustom(data.frases_customizadas as Record<string, string[]>);
+        }
       }
       const { data: usuario } = await supabase.from("usuarios")
         .select("estabelecimento_id").eq("auth_user_id", u.user.id).maybeSingle();
