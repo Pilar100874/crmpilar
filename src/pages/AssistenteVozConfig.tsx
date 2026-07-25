@@ -660,12 +660,26 @@ export default function AssistenteVozConfig() {
 
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setTestando(true)}>
+              <Mic className="w-4 h-4 mr-1.5" /> Testar agora
+            </Button>
             <Button onClick={salvarComando}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TestarGatilhoDialog
+        open={testando}
+        onOpenChange={setTestando}
+        tipo={editing?.tipo_acao}
+        payload={editing?.payload}
+        frase={editing?.frase_gatilho || ""}
+        resposta={editing?.resposta_falada}
+        provedorLabel={PROVEDORES_CONVERSA.find((p) => p.id === editing?.payload?.provedor)?.label}
+        responderPorVoz={!!config?.responder_por_voz}
+      />
 
       {/* Confirmação: telas do usuário não estão salvas */}
       <AlertDialog open={!!savePrompt} onOpenChange={(o) => !o && savePrompt?.onDecide("cancelar")}>
