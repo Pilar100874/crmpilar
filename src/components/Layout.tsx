@@ -636,11 +636,13 @@ export default function Layout({ children }: LayoutProps) {
     return null;
   }
 
-  // Aplica personalização de menu (localStorage) se existir
+  // Aplica personalização de menu (cache local + sincronia com banco por estabelecimento)
   const [customizedItems, setCustomizedItems] = useState(() => applyMenuCustomization(menuItems));
   useEffect(() => {
     const handler = () => setCustomizedItems(applyMenuCustomization(menuItems));
     window.addEventListener(MENU_CUSTOMIZATION_EVENT, handler);
+    // Busca personalização remota (compartilhada pelo admin do estabelecimento)
+    fetchRemoteCustomization().then(() => setCustomizedItems(applyMenuCustomization(menuItems)));
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
 
