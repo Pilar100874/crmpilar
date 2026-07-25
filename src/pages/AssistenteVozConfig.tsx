@@ -11,7 +11,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { Mic, Settings2, Search, ShieldCheck, FileBarChart, ExternalLink, Save, MessageCircle, Plus, X as XIcon, RotateCcw, Pencil, FlaskConical } from "lucide-react";
 import { ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
-import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
+import { GRUPOS_FRASES, FRASES_PADRAO, aliasesEfetivosRota, tituloEfetivoRota, type FraseGrupoId } from "@/lib/voz/frasesGatilho";
 import RelatoriosVozConfig from "./RelatoriosVozConfig";
 import RelatoriosVozSnapshots from "./RelatoriosVozSnapshots";
 import VozTesterPanel from "@/components/voz/VozTesterPanel";
