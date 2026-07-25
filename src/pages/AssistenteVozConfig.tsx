@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
-import { Mic, Plus, Pencil, Trash2, Wrench, Settings2, MessageSquare } from "lucide-react";
+import {
+  Mic, Plus, Pencil, Trash2, Wrench, Settings2, MessageSquare,
+  ExternalLink, MessagesSquare, PieChart, Lightbulb, Search, Save,
+} from "lucide-react";
+import { PROGRAMAS_DISPONIVEIS, EXEMPLOS_COMANDOS_VOZ } from "@/lib/voz/programasDisponiveis";
 
-type TipoAcao = "navegar" | "consultar_metrica" | "responder" | "disparar_bot" | "comando_tv";
+type TipoAcao =
+  | "abrir_programa"
+  | "popup_tela"
+  | "conversa"
+  | "navegar"
+  | "consultar_metrica"
+  | "responder"
+  | "disparar_bot"
+  | "comando_tv";
 
 interface Comando {
   id: string;
@@ -34,13 +47,41 @@ const FERRAMENTAS_NATIVAS = [
 ];
 
 const VOZES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "coral", "sage"];
-
 const METRICAS = [
-  "veiculos_online","empresas_total","contatos_total","orcamentos_hoje",
-  "orcamentos_mes","tv_dispositivos_online","alertas_ponto_hoje","atendimentos_abertos",
+  "veiculos_online", "empresas_total", "contatos_total", "orcamentos_hoje",
+  "orcamentos_mes", "tv_dispositivos_online", "alertas_ponto_hoje", "atendimentos_abertos",
+];
+const COMANDOS_TV = ["refresh", "reiniciar_app", "limpar_cache"];
+
+const PROVEDORES_CONVERSA = [
+  { id: "interno", label: "IA interna (padrão do sistema)" },
+  { id: "chatgpt", label: "ChatGPT (OpenAI)" },
+  { id: "claude", label: "Claude / Cloud Code (Anthropic)" },
+  { id: "cursor", label: "Cursor" },
 ];
 
-const COMANDOS_TV = ["refresh", "reiniciar_app", "limpar_cache"];
+const LABEL_TIPO: Record<TipoAcao, string> = {
+  abrir_programa: "Abrir Programa",
+  popup_tela: "Popup em tela",
+  conversa: "Conversa livre",
+  navegar: "Abrir tela (rota)",
+  consultar_metrica: "Consultar métrica",
+  responder: "Apenas responder",
+  disparar_bot: "Disparar automação",
+  comando_tv: "Comando nas TVs",
+};
+
+// Chave usada para o modo "Personalizar Menu" salvar as escolhas do usuário localmente
+const MENU_CUSTOM_KEY = "pilar:menu-customizacao";
+
+function telasDoUsuarioEstaoSalvas(): boolean {
+  try {
+    const v = localStorage.getItem(MENU_CUSTOM_KEY);
+    return !!v && v !== "null" && v !== "undefined";
+  } catch {
+    return false;
+  }
+}
 
 export default function AssistenteVozConfig() {
   const [comandos, setComandos] = useState<Comando[]>([]);
@@ -48,6 +89,10 @@ export default function AssistenteVozConfig() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Comando> | null>(null);
   const [confirmDel, setConfirmDel] = useState<Comando | null>(null);
+  const [buscaPrograma, setBuscaPrograma] = useState("");
+
+  // Confirmação "Salvar telas do usuário antes de rodar?"
+  const [savePrompt, setSavePrompt] = useState<null | { onDecide: (v: "salvar" | "continuar" | "cancelar") => void }>(null);
 
   const carregar = async () => {
     setLoading(true);
@@ -71,7 +116,7 @@ export default function AssistenteVozConfig() {
 
   useEffect(() => { carregar(); }, []);
 
-  const salvarComando = async () => {
+  const persistirComando = async () => {
     if (!editing?.frase_gatilho || !editing?.tipo_acao) {
       toast.error("Frase e tipo são obrigatórios");
       return;
@@ -105,6 +150,30 @@ export default function AssistenteVozConfig() {
     carregar();
   };
 
+  const salvarComando = async () => {
+    // Condição: só pode rodar/salvar se as telas do usuário estiverem salvas.
+    if (!telasDoUsuarioEstaoSalvas()) {
+      setSavePrompt({
+        onDecide: async (decisao) => {
+          setSavePrompt(null);
+          if (decisao === "cancelar") return;
+          if (decisao === "salvar") {
+            try {
+              localStorage.setItem(MENU_CUSTOM_KEY, JSON.stringify({ salvoEm: Date.now() }));
+              toast.success("Telas do usuário salvas");
+            } catch {
+              toast.error("Não foi possível salvar as telas do usuário");
+              return;
+            }
+          }
+          await persistirComando();
+        },
+      });
+      return;
+    }
+    await persistirComando();
+  };
+
   const excluir = async () => {
     if (!confirmDel) return;
     const { error } = await supabase.from("assistente_voz_comandos").delete().eq("id", confirmDel.id);
@@ -128,6 +197,30 @@ export default function AssistenteVozConfig() {
     salvarConfig({ ferramentas_desativadas: novas });
   };
 
+  const programasFiltrados = useMemo(() => {
+    const q = buscaPrograma.trim().toLowerCase();
+    if (!q) return PROGRAMAS_DISPONIVEIS;
+    return PROGRAMAS_DISPONIVEIS.filter(
+      (p) =>
+        p.label.toLowerCase().includes(q) ||
+        p.categoria.toLowerCase().includes(q) ||
+        p.path.toLowerCase().includes(q),
+    );
+  }, [buscaPrograma]);
+
+  const programasPorCategoria = useMemo(() => {
+    const m = new Map<string, typeof PROGRAMAS_DISPONIVEIS>();
+    for (const p of programasFiltrados) {
+      const arr = m.get(p.categoria) || [];
+      arr.push(p);
+      m.set(p.categoria, arr);
+    }
+    return Array.from(m.entries());
+  }, [programasFiltrados]);
+
+  const novoGatilho = () =>
+    setEditing({ tipo_acao: "abrir_programa", ativo: true, payload: { requer_tela_salva: true } });
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
@@ -142,18 +235,19 @@ export default function AssistenteVozConfig() {
 
       <Tabs defaultValue="comandos">
         <TabsList>
-          <TabsTrigger value="comandos"><MessageSquare className="w-4 h-4 mr-2" />Comandos</TabsTrigger>
+          <TabsTrigger value="comandos"><MessageSquare className="w-4 h-4 mr-2" />Gatilhos</TabsTrigger>
+          <TabsTrigger value="exemplos"><Lightbulb className="w-4 h-4 mr-2" />Exemplos de voz</TabsTrigger>
           <TabsTrigger value="ferramentas"><Wrench className="w-4 h-4 mr-2" />Ferramentas nativas</TabsTrigger>
           <TabsTrigger value="config"><Settings2 className="w-4 h-4 mr-2" />Configurações</TabsTrigger>
         </TabsList>
 
         <TabsContent value="comandos" className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-sm text-muted-foreground">
-              Frases faladas pelo usuário que disparam ações. Ex: "vendas do dia" → abre relatório.
+              Frases faladas pelo usuário que disparam ações. Escolha uma tela e escreva o que deseja que aconteça.
             </p>
-            <Button onClick={() => setEditing({ tipo_acao: "navegar", ativo: true, payload: {} })}>
-              <Plus className="w-4 h-4 mr-2" /> Novo comando
+            <Button onClick={novoGatilho}>
+              <Plus className="w-4 h-4 mr-2" /> Novo gatilho
             </Button>
           </div>
 
@@ -162,9 +256,9 @@ export default function AssistenteVozConfig() {
           {!loading && comandos.length === 0 && (
             <Card className="p-10 text-center">
               <MessageSquare className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-3">Nenhum comando customizado ainda.</p>
-              <Button onClick={() => setEditing({ tipo_acao: "navegar", ativo: true, payload: {} })}>
-                <Plus className="w-4 h-4 mr-2" /> Criar primeiro comando
+              <p className="text-sm text-muted-foreground mb-3">Nenhum gatilho customizado ainda.</p>
+              <Button onClick={novoGatilho}>
+                <Plus className="w-4 h-4 mr-2" /> Criar primeiro gatilho
               </Button>
             </Card>
           )}
@@ -176,7 +270,12 @@ export default function AssistenteVozConfig() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium truncate">"{c.frase_gatilho}"</span>
                     <Badge variant={c.ativo ? "default" : "secondary"}>{c.ativo ? "Ativo" : "Inativo"}</Badge>
-                    <Badge variant="outline">{c.tipo_acao}</Badge>
+                    <Badge variant="outline">{LABEL_TIPO[c.tipo_acao as TipoAcao] || c.tipo_acao}</Badge>
+                    {c.payload?.requer_tela_salva && (
+                      <Badge variant="outline" className="text-xs">
+                        <Save className="w-3 h-3 mr-1" /> Exige telas salvas
+                      </Badge>
+                    )}
                   </div>
                   {c.descricao && <p className="text-sm text-muted-foreground truncate mt-1">{c.descricao}</p>}
                 </div>
@@ -186,6 +285,37 @@ export default function AssistenteVozConfig() {
                 <Button size="sm" variant="ghost" onClick={() => setConfirmDel(c)}>
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="exemplos" className="space-y-3">
+          <Card className="p-4 bg-primary/5 border-primary/20">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium mb-1">O que dá para fazer falando com o Pilar?</p>
+                <p className="text-muted-foreground">
+                  Segue uma lista de exemplos que o assistente entende. Você pode falar variações delas —
+                  não precisa ser exatamente igual. Use como inspiração ao criar seus próprios gatilhos.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {EXEMPLOS_COMANDOS_VOZ.map((grupo) => (
+              <Card key={grupo.categoria} className="p-4">
+                <div className="font-medium mb-2">{grupo.categoria}</div>
+                <ul className="space-y-1.5 text-sm text-muted-foreground">
+                  {grupo.frases.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <Mic className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
               </Card>
             ))}
           </div>
@@ -248,36 +378,214 @@ export default function AssistenteVozConfig() {
         </TabsContent>
       </Tabs>
 
+      {/* Diálogo Novo/Editar Gatilho */}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Editar comando" : "Novo comando"}</DialogTitle>
+            <DialogTitle>{editing?.id ? "Editar gatilho" : "Novo gatilho de voz"}</DialogTitle>
+            <DialogDescription>
+              Defina a frase falada, escolha o tipo de ação e diga por escrito o que deve acontecer.
+            </DialogDescription>
           </DialogHeader>
           {editing && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <Label>Frase gatilho</Label>
-                <Input placeholder='ex: "vendas do dia"' value={editing.frase_gatilho || ""}
-                  onChange={(e) => setEditing({ ...editing, frase_gatilho: e.target.value })} />
+                <Label>Frase gatilho *</Label>
+                <Input
+                  placeholder='ex: "cadastrar CNPJ", "quem vendeu mais hoje"'
+                  value={editing.frase_gatilho || ""}
+                  onChange={(e) => setEditing({ ...editing, frase_gatilho: e.target.value })}
+                />
               </div>
+
               <div>
                 <Label>Descrição (opcional)</Label>
-                <Input value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} />
+                <Input
+                  value={editing.descricao || ""}
+                  onChange={(e) => setEditing({ ...editing, descricao: e.target.value })}
+                />
               </div>
+
               <div>
-                <Label>Tipo de ação</Label>
-                <Select value={editing.tipo_acao} onValueChange={(v: TipoAcao) => setEditing({ ...editing, tipo_acao: v, payload: {} })}>
+                <Label>Tipo de ação *</Label>
+                <Select
+                  value={editing.tipo_acao}
+                  onValueChange={(v: TipoAcao) =>
+                    setEditing({ ...editing, tipo_acao: v, payload: { requer_tela_salva: editing.payload?.requer_tela_salva ?? true } })
+                  }
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="navegar">Abrir tela (navegar)</SelectItem>
-                    <SelectItem value="consultar_metrica">Consultar métrica</SelectItem>
+                    <SelectItem value="abrir_programa">
+                      <div className="flex items-center gap-2"><ExternalLink className="w-4 h-4" /> Abrir Programa</div>
+                    </SelectItem>
+                    <SelectItem value="popup_tela">
+                      <div className="flex items-center gap-2"><PieChart className="w-4 h-4" /> Popup em tela</div>
+                    </SelectItem>
+                    <SelectItem value="conversa">
+                      <div className="flex items-center gap-2"><MessagesSquare className="w-4 h-4" /> Conversa livre</div>
+                    </SelectItem>
+                    <SelectItem value="consultar_metrica">Consultar métrica (avançado)</SelectItem>
+                    <SelectItem value="disparar_bot">Disparar automação (avançado)</SelectItem>
+                    <SelectItem value="comando_tv">Comando nas TVs (avançado)</SelectItem>
                     <SelectItem value="responder">Apenas responder texto</SelectItem>
-                    <SelectItem value="disparar_bot">Disparar automação</SelectItem>
-                    <SelectItem value="comando_tv">Comando nas TVs</SelectItem>
+                    <SelectItem value="navegar">Abrir tela por rota (legado)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* ABRIR PROGRAMA */}
+              {editing.tipo_acao === "abrir_programa" && (
+                <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+                  <div>
+                    <Label>Programa (tela do sistema) *</Label>
+                    <div className="relative mt-1">
+                      <Search className="w-4 h-4 absolute left-2 top-2.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar por nome, categoria ou rota…"
+                        className="pl-8"
+                        value={buscaPrograma}
+                        onChange={(e) => setBuscaPrograma(e.target.value)}
+                      />
+                    </div>
+                    <div className="mt-2 max-h-56 overflow-y-auto rounded-md border bg-background">
+                      {programasPorCategoria.map(([cat, lista]) => (
+                        <div key={cat}>
+                          <div className="px-3 py-1 text-xs uppercase tracking-wide text-muted-foreground bg-muted/50">
+                            {cat}
+                          </div>
+                          {lista.map((p) => {
+                            const selected = editing.payload?.path === p.path;
+                            return (
+                              <button
+                                key={p.path}
+                                type="button"
+                                onClick={() =>
+                                  setEditing({
+                                    ...editing,
+                                    payload: { ...editing.payload, path: p.path, label: p.label },
+                                  })
+                                }
+                                className={`w-full text-left px-3 py-1.5 text-sm hover:bg-accent flex items-center justify-between gap-2 ${
+                                  selected ? "bg-primary/10 text-primary" : ""
+                                }`}
+                              >
+                                <span>{p.label}</span>
+                                <span className="text-xs text-muted-foreground">{p.path}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                      {programasPorCategoria.length === 0 && (
+                        <div className="p-4 text-center text-sm text-muted-foreground">
+                          Nenhum programa encontrado.
+                        </div>
+                      )}
+                    </div>
+                    {editing.payload?.label && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Selecionado: <span className="font-medium text-foreground">{editing.payload.label}</span> ({editing.payload.path})
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Instrução (opcional) — o que fazer depois de abrir?</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="ex: cadastrar o CNPJ 12.345.678/0001-90 com nome Empresa X"
+                      value={editing.payload?.instrucao || ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, payload: { ...editing.payload, instrucao: e.target.value } })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Escreva em linguagem natural. O assistente lê essa instrução ao abrir a tela.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* POPUP EM TELA */}
+              {editing.tipo_acao === "popup_tela" && (
+                <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+                  <div>
+                    <Label>O que trazer no popup? *</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="ex: qual gerente vendeu mais no mês / qual vendedor vendeu mais hoje"
+                      value={editing.payload?.prompt || ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, payload: { ...editing.payload, prompt: e.target.value } })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border p-3 bg-background">
+                    <div>
+                      <div className="font-medium text-sm">Mostrar resultado em gráfico</div>
+                      <div className="text-xs text-muted-foreground">
+                        Quando aplicável, o popup exibe um gráfico junto da resposta.
+                      </div>
+                    </div>
+                    <Switch
+                      checked={!!editing.payload?.mostrar_grafico}
+                      onCheckedChange={(v) =>
+                        setEditing({ ...editing, payload: { ...editing.payload, mostrar_grafico: v } })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* CONVERSA LIVRE */}
+              {editing.tipo_acao === "conversa" && (
+                <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+                  <div>
+                    <Label>Contexto inicial (opcional)</Label>
+                    <Textarea
+                      rows={2}
+                      placeholder="ex: você é um consultor comercial focado em pós-venda"
+                      value={editing.payload?.contexto || ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, payload: { ...editing.payload, contexto: e.target.value } })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Provedor de IA</Label>
+                    <Select
+                      value={editing.payload?.provedor || "interno"}
+                      onValueChange={(v) =>
+                        setEditing({ ...editing, payload: { ...editing.payload, provedor: v } })
+                      }
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {PROVEDORES_CONVERSA.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border p-3 bg-background">
+                    <div>
+                      <div className="font-medium text-sm">Sempre responder de forma resumida</div>
+                      <div className="text-xs text-muted-foreground">
+                        Ideal quando a resposta vai ser lida em voz alta.
+                      </div>
+                    </div>
+                    <Switch
+                      checked={editing.payload?.resumir ?? true}
+                      onCheckedChange={(v) =>
+                        setEditing({ ...editing, payload: { ...editing.payload, resumir: v } })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Legado / avançado */}
               {editing.tipo_acao === "navegar" && (
                 <div>
                   <Label>Rota (ex: /relatorios)</Label>
@@ -319,6 +627,21 @@ export default function AssistenteVozConfig() {
                   onChange={(e) => setEditing({ ...editing, resposta_falada: e.target.value })} />
               </div>
 
+              <div className="rounded-md border p-3 bg-background flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Só rodar se as telas do usuário estiverem salvas</div>
+                  <div className="text-xs text-muted-foreground">
+                    Se não estiverem, o assistente pergunta se deseja salvar antes de executar.
+                  </div>
+                </div>
+                <Switch
+                  checked={editing.payload?.requer_tela_salva ?? true}
+                  onCheckedChange={(v) =>
+                    setEditing({ ...editing, payload: { ...editing.payload, requer_tela_salva: v } })
+                  }
+                />
+              </div>
+
               <div className="flex items-center gap-2">
                 <Switch checked={editing.ativo ?? true} onCheckedChange={(v) => setEditing({ ...editing, ativo: v })} />
                 <span className="text-sm">Ativo</span>
@@ -332,11 +655,33 @@ export default function AssistenteVozConfig() {
         </DialogContent>
       </Dialog>
 
+      {/* Confirmação: telas do usuário não estão salvas */}
+      <AlertDialog open={!!savePrompt} onOpenChange={(o) => !o && savePrompt?.onDecide("cancelar")}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Salvar suas telas antes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As telas do usuário ainda não foram salvas. Deseja salvar antes de continuar? Você pode
+              salvar, seguir sem salvar ou cancelar a ação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel onClick={() => savePrompt?.onDecide("cancelar")}>Cancelar</AlertDialogCancel>
+            <Button variant="outline" onClick={() => savePrompt?.onDecide("continuar")}>
+              Não salvar e continuar
+            </Button>
+            <AlertDialogAction onClick={() => savePrompt?.onDecide("salvar")}>
+              Salvar e continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <DeleteConfirmDialog
         open={!!confirmDel}
         onOpenChange={(o) => !o && setConfirmDel(null)}
         onConfirm={excluir}
-        title="Excluir comando?"
+        title="Excluir gatilho?"
         description={confirmDel ? `"${confirmDel.frase_gatilho}" será removido.` : ""}
       />
     </div>
