@@ -3133,11 +3133,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 addBotMessage(`📇 Cartão de contato: *${cNome || cPhone}* (wa.me/${cPhone})`, node.id);
                 if (useReal) {
                   try {
-                    await executarBlocoWhatsapp(
-                      { telefone: phone, mensagem: "", contact: { nome: cNome, whatsapp: cPhone } },
+                    const rc: any = await executarBlocoWhatsapp(
+                      { telefone: phone, contact: { nome: cNome, whatsapp: cPhone } },
                       { variaveis: perCtx, workflow_tipo: "bot", origem: "broadcast_vendedores_contato" },
                     );
-                  } catch {}
+                    if (!rc?.ok) addSystemMessage(`⚠️ Falha ao enviar contato para ${phone}: ${rc?.erro || rc?.response?.[0]?.erro || "erro desconhecido"}`);
+                  } catch (e: any) {
+                    addSystemMessage(`⚠️ Erro no envio de contato para ${phone}: ${e?.message || e}`);
+                  }
                 }
               }
             }
