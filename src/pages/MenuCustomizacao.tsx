@@ -450,17 +450,29 @@ export default function MenuCustomizacao() {
           <h1 className="text-2xl font-bold">Personalizar Menu Principal</h1>
           <p className="text-sm text-muted-foreground">
             Reorganize, crie pastas e subpastas arrastando ou usando os botões. Programas não podem ser excluídos.
+            A configuração é salva no banco e compartilhada com todos os usuários do estabelecimento.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
+          <Button variant="outline" onClick={handleReset} disabled={!isAdmin || saving}>
             <RotateCcw className="w-4 h-4 mr-2" /> Restaurar padrão
           </Button>
-          <Button onClick={handleSave} disabled={!dirty}>
-            <Save className="w-4 h-4 mr-2" /> Salvar
+          <Button onClick={handleSave} disabled={!isAdmin || !dirty || saving}>
+            <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
           </Button>
         </div>
       </div>
+
+      {!checkingAdmin && !isAdmin && (
+        <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+          <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+          <div>
+            <strong>Modo somente leitura.</strong> Apenas administradores podem alterar a estrutura do menu.
+            Você está vendo a configuração atual definida pelo admin do estabelecimento.
+          </div>
+        </div>
+      )}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
         <Card
