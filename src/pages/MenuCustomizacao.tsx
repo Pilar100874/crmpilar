@@ -884,26 +884,45 @@ export default function MenuCustomizacao() {
         </div>
       )}
 
-      {/* Desktop / large tablet: 3 columns */}
-      <div className="hidden lg:grid grid-cols-[1fr_1fr_360px] gap-4">
+      {/* Desktop / large tablet: 4 trees + pool */}
+      <div className="hidden xl:grid grid-cols-[1fr_1fr_1fr_1fr_320px] gap-3">
         {renderTreeCard("main", "Menu principal (lateral)", LayoutGrid, mainRoots)}
         {renderTreeCard("admin", "Menu Admin (rodapé)", Shield, adminRoots)}
+        {renderTreeCard("user", "Menu do usuário (rodapé)", UserIcon, userRoots)}
+        {renderTreeCard("system", "Sistema (rodapé)", Cog, systemRoots)}
         {renderPoolCard()}
+      </div>
+
+      {/* Large tablet fallback: 2x2 + pool below */}
+      <div className="hidden lg:grid xl:hidden grid-cols-2 gap-3">
+        {renderTreeCard("main", "Menu principal", LayoutGrid, mainRoots)}
+        {renderTreeCard("admin", "Admin (rodapé)", Shield, adminRoots)}
+        {renderTreeCard("user", "Usuário (rodapé)", UserIcon, userRoots)}
+        {renderTreeCard("system", "Sistema (rodapé)", Cog, systemRoots)}
+        <div className="col-span-2">{renderPoolCard()}</div>
       </div>
 
       {/* Mobile & tablet: tabs */}
       <div className="lg:hidden">
         <Tabs defaultValue="main" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger value="main" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+          <TabsList className="grid w-full grid-cols-5 h-auto">
+            <TabsTrigger value="main" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
               <LayoutGrid className="w-4 h-4" />
               <span>Menu</span>
             </TabsTrigger>
-            <TabsTrigger value="admin" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+            <TabsTrigger value="admin" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
               <Shield className="w-4 h-4" />
               <span>Admin</span>
             </TabsTrigger>
-            <TabsTrigger value="pool" className="flex-col gap-1 py-2 text-[11px] sm:text-xs sm:flex-row">
+            <TabsTrigger value="user" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
+              <UserIcon className="w-4 h-4" />
+              <span>Usuário</span>
+            </TabsTrigger>
+            <TabsTrigger value="system" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
+              <Cog className="w-4 h-4" />
+              <span>Sistema</span>
+            </TabsTrigger>
+            <TabsTrigger value="pool" className="flex-col gap-1 py-2 text-[10px] sm:text-xs sm:flex-row">
               <LayoutList className="w-4 h-4" />
               <span>Programas</span>
             </TabsTrigger>
@@ -914,9 +933,16 @@ export default function MenuCustomizacao() {
           <TabsContent value="admin" className="mt-3">
             {renderTreeCard("admin", "Menu Admin (rodapé)", Shield, adminRoots)}
           </TabsContent>
+          <TabsContent value="user" className="mt-3">
+            {renderTreeCard("user", "Menu do usuário (rodapé)", UserIcon, userRoots)}
+          </TabsContent>
+          <TabsContent value="system" className="mt-3">
+            {renderTreeCard("system", "Sistema (rodapé)", Cog, systemRoots)}
+          </TabsContent>
           <TabsContent value="pool" className="mt-3">
             {renderPoolCard()}
           </TabsContent>
+
         </Tabs>
       </div>
 
