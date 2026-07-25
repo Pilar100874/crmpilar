@@ -79,6 +79,37 @@ async function callEdge(action: string, params: Record<string, any>, timeoutMs =
   }
 }
 
+// ✍️ Revisa ortografia/gramática (pt-BR) do texto do usuário antes de enviar
+// para geração de vídeo. Preserva sentido, estrutura, símbolos e emojis.
+// Em falha, devolve o texto original.
+async function revisarTextoUsuarioPT(texto: string): Promise<string> {
+  const original = (texto || '').trim();
+  if (!original || original.length < 3) return texto;
+  try {
+    const systemPrompt = [
+      'Você é um revisor rigoroso de português do Brasil.',
+      'Corrija APENAS erros de ortografia, acentuação, concordância, regência e pontuação.',
+      'NÃO altere o sentido, o estilo, o tom, a ordem das frases nem adicione/remova conteúdo.',
+      'Preserve EXATAMENTE: quebras de linha, espaços, emojis, símbolos, colchetes, aspas, números, nomes próprios, marcas e termos técnicos em outros idiomas.',
+      'A saída será usada como prompt para geração de vídeo — tolerância ZERO a erros de grafia, especialmente quando houver identidade visual da marca.',
+      'Responda somente com o texto corrigido, sem comentários, sem explicações, sem prefixos, sem aspas envolvendo a resposta.',
+      'Se o texto já estiver correto, devolva-o inalterado.',
+    ].join(' ');
+    const corrigido = await callEdge('generate_text', {
+      model: 'google/gemini-2.5-flash',
+      systemPrompt,
+      prompt: original,
+    }, 30000);
+    const out = typeof corrigido === 'string' ? corrigido.trim() : '';
+    if (!out) return texto;
+    if (out.length > original.length * 3 + 200) return texto;
+    return out;
+  } catch (err) {
+    console.warn('[AutoVideo][spellcheck] revisão falhou, usando texto original:', err);
+    return texto;
+  }
+}
+
 async function generateVideoAsync(
   params: Record<string, any>,
   onProgress?: (msg: string) => void,
