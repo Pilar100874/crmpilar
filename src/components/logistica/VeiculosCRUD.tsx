@@ -65,6 +65,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [ultimasPosicoes, setUltimasPosicoes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [comunicacaoFilter, setComunicacaoFilter] = useState<'todos' | 'online' | 'inativo' | 'sem_sinal' | 'offline'>('todos');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -709,12 +710,30 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
-  const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v =>
-    v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (v as any).telefone_sms?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getVeiculoComunicacaoStatus = (v: Veiculo): 'sem_sinal' | 'online' | 'inativo' | 'offline' => {
+    const modelId = (v as any).tracker_model_id as string | undefined;
+    if (!modelId) return 'sem_sinal';
+    const last = ultimasPosicoes[v.id];
+    if (!last) return 'sem_sinal';
+    const diffMin = (Date.now() - new Date(last).getTime()) / 60000;
+    if (diffMin <= 30) return 'online';
+    if (diffMin <= 24 * 60) return 'inativo';
+    return 'offline';
+  };
+
+  const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v => {
+    const matchesSearch =
+      v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (v as any).telefone_sms?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    if (comunicacaoFilter === 'todos') return true;
+    const status = getVeiculoComunicacaoStatus(v);
+    return status === comunicacaoFilter;
+  });
 
   const unidadeNomeById = React.useMemo(() => {
     const map: Record<string, string> = {};
@@ -725,7 +744,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   return (
     <div className="space-y-4 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-xl">
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-2xl">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -735,6 +754,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               className="pl-9"
             />
           </div>
+          <Select value={comunicacaoFilter} onValueChange={(val) => setComunicacaoFilter(val as any)}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <Radio className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Comunicação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="online">Online</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+              <SelectItem value="sem_sinal">Sem sinal</SelectItem>
+              <SelectItem value="offline">Offline</SelectItem>
+            </SelectContent>
+          </Select>
           <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} />
         </div>
         <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
