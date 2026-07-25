@@ -64,7 +64,7 @@ import { SupportTicketFloatingButton } from "@/components/support/SupportTicketF
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
-import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization } from "@/lib/menuCustomization";
+import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
@@ -685,6 +685,9 @@ export default function Layout({ children }: LayoutProps) {
   const systemInMain = new Set<string>(
     visibleMenus.map((i) => i.system).filter(Boolean) as string[]
   );
+  // Ids de programas do Admin (rodapé) posicionados no menu principal — escondê-los no dropdown Admin do rodapé
+  const placedProgramIds = getPlacedProgramIds(visibleMenus);
+
 
 
   if (soloMode) {
@@ -1395,6 +1398,7 @@ export default function Layout({ children }: LayoutProps) {
 
                         {isAdmin && (
                           <>
+                            {!placedProgramIds.has("Admin Macros") && (
                             <NavLink
                               to="/macros"
                               onClick={() => setOpenSubmenuId(null)}
@@ -1403,6 +1407,8 @@ export default function Layout({ children }: LayoutProps) {
                               <Zap className="w-4 h-4 flex-shrink-0" />
                               <span className="text-sm">Macros</span>
                             </NavLink>
+                            )}
+                            {!placedProgramIds.has("Admin Tickets") && (
                             <NavLink
                               to="/admin/support-tickets"
                               onClick={() => setOpenSubmenuId(null)}
@@ -1411,6 +1417,8 @@ export default function Layout({ children }: LayoutProps) {
                               <LifeBuoy className="w-4 h-4 flex-shrink-0" />
                               <span className="text-sm">Tickets de Suporte</span>
                             </NavLink>
+                            )}
+                            {!placedProgramIds.has("Admin Apps") && (
                             <NavLink
                               to="/admin/apps"
                               onClick={() => setOpenSubmenuId(null)}
@@ -1419,6 +1427,8 @@ export default function Layout({ children }: LayoutProps) {
                               <AppWindow className="w-4 h-4 flex-shrink-0" />
                               <span className="text-sm">Apps</span>
                             </NavLink>
+                            )}
+                            {!placedProgramIds.has("Admin Telas Customizadas") && (
                             <NavLink
                               to="/admin/telas-customizadas"
                               onClick={() => setOpenSubmenuId(null)}
@@ -1427,6 +1437,8 @@ export default function Layout({ children }: LayoutProps) {
                               <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
                               <span className="text-sm">Tela Customizada</span>
                             </NavLink>
+                            )}
+                            {!placedProgramIds.has("Admin Politicas Internas") && (
                             <NavLink
                               to="/politicas-internas"
                               onClick={() => setOpenSubmenuId(null)}
@@ -1435,8 +1447,10 @@ export default function Layout({ children }: LayoutProps) {
                               <LucideIcons.BookOpen className="w-4 h-4 flex-shrink-0" />
                               <span className="text-sm">Políticas Internas</span>
                             </NavLink>
+                            )}
                           </>
                         )}
+
 
                       </div>
                     </div>
@@ -1527,6 +1541,7 @@ export default function Layout({ children }: LayoutProps) {
 
                     {isAdmin && (
                       <>
+                        {!placedProgramIds.has("Admin Macros") && (
                         <NavLink
                           to="/macros"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1535,6 +1550,8 @@ export default function Layout({ children }: LayoutProps) {
                           <Zap className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Macros</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Tickets") && (
                         <NavLink
                           to="/admin/support-tickets"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1543,6 +1560,8 @@ export default function Layout({ children }: LayoutProps) {
                           <LifeBuoy className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Tickets de Suporte</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Apps") && (
                         <NavLink
                           to="/admin/apps"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1551,6 +1570,8 @@ export default function Layout({ children }: LayoutProps) {
                           <AppWindow className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Apps</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Telas Customizadas") && (
                         <NavLink
                           to="/admin/telas-customizadas"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1559,6 +1580,8 @@ export default function Layout({ children }: LayoutProps) {
                           <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Tela Customizada</span>
                         </NavLink>
+                        )}
+                        {!placedProgramIds.has("Admin Politicas Internas") && (
                         <NavLink
                           to="/politicas-internas"
                           onClick={() => setOpenSubmenuId(null)}
@@ -1567,8 +1590,10 @@ export default function Layout({ children }: LayoutProps) {
                           <LucideIcons.BookOpen className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Políticas Internas</span>
                         </NavLink>
+                        )}
                       </>
                     )}
+
                     
                   </div>
                 )}
