@@ -231,6 +231,20 @@ export const menuItems: MenuItem[] = [
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
   
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
+  {
+    id: "Admin",
+    title: "Admin",
+    icon: LucideIcons.Shield,
+    subItems: [
+      { id: "Admin Config", title: "Configurações", url: "/config", icon: Settings },
+      { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Brain },
+      { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
+      { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
+      { id: "Admin Macros", title: "Macros", url: "/macros", icon: Zap },
+      { id: "Admin Telas Customizadas", title: "Tela Customizada", url: "/admin/telas-customizadas", icon: LucideIcons.LayoutGrid },
+      { id: "Admin Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen },
+    ],
+  },
 ];
 
 interface LayoutProps {
@@ -623,6 +637,10 @@ export default function Layout({ children }: LayoutProps) {
   // Filtra os menus baseado nas permissões
   const visibleMenus = menuItems
     .filter((item) => {
+      if (item.id === "Admin") {
+        return isAdmin;
+      }
+
       // Menus que sempre devem aparecer para usuários autenticados
       const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Controle de Visitantes", "Livro de Ocorrência", "Câmeras", "Editores"];
       if (alwaysVisibleMenus.includes(item.id)) {

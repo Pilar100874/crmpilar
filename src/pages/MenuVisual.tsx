@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Sun, Moon, Heart, Shield } from "lucide-react";
+import { ChevronLeft, Sun, Moon, Heart } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
@@ -99,28 +99,6 @@ export default function MenuVisual() {
     };
   }, []);
 
-  const ADMIN_ITEM: MenuItem = {
-    id: "Admin",
-    title: "Admin",
-    icon: Shield,
-    subItems: [
-      { id: "Admin Config", title: "Configurações", url: "/config", icon: Shield },
-      { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: Shield },
-      { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: Shield },
-      { id: "Admin Macros", title: "Macros", url: "/macros", icon: Shield },
-      { id: "Admin Email Config", title: "Email Config", url: "/email-config", icon: Shield },
-      { id: "Admin Push", title: "Notificações Push", url: "/config/push", icon: Shield },
-      { id: "Admin Visual", title: "Visual do Sistema", url: "/config/visual", icon: Shield },
-      { id: "Admin Variaveis", title: "Variáveis Globais", url: "/config/variaveis", icon: Shield },
-      { id: "Admin Skills", title: "Skills", url: "/config/skills", icon: Shield },
-      { id: "Admin SLA", title: "SLA", url: "/config/sla", icon: Shield },
-      { id: "Admin Omnichannel", title: "Omnichannel", url: "/omnichannel-builder", icon: Shield },
-      { id: "Admin Webhooks", title: "Webhooks", url: "/config/webhooks", icon: Shield },
-      { id: "Admin Pagamentos", title: "Pagamentos", url: "/config/pagamentos", icon: Shield },
-      { id: "Admin Filas", title: "Filas", url: "/monitor-filas", icon: Shield },
-    ],
-  };
-
   const handleClick = (item: MenuItem) => {
     if (item.subItems?.length) {
       setOpenItem(item);
@@ -130,9 +108,8 @@ export default function MenuVisual() {
   };
 
   const rootItems: MenuItem[] = [
-    ...menuItems,
+    ...menuItems.filter((item) => item.id !== "Admin" || isAdmin),
     ...EXTRA_ITEMS,
-    ...(isAdmin ? [ADMIN_ITEM] : []),
   ];
   const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
