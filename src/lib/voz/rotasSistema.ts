@@ -397,8 +397,8 @@ export function matchRotaComCandidatosEm(
   const primeiro = candidatos[0];
   const segundo = candidatos[1];
 
-  const MIN_SCORE = 60;
-  const MIN_MARGEM = 15;
+  const MIN_SCORE = 45;
+  const MIN_MARGEM = 8;
 
   if (primeiro.score < MIN_SCORE) return { escolhida: null, topN };
   if (segundo && primeiro.score - segundo.score < MIN_MARGEM) {
