@@ -1210,7 +1210,7 @@ export function useStudioExecution() {
         const editEstabId = localStorage.getItem('estabelecimentoId') || '';
         const editDefaults = getStudioDefaults(editEstabId);
         const editLangSuffix = getLanguagePromptSuffix(editDefaults.defaultLanguage || 'pt-BR');
-        const editPromptText = config.editPrompt || combinedInput || 'Melhore esta imagem';
+        const editPromptText = await revisarTextoUsuarioPT(config.editPrompt || combinedInput || 'Melhore esta imagem');
         let editPromptWithLang = `${editPromptText}\n\n[IDIOMA] Todos os textos na imagem devem estar ${editLangSuffix}.`;
 
         // Inject Visual Identity for image edit
