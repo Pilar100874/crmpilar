@@ -121,6 +121,33 @@ export default function MenuCustomizacao() {
     })();
   }, []);
 
+  // Auto-save em tempo real (debounced) sempre que houver alteração
+  useEffect(() => {
+    if (!dirty || !isAdmin || saving) return;
+    const t = setTimeout(() => {
+      (async () => {
+        try {
+          setSaving(true);
+          const payload: MenuCustomization = {
+            version: 1,
+            roots: mainRoots,
+            adminRoots,
+            userFooterRoots: userRoots,
+            systemFooterRoots: systemRoots,
+            ...(baseline ? { baseline } : {}),
+          };
+          await saveCustomization(payload);
+          setDirty(false);
+        } catch (e: any) {
+          toast.error(e?.message || "Erro ao salvar menu.");
+        } finally {
+          setSaving(false);
+        }
+      })();
+    }, 400);
+    return () => clearTimeout(t);
+  }, [dirty, isAdmin, saving, mainRoots, adminRoots, userRoots, systemRoots, baseline]);
+
   const programs = useMemo(() => extractPrograms(menuItems), []);
 
   const placedIds = useMemo(() => {
