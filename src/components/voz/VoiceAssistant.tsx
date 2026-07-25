@@ -983,7 +983,7 @@ export default function VoiceAssistant() {
                     />
                     <Button
                       size="icon"
-                      onClick={isRecording ? stopDictation : startDictation}
+                      onClick={() => { if (isRecording) stopDictation(); else startDictation(); }}
                       disabled={processing}
                       className={cn(
                         "h-12 w-12 rounded-full shrink-0",
