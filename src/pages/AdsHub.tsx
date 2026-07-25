@@ -182,7 +182,18 @@ const AdsHub: React.FC = () => {
 
     switch (activeTab) {
       case 'dashboard':
-        return <AdsDashboard />;
+        return (
+          <div className="space-y-4">
+            {estabelecimentoId && (
+              <AdsSetupChecklistCard
+                estabelecimentoId={estabelecimentoId}
+                onGoToWizard={() => setActiveTab('wizard')}
+                onNavigate={setActiveTab}
+              />
+            )}
+            <AdsDashboard />
+          </div>
+        );
       case 'campaigns':
         return <AdsCampaigns />;
       case 'reports':
@@ -211,6 +222,7 @@ const AdsHub: React.FC = () => {
         return <AdsDashboard />;
     }
   };
+
 
   // For dashboard tab, render the AdsDashboard directly without card wrapper
   if (activeTab === 'dashboard') {
