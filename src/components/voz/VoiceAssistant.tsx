@@ -167,6 +167,15 @@ export default function VoiceAssistant() {
             // beep + abre e grava
             playChime();
             setTimeout(() => {
+              setShowConfig(false);
+              setHistory([]);
+              setAmbiguas(null);
+              setInterimText("");
+              setManualText("");
+              setRelatorioMode(null);
+              setGrupoSelecionado(null);
+              setRelatorioAtual(null);
+              setResultadoRelatorio("");
               setOpen(true);
               startDictation();
             }, 150);
