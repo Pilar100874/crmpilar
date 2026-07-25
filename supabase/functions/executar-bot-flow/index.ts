@@ -495,7 +495,7 @@ async function executeBroadcast(
           cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
         }
         if (cPhone) {
-          await supabase.functions.invoke("send-agent-message", {
+          const { data: rc, error: rcErr } = await supabase.functions.invoke("send-agent-message", {
             body: {
               estabelecimento_id: estabelecimentoId, telefone: d.phone,
               contact: { nome: cNome, whatsapp: cPhone },
@@ -505,10 +505,17 @@ async function executeBroadcast(
               origem: `${origem}_contato`,
             },
           });
+          if (rcErr || (rc as any)?.success === false) {
+            console.warn("[broadcast] falha enviar contato p/", d.phone, rcErr?.message || (rc as any)?.error);
+          }
+        } else {
+          console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
         }
       }
     } catch (e) {
+      console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
       ok = false;
+
     }
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
@@ -547,8 +554,9 @@ async function executeBroadcast(
 
       const enviarResumo = async (telefone: string, itens: ResumoItem[], origemResumo: string) => {
         const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
+        console.log("[broadcast] enviando resumo p/", telefone, "origem:", origemResumo);
         try {
-          await supabase.functions.invoke("send-agent-message", {
+          const { data: r1, error: e1 } = await supabase.functions.invoke("send-agent-message", {
             body: {
               estabelecimento_id: estabelecimentoId, telefone,
               text: mediaUrlPre ? undefined : parte1,
@@ -561,8 +569,11 @@ async function executeBroadcast(
               origem: origemResumo,
             },
           });
+          if (e1 || (r1 as any)?.success === false) {
+            console.warn("[broadcast] falha parte1 resumo:", telefone, e1?.message || (r1 as any)?.error);
+          }
           if (depoisMask) {
-            await supabase.functions.invoke("send-agent-message", {
+            const { data: rd, error: ed } = await supabase.functions.invoke("send-agent-message", {
               body: {
                 estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
                 whatsappSessionId: cfg.whatsappSessionId || null,
@@ -571,8 +582,11 @@ async function executeBroadcast(
                 origem: `${origemResumo}_depois`,
               },
             });
+            if (ed || (rd as any)?.success === false) {
+              console.warn("[broadcast] falha depois resumo:", telefone, ed?.message || (rd as any)?.error);
+            }
           }
-          await supabase.functions.invoke("send-agent-message", {
+          const { data: rs, error: es } = await supabase.functions.invoke("send-agent-message", {
             body: {
               estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
               whatsappSessionId: cfg.whatsappSessionId || null,
@@ -581,15 +595,19 @@ async function executeBroadcast(
               origem: `${origemResumo}_stats`,
             },
           });
+          if (es || (rs as any)?.success === false) {
+            console.warn("[broadcast] falha stats resumo:", telefone, es?.message || (rs as any)?.error);
+          }
         } catch (err) {
-          console.warn("[executar-bot-flow] falha ao enviar resumo:", err);
+          console.warn("[executar-bot-flow] falha ao enviar resumo p/", telefone, ":", err);
         }
       };
 
+      console.log("[broadcast] resumo — gerentes:", resumoPorGerente.size, "extras:", numerosExtras.length, "raw:", cfg.resumoNumerosExtras);
       if (temResumoGerente) {
         for (const [, entry] of resumoPorGerente) {
           const gPhone = String(entry.gerente.whatsapp || "").replace(/\D/g, "");
-          if (!gPhone) continue;
+          if (!gPhone) { console.warn("[broadcast] gerente sem whatsapp:", entry.gerente); continue; }
           await enviarResumo(gPhone, entry.itens, "broadcast_vendedores_resumo");
         }
       }
@@ -604,6 +622,7 @@ async function executeBroadcast(
           await enviarResumo(numero, todos, "broadcast_vendedores_resumo_extra");
         }
       }
+
     }
   } catch (err) {
     console.warn("[executar-bot-flow] erro no envio de resumo:", err);
