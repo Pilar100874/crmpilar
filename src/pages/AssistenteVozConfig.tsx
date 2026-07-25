@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { PROGRAMAS_DISPONIVEIS, EXEMPLOS_COMANDOS_VOZ } from "@/lib/voz/programasDisponiveis";
 import { GatilhoLivePreview } from "@/components/voz/GatilhoLivePreview";
+import { TestarGatilhoDialog } from "@/components/voz/TestarGatilhoDialog";
 
 type TipoAcao =
   | "abrir_programa"
