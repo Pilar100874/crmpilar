@@ -340,6 +340,14 @@ function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: st
   return { invalid: false };
 }
 
+function failureReason(bodyTxt: string, status: number): string {
+  const lower = (bodyTxt || "").toLowerCase();
+  if (lower.includes("connection closed") || lower.includes("session closed") || lower.includes("socket closed")) return "sessao_desconectada";
+  if (lower.includes("not connected") || lower.includes("disconnected")) return "sessao_desconectada";
+  if (lower.includes("unauthorized") || lower.includes("forbidden")) return "credenciais_invalidas";
+  return `http_${status}`;
+}
+
 async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
   if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -352,8 +360,7 @@ async function sendEvolutionText(toNumberOnly: string, text: string, sessionName
   console.log("[AGENT][EVO] sendText:", res.status, bodyTxt.slice(0, 200));
   const inv = detectInvalidFromText(bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
-  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
 }
 
 async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
@@ -388,8 +395,7 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
   console.log("[AGENT][EVO] sendMedia:", res.status, bodyTxt.slice(0, 200));
   const inv = detectInvalidFromText(bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
-  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
 }
 
 /* ===== Cloud API senders ===== */
@@ -464,8 +470,7 @@ async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: stri
   console.log("[AGENT][EVO] sendContact:", res.status, bodyTxt.slice(0, 200));
   const inv = detectInvalidFromText(bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
-  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
 }
 
 async function sendCloudContact(phoneNumberId: string, accessToken: string, to: string, contact: { nome?: string; whatsapp: string }): Promise<SendOut> {
