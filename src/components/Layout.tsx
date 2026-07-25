@@ -685,6 +685,9 @@ export default function Layout({ children }: LayoutProps) {
   const systemInMain = new Set<string>(
     visibleMenus.map((i) => i.system).filter(Boolean) as string[]
   );
+  // Ids de programas do Admin (rodapé) posicionados no menu principal — escondê-los no dropdown Admin do rodapé
+  const placedProgramIds = getPlacedProgramIds(visibleMenus);
+
 
 
   if (soloMode) {
