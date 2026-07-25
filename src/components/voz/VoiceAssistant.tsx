@@ -562,14 +562,29 @@ export default function VoiceAssistant() {
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                  {/* Popup result */}
-                  {popupResult && (
-                    <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-3 relative">
-                      <button onClick={() => setPopupResult(null)} className="absolute top-1 right-1 p-1 hover:bg-background rounded">
-                        <X className="h-3 w-3" />
-                      </button>
-                      <div className="text-xs font-semibold text-primary mb-1">{popupResult.titulo}</div>
-                      <div className="text-sm whitespace-pre-wrap">{popupResult.texto}</div>
+                  {/* Desambiguação: opções quando o match não é claro */}
+                  {ambiguas && ambiguas.length > 0 && (
+                    <div className="rounded-lg border-2 border-yellow-500/40 bg-yellow-500/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                          Qual tela você quer abrir?
+                        </div>
+                        <button onClick={() => setAmbiguas(null)} className="p-1 hover:bg-background rounded">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        {ambiguas.map((r) => (
+                          <button
+                            key={r.path}
+                            onClick={() => { navigate(r.path); setAmbiguas(null); setOpen(false); }}
+                            className="w-full text-left text-sm px-2.5 py-1.5 rounded border bg-background hover:bg-primary/10 transition"
+                          >
+                            <div className="font-medium">{r.titulo}</div>
+                            <div className="text-[11px] text-muted-foreground">{r.path}</div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -642,7 +657,7 @@ export default function VoiceAssistant() {
                   )}
 
                   {/* Home — 2 intenções */}
-                  {history.length === 0 && !isRecording && !processing && !popupResult && !relatorioMode && (
+                  {history.length === 0 && !isRecording && !processing && !ambiguas && !relatorioMode && (
                     <div className="space-y-3">
                       <div className="text-center py-2">
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diga "{cfg.wake_word}" ou toque no mic</div>
