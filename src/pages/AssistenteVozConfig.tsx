@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { PROGRAMAS_DISPONIVEIS, EXEMPLOS_COMANDOS_VOZ } from "@/lib/voz/programasDisponiveis";
 import { GatilhoLivePreview } from "@/components/voz/GatilhoLivePreview";
+import { TestarGatilhoDialog } from "@/components/voz/TestarGatilhoDialog";
 
 type TipoAcao =
   | "abrir_programa"
@@ -91,6 +92,7 @@ export default function AssistenteVozConfig() {
   const [editing, setEditing] = useState<Partial<Comando> | null>(null);
   const [confirmDel, setConfirmDel] = useState<Comando | null>(null);
   const [buscaPrograma, setBuscaPrograma] = useState("");
+  const [testando, setTestando] = useState(false);
 
   // Confirmação "Salvar telas do usuário antes de rodar?"
   const [savePrompt, setSavePrompt] = useState<null | { onDecide: (v: "salvar" | "continuar" | "cancelar") => void }>(null);
@@ -658,12 +660,26 @@ export default function AssistenteVozConfig() {
 
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setTestando(true)}>
+              <Mic className="w-4 h-4 mr-1.5" /> Testar agora
+            </Button>
             <Button onClick={salvarComando}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TestarGatilhoDialog
+        open={testando}
+        onOpenChange={setTestando}
+        tipo={editing?.tipo_acao}
+        payload={editing?.payload}
+        frase={editing?.frase_gatilho || ""}
+        resposta={editing?.resposta_falada}
+        provedorLabel={PROVEDORES_CONVERSA.find((p) => p.id === editing?.payload?.provedor)?.label}
+        responderPorVoz={!!config?.responder_por_voz}
+      />
 
       {/* Confirmação: telas do usuário não estão salvas */}
       <AlertDialog open={!!savePrompt} onOpenChange={(o) => !o && savePrompt?.onDecide("cancelar")}>
