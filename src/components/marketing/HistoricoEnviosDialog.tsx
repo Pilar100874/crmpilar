@@ -248,6 +248,96 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
           )}
         </ScrollArea>
       </DialogContent>
+
+      {/* Dialog de detalhes de um envio específico */}
+      <Dialog open={!!detalhe} onOpenChange={(o) => !o && setDetalhe(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>O que foi enviado</DialogTitle>
+            <DialogDescription>
+              {detalhe && (
+                <>
+                  {new Date(detalhe.executed_at).toLocaleDateString("pt-BR")} às{" "}
+                  {new Date(detalhe.executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {detalhe.metodo ? ` · ${detalhe.metodo}` : ""}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-4 -mr-4">
+            {detalhe && (
+              <div className="space-y-4">
+                {detalhe.items?.length ? (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Conteúdo ({detalhe.items.length})
+                    </p>
+                    {detalhe.items.map((it, idx) => (
+                      <div key={idx} className="flex gap-3 rounded-md bg-muted/40 p-3">
+                        <div className="mt-0.5 text-muted-foreground shrink-0">{iconFor(it.tipo)}</div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <p className="text-[10px] uppercase text-muted-foreground">{it.tipo}</p>
+                          {it.titulo && <p className="text-sm font-medium">{it.titulo}</p>}
+                          {it.url && (it.tipo === "imagem" ? (
+                            <img src={it.url} alt="" className="max-h-72 rounded border object-contain" />
+                          ) : it.tipo === "video" ? (
+                            <video src={it.url} controls className="max-h-72 rounded border" />
+                          ) : it.tipo === "audio" ? (
+                            <audio src={it.url} controls className="w-full" />
+                          ) : (
+                            <a href={it.url} target="_blank" rel="noreferrer" className="text-xs text-primary underline break-all">
+                              {it.nome || it.url}
+                            </a>
+                          ))}
+                          {(it.conteudo || it.legenda) && (
+                            <p className="text-sm whitespace-pre-wrap break-words">{it.conteudo || it.legenda}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Nenhum conteúdo registrado neste envio.</p>
+                )}
+
+                {detalhe.recipients?.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                      <Users className="w-3 h-3" /> Destinatários ({detalhe.recipients.length})
+                    </p>
+                    <div className="rounded-md border">
+                      <table className="w-full text-xs">
+                        <tbody>
+                          {detalhe.recipients.map((r, i) => (
+                            <tr key={i} className="border-b last:border-0">
+                              <td className="px-2 py-1.5">{r.nome || "—"}</td>
+                              <td className="px-2 py-1.5 text-muted-foreground">{r.telefone || r.email || "—"}</td>
+                              <td className="px-2 py-1.5 text-right">
+                                {r.status === "enviado" || r.status === "ok" ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline" />
+                                ) : (
+                                  <span className="text-destructive" title={r.motivo || ""}>
+                                    <XCircle className="w-3.5 h-3.5 inline" />
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {detalhe.error_message && (
+                  <p className="text-xs text-destructive">{detalhe.error_message}</p>
+                )}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
