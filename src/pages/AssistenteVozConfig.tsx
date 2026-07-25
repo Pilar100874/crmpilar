@@ -689,7 +689,7 @@ export default function AssistenteVozConfig() {
       />
 
       {/* Confirmação: telas do usuário não estão salvas */}
-      <AlertDialog open={!!savePrompt} onOpenChange={(o) => !o && savePrompt?.onDecide("cancelar")}>
+      <AlertDialog open={!!savePrompt} onOpenChange={(o) => { if (!o && savePrompt) savePrompt.onDecide("cancelar"); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Salvar suas telas antes?</AlertDialogTitle>
