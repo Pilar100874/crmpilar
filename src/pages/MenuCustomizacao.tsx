@@ -7,6 +7,8 @@ import {
   fetchRemoteCustomization,
   initialAdminFooterTree,
   initialFromBase,
+  initialUserFooterTree,
+  initialSystemFooterTree,
   loadCustomization,
   MenuCustomization,
   saveCustomization,
@@ -20,7 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
-import { Lock, LayoutList } from "lucide-react";
+import { Lock, LayoutList, User as UserIcon, Cog } from "lucide-react";
 import {
   ChevronDown,
   ChevronRight,
@@ -39,9 +41,10 @@ import {
 } from "lucide-react";
 import { MenuIconPicker, resolveMenuIcon } from "@/components/menu/MenuIconPicker";
 
-type TreeKey = "main" | "admin";
+type TreeKey = "main" | "admin" | "user" | "system";
 type Path = number[];
 type DropPos = "before" | "after" | "inside";
+
 
 function cloneTree(roots: CustomNode[]): CustomNode[] {
   return JSON.parse(JSON.stringify(roots));
