@@ -409,9 +409,20 @@ export default function VoiceAssistant() {
 
   const startWake = useCallback(() => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-    if (wakeRecogRef.current) return;
     shouldWakeRef.current = true;
+    if (!SR) {
+      setWakeUnavailable(true);
+      setWakeListening(false);
+      return;
+    }
+    if (wakeRecogRef.current) {
+      setWakeListening(true);
+      return;
+    }
+    if (wakeRestartTimerRef.current) {
+      window.clearTimeout(wakeRestartTimerRef.current);
+      wakeRestartTimerRef.current = null;
+    }
     setWakeListening(true);
     try {
       const rec = new SR();
@@ -442,6 +453,10 @@ export default function VoiceAssistant() {
           shouldWakeRef.current = false;
           setWakeListening(false);
           setWakeUnavailable(true);
+        } else if (ev?.error === "audio-capture") {
+          shouldWakeRef.current = false;
+          setWakeListening(false);
+          setWakeUnavailable(true);
         }
       };
       rec.onend = () => {
@@ -451,7 +466,7 @@ export default function VoiceAssistant() {
           wakeRestartTimerRef.current = window.setTimeout(() => {
             wakeRestartTimerRef.current = null;
             if (shouldWakeRef.current) startWake();
-          }, 900);
+          }, 350);
         } else {
           setWakeListening(false);
         }
@@ -459,22 +474,23 @@ export default function VoiceAssistant() {
       rec.start();
       wakeRecogRef.current = rec;
     } catch {
+      wakeRecogRef.current = null;
       setWakeListening(Boolean(shouldWakeRef.current));
       wakeRestartTimerRef.current = window.setTimeout(() => {
         wakeRestartTimerRef.current = null;
         if (shouldWakeRef.current) startWake();
-      }, 1200);
+      }, 650);
     }
   }, [limparPainel, textoTemWake]);
 
   useEffect(() => {
-    if (cfg.wake_word_ativo && !wakeUnavailable && !isRecording && !processing) {
+    if (cfg.wake_word_ativo && !wakeUnavailable && !open && !isRecording && !processing) {
       startWake();
     } else {
       stopWake();
     }
     return () => stopWake();
-  }, [cfg.wake_word_ativo, cfg.wake_word, wakeUnavailable, isRecording, processing, startWake, stopWake]);
+  }, [cfg.wake_word_ativo, cfg.wake_word, wakeUnavailable, open, isRecording, processing, startWake, stopWake]);
 
   // ---------- Ditado (Web Speech nativo, transcrição em tempo real) ----------
   const startDictationNow = useCallback(() => {
@@ -563,8 +579,14 @@ export default function VoiceAssistant() {
     shouldWakeRef.current = false;
 
     const tinhaWakeAtivo = Boolean(wakeRecogRef.current);
-    try { wakeRecogRef.current?.abort?.(); } catch {}
-    try { wakeRecogRef.current?.stop?.(); } catch {}
+    if (wakeRestartTimerRef.current) {
+      window.clearTimeout(wakeRestartTimerRef.current);
+      wakeRestartTimerRef.current = null;
+    }
+    const wakeAtual = wakeRecogRef.current;
+    wakeRecogRef.current = null;
+    try { wakeAtual?.abort?.(); } catch {}
+    try { wakeAtual?.stop?.(); } catch {}
     setWakeListening(false);
 
     if (dictationStartTimerRef.current) window.clearTimeout(dictationStartTimerRef.current);
@@ -856,6 +878,7 @@ export default function VoiceAssistant() {
 
   // Sempre abre limpo, na aba do chat
   const abrirLimpo = useCallback(() => {
+    stopWake();
     setShowConfig(false);
     setHistory([]);
     setAmbiguas(null);
@@ -866,7 +889,7 @@ export default function VoiceAssistant() {
     setRelatorioAtual(null);
     setResultadoRelatorio("");
     setOpen(true);
-  }, []);
+  }, [stopWake]);
 
   // ---------- UI ----------
   return (
@@ -895,7 +918,7 @@ export default function VoiceAssistant() {
       {open && (
         <div
           className="fixed inset-0 z-[700] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
-          onClick={() => setOpen(false)}
+          onClick={fecharPainel}
         >
           <Card
             onClick={(e) => e.stopPropagation()}
@@ -923,7 +946,7 @@ export default function VoiceAssistant() {
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowConfig((s) => !s)}>
                   <Settings className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpen(false)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fecharPainel}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
