@@ -141,7 +141,7 @@ serve(async (req) => {
     }
     const toNumberOnly = String(customerPhone).replace(/\D/g, "");
 
-    // ===== Resolve número (prioridade: override do atendente > bot > padrão) =====
+    // ===== Resolve número (prioridade: sessão explícita do bloco > bot > padrão) =====
     let numero: any = null;
     const resolveEvolutionSession = async (session: any) => {
       const scopedEstabelecimentoId = conversation?.estabelecimento_id || estabelecimento_id || session?.estabelecimento_id;
@@ -163,19 +163,8 @@ serve(async (req) => {
       };
     };
 
-    // Prioridade máxima: sessão Evolution vinculada ao bot em execução.
-    if (botFlowId) {
-      const { data: session } = await supabase
-        .from("whatsapp_sessions")
-        .select("id, session_name, estabelecimento_id, status")
-        .eq("bot_flow_id", botFlowId)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      numero = await resolveEvolutionSession(session);
-    }
-    // Sessão Evolution explicitamente escolhida no bloco/workflow.
-    if (!numero && whatsappSessionId) {
+    // Sessão Evolution explicitamente escolhida no bloco/workflow deve ganhar do vínculo do bot.
+    if (whatsappSessionId) {
       const { data: session } = await supabase
         .from("whatsapp_sessions")
         .select("id, session_name, estabelecimento_id, status")
@@ -194,6 +183,18 @@ serve(async (req) => {
       if (scopedEstabelecimentoId) q = q.eq("estabelecimento_id", scopedEstabelecimentoId);
       const { data: sessions } = await q;
       numero = await resolveEvolutionSession(sessions?.[0]);
+    }
+
+    // Se o bloco não escolheu sessão, usa a sessão vinculada ao bot em execução.
+    if (!numero && botFlowId) {
+      const { data: session } = await supabase
+        .from("whatsapp_sessions")
+        .select("id, session_name, estabelecimento_id, status")
+        .eq("bot_flow_id", botFlowId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      numero = await resolveEvolutionSession(session);
     }
 
     if (!numero && whatsappNumeroId) {
@@ -287,6 +288,8 @@ serve(async (req) => {
       success: sendResult.ok,
       invalid_number: !!sendResult.invalid,
       reason: sendResult.reason || null,
+      provider: numero.provider || null,
+      session: numero.session_name || numero.nome || null,
     }), {
       status: sendResult.ok ? 200 : (sendResult.invalid ? 422 : 502),
       headers: { ...corsHeaders, "Content-Type": "application/json" },
