@@ -97,13 +97,24 @@ interface MenuPermissions {
   delete: boolean;
 }
 
+export type MenuSystemAction =
+  | "lock"
+  | "admin"
+  | "theme"
+  | "logout"
+  | "profile"
+  | "share-screen"
+  | "open-ticket"
+  | "pwa-update"
+  | "change-password";
+
 interface SubMenuItem {
   id: string;
   title: string;
   url: string;
   icon: any;
   group?: string;
-  system?: "lock" | "admin" | "theme" | "logout";
+  system?: MenuSystemAction;
 }
 
 
@@ -113,7 +124,7 @@ export interface MenuItem {
   url?: string;
   icon: any;
   subItems?: SubMenuItem[];
-  system?: "lock" | "admin" | "theme" | "logout";
+  system?: MenuSystemAction;
 }
 
 
