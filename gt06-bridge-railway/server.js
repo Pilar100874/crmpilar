@@ -224,8 +224,21 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
     }
     case 0x13:
     case 0x23: {
-      // Heartbeat / status
-      console.log(`💓 Heartbeat imei=${getImei() || '?'}`);
+      // Heartbeat / status — TerminalInformation no primeiro byte
+      // bit 1 (0x02) = ACC ligada (carro ligado)
+      const imei = getImei();
+      if (content.length >= 1 && imei) {
+        const terminalInfo = content[0];
+        const ignition = (terminalInfo & 0x02) !== 0;
+        const prev = stateByImei.get(imei) || {};
+        if (prev.ignition !== ignition) {
+          console.log(`🔑 IGNIÇÃO ${ignition ? 'LIGADA' : 'DESLIGADA'} imei=${imei}`);
+        }
+        stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString() });
+        // Envia status para o backend (sem coordenadas) para atualizar ignição
+        forwardPosition({ source: 'gt06-bridge-status', imei, ignition, timestamp: new Date().toISOString() });
+      }
+      console.log(`💓 Heartbeat imei=${imei || '?'}`);
       socket.write(buildResponse(protocol, serial));
       break;
     }
@@ -236,11 +249,22 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
       const loc = parseLocation(content);
       if (loc) {
         const imei = getImei();
-        console.log(`📍 imei=${imei} lat=${loc.latitude.toFixed(6)} lon=${loc.longitude.toFixed(6)} v=${loc.speed_kmh}km/h sats=${loc.satellites} fix=${loc.gps_fixed}`);
+        // Tenta ler ACC do pacote estendido (após 18 bytes de GPS + LBS ~8 bytes)
+        let ignition = stateByImei.get(imei)?.ignition;
+        if (content.length >= 27) {
+          // byte 26 costuma ser ACC status em pacotes estendidos J-series
+          const accByte = content[26];
+          if (accByte === 0 || accByte === 1) {
+            ignition = accByte === 1;
+            stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString() });
+          }
+        }
+        console.log(`📍 imei=${imei} lat=${loc.latitude.toFixed(6)} lon=${loc.longitude.toFixed(6)} v=${loc.speed_kmh}km/h sats=${loc.satellites} fix=${loc.gps_fixed} acc=${ignition}`);
         forwardPosition({
           source: 'gt06-bridge',
           imei,
           protocol: '0x' + protocol.toString(16),
+          ignition: typeof ignition === 'boolean' ? ignition : undefined,
           ...loc,
         });
       }
@@ -252,8 +276,9 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
       // Alarme (contém localização)
       const loc = parseLocation(content);
       const imei = getImei();
+      const ignition = stateByImei.get(imei)?.ignition;
       console.log(`🚨 Alarme imei=${imei}`);
-      if (loc) forwardPosition({ source: 'gt06-bridge', imei, alarm: true, protocol: '0x' + protocol.toString(16), ...loc });
+      if (loc) forwardPosition({ source: 'gt06-bridge', imei, alarm: true, protocol: '0x' + protocol.toString(16), ignition, ...loc });
       socket.write(buildResponse(protocol, serial));
       break;
     }
