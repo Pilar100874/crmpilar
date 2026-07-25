@@ -82,7 +82,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/ponto/aprovacoes", titulo: "Ponto - Aprovações", aliases: ["aprovacoes do ponto"] },
 
   // ============ Menu Principal - Controle de Veículos ============
-  { path: "/controle-veiculos", titulo: "Controle de Veículos", aliases: ["cv", "controle dos veiculos"] },
+  { path: "/controle-veiculos", titulo: "Controle de Veículos", aliases: ["cv", "controle dos veiculos", "dashboard controle de veiculos", "painel controle de veiculos"] },
 
   // ============ Menu Principal - Controle de Visitantes ============
   { path: "/controle-visitantes", titulo: "Controle de Visitantes", aliases: ["visitantes"] },
