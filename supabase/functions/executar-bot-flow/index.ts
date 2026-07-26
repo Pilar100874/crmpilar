@@ -93,7 +93,7 @@ serve(async (req) => {
       const t = nodeType(current);
       const cfg = current.data?.config || {};
       let handle: string | undefined;
-      trace.push({ node: current.id, type: t, label: current.data?.label });
+      trace.push({ node: current.id, type: t, label: current.data?.label, config: cfg });
 
       try {
         if (t === "start" || t === "inicio") {
