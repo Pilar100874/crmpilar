@@ -876,6 +876,15 @@ export default function VoiceAssistant() {
     };
   }, [fecharPainel, open, isRecording, processing, requestDictation]);
 
+  // Detecta touch (tablet/celular) — sem barra de espaço.
+  const isTouchDevice = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    try { if (window.matchMedia?.("(pointer: coarse)").matches) return true; } catch { /* ignore */ }
+    return "ontouchstart" in window || (navigator?.maxTouchPoints ?? 0) > 0;
+  }, []);
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => { setIsTouch(isTouchDevice()); }, [isTouchDevice]);
+
   // Sempre abre limpo, na aba do chat
   const abrirLimpo = useCallback(() => {
     stopWake();
@@ -889,7 +898,11 @@ export default function VoiceAssistant() {
     setRelatorioAtual(null);
     setResultadoRelatorio("");
     setOpen(true);
-  }, [stopWake]);
+    // Em touch já inicia o microfone (não há tecla de espaço).
+    if (isTouchDevice()) {
+      setTimeout(() => { requestDictation({ holdToTalk: false, source: "button" }); }, 300);
+    }
+  }, [stopWake, isTouchDevice, requestDictation]);
 
   // ---------- UI ----------
   return (
@@ -904,6 +917,7 @@ export default function VoiceAssistant() {
         )}
         title={
         wakeListening ? `Escutando "${cfg.wake_word}"…` :
+          isTouch ? "Toque para falar" :
           wakeUnavailable ? "Use o microfone ou Espaço" :
           cfg.wake_word_ativo ? "Ativando escuta…" : "Assistente por voz"
         }
@@ -1176,15 +1190,17 @@ export default function VoiceAssistant() {
                     />
                     <Button
                       size="icon"
-                      onClick={() => { if (isRecording) stopDictation(); else requestDictation(); }}
+                      onClick={() => { if (isRecording) stopDictation(); else requestDictation({ holdToTalk: false, source: "button" }); }}
                       disabled={processing}
                       className={cn(
-                        "h-12 w-12 rounded-full shrink-0",
+                        "rounded-full shrink-0",
+                        isTouch ? "h-14 w-14" : "h-12 w-12",
                         isRecording && "bg-destructive hover:bg-destructive/90 animate-pulse"
                       )}
+                      aria-label={isRecording ? "Parar gravação" : "Falar"}
                     >
-                      {processing ? <Loader2 className="h-5 w-5 animate-spin" /> :
-                        isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                      {processing ? <Loader2 className="h-6 w-6 animate-spin" /> :
+                        isRecording ? <MicOff className={isTouch ? "h-6 w-6" : "h-5 w-5"} /> : <Mic className={isTouch ? "h-6 w-6" : "h-5 w-5"} />}
                     </Button>
                     <Button
                       variant="outline" size="icon" className="h-9 w-9"
@@ -1195,7 +1211,11 @@ export default function VoiceAssistant() {
                     </Button>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>Pressione <kbd className="px-1 rounded bg-muted">espaço</kbd> para falar/parar</span>
+                    <span>
+                      {isTouch
+                        ? <>Toque no <Mic className="inline h-3 w-3 mx-0.5" /> para falar/parar</>
+                        : <>Pressione <kbd className="px-1 rounded bg-muted">espaço</kbd> para falar/parar</>}
+                    </span>
                     <span className="flex items-center gap-1">
                       {wakeListening && <><span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /> escuta ativa</>}
                     </span>
