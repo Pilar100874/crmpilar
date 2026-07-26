@@ -917,6 +917,7 @@ export default function VoiceAssistant() {
         )}
         title={
         wakeListening ? `Escutando "${cfg.wake_word}"…` :
+          isTouch ? "Toque para falar" :
           wakeUnavailable ? "Use o microfone ou Espaço" :
           cfg.wake_word_ativo ? "Ativando escuta…" : "Assistente por voz"
         }
