@@ -635,5 +635,5 @@ async function executeBroadcast(
     console.warn("[executar-bot-flow] erro no envio de resumo:", err);
   }
 
-  return { total, enviados, falhas, invalidos, detalhes };
+  return { total, enviados, falhas, invalidos, detalhes, mensagem: msg, mediaUrl: mediaUrlPre, mediaType, textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "" };
 }
