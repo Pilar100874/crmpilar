@@ -317,9 +317,25 @@ serve(async (req) => {
         totals: { total: totalDest, enviados, falhas },
         raw_result: result,
       });
+
+      // Manter apenas os últimos 20 registros por automação
+      const { data: antigos } = await supabase
+        .from("marketing_automation_execution_logs")
+        .select("id")
+        .eq("automation_id", automationId)
+        .order("executed_at", { ascending: false })
+        .range(20, 999);
+      const idsExcluir = (antigos || []).map((r: any) => r.id);
+      if (idsExcluir.length > 0) {
+        await supabase
+          .from("marketing_automation_execution_logs")
+          .delete()
+          .in("id", idsExcluir);
+      }
     } catch (logErr) {
       console.error("Falha ao gravar log de execução:", logErr);
     }
+
 
     return new Response(JSON.stringify({ success: true, result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
