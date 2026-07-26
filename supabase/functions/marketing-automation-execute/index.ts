@@ -240,37 +240,57 @@ serve(async (req) => {
       const trace: any[] = (result as any)?.details?.trace || [];
       for (const t of trace) {
         if (t?.broadcast) {
-          totalDest += t.broadcast.total || 0;
-          enviados += t.broadcast.enviados || 0;
-          falhas += t.broadcast.falhas || 0;
-          for (const d of t.broadcast.detalhes || []) {
+          const b = t.broadcast;
+          totalDest += b.total || 0;
+          enviados += b.enviados || 0;
+          falhas += b.falhas || 0;
+          for (const d of b.detalhes || []) {
             recipients.push({
               nome: d?.nome || d?.name || null,
               telefone: d?.telefone || d?.phone || null,
               email: d?.email || null,
-              status: d?.status || (d?.ok ? "enviado" : "falha"),
-              motivo: d?.motivo || d?.error || null,
+              status: (d?.status) || (d?.ok ? "enviado" : (d?.invalid ? "invalido" : "falha")),
+              motivo: d?.motivo || d?.error || (d?.invalid ? "WhatsApp inválido" : null),
             });
+          }
+          // Conteúdo enviado no broadcast
+          if (b.textoAntes) items.push({ tipo: "texto", conteudo: b.textoAntes, titulo: "Texto antes" });
+          if (b.mediaUrl) {
+            const tipoMidia = b.mediaType === "video" ? "video" : "imagem";
+            items.push({ tipo: tipoMidia, url: b.mediaUrl, legenda: b.mensagem || undefined });
+          } else if (b.mensagem) {
+            items.push({ tipo: "texto", conteudo: b.mensagem });
+          }
+          if (b.textoDepois) items.push({ tipo: "texto", conteudo: b.textoDepois, titulo: "Texto depois" });
+        }
+        if (t?.type === "mensagem_pre_definida_result") {
+          if (t.frase) items.push({ tipo: "texto", conteudo: t.frase, titulo: "Mensagem pré-definida" });
+          for (const url of (t.mediaUrls || [])) {
+            items.push({ tipo: t.mediaType === "video" ? "video" : "imagem", url });
           }
         }
         if (t?.type) {
           const nodeCfg = t?.config || {};
           const kind = t.type;
-          if (kind === "enviar_mensagem" || kind === "message" || kind === "mensagem") {
-            items.push({ tipo: "texto", conteudo: nodeCfg.mensagem || nodeCfg.text || msgFromVars });
-          } else if (kind === "enviar_imagem" || kind === "image") {
+          if (kind === "enviar_mensagem" || kind === "message" || kind === "mensagem" || kind === "send_message") {
+            const txt = nodeCfg.mensagem || nodeCfg.message || nodeCfg.text || msgFromVars;
+            if (txt) items.push({ tipo: "texto", conteudo: txt });
+          } else if (kind === "enviar_imagem" || kind === "image" || kind === "send_image") {
             items.push({ tipo: "imagem", url: nodeCfg.mediaUrl || nodeCfg.url, legenda: nodeCfg.caption || nodeCfg.legenda });
-          } else if (kind === "enviar_video" || kind === "video") {
+          } else if (kind === "enviar_video" || kind === "video" || kind === "send_video") {
             items.push({ tipo: "video", url: nodeCfg.mediaUrl || nodeCfg.url, legenda: nodeCfg.caption || nodeCfg.legenda });
           } else if (kind === "enviar_audio" || kind === "audio") {
             items.push({ tipo: "audio", url: nodeCfg.mediaUrl || nodeCfg.url });
           } else if (kind === "enviar_arquivo" || kind === "file" || kind === "document") {
             items.push({ tipo: "arquivo", url: nodeCfg.mediaUrl || nodeCfg.url, nome: nodeCfg.fileName });
-          } else if (kind === "broadcast" || kind === "envio_massa") {
-            if (nodeCfg.mensagem) items.push({ tipo: "texto", conteudo: nodeCfg.mensagem });
+          } else if (kind === "send_whatsapp_to_number") {
+            const txt = nodeCfg.message || nodeCfg.mensagem;
+            if (nodeCfg.mediaUrl) items.push({ tipo: "imagem", url: nodeCfg.mediaUrl, legenda: txt });
+            else if (txt) items.push({ tipo: "texto", conteudo: txt });
           }
         }
       }
+
     } else if (metodo === "push") {
       items.push({
         tipo: "push",
