@@ -152,6 +152,13 @@ serve(async (req) => {
                 }
               }
               handle = "default";
+              trace.push({
+                node: current.id,
+                type: "mensagem_pre_definida_result",
+                frase,
+                mediaUrls: ctx.last_generated_media_urls || (ctx.last_generated_media_url ? [ctx.last_generated_media_url] : []),
+                mediaType: ctx.last_generated_media_type || null,
+              });
             } else {
               handle = "sem_frase";
             }
