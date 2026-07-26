@@ -908,6 +908,7 @@ export default function VoiceAssistant() {
   return (
     <>
       {/* Botão flutuante */}
+      {!open && (
       <button
         onClick={abrirLimpo}
         className={cn(
