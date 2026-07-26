@@ -25,8 +25,22 @@ function isNoTabMode(): boolean {
   return new URLSearchParams(window.location.search).get("notab") === "1";
 }
 
+function isTouchOrSmallScreen(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const small = window.matchMedia("(max-width: 1024px)").matches;
+    return coarse || small;
+  } catch {
+    return false;
+  }
+}
+
 export default function OpenInNewTabButton() {
   if (isSoloMode() || isNoTabMode()) return null;
+  // Em celular/tablet não faz sentido abrir nova aba — ocultamos o botão.
+  if (isTouchOrSmallScreen()) return null;
+
 
   const abrirNovaAba = () => {
     const url = new URL(window.location.href);
