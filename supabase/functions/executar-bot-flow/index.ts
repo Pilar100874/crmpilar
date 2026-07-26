@@ -93,7 +93,7 @@ serve(async (req) => {
       const t = nodeType(current);
       const cfg = current.data?.config || {};
       let handle: string | undefined;
-      trace.push({ node: current.id, type: t, label: current.data?.label });
+      trace.push({ node: current.id, type: t, label: current.data?.label, config: cfg });
 
       try {
         if (t === "start" || t === "inicio") {
@@ -152,6 +152,13 @@ serve(async (req) => {
                 }
               }
               handle = "default";
+              trace.push({
+                node: current.id,
+                type: "mensagem_pre_definida_result",
+                frase,
+                mediaUrls: ctx.last_generated_media_urls || (ctx.last_generated_media_url ? [ctx.last_generated_media_url] : []),
+                mediaType: ctx.last_generated_media_type || null,
+              });
             } else {
               handle = "sem_frase";
             }
@@ -628,5 +635,5 @@ async function executeBroadcast(
     console.warn("[executar-bot-flow] erro no envio de resumo:", err);
   }
 
-  return { total, enviados, falhas, invalidos, detalhes };
+  return { total, enviados, falhas, invalidos, detalhes, mensagem: msg, mediaUrl: mediaUrlPre, mediaType, textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "" };
 }
