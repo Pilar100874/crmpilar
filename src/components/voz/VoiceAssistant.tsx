@@ -876,6 +876,15 @@ export default function VoiceAssistant() {
     };
   }, [fecharPainel, open, isRecording, processing, requestDictation]);
 
+  // Detecta touch (tablet/celular) — sem barra de espaço.
+  const isTouchDevice = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    try { if (window.matchMedia?.("(pointer: coarse)").matches) return true; } catch { /* ignore */ }
+    return "ontouchstart" in window || (navigator?.maxTouchPoints ?? 0) > 0;
+  }, []);
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => { setIsTouch(isTouchDevice()); }, [isTouchDevice]);
+
   // Sempre abre limpo, na aba do chat
   const abrirLimpo = useCallback(() => {
     stopWake();
@@ -889,7 +898,11 @@ export default function VoiceAssistant() {
     setRelatorioAtual(null);
     setResultadoRelatorio("");
     setOpen(true);
-  }, [stopWake]);
+    // Em touch já inicia o microfone (não há tecla de espaço).
+    if (isTouchDevice()) {
+      setTimeout(() => { requestDictation({ holdToTalk: false, source: "button" }); }, 300);
+    }
+  }, [stopWake, isTouchDevice, requestDictation]);
 
   // ---------- UI ----------
   return (
