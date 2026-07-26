@@ -931,6 +931,8 @@ export default function VoiceAssistant() {
           <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 ring-2 ring-background animate-pulse" />
         )}
       </button>
+      )}
+
 
 
       {/* Painel */}
