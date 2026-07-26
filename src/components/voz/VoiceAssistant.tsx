@@ -911,8 +911,11 @@ export default function VoiceAssistant() {
       <button
         onClick={abrirLimpo}
         className={cn(
-          "fixed bottom-16 right-4 z-[1000] h-12 w-12 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110",
+          "fixed z-[1000] rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110",
           "bg-gradient-to-br from-primary via-primary/90 to-primary/70 text-primary-foreground",
+          isTouch
+            ? "bottom-6 left-1/2 -translate-x-1/2 h-16 w-16"
+            : "bottom-16 right-4 h-12 w-12",
           wakeListening && "ring-4 ring-primary/40 animate-pulse"
         )}
         title={
@@ -922,11 +925,12 @@ export default function VoiceAssistant() {
           cfg.wake_word_ativo ? "Ativando escuta…" : "Assistente por voz"
         }
       >
-        {wakeListening ? <Radio className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+        {wakeListening ? <Radio className={isTouch ? "h-7 w-7" : "h-5 w-5"} /> : <Mic className={isTouch ? "h-7 w-7" : "h-5 w-5"} />}
         {wakeListening && (
           <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 ring-2 ring-background animate-pulse" />
         )}
       </button>
+
 
       {/* Painel */}
       {open && (
