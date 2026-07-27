@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
           numero = {
             provider: "evolution",
             evolution_url: evoCfg.evolution_url,
-            evolution_api_key: evoCfg.evolution_api_key || Deno.env.get("EVOLUTION_API_KEY") || Deno.env.get("EVOLUTION_API_KEY"),
+            evolution_api_key: evoCfg.evolution_api_key || Deno.env.get("EVOLUTION_API_KEY"),
             session_name: evoCfg.session_name || "default",
           };
         }

@@ -2308,8 +2308,8 @@ async function downloadIncomingImageAsPublicUrl(
 
 
 function resolveEvolution(evolutionUrl: string, evolutionApiKey: string) {
-  const base = (evolutionUrl || env("EVOLUTION_URL") || env("EVOLUTION_URL") || "").replace(/\/+$/, "");
-  const apiKey = (evolutionApiKey || env("EVOLUTION_API_KEY") || env("EVOLUTION_API_KEY") || "").trim();
+  const base = (evolutionUrl || env("EVOLUTION_URL") || "").replace(/\/+$/, "");
+  const apiKey = (evolutionApiKey || env("EVOLUTION_API_KEY") || "").trim();
   return { base, apiKey };
 }
 
@@ -4148,8 +4148,8 @@ async function executeNode(
               .limit(1)
               .maybeSingle();
             const sessionName = evolutionCfg?.session_name || context.vars.session || "default";
-            const evolutionUrl = evolutionCfg?.evolution_url || env("EVOLUTION_URL") || env("EVOLUTION_URL");
-            const evolutionKey = evolutionCfg?.evolution_api_key || env("EVOLUTION_API_KEY") || env("EVOLUTION_API_KEY");
+            const evolutionUrl = evolutionCfg?.evolution_url || env("EVOLUTION_URL");
+            const evolutionKey = evolutionCfg?.evolution_api_key || env("EVOLUTION_API_KEY");
             if (mediaUrl) {
               await sendEvolutionMediaMessage(phone, msg, "image", mediaUrl, sessionName, evolutionUrl, evolutionKey);
             } else if (msg) {
