@@ -346,14 +346,74 @@ async function runExecution(supabase: any, automationId: string, automation: any
 
 
     if (executionStatus !== "ok") {
-      return new Response(JSON.stringify({ success: false, error: executionError || "Falha ao confirmar envio", result }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      console.warn("Execução concluída com falha:", executionError);
+      return;
+    }
+    console.log("✅ Execução concluída com sucesso");
+  } catch (err) {
+    console.error("❌ Erro em runExecution:", err);
+    try {
+      await supabase.from("marketing_automation_execution_logs").insert({
+        automation_id: automationId,
+        estabelecimento_id: automation?.estabelecimento_id,
+        executed_at: new Date().toISOString(),
+        metodo: (automation?.config?.metodo_disparo) || "desconhecido",
+        status: "falha",
+        error_message: err instanceof Error ? err.message : String(err),
+        items: [],
+        recipients: [],
+        totals: { total: 0, enviados: 0, falhas: 0 },
+        raw_result: null,
       });
+    } catch (_) { /* noop */ }
+  }
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { automationId } = await req.json();
+    if (!automationId) {
+      return new Response(
+        JSON.stringify({ success: false, error: "automationId obrigatório" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    return new Response(JSON.stringify({ success: true, result }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const { data: automation, error: autoErr } = await supabase
+      .from("marketing_automations")
+      .select("*")
+      .eq("id", automationId)
+      .single();
+
+    if (autoErr || !automation) {
+      return new Response(
+        JSON.stringify({ success: false, error: `Automação não encontrada: ${autoErr?.message}` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Executa em background para não estourar o idle timeout (150s) do edge runtime.
+    // O cliente acompanha o resultado via marketing_automation_execution_logs.
+    const task = runExecution(supabase, automationId, automation);
+    // @ts-ignore EdgeRuntime é global no Supabase Edge Runtime
+    if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any)?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(task);
+    } else {
+      task.catch((e) => console.error("bg task err:", e));
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, accepted: true, automationId, message: "Execução iniciada em background. Acompanhe no histórico." }),
+      { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (err) {
     console.error("❌ Erro:", err);
     return new Response(
