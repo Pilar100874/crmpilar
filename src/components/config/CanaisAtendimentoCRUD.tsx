@@ -437,6 +437,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
           ok: true,
           latency: (data as any).latency ?? 0,
           instances: (data as any).instances ?? null,
+          list: Array.isArray((data as any).list) ? (data as any).list : [],
         });
         toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." });
       } else {
