@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,7 +127,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-3xl h-[85vh] max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Histórico de envios</DialogTitle>
           <DialogDescription>
@@ -136,7 +135,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 max-h-[70vh] pr-4 -mr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-4 -mr-4">
 
           {loading ? (
             <div className="space-y-3">
@@ -299,12 +298,12 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
 
       {/* Dialog de detalhes de um envio específico */}
       <Dialog open={!!detalhe} onOpenChange={(o) => !o && setDetalhe(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-2xl h-[85vh] max-h-[85vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>O que foi enviado</DialogTitle>
             <DialogDescription>
@@ -317,7 +316,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
               )}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0 max-h-[70vh] pr-4 -mr-4">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-4 -mr-4">
             {detalhe && (
               <div className="space-y-4">
                 {detalhe.items?.length ? (
@@ -422,7 +421,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                 )}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </Dialog>
