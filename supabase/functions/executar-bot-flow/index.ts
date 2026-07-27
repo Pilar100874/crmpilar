@@ -289,8 +289,6 @@ async function gravarLogAutomacao(
           else if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
           else if (/PEND/.test(provider)) finalStatus = "pendente";
         }
-        // Evolution aceitou mas WhatsApp não confirmou entrega -> mostrar como "não confirmado"
-        if (!d?.ok && provider === "UNCONFIRMED") finalStatus = "nao_confirmado";
         recipients.push({
           nome: d?.nome || d?.name || null,
           telefone: d?.telefone || d?.phone || null,

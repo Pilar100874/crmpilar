@@ -407,62 +407,57 @@ async function verifyEvolutionAck(
   if (!shouldConfirm) return { ok: true, status: ack.status };
   if (ack.status && !evolutionStatusLooksPending(ack.status)) return { ok: true, status: ack.status };
 
+  // Em envios em massa, o Evolution costuma retornar PENDING mesmo quando a mensagem já foi recebida.
+  // Não podemos segurar a função por vários segundos por destinatário, senão a lista para no meio.
+  if (ack.messageId) {
+    const pending = evolutionStatusLooksPending(ack.status);
+    return { ok: true, status: pending ? "SENT_PENDING_ACK" : (ack.status || "SENT_PENDING_ACK"), reason: "aceito_pelo_evolution_ack_pendente" };
+  }
+
   // Evolution/Baileys frequentemente responde PENDING e só atualiza o status depois.
-  // Fazemos polls curtos para tentar capturar SERVER_ACK/DELIVERY_ACK/READ real.
-  // Se após os polls ainda estiver PENDING, marcamos como UNCONFIRMED (ok=false)
-  // para que o usuário saiba que o Evolution aceitou mas não confirmou a entrega.
-  const attempts = [2_000, 3_000, 4_000];
+  // Fazemos múltiplas tentativas de leitura antes de desistir.
+  const attempts = [3_000, 5_000, 7_000];
   let lastStatus = String(ack.status || "PENDING").toUpperCase();
   let lastRecordFound = false;
   let lastHttpError: string | undefined;
 
   for (const wait of attempts) {
     await sleep(wait);
-    if (!ack.messageId) break;
     try {
       const resp = await fetch(`${base}/chat/findMessages/${encodeURIComponent(sessionName)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: apiKey },
-        body: JSON.stringify({ where: { key: { id: ack.messageId } } }),
-        signal: AbortSignal.timeout(8_000),
+        body: JSON.stringify(ack.messageId ? { where: { key: { id: ack.messageId } } } : { where: { key: { fromMe: true } } }),
+        signal: AbortSignal.timeout(15_000),
       });
       const data = await safeJson(resp);
-      if (!resp.ok) { lastHttpError = `http_${resp.status}`; continue; }
+      if (!resp.ok) {
+        lastHttpError = `http_${resp.status}`;
+        continue;
+      }
 
       const records = extractEvolutionMessages(data);
-      const match = records.find(
-        (m) => String(m?.key?.id || m?.id || m?.messageId || "") === ack.messageId,
-      );
+      const match = ack.messageId
+        ? records.find((m) => String(m?.key?.id || m?.id || m?.messageId || "") === ack.messageId)
+        : records[0];
       if (match) lastRecordFound = true;
       const currentStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
       lastStatus = currentStatus;
-      // SERVER_ACK = 1 (aceito pelo WA), DELIVERY_ACK = 2 (entregue), READ = 3 (lido)
-      if (currentStatus === "SERVER_ACK" || currentStatus === "DELIVERY_ACK" || currentStatus === "READ") {
+      if (!evolutionStatusLooksPending(currentStatus)) {
         return { ok: true, status: currentStatus };
-      }
-      if (currentStatus === "ERROR" || currentStatus === "FAILED" || currentStatus === "FAILURE") {
-        break;
       }
     } catch (e: any) {
       lastHttpError = e?.name === "AbortError" ? "timeout" : "erro";
     }
   }
 
-  // ERROR final: falha real
-  if (evolutionStatusIsFinalError(lastStatus)) {
-    await restartEvolutionInstance(base, apiKey, sessionName);
-    return { ok: false, status: lastStatus, reason: "evolution_erro_final" };
+  // Se a mensagem foi aceita pelo Evolution (temos messageId e ela aparece no findMessages),
+  // consideramos como enviada — o ACK do WhatsApp pode chegar depois e será atualizado via webhook.
+  if (ack.messageId && lastRecordFound) {
+    return { ok: true, status: lastStatus || "SENT_PENDING_ACK", reason: "aceito_pelo_evolution_ack_pendente" };
   }
 
-  // Ainda PENDING após polls: aceito pelo Evolution mas não confirmado pelo WhatsApp.
-  // Sinal comum de mídia rejeitada, número sem WA, ou fila travada.
-  if (ack.messageId) {
-    const reason = lastRecordFound
-      ? "evolution_aceitou_mas_whatsapp_nao_confirmou_entrega"
-      : "evolution_recebeu_id_mas_mensagem_nao_encontrada_no_historico";
-    return { ok: false, status: "UNCONFIRMED", reason };
-  }
-
+  // Nem sequer conseguimos localizar a mensagem — tenta reiniciar a instância para próximos envios.
   await restartEvolutionInstance(base, apiKey, sessionName);
   const reason = lastHttpError
     ? `evolution_sem_confirmacao_entrega_${lastHttpError}`
