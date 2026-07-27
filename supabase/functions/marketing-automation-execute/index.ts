@@ -312,36 +312,39 @@ async function runExecution(supabase: any, automationId: string, automation: any
         : `Nenhuma mensagem teve confirmação de entrega pelo Evolution. ${motivos}`.trim();
     }
 
-    try {
-      await supabase.from("marketing_automation_execution_logs").insert({
-        automation_id: automationId,
-        estabelecimento_id: automation.estabelecimento_id,
-        executed_at: new Date().toISOString(),
-        metodo,
-        status: executionStatus,
-        error_message: executionError,
-        items,
-        recipients,
-        totals: { total: totalDest, enviados, falhas },
-        raw_result: result,
-      });
+    // Para método "bot", o próprio executar-bot-flow grava o log com detalhes reais.
+    // Aqui pulamos para evitar sobrescrever com dados vazios em caso de timeout do invoke.
+    if (metodo !== "bot") {
+      try {
+        await supabase.from("marketing_automation_execution_logs").insert({
+          automation_id: automationId,
+          estabelecimento_id: automation.estabelecimento_id,
+          executed_at: new Date().toISOString(),
+          metodo,
+          status: executionStatus,
+          error_message: executionError,
+          items,
+          recipients,
+          totals: { total: totalDest, enviados, falhas },
+          raw_result: result,
+        });
 
-      // Manter apenas os últimos 20 registros por automação
-      const { data: antigos } = await supabase
-        .from("marketing_automation_execution_logs")
-        .select("id")
-        .eq("automation_id", automationId)
-        .order("executed_at", { ascending: false })
-        .range(20, 999);
-      const idsExcluir = (antigos || []).map((r: any) => r.id);
-      if (idsExcluir.length > 0) {
-        await supabase
+        const { data: antigos } = await supabase
           .from("marketing_automation_execution_logs")
-          .delete()
-          .in("id", idsExcluir);
+          .select("id")
+          .eq("automation_id", automationId)
+          .order("executed_at", { ascending: false })
+          .range(20, 999);
+        const idsExcluir = (antigos || []).map((r: any) => r.id);
+        if (idsExcluir.length > 0) {
+          await supabase
+            .from("marketing_automation_execution_logs")
+            .delete()
+            .in("id", idsExcluir);
+        }
+      } catch (logErr) {
+        console.error("Falha ao gravar log de execução:", logErr);
       }
-    } catch (logErr) {
-      console.error("Falha ao gravar log de execução:", logErr);
     }
 
 
