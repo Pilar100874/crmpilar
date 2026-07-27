@@ -335,8 +335,11 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [showEvolutionKey, setShowEvolutionKey] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<
-    | { ok: true; latency: number; instances: number | null; list?: Array<{ name: string; status: string; number?: string | null; profileName?: string | null }> }
-    | { ok: false; error: string }
+    | {
+        ok: boolean;
+        server: { ok: boolean; latency?: number; status?: number; instances?: number | null; list?: Array<{ name: string; status: string; number?: string | null; profileName?: string | null }>; error?: string };
+        manager: { ok: boolean; latency?: number; status?: number; error?: string } | null;
+      }
     | null
   >(null);
   const [newSessionName, setNewSessionName] = useState("");
@@ -425,25 +428,30 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     setTestResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("evolution-manager", {
-        body: { action: "test", url: evolutionUrl.trim(), apiKey: evolutionApiKey.trim() },
+        body: {
+          action: "test",
+          url: evolutionUrl.trim(),
+          apiKey: evolutionApiKey.trim(),
+          managerUrl: managerUrl.trim() || undefined,
+        },
       });
       if (error) throw new Error(error.message);
-      if ((data as any)?.ok) {
-        setTestResult({
-          ok: true,
-          latency: (data as any).latency ?? 0,
-          instances: (data as any).instances ?? null,
-          list: Array.isArray((data as any).list) ? (data as any).list : [],
-        });
-        toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." });
+      const d = (data as any) || {};
+      const result = {
+        ok: !!d.ok,
+        server: d.server || { ok: false, error: d.error || "Sem resposta do servidor." },
+        manager: d.manager ?? null,
+      };
+      setTestResult(result);
+      if (result.ok) {
+        toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." + (result.manager?.ok ? " Manager também acessível." : "") });
       } else {
-        const err = (data as any)?.error || "Falha na conexão.";
-        setTestResult({ ok: false, error: err });
+        const err = (!result.server.ok ? result.server.error : result.manager?.error) || "Falha na conexão.";
         toast({ title: "Falha ao conectar", description: err, variant: "destructive" });
       }
     } catch (e: any) {
       const err = e?.message || "Erro ao testar conexão.";
-      setTestResult({ ok: false, error: err });
+      setTestResult({ ok: false, server: { ok: false, error: err }, manager: null });
       toast({ title: "Erro ao testar", description: err, variant: "destructive" });
     } finally {
       setTestingConnection(false);
@@ -896,18 +904,55 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                     )}
                   </Button>
                 </div>
-                {testResult && (testResult.ok ? (
+                {testResult && (
                   <div className="space-y-2">
-                    <Alert>
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-xs">
-                        Conectado em {testResult.latency}ms
-                        {typeof testResult.instances === "number"
-                          ? ` • ${testResult.instances} instância(s) no servidor`
-                          : ""}
-                      </AlertDescription>
-                    </Alert>
-                    {testResult.list && testResult.list.length > 0 && (
+                    {/* Servidor Evolution */}
+                    {testResult.server.ok ? (
+                      <Alert>
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-xs">
+                          <strong>Servidor Evolution:</strong> conectado em {testResult.server.latency}ms
+                          {typeof testResult.server.instances === "number"
+                            ? ` • ${testResult.server.instances} instância(s)`
+                            : ""}
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          <strong>Servidor Evolution:</strong> {testResult.server.error || "Falha desconhecida."}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Manager */}
+                    {testResult.manager ? (
+                      testResult.manager.ok ? (
+                        <Alert>
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-xs">
+                            <strong>Manager:</strong> acessível em {testResult.manager.latency}ms — apikey aceita.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription className="text-xs">
+                            <strong>Manager:</strong> {testResult.manager.error || "Falha ao acessar o Manager."}
+                          </AlertDescription>
+                        </Alert>
+                      )
+                    ) : (
+                      managerUrl.trim() ? null : (
+                        <p className="text-[11px] text-muted-foreground pl-1">
+                          URL do Manager não informada — teste ignorado para o Manager.
+                        </p>
+                      )
+                    )}
+
+                    {/* Lista de instâncias */}
+                    {testResult.server.list && testResult.server.list.length > 0 && (
                       <div className="rounded-md border max-h-64 overflow-auto">
                         <table className="w-full text-xs">
                           <thead className="bg-muted/50 sticky top-0">
@@ -918,7 +963,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                             </tr>
                           </thead>
                           <tbody>
-                            {testResult.list.map((inst, idx) => {
+                            {testResult.server.list.map((inst, idx) => {
                               const s = String(inst.status || "").toLowerCase();
                               const color =
                                 s === "open" || s === "working" || s === "connected"
@@ -945,14 +990,9 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                       </div>
                     )}
                   </div>
-                ) : (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">{(testResult as { ok: false; error: string }).error}</AlertDescription>
-                  </Alert>
-                ))}
+                )}
                 <p className="text-xs text-muted-foreground">
-                  A validação chama <code>GET /instance/fetchInstances</code> no endpoint informado usando a apikey.
+                  A validação chama <code>GET /instance/fetchInstances</code> no servidor e, se informado, também no Manager, usando a apikey.
                 </p>
               </div>
               <div className="space-y-2">

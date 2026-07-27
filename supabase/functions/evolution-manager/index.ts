@@ -178,13 +178,16 @@ serve(async (req) => {
     const body = await req.json();
     const { action, estabelecimentoId, sessionId, sessionName, webhookUrl } = body || {};
 
-    // Ação "test": valida conectividade com um URL/apikey fornecidos, sem depender de config salva
     if (action === "test") {
       const testUrl = normalizeBaseUrl(String(body?.url || "").trim());
       const testKey = String(body?.apiKey || "").trim();
+      const managerUrl = String(body?.managerUrl || "").trim();
       if (!testUrl || !testKey) {
         return json({ ok: false, error: "Informe URL e apikey para testar." }, 400);
       }
+
+      // 1) Servidor Evolution (fetchInstances)
+      let serverResult: any = { ok: false };
       try {
         const started = Date.now();
         const resp = await fetch(`${testUrl}/instance/fetchInstances`, {
@@ -195,27 +198,79 @@ serve(async (req) => {
         const latency = Date.now() - started;
         const data = await safeJson(resp);
         if (resp.status === 401 || resp.status === 403) {
-          return json({ ok: false, status: resp.status, latency, error: "apikey inválida (não autorizada pelo servidor Evolution)." });
+          serverResult = { ok: false, status: resp.status, latency, error: "apikey rejeitada pelo servidor Evolution (401/403). Confira o valor de AUTHENTICATION_API_KEY no .env do servidor." };
+        } else if (!resp.ok) {
+          serverResult = { ok: false, status: resp.status, latency, error: `Servidor respondeu ${resp.status}. Verifique se a URL aponta para uma instalação Evolution v2 acessível.`, details: data };
+        } else {
+          const rawList = Array.isArray(data) ? data : (Array.isArray(data?.instances) ? data.instances : []);
+          const list = rawList.map((it: any) => {
+            const inst = it?.instance || it;
+            return {
+              name: inst?.instanceName || inst?.name || inst?.id || "—",
+              status: inst?.connectionStatus || inst?.status || inst?.state || "unknown",
+              number: inst?.owner || inst?.number || inst?.profileName || null,
+              profileName: inst?.profileName || null,
+            };
+          });
+          serverResult = { ok: true, status: resp.status, latency, instances: list.length, list };
         }
-        if (!resp.ok) {
-          return json({ ok: false, status: resp.status, latency, error: `Servidor respondeu ${resp.status}.`, details: data });
-        }
-        const rawList = Array.isArray(data) ? data : (Array.isArray(data?.instances) ? data.instances : []);
-        const list = rawList.map((it: any) => {
-          const inst = it?.instance || it;
-          return {
-            name: inst?.instanceName || inst?.name || inst?.id || "—",
-            status: inst?.connectionStatus || inst?.status || inst?.state || "unknown",
-            number: inst?.owner || inst?.number || inst?.profileName || null,
-            profileName: inst?.profileName || null,
-          };
-        });
-        return json({ ok: true, status: resp.status, latency, instances: list.length, list });
       } catch (e: any) {
         const msg = e?.message || String(e);
-        return json({ ok: false, error: `Falha ao conectar: ${msg}` });
+        const hint = /timeout|abort/i.test(msg)
+          ? "Tempo esgotado (>10s). O servidor pode estar offline ou bloqueando requisições externas."
+          : /fetch|network|dns|resolve/i.test(msg)
+          ? "Não foi possível resolver o endereço. Verifique o domínio, HTTPS e liberação de firewall."
+          : msg;
+        serverResult = { ok: false, error: `Falha ao conectar no servidor: ${hint}` };
       }
+
+      // 2) Manager (opcional, se informado)
+      let managerResult: any = null;
+      if (managerUrl) {
+        const mUrl = normalizeBaseUrl(managerUrl);
+        try {
+          const started = Date.now();
+          // O Manager valida a apikey pelo mesmo endpoint /instance/fetchInstances.
+          const resp = await fetch(`${mUrl}/instance/fetchInstances`, {
+            method: "GET",
+            headers: buildHeaders(testKey),
+            signal: AbortSignal.timeout(10000),
+          });
+          const latency = Date.now() - started;
+          if (resp.status === 401 || resp.status === 403) {
+            managerResult = { ok: false, status: resp.status, latency, error: "Manager acessível, mas a apikey foi rejeitada. Use a mesma AUTHENTICATION_API_KEY do servidor." };
+          } else if (resp.status === 404) {
+            managerResult = { ok: false, status: resp.status, latency, error: "URL do Manager não expõe a API (404). Normalmente o Manager e o servidor compartilham o mesmo domínio — confira se não digitou o caminho /manager por engano." };
+          } else if (!resp.ok) {
+            managerResult = { ok: false, status: resp.status, latency, error: `Manager respondeu ${resp.status}. Verifique se a URL está correta e acessível publicamente.` };
+          } else {
+            managerResult = { ok: true, status: resp.status, latency };
+          }
+        } catch (e: any) {
+          const msg = e?.message || String(e);
+          const hint = /timeout|abort/i.test(msg)
+            ? "Tempo esgotado (>10s) ao acessar o Manager."
+            : /fetch|network|dns|resolve/i.test(msg)
+            ? "Não foi possível resolver o endereço do Manager. Confira domínio/HTTPS."
+            : msg;
+          managerResult = { ok: false, error: `Falha ao acessar o Manager: ${hint}` };
+        }
+      }
+
+      return json({
+        ok: serverResult.ok && (managerResult ? managerResult.ok : true),
+        server: serverResult,
+        manager: managerResult,
+        // Campos legados para compatibilidade com UI antiga
+        latency: serverResult.latency,
+        instances: serverResult.instances ?? null,
+        list: serverResult.list ?? [],
+        error: !serverResult.ok
+          ? serverResult.error
+          : (managerResult && !managerResult.ok ? managerResult.error : undefined),
+      });
     }
+
 
     if (!action || !estabelecimentoId || !sessionName) {
       return json({ error: "Ação, estabelecimento e instância são obrigatórios." }, 400);
