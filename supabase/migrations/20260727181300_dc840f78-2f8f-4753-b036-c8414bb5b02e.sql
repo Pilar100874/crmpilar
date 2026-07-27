@@ -1,0 +1,1 @@
+UPDATE public.conversations SET bot_active = true WHERE id = '75c98ee6-7f9e-4fe5-92f7-0d0ad22988f0';
