@@ -30,6 +30,11 @@ interface Recipient {
   email?: string | null;
   status?: string | null;
   motivo?: string | null;
+  providerStatus?: string | null;
+  messageId?: string | null;
+  attempts?: number | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
 }
 interface LogRow {
   id: string;
@@ -53,6 +58,45 @@ const iconFor = (tipo: string) => {
     default: return <MessageSquare className="w-4 h-4" />;
   }
 };
+
+type StatusKind = "ack" | "pendente" | "enviado" | "invalido" | "falha" | "outro";
+function normalizeStatus(r: Recipient): StatusKind {
+  const s = String(r.status || "").toLowerCase();
+  if (s === "ack") return "ack";
+  if (s === "pendente" || s === "pending") return "pendente";
+  if (s === "invalido" || s === "invalid") return "invalido";
+  if (s === "enviado" || s === "ok") return "enviado";
+  if (s === "falha" || s === "erro" || s === "error") return "falha";
+  return "outro";
+}
+function StatusPill({ r }: { r: Recipient }) {
+  const k = normalizeStatus(r);
+  const cfg: Record<StatusKind, { label: string; cls: string; title?: string }> = {
+    ack:      { label: "Entregue (ACK)", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+    enviado:  { label: "Enviado",        cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+    pendente: { label: "PENDING",        cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+                title: "Aceito pelo Evolution mas ainda sem confirmação do WhatsApp" },
+    invalido: { label: "Inválido",       cls: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30" },
+    falha:    { label: "Falha",          cls: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30" },
+    outro:    { label: r.status || "—",  cls: "bg-muted text-muted-foreground border-border" },
+  };
+  const c = cfg[k];
+  return (
+    <span
+      title={r.motivo || c.title || ""}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${c.cls}`}
+    >
+      {c.label}
+      {r.attempts && r.attempts > 1 ? <span className="opacity-70">·{r.attempts}x</span> : null}
+    </span>
+  );
+}
+function fmtHms(iso?: string | null) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch { return ""; }
+}
 
 export default function HistoricoEnviosDialog({ open, onOpenChange, automationId, automationName }: Props) {
   const [loading, setLoading] = useState(false);
@@ -137,6 +181,21 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                         </div>
                       </div>
 
+                      {/* Resumo por status */}
+                      {log.recipients?.length > 0 && (() => {
+                        const c = { ack: 0, enviado: 0, pendente: 0, invalido: 0, falha: 0, outro: 0 };
+                        for (const r of log.recipients) c[normalizeStatus(r)]++;
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {c.ack > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">{c.ack} entregue{c.ack > 1 ? "s" : ""} (ACK)</span>}
+                            {c.enviado > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{c.enviado} enviado{c.enviado > 1 ? "s" : ""}</span>}
+                            {c.pendente > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30">{c.pendente} PENDING</span>}
+                            {c.invalido > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30">{c.invalido} inválido{c.invalido > 1 ? "s" : ""}</span>}
+                            {c.falha > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">{c.falha} falha{c.falha > 1 ? "s" : ""}</span>}
+                          </div>
+                        );
+                      })()}
+
                       {/* Prévia + botão para ver detalhes */}
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="text-xs text-muted-foreground flex items-center gap-3">
@@ -155,7 +214,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                             className="h-7 px-2 text-xs"
                           >
                             <Eye className="w-3.5 h-3.5 mr-1" />
-                            Ver o que foi enviado
+                            Linha do tempo
                           </Button>
                           <Button
                             size="sm"
@@ -209,26 +268,19 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                               Destinatários {total > 0 && `(${enviados}/${total}${falhas ? ` · ${falhas} falhas` : ""})`}
                             </p>
                             {log.recipients?.length > 0 ? (
-                              <div className="max-h-40 overflow-y-auto rounded-md border">
-                                <table className="w-full text-xs">
-                                  <tbody>
-                                    {log.recipients.map((r, i) => (
-                                      <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
-                                        <td className="px-2 py-1.5">{r.nome || "—"}</td>
-                                        <td className="px-2 py-1.5 text-muted-foreground">{r.telefone || r.email || "—"}</td>
-                                        <td className="px-2 py-1.5 text-right">
-                                          {r.status === "enviado" || r.status === "ok" ? (
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline" />
-                                          ) : (
-                                            <span className="text-destructive" title={r.motivo || ""}>
-                                              <XCircle className="w-3.5 h-3.5 inline" />
-                                            </span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                              <div className="max-h-56 overflow-y-auto rounded-md border divide-y">
+                                {log.recipients.map((r, i) => (
+                                  <div key={i} className="px-2 py-1.5 flex items-center gap-2 text-xs hover:bg-muted/50">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium truncate">{r.nome || r.telefone || r.email || "—"}</div>
+                                      <div className="text-[10px] text-muted-foreground truncate">
+                                        {r.telefone || r.email || ""}
+                                        {r.motivo ? ` · ${r.motivo}` : ""}
+                                      </div>
+                                    </div>
+                                    <StatusPill r={r} />
+                                  </div>
+                                ))}
                               </div>
                             ) : (
                               <p className="text-xs text-muted-foreground italic">Sem destinatários registrados.</p>
@@ -301,34 +353,69 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                   <p className="text-sm text-muted-foreground italic">Nenhum conteúdo registrado neste envio.</p>
                 )}
 
-                {detalhe.recipients?.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-                      <Users className="w-3 h-3" /> Destinatários ({detalhe.recipients.length})
-                    </p>
-                    <div className="rounded-md border">
-                      <table className="w-full text-xs">
-                        <tbody>
-                          {detalhe.recipients.map((r, i) => (
-                            <tr key={i} className="border-b last:border-0">
-                              <td className="px-2 py-1.5">{r.nome || "—"}</td>
-                              <td className="px-2 py-1.5 text-muted-foreground">{r.telefone || r.email || "—"}</td>
-                              <td className="px-2 py-1.5 text-right">
-                                {r.status === "enviado" || r.status === "ok" ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline" />
-                                ) : (
-                                  <span className="text-destructive" title={r.motivo || ""}>
-                                    <XCircle className="w-3.5 h-3.5 inline" />
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                {detalhe.recipients?.length > 0 && (() => {
+                  const c = { ack: 0, enviado: 0, pendente: 0, invalido: 0, falha: 0, outro: 0 };
+                  for (const r of detalhe.recipients) c[normalizeStatus(r)]++;
+                  // ordena por horário do envio
+                  const sorted = [...detalhe.recipients].sort((a, b) => {
+                    const ta = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+                    const tb = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+                    return ta - tb;
+                  });
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                          <Users className="w-3 h-3" /> Linha do tempo por destinatário ({detalhe.recipients.length})
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.ack > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">{c.ack} ACK</span>}
+                          {c.enviado > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{c.enviado} enviado</span>}
+                          {c.pendente > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30">{c.pendente} PENDING</span>}
+                          {c.invalido > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30">{c.invalido} inválido</span>}
+                          {c.falha > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">{c.falha} falha</span>}
+                        </div>
+                      </div>
+                      <div className="relative pl-5 space-y-2">
+                        <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border" />
+                        {sorted.map((r, i) => {
+                          const k = normalizeStatus(r);
+                          const dotCls =
+                            k === "ack" || k === "enviado" ? "bg-emerald-500"
+                            : k === "pendente" ? "bg-amber-500"
+                            : k === "invalido" ? "bg-orange-500"
+                            : k === "falha" ? "bg-red-500"
+                            : "bg-muted-foreground";
+                          return (
+                            <div key={i} className="relative">
+                              <div className={`absolute -left-[15px] top-2 w-2.5 h-2.5 rounded-full ring-2 ring-background ${dotCls}`} />
+                              <div className="rounded-md border bg-muted/30 p-2 text-xs flex items-start gap-2 flex-wrap">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium truncate">{r.nome || r.telefone || r.email || "—"}</span>
+                                    <StatusPill r={r} />
+                                    {r.providerStatus && (
+                                      <span className="text-[10px] text-muted-foreground font-mono">{r.providerStatus}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                                    {r.telefone || r.email || ""}
+                                    {r.startedAt && <span> · início {fmtHms(r.startedAt)}</span>}
+                                    {r.finishedAt && <span> · fim {fmtHms(r.finishedAt)}</span>}
+                                    {r.messageId && <span> · id <span className="font-mono">{r.messageId.slice(0, 10)}…</span></span>}
+                                  </div>
+                                  {r.motivo && (
+                                    <div className="text-[11px] text-destructive mt-1 break-words">{r.motivo}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {detalhe.error_message && (
                   <p className="text-xs text-destructive">{detalhe.error_message}</p>

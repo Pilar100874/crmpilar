@@ -473,6 +473,9 @@ async function executeBroadcast(
       error,
       invalid: !!(data as any)?.invalid_number,
       reason: error?.message || (data as any)?.reason || (data as any)?.error || null,
+      providerStatus: (data as any)?.provider_status || null,
+      messageId: (data as any)?.message_id || null,
+      attempts: (data as any)?.attempts || null,
     };
   };
 
@@ -495,6 +498,10 @@ async function executeBroadcast(
     let ok = true;
     let invalid = false;
     let sendReason: string | null = null;
+    let providerStatus: string | null = null;
+    let messageId: string | null = null;
+    let attempts: number | null = null;
+    const startedAt = new Date().toISOString();
     try {
       if (antes) {
         const pre = await invokeSend({
@@ -504,6 +511,9 @@ async function executeBroadcast(
           botFlowId: botFlowId || null,
           origem: `${origem}_antes`,
         });
+        providerStatus = pre.providerStatus || providerStatus;
+        messageId = pre.messageId || messageId;
+        attempts = pre.attempts || attempts;
         if (!pre.ok) {
           ok = false;
           invalid = pre.invalid;
@@ -525,6 +535,9 @@ async function executeBroadcast(
         ok = r.ok;
         invalid = r.invalid;
         sendReason = r.reason;
+        providerStatus = r.providerStatus || providerStatus;
+        messageId = r.messageId || messageId;
+        attempts = r.attempts || attempts;
       }
       if (ok && depois && !invalid) {
         const post = await invokeSend({
@@ -534,6 +547,9 @@ async function executeBroadcast(
           botFlowId: botFlowId || null,
           origem: `${origem}_depois`,
         });
+        providerStatus = post.providerStatus || providerStatus;
+        messageId = post.messageId || messageId;
+        attempts = post.attempts || attempts;
         if (!post.ok) {
           ok = false;
           invalid = post.invalid;
@@ -561,6 +577,7 @@ async function executeBroadcast(
             botFlowId: botFlowId || null,
             origem: `${origem}_contato`,
           });
+          providerStatus = contato.providerStatus || providerStatus;
           if (!contato.ok) {
             ok = false;
             invalid = contato.invalid;
@@ -579,7 +596,13 @@ async function executeBroadcast(
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
     const motivoFinal = ok ? null : (sendReason || (invalid ? "WhatsApp inválido/inexistente" : "Falha ao enviar (verifique sessão Evolution)"));
-    detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid, motivo: motivoFinal, reason: motivoFinal });
+    const finishedAt = new Date().toISOString();
+    detalhes.push({
+      nome: d.nome, phone: d.phone, kind: d.kind,
+      ok, invalid, motivo: motivoFinal, reason: motivoFinal,
+      providerStatus, messageId, attempts,
+      startedAt, finishedAt,
+    });
     if (d.gerente?.id) {
       const key = d.gerente.id;
       if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: d.gerente, itens: [] });
