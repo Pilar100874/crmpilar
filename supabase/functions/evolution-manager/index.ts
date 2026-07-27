@@ -185,15 +185,15 @@ serve(async (req) => {
     const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
     const { data: config, error: cfgErr } = await supabase
       .from("whatsapp_config")
-      .select("waha_url, waha_api_key, webhook_url")
+      .select("evolution_url, evolution_api_key, webhook_url")
       .eq("estabelecimento_id", estabelecimentoId)
       .maybeSingle();
 
     if (cfgErr) return json({ error: cfgErr.message }, 500);
 
-    // Reaproveitamos as colunas existentes: waha_url -> Evolution URL, waha_api_key -> Evolution apikey.
-    const base = normalizeBaseUrl(config?.waha_url || env("EVOLUTION_URL") || env("WAHA_URL"));
-    const apiKey = String(config?.waha_api_key || env("EVOLUTION_API_KEY") || env("WAHA_API_KEY") || "").trim();
+    // Colunas evolution_url / evolution_api_key da tabela whatsapp_config.
+    const base = normalizeBaseUrl(config?.evolution_url || env("EVOLUTION_URL"));
+    const apiKey = String(config?.evolution_api_key || env("EVOLUTION_API_KEY") || "").trim();
     const resolvedWebhookUrl = String(
       webhookUrl ||
       config?.webhook_url ||
