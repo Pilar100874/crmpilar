@@ -337,7 +337,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [showEvolutionKey, setShowEvolutionKey] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<
-    | { ok: true; latency: number; instances: number | null }
+    | { ok: true; latency: number; instances: number | null; list?: Array<{ name: string; status: string; number?: string | null; profileName?: string | null }> }
     | { ok: false; error: string }
     | null
   >(null);
@@ -437,6 +437,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
           ok: true,
           latency: (data as any).latency ?? 0,
           instances: (data as any).instances ?? null,
+          list: Array.isArray((data as any).list) ? (data as any).list : [],
         });
         toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." });
       } else {
@@ -902,15 +903,54 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                   </Button>
                 </div>
                 {testResult && (testResult.ok ? (
-                  <Alert>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <AlertDescription className="text-xs">
-                      Conectado em {testResult.latency}ms
-                      {typeof testResult.instances === "number"
-                        ? ` • ${testResult.instances} instância(s) no servidor`
-                        : ""}
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-2">
+                    <Alert>
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-xs">
+                        Conectado em {testResult.latency}ms
+                        {typeof testResult.instances === "number"
+                          ? ` • ${testResult.instances} instância(s) no servidor`
+                          : ""}
+                      </AlertDescription>
+                    </Alert>
+                    {testResult.list && testResult.list.length > 0 && (
+                      <div className="rounded-md border max-h-64 overflow-auto">
+                        <table className="w-full text-xs">
+                          <thead className="bg-muted/50 sticky top-0">
+                            <tr>
+                              <th className="text-left px-2 py-1.5 font-medium">Instância</th>
+                              <th className="text-left px-2 py-1.5 font-medium">Status</th>
+                              <th className="text-left px-2 py-1.5 font-medium">Número / Perfil</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {testResult.list.map((inst, idx) => {
+                              const s = String(inst.status || "").toLowerCase();
+                              const color =
+                                s === "open" || s === "working" || s === "connected"
+                                  ? "bg-green-500/15 text-green-700 dark:text-green-400"
+                                  : s === "connecting" || s === "qr" || s === "pairing"
+                                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                                  : "bg-muted text-muted-foreground";
+                              return (
+                                <tr key={idx} className="border-t">
+                                  <td className="px-2 py-1.5 font-mono">{inst.name}</td>
+                                  <td className="px-2 py-1.5">
+                                    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${color}`}>
+                                      {inst.status || "unknown"}
+                                    </span>
+                                  </td>
+                                  <td className="px-2 py-1.5 text-muted-foreground">
+                                    {inst.number || inst.profileName || "—"}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />

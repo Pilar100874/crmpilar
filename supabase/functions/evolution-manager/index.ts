@@ -200,8 +200,17 @@ serve(async (req) => {
         if (!resp.ok) {
           return json({ ok: false, status: resp.status, latency, error: `Servidor respondeu ${resp.status}.`, details: data });
         }
-        const count = Array.isArray(data) ? data.length : (Array.isArray(data?.instances) ? data.instances.length : null);
-        return json({ ok: true, status: resp.status, latency, instances: count });
+        const rawList = Array.isArray(data) ? data : (Array.isArray(data?.instances) ? data.instances : []);
+        const list = rawList.map((it: any) => {
+          const inst = it?.instance || it;
+          return {
+            name: inst?.instanceName || inst?.name || inst?.id || "—",
+            status: inst?.connectionStatus || inst?.status || inst?.state || "unknown",
+            number: inst?.owner || inst?.number || inst?.profileName || null,
+            profileName: inst?.profileName || null,
+          };
+        });
+        return json({ ok: true, status: resp.status, latency, instances: list.length, list });
       } catch (e: any) {
         const msg = e?.message || String(e);
         return json({ ok: false, error: `Falha ao conectar: ${msg}` });
