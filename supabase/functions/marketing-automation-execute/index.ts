@@ -231,6 +231,8 @@ serve(async (req) => {
     const items: any[] = [];
     const recipients: any[] = [];
     let totalDest = 0, enviados = 0, falhas = 0;
+    let executionStatus = "ok";
+    let executionError: string | null = null;
 
     const vars = allVars;
     const msgFromVars =
@@ -254,6 +256,8 @@ serve(async (req) => {
             });
           }
           if (b.aborted && b.error) {
+            executionStatus = "falha";
+            executionError = b.error;
             items.push({ tipo: "texto", conteudo: `⚠️ Envio abortado: ${b.error}`, titulo: "Aviso do sistema" });
           }
           // Conteúdo enviado no broadcast
@@ -308,13 +312,26 @@ serve(async (req) => {
       items.push({ tipo: "texto", conteudo: msgFromVars });
     }
 
+    if (metodo === "bot" && !executionError && falhas > 0) {
+      const motivos = recipients
+        .filter((r) => r.status !== "enviado" && r.motivo)
+        .map((r) => `${r.nome || r.telefone}: ${r.motivo}`)
+        .slice(0, 3)
+        .join(" | ");
+      executionStatus = enviados > 0 ? "parcial" : "falha";
+      executionError = enviados > 0
+        ? `Algumas mensagens não tiveram confirmação de entrega. ${motivos}`.trim()
+        : `Nenhuma mensagem teve confirmação de entrega pelo Evolution. ${motivos}`.trim();
+    }
+
     try {
       await supabase.from("marketing_automation_execution_logs").insert({
         automation_id: automationId,
         estabelecimento_id: automation.estabelecimento_id,
         executed_at: new Date().toISOString(),
         metodo,
-        status: "ok",
+        status: executionStatus,
+        error_message: executionError,
         items,
         recipients,
         totals: { total: totalDest, enviados, falhas },
@@ -339,6 +356,12 @@ serve(async (req) => {
       console.error("Falha ao gravar log de execução:", logErr);
     }
 
+
+    if (executionStatus !== "ok") {
+      return new Response(JSON.stringify({ success: false, error: executionError || "Falha ao confirmar envio", result }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
