@@ -914,7 +914,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                 ) : (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">{testResult.error}</AlertDescription>
+                    <AlertDescription className="text-xs">{(testResult as { ok: false; error: string }).error}</AlertDescription>
                   </Alert>
                 ))}
                 <p className="text-xs text-muted-foreground">
