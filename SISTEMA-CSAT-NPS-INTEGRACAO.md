@@ -64,12 +64,12 @@ Edge Function: `enviar-pesquisa-satisfacao/index.ts`
    - Insere em `pesquisas_respostas` com `nota = -1` (marcador temporário)
    - Registra `enviada_em` (timestamp do envio)
 
-4. **🔥 Envia mensagem via WhatsApp (WAHA)**:
+4. **🔥 Envia mensagem via WhatsApp (Evolution)**:
    ```typescript
-   // Busca configuração WAHA do estabelecimento
-   const { data: wahaConfig } = await supabase
+   // Busca configuração Evolution do estabelecimento
+   const { data: evolutionConfig } = await supabase
      .from('whatsapp_config')
-     .select('waha_url, waha_api_key')
+     .select('evolution_url, evolution_api_key')
      .eq('estabelecimento_id', estabelecimento_id)
      .single();
 
@@ -81,12 +81,12 @@ Edge Function: `enviar-pesquisa-satisfacao/index.ts`
      .eq('status', 'active')
      .single();
 
-   // Envia via WAHA
-   await fetch(`${wahaConfig.waha_url}/api/sendText`, {
+   // Envia via Evolution
+   await fetch(`${evolutionConfig.evolution_url}/api/sendText`, {
      method: 'POST',
      headers: {
        'Content-Type': 'application/json',
-       'X-Api-Key': wahaConfig.waha_api_key
+       'X-Api-Key': evolutionConfig.evolution_api_key
      },
      body: JSON.stringify({
        session: session.session_name,
@@ -291,10 +291,10 @@ Campos obrigatórios:
 - Trigger (quando enviar)
 - Aplicável a: Filas e/ou Atendentes específicos (opcional)
 
-### 2. Configurar WAHA
-Interface: `Config > Configuração WhatsApp WAHA`
+### 2. Configurar Evolution
+Interface: `Config > Configuração WhatsApp Evolution`
 
-- URL do servidor WAHA
+- URL do servidor Evolution
 - API Key
 - Sessão ativa configurada
 
@@ -359,15 +359,15 @@ Toggle "Ativa" na listagem de pesquisas
 1. ✅ Verificar se pesquisa está **ativa**
 2. ✅ Verificar se `canal` está incluído em `canais` da pesquisa
 3. ✅ Verificar filtros de `fila` e `atendente`
-4. ✅ Verificar configuração WAHA (URL, API Key, sessão ativa)
+4. ✅ Verificar configuração Evolution (URL, API Key, sessão ativa)
 5. ✅ Verificar logs da Edge Function `enviar-pesquisa-satisfacao`
 
 ### Cliente não recebe a mensagem
 
 1. ✅ Verificar telefone do cliente cadastrado
-2. ✅ Verificar sessão WAHA ativa e conectada
-3. ✅ Verificar logs do servidor WAHA
-4. ✅ Testar envio manual via WAHA UI
+2. ✅ Verificar sessão Evolution ativa e conectada
+3. ✅ Verificar logs do servidor Evolution
+4. ✅ Testar envio manual via Evolution UI
 
 ### Resposta não é processada
 
@@ -391,4 +391,4 @@ Toggle "Ativa" na listagem de pesquisas
 
 - Documentação CSAT/NPS: `SISTEMA-CSAT-NPS.md`
 - Documentação Omnichannel: `ARQUITETURA-OMNICHANNEL.md`
-- Configuração WAHA: Interface em `/config`
+- Configuração Evolution: Interface em `/config`

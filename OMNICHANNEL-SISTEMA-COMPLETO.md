@@ -231,7 +231,7 @@ Todas as funcionalidades críticas para um sistema omnichannel moderno foram imp
 - **Push:** Alertas em tempo real
 
 ### 3. Canais:
-- **WhatsApp** (WAHA) ✅
+- **WhatsApp** (Evolution) ✅
 - **WebChat** ✅
 - **Email**
 - **Telegram**
