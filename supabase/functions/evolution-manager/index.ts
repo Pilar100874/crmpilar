@@ -1,6 +1,4 @@
-// Evolution API manager — substitui o antigo WAHA manager.
-// Mantemos o nome da função (waha-manager) para preservar todas as chamadas existentes do frontend,
-// mas internamente todas as requisições vão para a Evolution API.
+// Evolution API manager — gerencia instâncias, status e QR code do WhatsApp via Evolution API.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
