@@ -4049,17 +4049,6 @@ async function executeNode(
           : undefined;
 
         let sent = false;
-        if (false) {
-          sent = await sendCloudTemplate(
-            "",
-            "",
-            context.vars.from || "",
-            name,
-            lang,
-            bodyVars,
-            headerParam,
-          );
-        }
         if (!sent) {
           if (fallbackTxt) {
             await onResponse(fallbackTxt);
