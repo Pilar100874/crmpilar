@@ -431,7 +431,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     };
     const cleanApiKey = String(apiKey || '').trim();
     if (cleanApiKey) {
-      headers['x-api-key'] = cleanApiKey;
+      // Evolution API v2 usa o header lowercase "apikey".
+      headers['apikey'] = cleanApiKey;
     }
     return headers;
   };
