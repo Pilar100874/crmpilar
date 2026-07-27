@@ -421,26 +421,30 @@ export default function MarketingAutomacoes() {
                   </p>
                 )}
 
-                {cfg.last_executed_at && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setHistoricoAutomacao(automacao);
-                      setHistoricoOpen(true);
-                    }}
-                    className="mt-3 w-full text-left rounded-lg border bg-muted/30 hover:bg-muted/60 p-2.5 transition-colors"
-                  >
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Último envio
-                    </p>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHistoricoAutomacao(automacao);
+                    setHistoricoOpen(true);
+                  }}
+                  className="mt-3 w-full text-left rounded-lg border bg-muted/30 hover:bg-muted/60 p-2.5 transition-colors"
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Histórico de envios
+                  </p>
+                  {cfg.last_executed_at ? (
                     <p className="text-[11px] sm:text-xs text-foreground mt-1">
-                      {new Date(cfg.last_executed_at).toLocaleDateString("pt-BR")} às{" "}
+                      Último envio: {new Date(cfg.last_executed_at).toLocaleDateString("pt-BR")} às{" "}
                       {new Date(cfg.last_executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
-                    <p className="text-[10px] text-primary mt-1 font-medium">Ver histórico completo →</p>
-                  </button>
-                )}
+                  ) : (
+                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
+                      Nenhum envio registrado ainda
+                    </p>
+                  )}
+                  <p className="text-[10px] text-primary mt-1 font-medium">Ver histórico completo →</p>
+                </button>
 
                 <p className="text-[11px] text-muted-foreground/80 mt-2">
                   Criada {formatDistanceToNow(new Date(automacao.created_at), { addSuffix: true, locale: ptBR })}
