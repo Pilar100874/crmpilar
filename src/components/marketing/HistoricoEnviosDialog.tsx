@@ -92,7 +92,8 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <ScrollArea className="flex-1 min-h-0 max-h-[70vh] pr-4 -mr-4">
+
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -264,7 +265,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
               )}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4 -mr-4">
+          <ScrollArea className="flex-1 min-h-0 max-h-[70vh] pr-4 -mr-4">
             {detalhe && (
               <div className="space-y-4">
                 {detalhe.items?.length ? (
