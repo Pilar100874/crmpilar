@@ -227,7 +227,8 @@ async function runExecution(supabase: any, automationId: string, automation: any
             // Map providerStatus para status "amigável" (ACK real vs PENDING presa)
             let finalStatus = baseStatus;
             if (d?.ok && provider) {
-              if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
+              if (provider === "SENT_PENDING_ACK") finalStatus = "enviado";
+              else if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
               else if (/PEND/.test(provider)) finalStatus = "pendente";
             }
             recipients.push({
