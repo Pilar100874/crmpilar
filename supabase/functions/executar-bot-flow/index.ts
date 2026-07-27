@@ -321,15 +321,16 @@ async function executeBroadcast(
     if (ids.length) {
       const { data: gv } = await supabase
         .from("empresa_vinculos")
-        .select("empresa_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp)")
-        .in("empresa_id", ids)
+        .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp)")
+        .in("vendedor_id", ids)
         .not("usuario_id", "is", null);
       (gv || []).forEach((r: any) => {
-        if (r.usuarios?.id && !gerentesMap.has(r.empresa_id)) {
-          gerentesMap.set(r.empresa_id, { id: r.usuarios.id, nome: r.usuarios.nome || "", whatsapp: r.usuarios.whatsapp });
+        if (r.vendedor_id && r.usuarios?.id && !gerentesMap.has(r.vendedor_id)) {
+          gerentesMap.set(r.vendedor_id, { id: r.usuarios.id, nome: r.usuarios.nome || "", whatsapp: r.usuarios.whatsapp });
         }
       });
     }
+
     if (_ft === "com_gerente") vs = vs.filter((v: any) => gerentesMap.has(v.id));
     if (_ft === "gerente_especifico" && cfg.gerenteId)
       vs = vs.filter((v: any) => gerentesMap.get(v.id)?.id === cfg.gerenteId);
