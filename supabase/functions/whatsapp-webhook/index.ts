@@ -2366,6 +2366,21 @@ function isEvolutionPendingStatus(status?: string): boolean {
   return normalized === "PENDING" || normalized === "SERVER_ACK_PENDING" || normalized === "ERROR";
 }
 
+function isEvolutionFinalErrorStatus(status?: string): boolean {
+  const normalized = String(status || "").toUpperCase();
+  return normalized === "ERROR" || normalized === "FAILED" || normalized === "FAILURE";
+}
+
+function buildEvolutionNumberVariants(toNumberOnly: string): string[] {
+  const digits = String(toNumberOnly || "").replace(/\D/g, "");
+  if (!digits) return [];
+
+  // Evolution/Baileys 2.3+ pode falhar em contatos migrados para LID quando
+  // recebe só dígitos. Tentamos primeiro o formato oficial da API e, se o
+  // WhatsApp finalizar como ERROR, tentamos o JID clássico do contato.
+  return Array.from(new Set([digits, `${digits}@s.whatsapp.net`]));
+}
+
 function extractEvolutionMessageRecords(data: any): any[] {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.messages?.records)) return data.messages.records;
@@ -2545,29 +2560,37 @@ async function sendEvolutionTextMessage(
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendText/${encodeURIComponent(instance)}`;
-  const body = { number, text: toWhatsappMarkdown(text) };
+  const messageText = toWhatsappMarkdown(text);
+  const numberVariants = buildEvolutionNumberVariants(number);
 
   console.log(`[EVOLUTION] Enviando TEXT -> ${number}`, { instance });
-  const first = await postEvolutionMessage(endpoint, apiKey, body, "sendText");
-  if (!first.ok) {
-    if (first.status === 401) console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
-    return false;
-  }
-  const firstDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(first.bodyText));
-  if (firstDelivery.ok) return true;
 
-  console.warn("[EVOLUTION] Envio ficou preso; reiniciando sessão e tentando reenviar uma vez:", firstDelivery);
+  for (const [index, variant] of numberVariants.entries()) {
+    const body = { number: variant, text: messageText };
+    const first = await postEvolutionMessage(endpoint, apiKey, body, index === 0 ? "sendText" : "sendText jid-fallback");
+    if (!first.ok) {
+      if (first.status === 401) console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
+      continue;
+    }
+    const firstDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(first.bodyText));
+    if (firstDelivery.ok) return true;
+    console.warn("[EVOLUTION] sendText sem entrega confirmada:", { variant: index === 0 ? "digits" : "jid", delivery: firstDelivery });
+    if (!isEvolutionFinalErrorStatus(firstDelivery.status)) break;
+  }
+
+  console.warn("[EVOLUTION] Envio não confirmou entrega; reiniciando sessão e tentando reenviar uma vez.");
   const restarted = await restartEvolutionInstance(base, apiKey, instance);
   if (restarted) await sleep(3500);
 
-  const retry = await postEvolutionMessage(endpoint, apiKey, body, "sendText retry");
-  if (!retry.ok) return false;
-  const retryDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(retry.bodyText));
-  if (!retryDelivery.ok) {
-    console.error("[EVOLUTION] Mensagem não teve confirmação de entrega após retry:", retryDelivery);
-    return false;
+  for (const [index, variant] of numberVariants.entries()) {
+    const retry = await postEvolutionMessage(endpoint, apiKey, { number: variant, text: messageText }, index === 0 ? "sendText retry" : "sendText retry jid-fallback");
+    if (!retry.ok) continue;
+    const retryDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(retry.bodyText));
+    if (retryDelivery.ok) return true;
+    console.error("[EVOLUTION] Mensagem não teve confirmação de entrega após retry:", { variant: index === 0 ? "digits" : "jid", retryDelivery });
+    if (!isEvolutionFinalErrorStatus(retryDelivery.status)) break;
   }
-  return true;
+  return false;
 }
 
 async function sendEvolutionListMessage(
