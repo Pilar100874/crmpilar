@@ -23708,6 +23708,7 @@ export type Database = {
           created_at: string | null
           estabelecimento_id: string | null
           evolution_api_key: string | null
+          evolution_mode: string
           evolution_url: string | null
           id: string
           manager_password: string | null
@@ -23729,6 +23730,7 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           evolution_api_key?: string | null
+          evolution_mode?: string
           evolution_url?: string | null
           id?: string
           manager_password?: string | null
@@ -23750,6 +23752,7 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           evolution_api_key?: string | null
+          evolution_mode?: string
           evolution_url?: string | null
           id?: string
           manager_password?: string | null
