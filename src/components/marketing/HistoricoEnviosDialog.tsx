@@ -353,34 +353,69 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                   <p className="text-sm text-muted-foreground italic">Nenhum conteúdo registrado neste envio.</p>
                 )}
 
-                {detalhe.recipients?.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-                      <Users className="w-3 h-3" /> Destinatários ({detalhe.recipients.length})
-                    </p>
-                    <div className="rounded-md border">
-                      <table className="w-full text-xs">
-                        <tbody>
-                          {detalhe.recipients.map((r, i) => (
-                            <tr key={i} className="border-b last:border-0">
-                              <td className="px-2 py-1.5">{r.nome || "—"}</td>
-                              <td className="px-2 py-1.5 text-muted-foreground">{r.telefone || r.email || "—"}</td>
-                              <td className="px-2 py-1.5 text-right">
-                                {r.status === "enviado" || r.status === "ok" ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline" />
-                                ) : (
-                                  <span className="text-destructive" title={r.motivo || ""}>
-                                    <XCircle className="w-3.5 h-3.5 inline" />
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                {detalhe.recipients?.length > 0 && (() => {
+                  const c = { ack: 0, enviado: 0, pendente: 0, invalido: 0, falha: 0, outro: 0 };
+                  for (const r of detalhe.recipients) c[normalizeStatus(r)]++;
+                  // ordena por horário do envio
+                  const sorted = [...detalhe.recipients].sort((a, b) => {
+                    const ta = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+                    const tb = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+                    return ta - tb;
+                  });
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                          <Users className="w-3 h-3" /> Linha do tempo por destinatário ({detalhe.recipients.length})
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.ack > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">{c.ack} ACK</span>}
+                          {c.enviado > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{c.enviado} enviado</span>}
+                          {c.pendente > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30">{c.pendente} PENDING</span>}
+                          {c.invalido > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30">{c.invalido} inválido</span>}
+                          {c.falha > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">{c.falha} falha</span>}
+                        </div>
+                      </div>
+                      <div className="relative pl-5 space-y-2">
+                        <div className="absolute left-1.5 top-1 bottom-1 w-px bg-border" />
+                        {sorted.map((r, i) => {
+                          const k = normalizeStatus(r);
+                          const dotCls =
+                            k === "ack" || k === "enviado" ? "bg-emerald-500"
+                            : k === "pendente" ? "bg-amber-500"
+                            : k === "invalido" ? "bg-orange-500"
+                            : k === "falha" ? "bg-red-500"
+                            : "bg-muted-foreground";
+                          return (
+                            <div key={i} className="relative">
+                              <div className={`absolute -left-[15px] top-2 w-2.5 h-2.5 rounded-full ring-2 ring-background ${dotCls}`} />
+                              <div className="rounded-md border bg-muted/30 p-2 text-xs flex items-start gap-2 flex-wrap">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium truncate">{r.nome || r.telefone || r.email || "—"}</span>
+                                    <StatusPill r={r} />
+                                    {r.providerStatus && (
+                                      <span className="text-[10px] text-muted-foreground font-mono">{r.providerStatus}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                                    {r.telefone || r.email || ""}
+                                    {r.startedAt && <span> · início {fmtHms(r.startedAt)}</span>}
+                                    {r.finishedAt && <span> · fim {fmtHms(r.finishedAt)}</span>}
+                                    {r.messageId && <span> · id <span className="font-mono">{r.messageId.slice(0, 10)}…</span></span>}
+                                  </div>
+                                  {r.motivo && (
+                                    <div className="text-[11px] text-destructive mt-1 break-words">{r.motivo}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {detalhe.error_message && (
                   <p className="text-xs text-destructive">{detalhe.error_message}</p>
