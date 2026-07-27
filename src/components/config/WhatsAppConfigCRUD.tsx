@@ -31,8 +31,8 @@ interface WhatsAppNumero {
   provider: Provider;
   ativo: boolean;
   is_default: boolean;
-  waha_url: string | null;
-  waha_api_key: string | null;
+  evolution_url: string | null;
+  evolution_api_key: string | null;
   session_name: string | null;
   cloud_phone_number_id: string | null;
   cloud_access_token: string | null;
@@ -47,8 +47,8 @@ interface FormState {
   provider: Provider;
   ativo: boolean;
   is_default: boolean;
-  waha_url: string;
-  waha_api_key: string;
+  evolution_url: string;
+  evolution_api_key: string;
   session_name: string;
   cloud_phone_number_id: string;
   cloud_access_token: string;
@@ -62,8 +62,8 @@ const EMPTY_FORM: FormState = {
   provider: "evolution",
   ativo: true,
   is_default: false,
-  waha_url: "",
-  waha_api_key: "",
+  evolution_url: "",
+  evolution_api_key: "",
   session_name: "default",
   cloud_phone_number_id: "",
   cloud_access_token: "",
@@ -99,7 +99,7 @@ export function WhatsAppConfigCRUD() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setNumeros((data || []) as WhatsAppNumero[]);
+      setNumeros(((data || []) as unknown) as WhatsAppNumero[]);
     } catch (e: any) {
       console.error(e);
       toast({ title: "Erro", description: e.message || "Falha ao carregar números", variant: "destructive" });
@@ -122,8 +122,8 @@ export function WhatsAppConfigCRUD() {
       provider: n.provider,
       ativo: n.ativo,
       is_default: n.is_default,
-      waha_url: n.waha_url || "",
-      waha_api_key: n.waha_api_key || "",
+      evolution_url: n.evolution_url || "",
+      evolution_api_key: n.evolution_api_key || "",
       session_name: n.session_name || "default",
       cloud_phone_number_id: n.cloud_phone_number_id || "",
       cloud_access_token: n.cloud_access_token || "",
@@ -140,7 +140,7 @@ export function WhatsAppConfigCRUD() {
       return;
     }
     if (form.provider === "evolution") {
-      if (!form.waha_url || !form.session_name) {
+      if (!form.evolution_url || !form.session_name) {
         toast({ title: "Campos obrigatórios", description: "Preencha URL e nome da sessão (Evolution)", variant: "destructive" });
         return;
       }
@@ -166,8 +166,8 @@ export function WhatsAppConfigCRUD() {
         provider: form.provider,
         ativo: form.ativo,
         is_default: form.is_default,
-        waha_url: form.provider === "evolution" ? form.waha_url : null,
-        waha_api_key: form.provider === "evolution" ? (form.waha_api_key || null) : null,
+        evolution_url: form.provider === "evolution" ? form.evolution_url : null,
+        evolution_api_key: form.provider === "evolution" ? (form.evolution_api_key || null) : null,
         session_name: form.provider === "evolution" ? form.session_name : null,
         cloud_phone_number_id: form.provider === "cloud_api" ? form.cloud_phone_number_id : null,
         cloud_access_token: form.provider === "cloud_api" ? form.cloud_access_token : null,
@@ -403,8 +403,8 @@ export function WhatsAppConfigCRUD() {
                   <Label>URL da API *</Label>
                   <Input
                     placeholder="https://evolution.seudominio.com"
-                    value={form.waha_url}
-                    onChange={(e) => setForm({ ...form, waha_url: e.target.value })}
+                    value={form.evolution_url}
+                    onChange={(e) => setForm({ ...form, evolution_url: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -413,8 +413,8 @@ export function WhatsAppConfigCRUD() {
                     <Input
                       type={showSecrets ? "text" : "password"}
                       placeholder="Chave da API"
-                      value={form.waha_api_key}
-                      onChange={(e) => setForm({ ...form, waha_api_key: e.target.value })}
+                      value={form.evolution_api_key}
+                      onChange={(e) => setForm({ ...form, evolution_api_key: e.target.value })}
                       className="pr-10"
                     />
                     <Button

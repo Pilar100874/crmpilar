@@ -148,16 +148,16 @@ serve(async (req) => {
       const { data: cfg } = scopedEstabelecimentoId
         ? await supabase
           .from("whatsapp_config")
-          .select("provider, waha_url, waha_api_key")
+          .select("provider, evolution_url, evolution_api_key")
           .eq("estabelecimento_id", scopedEstabelecimentoId)
           .maybeSingle()
         : { data: null };
 
-      if (!session?.session_name || !cfg?.waha_url || !cfg?.waha_api_key) return null;
+      if (!session?.session_name || !cfg?.evolution_url || !cfg?.evolution_api_key) return null;
       return {
         provider: cfg.provider || "evolution",
-        waha_url: cfg.waha_url,
-        waha_api_key: cfg.waha_api_key,
+        evolution_url: cfg.evolution_url,
+        evolution_api_key: cfg.evolution_api_key,
         session_name: session.session_name,
         nome: session.session_name,
       };
@@ -231,17 +231,17 @@ serve(async (req) => {
 
     // Fallback antigo (compatibilidade): whatsapp_config por estabelecimento
     if (!numero && conversation.estabelecimento_id) {
-      const { data: wahaConfig } = await supabase
+      const { data: evolutionConfig } = await supabase
         .from("whatsapp_config")
         .select("*")
         .eq("estabelecimento_id", conversation.estabelecimento_id)
         .maybeSingle();
-      if (wahaConfig?.waha_url && wahaConfig?.waha_api_key) {
+      if (evolutionConfig?.evolution_url && evolutionConfig?.evolution_api_key) {
         numero = {
-          provider: wahaConfig.provider || "evolution",
-          waha_url: wahaConfig.waha_url,
-          waha_api_key: wahaConfig.waha_api_key,
-          session_name: wahaConfig.session_name || "default",
+          provider: evolutionConfig.provider || "evolution",
+          evolution_url: evolutionConfig.evolution_url,
+          evolution_api_key: evolutionConfig.evolution_api_key,
+          session_name: evolutionConfig.session_name || "default",
         };
       }
     }
@@ -265,9 +265,9 @@ serve(async (req) => {
         sendResult = await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
       }
     } else {
-      const base = (numero.waha_url || "").replace(/\/+$/, "");
+      const base = (numero.evolution_url || "").replace(/\/+$/, "");
       const session = numero.session_name || "default";
-      const apiKey = numero.waha_api_key;
+      const apiKey = numero.evolution_api_key;
       if (contact && contact.whatsapp) {
         sendResult = await sendEvolutionContact(toNumberOnly, contact, session, base, apiKey);
       } else if (fileUrl) {

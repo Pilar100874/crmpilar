@@ -27,7 +27,7 @@ const SUPABASE_URL = env("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY");
 const VERIFY_TOKEN = env("WHATSAPP_VERIFY_TOKEN", "conversa_botique_verify");
 // JID suffix mantido por compatibilidade (não usado pelo Evolution, que aceita só dígitos)
-const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@s.whatsapp.net");
+const JID_SUFFIX = env("EVOLUTION_JID_SUFFIX", "@s.whatsapp.net");
 
 const toJid = (numOnly: string) => `${String(numOnly).replace(/\D/g, "")}${JID_SUFFIX}`;
 
@@ -94,18 +94,18 @@ function detectDeviceFromMessageId(messageId?: string): "ios" | "android" | "unk
 }
 
 // Detecta evento do Evolution API (messages.upsert) ou formatos antigos compatíveis.
-function isWahaMessageEvent(raw: any): boolean {
+function isEvolutionMessageEvent(raw: any): boolean {
   const event = String(raw?.event || raw?.type || "").toLowerCase();
   if (!event) return false;
   // Evolution: "messages.upsert" | "messages.update"
   if (event.startsWith("messages.")) return true;
-  // Compatibilidade legada (WAHA)
+  // Compatibilidade legada (Evolution)
   if (event === "message" || event === "message.any" || event.startsWith("message.")) return true;
   return false;
 }
 
 // Resolve o nome da instância/sessão (Evolution usa "instance")
-function resolveWahaSession(raw: any): string {
+function resolveEvolutionSession(raw: any): string {
   return String(
     raw?.instance ||
       raw?.instanceName ||
@@ -179,8 +179,8 @@ serve(async (req) => {
     let from = "";                 // número do remetente (apenas dígitos)
     let body = "";                 // texto recebido
     let phoneNumberId = "";        // Meta Graph API phone number id
-    let transport: "waha" | "meta" | "twilio" = "meta";
-    let wahaSession = "default";
+    let transport: "evolution" | "meta" | "twilio" = "meta";
+    let evolutionSession = "default";
     let incomingImage: any = null; // metadados de imagem recebida (anexo)
     let metaAccessToken = "";      // token Meta para baixar mídia
     let inboundMsgId = "";         // id da mensagem recebida (para dedup)
@@ -188,11 +188,11 @@ serve(async (req) => {
 
 
 
-    // ====== Heurística Evolution API (substitui WAHA) ======
+    // ====== Heurística Evolution API (substitui Evolution) ======
 
     // A) Evolution v2: { event:'messages.upsert', instance, data:{ key:{remoteJid, fromMe}, message:{...} } }
-    if (isWahaMessageEvent(raw) && (raw?.data?.key || raw?.data?.message || raw?.data)) {
-      transport = "waha";
+    if (isEvolutionMessageEvent(raw) && (raw?.data?.key || raw?.data?.message || raw?.data)) {
+      transport = "evolution";
       const d = raw.data || {};
       const fromMe = d?.key?.fromMe === true;
 
@@ -214,7 +214,7 @@ serve(async (req) => {
 
       from = remoteJid.split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(d?.message) || d?.text || "";
-      wahaSession = resolveWahaSession(raw);
+      evolutionSession = resolveEvolutionSession(raw);
       inboundMsgId = String(d?.key?.id || "");
       if (d?.message?.imageMessage) {
         incomingImage = {
@@ -226,12 +226,12 @@ serve(async (req) => {
           rawKey: d?.key,
         };
       }
-      console.log("[EVOLUTION] Mensagem recebida:", { instance: wahaSession, from, text: body, hasImage: !!incomingImage });
+      console.log("[EVOLUTION] Mensagem recebida:", { instance: evolutionSession, from, text: body, hasImage: !!incomingImage });
     }
 
     // B) Baileys cru: { messages:[{ key:{remoteJid}, message:{...} }] } — compatibilidade
-    if (transport !== "waha" && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
-      transport = "waha";
+    if (transport !== "evolution" && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
+      transport = "evolution";
       const msg0 = raw.messages[0];
       if (msg0.key?.fromMe) {
         return new Response(JSON.stringify({ success: true, ignored: "fromMe" }), {
@@ -241,7 +241,7 @@ serve(async (req) => {
       const remote = msg0.key?.remoteJid || "";
       from = String(remote).split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(msg0.message);
-      wahaSession = resolveWahaSession(raw);
+      evolutionSession = resolveEvolutionSession(raw);
       inboundMsgId = String(msg0?.key?.id || "");
       if (msg0.message?.imageMessage) {
         incomingImage = {
@@ -253,11 +253,11 @@ serve(async (req) => {
           rawKey: msg0?.key,
         };
       }
-      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: wahaSession, from, text: body, hasImage: !!incomingImage });
+      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: evolutionSession, from, text: body, hasImage: !!incomingImage });
     }
 
     // ====== Meta oficial (se não caiu em Evolution) ======
-    if (transport !== "waha") {
+    if (transport !== "evolution") {
       const payload: WhatsAppWebhookPayload = raw;
       if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
         console.log("Received WhatsApp (Meta) webhook:", JSON.stringify(raw));
@@ -306,72 +306,72 @@ serve(async (req) => {
 
 
 
-    // ====== Busca configuração do WAHA SEMPRE DO BANCO (nunca de secrets) ======
-    let WAHA_URL = "";
-    let WAHA_API_KEY = "";
+    // ====== Busca configuração do Evolution SEMPRE DO BANCO (nunca de secrets) ======
+    let EVOLUTION_URL = "";
+    let EVOLUTION_API_KEY = "";
     let estabelecimentoId = "";
     
-    if (transport === "waha") {
-      console.log("[WAHA] Buscando configuração do banco para sessão:", wahaSession);
+    if (transport === "evolution") {
+      console.log("[EVOLUTION] Buscando configuração do banco para sessão:", evolutionSession);
       
       // Primeiro busca a sessão para pegar o estabelecimento_id
       const { data: sessionData, error: sessionError } = await supabase
         .from("whatsapp_sessions")
         .select("estabelecimento_id")
-        .eq("session_name", wahaSession)
+        .eq("session_name", evolutionSession)
         .maybeSingle();
       
       if (sessionError) {
-        console.error("[WAHA] Erro ao buscar sessão:", sessionError);
+        console.error("[EVOLUTION] Erro ao buscar sessão:", sessionError);
       }
       
       if (sessionData?.estabelecimento_id) {
         estabelecimentoId = sessionData.estabelecimento_id;
-        console.log("[WAHA] Sessão encontrada, estabelecimento_id:", estabelecimentoId);
+        console.log("[EVOLUTION] Sessão encontrada, estabelecimento_id:", estabelecimentoId);
         
-        // Agora busca a configuração WAHA do estabelecimento NA TABELA whatsapp_config
-        const { data: wahaConfig, error: configError } = await supabase
+        // Agora busca a configuração Evolution do estabelecimento NA TABELA whatsapp_config
+        const { data: evolutionConfig, error: configError } = await supabase
           .from("whatsapp_config")
-          .select("waha_url, waha_api_key")
+          .select("evolution_url, evolution_api_key")
           .eq("estabelecimento_id", sessionData.estabelecimento_id)
           .maybeSingle();
         
         if (configError) {
-          console.error("[WAHA] Erro ao buscar configuração:", configError);
+          console.error("[EVOLUTION] Erro ao buscar configuração:", configError);
         }
         
-        if (wahaConfig) {
-          WAHA_URL = wahaConfig.waha_url || env("WAHA_URL");
-          WAHA_API_KEY = env("WAHA_API_KEY") || wahaConfig.waha_api_key || "";
-          console.log("[WAHA] ✓ Configuração carregada do banco:", { 
-            sessionName: wahaSession, 
-            hasUrl: !!WAHA_URL, 
-            hasApiKey: !!WAHA_API_KEY,
-            urlPreview: WAHA_URL ? WAHA_URL.substring(0, 30) + "..." : "vazio"
+        if (evolutionConfig) {
+          EVOLUTION_URL = evolutionConfig.evolution_url || env("EVOLUTION_URL");
+          EVOLUTION_API_KEY = env("EVOLUTION_API_KEY") || evolutionConfig.evolution_api_key || "";
+          console.log("[EVOLUTION] ✓ Configuração carregada do banco:", { 
+            sessionName: evolutionSession, 
+            hasUrl: !!EVOLUTION_URL, 
+            hasApiKey: !!EVOLUTION_API_KEY,
+            urlPreview: EVOLUTION_URL ? EVOLUTION_URL.substring(0, 30) + "..." : "vazio"
           });
           
-          if (!WAHA_API_KEY) {
-            console.error("[WAHA] ⚠️ WAHA_API_KEY está vazio! Configure através da interface em Config > Configuração WhatsApp WAHA");
+          if (!EVOLUTION_API_KEY) {
+            console.error("[EVOLUTION] ⚠️ EVOLUTION_API_KEY está vazio! Configure através da interface em Config > Configuração WhatsApp Evolution");
           }
         } else {
-          console.error("[WAHA] ⚠️ Nenhuma configuração encontrada na tabela whatsapp_config para estabelecimento_id:", sessionData.estabelecimento_id);
-          console.error("[WAHA] 📝 Configure o servidor WAHA através da interface em: Config > Configuração WhatsApp WAHA");
+          console.error("[EVOLUTION] ⚠️ Nenhuma configuração encontrada na tabela whatsapp_config para estabelecimento_id:", sessionData.estabelecimento_id);
+          console.error("[EVOLUTION] 📝 Configure o servidor Evolution através da interface em: Config > Configuração WhatsApp Evolution");
         }
       } else {
-        console.error("[WAHA] ⚠️ Nenhuma sessão encontrada com nome:", wahaSession);
-        console.error("[WAHA] 📝 Crie uma sessão através da interface em: Config > Configuração WhatsApp WAHA");
+        console.error("[EVOLUTION] ⚠️ Nenhuma sessão encontrada com nome:", evolutionSession);
+        console.error("[EVOLUTION] 📝 Crie uma sessão através da interface em: Config > Configuração WhatsApp Evolution");
       }
     }
     
     // ====== Carrega fluxo ativo para a sessão ======
     let flowData = null;
     
-    if (transport === "waha") {
+    if (transport === "evolution") {
       // Busca o estabelecimento_id e bot_flow_id atrelados à sessão
       const { data: sessionData } = await supabase
         .from("whatsapp_sessions")
         .select("estabelecimento_id, bot_flow_id")
-        .eq("session_name", wahaSession)
+        .eq("session_name", evolutionSession)
         .maybeSingle();
 
       // 1) Se a sessão estiver vinculada a um bot específico, usa esse bot
@@ -384,12 +384,12 @@ serve(async (req) => {
           .eq("active", true)
           .maybeSingle();
         if (data) {
-          console.log("[WAHA] Bot via session.bot_flow_id:", { botName: data?.name, canais: data?.canais });
+          console.log("[EVOLUTION] Bot via session.bot_flow_id:", { botName: data?.name, canais: data?.canais });
           flowData = data;
         }
       }
 
-      // 2) Fallback: bot ativo do estabelecimento configurado para WAHA
+      // 2) Fallback: bot ativo do estabelecimento configurado para Evolution
       //    (aceita canal whatsapp OU marketing_automation)
       if (!flowData && sessionData?.estabelecimento_id) {
         const { data } = await supabase
@@ -398,10 +398,10 @@ serve(async (req) => {
           .eq("active", true)
           .eq("estabelecimento_id", sessionData.estabelecimento_id)
           .or("canais.cs.{whatsapp},canais.cs.{marketing_automation}")
-          .eq("whatsapp_type", "waha")
+          .eq("whatsapp_type", "evolution")
           .maybeSingle();
 
-        console.log("[WAHA] Bot fallback search:", { found: !!data, botName: data?.name });
+        console.log("[EVOLUTION] Bot fallback search:", { found: !!data, botName: data?.name });
         flowData = data;
       }
     } else {
@@ -425,7 +425,7 @@ serve(async (req) => {
     // ====== Resolve número vinculado ao bot (multi-provider) ======
     // Prioridade: bot_flows.whatsapp_numero_id -> whatsapp_numeros
     // Fallback Meta: busca número por cloud_phone_number_id == phoneNumberId
-    let activeProvider: "evolution" | "cloud_api" = transport === "waha" ? "evolution" : "cloud_api";
+    let activeProvider: "evolution" | "cloud_api" = transport === "evolution" ? "evolution" : "cloud_api";
     let cloudPhoneNumberId = phoneNumberId;
     let cloudAccessToken = "";
 
@@ -455,9 +455,9 @@ serve(async (req) => {
       if (numeroRow) {
         activeProvider = numeroRow.provider === "cloud_api" ? "cloud_api" : "evolution";
         if (activeProvider === "evolution") {
-          if (numeroRow.waha_url) WAHA_URL = numeroRow.waha_url;
-          if (numeroRow.waha_api_key) WAHA_API_KEY = numeroRow.waha_api_key;
-          if (numeroRow.session_name) wahaSession = numeroRow.session_name;
+          if (numeroRow.evolution_url) EVOLUTION_URL = numeroRow.evolution_url;
+          if (numeroRow.evolution_api_key) EVOLUTION_API_KEY = numeroRow.evolution_api_key;
+          if (numeroRow.session_name) evolutionSession = numeroRow.session_name;
         } else {
           cloudPhoneNumberId = numeroRow.cloud_phone_number_id || phoneNumberId;
           cloudAccessToken = numeroRow.cloud_access_token || "";
@@ -483,7 +483,7 @@ serve(async (req) => {
       mediaUrl = optimizedMediaUrl;
       if (activeProvider === "evolution") {
         if (interactive?.type === "list") {
-          const ok = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          const ok = await sendEvolutionListMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           if (!ok) {
             console.log("[FLOW] sendList falhou, usando fallback texto numerado");
             const allRows = (interactive.sections || [])
@@ -492,22 +492,22 @@ serve(async (req) => {
             allRows.forEach((row: any, index: number) => {
               fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
             });
-            await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
+            await sendEvolutionTextMessage(from, fallback, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           }
           return;
         }
         if (interactive?.type === "buttons") {
-          await sendWahaButtonsMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          await sendEvolutionButtonsMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           return;
         }
         if (interactive?.type === "carousel") {
-          await sendWahaCarouselMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          await sendEvolutionCarouselMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           return;
         }
         if (mediaUrl && mediaType) {
-          await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession, WAHA_URL, WAHA_API_KEY);
+          await sendEvolutionMediaMessage(from, text, mediaType, mediaUrl, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
         } else if (text) {
-          await sendWahaTextMessage(from, text, wahaSession, WAHA_URL, WAHA_API_KEY);
+          await sendEvolutionTextMessage(from, text, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
         }
       } else {
         // Cloud API (Meta oficial)
@@ -593,12 +593,12 @@ serve(async (req) => {
               forwardText,
             );
           } else {
-            await sendWahaTextMessage(
+            await sendEvolutionTextMessage(
               from,
               forwardText,
-              targetNumero.session_name || wahaSession,
-              targetNumero.waha_url || WAHA_URL,
-              targetNumero.waha_api_key || WAHA_API_KEY,
+              targetNumero.session_name || evolutionSession,
+              targetNumero.evolution_url || EVOLUTION_URL,
+              targetNumero.evolution_api_key || EVOLUTION_API_KEY,
             );
           }
 
@@ -619,8 +619,8 @@ serve(async (req) => {
       });
     }
 
-    // ====== Contexto por sessão (isola por WAHA) ======
-    const sessionKey = transport === "waha" ? `whatsapp_${wahaSession}_${from}` : `whatsapp_meta_${from}`;
+    // ====== Contexto por sessão (isola por Evolution) ======
+    const sessionKey = transport === "evolution" ? `whatsapp_${evolutionSession}_${from}` : `whatsapp_meta_${from}`;
     console.log("[SESSION] Looking for session:", sessionKey);
 
     const { data: sessionData } = await supabase
@@ -651,7 +651,7 @@ serve(async (req) => {
     context.vars.userMessage = body;
     context.vars.from = from;
     context.vars.phoneNumber = from;
-    context.vars.session = wahaSession;
+    context.vars.session = evolutionSession;
     if (incomingImage) context.vars.__incoming_image = incomingImage; else delete context.vars.__incoming_image;
     if (estabelecimentoId) context.vars.estabelecimento_id = estabelecimentoId;
 
@@ -853,7 +853,7 @@ serve(async (req) => {
       const raw = String(body || "").trim().toLowerCase();
       if (raw === "recomeçar" || raw === "recomecar" || raw === "reiniciar" || raw === "restart") {
         console.log("[RESTART] Palavra-chave de reinício detectada");
-        context = { vars: { userMessage: body, from, phoneNumber: from, session: wahaSession, estabelecimento_id: estabelecimentoId } };
+        context = { vars: { userMessage: body, from, phoneNumber: from, session: evolutionSession, estabelecimento_id: estabelecimentoId } };
         const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
         if (startNode) {
           await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
@@ -881,7 +881,7 @@ serve(async (req) => {
         const raw = String(body || "").trim();
         if (pendingGoodbye && raw.length > 0) {
           console.log("[RESTART] Mensagem recebida após despedida — reiniciando fluxo");
-          context = { vars: { userMessage: body, from, phoneNumber: from, session: wahaSession, estabelecimento_id: estabelecimentoId } };
+          context = { vars: { userMessage: body, from, phoneNumber: from, session: evolutionSession, estabelecimento_id: estabelecimentoId } };
           const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
           if (startNode) {
             await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
@@ -992,7 +992,7 @@ serve(async (req) => {
       
       if (!pendingNode) {
         console.error("[FLOW] Pending node not found, resetting context");
-        context = { vars: { userMessage: body, from, phoneNumber: from, session: wahaSession } };
+        context = { vars: { userMessage: body, from, phoneNumber: from, session: evolutionSession } };
         const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
         if (startNode) {
           await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
@@ -1052,9 +1052,9 @@ serve(async (req) => {
       ) {
         console.log("[FLOW] Usuário escolheu Sair — finalizando fluxo");
         await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
-        context = { vars: { from, phoneNumber: from, session: wahaSession } };
+        context = { vars: { from, phoneNumber: from, session: evolutionSession } };
         const supabaseCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-        const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+        const sessionKey = `whatsapp_${evolutionSession || "default"}_${from || ""}`;
         await supabaseCli.from("chat_sessions").delete().eq("session_id", sessionKey);
         shouldSaveContext = false;
         shouldReturn = true;
@@ -1451,9 +1451,9 @@ serve(async (req) => {
                 await respond(customWait || "⏳ Recebendo a foto, aguarde...");
               }
               const publicUrl = await downloadIncomingImageAsPublicUrl(incoming, {
-                wahaUrl: WAHA_URL,
-                wahaApiKey: WAHA_API_KEY,
-                sessionName: wahaSession,
+                evolutionUrl: EVOLUTION_URL,
+                evolutionApiKey: EVOLUTION_API_KEY,
+                sessionName: evolutionSession,
                 metaToken: cloudAccessToken,
                 from,
               });
@@ -1495,9 +1495,9 @@ serve(async (req) => {
             }
           } else if (rRaw === "cancelar" || rRaw === "sair" || rRaw === "pim_exit" || idx === exitIndex) {
             await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
-            context = { vars: { from, phoneNumber: from, session: wahaSession } };
+            context = { vars: { from, phoneNumber: from, session: evolutionSession } };
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-            const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+            const sessionKey = `whatsapp_${evolutionSession || "default"}_${from || ""}`;
             await sbCli.from("chat_sessions").delete().eq("session_id", sessionKey);
             shouldSaveContext = false;
             shouldReturn = true;
@@ -1651,9 +1651,9 @@ serve(async (req) => {
             else await generateTextSamples(theme);
           } else if (idx === exitIndex) {
             await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
-            context = { vars: { from, phoneNumber: from, session: wahaSession } };
+            context = { vars: { from, phoneNumber: from, session: evolutionSession } };
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-            const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+            const sessionKey = `whatsapp_${evolutionSession || "default"}_${from || ""}`;
             await sbCli.from("chat_sessions").delete().eq("session_id", sessionKey);
             shouldSaveContext = false;
             shouldReturn = true;
@@ -2223,14 +2223,14 @@ async function sendCloudButtonsMessage(
 
 async function downloadIncomingImageAsPublicUrl(
   incoming: any,
-  ctx: { wahaUrl: string; wahaApiKey: string; sessionName: string; metaToken?: string; from: string },
+  ctx: { evolutionUrl: string; evolutionApiKey: string; sessionName: string; metaToken?: string; from: string },
 ): Promise<string | null> {
   try {
     let base64 = "";
     let mimetype = incoming?.mimetype || "image/jpeg";
 
     if (incoming?.source === "evolution") {
-      const { base, apiKey } = resolveEvolution(ctx.wahaUrl, ctx.wahaApiKey);
+      const { base, apiKey } = resolveEvolution(ctx.evolutionUrl, ctx.evolutionApiKey);
       if (!base || !apiKey) {
         console.error("[INCOMING-IMG] Evolution sem URL/apikey");
         return null;
@@ -2307,9 +2307,9 @@ async function downloadIncomingImageAsPublicUrl(
 /* ======= Evolution API – envio de texto e mídia ======= */
 
 
-function resolveEvolution(wahaUrl: string, wahaApiKey: string) {
-  const base = (wahaUrl || env("EVOLUTION_URL") || env("WAHA_URL") || "").replace(/\/+$/, "");
-  const apiKey = (wahaApiKey || env("EVOLUTION_API_KEY") || env("WAHA_API_KEY") || "").trim();
+function resolveEvolution(evolutionUrl: string, evolutionApiKey: string) {
+  const base = (evolutionUrl || env("EVOLUTION_URL") || "").replace(/\/+$/, "");
+  const apiKey = (evolutionApiKey || env("EVOLUTION_API_KEY") || "").trim();
   return { base, apiKey };
 }
 
@@ -2366,14 +2366,14 @@ function normalizeUrl(raw: string, kind: SocialKind): string {
   }
 }
 
-async function sendWahaTextMessage(
+async function sendEvolutionTextMessage(
   toNumberOnly: string,
   text: string,
   sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
+  evolutionUrl: string,
+  evolutionApiKey: string,
 ) {
-  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) {
     console.error("[EVOLUTION] URL ou apikey ausentes. Configure em Canais de Atendimento.");
     return;
@@ -2405,14 +2405,14 @@ async function sendWahaTextMessage(
   }
 }
 
-async function sendWahaListMessage(
+async function sendEvolutionListMessage(
   toNumberOnly: string,
   interactive: any,
   sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
+  evolutionUrl: string,
+  evolutionApiKey: string,
 ): Promise<boolean> {
-  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) {
     console.error("[EVOLUTION] URL ou apikey ausentes para sendList.");
     return false;
@@ -2477,14 +2477,14 @@ async function sendWahaListMessage(
   }
 }
 
-async function sendWahaPollMessage(
+async function sendEvolutionPollMessage(
   toNumberOnly: string,
   poll: { name: string; values: string[]; selectableCount?: number },
   sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
+  evolutionUrl: string,
+  evolutionApiKey: string,
 ): Promise<boolean> {
-  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) return false;
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -2512,15 +2512,15 @@ async function sendWahaPollMessage(
   }
 }
 
-async function sendWahaButtonsMessage(
+async function sendEvolutionButtonsMessage(
   toNumberOnly: string,
   interactive: any,
   sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
+  evolutionUrl: string,
+  evolutionApiKey: string,
   allowTextFallback = true,
 ) {
-  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) return;
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -2584,26 +2584,26 @@ async function sendWahaButtonsMessage(
         else if (b.type === "pix") extra = ` (Pix ${b.keyType}: ${b.key})`;
         fallback += `\n${i + 1}. ${b.displayText}${extra}`;
       });
-      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+      await sendEvolutionTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendButtons:", err);
     if (allowTextFallback) {
       let fallback = `${body.description}\n`;
       buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
-      try { await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey); } catch {}
+      try { await sendEvolutionTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey); } catch {}
     }
   }
 }
 
-async function sendWahaCarouselMessage(
+async function sendEvolutionCarouselMessage(
   toNumberOnly: string,
   interactive: any,
   sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
+  evolutionUrl: string,
+  evolutionApiKey: string,
 ) {
-  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) return;
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -2653,7 +2653,7 @@ async function sendWahaCarouselMessage(
       cards.forEach((c: any, i: number) => {
         fallback += `\n${i + 1}. ${c.body}${c.footer ? " — " + c.footer : ""}`;
       });
-      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+      await sendEvolutionTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendCarousel:", err);
@@ -2661,16 +2661,16 @@ async function sendWahaCarouselMessage(
 }
 
 
-async function sendWahaMediaMessage(
+async function sendEvolutionMediaMessage(
   toNumberOnly: string,
   caption: string | undefined,
   mediaType: string,
   mediaUrl: string,
   sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
+  evolutionUrl: string,
+  evolutionApiKey: string,
 ) {
-  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) {
     console.error("[EVOLUTION] URL ou apikey ausentes para envio de mídia.");
     return;
@@ -2763,12 +2763,12 @@ async function sendWahaMediaMessage(
     evoType === "video" ? "vídeo" :
     evoType === "audio" ? "áudio" : "arquivo";
   console.error("[EVOLUTION] ❌ Falha ao enviar mídia. Enviando link como fallback.");
-  await sendWahaTextMessage(
+  await sendEvolutionTextMessage(
     toNumberOnly,
     `${caption ? `${caption}\n` : ""}Link do ${fallbackLabel}: ${mediaUrl}`,
     sessionName,
-    wahaUrl,
-    wahaApiKey,
+    evolutionUrl,
+    evolutionApiKey,
   );
 }
 
@@ -3129,7 +3129,7 @@ async function executeNode(
       }
       let fallbackTxt = bodyText + "";
       buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text || b.title}`; });
-      // Envia como reply buttons (quick reply) — sendWahaButtonsMessage já faz fallback de texto se a entrega falhar.
+      // Envia como reply buttons (quick reply) — sendEvolutionButtonsMessage já faz fallback de texto se a entrega falhar.
       await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
@@ -4142,18 +4142,18 @@ async function executeNode(
         } else {
           try {
             const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-            const { data: wahaCfg } = await supabase
+            const { data: evolutionCfg } = await supabase
               .from("whatsapp_config")
-              .select("waha_url, waha_api_key, session_name")
+              .select("evolution_url, evolution_api_key, session_name")
               .limit(1)
               .maybeSingle();
-            const sessionName = wahaCfg?.session_name || context.vars.session || "default";
-            const wahaUrl = wahaCfg?.waha_url || env("EVOLUTION_URL") || env("WAHA_URL");
-            const wahaKey = wahaCfg?.waha_api_key || env("EVOLUTION_API_KEY") || env("WAHA_API_KEY");
+            const sessionName = evolutionCfg?.session_name || context.vars.session || "default";
+            const evolutionUrl = evolutionCfg?.evolution_url || env("EVOLUTION_URL");
+            const evolutionKey = evolutionCfg?.evolution_api_key || env("EVOLUTION_API_KEY");
             if (mediaUrl) {
-              await sendWahaMediaMessage(phone, msg, "image", mediaUrl, sessionName, wahaUrl, wahaKey);
+              await sendEvolutionMediaMessage(phone, msg, "image", mediaUrl, sessionName, evolutionUrl, evolutionKey);
             } else if (msg) {
-              await sendWahaTextMessage(phone, msg, sessionName, wahaUrl, wahaKey);
+              await sendEvolutionTextMessage(phone, msg, sessionName, evolutionUrl, evolutionKey);
             }
             context.vars[outVar] = "enviado";
           } catch (e) {

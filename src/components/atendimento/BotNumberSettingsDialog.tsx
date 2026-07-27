@@ -167,7 +167,7 @@ export function BotNumberSettingsDialog({
             id: linkedSession.id,
             nome: linkedSession.session_name,
             telefone: linkedSession.phone_number,
-            provider: "waha",
+            provider: "evolution",
             session_name: linkedSession.session_name,
           });
         }

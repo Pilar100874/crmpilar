@@ -75,14 +75,14 @@ Deno.serve(async (req) => {
       if (!numero) {
         const { data: evoCfg } = await supabase
           .from("whatsapp_config")
-          .select("waha_url, waha_api_key, session_name")
+          .select("evolution_url, evolution_api_key, session_name")
           .eq("estabelecimento_id", pedido.estabelecimento_id)
           .maybeSingle();
-        if (evoCfg?.waha_url) {
+        if (evoCfg?.evolution_url) {
           numero = {
             provider: "evolution",
-            waha_url: evoCfg.waha_url,
-            waha_api_key: evoCfg.waha_api_key || Deno.env.get("EVOLUTION_API_KEY") || Deno.env.get("WAHA_API_KEY"),
+            evolution_url: evoCfg.evolution_url,
+            evolution_api_key: evoCfg.evolution_api_key || Deno.env.get("EVOLUTION_API_KEY"),
             session_name: evoCfg.session_name || "default",
           };
         }
@@ -120,8 +120,8 @@ Deno.serve(async (req) => {
         sent = r.ok;
         if (!r.ok) console.error("[CLOUD] Erro:", await r.text().catch(() => ""));
       } else {
-        const evoUrl = (numero.waha_url || "").replace(/\/+$/, "");
-        const apiKey = numero.waha_api_key;
+        const evoUrl = (numero.evolution_url || "").replace(/\/+$/, "");
+        const apiKey = numero.evolution_api_key;
         const instance = numero.session_name || "default";
         const r = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
           method: "POST",

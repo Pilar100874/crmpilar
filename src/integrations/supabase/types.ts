@@ -23707,6 +23707,8 @@ export type Database = {
           cloud_webhook_verify_token: string | null
           created_at: string | null
           estabelecimento_id: string | null
+          evolution_api_key: string | null
+          evolution_url: string | null
           id: string
           manager_password: string | null
           manager_url: string | null
@@ -23715,8 +23717,6 @@ export type Database = {
           provider: string
           session_name: string | null
           updated_at: string | null
-          waha_api_key: string | null
-          waha_url: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -23728,6 +23728,8 @@ export type Database = {
           cloud_webhook_verify_token?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
+          evolution_api_key?: string | null
+          evolution_url?: string | null
           id?: string
           manager_password?: string | null
           manager_url?: string | null
@@ -23736,8 +23738,6 @@ export type Database = {
           provider?: string
           session_name?: string | null
           updated_at?: string | null
-          waha_api_key?: string | null
-          waha_url?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -23749,6 +23749,8 @@ export type Database = {
           cloud_webhook_verify_token?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
+          evolution_api_key?: string | null
+          evolution_url?: string | null
           id?: string
           manager_password?: string | null
           manager_url?: string | null
@@ -23757,8 +23759,6 @@ export type Database = {
           provider?: string
           session_name?: string | null
           updated_at?: string | null
-          waha_api_key?: string | null
-          waha_url?: string | null
           webhook_url?: string | null
         }
         Relationships: [
@@ -23780,6 +23780,8 @@ export type Database = {
           cloud_webhook_verify_token: string | null
           created_at: string
           estabelecimento_id: string
+          evolution_api_key: string | null
+          evolution_url: string | null
           id: string
           is_default: boolean
           nome: string
@@ -23787,8 +23789,6 @@ export type Database = {
           session_name: string | null
           telefone: string | null
           updated_at: string
-          waha_api_key: string | null
-          waha_url: string | null
         }
         Insert: {
           ativo?: boolean
@@ -23798,6 +23798,8 @@ export type Database = {
           cloud_webhook_verify_token?: string | null
           created_at?: string
           estabelecimento_id: string
+          evolution_api_key?: string | null
+          evolution_url?: string | null
           id?: string
           is_default?: boolean
           nome: string
@@ -23805,8 +23807,6 @@ export type Database = {
           session_name?: string | null
           telefone?: string | null
           updated_at?: string
-          waha_api_key?: string | null
-          waha_url?: string | null
         }
         Update: {
           ativo?: boolean
@@ -23816,6 +23816,8 @@ export type Database = {
           cloud_webhook_verify_token?: string | null
           created_at?: string
           estabelecimento_id?: string
+          evolution_api_key?: string | null
+          evolution_url?: string | null
           id?: string
           is_default?: boolean
           nome?: string
@@ -23823,8 +23825,6 @@ export type Database = {
           session_name?: string | null
           telefone?: string | null
           updated_at?: string
-          waha_api_key?: string | null
-          waha_url?: string | null
         }
         Relationships: [
           {
