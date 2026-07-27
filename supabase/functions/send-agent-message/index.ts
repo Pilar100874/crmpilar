@@ -410,7 +410,8 @@ async function verifyEvolutionAck(
   // Em envios em massa, o Evolution costuma retornar PENDING mesmo quando a mensagem já foi recebida.
   // Não podemos segurar a função por vários segundos por destinatário, senão a lista para no meio.
   if (ack.messageId) {
-    return { ok: true, status: ack.status || "SENT_PENDING_ACK", reason: "aceito_pelo_evolution_ack_pendente" };
+    const pending = evolutionStatusLooksPending(ack.status);
+    return { ok: true, status: pending ? "SENT_PENDING_ACK" : (ack.status || "SENT_PENDING_ACK"), reason: "aceito_pelo_evolution_ack_pendente" };
   }
 
   // Evolution/Baileys frequentemente responde PENDING e só atualiza o status depois.

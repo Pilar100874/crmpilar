@@ -285,7 +285,8 @@ async function gravarLogAutomacao(
         const provider = String(d?.providerStatus || "").toUpperCase();
         let finalStatus = baseStatus;
         if (d?.ok && provider) {
-          if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
+          if (provider === "SENT_PENDING_ACK") finalStatus = "enviado";
+          else if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
           else if (/PEND/.test(provider)) finalStatus = "pendente";
         }
         recipients.push({
