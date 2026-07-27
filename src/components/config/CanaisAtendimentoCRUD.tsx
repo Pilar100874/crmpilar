@@ -578,8 +578,6 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
         evolution_mode: evolutionMode,
         webhook_url: webhookUrl || null,
         manager_url: managerUrl || null,
-        manager_user: managerUser || null,
-        manager_password: managerPassword || null,
       } as any;
 
       if (existingConfig) {
