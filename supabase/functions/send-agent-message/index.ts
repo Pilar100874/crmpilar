@@ -553,14 +553,16 @@ async function sendCloudContact(phoneNumberId: string, accessToken: string, to: 
       phones: [{ phone: `+${digits}`, wa_id: digits, type: "CELL" }],
     }],
   };
-  const r = await fetch(url, {
+  const r = await fetchWithRetry("CLOUD sendContact", url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await r.text().catch(() => "");
-  if (!r.ok) console.error("[AGENT][CLOUD] sendContact error:", bodyTxt);
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  console.error("[AGENT][CLOUD] sendContact error:", r.bodyTxt, "attempts:", r.attempts);
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : `http_${r.status}`;
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
