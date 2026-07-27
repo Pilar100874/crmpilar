@@ -404,22 +404,33 @@ async function runDiagnostic(params: {
       addStep({
         id: `delivery-${number.includes("@") ? "jid" : "digits"}`,
         title: "Confirmação no Evolution",
-        status: isFinalErrorStatus(delivery.status) ? "error" : isPendingStatus(delivery.status) ? "warning" : "ok",
+        status: isFinalErrorStatus(delivery.status)
+          ? "error"
+          : isDeliveredStatus(delivery.status)
+          ? "ok"
+          : delivery.found
+          ? "info"
+          : "warning",
         message: delivery.found
-          ? `Registro encontrado com status ${delivery.status}.`
+          ? isDeliveredStatus(delivery.status)
+            ? `Entrega confirmada pelo Evolution (${delivery.status}).`
+            : `Mensagem registrada no Evolution (${delivery.status}). O WhatsApp normalmente confirma a entrega via webhook em segundos — se o destinatário recebeu, isso é esperado.`
           : `Mensagem aceita, mas não apareceu no histórico consultável. Último status: ${delivery.status}.`,
         latency: Date.now() - pollStarted,
         details: { status: delivery.status, found: delivery.found, messageId: ack.messageId },
       });
 
-      if (!isPendingStatus(delivery.status)) {
+      if (isDeliveredStatus(delivery.status)) {
         delivered = true;
         break;
       }
-      if (!isFinalErrorStatus(delivery.status)) {
-        pending = true;
-        break;
+      if (isFinalErrorStatus(delivery.status)) {
+        // tenta próxima variante (JID)
+        continue;
       }
+      // found=true + PENDING = aceito pelo Evolution, aguardando ACK do WhatsApp
+      pending = true;
+      break;
     } catch (e: any) {
       addStep({
         id: `send-${number.includes("@") ? "jid" : "digits"}`,
@@ -432,9 +443,9 @@ async function runDiagnostic(params: {
   }
 
   const conclusion = delivered
-    ? "Envio confirmado. Se não chegou no aparelho, verifique o WhatsApp do destinatário, bloqueios do contato ou atraso de rede."
+    ? "Entrega confirmada pelo Evolution (ACK do WhatsApp recebido)."
     : pending
-    ? "Lovable chegou ao Evolution e o Evolution aceitou a mensagem, mas ela ficou sem confirmação. O bloqueio está no Evolution/WhatsApp/Baileys/sessão vinculada."
+    ? "Evolution aceitou e registrou a mensagem. Se o destinatário recebeu no aparelho, o envio está funcionando — o status 'PENDING' apenas indica que o ACK do WhatsApp ainda não voltou pelo webhook (comum quando o webhook de status não está configurado no servidor Evolution). Se NÃO chegou, o bloqueio está na sessão/WhatsApp/Baileys."
     : "Lovable chegou ao Evolution, mas o Evolution finalizou o envio com erro. Verifique sessão, bloqueio do WhatsApp, LID/JID e logs do Evolution.";
 
   return {
