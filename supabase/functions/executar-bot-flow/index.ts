@@ -473,6 +473,9 @@ async function executeBroadcast(
       error,
       invalid: !!(data as any)?.invalid_number,
       reason: error?.message || (data as any)?.reason || (data as any)?.error || null,
+      providerStatus: (data as any)?.provider_status || null,
+      messageId: (data as any)?.message_id || null,
+      attempts: (data as any)?.attempts || null,
     };
   };
 
