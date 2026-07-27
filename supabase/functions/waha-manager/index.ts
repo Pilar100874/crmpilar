@@ -269,6 +269,44 @@ serve(async (req) => {
       return json({ success: true, qrCode: qr });
     }
 
+    if (action === "pending_count") {
+      // Conta mensagens fromMe com status PENDING nos últimos N minutos.
+      // Detecta sessão "zumbi": Evolution diz WORKING mas mensagens não entregam
+      // (celular pareado offline / instância travada).
+      const minutes = Math.max(1, Math.min(120, Number(body?.minutes ?? 15)));
+      const sinceMs = Date.now() - minutes * 60_000;
+      try {
+        const { resp, data } = await evoFetch(
+          `${base}/chat/findMessages/${encodeURIComponent(instance)}`,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ where: { key: { fromMe: true } } }),
+          },
+        );
+        if (!resp.ok) return json({ success: true, pending: 0, total: 0, supported: false });
+        const raw: any[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.messages?.records) ? data.messages.records
+          : Array.isArray(data?.records) ? data.records
+          : Array.isArray(data?.messages) ? data.messages
+          : [];
+        let pending = 0, total = 0, newest = 0;
+        for (const m of raw) {
+          const tsRaw = m?.messageTimestamp ?? m?.timestamp ?? m?.messageTimestampMs ?? 0;
+          const ts = Number(tsRaw) > 1e12 ? Number(tsRaw) : Number(tsRaw) * 1000;
+          if (!ts || ts < sinceMs) continue;
+          total++;
+          if (ts > newest) newest = ts;
+          const st = String(m?.status || "").toUpperCase();
+          if (st === "PENDING" || st === "ERROR" || st === "SERVER_ACK_PENDING") pending++;
+        }
+        return json({ success: true, pending, total, minutes, newest, supported: true });
+      } catch (e: any) {
+        return json({ success: true, pending: 0, total: 0, supported: false, error: e?.message });
+      }
+    }
+
     return json({ error: "Ação inválida." }, 400);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro interno no manager Evolution.";
