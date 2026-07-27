@@ -428,25 +428,30 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     setTestResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("evolution-manager", {
-        body: { action: "test", url: evolutionUrl.trim(), apiKey: evolutionApiKey.trim() },
+        body: {
+          action: "test",
+          url: evolutionUrl.trim(),
+          apiKey: evolutionApiKey.trim(),
+          managerUrl: managerUrl.trim() || undefined,
+        },
       });
       if (error) throw new Error(error.message);
-      if ((data as any)?.ok) {
-        setTestResult({
-          ok: true,
-          latency: (data as any).latency ?? 0,
-          instances: (data as any).instances ?? null,
-          list: Array.isArray((data as any).list) ? (data as any).list : [],
-        });
-        toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." });
+      const d = (data as any) || {};
+      const result = {
+        ok: !!d.ok,
+        server: d.server || { ok: false, error: d.error || "Sem resposta do servidor." },
+        manager: d.manager ?? null,
+      };
+      setTestResult(result);
+      if (result.ok) {
+        toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." + (result.manager?.ok ? " Manager também acessível." : "") });
       } else {
-        const err = (data as any)?.error || "Falha na conexão.";
-        setTestResult({ ok: false, error: err });
+        const err = (!result.server.ok ? result.server.error : result.manager?.error) || "Falha na conexão.";
         toast({ title: "Falha ao conectar", description: err, variant: "destructive" });
       }
     } catch (e: any) {
       const err = e?.message || "Erro ao testar conexão.";
-      setTestResult({ ok: false, error: err });
+      setTestResult({ ok: false, server: { ok: false, error: err }, manager: null });
       toast({ title: "Erro ao testar", description: err, variant: "destructive" });
     } finally {
       setTestingConnection(false);
