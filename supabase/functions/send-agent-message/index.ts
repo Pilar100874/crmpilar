@@ -396,33 +396,55 @@ async function verifyEvolutionAck(
   if (!shouldConfirm) return { ok: true, status: ack.status };
   if (ack.status && !evolutionStatusLooksPending(ack.status)) return { ok: true, status: ack.status };
 
-  // Evolution/Baileys pode responder PENDING imediatamente; aguardamos uma confirmação real.
-  await sleep(5_000);
-  try {
-    const resp = await fetch(`${base}/chat/findMessages/${encodeURIComponent(sessionName)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: apiKey },
-      body: JSON.stringify(ack.messageId ? { where: { key: { id: ack.messageId } } } : { where: { key: { fromMe: true } } }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const data = await safeJson(resp);
-    if (!resp.ok) {
-      return { ok: false, status: ack.status, reason: `evolution_sem_confirmacao_entrega_http_${resp.status}` };
-    }
+  // Evolution/Baileys frequentemente responde PENDING e só atualiza o status depois.
+  // Fazemos múltiplas tentativas de leitura antes de desistir.
+  const attempts = [3_000, 5_000, 7_000];
+  let lastStatus = String(ack.status || "PENDING").toUpperCase();
+  let lastRecordFound = false;
+  let lastHttpError: string | undefined;
 
-    const records = extractEvolutionMessages(data);
-    const match = ack.messageId
-      ? records.find((m) => String(m?.key?.id || m?.id || m?.messageId || "") === ack.messageId)
-      : records[0];
-    const currentStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
-    if (evolutionStatusLooksPending(currentStatus)) {
-      await restartEvolutionInstance(base, apiKey, sessionName);
-      return { ok: false, status: currentStatus, reason: `evolution_pending_nao_entregue_${currentStatus.toLowerCase()}` };
+  for (const wait of attempts) {
+    await sleep(wait);
+    try {
+      const resp = await fetch(`${base}/chat/findMessages/${encodeURIComponent(sessionName)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: apiKey },
+        body: JSON.stringify(ack.messageId ? { where: { key: { id: ack.messageId } } } : { where: { key: { fromMe: true } } }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      const data = await safeJson(resp);
+      if (!resp.ok) {
+        lastHttpError = `http_${resp.status}`;
+        continue;
+      }
+
+      const records = extractEvolutionMessages(data);
+      const match = ack.messageId
+        ? records.find((m) => String(m?.key?.id || m?.id || m?.messageId || "") === ack.messageId)
+        : records[0];
+      if (match) lastRecordFound = true;
+      const currentStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
+      lastStatus = currentStatus;
+      if (!evolutionStatusLooksPending(currentStatus)) {
+        return { ok: true, status: currentStatus };
+      }
+    } catch (e: any) {
+      lastHttpError = e?.name === "AbortError" ? "timeout" : "erro";
     }
-    return { ok: true, status: currentStatus };
-  } catch (e: any) {
-    return { ok: false, status: ack.status, reason: `evolution_sem_confirmacao_entrega_${e?.name === "AbortError" ? "timeout" : "erro"}` };
   }
+
+  // Se a mensagem foi aceita pelo Evolution (temos messageId e ela aparece no findMessages),
+  // consideramos como enviada — o ACK do WhatsApp pode chegar depois e será atualizado via webhook.
+  if (ack.messageId && lastRecordFound) {
+    return { ok: true, status: lastStatus || "SENT_PENDING_ACK", reason: "aceito_pelo_evolution_ack_pendente" };
+  }
+
+  // Nem sequer conseguimos localizar a mensagem — tenta reiniciar a instância para próximos envios.
+  await restartEvolutionInstance(base, apiKey, sessionName);
+  const reason = lastHttpError
+    ? `evolution_sem_confirmacao_entrega_${lastHttpError}`
+    : `evolution_pending_nao_entregue_${(lastStatus || "pending").toLowerCase()}`;
+  return { ok: false, status: lastStatus, reason };
 }
 
 function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: string } {
