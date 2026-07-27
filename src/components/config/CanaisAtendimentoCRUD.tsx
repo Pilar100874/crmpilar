@@ -58,6 +58,7 @@ interface EvolutionDiagnosticStep {
 
 interface EvolutionDiagnosticReport {
   ok: boolean;
+  likely?: boolean;
   conclusion: string;
   providerStatus?: string | null;
   messageId?: string | null;
