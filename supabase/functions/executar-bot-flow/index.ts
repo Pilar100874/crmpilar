@@ -245,6 +245,38 @@ async function executeBroadcast(
   origem: string,
   botFlowId?: string,
 ) {
+  // ===== Pre-check: sessão de WhatsApp precisa estar WORKING =====
+  try {
+    let sessionQuery = supabase
+      .from("whatsapp_sessions")
+      .select("id, session_name, status, phone_number, bot_flow_id")
+      .eq("estabelecimento_id", estabelecimentoId);
+    if (cfg.whatsappSessionId) sessionQuery = sessionQuery.eq("id", cfg.whatsappSessionId);
+    else if (cfg.whatsappSessionName) sessionQuery = sessionQuery.eq("session_name", cfg.whatsappSessionName);
+    else if (botFlowId) sessionQuery = sessionQuery.eq("bot_flow_id", botFlowId);
+    const { data: sess } = await sessionQuery.limit(1).maybeSingle();
+    if (!sess) {
+      const nomeRef = cfg.whatsappSessionName || cfg.whatsappSessionId || "(padrão)";
+      return {
+        total: 0, enviados: 0, falhas: 0, invalidos: 0, detalhes: [],
+        mensagem: "", mediaUrl: "", mediaType: "", textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
+        aborted: true,
+        error: `Sessão WhatsApp "${nomeRef}" não encontrada para este estabelecimento. Configure em Canais → WhatsApp.`,
+      };
+    }
+    if (sess.status !== "WORKING") {
+      return {
+        total: 0, enviados: 0, falhas: 0, invalidos: 0, detalhes: [],
+        mensagem: "", mediaUrl: "", mediaType: "", textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
+        aborted: true,
+        error: `Sessão WhatsApp "${sess.session_name}" não está conectada (status atual: ${sess.status || "desconhecido"}). Envio abortado — reconecte em Canais → WhatsApp e execute novamente.`,
+        session: { id: sess.id, nome: sess.session_name, status: sess.status },
+      };
+    }
+  } catch (e) {
+    console.warn("[broadcast] pre-check sessão falhou (seguindo mesmo assim):", e);
+  }
+
   const _mediaVarName = (cfg.mediaVar || "last_generated_media_url").trim();
   const preTemMidia = !!cfg.usarMensagemPreDefinida
     && !!String(baseCtx[_mediaVarName] || baseCtx.last_generated_media_url || "").trim();
@@ -478,6 +510,7 @@ async function executeBroadcast(
       });
       ok = !rErr && (r as any)?.success !== false;
       invalid = !!(r as any)?.invalid_number;
+      var sendReason: string | null = (rErr?.message) || ((r as any)?.reason) || ((r as any)?.error) || null;
       if (depois && !invalid) {
         await supabase.functions.invoke("send-agent-message", {
           body: {
@@ -522,11 +555,14 @@ async function executeBroadcast(
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
       ok = false;
-
+      // @ts-ignore
+      sendReason = sendReason || (e instanceof Error ? e.message : String(e));
     }
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
-    detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid });
+    // @ts-ignore
+    const motivoFinal = ok ? null : (sendReason || (invalid ? "WhatsApp inválido/inexistente" : "Falha ao enviar (verifique sessão Evolution)"));
+    detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid, motivo: motivoFinal, reason: motivoFinal });
     if (d.gerente?.id) {
       const key = d.gerente.id;
       if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: d.gerente, itens: [] });
