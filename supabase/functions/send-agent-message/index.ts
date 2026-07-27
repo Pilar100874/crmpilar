@@ -255,7 +255,7 @@ serve(async (req) => {
 
     console.log("[AGENT] Enviando via", numero.provider, { nome: numero.nome });
 
-    let sendResult: { ok: boolean; invalid?: boolean; reason?: string } = { ok: true };
+    let sendResult: SendOut = { ok: true };
     if (numero.provider === "cloud_api") {
       if (contact && contact.whatsapp) {
         sendResult = await sendCloudContact(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, contact);
@@ -392,10 +392,12 @@ async function verifyEvolutionAck(
   sessionName: string,
   ack: { messageId?: string; status?: string },
 ): Promise<{ ok: boolean; reason?: string; status?: string }> {
-  if (!evolutionStatusLooksPending(ack.status)) return { ok: true, status: ack.status };
+  const shouldConfirm = !!ack.messageId || evolutionStatusLooksPending(ack.status);
+  if (!shouldConfirm) return { ok: true, status: ack.status };
+  if (ack.status && !evolutionStatusLooksPending(ack.status)) return { ok: true, status: ack.status };
 
   // Evolution/Baileys pode responder PENDING imediatamente; aguardamos uma confirmação real.
-  await sleep(10_000);
+  await sleep(5_000);
   try {
     const resp = await fetch(`${base}/chat/findMessages/${encodeURIComponent(sessionName)}`, {
       method: "POST",
