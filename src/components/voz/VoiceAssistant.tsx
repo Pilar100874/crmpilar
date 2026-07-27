@@ -916,7 +916,7 @@ export default function VoiceAssistant() {
           "bg-gradient-to-br from-primary via-primary/90 to-primary/70 text-primary-foreground",
           isTouch
             ? "bottom-6 left-1/2 -translate-x-1/2 h-16 w-16"
-            : "bottom-16 right-4 h-12 w-12",
+            : "bottom-16 right-4 h-10 w-10",
           wakeListening && "ring-4 ring-primary/40 animate-pulse"
         )}
         title={
