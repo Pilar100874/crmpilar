@@ -225,6 +225,22 @@ serve(async (req) => {
       current = nextNode(nodes, edges, current.id, handle);
     }
 
+    // Grava o log da execução da automação de marketing (quando disparado por ela).
+    // Isso evita que um timeout no invoke do caller resulte em log vazio "falha".
+    if (automationId) {
+      try {
+        await gravarLogAutomacao(supabase, {
+          automationId,
+          estabelecimentoId: estId,
+          trace,
+          vars: variaveis || {},
+          resultOk: true,
+        });
+      } catch (e) {
+        console.warn("[executar-bot-flow] falha ao gravar log da automação:", e);
+      }
+    }
+
     return new Response(JSON.stringify({ success: true, trace, variaveis: ctx }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -235,6 +251,140 @@ serve(async (req) => {
     );
   }
 });
+
+// Grava um registro em marketing_automation_execution_logs a partir do trace,
+// espelhando a mesma lógica antes existente em marketing-automation-execute.
+async function gravarLogAutomacao(
+  supabase: any,
+  args: {
+    automationId: string;
+    estabelecimentoId: string;
+    trace: any[];
+    vars: Record<string, any>;
+    resultOk: boolean;
+  },
+) {
+  const { automationId, estabelecimentoId, trace, vars } = args;
+  const items: any[] = [];
+  const recipients: any[] = [];
+  let totalDest = 0, enviados = 0, falhas = 0;
+  let executionStatus = "ok";
+  let executionError: string | null = null;
+
+  const msgFromVars =
+    vars.mensagem || vars.message || vars.texto || vars.text || vars.body || "";
+
+  for (const t of trace) {
+    if (t?.broadcast) {
+      const b = t.broadcast;
+      totalDest += b.total || 0;
+      enviados += b.enviados || 0;
+      falhas += b.falhas || 0;
+      for (const d of b.detalhes || []) {
+        const baseStatus = (d?.status) || (d?.ok ? "enviado" : (d?.invalid ? "invalido" : "falha"));
+        const provider = String(d?.providerStatus || "").toUpperCase();
+        let finalStatus = baseStatus;
+        if (d?.ok && provider) {
+          if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
+          else if (/PEND/.test(provider)) finalStatus = "pendente";
+        }
+        recipients.push({
+          nome: d?.nome || d?.name || null,
+          telefone: d?.telefone || d?.phone || null,
+          email: d?.email || null,
+          status: finalStatus,
+          motivo: d?.motivo || d?.reason || d?.error || (d?.invalid ? "WhatsApp inválido" : null),
+          providerStatus: d?.providerStatus || null,
+          messageId: d?.messageId || null,
+          attempts: d?.attempts || null,
+          startedAt: d?.startedAt || null,
+          finishedAt: d?.finishedAt || null,
+        });
+      }
+      if (b.aborted && b.error) {
+        executionStatus = "falha";
+        executionError = b.error;
+        items.push({ tipo: "texto", conteudo: `⚠️ Envio abortado: ${b.error}`, titulo: "Aviso do sistema" });
+      }
+      if (b.textoAntes) items.push({ tipo: "texto", conteudo: b.textoAntes, titulo: "Texto antes" });
+      if (b.mediaUrl) {
+        const tipoMidia = b.mediaType === "video" ? "video" : "imagem";
+        items.push({ tipo: tipoMidia, url: b.mediaUrl, legenda: b.mensagem || undefined });
+      } else if (b.mensagem) {
+        items.push({ tipo: "texto", conteudo: b.mensagem });
+      }
+      if (b.textoDepois) items.push({ tipo: "texto", conteudo: b.textoDepois, titulo: "Texto depois" });
+    }
+    if (t?.type === "mensagem_pre_definida_result") {
+      if (t.frase) items.push({ tipo: "texto", conteudo: t.frase, titulo: "Mensagem pré-definida" });
+      for (const url of (t.mediaUrls || [])) {
+        items.push({ tipo: t.mediaType === "video" ? "video" : "imagem", url });
+      }
+    }
+    if (t?.type) {
+      const nodeCfg = t?.config || {};
+      const kind = t.type;
+      if (kind === "enviar_mensagem" || kind === "message" || kind === "mensagem" || kind === "send_message") {
+        const txt = nodeCfg.mensagem || nodeCfg.message || nodeCfg.text || msgFromVars;
+        if (txt) items.push({ tipo: "texto", conteudo: txt });
+      } else if (kind === "enviar_imagem" || kind === "image" || kind === "send_image") {
+        items.push({ tipo: "imagem", url: nodeCfg.mediaUrl || nodeCfg.url, legenda: nodeCfg.caption || nodeCfg.legenda });
+      } else if (kind === "enviar_video" || kind === "video" || kind === "send_video") {
+        items.push({ tipo: "video", url: nodeCfg.mediaUrl || nodeCfg.url, legenda: nodeCfg.caption || nodeCfg.legenda });
+      } else if (kind === "enviar_audio" || kind === "audio") {
+        items.push({ tipo: "audio", url: nodeCfg.mediaUrl || nodeCfg.url });
+      } else if (kind === "enviar_arquivo" || kind === "file" || kind === "document") {
+        items.push({ tipo: "arquivo", url: nodeCfg.mediaUrl || nodeCfg.url, nome: nodeCfg.fileName });
+      } else if (kind === "send_whatsapp_to_number") {
+        const txt = nodeCfg.message || nodeCfg.mensagem;
+        if (nodeCfg.mediaUrl) items.push({ tipo: "imagem", url: nodeCfg.mediaUrl, legenda: txt });
+        else if (txt) items.push({ tipo: "texto", conteudo: txt });
+      }
+    }
+  }
+
+  if (items.length === 0 && msgFromVars) {
+    items.push({ tipo: "texto", conteudo: msgFromVars });
+  }
+
+  if (!executionError && falhas > 0) {
+    const motivos = recipients
+      .filter((r) => r.status !== "enviado" && r.status !== "ack" && r.motivo)
+      .map((r) => `${r.nome || r.telefone}: ${r.motivo}`)
+      .slice(0, 3).join(" | ");
+    executionStatus = enviados > 0 ? "parcial" : "falha";
+    executionError = enviados > 0
+      ? `Algumas mensagens não tiveram confirmação de entrega. ${motivos}`.trim()
+      : `Nenhuma mensagem teve confirmação de entrega pelo Evolution. ${motivos}`.trim();
+  }
+
+  await supabase.from("marketing_automation_execution_logs").insert({
+    automation_id: automationId,
+    estabelecimento_id: estabelecimentoId,
+    executed_at: new Date().toISOString(),
+    metodo: "bot",
+    status: executionStatus,
+    error_message: executionError,
+    items,
+    recipients,
+    totals: { total: totalDest, enviados, falhas },
+    raw_result: { source: "executar-bot-flow", trace_length: trace.length },
+  });
+
+  // Mantém apenas os últimos 20 registros da automação (dedupe/limpeza).
+  try {
+    const { data: antigos } = await supabase
+      .from("marketing_automation_execution_logs")
+      .select("id")
+      .eq("automation_id", automationId)
+      .order("executed_at", { ascending: false })
+      .range(20, 999);
+    const idsExcluir = (antigos || []).map((r: any) => r.id);
+    if (idsExcluir.length > 0) {
+      await supabase.from("marketing_automation_execution_logs").delete().in("id", idsExcluir);
+    }
+  } catch (_) { /* noop */ }
+}
 
 // ---------- Broadcast (Envio em massa) ----------
 async function executeBroadcast(
