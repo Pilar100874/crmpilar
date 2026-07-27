@@ -406,12 +406,50 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
           setManagerUrl(cfg.manager_url || "");
           setManagerUser(cfg.manager_user || "");
           setManagerPassword(cfg.manager_password || "");
+          setEvolutionMode((cfg.evolution_mode as "producao" | "sandbox") || "producao");
         }
       }
 
       await refreshSessions();
     } catch (error) {
       console.error("Error loading config:", error);
+    }
+  };
+
+  const testEvolutionConnection = async () => {
+    if (!evolutionUrl.trim() || !evolutionApiKey.trim()) {
+      toast({
+        title: "Preencha URL e apikey",
+        description: "Informe o endpoint e a apikey antes de testar.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setTestingConnection(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("evolution-manager", {
+        body: { action: "test", url: evolutionUrl.trim(), apiKey: evolutionApiKey.trim() },
+      });
+      if (error) throw new Error(error.message);
+      if ((data as any)?.ok) {
+        setTestResult({
+          ok: true,
+          latency: (data as any).latency ?? 0,
+          instances: (data as any).instances ?? null,
+        });
+        toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." });
+      } else {
+        const err = (data as any)?.error || "Falha na conexão.";
+        setTestResult({ ok: false, error: err });
+        toast({ title: "Falha ao conectar", description: err, variant: "destructive" });
+      }
+    } catch (e: any) {
+      const err = e?.message || "Erro ao testar conexão.";
+      setTestResult({ ok: false, error: err });
+      toast({ title: "Erro ao testar", description: err, variant: "destructive" });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
