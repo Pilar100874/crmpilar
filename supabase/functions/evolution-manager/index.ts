@@ -193,9 +193,44 @@ function parseEvolutionAck(payload: any): { messageId?: string; status?: string;
   };
 }
 
+// Baileys ack: 0=erro, 1=pendente no servidor, 2=entregue ao dispositivo, 3=lido, 4=reproduzido
+function mapAckNumberToStatus(ack: any): string | null {
+  const n = typeof ack === "number" ? ack : Number(ack);
+  if (!Number.isFinite(n)) return null;
+  if (n <= 0) return "ERROR";
+  if (n === 1) return "SERVER_ACK";
+  if (n === 2) return "DELIVERY_ACK";
+  if (n === 3) return "READ";
+  if (n >= 4) return "PLAYED";
+  return null;
+}
+
+function extractRecordStatus(record: any, fallback?: string): string {
+  if (!record) return String(fallback || "PENDING").toUpperCase();
+  const ackStatus =
+    mapAckNumberToStatus(record?.ack) ??
+    mapAckNumberToStatus(record?.message?.ack) ??
+    mapAckNumberToStatus(record?.messageStatus);
+  if (ackStatus) return ackStatus;
+  const raw = record?.status || record?.message?.status || record?.messageStatus;
+  if (raw) {
+    const upper = String(raw).toUpperCase();
+    // status textuais que o Evolution v2 pode retornar
+    if (upper === "DELIVERY_ACK" || upper === "READ" || upper === "PLAYED" || upper === "SERVER_ACK" || upper === "DELIVERED") return upper;
+    if (upper === "ERROR" || upper === "FAILED" || upper === "FAILURE") return upper;
+    return upper;
+  }
+  return String(fallback || "PENDING").toUpperCase();
+}
+
 function isPendingStatus(status?: string) {
   const value = String(status || "").toUpperCase();
-  return !value || value === "PENDING" || value === "SERVER_ACK_PENDING" || value === "ERROR";
+  return !value || value === "PENDING" || value === "SERVER_ACK_PENDING";
+}
+
+function isDeliveredStatus(status?: string) {
+  const value = String(status || "").toUpperCase();
+  return value === "SERVER_ACK" || value === "DELIVERY_ACK" || value === "READ" || value === "PLAYED" || value === "DELIVERED";
 }
 
 function isFinalErrorStatus(status?: string) {
@@ -223,7 +258,7 @@ async function pollMessageStatus(base: string, headers: Record<string, string>, 
   let found = false;
   let lastRecord: any = null;
 
-  for (const wait of [2_000, 4_000, 6_000]) {
+  for (const wait of [2_000, 3_000, 4_000, 5_000, 6_000]) {
     await sleep(wait);
     const { resp, data } = await evoFetch(`${base}/chat/findMessages/${encodeURIComponent(instance)}`, {
       method: "POST",
@@ -243,8 +278,8 @@ async function pollMessageStatus(base: string, headers: Record<string, string>, 
     if (match) {
       found = true;
       lastRecord = match;
-      lastStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
-      if (!isPendingStatus(lastStatus) || isFinalErrorStatus(lastStatus)) break;
+      lastStatus = extractRecordStatus(match, ack.status);
+      if (isDeliveredStatus(lastStatus) || isFinalErrorStatus(lastStatus)) break;
     }
   }
 
@@ -369,22 +404,33 @@ async function runDiagnostic(params: {
       addStep({
         id: `delivery-${number.includes("@") ? "jid" : "digits"}`,
         title: "Confirmação no Evolution",
-        status: isFinalErrorStatus(delivery.status) ? "error" : isPendingStatus(delivery.status) ? "warning" : "ok",
+        status: isFinalErrorStatus(delivery.status)
+          ? "error"
+          : isDeliveredStatus(delivery.status)
+          ? "ok"
+          : delivery.found
+          ? "info"
+          : "warning",
         message: delivery.found
-          ? `Registro encontrado com status ${delivery.status}.`
+          ? isDeliveredStatus(delivery.status)
+            ? `Entrega confirmada pelo Evolution (${delivery.status}).`
+            : `Mensagem registrada no Evolution (${delivery.status}). O WhatsApp normalmente confirma a entrega via webhook em segundos — se o destinatário recebeu, isso é esperado.`
           : `Mensagem aceita, mas não apareceu no histórico consultável. Último status: ${delivery.status}.`,
         latency: Date.now() - pollStarted,
         details: { status: delivery.status, found: delivery.found, messageId: ack.messageId },
       });
 
-      if (!isPendingStatus(delivery.status)) {
+      if (isDeliveredStatus(delivery.status)) {
         delivered = true;
         break;
       }
-      if (!isFinalErrorStatus(delivery.status)) {
-        pending = true;
-        break;
+      if (isFinalErrorStatus(delivery.status)) {
+        // tenta próxima variante (JID)
+        continue;
       }
+      // found=true + PENDING = aceito pelo Evolution, aguardando ACK do WhatsApp
+      pending = true;
+      break;
     } catch (e: any) {
       addStep({
         id: `send-${number.includes("@") ? "jid" : "digits"}`,
@@ -397,9 +443,9 @@ async function runDiagnostic(params: {
   }
 
   const conclusion = delivered
-    ? "Envio confirmado. Se não chegou no aparelho, verifique o WhatsApp do destinatário, bloqueios do contato ou atraso de rede."
+    ? "Entrega confirmada pelo Evolution (ACK do WhatsApp recebido)."
     : pending
-    ? "Lovable chegou ao Evolution e o Evolution aceitou a mensagem, mas ela ficou sem confirmação. O bloqueio está no Evolution/WhatsApp/Baileys/sessão vinculada."
+    ? "Evolution aceitou e registrou a mensagem. Se o destinatário recebeu no aparelho, o envio está funcionando — o status 'PENDING' apenas indica que o ACK do WhatsApp ainda não voltou pelo webhook (comum quando o webhook de status não está configurado no servidor Evolution). Se NÃO chegou, o bloqueio está na sessão/WhatsApp/Baileys."
     : "Lovable chegou ao Evolution, mas o Evolution finalizou o envio com erro. Verifique sessão, bloqueio do WhatsApp, LID/JID e logs do Evolution.";
 
   return {
