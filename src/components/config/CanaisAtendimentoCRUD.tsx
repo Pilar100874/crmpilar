@@ -827,25 +827,99 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                 Configure a URL e a apikey do seu servidor Evolution API
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto pr-1">
               <div className="space-y-2">
-                <Label htmlFor="evolution-url">URL do Servidor Evolution</Label>
+                <Label htmlFor="evolution-url">Endpoint do Servidor Evolution</Label>
                 <Input
                   id="evolution-url"
                   placeholder="https://evolution.exemplo.com"
                   value={evolutionUrl}
-                  onChange={(e) => setEvolutionUrl(e.target.value)}
+                  onChange={(e) => { setEvolutionUrl(e.target.value); setTestResult(null); }}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Base URL da Evolution API v2 (sem barra no final).
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="evolution-key">apikey (obrigatória)</Label>
-                <Input
-                  id="evolution-key"
-                  type="password"
-                  placeholder="Sua apikey global do Evolution"
-                  value={evolutionApiKey}
-                  onChange={(e) => setEvolutionApiKey(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="evolution-key"
+                    type={showEvolutionKey ? "text" : "password"}
+                    placeholder="Sua apikey global do Evolution"
+                    value={evolutionApiKey}
+                    onChange={(e) => { setEvolutionApiKey(e.target.value); setTestResult(null); }}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEvolutionKey((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showEvolutionKey ? "Ocultar apikey" : "Mostrar apikey"}
+                  >
+                    {showEvolutionKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Modo do servidor</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { id: "producao", label: "Produção", desc: "Uso real com clientes" },
+                    { id: "sandbox", label: "Sandbox", desc: "Ambiente de testes" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setEvolutionMode(opt.id)}
+                      className={`text-left rounded-md border p-3 transition-colors ${
+                        evolutionMode === opt.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{opt.label}</div>
+                      <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-md border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-medium">Testar conectividade</div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={testEvolutionConnection}
+                    disabled={testingConnection}
+                  >
+                    {testingConnection ? (
+                      <><RefreshCw className="h-3 w-3 mr-2 animate-spin" /> Testando...</>
+                    ) : (
+                      <>Testar conexão</>
+                    )}
+                  </Button>
+                </div>
+                {testResult && (testResult.ok ? (
+                  <Alert>
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-xs">
+                      Conectado em {testResult.latency}ms
+                      {typeof testResult.instances === "number"
+                        ? ` • ${testResult.instances} instância(s) no servidor`
+                        : ""}
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">{testResult.error}</AlertDescription>
+                  </Alert>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  A validação chama <code>GET /instance/fetchInstances</code> no endpoint informado usando a apikey.
+                </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
