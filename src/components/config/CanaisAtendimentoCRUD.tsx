@@ -431,7 +431,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     };
     const cleanApiKey = String(apiKey || '').trim();
     if (cleanApiKey) {
-      headers['x-api-key'] = cleanApiKey;
+      // Evolution API v2 usa o header lowercase "apikey".
+      headers['apikey'] = cleanApiKey;
     }
     return headers;
   };
@@ -454,32 +455,26 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     if (webhookSyncCacheRef.current[cacheKey]) return;
 
     const body = JSON.stringify({
-      name: sessionName,
-      config: {
-        webhooks: [
-          {
-            url: resolvedWebhookUrl,
-            events: ['message', 'message.any'],
-          },
-        ],
+      webhook: {
+        enabled: true,
+        url: resolvedWebhookUrl,
+        byEvents: false,
+        base64: false,
+        events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE', 'QRCODE_UPDATED'],
       },
     });
 
-    const attempts = [
-      { url: `${base}/api/sessions/${sessionName}`, method: 'PUT' },
-      { url: `${base}/api/sessions/${sessionName}`, method: 'POST' },
-    ];
-
-    for (const attempt of attempts) {
-      try {
-        const response = await fetch(attempt.url, { method: attempt.method, headers, body });
-        if (response.ok || [200, 201, 202, 204].includes(response.status)) {
-          webhookSyncCacheRef.current[cacheKey] = true;
-          return;
-        }
-      } catch (error) {
-        console.warn(`Erro ao sincronizar webhook da sessão ${sessionName}:`, error);
+    // Evolution API v2: POST /webhook/set/{instance}
+    try {
+      const response = await fetch(
+        `${base}/webhook/set/${encodeURIComponent(sessionName)}`,
+        { method: 'POST', headers, body },
+      );
+      if (response.ok || [200, 201, 202, 204].includes(response.status)) {
+        webhookSyncCacheRef.current[cacheKey] = true;
       }
+    } catch (error) {
+      console.warn(`Erro ao sincronizar webhook da sessão ${sessionName}:`, error);
     }
   };
 
@@ -714,48 +709,20 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
       const base = config?.evolution_url?.replace(/\/+$/, '') || '';
 
-      const stopUrls = [
-        `${base}/api/sessions/${session.session_name}/stop`,
-        `${base}/api/${session.session_name}/stop`,
-      ];
-      for (const url of stopUrls) {
-        try {
-          const resp = await fetch(url, { method: 'POST', headers });
-          if (resp.ok || resp.status === 201 || resp.status === 404) break;
-        } catch (e) {}
-      }
-
-      const logoutUrls = [
-        `${base}/api/sessions/${session.session_name}/logout`,
-        `${base}/api/${session.session_name}/logout`,
-      ];
-      for (const url of logoutUrls) {
-        try {
-          const resp = await fetch(url, { method: 'POST', headers });
-          if (resp.ok || resp.status === 404) break;
-        } catch (e) {}
-      }
+      // Evolution API v2: logout e delete de instância
+      const instance = encodeURIComponent(session.session_name);
+      try {
+        const resp = await fetch(`${base}/instance/logout/${instance}`, { method: 'DELETE', headers });
+        if (!resp.ok && resp.status !== 404) console.warn('logout status', resp.status);
+      } catch (e) {}
 
       await new Promise(r => setTimeout(r, 500));
 
-      const deleteAttempts = [
-        { url: `${base}/api/sessions/${session.session_name}?force=true`, method: 'DELETE' },
-        { url: `${base}/api/sessions/${session.session_name}`, method: 'DELETE' },
-        { url: `${base}/api/${session.session_name}`, method: 'DELETE' },
-        { url: `${base}/api/sessions/${session.session_name}/delete`, method: 'POST' },
-        { url: `${base}/api/${session.session_name}/delete`, method: 'POST' },
-      ];
-
       let deletedOnServer = false;
-      for (const attempt of deleteAttempts) {
-        try {
-          const resp = await fetch(attempt.url, { method: attempt.method, headers });
-          if (resp.ok || resp.status === 404) {
-            deletedOnServer = true;
-            break;
-          }
-        } catch (e) {}
-      }
+      try {
+        const resp = await fetch(`${base}/instance/delete/${instance}`, { method: 'DELETE', headers });
+        if (resp.ok || resp.status === 404) deletedOnServer = true;
+      } catch (e) {}
 
       await supabase
         .from('whatsapp_sessions')
