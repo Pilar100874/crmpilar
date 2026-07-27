@@ -2313,6 +2313,157 @@ function resolveEvolution(evolutionUrl: string, evolutionApiKey: string) {
   return { base, apiKey };
 }
 
+type EvolutionSendResult = {
+  ok: boolean;
+  reason?: string;
+  messageId?: string;
+  status?: string;
+};
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function safeEvolutionJson(resp: Response): Promise<any> {
+  const text = await resp.text().catch(() => "");
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function parseEvolutionSendAck(bodyTxt: string): { messageId?: string; status?: string } {
+  try {
+    const payload = JSON.parse(bodyTxt || "{}");
+    const messageId = payload?.key?.id || payload?.id || payload?.messageId || payload?.message?.key?.id;
+    const status = payload?.status || payload?.message?.status || payload?.data?.status;
+    return {
+      messageId: messageId ? String(messageId) : undefined,
+      status: status ? String(status).toUpperCase() : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function isEvolutionPendingStatus(status?: string): boolean {
+  const normalized = String(status || "").toUpperCase();
+  return normalized === "PENDING" || normalized === "SERVER_ACK_PENDING" || normalized === "ERROR";
+}
+
+function extractEvolutionMessageRecords(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.messages?.records)) return data.messages.records;
+  if (Array.isArray(data?.records)) return data.records;
+  if (Array.isArray(data?.messages)) return data.messages;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+async function restartEvolutionInstance(base: string, apiKey: string, instance: string) {
+  const headers = { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey };
+  for (const method of ["POST", "GET"] as const) {
+    try {
+      const resp = await fetch(`${base}/instance/restart/${encodeURIComponent(instance)}`, {
+        method,
+        headers,
+        signal: AbortSignal.timeout(10000),
+      });
+      if (resp.ok || resp.status === 201 || resp.status === 204) {
+        console.warn(`[EVOLUTION] Instância ${instance} reiniciada após envio preso em PENDING.`);
+        return true;
+      }
+    } catch (error) {
+      console.warn("[EVOLUTION] Falha ao tentar reiniciar instância:", error);
+    }
+  }
+  return false;
+}
+
+async function verifyEvolutionDelivery(
+  base: string,
+  apiKey: string,
+  instance: string,
+  ack: { messageId?: string; status?: string },
+): Promise<EvolutionSendResult> {
+  if (!ack.messageId && !isEvolutionPendingStatus(ack.status)) {
+    return { ok: true, status: ack.status };
+  }
+  if (ack.status && !isEvolutionPendingStatus(ack.status)) {
+    return { ok: true, messageId: ack.messageId, status: ack.status };
+  }
+
+  let lastStatus = String(ack.status || "PENDING").toUpperCase();
+  let found = false;
+  let lastError = "";
+
+  for (const wait of [2000, 3500, 5500]) {
+    await sleep(wait);
+    try {
+      const resp = await fetch(`${base}/chat/findMessages/${encodeURIComponent(instance)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+        body: JSON.stringify(ack.messageId ? { where: { key: { id: ack.messageId } } } : { where: { key: { fromMe: true } } }),
+        signal: AbortSignal.timeout(12000),
+      });
+      const data = await safeEvolutionJson(resp);
+      if (!resp.ok) {
+        lastError = `http_${resp.status}`;
+        continue;
+      }
+
+      const records = extractEvolutionMessageRecords(data);
+      const match = ack.messageId
+        ? records.find((message) => String(message?.key?.id || message?.id || message?.messageId || "") === ack.messageId)
+        : records[0];
+      if (match) found = true;
+      lastStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
+      console.log("[EVOLUTION] Verificação de entrega:", { instance, messageId: ack.messageId, status: lastStatus, found });
+      if (!isEvolutionPendingStatus(lastStatus)) {
+        return { ok: true, messageId: ack.messageId, status: lastStatus };
+      }
+    } catch (error: any) {
+      lastError = error?.name === "AbortError" ? "timeout" : (error?.message || "erro");
+    }
+  }
+
+  return {
+    ok: false,
+    messageId: ack.messageId,
+    status: lastStatus,
+    reason: found ? `evolution_pending_${lastStatus.toLowerCase()}` : `evolution_sem_confirmacao_${lastError || "nao_localizada"}`,
+  };
+}
+
+async function postEvolutionMessage(
+  endpoint: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  label: string,
+): Promise<{ ok: boolean; status: number; bodyText: string; reason?: string }> {
+  try {
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        apikey: apiKey,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(45000),
+    });
+    const bodyText = await resp.text().catch(() => "");
+    console.log(`[EVOLUTION] ${label} result:`, resp.status, bodyText.slice(0, 500));
+    return { ok: resp.ok, status: resp.status, bodyText, reason: resp.ok ? undefined : `http_${resp.status}` };
+  } catch (error: any) {
+    const reason = error?.name === "AbortError" ? "timeout" : (error?.message || "erro_rede");
+    console.error(`[EVOLUTION] ${label} erro:`, reason);
+    return { ok: false, status: 0, bodyText: "", reason };
+  }
+}
+
 /**
  * Converte markdown comum (gerado por LLMs) para a sintaxe que o WhatsApp
  * realmente renderiza. Sem isso, o usuário vê literalmente `**texto**`,
@@ -2376,33 +2527,34 @@ async function sendEvolutionTextMessage(
   const { base, apiKey } = resolveEvolution(evolutionUrl, evolutionApiKey);
   if (!base || !apiKey) {
     console.error("[EVOLUTION] URL ou apikey ausentes. Configure em Canais de Atendimento.");
-    return;
+    return false;
   }
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendText/${encodeURIComponent(instance)}`;
+  const body = { number, text: toWhatsappMarkdown(text) };
 
-  try {
-    console.log(`[EVOLUTION] Enviando TEXT -> ${number}`, { instance });
-    const resp = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        apikey: apiKey,
-      },
-      body: JSON.stringify({ number, text: toWhatsappMarkdown(text) }),
-      signal: AbortSignal.timeout(60000),
-    });
-    const resultText = await resp.text().catch(() => "");
-    console.log("[EVOLUTION] sendText result:", resp.status, resultText.slice(0, 500));
-    if (resp.ok) return;
-    if (resp.status === 401) {
-      console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
-    }
-  } catch (err) {
-    console.error("[EVOLUTION] Erro no sendText:", err);
+  console.log(`[EVOLUTION] Enviando TEXT -> ${number}`, { instance });
+  const first = await postEvolutionMessage(endpoint, apiKey, body, "sendText");
+  if (!first.ok) {
+    if (first.status === 401) console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
+    return false;
   }
+  const firstDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(first.bodyText));
+  if (firstDelivery.ok) return true;
+
+  console.warn("[EVOLUTION] Envio ficou preso; reiniciando sessão e tentando reenviar uma vez:", firstDelivery);
+  const restarted = await restartEvolutionInstance(base, apiKey, instance);
+  if (restarted) await sleep(3500);
+
+  const retry = await postEvolutionMessage(endpoint, apiKey, body, "sendText retry");
+  if (!retry.ok) return false;
+  const retryDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(retry.bodyText));
+  if (!retryDelivery.ok) {
+    console.error("[EVOLUTION] Mensagem não teve confirmação de entrega após retry:", retryDelivery);
+    return false;
+  }
+  return true;
 }
 
 async function sendEvolutionListMessage(
