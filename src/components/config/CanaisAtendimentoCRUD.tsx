@@ -709,48 +709,20 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
       const base = config?.evolution_url?.replace(/\/+$/, '') || '';
 
-      const stopUrls = [
-        `${base}/api/sessions/${session.session_name}/stop`,
-        `${base}/api/${session.session_name}/stop`,
-      ];
-      for (const url of stopUrls) {
-        try {
-          const resp = await fetch(url, { method: 'POST', headers });
-          if (resp.ok || resp.status === 201 || resp.status === 404) break;
-        } catch (e) {}
-      }
-
-      const logoutUrls = [
-        `${base}/api/sessions/${session.session_name}/logout`,
-        `${base}/api/${session.session_name}/logout`,
-      ];
-      for (const url of logoutUrls) {
-        try {
-          const resp = await fetch(url, { method: 'POST', headers });
-          if (resp.ok || resp.status === 404) break;
-        } catch (e) {}
-      }
+      // Evolution API v2: logout e delete de instância
+      const instance = encodeURIComponent(session.session_name);
+      try {
+        const resp = await fetch(`${base}/instance/logout/${instance}`, { method: 'DELETE', headers });
+        if (!resp.ok && resp.status !== 404) console.warn('logout status', resp.status);
+      } catch (e) {}
 
       await new Promise(r => setTimeout(r, 500));
 
-      const deleteAttempts = [
-        { url: `${base}/api/sessions/${session.session_name}?force=true`, method: 'DELETE' },
-        { url: `${base}/api/sessions/${session.session_name}`, method: 'DELETE' },
-        { url: `${base}/api/${session.session_name}`, method: 'DELETE' },
-        { url: `${base}/api/sessions/${session.session_name}/delete`, method: 'POST' },
-        { url: `${base}/api/${session.session_name}/delete`, method: 'POST' },
-      ];
-
       let deletedOnServer = false;
-      for (const attempt of deleteAttempts) {
-        try {
-          const resp = await fetch(attempt.url, { method: attempt.method, headers });
-          if (resp.ok || resp.status === 404) {
-            deletedOnServer = true;
-            break;
-          }
-        } catch (e) {}
-      }
+      try {
+        const resp = await fetch(`${base}/instance/delete/${instance}`, { method: 'DELETE', headers });
+        if (resp.ok || resp.status === 404) deletedOnServer = true;
+      } catch (e) {}
 
       await supabase
         .from('whatsapp_sessions')
