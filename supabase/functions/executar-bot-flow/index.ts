@@ -555,11 +555,14 @@ async function executeBroadcast(
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
       ok = false;
-
+      // @ts-ignore
+      sendReason = sendReason || (e instanceof Error ? e.message : String(e));
     }
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
-    detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid });
+    // @ts-ignore
+    const motivoFinal = ok ? null : (sendReason || (invalid ? "WhatsApp inválido/inexistente" : "Falha ao enviar (verifique sessão Evolution)"));
+    detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid, motivo: motivoFinal, reason: motivoFinal });
     if (d.gerente?.id) {
       const key = d.gerente.id;
       if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: d.gerente, itens: [] });
