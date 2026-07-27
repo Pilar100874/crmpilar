@@ -194,7 +194,20 @@ serve(async (req) => {
     if (isEvolutionMessageEvent(raw) && (raw?.data?.key || raw?.data?.message || raw?.data)) {
       transport = "evolution";
       const d = raw.data || {};
-      const fromMe = d?.key?.fromMe === true;
+      const eventName = String(raw?.event || raw?.type || "").toLowerCase();
+      const fromMe = d?.key?.fromMe === true || d?.fromMe === true;
+
+      if (eventName === "messages.update" || eventName === "message.update") {
+        console.log("[EVOLUTION] Ignorando atualização de status da mensagem", {
+          instance: resolveEvolutionSession(raw),
+          messageId: d?.key?.id || d?.keyId || d?.messageId,
+          status: d?.status,
+          fromMe,
+        });
+        return new Response(JSON.stringify({ success: true, ignored: "status_update" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (fromMe) {
         console.log("[EVOLUTION] Ignorando mensagem do próprio bot");
