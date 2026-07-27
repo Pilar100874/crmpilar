@@ -329,7 +329,7 @@ async function markWhatsappStatus(supabase: any, phone: string, status: "valid" 
 }
 
 /* ===== Evolution senders ===== */
-type SendOut = { ok: boolean; invalid?: boolean; reason?: string };
+type SendOut = { ok: boolean; invalid?: boolean; reason?: string; attempts?: number };
 
 function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: string } {
   const lower = (bodyTxt || "").toLowerCase();
@@ -348,19 +348,77 @@ function failureReason(bodyTxt: string, status: number): string {
   return `http_${status}`;
 }
 
+/* ===== Retry policy for transient Evolution/Cloud failures =====
+   Retries on: network errors, timeouts (AbortError), and HTTP 408/425/429/500/502/503/504.
+   Does NOT retry if provider indicates invalid number.
+   3 attempts total, exponential backoff with jitter. */
+const TRANSIENT_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS = 3;
+const PER_ATTEMPT_TIMEOUT_MS = 20000;
+
+function isTransientStatus(status: number): boolean {
+  return TRANSIENT_STATUSES.has(status);
+}
+
+async function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function fetchWithRetry(
+  label: string,
+  url: string,
+  init: RequestInit,
+): Promise<{ ok: boolean; status: number; bodyTxt: string; attempts: number; networkError?: string }> {
+  let lastErr: string | undefined;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), PER_ATTEMPT_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...init, signal: ctrl.signal });
+      clearTimeout(timer);
+      const bodyTxt = await res.text().catch(() => "");
+      if (res.ok) return { ok: true, status: res.status, bodyTxt, attempts: attempt };
+
+      // Do not retry if the response signals an invalid number — permanent failure.
+      const inv = detectInvalidFromText(bodyTxt);
+      if (inv.invalid) return { ok: false, status: res.status, bodyTxt, attempts: attempt };
+
+      if (isTransientStatus(res.status) && attempt < MAX_ATTEMPTS) {
+        const backoff = 500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300);
+        console.warn(`[AGENT][RETRY] ${label} http_${res.status} attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${backoff}ms`);
+        await sleep(backoff);
+        continue;
+      }
+      return { ok: false, status: res.status, bodyTxt, attempts: attempt };
+    } catch (e: any) {
+      clearTimeout(timer);
+      const isAbort = e?.name === "AbortError";
+      lastErr = isAbort ? "timeout" : (e?.message || "network_error");
+      if (attempt < MAX_ATTEMPTS) {
+        const backoff = 500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300);
+        console.warn(`[AGENT][RETRY] ${label} ${lastErr} attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${backoff}ms`);
+        await sleep(backoff);
+        continue;
+      }
+      return { ok: false, status: 0, bodyTxt: "", attempts: attempt, networkError: lastErr };
+    }
+  }
+  return { ok: false, status: 0, bodyTxt: "", attempts: MAX_ATTEMPTS, networkError: lastErr };
+}
+
+
 async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
   if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
-  const res = await fetch(`${base}/message/sendText/${encodeURIComponent(sessionName)}`, {
+  const r = await fetchWithRetry("EVO sendText", `${base}/message/sendText/${encodeURIComponent(sessionName)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify({ number, text }),
   });
-  const bodyTxt = await res.text().catch(() => "");
-  console.log("[AGENT][EVO] sendText:", res.status, bodyTxt.slice(0, 200));
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
+  console.log("[AGENT][EVO] sendText:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
 
 async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
@@ -386,32 +444,35 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
     endpoint = `${base}/message/sendMedia/${encodeURIComponent(sessionName)}`;
     body = { number, mediatype: evoType, mimetype: mime, media: mediaUrl, fileName: inferredName, ...(caption ? { caption } : {}) };
   }
-  const res = await fetch(endpoint, {
+  const r = await fetchWithRetry("EVO sendMedia", endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await res.text().catch(() => "");
-  console.log("[AGENT][EVO] sendMedia:", res.status, bodyTxt.slice(0, 200));
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
+  console.log("[AGENT][EVO] sendMedia:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
 
 /* ===== Cloud API senders ===== */
 async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string): Promise<SendOut> {
   if (!phoneNumberId || !accessToken) { console.error("[AGENT][CLOUD] Faltam credenciais"); return { ok: false, reason: "config_missing" }; }
   const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
-  const r = await fetch(url, {
+  const r = await fetchWithRetry("CLOUD sendText", url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
   });
-  const bodyTxt = await r.text().catch(() => "");
-  if (!r.ok) console.error("[AGENT][CLOUD] sendText error:", bodyTxt);
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  console.error("[AGENT][CLOUD] sendText error:", r.bodyTxt, "attempts:", r.attempts);
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : `http_${r.status}`;
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
 
 async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: string, mediaUrl: string, mediaType: string, caption?: string): Promise<SendOut> {
@@ -421,17 +482,19 @@ async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: st
   const t = typeMap[(mediaType || "").toLowerCase()] || "document";
   const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
   if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
-  const r = await fetch(url, {
+  const r = await fetchWithRetry("CLOUD sendMedia", url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await r.text().catch(() => "");
-  if (!r.ok) console.error("[AGENT][CLOUD] sendMedia error:", bodyTxt);
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  console.error("[AGENT][CLOUD] sendMedia error:", r.bodyTxt, "attempts:", r.attempts);
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : `http_${r.status}`;
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
 
 /* ===== Contact (vCard) senders ===== */
 function buildVCard(nome: string, whatsapp: string): string {
@@ -461,17 +524,19 @@ async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: stri
       phoneNumber: `+${contactDigits}`,
     }],
   };
-  const res = await fetch(`${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
+  const r = await fetchWithRetry("EVO sendContact", `${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await res.text().catch(() => "");
-  console.log("[AGENT][EVO] sendContact:", res.status, bodyTxt.slice(0, 200));
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
+  console.log("[AGENT][EVO] sendContact:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
 
 async function sendCloudContact(phoneNumberId: string, accessToken: string, to: string, contact: { nome?: string; whatsapp: string }): Promise<SendOut> {
   if (!phoneNumberId || !accessToken) return { ok: false, reason: "config_missing" };
@@ -488,14 +553,16 @@ async function sendCloudContact(phoneNumberId: string, accessToken: string, to: 
       phones: [{ phone: `+${digits}`, wa_id: digits, type: "CELL" }],
     }],
   };
-  const r = await fetch(url, {
+  const r = await fetchWithRetry("CLOUD sendContact", url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await r.text().catch(() => "");
-  if (!r.ok) console.error("[AGENT][CLOUD] sendContact error:", bodyTxt);
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  console.error("[AGENT][CLOUD] sendContact error:", r.bodyTxt, "attempts:", r.attempts);
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : `http_${r.status}`;
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
