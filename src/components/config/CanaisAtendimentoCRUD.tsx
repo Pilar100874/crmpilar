@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { MessageSquare, Facebook, Instagram, Send, Globe, Radio, Smartphone, Plus, Trash2, RefreshCw, Save, AlertCircle, ExternalLink, Eye, EyeOff, Power, CheckCircle2 } from "lucide-react";
+import { MessageSquare, Facebook, Instagram, Send, Globe, Radio, Smartphone, Plus, Trash2, RefreshCw, Save, AlertCircle, ExternalLink, Eye, EyeOff, Power, CheckCircle2, Bug, Clock, PlayCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast as sonnerToast } from "@/lib/toast-config";
 import {
   Dialog,
@@ -42,6 +43,28 @@ interface WhatsAppSession {
   status: string;
   qr_code: string | null;
   bot_flow_id: string | null;
+}
+
+type EvolutionDiagnosticStatus = "ok" | "warning" | "error" | "info";
+
+interface EvolutionDiagnosticStep {
+  id: string;
+  title: string;
+  status: EvolutionDiagnosticStatus;
+  message: string;
+  latency?: number;
+  details?: unknown;
+}
+
+interface EvolutionDiagnosticReport {
+  ok: boolean;
+  conclusion: string;
+  providerStatus?: string | null;
+  messageId?: string | null;
+  usedNumber?: string | null;
+  startedAt?: string;
+  finishedAt?: string;
+  steps: EvolutionDiagnosticStep[];
 }
 
 // WhatsApp Business API Config
@@ -349,6 +372,11 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [sessionUsages, setSessionUsages] = useState<Array<{ tipo: string; nome: string; id: string }>>([]);
   const [checkingUsage, setCheckingUsage] = useState(false);
+  const [diagnosticSessionId, setDiagnosticSessionId] = useState("");
+  const [diagnosticPhone, setDiagnosticPhone] = useState("");
+  const [diagnosticMessage, setDiagnosticMessage] = useState("Teste de diagnóstico do Pilar CRM via Evolution.");
+  const [diagnosticRunning, setDiagnosticRunning] = useState(false);
+  const [diagnosticReport, setDiagnosticReport] = useState<EvolutionDiagnosticReport | null>(null);
 
   useEffect(() => {
     loadConfig();
@@ -371,6 +399,13 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
       }
     }
   }, [sessions, selectedQrSession]);
+
+  useEffect(() => {
+    if (!diagnosticSessionId && sessions.length > 0) {
+      const workingSession = sessions.find((session) => session.status === "WORKING") || sessions[0];
+      setDiagnosticSessionId(workingSession.id);
+    }
+  }, [sessions, diagnosticSessionId]);
 
   const loadBots = async () => {
     try {
@@ -811,6 +846,72 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     return <Badge variant={info.variant}>{info.label}</Badge>;
   };
 
+  const getDiagnosticBadge = (status: EvolutionDiagnosticStatus) => {
+    const map: Record<EvolutionDiagnosticStatus, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
+      ok: { variant: "default", label: "OK" },
+      warning: { variant: "secondary", label: "Atenção" },
+      error: { variant: "destructive", label: "Erro" },
+      info: { variant: "outline", label: "Info" },
+    };
+    const item = map[status];
+    return <Badge variant={item.variant}>{item.label}</Badge>;
+  };
+
+  const runEvolutionDiagnostic = async () => {
+    const session = sessions.find((item) => item.id === diagnosticSessionId);
+    const phone = diagnosticPhone.replace(/\D/g, "");
+
+    if (!session) {
+      toast({ title: "Selecione uma sessão", description: "Escolha a sessão Evolution que será testada.", variant: "destructive" });
+      return;
+    }
+    if (!phone || phone.length < 10) {
+      toast({ title: "WhatsApp inválido", description: "Informe o número com DDD para receber a mensagem de teste.", variant: "destructive" });
+      return;
+    }
+
+    setDiagnosticRunning(true);
+    setDiagnosticReport(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("evolution-manager", {
+        body: {
+          action: "diagnose",
+          estabelecimentoId,
+          sessionId: session.id,
+          sessionName: session.session_name,
+          webhookUrl: getResolvedWebhookUrl(config?.webhook_url),
+          testPhone: phone,
+          testMessage: diagnosticMessage.trim() || undefined,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const report = data as EvolutionDiagnosticReport;
+      setDiagnosticReport(report);
+      toast({
+        title: report.ok ? "Diagnóstico concluído" : "Diagnóstico encontrou bloqueio",
+        description: report.conclusion || "Verifique as etapas do painel.",
+        variant: report.ok ? "default" : "destructive",
+      });
+    } catch (error: any) {
+      const message = error?.message || "Erro ao executar diagnóstico.";
+      setDiagnosticReport({
+        ok: false,
+        conclusion: message,
+        steps: [{ id: "invoke", title: "Chamada do diagnóstico", status: "error", message }],
+      });
+      toast({ title: "Erro no diagnóstico", description: message, variant: "destructive" });
+    } finally {
+      setDiagnosticRunning(false);
+    }
+  };
+
+  const copyDiagnosticReport = async () => {
+    if (!diagnosticReport) return;
+    await navigator.clipboard.writeText(JSON.stringify(diagnosticReport, null, 2));
+    sonnerToast.success("Relatório copiado!");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -1174,6 +1275,128 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                 </Card>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {config && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bug className="h-5 w-5" />
+                  Diagnóstico de envio Evolution
+                </CardTitle>
+                <CardDescription>
+                  Valida servidor, instância, webhook, envio, JID e confirmação no histórico do Evolution.
+                </CardDescription>
+              </div>
+              {diagnosticReport && (
+                <Button type="button" variant="outline" size="sm" onClick={copyDiagnosticReport}>
+                  Copiar relatório
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 lg:grid-cols-[1.1fr_1fr]">
+              <div className="space-y-2">
+                <Label>Sessão para testar</Label>
+                <Select value={diagnosticSessionId} onValueChange={(value) => { setDiagnosticSessionId(value); setDiagnosticReport(null); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a sessão" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sessions.map((session) => (
+                      <SelectItem key={session.id} value={session.id}>
+                        {session.session_name} • {session.status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="diagnostic-phone">WhatsApp que deve receber o teste</Label>
+                <Input
+                  id="diagnostic-phone"
+                  placeholder="Ex: 5511999999999"
+                  value={diagnosticPhone}
+                  onChange={(event) => { setDiagnosticPhone(event.target.value); setDiagnosticReport(null); }}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="diagnostic-message">Mensagem de teste</Label>
+              <Input
+                id="diagnostic-message"
+                value={diagnosticMessage}
+                onChange={(event) => setDiagnosticMessage(event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                O teste envia uma mensagem real e tenta confirmar no histórico do Evolution. Se ficar PENDING/ERROR depois de aceito, o gargalo está no Evolution/WhatsApp/sessão.
+              </p>
+              <Button type="button" onClick={runEvolutionDiagnostic} disabled={diagnosticRunning || sessions.length === 0}>
+                {diagnosticRunning ? (
+                  <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Diagnosticando...</>
+                ) : (
+                  <><PlayCircle className="h-4 w-4 mr-2" /> Rodar diagnóstico</>
+                )}
+              </Button>
+            </div>
+
+            {diagnosticReport && (
+              <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {diagnosticReport.ok ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <AlertCircle className="h-4 w-4 text-destructive" />}
+                      <h3 className="text-sm font-semibold">Conclusão</h3>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{diagnosticReport.conclusion}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {diagnosticReport.providerStatus && <Badge variant="outline">Status: {diagnosticReport.providerStatus}</Badge>}
+                    {diagnosticReport.usedNumber && <Badge variant="outline">Destino: {diagnosticReport.usedNumber}</Badge>}
+                    {diagnosticReport.messageId && <Badge variant="outline">ID: {diagnosticReport.messageId}</Badge>}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {diagnosticReport.steps.map((step, index) => (
+                    <div key={`${step.id}-${index}`} className="rounded-md border bg-background p-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                            {index + 1}
+                          </span>
+                          <span className="text-sm font-medium">{step.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {typeof step.latency === "number" && (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" /> {step.latency}ms
+                            </span>
+                          )}
+                          {getDiagnosticBadge(step.status)}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{step.message}</p>
+                      {step.details ? (
+                        <details className="mt-2 rounded border bg-muted/40 p-2 text-xs">
+                          <summary className="cursor-pointer font-medium">Detalhes técnicos</summary>
+                          <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words">
+                            {JSON.stringify(step.details, null, 2)}
+                          </pre>
+                        </details>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
