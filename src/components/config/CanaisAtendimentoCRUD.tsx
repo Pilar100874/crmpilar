@@ -337,7 +337,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [showEvolutionKey, setShowEvolutionKey] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<
-    | { ok: true; latency: number; instances: number | null }
+    | { ok: true; latency: number; instances: number | null; list?: Array<{ name: string; status: string; number?: string | null; profileName?: string | null }> }
     | { ok: false; error: string }
     | null
   >(null);
