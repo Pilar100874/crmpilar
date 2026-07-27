@@ -99,7 +99,7 @@ export function WhatsAppConfigCRUD() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setNumeros((data || []) as WhatsAppNumero[]);
+      setNumeros(((data || []) as unknown) as WhatsAppNumero[]);
     } catch (e: any) {
       console.error(e);
       toast({ title: "Erro", description: e.message || "Falha ao carregar números", variant: "destructive" });
