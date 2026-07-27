@@ -332,8 +332,6 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [evolutionMode, setEvolutionMode] = useState<"producao" | "sandbox">("producao");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [managerUrl, setManagerUrl] = useState("");
-  const [managerUser, setManagerUser] = useState("");
-  const [managerPassword, setManagerPassword] = useState("");
   const [showEvolutionKey, setShowEvolutionKey] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<
