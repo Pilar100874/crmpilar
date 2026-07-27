@@ -288,10 +288,13 @@ serve(async (req) => {
       success: sendResult.ok,
       invalid_number: !!sendResult.invalid,
       reason: sendResult.reason || null,
+      attempts: sendResult.attempts || null,
+      message_id: sendResult.messageId || null,
+      provider_status: sendResult.providerStatus || null,
       provider: numero.provider || null,
       session: numero.session_name || numero.nome || null,
     }), {
-      status: sendResult.ok ? 200 : (sendResult.invalid ? 422 : 502),
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
@@ -329,7 +332,96 @@ async function markWhatsappStatus(supabase: any, phone: string, status: "valid" 
 }
 
 /* ===== Evolution senders ===== */
-type SendOut = { ok: boolean; invalid?: boolean; reason?: string; attempts?: number };
+type SendOut = { ok: boolean; invalid?: boolean; reason?: string; attempts?: number; messageId?: string; providerStatus?: string };
+
+function parseEvolutionAck(bodyTxt: string): { messageId?: string; status?: string } {
+  try {
+    const payload = JSON.parse(bodyTxt || "{}");
+    const messageId = payload?.key?.id || payload?.id || payload?.messageId || payload?.message?.key?.id;
+    const status = payload?.status || payload?.message?.status || payload?.data?.status;
+    return {
+      messageId: messageId ? String(messageId) : undefined,
+      status: status ? String(status).toUpperCase() : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function evolutionStatusLooksPending(status?: string): boolean {
+  const s = String(status || "").toUpperCase();
+  return s === "PENDING" || s === "SERVER_ACK_PENDING" || s === "ERROR";
+}
+
+function extractEvolutionMessages(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.messages?.records)) return data.messages.records;
+  if (Array.isArray(data?.records)) return data.records;
+  if (Array.isArray(data?.messages)) return data.messages;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+async function safeJson(resp: Response): Promise<any> {
+  const txt = await resp.text().catch(() => "");
+  if (!txt) return null;
+  try { return JSON.parse(txt); } catch { return txt; }
+}
+
+async function restartEvolutionInstance(base: string, apiKey: string, sessionName: string) {
+  const headers = { "Content-Type": "application/json", apikey: apiKey };
+  const urls = [
+    { url: `${base}/instance/restart/${encodeURIComponent(sessionName)}`, method: "POST" },
+    { url: `${base}/instance/restart/${encodeURIComponent(sessionName)}`, method: "GET" },
+  ];
+  for (const item of urls) {
+    try {
+      const resp = await fetch(item.url, { method: item.method, headers, signal: AbortSignal.timeout(8000) });
+      if (resp.ok || resp.status === 201 || resp.status === 204) {
+        console.warn(`[AGENT][EVO] instância ${sessionName} reiniciada após mensagens presas em PENDING`);
+        return true;
+      }
+    } catch (_) { /* best effort */ }
+  }
+  return false;
+}
+
+async function verifyEvolutionAck(
+  base: string,
+  apiKey: string,
+  sessionName: string,
+  ack: { messageId?: string; status?: string },
+): Promise<{ ok: boolean; reason?: string; status?: string }> {
+  if (!evolutionStatusLooksPending(ack.status)) return { ok: true, status: ack.status };
+
+  // Evolution/Baileys pode responder PENDING imediatamente; aguardamos uma confirmação real.
+  await sleep(10_000);
+  try {
+    const resp = await fetch(`${base}/chat/findMessages/${encodeURIComponent(sessionName)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: apiKey },
+      body: JSON.stringify(ack.messageId ? { where: { key: { id: ack.messageId } } } : { where: { key: { fromMe: true } } }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const data = await safeJson(resp);
+    if (!resp.ok) {
+      return { ok: false, status: ack.status, reason: `evolution_sem_confirmacao_entrega_http_${resp.status}` };
+    }
+
+    const records = extractEvolutionMessages(data);
+    const match = ack.messageId
+      ? records.find((m) => String(m?.key?.id || m?.id || m?.messageId || "") === ack.messageId)
+      : records[0];
+    const currentStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
+    if (evolutionStatusLooksPending(currentStatus)) {
+      await restartEvolutionInstance(base, apiKey, sessionName);
+      return { ok: false, status: currentStatus, reason: `evolution_pending_nao_entregue_${currentStatus.toLowerCase()}` };
+    }
+    return { ok: true, status: currentStatus };
+  } catch (e: any) {
+    return { ok: false, status: ack.status, reason: `evolution_sem_confirmacao_entrega_${e?.name === "AbortError" ? "timeout" : "erro"}` };
+  }
+}
 
 function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: string } {
   const lower = (bodyTxt || "").toLowerCase();
@@ -414,7 +506,12 @@ async function sendEvolutionText(toNumberOnly: string, text: string, sessionName
     body: JSON.stringify({ number, text }),
   });
   console.log("[AGENT][EVO] sendText:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
-  if (r.ok) return { ok: true, attempts: r.attempts };
+  const ack = parseEvolutionAck(r.bodyTxt);
+  if (r.ok) {
+    const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
+    if (!checked.ok) return { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+    return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+  }
   const inv = detectInvalidFromText(r.bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
   const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
@@ -450,7 +547,12 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
     body: JSON.stringify(body),
   });
   console.log("[AGENT][EVO] sendMedia:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
-  if (r.ok) return { ok: true, attempts: r.attempts };
+  const ack = parseEvolutionAck(r.bodyTxt);
+  if (r.ok) {
+    const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
+    if (!checked.ok) return { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+    return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+  }
   const inv = detectInvalidFromText(r.bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
   const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
@@ -530,7 +632,12 @@ async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: stri
     body: JSON.stringify(body),
   });
   console.log("[AGENT][EVO] sendContact:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
-  if (r.ok) return { ok: true, attempts: r.attempts };
+  const ack = parseEvolutionAck(r.bodyTxt);
+  if (r.ok) {
+    const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
+    if (!checked.ok) return { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+    return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+  }
   const inv = detectInvalidFromText(r.bodyTxt);
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
   const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
