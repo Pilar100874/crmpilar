@@ -335,8 +335,11 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [showEvolutionKey, setShowEvolutionKey] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<
-    | { ok: true; latency: number; instances: number | null; list?: Array<{ name: string; status: string; number?: string | null; profileName?: string | null }> }
-    | { ok: false; error: string }
+    | {
+        ok: boolean;
+        server: { ok: boolean; latency?: number; status?: number; instances?: number | null; list?: Array<{ name: string; status: string; number?: string | null; profileName?: string | null }>; error?: string };
+        manager: { ok: boolean; latency?: number; status?: number; error?: string } | null;
+      }
     | null
   >(null);
   const [newSessionName, setNewSessionName] = useState("");
