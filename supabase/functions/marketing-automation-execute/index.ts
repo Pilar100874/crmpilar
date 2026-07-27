@@ -247,12 +247,25 @@ serve(async (req) => {
           enviados += b.enviados || 0;
           falhas += b.falhas || 0;
           for (const d of b.detalhes || []) {
+            const baseStatus = (d?.status) || (d?.ok ? "enviado" : (d?.invalid ? "invalido" : "falha"));
+            const provider = String(d?.providerStatus || "").toUpperCase();
+            // Map providerStatus para status "amigável" (ACK real vs PENDING presa)
+            let finalStatus = baseStatus;
+            if (d?.ok && provider) {
+              if (/ACK|READ|DELIVER|SERVER/.test(provider)) finalStatus = "ack";
+              else if (/PEND/.test(provider)) finalStatus = "pendente";
+            }
             recipients.push({
               nome: d?.nome || d?.name || null,
               telefone: d?.telefone || d?.phone || null,
               email: d?.email || null,
-              status: (d?.status) || (d?.ok ? "enviado" : (d?.invalid ? "invalido" : "falha")),
+              status: finalStatus,
               motivo: d?.motivo || d?.reason || d?.error || (d?.invalid ? "WhatsApp inválido" : null),
+              providerStatus: d?.providerStatus || null,
+              messageId: d?.messageId || null,
+              attempts: d?.attempts || null,
+              startedAt: d?.startedAt || null,
+              finishedAt: d?.finishedAt || null,
             });
           }
           if (b.aborted && b.error) {
