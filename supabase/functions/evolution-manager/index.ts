@@ -270,9 +270,7 @@ serve(async (req) => {
           : (managerResult && !managerResult.ok ? managerResult.error : undefined),
       });
     }
-        return json({ ok: false, error: `Falha ao conectar: ${msg}` });
-      }
-    }
+
 
     if (!action || !estabelecimentoId || !sessionName) {
       return json({ error: "Ação, estabelecimento e instância são obrigatórios." }, 400);
