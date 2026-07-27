@@ -510,6 +510,8 @@ async function executeBroadcast(
       });
       ok = !rErr && (r as any)?.success !== false;
       invalid = !!(r as any)?.invalid_number;
+      var sendReason: string | null = (rErr?.message) || ((r as any)?.reason) || ((r as any)?.error) || null;
+      invalid = !!(r as any)?.invalid_number;
       if (depois && !invalid) {
         await supabase.functions.invoke("send-agent-message", {
           body: {
