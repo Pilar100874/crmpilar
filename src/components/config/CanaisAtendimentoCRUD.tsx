@@ -329,10 +329,18 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   
   const [evolutionUrl, setEvolutionUrl] = useState("");
   const [evolutionApiKey, setEvolutionApiKey] = useState("");
+  const [evolutionMode, setEvolutionMode] = useState<"producao" | "sandbox">("producao");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [managerUrl, setManagerUrl] = useState("");
   const [managerUser, setManagerUser] = useState("");
   const [managerPassword, setManagerPassword] = useState("");
+  const [showEvolutionKey, setShowEvolutionKey] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<
+    | { ok: true; latency: number; instances: number | null }
+    | { ok: false; error: string }
+    | null
+  >(null);
   const [newSessionName, setNewSessionName] = useState("");
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
@@ -398,12 +406,50 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
           setManagerUrl(cfg.manager_url || "");
           setManagerUser(cfg.manager_user || "");
           setManagerPassword(cfg.manager_password || "");
+          setEvolutionMode((cfg.evolution_mode as "producao" | "sandbox") || "producao");
         }
       }
 
       await refreshSessions();
     } catch (error) {
       console.error("Error loading config:", error);
+    }
+  };
+
+  const testEvolutionConnection = async () => {
+    if (!evolutionUrl.trim() || !evolutionApiKey.trim()) {
+      toast({
+        title: "Preencha URL e apikey",
+        description: "Informe o endpoint e a apikey antes de testar.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setTestingConnection(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("evolution-manager", {
+        body: { action: "test", url: evolutionUrl.trim(), apiKey: evolutionApiKey.trim() },
+      });
+      if (error) throw new Error(error.message);
+      if ((data as any)?.ok) {
+        setTestResult({
+          ok: true,
+          latency: (data as any).latency ?? 0,
+          instances: (data as any).instances ?? null,
+        });
+        toast({ title: "✓ Conexão OK", description: "Servidor Evolution respondeu com sucesso." });
+      } else {
+        const err = (data as any)?.error || "Falha na conexão.";
+        setTestResult({ ok: false, error: err });
+        toast({ title: "Falha ao conectar", description: err, variant: "destructive" });
+      }
+    } catch (e: any) {
+      const err = e?.message || "Erro ao testar conexão.";
+      setTestResult({ ok: false, error: err });
+      toast({ title: "Erro ao testar", description: err, variant: "destructive" });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
@@ -504,10 +550,18 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   };
 
   const saveConfig = async () => {
-    if (!evolutionUrl) {
+    if (!evolutionUrl.trim()) {
       toast({
         title: "Erro",
         description: "URL do Servidor Evolution é obrigatória",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!evolutionApiKey.trim()) {
+      toast({
+        title: "Erro",
+        description: "A apikey do Evolution é obrigatória",
         variant: "destructive",
       });
       return;
@@ -521,32 +575,27 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
 
+      const payload = {
+        evolution_url: evolutionUrl.trim(),
+        evolution_api_key: evolutionApiKey.trim(),
+        evolution_mode: evolutionMode,
+        webhook_url: webhookUrl || null,
+        manager_url: managerUrl || null,
+        manager_user: managerUser || null,
+        manager_password: managerPassword || null,
+      } as any;
+
       if (existingConfig) {
         const { error } = await supabase
           .from("whatsapp_config")
-          .update({
-            evolution_url: evolutionUrl,
-            evolution_api_key: evolutionApiKey || null,
-            webhook_url: webhookUrl || null,
-            manager_url: managerUrl || null,
-            manager_user: managerUser || null,
-            manager_password: managerPassword || null,
-          } as any)
+          .update(payload)
           .eq("id", existingConfig.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("whatsapp_config")
-          .insert({
-            estabelecimento_id: estabelecimentoId,
-            evolution_url: evolutionUrl,
-            evolution_api_key: evolutionApiKey || null,
-            webhook_url: webhookUrl || null,
-            manager_url: managerUrl || null,
-            manager_user: managerUser || null,
-            manager_password: managerPassword || null,
-          } as any);
+          .insert({ estabelecimento_id: estabelecimentoId, ...payload });
 
         if (error) throw error;
       }
@@ -778,25 +827,99 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                 Configure a URL e a apikey do seu servidor Evolution API
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto pr-1">
               <div className="space-y-2">
-                <Label htmlFor="evolution-url">URL do Servidor Evolution</Label>
+                <Label htmlFor="evolution-url">Endpoint do Servidor Evolution</Label>
                 <Input
                   id="evolution-url"
                   placeholder="https://evolution.exemplo.com"
                   value={evolutionUrl}
-                  onChange={(e) => setEvolutionUrl(e.target.value)}
+                  onChange={(e) => { setEvolutionUrl(e.target.value); setTestResult(null); }}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Base URL da Evolution API v2 (sem barra no final).
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="evolution-key">apikey (obrigatória)</Label>
-                <Input
-                  id="evolution-key"
-                  type="password"
-                  placeholder="Sua apikey global do Evolution"
-                  value={evolutionApiKey}
-                  onChange={(e) => setEvolutionApiKey(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="evolution-key"
+                    type={showEvolutionKey ? "text" : "password"}
+                    placeholder="Sua apikey global do Evolution"
+                    value={evolutionApiKey}
+                    onChange={(e) => { setEvolutionApiKey(e.target.value); setTestResult(null); }}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEvolutionKey((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showEvolutionKey ? "Ocultar apikey" : "Mostrar apikey"}
+                  >
+                    {showEvolutionKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Modo do servidor</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { id: "producao", label: "Produção", desc: "Uso real com clientes" },
+                    { id: "sandbox", label: "Sandbox", desc: "Ambiente de testes" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setEvolutionMode(opt.id)}
+                      className={`text-left rounded-md border p-3 transition-colors ${
+                        evolutionMode === opt.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{opt.label}</div>
+                      <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-md border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-medium">Testar conectividade</div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={testEvolutionConnection}
+                    disabled={testingConnection}
+                  >
+                    {testingConnection ? (
+                      <><RefreshCw className="h-3 w-3 mr-2 animate-spin" /> Testando...</>
+                    ) : (
+                      <>Testar conexão</>
+                    )}
+                  </Button>
+                </div>
+                {testResult && (testResult.ok ? (
+                  <Alert>
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-xs">
+                      Conectado em {testResult.latency}ms
+                      {typeof testResult.instances === "number"
+                        ? ` • ${testResult.instances} instância(s) no servidor`
+                        : ""}
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">{(testResult as { ok: false; error: string }).error}</AlertDescription>
+                  </Alert>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  A validação chama <code>GET /instance/fetchInstances</code> no endpoint informado usando a apikey.
+                </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">

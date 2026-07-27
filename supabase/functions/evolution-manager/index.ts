@@ -178,6 +178,36 @@ serve(async (req) => {
     const body = await req.json();
     const { action, estabelecimentoId, sessionId, sessionName, webhookUrl } = body || {};
 
+    // Ação "test": valida conectividade com um URL/apikey fornecidos, sem depender de config salva
+    if (action === "test") {
+      const testUrl = normalizeBaseUrl(String(body?.url || "").trim());
+      const testKey = String(body?.apiKey || "").trim();
+      if (!testUrl || !testKey) {
+        return json({ ok: false, error: "Informe URL e apikey para testar." }, 400);
+      }
+      try {
+        const started = Date.now();
+        const resp = await fetch(`${testUrl}/instance/fetchInstances`, {
+          method: "GET",
+          headers: buildHeaders(testKey),
+          signal: AbortSignal.timeout(10000),
+        });
+        const latency = Date.now() - started;
+        const data = await safeJson(resp);
+        if (resp.status === 401 || resp.status === 403) {
+          return json({ ok: false, status: resp.status, latency, error: "apikey inválida (não autorizada pelo servidor Evolution)." });
+        }
+        if (!resp.ok) {
+          return json({ ok: false, status: resp.status, latency, error: `Servidor respondeu ${resp.status}.`, details: data });
+        }
+        const count = Array.isArray(data) ? data.length : (Array.isArray(data?.instances) ? data.instances.length : null);
+        return json({ ok: true, status: resp.status, latency, instances: count });
+      } catch (e: any) {
+        const msg = e?.message || String(e);
+        return json({ ok: false, error: `Falha ao conectar: ${msg}` });
+      }
+    }
+
     if (!action || !estabelecimentoId || !sessionName) {
       return json({ error: "Ação, estabelecimento e instância são obrigatórios." }, 400);
     }
