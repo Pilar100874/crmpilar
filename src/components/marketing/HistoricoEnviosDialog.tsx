@@ -30,6 +30,11 @@ interface Recipient {
   email?: string | null;
   status?: string | null;
   motivo?: string | null;
+  providerStatus?: string | null;
+  messageId?: string | null;
+  attempts?: number | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
 }
 interface LogRow {
   id: string;
@@ -53,6 +58,45 @@ const iconFor = (tipo: string) => {
     default: return <MessageSquare className="w-4 h-4" />;
   }
 };
+
+type StatusKind = "ack" | "pendente" | "enviado" | "invalido" | "falha" | "outro";
+function normalizeStatus(r: Recipient): StatusKind {
+  const s = String(r.status || "").toLowerCase();
+  if (s === "ack") return "ack";
+  if (s === "pendente" || s === "pending") return "pendente";
+  if (s === "invalido" || s === "invalid") return "invalido";
+  if (s === "enviado" || s === "ok") return "enviado";
+  if (s === "falha" || s === "erro" || s === "error") return "falha";
+  return "outro";
+}
+function StatusPill({ r }: { r: Recipient }) {
+  const k = normalizeStatus(r);
+  const cfg: Record<StatusKind, { label: string; cls: string; title?: string }> = {
+    ack:      { label: "Entregue (ACK)", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+    enviado:  { label: "Enviado",        cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+    pendente: { label: "PENDING",        cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+                title: "Aceito pelo Evolution mas ainda sem confirmação do WhatsApp" },
+    invalido: { label: "Inválido",       cls: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30" },
+    falha:    { label: "Falha",          cls: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30" },
+    outro:    { label: r.status || "—",  cls: "bg-muted text-muted-foreground border-border" },
+  };
+  const c = cfg[k];
+  return (
+    <span
+      title={r.motivo || c.title || ""}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${c.cls}`}
+    >
+      {c.label}
+      {r.attempts && r.attempts > 1 ? <span className="opacity-70">·{r.attempts}x</span> : null}
+    </span>
+  );
+}
+function fmtHms(iso?: string | null) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch { return ""; }
+}
 
 export default function HistoricoEnviosDialog({ open, onOpenChange, automationId, automationName }: Props) {
   const [loading, setLoading] = useState(false);
