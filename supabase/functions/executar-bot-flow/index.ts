@@ -85,7 +85,7 @@ serve(async (req) => {
 
     const ctx: Record<string, any> = { ...(variaveis || {}), estabelecimento_id: estId };
 
-    let current = findStart(nodes);
+    let current: FlowNode | null = findStart(nodes) || null;
     if (!current) throw new Error("Nó de início não encontrado");
 
     let steps = 0;
@@ -464,6 +464,17 @@ async function executeBroadcast(
   const detalhes: any[] = [];
   type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
   const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string }; itens: ResumoItem[] }>();
+  const invokeSend = async (body: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke("send-agent-message", { body });
+    const ok = !error && (data as any)?.success !== false;
+    return {
+      ok,
+      data,
+      error,
+      invalid: !!(data as any)?.invalid_number,
+      reason: error?.message || (data as any)?.reason || (data as any)?.error || null,
+    };
+  };
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   for (const d of destinatarios) {
@@ -483,20 +494,24 @@ async function executeBroadcast(
 
     let ok = true;
     let invalid = false;
+    let sendReason: string | null = null;
     try {
       if (antes) {
-        await supabase.functions.invoke("send-agent-message", {
-          body: {
-            estabelecimento_id: estabelecimentoId, telefone: d.phone, text: antes,
-            whatsappSessionId: cfg.whatsappSessionId || null,
-            whatsappSessionName: cfg.whatsappSessionName || null,
-            botFlowId: botFlowId || null,
-            origem: `${origem}_antes`,
-          },
+        const pre = await invokeSend({
+          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: antes,
+          whatsappSessionId: cfg.whatsappSessionId || null,
+          whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
+          origem: `${origem}_antes`,
         });
+        if (!pre.ok) {
+          ok = false;
+          invalid = pre.invalid;
+          sendReason = pre.reason || "Falha ao confirmar envio do texto inicial";
+        }
       }
-      const { data: r, error: rErr } = await supabase.functions.invoke("send-agent-message", {
-        body: {
+      if (ok && !invalid) {
+        const r = await invokeSend({
           estabelecimento_id: estabelecimentoId, telefone: d.phone,
           text: msgInterp || undefined,
           caption: mediaUrlPre ? msgInterp : undefined,
@@ -506,24 +521,27 @@ async function executeBroadcast(
           whatsappSessionName: cfg.whatsappSessionName || null,
           botFlowId: botFlowId || null,
           origem,
-        },
-      });
-      ok = !rErr && (r as any)?.success !== false;
-      invalid = !!(r as any)?.invalid_number;
-      var sendReason: string | null = (rErr?.message) || ((r as any)?.reason) || ((r as any)?.error) || null;
-      if (depois && !invalid) {
-        await supabase.functions.invoke("send-agent-message", {
-          body: {
-            estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
-            whatsappSessionId: cfg.whatsappSessionId || null,
-            whatsappSessionName: cfg.whatsappSessionName || null,
-            botFlowId: botFlowId || null,
-            origem: `${origem}_depois`,
-          },
         });
+        ok = r.ok;
+        invalid = r.invalid;
+        sendReason = r.reason;
+      }
+      if (ok && depois && !invalid) {
+        const post = await invokeSend({
+          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
+          whatsappSessionId: cfg.whatsappSessionId || null,
+          whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
+          origem: `${origem}_depois`,
+        });
+        if (!post.ok) {
+          ok = false;
+          invalid = post.invalid;
+          sendReason = post.reason || "Falha ao confirmar envio do texto final";
+        }
       }
       const enviarContato = !!(cfg.enviarContato || cfg.enviarContatoGerente);
-      if (enviarContato) {
+      if (ok && enviarContato) {
         const contatoTipo = cfg.contatoTipo || "gerente_do_vendedor";
         let cNome = "";
         let cPhone = "";
@@ -535,18 +553,19 @@ async function executeBroadcast(
           cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
         }
         if (cPhone) {
-          const { data: rc, error: rcErr } = await supabase.functions.invoke("send-agent-message", {
-            body: {
-              estabelecimento_id: estabelecimentoId, telefone: d.phone,
-              contact: { nome: cNome, whatsapp: cPhone },
-              whatsappSessionId: cfg.whatsappSessionId || null,
-              whatsappSessionName: cfg.whatsappSessionName || null,
-              botFlowId: botFlowId || null,
-              origem: `${origem}_contato`,
-            },
+          const contato = await invokeSend({
+            estabelecimento_id: estabelecimentoId, telefone: d.phone,
+            contact: { nome: cNome, whatsapp: cPhone },
+            whatsappSessionId: cfg.whatsappSessionId || null,
+            whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
+            origem: `${origem}_contato`,
           });
-          if (rcErr || (rc as any)?.success === false) {
-            console.warn("[broadcast] falha enviar contato p/", d.phone, rcErr?.message || (rc as any)?.error);
+          if (!contato.ok) {
+            ok = false;
+            invalid = contato.invalid;
+            sendReason = contato.reason || "Falha ao confirmar envio do contato";
+            console.warn("[broadcast] falha enviar contato p/", d.phone, sendReason);
           }
         } else {
           console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
@@ -555,12 +574,10 @@ async function executeBroadcast(
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
       ok = false;
-      // @ts-ignore
       sendReason = sendReason || (e instanceof Error ? e.message : String(e));
     }
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
-    // @ts-ignore
     const motivoFinal = ok ? null : (sendReason || (invalid ? "WhatsApp inválido/inexistente" : "Falha ao enviar (verifique sessão Evolution)"));
     detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid, motivo: motivoFinal, reason: motivoFinal });
     if (d.gerente?.id) {
@@ -599,47 +616,43 @@ async function executeBroadcast(
         const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
         console.log("[broadcast] enviando resumo p/", telefone, "origem:", origemResumo);
         try {
-          const { data: r1, error: e1 } = await supabase.functions.invoke("send-agent-message", {
-            body: {
-              estabelecimento_id: estabelecimentoId, telefone,
-              text: mediaUrlPre ? undefined : parte1,
-              caption: mediaUrlPre ? parte1 : undefined,
-              fileUrl: mediaUrlPre || undefined,
-              contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
-              whatsappSessionId: cfg.whatsappSessionId || null,
-              whatsappSessionName: cfg.whatsappSessionName || null,
-              botFlowId: botFlowId || null,
-              origem: origemResumo,
-            },
+          const r1 = await invokeSend({
+            estabelecimento_id: estabelecimentoId, telefone,
+            text: mediaUrlPre ? undefined : parte1,
+            caption: mediaUrlPre ? parte1 : undefined,
+            fileUrl: mediaUrlPre || undefined,
+            contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
+            whatsappSessionId: cfg.whatsappSessionId || null,
+            whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
+            origem: origemResumo,
           });
-          if (e1 || (r1 as any)?.success === false) {
-            console.warn("[broadcast] falha parte1 resumo:", telefone, e1?.message || (r1 as any)?.error);
+          if (!r1.ok) {
+            console.warn("[broadcast] falha parte1 resumo:", telefone, r1.reason);
+            return;
           }
           if (depoisMask) {
-            const { data: rd, error: ed } = await supabase.functions.invoke("send-agent-message", {
-              body: {
-                estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
-                whatsappSessionId: cfg.whatsappSessionId || null,
-                whatsappSessionName: cfg.whatsappSessionName || null,
-                botFlowId: botFlowId || null,
-                origem: `${origemResumo}_depois`,
-              },
-            });
-            if (ed || (rd as any)?.success === false) {
-              console.warn("[broadcast] falha depois resumo:", telefone, ed?.message || (rd as any)?.error);
-            }
-          }
-          const { data: rs, error: es } = await supabase.functions.invoke("send-agent-message", {
-            body: {
-              estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
+            const rd = await invokeSend({
+              estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
               whatsappSessionId: cfg.whatsappSessionId || null,
               whatsappSessionName: cfg.whatsappSessionName || null,
               botFlowId: botFlowId || null,
-              origem: `${origemResumo}_stats`,
-            },
+              origem: `${origemResumo}_depois`,
+            });
+            if (!rd.ok) {
+              console.warn("[broadcast] falha depois resumo:", telefone, rd.reason);
+              return;
+            }
+          }
+          const rs = await invokeSend({
+            estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
+            whatsappSessionId: cfg.whatsappSessionId || null,
+            whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
+            origem: `${origemResumo}_stats`,
           });
-          if (es || (rs as any)?.success === false) {
-            console.warn("[broadcast] falha stats resumo:", telefone, es?.message || (rs as any)?.error);
+          if (!rs.ok) {
+            console.warn("[broadcast] falha stats resumo:", telefone, rs.reason);
           }
         } catch (err) {
           console.warn("[executar-bot-flow] falha ao enviar resumo p/", telefone, ":", err);
