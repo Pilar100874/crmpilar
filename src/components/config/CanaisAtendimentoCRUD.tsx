@@ -550,10 +550,18 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   };
 
   const saveConfig = async () => {
-    if (!evolutionUrl) {
+    if (!evolutionUrl.trim()) {
       toast({
         title: "Erro",
         description: "URL do Servidor Evolution é obrigatória",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!evolutionApiKey.trim()) {
+      toast({
+        title: "Erro",
+        description: "A apikey do Evolution é obrigatória",
         variant: "destructive",
       });
       return;
@@ -567,32 +575,27 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
 
+      const payload = {
+        evolution_url: evolutionUrl.trim(),
+        evolution_api_key: evolutionApiKey.trim(),
+        evolution_mode: evolutionMode,
+        webhook_url: webhookUrl || null,
+        manager_url: managerUrl || null,
+        manager_user: managerUser || null,
+        manager_password: managerPassword || null,
+      } as any;
+
       if (existingConfig) {
         const { error } = await supabase
           .from("whatsapp_config")
-          .update({
-            evolution_url: evolutionUrl,
-            evolution_api_key: evolutionApiKey || null,
-            webhook_url: webhookUrl || null,
-            manager_url: managerUrl || null,
-            manager_user: managerUser || null,
-            manager_password: managerPassword || null,
-          } as any)
+          .update(payload)
           .eq("id", existingConfig.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("whatsapp_config")
-          .insert({
-            estabelecimento_id: estabelecimentoId,
-            evolution_url: evolutionUrl,
-            evolution_api_key: evolutionApiKey || null,
-            webhook_url: webhookUrl || null,
-            manager_url: managerUrl || null,
-            manager_user: managerUser || null,
-            manager_password: managerPassword || null,
-          } as any);
+          .insert({ estabelecimento_id: estabelecimentoId, ...payload });
 
         if (error) throw error;
       }
