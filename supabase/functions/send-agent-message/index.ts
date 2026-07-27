@@ -329,7 +329,7 @@ async function markWhatsappStatus(supabase: any, phone: string, status: "valid" 
 }
 
 /* ===== Evolution senders ===== */
-type SendOut = { ok: boolean; invalid?: boolean; reason?: string };
+type SendOut = { ok: boolean; invalid?: boolean; reason?: string; attempts?: number };
 
 function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: string } {
   const lower = (bodyTxt || "").toLowerCase();
@@ -347,6 +347,63 @@ function failureReason(bodyTxt: string, status: number): string {
   if (lower.includes("unauthorized") || lower.includes("forbidden")) return "credenciais_invalidas";
   return `http_${status}`;
 }
+
+/* ===== Retry policy for transient Evolution/Cloud failures =====
+   Retries on: network errors, timeouts (AbortError), and HTTP 408/425/429/500/502/503/504.
+   Does NOT retry if provider indicates invalid number.
+   3 attempts total, exponential backoff with jitter. */
+const TRANSIENT_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS = 3;
+const PER_ATTEMPT_TIMEOUT_MS = 20000;
+
+function isTransientStatus(status: number): boolean {
+  return TRANSIENT_STATUSES.has(status);
+}
+
+async function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function fetchWithRetry(
+  label: string,
+  url: string,
+  init: RequestInit,
+): Promise<{ ok: boolean; status: number; bodyTxt: string; attempts: number; networkError?: string }> {
+  let lastErr: string | undefined;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), PER_ATTEMPT_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...init, signal: ctrl.signal });
+      clearTimeout(timer);
+      const bodyTxt = await res.text().catch(() => "");
+      if (res.ok) return { ok: true, status: res.status, bodyTxt, attempts: attempt };
+
+      // Do not retry if the response signals an invalid number — permanent failure.
+      const inv = detectInvalidFromText(bodyTxt);
+      if (inv.invalid) return { ok: false, status: res.status, bodyTxt, attempts: attempt };
+
+      if (isTransientStatus(res.status) && attempt < MAX_ATTEMPTS) {
+        const backoff = 500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300);
+        console.warn(`[AGENT][RETRY] ${label} http_${res.status} attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${backoff}ms`);
+        await sleep(backoff);
+        continue;
+      }
+      return { ok: false, status: res.status, bodyTxt, attempts: attempt };
+    } catch (e: any) {
+      clearTimeout(timer);
+      const isAbort = e?.name === "AbortError";
+      lastErr = isAbort ? "timeout" : (e?.message || "network_error");
+      if (attempt < MAX_ATTEMPTS) {
+        const backoff = 500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 300);
+        console.warn(`[AGENT][RETRY] ${label} ${lastErr} attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${backoff}ms`);
+        await sleep(backoff);
+        continue;
+      }
+      return { ok: false, status: 0, bodyTxt: "", attempts: attempt, networkError: lastErr };
+    }
+  }
+  return { ok: false, status: 0, bodyTxt: "", attempts: MAX_ATTEMPTS, networkError: lastErr };
+}
+
 
 async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
   if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
