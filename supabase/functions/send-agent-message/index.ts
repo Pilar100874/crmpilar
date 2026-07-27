@@ -353,6 +353,17 @@ function evolutionStatusLooksPending(status?: string): boolean {
   return s === "PENDING" || s === "SERVER_ACK_PENDING" || s === "ERROR";
 }
 
+function evolutionStatusIsFinalError(status?: string): boolean {
+  const s = String(status || "").toUpperCase();
+  return s === "ERROR" || s === "FAILED" || s === "FAILURE";
+}
+
+function buildEvolutionNumberVariants(toNumberOnly: string): string[] {
+  const digits = String(toNumberOnly || "").replace(/\D/g, "");
+  if (!digits) return [];
+  return Array.from(new Set([digits, `${digits}@s.whatsapp.net`]));
+}
+
 function extractEvolutionMessages(data: any): any[] {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.messages?.records)) return data.messages.records;
@@ -524,22 +535,30 @@ async function fetchWithRetry(
 async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
   if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
-  const r = await fetchWithRetry("EVO sendText", `${base}/message/sendText/${encodeURIComponent(sessionName)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: apiKey },
-    body: JSON.stringify({ number, text }),
-  });
-  console.log("[AGENT][EVO] sendText:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
-  const ack = parseEvolutionAck(r.bodyTxt);
-  if (r.ok) {
-    const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
-    if (!checked.ok) return { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
-    return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+  const endpoint = `${base}/message/sendText/${encodeURIComponent(sessionName)}`;
+  let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
+
+  for (const [index, variant] of buildEvolutionNumberVariants(number).entries()) {
+    const r = await fetchWithRetry(index === 0 ? "EVO sendText" : "EVO sendText jid-fallback", endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: apiKey },
+      body: JSON.stringify({ number: variant, text }),
+    });
+    console.log("[AGENT][EVO] sendText:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts, "variant:", index === 0 ? "digits" : "jid");
+    const ack = parseEvolutionAck(r.bodyTxt);
+    if (r.ok) {
+      const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
+      if (checked.ok) return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+      lastResult = { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+      if (evolutionStatusIsFinalError(checked.status || ack.status)) continue;
+      return lastResult;
+    }
+    const inv = detectInvalidFromText(r.bodyTxt);
+    if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+    const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+    lastResult = { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
   }
-  const inv = detectInvalidFromText(r.bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
-  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
-  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
+  return lastResult;
 }
 
 async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
