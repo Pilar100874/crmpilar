@@ -250,8 +250,11 @@ serve(async (req) => {
               telefone: d?.telefone || d?.phone || null,
               email: d?.email || null,
               status: (d?.status) || (d?.ok ? "enviado" : (d?.invalid ? "invalido" : "falha")),
-              motivo: d?.motivo || d?.error || (d?.invalid ? "WhatsApp inválido" : null),
+              motivo: d?.motivo || d?.reason || d?.error || (d?.invalid ? "WhatsApp inválido" : null),
             });
+          }
+          if (b.aborted && b.error) {
+            items.push({ tipo: "texto", conteudo: `⚠️ Envio abortado: ${b.error}`, titulo: "Aviso do sistema" });
           }
           // Conteúdo enviado no broadcast
           if (b.textoAntes) items.push({ tipo: "texto", conteudo: b.textoAntes, titulo: "Texto antes" });
