@@ -115,6 +115,7 @@ async function setWebhook(base: string, headers: Record<string, string>, instanc
       base64: false,
       events: [
         "MESSAGES_UPSERT",
+        "MESSAGES_UPDATE",
         "CONNECTION_UPDATE",
         "QRCODE_UPDATED",
       ],
@@ -142,7 +143,7 @@ async function createInstance(base: string, headers: Record<string, string>, ins
       url: webhookUrl,
       byEvents: false,
       base64: false,
-      events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"],
+      events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE", "QRCODE_UPDATED"],
     },
   });
   const { resp, data } = await evoFetch(`${base}/instance/create`, {

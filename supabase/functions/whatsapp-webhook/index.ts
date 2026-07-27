@@ -2892,21 +2892,24 @@ async function sendEvolutionMediaMessage(
     }
 
     console.log(`[EVOLUTION] Enviando MEDIA (${evoType}) -> ${number}`, { instance, endpoint });
-    const resp = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        apikey: apiKey,
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(90000),
-    });
-    const resultText = await resp.text().catch(() => "");
-    console.log("[EVOLUTION] sendMedia result:", resp.status, resultText.slice(0, 500));
-    if (resp.ok) return;
+    const first = await postEvolutionMessage(endpoint, apiKey, body, "sendMedia");
+    if (!first.ok) return false;
+    const firstDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(first.bodyText));
+    if (firstDelivery.ok) return true;
+
+    console.warn("[EVOLUTION] Mídia ficou presa; reiniciando sessão e tentando reenviar uma vez:", firstDelivery);
+    const restarted = await restartEvolutionInstance(base, apiKey, instance);
+    if (restarted) await sleep(3500);
+
+    const retry = await postEvolutionMessage(endpoint, apiKey, body, "sendMedia retry");
+    if (!retry.ok) return false;
+    const retryDelivery = await verifyEvolutionDelivery(base, apiKey, instance, parseEvolutionSendAck(retry.bodyText));
+    if (retryDelivery.ok) return true;
+    console.error("[EVOLUTION] Mídia não teve confirmação de entrega após retry:", retryDelivery);
+    return false;
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendMedia:", err);
+    return false;
   }
 
   // Fallback: envia link como texto
