@@ -649,8 +649,8 @@ Arquivo: `.env`
 ```bash
 VITE_SUPABASE_URL=sua-url
 VITE_SUPABASE_ANON_KEY=sua-key
-WAHA_URL=url-waha
-WAHA_API_KEY=key-waha
+Evolution_URL=url-evolution
+Evolution_API_KEY=key-evolution
 ```
 
 ### Edge Functions Principais
