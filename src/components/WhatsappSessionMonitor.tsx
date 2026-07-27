@@ -2,10 +2,9 @@
 // - Polling a cada 45s de todas as sessões do estabelecimento do usuário logado.
 // - Considera "caiu" qualquer sessão cujo status NÃO seja WORKING nem SCAN_QR_CODE
 //   (ex.: STOPPED, DISCONNECTED, FAILED, CLOSE, TIMEOUT, etc.).
+// - Também detecta sessão "ZUMBI": aparece WORKING mas as mensagens estão
+//   acumulando em PENDING no Evolution (celular pareado offline / instância travada).
 // - Só é exibido para usuários admin (user_roles.role = 'admin').
-// - Popup grande (AlertDialog) com botão "Reconectar agora" que chama a
-//   edge function `waha-manager` (action: start) para subir a sessão novamente
-//   e abre a página /atendimento-config?tab=canais para escanear o QR se pedido.
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
+import { AlertTriangle, RefreshCw, Loader2, Ghost } from "lucide-react";
 import { toast } from "sonner";
 
 type SessionRow = {
@@ -30,23 +29,34 @@ type SessionRow = {
   session_name: string;
   status: string | null;
   phone_number: string | null;
+  // preenchido só para zumbis
+  pending?: number;
+  total?: number;
+  reason?: "down" | "zombie";
 };
 
 const HEALTHY_STATES = new Set(["WORKING", "SCAN_QR_CODE"]);
 const POLL_MS = 45_000;
+// Intervalo de checagem de zumbi é mais espaçado (chama Evolution API por sessão).
+const ZOMBIE_POLL_MS = 3 * 60_000;
 // Silencia o mesmo aviso por 5 min após "Depois" para não incomodar.
 const SNOOZE_MS = 5 * 60_000;
+// Limiares para considerar sessão zumbi (WORKING mas com PENDING acumulando).
+const ZOMBIE_MIN_PENDING = 5; // pelo menos 5 mensagens pendentes
+const ZOMBIE_WINDOW_MIN = 15; // nos últimos 15 minutos
 
 export default function WhatsappSessionMonitor() {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [downSessions, setDownSessions] = useState<SessionRow[]>([]);
+  const [zombieSessions, setZombieSessions] = useState<SessionRow[]>([]);
   const [open, setOpen] = useState(false);
   const [reconnecting, setReconnecting] = useState<string | null>(null);
+  const [restarting, setRestarting] = useState<string | null>(null);
   const snoozedUntilRef = useRef<number>(0);
+  const lastZombieCheckRef = useRef<number>(0);
 
-  // Detecta admin + estabelecimento do usuário logado
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -64,7 +74,6 @@ export default function WhatsappSessionMonitor() {
     return () => { mounted = false; };
   }, []);
 
-  // Polling
   useEffect(() => {
     if (!isAdmin || !estabelecimentoId) return;
 
@@ -75,14 +84,45 @@ export default function WhatsappSessionMonitor() {
         .eq("estabelecimento_id", estabelecimentoId);
       if (error || !data) return;
 
-      const down = data.filter((s) => !HEALTHY_STATES.has(String(s.status || "").toUpperCase()));
+      const down: SessionRow[] = data
+        .filter((s) => !HEALTHY_STATES.has(String(s.status || "").toUpperCase()))
+        .map((s) => ({ ...s, reason: "down" as const }));
       setDownSessions(down);
 
-      if (down.length > 0 && Date.now() > snoozedUntilRef.current) {
-        setOpen(true);
-      } else if (down.length === 0) {
-        setOpen(false);
+      // Checagem de zumbi: só sessões WORKING, e no máximo a cada ZOMBIE_POLL_MS.
+      const now = Date.now();
+      let zombies: SessionRow[] = zombieSessions;
+      if (now - lastZombieCheckRef.current >= ZOMBIE_POLL_MS) {
+        lastZombieCheckRef.current = now;
+        const working = data.filter((s) => String(s.status || "").toUpperCase() === "WORKING");
+        const results = await Promise.all(
+          working.map(async (s) => {
+            try {
+              const { data: resp } = await supabase.functions.invoke("waha-manager", {
+                body: {
+                  action: "pending_count",
+                  estabelecimentoId,
+                  sessionId: s.id,
+                  sessionName: s.session_name,
+                  minutes: ZOMBIE_WINDOW_MIN,
+                },
+              });
+              const pending = Number(resp?.pending || 0);
+              const total = Number(resp?.total || 0);
+              if (resp?.supported && pending >= ZOMBIE_MIN_PENDING) {
+                return { ...s, pending, total, reason: "zombie" as const };
+              }
+            } catch { /* silencioso */ }
+            return null;
+          }),
+        );
+        zombies = results.filter(Boolean) as SessionRow[];
+        setZombieSessions(zombies);
       }
+
+      const shouldOpen = (down.length > 0 || zombies.length > 0) && Date.now() > snoozedUntilRef.current;
+      if (shouldOpen) setOpen(true);
+      else if (down.length === 0 && zombies.length === 0) setOpen(false);
     };
 
     check();
@@ -118,6 +158,33 @@ export default function WhatsappSessionMonitor() {
     }
   };
 
+  const restartZombie = async (s: SessionRow) => {
+    try {
+      setRestarting(s.id);
+      // Força reconexão da instância (mesmo endpoint start faz connect/QR quando preciso).
+      const { data, error } = await supabase.functions.invoke("waha-manager", {
+        body: {
+          action: "start",
+          estabelecimentoId,
+          sessionId: s.id,
+          sessionName: s.session_name,
+        },
+      });
+      if (error) throw error;
+      if (data?.qrCode) {
+        toast.warning(`Sessão "${s.session_name}" precisa de novo QR Code.`);
+        navigate("/atendimento-config?tab=canais");
+        setOpen(false);
+      } else {
+        toast.success(`Instância "${s.session_name}" reiniciada. Verifique o celular pareado.`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao reiniciar instância.");
+    } finally {
+      setRestarting(null);
+    }
+  };
+
   const openConfig = () => {
     navigate("/atendimento-config?tab=canais");
     setOpen(false);
@@ -130,20 +197,31 @@ export default function WhatsappSessionMonitor() {
 
   if (!isAdmin) return null;
 
+  const totalIssues = downSessions.length + zombieSessions.length;
+  const onlyZombies = downSessions.length === 0 && zombieSessions.length > 0;
+
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) snooze(); }}>
       <AlertDialogContent className="max-w-2xl border-destructive/40">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-3 text-2xl">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/15">
-              <AlertTriangle className="h-7 w-7 text-destructive" />
+              {onlyZombies ? (
+                <Ghost className="h-7 w-7 text-destructive" />
+              ) : (
+                <AlertTriangle className="h-7 w-7 text-destructive" />
+              )}
             </span>
-            Sessão do WhatsApp caiu
+            {onlyZombies
+              ? "WhatsApp travado (mensagens não estão saindo)"
+              : "Sessão do WhatsApp caiu"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-base">
-            {downSessions.length === 1
-              ? "Uma sessão do WhatsApp está desconectada. Reconecte agora para não perder mensagens."
-              : `${downSessions.length} sessões do WhatsApp estão desconectadas. Reconecte-as para não perder mensagens.`}
+            {onlyZombies
+              ? `${zombieSessions.length === 1 ? "Uma sessão aparece como conectada" : `${zombieSessions.length} sessões aparecem como conectadas`}, mas mensagens estão acumulando em PENDING no Evolution. Isso geralmente indica que o celular pareado está offline ou a instância travou.`
+              : totalIssues === 1
+                ? "Uma sessão do WhatsApp está desconectada. Reconecte agora para não perder mensagens."
+                : `${totalIssues} sessões do WhatsApp com problema. Verifique abaixo.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -153,15 +231,11 @@ export default function WhatsappSessionMonitor() {
               <div className="min-w-0">
                 <div className="truncate font-semibold">{s.session_name}</div>
                 <div className="text-xs text-muted-foreground">
-                  Status: <span className="font-mono">{s.status || "desconhecido"}</span>
+                  Desconectada · Status: <span className="font-mono">{s.status || "desconhecido"}</span>
                   {s.phone_number ? ` · ${s.phone_number}` : ""}
                 </div>
               </div>
-              <Button
-                size="sm"
-                onClick={() => reconnect(s)}
-                disabled={reconnecting === s.id}
-              >
+              <Button size="sm" onClick={() => reconnect(s)} disabled={reconnecting === s.id}>
                 {reconnecting === s.id ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reconectando…</>
                 ) : (
@@ -170,7 +244,47 @@ export default function WhatsappSessionMonitor() {
               </Button>
             </div>
           ))}
+
+          {zombieSessions.map((s) => (
+            <div
+              key={`z-${s.id}`}
+              className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/5 p-3 shadow-sm"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 truncate font-semibold">
+                  <Ghost className="h-4 w-4 text-amber-600" />
+                  {s.session_name}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Aparece como <span className="font-mono">WORKING</span>, mas
+                  {" "}<strong className="text-amber-700 dark:text-amber-400">{s.pending} de {s.total}</strong>
+                  {" "}mensagens dos últimos {ZOMBIE_WINDOW_MIN}min estão em PENDING.
+                  {s.phone_number ? ` · ${s.phone_number}` : ""}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => restartZombie(s)}
+                disabled={restarting === s.id}
+              >
+                {restarting === s.id ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reiniciando…</>
+                ) : (
+                  <><RefreshCw className="mr-2 h-4 w-4" /> Reiniciar instância</>
+                )}
+              </Button>
+            </div>
+          ))}
         </div>
+
+        {zombieSessions.length > 0 && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Como resolver:</strong>{" "}
+            confirme que o celular pareado está com internet e WhatsApp aberto.
+            Se persistir, reinicie a instância acima e, caso peça, escaneie o QR novamente.
+          </div>
+        )}
 
         <AlertDialogFooter>
           <AlertDialogCancel>Lembrar depois</AlertDialogCancel>
