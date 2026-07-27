@@ -616,47 +616,43 @@ async function executeBroadcast(
         const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
         console.log("[broadcast] enviando resumo p/", telefone, "origem:", origemResumo);
         try {
-          const { data: r1, error: e1 } = await supabase.functions.invoke("send-agent-message", {
-            body: {
-              estabelecimento_id: estabelecimentoId, telefone,
-              text: mediaUrlPre ? undefined : parte1,
-              caption: mediaUrlPre ? parte1 : undefined,
-              fileUrl: mediaUrlPre || undefined,
-              contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
-              whatsappSessionId: cfg.whatsappSessionId || null,
-              whatsappSessionName: cfg.whatsappSessionName || null,
-              botFlowId: botFlowId || null,
-              origem: origemResumo,
-            },
+          const r1 = await invokeSend({
+            estabelecimento_id: estabelecimentoId, telefone,
+            text: mediaUrlPre ? undefined : parte1,
+            caption: mediaUrlPre ? parte1 : undefined,
+            fileUrl: mediaUrlPre || undefined,
+            contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
+            whatsappSessionId: cfg.whatsappSessionId || null,
+            whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
+            origem: origemResumo,
           });
-          if (e1 || (r1 as any)?.success === false) {
-            console.warn("[broadcast] falha parte1 resumo:", telefone, e1?.message || (r1 as any)?.error);
+          if (!r1.ok) {
+            console.warn("[broadcast] falha parte1 resumo:", telefone, r1.reason);
+            return;
           }
           if (depoisMask) {
-            const { data: rd, error: ed } = await supabase.functions.invoke("send-agent-message", {
-              body: {
-                estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
-                whatsappSessionId: cfg.whatsappSessionId || null,
-                whatsappSessionName: cfg.whatsappSessionName || null,
-                botFlowId: botFlowId || null,
-                origem: `${origemResumo}_depois`,
-              },
-            });
-            if (ed || (rd as any)?.success === false) {
-              console.warn("[broadcast] falha depois resumo:", telefone, ed?.message || (rd as any)?.error);
-            }
-          }
-          const { data: rs, error: es } = await supabase.functions.invoke("send-agent-message", {
-            body: {
-              estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
+            const rd = await invokeSend({
+              estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
               whatsappSessionId: cfg.whatsappSessionId || null,
               whatsappSessionName: cfg.whatsappSessionName || null,
               botFlowId: botFlowId || null,
-              origem: `${origemResumo}_stats`,
-            },
+              origem: `${origemResumo}_depois`,
+            });
+            if (!rd.ok) {
+              console.warn("[broadcast] falha depois resumo:", telefone, rd.reason);
+              return;
+            }
+          }
+          const rs = await invokeSend({
+            estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
+            whatsappSessionId: cfg.whatsappSessionId || null,
+            whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
+            origem: `${origemResumo}_stats`,
           });
-          if (es || (rs as any)?.success === false) {
-            console.warn("[broadcast] falha stats resumo:", telefone, es?.message || (rs as any)?.error);
+          if (!rs.ok) {
+            console.warn("[broadcast] falha stats resumo:", telefone, rs.reason);
           }
         } catch (err) {
           console.warn("[executar-bot-flow] falha ao enviar resumo p/", telefone, ":", err);
