@@ -193,9 +193,44 @@ function parseEvolutionAck(payload: any): { messageId?: string; status?: string;
   };
 }
 
+// Baileys ack: 0=erro, 1=pendente no servidor, 2=entregue ao dispositivo, 3=lido, 4=reproduzido
+function mapAckNumberToStatus(ack: any): string | null {
+  const n = typeof ack === "number" ? ack : Number(ack);
+  if (!Number.isFinite(n)) return null;
+  if (n <= 0) return "ERROR";
+  if (n === 1) return "SERVER_ACK";
+  if (n === 2) return "DELIVERY_ACK";
+  if (n === 3) return "READ";
+  if (n >= 4) return "PLAYED";
+  return null;
+}
+
+function extractRecordStatus(record: any, fallback?: string): string {
+  if (!record) return String(fallback || "PENDING").toUpperCase();
+  const ackStatus =
+    mapAckNumberToStatus(record?.ack) ??
+    mapAckNumberToStatus(record?.message?.ack) ??
+    mapAckNumberToStatus(record?.messageStatus);
+  if (ackStatus) return ackStatus;
+  const raw = record?.status || record?.message?.status || record?.messageStatus;
+  if (raw) {
+    const upper = String(raw).toUpperCase();
+    // status textuais que o Evolution v2 pode retornar
+    if (upper === "DELIVERY_ACK" || upper === "READ" || upper === "PLAYED" || upper === "SERVER_ACK" || upper === "DELIVERED") return upper;
+    if (upper === "ERROR" || upper === "FAILED" || upper === "FAILURE") return upper;
+    return upper;
+  }
+  return String(fallback || "PENDING").toUpperCase();
+}
+
 function isPendingStatus(status?: string) {
   const value = String(status || "").toUpperCase();
-  return !value || value === "PENDING" || value === "SERVER_ACK_PENDING" || value === "ERROR";
+  return !value || value === "PENDING" || value === "SERVER_ACK_PENDING";
+}
+
+function isDeliveredStatus(status?: string) {
+  const value = String(status || "").toUpperCase();
+  return value === "SERVER_ACK" || value === "DELIVERY_ACK" || value === "READ" || value === "PLAYED" || value === "DELIVERED";
 }
 
 function isFinalErrorStatus(status?: string) {
@@ -223,7 +258,7 @@ async function pollMessageStatus(base: string, headers: Record<string, string>, 
   let found = false;
   let lastRecord: any = null;
 
-  for (const wait of [2_000, 4_000, 6_000]) {
+  for (const wait of [2_000, 3_000, 4_000, 5_000, 6_000]) {
     await sleep(wait);
     const { resp, data } = await evoFetch(`${base}/chat/findMessages/${encodeURIComponent(instance)}`, {
       method: "POST",
@@ -243,8 +278,8 @@ async function pollMessageStatus(base: string, headers: Record<string, string>, 
     if (match) {
       found = true;
       lastRecord = match;
-      lastStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
-      if (!isPendingStatus(lastStatus) || isFinalErrorStatus(lastStatus)) break;
+      lastStatus = extractRecordStatus(match, ack.status);
+      if (isDeliveredStatus(lastStatus) || isFinalErrorStatus(lastStatus)) break;
     }
   }
 
