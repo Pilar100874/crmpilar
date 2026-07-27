@@ -464,6 +464,17 @@ async function executeBroadcast(
   const detalhes: any[] = [];
   type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
   const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string }; itens: ResumoItem[] }>();
+  const invokeSend = async (body: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke("send-agent-message", { body });
+    const ok = !error && (data as any)?.success !== false;
+    return {
+      ok,
+      data,
+      error,
+      invalid: !!(data as any)?.invalid_number,
+      reason: error?.message || (data as any)?.reason || (data as any)?.error || null,
+    };
+  };
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   for (const d of destinatarios) {
