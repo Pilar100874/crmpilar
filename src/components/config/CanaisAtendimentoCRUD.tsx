@@ -329,10 +329,18 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   
   const [evolutionUrl, setEvolutionUrl] = useState("");
   const [evolutionApiKey, setEvolutionApiKey] = useState("");
+  const [evolutionMode, setEvolutionMode] = useState<"producao" | "sandbox">("producao");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [managerUrl, setManagerUrl] = useState("");
   const [managerUser, setManagerUser] = useState("");
   const [managerPassword, setManagerPassword] = useState("");
+  const [showEvolutionKey, setShowEvolutionKey] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<
+    | { ok: true; latency: number; instances: number | null }
+    | { ok: false; error: string }
+    | null
+  >(null);
   const [newSessionName, setNewSessionName] = useState("");
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
