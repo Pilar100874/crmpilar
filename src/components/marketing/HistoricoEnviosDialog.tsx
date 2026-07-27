@@ -181,6 +181,21 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                         </div>
                       </div>
 
+                      {/* Resumo por status */}
+                      {log.recipients?.length > 0 && (() => {
+                        const c = { ack: 0, enviado: 0, pendente: 0, invalido: 0, falha: 0, outro: 0 };
+                        for (const r of log.recipients) c[normalizeStatus(r)]++;
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {c.ack > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">{c.ack} entregue{c.ack > 1 ? "s" : ""} (ACK)</span>}
+                            {c.enviado > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{c.enviado} enviado{c.enviado > 1 ? "s" : ""}</span>}
+                            {c.pendente > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30">{c.pendente} PENDING</span>}
+                            {c.invalido > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30">{c.invalido} inválido{c.invalido > 1 ? "s" : ""}</span>}
+                            {c.falha > 0 && <span className="text-[10px] rounded-full border px-2 py-0.5 bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">{c.falha} falha{c.falha > 1 ? "s" : ""}</span>}
+                          </div>
+                        );
+                      })()}
+
                       {/* Prévia + botão para ver detalhes */}
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="text-xs text-muted-foreground flex items-center gap-3">
@@ -199,7 +214,7 @@ export default function HistoricoEnviosDialog({ open, onOpenChange, automationId
                             className="h-7 px-2 text-xs"
                           >
                             <Eye className="w-3.5 h-3.5 mr-1" />
-                            Ver o que foi enviado
+                            Linha do tempo
                           </Button>
                           <Button
                             size="sm"
