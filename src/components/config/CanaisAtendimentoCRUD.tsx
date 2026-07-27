@@ -58,6 +58,7 @@ interface EvolutionDiagnosticStep {
 
 interface EvolutionDiagnosticReport {
   ok: boolean;
+  likely?: boolean;
   conclusion: string;
   providerStatus?: string | null;
   messageId?: string | null;
@@ -889,7 +890,11 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
       const report = data as EvolutionDiagnosticReport;
       setDiagnosticReport(report);
       toast({
-        title: report.ok ? "Diagnóstico concluído" : "Diagnóstico encontrou bloqueio",
+        title: report.likely
+          ? "Diagnóstico concluído (aguardando ACK)"
+          : report.ok
+          ? "Diagnóstico concluído"
+          : "Diagnóstico encontrou bloqueio",
         description: report.conclusion || "Verifique as etapas do painel.",
         variant: report.ok ? "default" : "destructive",
       });

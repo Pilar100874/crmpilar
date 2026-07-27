@@ -449,7 +449,8 @@ async function runDiagnostic(params: {
     : "Lovable chegou ao Evolution, mas o Evolution finalizou o envio com erro. Verifique sessão, bloqueio do WhatsApp, LID/JID e logs do Evolution.";
 
   return {
-    ok: delivered,
+    ok: delivered || pending,
+    likely: !delivered && pending,
     conclusion,
     providerStatus,
     messageId,
