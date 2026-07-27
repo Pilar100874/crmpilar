@@ -170,12 +170,12 @@ Deno.serve(async (req) => {
         numero = defNum;
 
         if (!numero) {
-          const { data: wahaConfig } = await supabase
+          const { data: evolutionConfig } = await supabase
             .from('whatsapp_config')
-            .select('waha_url, waha_api_key, session_name')
+            .select('evolution_url, evolution_api_key, session_name')
             .eq('estabelecimento_id', conversation.estabelecimento_id)
             .maybeSingle();
-          if (wahaConfig?.waha_url && wahaConfig?.waha_api_key) {
+          if (evolutionConfig?.evolution_url && evolutionConfig?.evolution_api_key) {
             const { data: session } = await supabase
               .from('whatsapp_sessions')
               .select('session_name')
@@ -184,9 +184,9 @@ Deno.serve(async (req) => {
               .maybeSingle();
             numero = {
               provider: 'evolution',
-              waha_url: wahaConfig.waha_url,
-              waha_api_key: wahaConfig.waha_api_key,
-              session_name: session?.session_name || wahaConfig.session_name || 'default',
+              evolution_url: evolutionConfig.evolution_url,
+              evolution_api_key: evolutionConfig.evolution_api_key,
+              session_name: session?.session_name || evolutionConfig.session_name || 'default',
             };
           }
         }
@@ -203,11 +203,11 @@ Deno.serve(async (req) => {
           });
           if (!r.ok) throw new Error(`Erro Cloud API: ${await r.text().catch(() => '')}`);
         } else {
-          const evoUrl = String(numero.waha_url).replace(/\/+$/, '');
+          const evoUrl = String(numero.evolution_url).replace(/\/+$/, '');
           const instance = numero.session_name || 'default';
           const r = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': numero.waha_api_key },
+            headers: { 'Content-Type': 'application/json', 'apikey': numero.evolution_api_key },
             body: JSON.stringify({ number: phone, text: mensagem }),
           });
           if (!r.ok) throw new Error(`Erro Evolution: ${await r.text().catch(() => '')}`);

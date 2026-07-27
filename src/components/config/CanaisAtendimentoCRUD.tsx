@@ -327,8 +327,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const [bots, setBots] = useState<any[]>([]);
   const webhookSyncCacheRef = useRef<Record<string, boolean>>({});
   
-  const [wahaUrl, setWahaUrl] = useState("");
-  const [wahaApiKey, setWahaApiKey] = useState("");
+  const [evolutionUrl, setEvolutionUrl] = useState("");
+  const [evolutionApiKey, setEvolutionApiKey] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [managerUrl, setManagerUrl] = useState("");
   const [managerUser, setManagerUser] = useState("");
@@ -390,10 +390,10 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
       if (!error && configData) {
         const cfg = configData as any;
-        if (cfg.waha_url) {
+        if (cfg.evolution_url) {
           setConfig(cfg);
-          setWahaUrl(cfg.waha_url);
-          setWahaApiKey(cfg.waha_api_key || "");
+          setEvolutionUrl(cfg.evolution_url);
+          setEvolutionApiKey(cfg.evolution_api_key || "");
           setWebhookUrl(cfg.webhook_url || "");
           setManagerUrl(cfg.manager_url || "");
           setManagerUser(cfg.manager_user || "");
@@ -424,7 +424,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     return (customWebhookUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`).trim();
   };
 
-  const buildWahaHeaders = (apiKey?: string | null) => {
+  const buildEvolutionHeaders = (apiKey?: string | null) => {
     const headers: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -436,8 +436,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     return headers;
   };
 
-  const callWahaManager = async (body: Record<string, any>) => {
-    const { data, error } = await supabase.functions.invoke('waha-manager', { body });
+  const callEvolutionManager = async (body: Record<string, any>) => {
+    const { data, error } = await supabase.functions.invoke('evolution-manager', { body });
     if (error) throw new Error(error.message || 'Erro ao comunicar com o gerenciador Evolution');
     if ((data as any)?.error) throw new Error((data as any).error);
     return data as any;
@@ -486,7 +486,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   const syncSessionStatus = async (sessionsToSync: any[]) => {
     for (const session of sessionsToSync) {
       try {
-        await callWahaManager({
+        await callEvolutionManager({
           action: 'status',
           estabelecimentoId,
           sessionId: session.id,
@@ -509,7 +509,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
   };
 
   const saveConfig = async () => {
-    if (!wahaUrl) {
+    if (!evolutionUrl) {
       toast({
         title: "Erro",
         description: "URL do Servidor Evolution é obrigatória",
@@ -530,8 +530,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
         const { error } = await supabase
           .from("whatsapp_config")
           .update({
-            waha_url: wahaUrl,
-            waha_api_key: wahaApiKey || null,
+            evolution_url: evolutionUrl,
+            evolution_api_key: evolutionApiKey || null,
             webhook_url: webhookUrl || null,
             manager_url: managerUrl || null,
             manager_user: managerUser || null,
@@ -545,8 +545,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
           .from("whatsapp_config")
           .insert({
             estabelecimento_id: estabelecimentoId,
-            waha_url: wahaUrl,
-            waha_api_key: wahaApiKey || null,
+            evolution_url: evolutionUrl,
+            evolution_api_key: evolutionApiKey || null,
             webhook_url: webhookUrl || null,
             manager_url: managerUrl || null,
             manager_user: managerUser || null,
@@ -629,7 +629,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
   const startSession = async (sessionId: string, sessionName: string) => {
     try {
-      const result = await callWahaManager({
+      const result = await callEvolutionManager({
         action: 'start',
         estabelecimentoId,
         sessionId,
@@ -659,7 +659,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
-      await callWahaManager({
+      await callEvolutionManager({
         action: 'qr',
         estabelecimentoId,
         sessionId,
@@ -709,10 +709,10 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
       if (!session) return;
 
       const headers: Record<string, string> = {
-        ...buildWahaHeaders(config?.waha_api_key),
+        ...buildEvolutionHeaders(config?.evolution_api_key),
       };
 
-      const base = config?.waha_url?.replace(/\/+$/, '') || '';
+      const base = config?.evolution_url?.replace(/\/+$/, '') || '';
 
       const stopUrls = [
         `${base}/api/sessions/${session.session_name}/stop`,
@@ -813,22 +813,22 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="waha-url">URL do Servidor Evolution</Label>
+                <Label htmlFor="evolution-url">URL do Servidor Evolution</Label>
                 <Input
-                  id="waha-url"
+                  id="evolution-url"
                   placeholder="https://evolution.exemplo.com"
-                  value={wahaUrl}
-                  onChange={(e) => setWahaUrl(e.target.value)}
+                  value={evolutionUrl}
+                  onChange={(e) => setEvolutionUrl(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="waha-key">apikey (obrigatória)</Label>
+                <Label htmlFor="evolution-key">apikey (obrigatória)</Label>
                 <Input
-                  id="waha-key"
+                  id="evolution-key"
                   type="password"
                   placeholder="Sua apikey global do Evolution"
-                  value={wahaApiKey}
-                  onChange={(e) => setWahaApiKey(e.target.value)}
+                  value={evolutionApiKey}
+                  onChange={(e) => setEvolutionApiKey(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -2144,7 +2144,7 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId: propEstabId }: Canais
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="whatsapp-waha">
+            <AccordionItem value="whatsapp-evolution">
               <AccordionTrigger className="text-lg font-semibold">
                 <div className="flex items-center gap-2">
                   <Radio className="w-5 h-5 text-blue-600" />

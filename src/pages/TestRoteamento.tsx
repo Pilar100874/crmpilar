@@ -100,7 +100,7 @@ export default function TestRoteamento() {
     // Se não tem canais definidos, mostrar para todos
     if (!bot.canais || bot.canais.length === 0) return true;
     
-    // Para WhatsApp, verificar o tipo (business ou waha)
+    // Para WhatsApp, verificar o tipo (business ou evolution)
     if (selectedCanal === "whatsapp") {
       return bot.canais.includes("whatsapp");
     }
@@ -385,7 +385,7 @@ export default function TestRoteamento() {
                               Business: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business" && b.active).length} ativos)
                             </span>
                             <span>
-                              Evolution: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha" && b.active).length} ativos)
+                              Evolution: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "evolution").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "evolution" && b.active).length} ativos)
                             </span>
                           </div>
                         </div>

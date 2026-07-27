@@ -98,7 +98,7 @@ export default function WhatsappSessionMonitor() {
         const results = await Promise.all(
           working.map(async (s) => {
             try {
-              const { data: resp } = await supabase.functions.invoke("waha-manager", {
+              const { data: resp } = await supabase.functions.invoke("evolution-manager", {
                 body: {
                   action: "pending_count",
                   estabelecimentoId,
@@ -133,7 +133,7 @@ export default function WhatsappSessionMonitor() {
   const reconnect = async (s: SessionRow) => {
     try {
       setReconnecting(s.id);
-      const { data, error } = await supabase.functions.invoke("waha-manager", {
+      const { data, error } = await supabase.functions.invoke("evolution-manager", {
         body: {
           action: "start",
           estabelecimentoId,
@@ -162,7 +162,7 @@ export default function WhatsappSessionMonitor() {
     try {
       setRestarting(s.id);
       // Força reconexão da instância (mesmo endpoint start faz connect/QR quando preciso).
-      const { data, error } = await supabase.functions.invoke("waha-manager", {
+      const { data, error } = await supabase.functions.invoke("evolution-manager", {
         body: {
           action: "start",
           estabelecimentoId,

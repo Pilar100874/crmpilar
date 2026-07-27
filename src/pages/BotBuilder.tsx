@@ -109,7 +109,7 @@ function BotBuilderContent() {
   const [currentBotName, setCurrentBotName] = useState("Novo Bot");
   const [currentBotDescription, setCurrentBotDescription] = useState("");
   const [currentBotCanais, setCurrentBotCanais] = useState<string[]>(["whatsapp"]);
-  const [currentBotWhatsAppType, setCurrentBotWhatsAppType] = useState<string>("waha");
+  const [currentBotWhatsAppType, setCurrentBotWhatsAppType] = useState<string>("evolution");
   const [currentBotWhatsAppNumeroId, setCurrentBotWhatsAppNumeroId] = useState<string | null>(null);
   const [currentBotForwardToNumeroId, setCurrentBotForwardToNumeroId] = useState<string | null>(null);
   const [savedBots, setSavedBots] = useState<any[]>([]);
@@ -1235,7 +1235,7 @@ function BotBuilderContent() {
       setCurrentBotName(data.name);
       setCurrentBotDescription(data.description || "");
       setCurrentBotCanais(data.canais || ["whatsapp"]);
-      setCurrentBotWhatsAppType(data.whatsapp_type || "waha");
+      setCurrentBotWhatsAppType(data.whatsapp_type || "evolution");
       setCurrentBotWhatsAppNumeroId((data as any).whatsapp_numero_id || null);
       setCurrentBotForwardToNumeroId((data as any).forward_to_numero_id || null);
       setSelectedNode(null);

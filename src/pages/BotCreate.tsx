@@ -47,7 +47,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
   const [selectedCanal, setSelectedCanal] = useState<string>("whatsapp");
-  const [selectedWhatsAppType, setSelectedWhatsAppType] = useState<string>("waha");
+  const [selectedWhatsAppType, setSelectedWhatsAppType] = useState<string>("evolution");
   const [isCreating, setIsCreating] = useState(false);
   
   // Dialogs para duplicar e renomear
@@ -57,7 +57,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [duplicateName, setDuplicateName] = useState("");
   const [duplicateDescription, setDuplicateDescription] = useState("");
   const [duplicateCanal, setDuplicateCanal] = useState<string>("whatsapp");
-  const [duplicateWhatsAppType, setDuplicateWhatsAppType] = useState<string>("waha");
+  const [duplicateWhatsAppType, setDuplicateWhatsAppType] = useState<string>("evolution");
   const [renameName, setRenameName] = useState("");
   const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
@@ -188,7 +188,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         // Configurar webhook/status na Evolution pelo backend seguro
         if (session) {
           try {
-            const { data, error } = await supabase.functions.invoke('waha-manager', {
+            const { data, error } = await supabase.functions.invoke('evolution-manager', {
               body: {
                 action: 'status',
                 estabelecimentoId,
@@ -407,7 +407,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       setNewBotName("");
       setNewBotDescription("");
       setSelectedCanal("whatsapp");
-      setSelectedWhatsAppType("waha");
+      setSelectedWhatsAppType("evolution");
       setSelectedNumeroId("");
     } catch (error) {
       console.error("Error creating bot:", error);
@@ -475,7 +475,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       setDuplicateName("");
       setDuplicateDescription("");
       setDuplicateCanal("whatsapp");
-      setDuplicateWhatsAppType("waha");
+      setDuplicateWhatsAppType("evolution");
       setSelectedBot(null);
       closeOverlays();
       // Garantir que pointer-events do body seja restaurado (workaround Radix Dialog + Select)
@@ -652,7 +652,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                           setDuplicateName(`${bot.name} (cópia)`);
                           setDuplicateDescription(bot.description || "");
                           setDuplicateCanal(bot.canais?.[0] || "whatsapp");
-                          setDuplicateWhatsAppType(bot.whatsapp_type || "waha");
+                          setDuplicateWhatsAppType(bot.whatsapp_type || "evolution");
                           setDuplicateDialogOpen(true);
                         }}
                         onToggleActive={() => handleToggleActive(bot.id, bot.active)}
@@ -799,7 +799,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waha">WhatsApp Evolution</SelectItem>
+                    <SelectItem value="evolution">WhatsApp Evolution</SelectItem>
                     <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -869,7 +869,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
             setDuplicateName("");
             setDuplicateDescription("");
             setDuplicateCanal("whatsapp");
-            setDuplicateWhatsAppType("waha");
+            setDuplicateWhatsAppType("evolution");
             setSelectedBot(null);
           }
         }}
@@ -938,7 +938,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waha">WhatsApp Evolution</SelectItem>
+                    <SelectItem value="evolution">WhatsApp Evolution</SelectItem>
                     <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -956,7 +956,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                 setDuplicateName("");
                 setDuplicateDescription("");
                 setDuplicateCanal("whatsapp");
-                setDuplicateWhatsAppType("waha");
+                setDuplicateWhatsAppType("evolution");
                 setDuplicateDialogOpen(false);
                 setSelectedBot(null);
               }}

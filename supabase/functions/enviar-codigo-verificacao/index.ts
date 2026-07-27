@@ -43,11 +43,11 @@ serve(async (req) => {
         .select("*")
         .limit(1)
         .maybeSingle();
-      if (whatsappConfig?.waha_url) {
+      if (whatsappConfig?.evolution_url) {
         numero = {
           provider: "evolution",
-          waha_url: whatsappConfig.waha_url,
-          waha_api_key: whatsappConfig.waha_api_key,
+          evolution_url: whatsappConfig.evolution_url,
+          evolution_api_key: whatsappConfig.evolution_api_key,
           session_name: whatsappConfig.session_name || "default",
         };
       }
@@ -76,9 +76,9 @@ serve(async (req) => {
       messageId = j?.messages?.[0]?.id;
       if (!ok) console.error("[CLOUD] Erro:", j);
     } else {
-      const evoUrl = (numero.waha_url || "").replace(/\/+$/, "");
+      const evoUrl = (numero.evolution_url || "").replace(/\/+$/, "");
       const instance = numero.session_name || "default";
-      const apiKey = numero.waha_api_key;
+      const apiKey = numero.evolution_api_key;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (apiKey) headers["apikey"] = apiKey;
       const r = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {

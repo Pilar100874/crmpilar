@@ -33,7 +33,7 @@ async function enviarWhatsapp(sb: any, telefone: string, mensagem: string) {
   let numero: any = def;
   if (!numero) {
     const { data: cfg } = await sb.from("whatsapp_config").select("*").limit(1).maybeSingle();
-    if (cfg?.waha_url) numero = { provider: "evolution", waha_url: cfg.waha_url, waha_api_key: cfg.waha_api_key, session_name: cfg.session_name || "default" };
+    if (cfg?.evolution_url) numero = { provider: "evolution", evolution_url: cfg.evolution_url, evolution_api_key: cfg.evolution_api_key, session_name: cfg.session_name || "default" };
   }
   if (!numero) throw new Error("Nenhum WhatsApp configurado");
   const phone = telefone.replace(/\D/g, "");
@@ -45,10 +45,10 @@ async function enviarWhatsapp(sb: any, telefone: string, mensagem: string) {
     });
     if (!r.ok) throw new Error(`WA ${r.status}`);
   } else {
-    const url = (numero.waha_url || "").replace(/\/+$/, "");
+    const url = (numero.evolution_url || "").replace(/\/+$/, "");
     const inst = numero.session_name || "default";
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (numero.waha_api_key) headers["apikey"] = numero.waha_api_key;
+    if (numero.evolution_api_key) headers["apikey"] = numero.evolution_api_key;
     const r = await fetch(`${url}/message/sendText/${encodeURIComponent(inst)}`, { method: "POST", headers, body: JSON.stringify({ number: phone, text: mensagem }) });
     if (!r.ok) throw new Error(`WA ${r.status}`);
   }
