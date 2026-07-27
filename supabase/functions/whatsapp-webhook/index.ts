@@ -483,7 +483,7 @@ serve(async (req) => {
       mediaUrl = optimizedMediaUrl;
       if (activeProvider === "evolution") {
         if (interactive?.type === "list") {
-          const ok = await sendWahaListMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
+          const ok = await sendEvolutionListMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           if (!ok) {
             console.log("[FLOW] sendList falhou, usando fallback texto numerado");
             const allRows = (interactive.sections || [])
@@ -492,22 +492,22 @@ serve(async (req) => {
             allRows.forEach((row: any, index: number) => {
               fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
             });
-            await sendWahaTextMessage(from, fallback, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
+            await sendEvolutionTextMessage(from, fallback, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           }
           return;
         }
         if (interactive?.type === "buttons") {
-          await sendWahaButtonsMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
+          await sendEvolutionButtonsMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           return;
         }
         if (interactive?.type === "carousel") {
-          await sendWahaCarouselMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
+          await sendEvolutionCarouselMessage(from, interactive, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
           return;
         }
         if (mediaUrl && mediaType) {
-          await sendWahaMediaMessage(from, text, mediaType, mediaUrl, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
+          await sendEvolutionMediaMessage(from, text, mediaType, mediaUrl, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
         } else if (text) {
-          await sendWahaTextMessage(from, text, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
+          await sendEvolutionTextMessage(from, text, evolutionSession, EVOLUTION_URL, EVOLUTION_API_KEY);
         }
       } else {
         // Cloud API (Meta oficial)
@@ -593,7 +593,7 @@ serve(async (req) => {
               forwardText,
             );
           } else {
-            await sendWahaTextMessage(
+            await sendEvolutionTextMessage(
               from,
               forwardText,
               targetNumero.session_name || evolutionSession,
@@ -2366,7 +2366,7 @@ function normalizeUrl(raw: string, kind: SocialKind): string {
   }
 }
 
-async function sendWahaTextMessage(
+async function sendEvolutionTextMessage(
   toNumberOnly: string,
   text: string,
   sessionName: string,
@@ -2405,7 +2405,7 @@ async function sendWahaTextMessage(
   }
 }
 
-async function sendWahaListMessage(
+async function sendEvolutionListMessage(
   toNumberOnly: string,
   interactive: any,
   sessionName: string,
@@ -2477,7 +2477,7 @@ async function sendWahaListMessage(
   }
 }
 
-async function sendWahaPollMessage(
+async function sendEvolutionPollMessage(
   toNumberOnly: string,
   poll: { name: string; values: string[]; selectableCount?: number },
   sessionName: string,
@@ -2512,7 +2512,7 @@ async function sendWahaPollMessage(
   }
 }
 
-async function sendWahaButtonsMessage(
+async function sendEvolutionButtonsMessage(
   toNumberOnly: string,
   interactive: any,
   sessionName: string,
@@ -2584,19 +2584,19 @@ async function sendWahaButtonsMessage(
         else if (b.type === "pix") extra = ` (Pix ${b.keyType}: ${b.key})`;
         fallback += `\n${i + 1}. ${b.displayText}${extra}`;
       });
-      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey);
+      await sendEvolutionTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendButtons:", err);
     if (allowTextFallback) {
       let fallback = `${body.description}\n`;
       buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
-      try { await sendWahaTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey); } catch {}
+      try { await sendEvolutionTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey); } catch {}
     }
   }
 }
 
-async function sendWahaCarouselMessage(
+async function sendEvolutionCarouselMessage(
   toNumberOnly: string,
   interactive: any,
   sessionName: string,
@@ -2653,7 +2653,7 @@ async function sendWahaCarouselMessage(
       cards.forEach((c: any, i: number) => {
         fallback += `\n${i + 1}. ${c.body}${c.footer ? " — " + c.footer : ""}`;
       });
-      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey);
+      await sendEvolutionTextMessage(toNumberOnly, fallback, sessionName, evolutionUrl, evolutionApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendCarousel:", err);
@@ -2661,7 +2661,7 @@ async function sendWahaCarouselMessage(
 }
 
 
-async function sendWahaMediaMessage(
+async function sendEvolutionMediaMessage(
   toNumberOnly: string,
   caption: string | undefined,
   mediaType: string,
@@ -2763,7 +2763,7 @@ async function sendWahaMediaMessage(
     evoType === "video" ? "vídeo" :
     evoType === "audio" ? "áudio" : "arquivo";
   console.error("[EVOLUTION] ❌ Falha ao enviar mídia. Enviando link como fallback.");
-  await sendWahaTextMessage(
+  await sendEvolutionTextMessage(
     toNumberOnly,
     `${caption ? `${caption}\n` : ""}Link do ${fallbackLabel}: ${mediaUrl}`,
     sessionName,
@@ -3129,7 +3129,7 @@ async function executeNode(
       }
       let fallbackTxt = bodyText + "";
       buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text || b.title}`; });
-      // Envia como reply buttons (quick reply) — sendWahaButtonsMessage já faz fallback de texto se a entrega falhar.
+      // Envia como reply buttons (quick reply) — sendEvolutionButtonsMessage já faz fallback de texto se a entrega falhar.
       await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
@@ -4142,18 +4142,18 @@ async function executeNode(
         } else {
           try {
             const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-            const { data: wahaCfg } = await supabase
+            const { data: evolutionCfg } = await supabase
               .from("whatsapp_config")
               .select("evolution_url, evolution_api_key, session_name")
               .limit(1)
               .maybeSingle();
-            const sessionName = wahaCfg?.session_name || context.vars.session || "default";
-            const evolutionUrl = wahaCfg?.evolution_url || env("EVOLUTION_URL") || env("EVOLUTION_URL");
-            const wahaKey = wahaCfg?.evolution_api_key || env("EVOLUTION_API_KEY") || env("EVOLUTION_API_KEY");
+            const sessionName = evolutionCfg?.session_name || context.vars.session || "default";
+            const evolutionUrl = evolutionCfg?.evolution_url || env("EVOLUTION_URL") || env("EVOLUTION_URL");
+            const evolutionKey = evolutionCfg?.evolution_api_key || env("EVOLUTION_API_KEY") || env("EVOLUTION_API_KEY");
             if (mediaUrl) {
-              await sendWahaMediaMessage(phone, msg, "image", mediaUrl, sessionName, evolutionUrl, wahaKey);
+              await sendEvolutionMediaMessage(phone, msg, "image", mediaUrl, sessionName, evolutionUrl, evolutionKey);
             } else if (msg) {
-              await sendWahaTextMessage(phone, msg, sessionName, evolutionUrl, wahaKey);
+              await sendEvolutionTextMessage(phone, msg, sessionName, evolutionUrl, evolutionKey);
             }
             context.vars[outVar] = "enviado";
           } catch (e) {
