@@ -4049,10 +4049,10 @@ async function executeNode(
           : undefined;
 
         let sent = false;
-        if (name && activeProvider === "cloud_api" && cloudPhoneNumberId && cloudAccessToken) {
+        if (false) {
           sent = await sendCloudTemplate(
-            cloudPhoneNumberId,
-            cloudAccessToken,
+            "",
+            "",
             context.vars.from || "",
             name,
             lang,
