@@ -172,6 +172,248 @@ async function connectInstance(base: string, headers: Record<string, string>, in
   return null;
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function extractMessages(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.messages?.records)) return data.messages.records;
+  if (Array.isArray(data?.records)) return data.records;
+  if (Array.isArray(data?.messages)) return data.messages;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+function parseEvolutionAck(payload: any): { messageId?: string; status?: string; raw?: any } {
+  const messageId = payload?.key?.id || payload?.id || payload?.messageId || payload?.message?.key?.id || payload?.data?.key?.id;
+  const status = payload?.status || payload?.message?.status || payload?.data?.status;
+  return {
+    messageId: messageId ? String(messageId) : undefined,
+    status: status ? String(status).toUpperCase() : undefined,
+    raw: payload,
+  };
+}
+
+function isPendingStatus(status?: string) {
+  const value = String(status || "").toUpperCase();
+  return !value || value === "PENDING" || value === "SERVER_ACK_PENDING" || value === "ERROR";
+}
+
+function isFinalErrorStatus(status?: string) {
+  const value = String(status || "").toUpperCase();
+  return value === "ERROR" || value === "FAILED" || value === "FAILURE";
+}
+
+function buildNumberVariants(phone: string): string[] {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return [];
+  return Array.from(new Set([digits, `${digits}@s.whatsapp.net`]));
+}
+
+type DiagnosticStep = {
+  id: string;
+  title: string;
+  status: "ok" | "warning" | "error" | "info";
+  message: string;
+  latency?: number;
+  details?: unknown;
+};
+
+async function pollMessageStatus(base: string, headers: Record<string, string>, instance: string, ack: { messageId?: string; status?: string }) {
+  let lastStatus = String(ack.status || "PENDING").toUpperCase();
+  let found = false;
+  let lastRecord: any = null;
+
+  for (const wait of [2_000, 4_000, 6_000]) {
+    await sleep(wait);
+    const { resp, data } = await evoFetch(`${base}/chat/findMessages/${encodeURIComponent(instance)}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(ack.messageId ? { where: { key: { id: ack.messageId } } } : { where: { key: { fromMe: true } } }),
+    });
+
+    if (!resp.ok) {
+      lastStatus = `HTTP_${resp.status}`;
+      continue;
+    }
+
+    const records = extractMessages(data);
+    const match = ack.messageId
+      ? records.find((m) => String(m?.key?.id || m?.id || m?.messageId || "") === ack.messageId)
+      : records[0];
+    if (match) {
+      found = true;
+      lastRecord = match;
+      lastStatus = String(match?.status || ack.status || "PENDING").toUpperCase();
+      if (!isPendingStatus(lastStatus) || isFinalErrorStatus(lastStatus)) break;
+    }
+  }
+
+  return { found, status: lastStatus, record: lastRecord };
+}
+
+async function runDiagnostic(params: {
+  base: string;
+  headers: Record<string, string>;
+  instance: string;
+  phone: string;
+  message: string;
+  webhookUrl: string;
+}) {
+  const steps: DiagnosticStep[] = [];
+  const startedAt = new Date().toISOString();
+
+  const addStep = (step: DiagnosticStep) => steps.push(step);
+
+  try {
+    const started = Date.now();
+    const { resp, data } = await evoFetch(`${params.base}/instance/fetchInstances`, {
+      method: "GET",
+      headers: params.headers,
+    });
+    addStep({
+      id: "server",
+      title: "Servidor Evolution",
+      status: resp.ok ? "ok" : "error",
+      message: resp.ok
+        ? `Servidor acessível em ${Date.now() - started}ms.`
+        : `Servidor respondeu HTTP ${resp.status}.`,
+      latency: Date.now() - started,
+      details: resp.ok ? undefined : data,
+    });
+    if (!resp.ok) {
+      return { ok: false, conclusion: "Falha antes do envio: URL, apikey, firewall ou servidor Evolution.", startedAt, finishedAt: new Date().toISOString(), steps };
+    }
+  } catch (e: any) {
+    addStep({ id: "server", title: "Servidor Evolution", status: "error", message: e?.message || "Falha de conexão." });
+    return { ok: false, conclusion: "O backend não conseguiu alcançar o servidor Evolution.", startedAt, finishedAt: new Date().toISOString(), steps };
+  }
+
+  const stateStarted = Date.now();
+  const state = await getInstanceState(params.base, params.headers, params.instance);
+  addStep({
+    id: "instance",
+    title: "Instância WhatsApp",
+    status: state.exists && state.status === "WORKING" ? "ok" : "error",
+    message: state.exists
+      ? `Status atual: ${state.status}${state.phoneNumber ? ` • número ${state.phoneNumber}` : ""}.`
+      : "Instância não encontrada no Evolution.",
+    latency: Date.now() - stateStarted,
+    details: state,
+  });
+  if (!state.exists || state.status !== "WORKING") {
+    return { ok: false, conclusion: "A instância não está conectada. O problema está antes do disparo da mensagem.", startedAt, finishedAt: new Date().toISOString(), steps };
+  }
+
+  const webhookStarted = Date.now();
+  const webhookOk = await setWebhook(params.base, params.headers, params.instance, params.webhookUrl);
+  addStep({
+    id: "webhook",
+    title: "Webhook de entrada",
+    status: webhookOk ? "ok" : "warning",
+    message: webhookOk
+      ? "Webhook configurado/confirmado na instância. Mensagens recebidas devem chegar ao sistema."
+      : "Não foi possível confirmar o webhook. O envio pode funcionar, mas respostas do cliente podem não chegar.",
+    latency: Date.now() - webhookStarted,
+    details: { webhookUrl: params.webhookUrl },
+  });
+
+  const variants = buildNumberVariants(params.phone);
+  if (!variants.length) {
+    addStep({ id: "phone", title: "Número de teste", status: "error", message: "Número inválido para teste." });
+    return { ok: false, conclusion: "Informe um WhatsApp válido com DDD e país.", startedAt, finishedAt: new Date().toISOString(), steps };
+  }
+
+  let delivered = false;
+  let pending = false;
+  let usedNumber: string | null = null;
+  let messageId: string | null = null;
+  let providerStatus: string | null = null;
+
+  for (const number of variants) {
+    const sendStarted = Date.now();
+    try {
+      const { resp, data } = await evoFetch(`${params.base}/message/sendText/${encodeURIComponent(params.instance)}`, {
+        method: "POST",
+        headers: params.headers,
+        body: JSON.stringify({ number, text: params.message, delay: 1200, linkPreview: false }),
+      });
+      const ack = parseEvolutionAck(data);
+      const sendStepId = `send-${number.includes("@") ? "jid" : "digits"}`;
+      if (!resp.ok && resp.status !== 201) {
+        addStep({
+          id: sendStepId,
+          title: number.includes("@") ? "Envio com JID" : "Envio com número",
+          status: "error",
+          message: `Evolution recusou o envio com HTTP ${resp.status}.`,
+          latency: Date.now() - sendStarted,
+          details: data,
+        });
+        continue;
+      }
+
+      usedNumber = number;
+      messageId = ack.messageId || null;
+      providerStatus = ack.status || "PENDING";
+      addStep({
+        id: sendStepId,
+        title: number.includes("@") ? "Envio com JID" : "Envio com número",
+        status: "ok",
+        message: `Evolution aceitou o envio${ack.messageId ? ` • ID ${ack.messageId}` : ""}${ack.status ? ` • ${ack.status}` : ""}.`,
+        latency: Date.now() - sendStarted,
+        details: { status: ack.status, messageId: ack.messageId },
+      });
+
+      const pollStarted = Date.now();
+      const delivery = await pollMessageStatus(params.base, params.headers, params.instance, ack);
+      providerStatus = delivery.status;
+      addStep({
+        id: `delivery-${number.includes("@") ? "jid" : "digits"}`,
+        title: "Confirmação no Evolution",
+        status: isFinalErrorStatus(delivery.status) ? "error" : isPendingStatus(delivery.status) ? "warning" : "ok",
+        message: delivery.found
+          ? `Registro encontrado com status ${delivery.status}.`
+          : `Mensagem aceita, mas não apareceu no histórico consultável. Último status: ${delivery.status}.`,
+        latency: Date.now() - pollStarted,
+        details: { status: delivery.status, found: delivery.found, messageId: ack.messageId },
+      });
+
+      if (!isPendingStatus(delivery.status)) {
+        delivered = true;
+        break;
+      }
+      if (!isFinalErrorStatus(delivery.status)) {
+        pending = true;
+        break;
+      }
+    } catch (e: any) {
+      addStep({
+        id: `send-${number.includes("@") ? "jid" : "digits"}`,
+        title: number.includes("@") ? "Envio com JID" : "Envio com número",
+        status: "error",
+        message: e?.message || "Erro ao chamar endpoint de envio.",
+        latency: Date.now() - sendStarted,
+      });
+    }
+  }
+
+  const conclusion = delivered
+    ? "Envio confirmado. Se não chegou no aparelho, verifique o WhatsApp do destinatário, bloqueios do contato ou atraso de rede."
+    : pending
+    ? "Lovable chegou ao Evolution e o Evolution aceitou a mensagem, mas ela ficou sem confirmação. O bloqueio está no Evolution/WhatsApp/Baileys/sessão vinculada."
+    : "Lovable chegou ao Evolution, mas o Evolution finalizou o envio com erro. Verifique sessão, bloqueio do WhatsApp, LID/JID e logs do Evolution.";
+
+  return {
+    ok: delivered,
+    conclusion,
+    providerStatus,
+    messageId,
+    usedNumber,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    steps,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -398,6 +640,23 @@ serve(async (req) => {
       } catch (e: any) {
         return json({ success: true, pending: 0, total: 0, supported: false, error: e?.message });
       }
+    }
+
+    if (action === "diagnose") {
+      const phone = String(body?.testPhone || body?.phone || "").replace(/\D/g, "");
+      if (!phone || phone.length < 10) {
+        return json({ ok: false, error: "Informe um WhatsApp de teste válido com DDD." }, 400);
+      }
+      const message = String(body?.testMessage || "").trim() || `Teste diagnóstico Pilar CRM ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
+      const report = await runDiagnostic({
+        base,
+        headers,
+        instance,
+        phone,
+        message,
+        webhookUrl: resolvedWebhookUrl,
+      });
+      return json({ success: true, ...report });
     }
 
     return json({ error: "Ação inválida." }, 400);
