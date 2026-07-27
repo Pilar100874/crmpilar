@@ -85,7 +85,7 @@ serve(async (req) => {
 
     const ctx: Record<string, any> = { ...(variaveis || {}), estabelecimento_id: estId };
 
-    let current = findStart(nodes);
+    let current: FlowNode | null = findStart(nodes) || null;
     if (!current) throw new Error("Nó de início não encontrado");
 
     let steps = 0;
