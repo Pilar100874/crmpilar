@@ -983,31 +983,8 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                   onChange={(e) => setManagerUrl(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Endereço do painel administrativo (Manager) do Evolution API.
+                  Endereço do painel administrativo (Manager) do Evolution API. O Manager autentica apenas com URL + apikey — não usa usuário/senha.
                 </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="manager-user">Usuário do Manager</Label>
-                  <Input
-                    id="manager-user"
-                    placeholder="admin"
-                    autoComplete="off"
-                    value={managerUser}
-                    onChange={(e) => setManagerUser(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="manager-password">Senha do Manager</Label>
-                  <Input
-                    id="manager-password"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    value={managerPassword}
-                    onChange={(e) => setManagerPassword(e.target.value)}
-                  />
-                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
