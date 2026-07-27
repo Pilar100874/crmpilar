@@ -456,6 +456,12 @@ async function executeBroadcast(
   };
   const destinatarios: Dest[] = [];
   const gerentesMap = new Map<string, { id: string; nome: string; whatsapp?: string }>();
+  const pushDestinatario = (dest: Dest) => {
+    if (!dest.phone || dest.phone.replace(/\D/g, "").length < 10) return;
+    const key = `${dest.kind}:${dest.id}:${dest.phone}`;
+    if (destinatarios.some((d) => `${d.kind}:${d.id}:${d.phone}` === key)) return;
+    destinatarios.push(dest);
+  };
 
   // Vendedores
   if (!somenteEmpresas && !modoEspecifico && !modoEmpresasSegmento) {
@@ -488,7 +494,7 @@ async function executeBroadcast(
     for (const v of vs) {
       const rawNome = v.nome_fantasia || v.nome || "";
       const cleanNome = rawNome.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNome;
-      destinatarios.push({
+      pushDestinatario({
         kind: "vendedor", id: v.id,
         phone: (v.whatsapp || v.telefone || "").replace(/\D/g, ""),
         nome: cleanNome,
@@ -504,7 +510,7 @@ async function executeBroadcast(
     if (cfg.especificoTipo === "gerente") {
       const { data: u } = await supabase.from("usuarios").select("id, nome, whatsapp").eq("id", cfg.especificoAlvoId).maybeSingle();
       const phone = (u?.whatsapp || "").replace(/\D/g, "");
-      if (u && phone.length >= 10) destinatarios.push({
+      if (u && phone.length >= 10) pushDestinatario({
         kind: "vendedor", id: u.id, phone, nome: u.nome || "",
         vendedorObj: { nome: u.nome || "", whatsapp: u.whatsapp || "" }, empresaObj: {},
         gerente: { id: u.id, nome: u.nome || "", whatsapp: u.whatsapp },
@@ -518,7 +524,7 @@ async function executeBroadcast(
         const isVend = e.tipo_cliente === "vendedor";
         const rawNomeE = e.nome_fantasia || e.nome || "";
         const cleanNomeE = rawNomeE.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNomeE;
-        destinatarios.push({
+        pushDestinatario({
           kind: isVend ? "vendedor" : "empresa", id: e.id, phone,
           nome: isVend ? cleanNomeE : rawNomeE,
           vendedorObj: isVend ? { nome: cleanNomeE, whatsapp: e.whatsapp || "" } : {},
@@ -547,7 +553,7 @@ async function executeBroadcast(
     (emps || []).forEach((e: any) => {
       const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
       if (phone.length < 10) return;
-      destinatarios.push({
+      pushDestinatario({
         kind: "empresa", id: e.id, phone,
         nome: e.nome_fantasia || e.nome || "",
         vendedorObj: {},
@@ -592,7 +598,7 @@ async function executeBroadcast(
         if (phone.length < 10) return;
         const gid = map.get(e.id);
         const gu = gid ? gerMap.get(gid) : null;
-        destinatarios.push({
+        pushDestinatario({
           kind: "empresa", id: e.id, phone,
           nome: e.nome_fantasia || e.nome || "",
           vendedorObj: {},
@@ -603,6 +609,7 @@ async function executeBroadcast(
     }
   }
 
+  console.log("[broadcast] destinatários resolvidos:", destinatarios.length, destinatarios.map((d) => ({ nome: d.nome, phone: d.phone, kind: d.kind })).slice(0, 20));
   const total = destinatarios.length;
   const mediaUrlPre = cfg.usarMensagemPreDefinida
     ? String(baseCtx[_mediaVarName] || baseCtx.last_generated_media_url || "")
