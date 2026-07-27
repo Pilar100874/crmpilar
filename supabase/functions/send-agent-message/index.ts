@@ -524,17 +524,19 @@ async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: stri
       phoneNumber: `+${contactDigits}`,
     }],
   };
-  const res = await fetch(`${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
+  const r = await fetchWithRetry("EVO sendContact", `${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await res.text().catch(() => "");
-  console.log("[AGENT][EVO] sendContact:", res.status, bodyTxt.slice(0, 200));
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: res.ok, reason: res.ok ? undefined : failureReason(bodyTxt, res.status) };
+  console.log("[AGENT][EVO] sendContact:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
 
 async function sendCloudContact(phoneNumberId: string, accessToken: string, to: string, contact: { nome?: string; whatsapp: string }): Promise<SendOut> {
   if (!phoneNumberId || !accessToken) return { ok: false, reason: "config_missing" };
