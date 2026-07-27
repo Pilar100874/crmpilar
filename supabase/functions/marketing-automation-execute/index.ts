@@ -37,33 +37,8 @@ function applyUrlPlaceholders(url: string, vars: Record<string, string>) {
   return { url: out, used };
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+async function runExecution(supabase: any, automationId: string, automation: any) {
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { automationId } = await req.json();
-    if (!automationId) {
-      return new Response(
-        JSON.stringify({ success: false, error: "automationId obrigatório" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    const { data: automation, error: autoErr } = await supabase
-      .from("marketing_automations")
-      .select("*")
-      .eq("id", automationId)
-      .single();
-
-    if (autoErr || !automation) {
-      throw new Error(`Automação não encontrada: ${autoErr?.message}`);
-    }
 
     const config = (automation.config || {}) as any;
     const metodo = config.metodo_disparo || (config.bot_id ? "bot" : "webhook");
