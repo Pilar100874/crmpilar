@@ -462,16 +462,17 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
 async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string): Promise<SendOut> {
   if (!phoneNumberId || !accessToken) { console.error("[AGENT][CLOUD] Faltam credenciais"); return { ok: false, reason: "config_missing" }; }
   const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
-  const r = await fetch(url, {
+  const r = await fetchWithRetry("CLOUD sendText", url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
   });
-  const bodyTxt = await r.text().catch(() => "");
-  if (!r.ok) console.error("[AGENT][CLOUD] sendText error:", bodyTxt);
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  console.error("[AGENT][CLOUD] sendText error:", r.bodyTxt, "attempts:", r.attempts);
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : `http_${r.status}`;
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
 
 async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: string, mediaUrl: string, mediaType: string, caption?: string): Promise<SendOut> {
@@ -481,17 +482,19 @@ async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: st
   const t = typeMap[(mediaType || "").toLowerCase()] || "document";
   const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
   if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
-  const r = await fetch(url, {
+  const r = await fetchWithRetry("CLOUD sendMedia", url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(body),
   });
-  const bodyTxt = await r.text().catch(() => "");
-  if (!r.ok) console.error("[AGENT][CLOUD] sendMedia error:", bodyTxt);
-  const inv = detectInvalidFromText(bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
-  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+  if (r.ok) return { ok: true, attempts: r.attempts };
+  console.error("[AGENT][CLOUD] sendMedia error:", r.bodyTxt, "attempts:", r.attempts);
+  const inv = detectInvalidFromText(r.bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+  const reason = r.networkError ? `net_${r.networkError}` : `http_${r.status}`;
+  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
 }
+
 
 /* ===== Contact (vCard) senders ===== */
 function buildVCard(nome: string, whatsapp: string): string {
