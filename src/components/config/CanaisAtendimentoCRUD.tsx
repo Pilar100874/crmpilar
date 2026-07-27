@@ -455,32 +455,26 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
     if (webhookSyncCacheRef.current[cacheKey]) return;
 
     const body = JSON.stringify({
-      name: sessionName,
-      config: {
-        webhooks: [
-          {
-            url: resolvedWebhookUrl,
-            events: ['message', 'message.any'],
-          },
-        ],
+      webhook: {
+        enabled: true,
+        url: resolvedWebhookUrl,
+        byEvents: false,
+        base64: false,
+        events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE', 'QRCODE_UPDATED'],
       },
     });
 
-    const attempts = [
-      { url: `${base}/api/sessions/${sessionName}`, method: 'PUT' },
-      { url: `${base}/api/sessions/${sessionName}`, method: 'POST' },
-    ];
-
-    for (const attempt of attempts) {
-      try {
-        const response = await fetch(attempt.url, { method: attempt.method, headers, body });
-        if (response.ok || [200, 201, 202, 204].includes(response.status)) {
-          webhookSyncCacheRef.current[cacheKey] = true;
-          return;
-        }
-      } catch (error) {
-        console.warn(`Erro ao sincronizar webhook da sessão ${sessionName}:`, error);
+    // Evolution API v2: POST /webhook/set/{instance}
+    try {
+      const response = await fetch(
+        `${base}/webhook/set/${encodeURIComponent(sessionName)}`,
+        { method: 'POST', headers, body },
+      );
+      if (response.ok || [200, 201, 202, 204].includes(response.status)) {
+        webhookSyncCacheRef.current[cacheKey] = true;
       }
+    } catch (error) {
+      console.warn(`Erro ao sincronizar webhook da sessão ${sessionName}:`, error);
     }
   };
 
