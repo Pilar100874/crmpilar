@@ -904,18 +904,55 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                     )}
                   </Button>
                 </div>
-                {testResult && (testResult.ok ? (
+                {testResult && (
                   <div className="space-y-2">
-                    <Alert>
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-xs">
-                        Conectado em {testResult.latency}ms
-                        {typeof testResult.instances === "number"
-                          ? ` • ${testResult.instances} instância(s) no servidor`
-                          : ""}
-                      </AlertDescription>
-                    </Alert>
-                    {testResult.list && testResult.list.length > 0 && (
+                    {/* Servidor Evolution */}
+                    {testResult.server.ok ? (
+                      <Alert>
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-xs">
+                          <strong>Servidor Evolution:</strong> conectado em {testResult.server.latency}ms
+                          {typeof testResult.server.instances === "number"
+                            ? ` • ${testResult.server.instances} instância(s)`
+                            : ""}
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          <strong>Servidor Evolution:</strong> {testResult.server.error || "Falha desconhecida."}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Manager */}
+                    {testResult.manager ? (
+                      testResult.manager.ok ? (
+                        <Alert>
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-xs">
+                            <strong>Manager:</strong> acessível em {testResult.manager.latency}ms — apikey aceita.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription className="text-xs">
+                            <strong>Manager:</strong> {testResult.manager.error || "Falha ao acessar o Manager."}
+                          </AlertDescription>
+                        </Alert>
+                      )
+                    ) : (
+                      managerUrl.trim() ? null : (
+                        <p className="text-[11px] text-muted-foreground pl-1">
+                          URL do Manager não informada — teste ignorado para o Manager.
+                        </p>
+                      )
+                    )}
+
+                    {/* Lista de instâncias */}
+                    {testResult.server.list && testResult.server.list.length > 0 && (
                       <div className="rounded-md border max-h-64 overflow-auto">
                         <table className="w-full text-xs">
                           <thead className="bg-muted/50 sticky top-0">
@@ -926,7 +963,7 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                             </tr>
                           </thead>
                           <tbody>
-                            {testResult.list.map((inst, idx) => {
+                            {testResult.server.list.map((inst, idx) => {
                               const s = String(inst.status || "").toLowerCase();
                               const color =
                                 s === "open" || s === "working" || s === "connected"
@@ -953,14 +990,9 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                       </div>
                     )}
                   </div>
-                ) : (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">{(testResult as { ok: false; error: string }).error}</AlertDescription>
-                  </Alert>
-                ))}
+                )}
                 <p className="text-xs text-muted-foreground">
-                  A validação chama <code>GET /instance/fetchInstances</code> no endpoint informado usando a apikey.
+                  A validação chama <code>GET /instance/fetchInstances</code> no servidor e, se informado, também no Manager, usando a apikey.
                 </p>
               </div>
               <div className="space-y-2">
