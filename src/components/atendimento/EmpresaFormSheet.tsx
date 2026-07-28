@@ -51,11 +51,12 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [saving, setSaving] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("empresa");
-  
+  const numeroInputRef = useRef<HTMLInputElement | null>(null);
+
   // Hooks para busca automática
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
-  
+
   // Form data
   const [formData, setFormData] = useState<Record<string, any>>({
     company_type: "Pessoa Jurídica",
@@ -65,13 +66,27 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     cep: "",
     endereco: "",
     numero: "",
+    complemento: "",
     bairro: "",
     cidade: "",
     estado: "",
+    pais: "Brasil",
     inscricao: "",
     telefone: "",
     email: "",
     segmento_id: "",
+    // Novos campos do padrão de cadastro
+    situacao_cadastral: "",
+    data_abertura: "",
+    natureza_juridica: "",
+    capital_social: "",
+    porte: "",
+    regime_tributario: "",
+    optante_mei: null as boolean | null,
+    optante_simples: null as boolean | null,
+    cnae_principal: "",
+    cnae_descricao: "",
+    cnaes_secundarios: [] as { codigo: string; descricao: string }[],
   });
   
   // Custom fields
