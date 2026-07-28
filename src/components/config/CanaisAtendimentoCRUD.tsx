@@ -1278,6 +1278,47 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
                       </div>
                     ) : null;
                   })()}
+                  <div className="space-y-1 border-t pt-2">
+                    <Label className="text-xs flex items-center gap-1">
+                      <RefreshCw className="h-3 w-3" /> Reconexão preventiva
+                    </Label>
+                    <Select
+                      value={String(session.auto_reconnect_days ?? 7)}
+                      onValueChange={async (v) => {
+                        const days = Number(v);
+                        const { error } = await supabase
+                          .from("whatsapp_sessions")
+                          .update({ auto_reconnect_days: days })
+                          .eq("id", session.id);
+                        if (error) {
+                          sonnerToast.error("Falha ao salvar reconexão preventiva.");
+                        } else {
+                          sonnerToast.success(
+                            days === 0
+                              ? "Reconexão preventiva desativada."
+                              : `Reconecta a cada ${days} dias.`,
+                          );
+                          refreshSessions();
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Desligada</SelectItem>
+                        <SelectItem value="3">A cada 3 dias</SelectItem>
+                        <SelectItem value="7">A cada 7 dias (recomendado)</SelectItem>
+                        <SelectItem value="15">A cada 15 dias</SelectItem>
+                        <SelectItem value="30">A cada 30 dias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {session.last_reconnect_at && (
+                      <p className="text-[10px] text-muted-foreground">
+                        Última: {new Date(session.last_reconnect_at).toLocaleString("pt-BR")}
+                      </p>
+                    )}
+                  </div>
                   </CardContent>
                 </Card>
               ))}
