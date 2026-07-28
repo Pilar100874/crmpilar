@@ -1663,8 +1663,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const renderField = (field: CustomField, isDisabled: boolean = false) => {
     const displayValue = formData[field.id] || "";
 
+    const isBrasilBlur = (formData.pais || "Brasil") === "Brasil";
     const handleFieldBlur = () => {
-      if (field.id === "cep" && formData.cep?.length === 9) {
+      if (field.id === "cep" && isBrasilBlur && formData.cep?.length === 9) {
         handleCEPLookup(formData.cep);
       }
       if (field.id === "cpf_cnpj") {
