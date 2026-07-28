@@ -473,7 +473,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
   const cnpjDebounceRef = React.useRef<number | null>(null);
   const cepDebounceRef = React.useRef<number | null>(null);
-  type LookupStatus = "idle" | "loading" | "ok" | "invalid" | "notfound" | "error";
   const [cnpjStatus, setCnpjStatus] = useState<LookupStatus>("idle");
   const [cepStatus, setCepStatus] = useState<LookupStatus>("idle");
 
