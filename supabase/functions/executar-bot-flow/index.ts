@@ -831,7 +831,10 @@ async function executeBroadcast(
       const maskVars = (s: string) => (s || "").replace(/\{\{[^}]+\}\}/g, "XXX");
       const antesMask = maskVars(cfg.textoAntes || "").trim();
       const depoisMask = maskVars(cfg.textoDepois || "").trim();
-      const msgMask = cfg.usarMensagemPreDefinida ? msg : maskVars(cfg.message || "").trim();
+      // Quando há mídia com frase embutida, o resumo também não repete o texto da frase.
+      const msgMask = cfg.usarMensagemPreDefinida
+        ? (mediaUrlPre ? maskVars(extraTexto || "").trim() : msg)
+        : maskVars(cfg.message || "").trim();
       const cabecalho = `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}`;
 
       // Contato usado no resumo (mesma opção do "Enviar contato logo após a mensagem")
