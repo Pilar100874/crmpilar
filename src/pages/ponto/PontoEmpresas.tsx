@@ -1,3 +1,4 @@
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { useEffect, useState } from "react";
 import { Plus, Building2, Trash2, Pencil, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";

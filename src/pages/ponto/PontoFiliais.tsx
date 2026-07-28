@@ -310,14 +310,13 @@ export default function PontoFiliais() {
               <Label>Endereço</Label>
               <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
             </div>
-            <div className="sm:col-span-2">
-              <Label>UF</Label>
-              <UfSelect value={form.uf} onChange={(v) => setForm({ ...form, uf: v, cidade: "" })} />
+            <div className="sm:col-span-6">
+              <UfCidadeIbge
+                value={{ uf: form.uf || "", cidade: form.cidade || "", ibge: (form as any).codigo_ibge || "" }}
+                onChange={(v) => setForm({ ...form, uf: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
+              />
             </div>
-            <div className="sm:col-span-4">
-              <Label>Cidade</Label>
-              <CidadeSelect uf={form.uf} value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
-            </div>
+
 
             <div className="sm:col-span-3">
               <Label>Inscrição Estadual</Label>
