@@ -1448,11 +1448,22 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                                   {l.ok && l.provider_message_id && !dlr && (
                                     <Badge variant="outline" className="h-4 text-[9px] px-1">Clique em Verificar entrega</Badge>
                                   )}
+                                  {l.device_reply && (
+                                    <Badge variant="default" className="h-4 text-[9px] px-1 bg-blue-600">Rastreador respondeu</Badge>
+                                  )}
                                 </div>
                                 {l.erro && <div className="text-destructive text-[10px] break-words">{l.erro}</div>}
                                 {dlr?.entregue_at && (
                                   <div className="text-muted-foreground text-[10px]">
                                     entregue {new Date(dlr.entregue_at).toLocaleString('pt-BR')}
+                                  </div>
+                                )}
+                                {l.device_reply && (
+                                  <div className="mt-1 rounded bg-blue-500/10 border border-blue-500/30 px-2 py-1">
+                                    <div className="text-[9px] uppercase tracking-wider text-blue-700 dark:text-blue-300 font-medium">
+                                      Resposta do rastreador {l.device_reply_at && `· ${new Date(l.device_reply_at).toLocaleString('pt-BR')}`}
+                                    </div>
+                                    <div className="text-[11px] font-mono break-words">{l.device_reply}</div>
                                   </div>
                                 )}
                               </div>
@@ -1462,11 +1473,29 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       </div>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-2">
-                      "Entregue no chip" = a operadora confirmou que o SMS chegou no chip do rastreador (DLR).
-                      A resposta com <code>ok</code> do próprio rastreador exige captura de SMS de entrada — em breve.
+                      <b>Entregue no chip</b> = a operadora confirmou que o SMS chegou no chip do rastreador (DLR).<br/>
+                      <b>Rastreador respondeu</b> = o próprio rastreador enviou SMS de volta (ex.: <code>APN,... ok</code>).
+                      {formData.tracker_expect_sms_reply === false && ' Ative "Aguardar resposta SMS" abaixo se este rastreador responder.'}
                     </p>
                   </div>
                 )}
+
+                <div className="flex items-center justify-between rounded-md border p-2 mt-2">
+                  <div className="flex-1">
+                    <Label htmlFor="expect-sms-reply" className="text-xs font-medium cursor-pointer">
+                      Aguardar resposta SMS do rastreador (opcional)
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Marque se este rastreador responde <code>ok</code> por SMS a cada comando.
+                      Se o chip não envia SMS de saída, deixe desmarcado — a validação será só pelo DLR e pela conexão no servidor.
+                    </p>
+                  </div>
+                  <Switch
+                    id="expect-sms-reply"
+                    checked={!!formData.tracker_expect_sms_reply}
+                    onCheckedChange={(v) => setFormData({ ...formData, tracker_expect_sms_reply: v })}
+                  />
+                </div>
               </div>
 
             </div>
