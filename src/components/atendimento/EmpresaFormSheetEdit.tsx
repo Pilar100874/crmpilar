@@ -12,6 +12,7 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCNPJ, maskCPF, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { validateCpfCnpjField } from "@/lib/docValidation";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { EmpresaFormulariosTab } from "@/components/empresas/EmpresaFormulariosTab";
@@ -258,6 +259,13 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
     if (segmentosSelecionados.length === 0) {
       toast.error("Selecione pelo menos um segmento");
       setActiveTab("segmentos");
+      return;
+    }
+
+    const _docCheck = validateCpfCnpjField(formData.cpf_cnpj);
+    if (!_docCheck.ok) {
+      toast.error(_docCheck.message!);
+      setActiveTab("empresa");
       return;
     }
 

@@ -12,6 +12,7 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCNPJ, maskCPF, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { validateCpfCnpjField } from "@/lib/docValidation";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 
@@ -272,6 +273,13 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
 
     if (!formData.segmento_id?.trim()) {
       toast.error("Segmento é obrigatório. Selecione um segmento para continuar.");
+      setActiveTab("empresa");
+      return;
+    }
+
+    const docCheck = validateCpfCnpjField(formData.cpf_cnpj);
+    if (!docCheck.ok) {
+      toast.error(docCheck.message!);
       setActiveTab("empresa");
       return;
     }

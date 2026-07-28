@@ -11,6 +11,7 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCNPJ, maskCPF, maskCEP, maskPhone } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { validateCpfCnpjField } from "@/lib/docValidation";
 
 interface CustomField {
   id: string;
@@ -246,6 +247,9 @@ export function EmpresaFormEmbedded({
       toast.error("Nome Fantasia é obrigatório");
       return;
     }
+
+    const _docCheck = validateCpfCnpjField(formData.cpf_cnpj);
+    if (!_docCheck.ok) { toast.error(_docCheck.message!); return; }
 
     setSaving(true);
     try {

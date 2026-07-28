@@ -129,6 +129,8 @@ export function EstabelecimentosCRUD() {
     }
 
     const cleanCNPJ = formData.cnpj.replace(/\D/g, "");
+    const _dc = (await import("@/lib/docValidation")).validateCpfCnpjField(cleanCNPJ, { required: true, label: "CNPJ" });
+    if (!_dc.ok) { toast.error(_dc.message!); return; }
 
     if (editingId) {
       if (isUserAdmin) {
