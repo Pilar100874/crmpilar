@@ -1083,7 +1083,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       // Separar campos padrão de campos customizados
-      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
+      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'numero', 'complemento', 'pais', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
       const qualificationFields = ['contato_nome','contato_cargo','contato_email','contato_telefone','porte','faturamento_estimado','funcionarios_estimado','data_fundacao','situacao_cadastral','score_prospect','score_motivo','prioridade','produtos_interesse','tags','observacoes_internas'];
       const customFieldsData: any = {
         company_type: formData.company_type,
