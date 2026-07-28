@@ -42,14 +42,24 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [saving, setSaving] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("contato");
-  
+  const numeroInputRef = useRef<HTMLInputElement | null>(null);
+
   // Form data
   const [formData, setFormData] = useState<Record<string, any>>({
     name: initialData?.nome || "",
+    cpf: "",
+    data_nascimento: "",
     email: initialData?.email || "",
     phone: initialData?.telefone || "",
     tel: "",
     position: "",
+    cep: "",
+    logradouro: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
   });
   
   // Custom fields
