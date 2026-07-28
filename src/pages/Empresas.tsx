@@ -248,11 +248,14 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: false },
     { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
     { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
-    { id: "cep", label: "CEP", type: "text", category: "company", required: true, locked: false },
+    { id: "pais", label: "País", type: "select", category: "company", options: ["Brasil", "Portugal", "Estados Unidos", "Argentina", "Chile", "Uruguai", "Paraguai", "Colômbia", "México", "Espanha", "Reino Unido", "Alemanha", "França", "Itália", "Japão", "China", "Canadá", "Outro"], required: true, locked: false },
+    { id: "cep", label: "CEP / Código Postal", type: "text", category: "company", required: true, locked: false },
     { id: "address", label: "Endereço", type: "text", category: "company", required: true, locked: true },
-    { id: "city", label: "Cidade", type: "text", category: "company", required: true, locked: true },
+    { id: "numero", label: "Número", type: "text", category: "company", required: false, locked: false },
+    { id: "complemento", label: "Complemento", type: "text", category: "company", required: false, locked: false },
     { id: "neighborhood", label: "Bairro", type: "text", category: "company", required: true, locked: true },
-    { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
+    { id: "city", label: "Cidade", type: "text", category: "company", required: true, locked: true },
+    { id: "state", label: "UF / Estado", type: "text", category: "company", required: true, locked: true },
     { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: false, locked: true },
     { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: true },
     { id: "whatsapp", label: "WhatsApp", type: "phone", category: "company", required: false, locked: true },
@@ -305,14 +308,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       const missingStandard = companyFields.filter((f) => !existingIds.has(f.id));
       if (missingStandard.length === 0) return mapped;
       const result = [...mapped];
+      const insertAfter = (afterId: string, f: CustomField) => {
+        const idx = result.findIndex((x) => x.id === afterId);
+        if (idx >= 0) result.splice(idx + 1, 0, f);
+        else result.push(f);
+      };
       for (const f of missingStandard) {
-        if (f.id === 'whatsapp') {
-          const idx = result.findIndex((x) => x.id === 'telefone');
-          if (idx >= 0) result.splice(idx + 1, 0, f);
-          else result.push(f);
-        } else {
-          result.push(f);
+        if (f.id === 'whatsapp') insertAfter('telefone', f);
+        else if (f.id === 'pais') {
+          const idx = result.findIndex((x) => x.id === 'cep');
+          if (idx >= 0) result.splice(idx, 0, f); else result.push(f);
         }
+        else if (f.id === 'numero') insertAfter('address', f);
+        else if (f.id === 'complemento') insertAfter('numero', f);
+        else result.push(f);
       }
       return result;
     }
@@ -650,6 +659,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       email: empresa.email || "",
       cep: empresa.cep || "",
       address: empresa.endereco || "",
+      numero: (empresa as any).numero || empresa.custom_fields?.numero || "",
+      complemento: (empresa as any).complemento || empresa.custom_fields?.complemento || "",
+      pais: (empresa as any).pais || empresa.custom_fields?.pais || "Brasil",
       city: empresa.cidade || "",
       state: empresa.estado || "",
       neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
@@ -1019,9 +1031,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const handleSaveEmpresa = async () => {
     const errors: Record<string, string> = {};
 
+    const isBrasil = (formData.pais || "Brasil") === "Brasil";
+
     // Validar campos obrigatórios da empresa com base na configuração
     const requiredIds = formFieldsToRender.filter(f => f.required).map(f => f.id);
     requiredIds.forEach((fieldId) => {
+      // Fora do Brasil, CEP não é obrigatório (país pode não ter código postal padronizado)
+      if (!isBrasil && fieldId === "cep") return;
       if (!formData[fieldId]?.toString().trim()) {
         errors[fieldId] = "Campo obrigatório";
       }
@@ -1036,7 +1052,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     }
 
-    if (formData.cep && !validateCEP(formData.cep)) {
+    if (isBrasil && formData.cep && !validateCEP(formData.cep)) {
       errors.cep = "CEP inválido";
     }
 
@@ -1071,7 +1087,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       // Separar campos padrão de campos customizados
-      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
+      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'numero', 'complemento', 'pais', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
       const qualificationFields = ['contato_nome','contato_cargo','contato_email','contato_telefone','porte','faturamento_estimado','funcionarios_estimado','data_fundacao','situacao_cadastral','score_prospect','score_motivo','prioridade','produtos_interesse','tags','observacoes_internas'];
       const customFieldsData: any = {
         company_type: formData.company_type,
@@ -1102,6 +1118,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         email: formData.email || null,
         site: formData.site || null,
         endereco: formData.address,
+        numero: formData.numero || null,
+        complemento: formData.complemento || null,
+        pais: formData.pais || "Brasil",
         cidade: formData.city,
         estado: formData.state,
         cep: formData.cep,
@@ -1644,8 +1663,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const renderField = (field: CustomField, isDisabled: boolean = false) => {
     const displayValue = formData[field.id] || "";
 
+    const isBrasilBlur = (formData.pais || "Brasil") === "Brasil";
     const handleFieldBlur = () => {
-      if (field.id === "cep" && formData.cep?.length === 9) {
+      if (field.id === "cep" && isBrasilBlur && formData.cep?.length === 9) {
         handleCEPLookup(formData.cep);
       }
       if (field.id === "cpf_cnpj") {
@@ -1661,12 +1681,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     };
 
+    const isBrasil = (formData.pais || "Brasil") === "Brasil";
+
     const handleFieldChange = (value: any) => {
       let maskedValue = value;
 
       if (field.id === "cpf_cnpj") {
         maskedValue = formData.company_type === "Pessoa Física" ? maskCPF(value) : maskCNPJ(value);
-      } else if (field.id === "cep") {
+      } else if (field.id === "cep" && isBrasil) {
         maskedValue = maskCEP(value);
       } else if (field.type === "phone") {
         maskedValue = maskWhatsApp(value);
@@ -1686,13 +1708,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           handleCNPJLookup(maskedValue);
         }, 400);
       }
-      if (field.id === "cep" && clean.length === 8) {
+      if (field.id === "cep" && isBrasil && clean.length === 8) {
         if (cepDebounceRef.current) window.clearTimeout(cepDebounceRef.current);
         cepDebounceRef.current = window.setTimeout(() => {
           handleCEPLookup(maskedValue);
         }, 400);
       }
     };
+
 
     switch (field.type) {
       case "select":
@@ -1738,7 +1761,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         );
       default:
         {
-          const isCepDriven = field.id === "city" || field.id === "state";
+          const isCepDriven = (field.id === "city" || field.id === "state") && isBrasil;
           if (isCepDriven) {
             return (
               <div className="relative">
@@ -1783,7 +1806,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 onRetry={() => handleCNPJLookup(formData.cpf_cnpj)}
               />
             )}
-            {field.id === "cep" && !fieldErrors[field.id] && (
+            {field.id === "cep" && isBrasil && !fieldErrors[field.id] && (
               <LookupStatusMessage
                 kind="cep"
                 status={cepStatus}
