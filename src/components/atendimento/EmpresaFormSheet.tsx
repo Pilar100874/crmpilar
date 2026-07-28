@@ -227,14 +227,17 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     setSegmentos(data || []);
   };
   
-  // Buscar CNPJ automaticamente na Receita Federal
+  // Foco no campo Número (Nubank-style: quando endereço vem preenchido, cursor vai para o Número)
+  const focusNumero = () => {
+    setTimeout(() => numeroInputRef.current?.focus(), 80);
+  };
+
+  // Buscar CNPJ automaticamente
   const handleCNPJChange = async (value: string) => {
     const clean = value.replace(/\D/g, "");
     const maskedValue = clean.length <= 11 ? maskCPF(value) : maskCNPJ(value);
     setFormData(prev => ({ ...prev, cpf_cnpj: maskedValue }));
 
-    // Se for CNPJ completo (14 dígitos), buscar dados. Se não encontrar, mantém os campos
-    // editáveis para preenchimento manual pelo usuário.
     if (clean.length === 14) {
       const data = await lookupCNPJ(clean);
       if (data) {
@@ -244,15 +247,29 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           nome: data.nome || prev.nome,
           nome_fantasia: data.fantasia || prev.nome_fantasia,
           cep: cepMasked || prev.cep,
-          endereco: data.logradouro + (data.numero ? ', ' + data.numero : '') || prev.endereco,
+          endereco: data.logradouro || prev.endereco,
           numero: data.numero || prev.numero,
+          complemento: data.complemento || prev.complemento,
           bairro: data.bairro || prev.bairro,
           telefone: data.telefone ? maskPhone(data.telefone) : prev.telefone,
           email: data.email || prev.email,
+          situacao_cadastral: data.situacaoCadastral || prev.situacao_cadastral,
+          data_abertura: data.dataAbertura || prev.data_abertura,
+          natureza_juridica: data.naturezaJuridica || prev.natureza_juridica,
+          capital_social: data.capitalSocial != null ? String(data.capitalSocial) : prev.capital_social,
+          porte: data.porte || prev.porte,
+          regime_tributario: data.regimeTributario || prev.regime_tributario,
+          optante_mei: data.optanteMei ?? prev.optante_mei,
+          optante_simples: data.optanteSimples ?? prev.optante_simples,
+          cnae_principal: data.cnaePrincipal || prev.cnae_principal,
+          cnae_descricao: data.cnaePrincipalDescricao || prev.cnae_descricao,
+          cnaes_secundarios: data.cnaesSecundarios || prev.cnaes_secundarios,
+          pais: data.pais || prev.pais || "Brasil",
         }));
-        // UF/Cidade sempre vêm pelo CEP — dispara a busca automaticamente
         if (cepMasked) {
-          await handleCEPChange(cepMasked);
+          await handleCEPChange(cepMasked, /*focusNumero*/ !data.numero);
+        } else if (!data.numero) {
+          focusNumero();
         }
         toast.success("Dados preenchidos automaticamente via CNPJ");
       }
@@ -261,7 +278,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
 
 
   // Buscar CEP automaticamente
-  const handleCEPChange = async (value: string) => {
+  const handleCEPChange = async (value: string, shouldFocusNumero = true) => {
     const maskedValue = maskCEP(value);
     setFormData(prev => ({ ...prev, cep: maskedValue }));
 
@@ -277,6 +294,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           estado: data.uf || prev.estado,
         }));
         toast.success("Endereço preenchido automaticamente");
+        if (shouldFocusNumero) focusNumero();
       }
     }
   };
