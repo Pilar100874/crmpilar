@@ -21138,6 +21138,57 @@ export type Database = {
         }
         Relationships: []
       }
+      tracker_sms_replies: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          estabelecimento_id: string | null
+          id: string
+          matched_log_provider_message_id: string | null
+          mensagem: string
+          recebido_em: string
+          telefone_remetente: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          matched_log_provider_message_id?: string | null
+          mensagem: string
+          recebido_em?: string
+          telefone_remetente: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          matched_log_provider_message_id?: string | null
+          mensagem?: string
+          recebido_em?: string
+          telefone_remetente?: string
+          veiculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracker_sms_replies_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "sms_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracker_sms_replies_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_commands: {
         Row: {
           confirmado_em: string | null
@@ -22420,6 +22471,7 @@ export type Database = {
           tracker_config_error: string | null
           tracker_config_log: Json
           tracker_config_status: string
+          tracker_expect_sms_reply: boolean
           tracker_model_id: string | null
           updated_at: string
         }
@@ -22443,6 +22495,7 @@ export type Database = {
           tracker_config_error?: string | null
           tracker_config_log?: Json
           tracker_config_status?: string
+          tracker_expect_sms_reply?: boolean
           tracker_model_id?: string | null
           updated_at?: string
         }
@@ -22466,6 +22519,7 @@ export type Database = {
           tracker_config_error?: string | null
           tracker_config_log?: Json
           tracker_config_status?: string
+          tracker_expect_sms_reply?: boolean
           tracker_model_id?: string | null
           updated_at?: string
         }
