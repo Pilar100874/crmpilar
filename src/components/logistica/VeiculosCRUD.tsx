@@ -75,6 +75,60 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [enviandoSms, setEnviandoSms] = useState(false);
   const [configurandoTracker, setConfigurandoTracker] = useState(false);
+  const [verificandoEntrega, setVerificandoEntrega] = useState(false);
+  const [deliveryStatuses, setDeliveryStatuses] = useState<Record<string, { entregue_at: string | null; status: string; erro_mensagem: string | null }>>({});
+
+  // Reseta status de entrega quando trocar de veículo e busca automaticamente ao abrir
+  useEffect(() => {
+    setDeliveryStatuses({});
+    if (!selectedVeiculo) return;
+    const log = (selectedVeiculo as any).tracker_config_log;
+    if (!Array.isArray(log) || log.length === 0) return;
+    const ids = log.map((l: any) => l.provider_message_id).filter(Boolean);
+    if (ids.length === 0) return;
+    supabase
+      .from('sms_queue')
+      .select('id, entregue_at, status, erro_mensagem')
+      .in('id', ids)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, any> = {};
+        data.forEach((r: any) => { map[r.id] = r; });
+        setDeliveryStatuses(map);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVeiculo?.id]);
+
+  const verificarEntregaSms = async () => {
+    if (!selectedVeiculo) return;
+    const log = (selectedVeiculo as any).tracker_config_log;
+    if (!Array.isArray(log) || log.length === 0) {
+      toast.info('Nenhum SMS enviado ainda para conferir entrega.');
+      return;
+    }
+    const ids = log.map((l: any) => l.provider_message_id).filter(Boolean);
+    if (ids.length === 0) {
+      toast.warning('Este log é anterior à captura de entrega. Reenvie os parâmetros para acompanhar o DLR.');
+      return;
+    }
+    setVerificandoEntrega(true);
+    try {
+      const { data, error } = await supabase
+        .from('sms_queue')
+        .select('id, entregue_at, status, erro_mensagem')
+        .in('id', ids);
+      if (error) throw error;
+      const map: Record<string, any> = {};
+      (data || []).forEach((r: any) => { map[r.id] = r; });
+      setDeliveryStatuses(map);
+      const entregues = (data || []).filter((r: any) => r.entregue_at).length;
+      toast.success(`${entregues}/${ids.length} SMS confirmados como entregues no chip do rastreador.`);
+    } catch (e: any) {
+      toast.error(e.message || 'Falha ao consultar status de entrega');
+    } finally {
+      setVerificandoEntrega(false);
+    }
+  };
   const [bulkOpen, setBulkOpen] = useState(false);
   const [mainTab, setMainTab] = useState<'veiculos' | 'dispositivos'>('veiculos');
   const [urlCopiada, setUrlCopiada] = useState(false);
