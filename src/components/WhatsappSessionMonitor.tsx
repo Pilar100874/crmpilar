@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Loader2, Ghost } from "lucide-react";
+import { AlertTriangle, RefreshCw, Loader2, Ghost, QrCode } from "lucide-react";
 import { toast } from "sonner";
 
 type SessionRow = {
