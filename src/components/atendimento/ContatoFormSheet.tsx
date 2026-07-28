@@ -433,6 +433,8 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                   value={formData.data_nascimento}
                   onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
                 />
+              </div>
+
 
               {/* Email */}
               <div className="space-y-2">
