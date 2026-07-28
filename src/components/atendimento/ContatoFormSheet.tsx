@@ -418,6 +418,22 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 />
               </div>
 
+              {/* CPF (com validação) */}
+              <CpfField
+                value={formData.cpf}
+                onChange={(v) => setFormData({ ...formData, cpf: v })}
+                label="CPF"
+              />
+
+              {/* Data de nascimento */}
+              <div className="space-y-2">
+                <Label>Data de nascimento</Label>
+                <Input
+                  type="date"
+                  value={formData.data_nascimento}
+                  onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                />
+
               {/* Email */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
