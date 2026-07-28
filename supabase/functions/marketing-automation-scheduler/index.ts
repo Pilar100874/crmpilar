@@ -21,39 +21,61 @@ function shouldRun(config: any, lastRunISO: string | null): boolean {
 
   const now = nowInTZ();
   const [hh, mm] = horario.split(":").map(Number);
-  if (now.getUTCHours() !== hh || now.getUTCMinutes() !== mm) return false;
+  if (isNaN(hh) || isNaN(mm)) return false;
 
-  // Avoid double-run within the same minute
-  if (lastRunISO) {
-    const last = new Date(lastRunISO);
-    if (Math.abs(now.getTime() - last.getTime()) < 90 * 1000) return false;
-  }
+  // "Já passou do horário-alvo hoje?" (em horário local)
+  const nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const targetMinutes = hh * 60 + mm;
+  if (nowMinutes < targetMinutes) return false;
+
+  // Idempotência por período: se já rodou dentro da janela do período, não repete.
+  // (evita duplo disparo mesmo com scheduler rodando a cada minuto)
+  const last = lastRunISO ? new Date(lastRunISO) : null;
+  const lastLocal = last ? new Date(last.getTime() + TZ_OFFSET_MIN * 60 * 1000) : null;
+
+  const sameDay = (a: Date, b: Date) =>
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate();
 
   switch (periodicidade) {
     case "data_especifica": {
       const target = config.data_especifica;
       if (!target) return false;
       const todayISO = now.toISOString().slice(0, 10);
-      return target === todayISO;
-    }
-    case "diario":
+      if (target !== todayISO) return false;
+      if (lastLocal && sameDay(lastLocal, now)) return false;
       return true;
+    }
+    case "diario": {
+      if (lastLocal && sameDay(lastLocal, now)) return false;
+      return true;
+    }
     case "semanal": {
-      const dia = parseInt(config.dia_semana || "-1", 10);
-      return now.getUTCDay() === dia;
+      const dia = parseInt(config.dia_semana ?? "-1", 10);
+      if (now.getUTCDay() !== dia) return false;
+      if (lastLocal && (now.getTime() - lastLocal.getTime()) < 6 * 24 * 60 * 60 * 1000) return false;
+      return true;
     }
     case "quinzenal": {
       const diaMes = parseInt(config.dia_mes || "0", 10);
       const day = now.getUTCDate();
-      return day === diaMes || day === ((diaMes + 14) % 31 || 15);
+      const alt = ((diaMes + 14) % 31) || 15;
+      if (day !== diaMes && day !== alt) return false;
+      if (lastLocal && sameDay(lastLocal, now)) return false;
+      return true;
     }
     case "mensal": {
       const diaMes = parseInt(config.dia_mes || "0", 10);
-      return now.getUTCDate() === diaMes;
+      if (now.getUTCDate() !== diaMes) return false;
+      if (lastLocal && sameDay(lastLocal, now)) return false;
+      return true;
     }
     case "anual": {
       const diaMes = parseInt(config.dia_mes || "0", 10);
-      return now.getUTCDate() === diaMes && now.getUTCMonth() === 0;
+      if (now.getUTCDate() !== diaMes || now.getUTCMonth() !== 0) return false;
+      if (lastLocal && sameDay(lastLocal, now)) return false;
+      return true;
     }
     default:
       return false;
