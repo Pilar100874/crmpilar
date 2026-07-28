@@ -879,27 +879,44 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const handleCEPLookup = async (cep: string) => {
-    const result = await buscarCEP(cep);
-    if (result) {
-      setFormData(prev => ({
-        ...prev,
-        cep: maskCEP(result.cep),
-        address: result.logradouro || prev.address,
-        neighborhood: result.bairro || prev.neighborhood,
-        city: result.cidade,
-        state: result.uf,
-      }));
-      // Auto-focus no número após auto-preencher endereço
-      setTimeout(() => {
-        const el = document.getElementById("numero") as HTMLInputElement | null;
-        el?.focus();
-      }, 60);
+    const digits = (cep || "").replace(/\D/g, "");
+    if (digits.length !== 8) {
+      setCepStatus(digits.length === 0 ? "idle" : "invalid");
+      return;
+    }
+    setCepStatus("loading");
+    try {
+      const result = await buscarCEP(cep);
+      if (result) {
+        setFormData(prev => ({
+          ...prev,
+          cep: maskCEP(result.cep),
+          address: result.logradouro || prev.address,
+          neighborhood: result.bairro || prev.neighborhood,
+          city: result.cidade,
+          state: result.uf,
+        }));
+        setCepStatus("ok");
+        setTimeout(() => {
+          const el = document.getElementById("numero") as HTMLInputElement | null;
+          el?.focus();
+        }, 60);
+      } else {
+        setCepStatus("notfound");
+      }
+    } catch {
+      setCepStatus("error");
     }
   };
 
   const handleCNPJLookup = async (cnpj: string) => {
-    const result = await buscarCNPJ(cnpj);
-    if (result) {
+    const digits = (cnpj || "").replace(/\D/g, "");
+    if (digits.length === 0) { setCnpjStatus("idle"); return; }
+    if (digits.length !== 14) { setCnpjStatus("invalid"); return; }
+    setCnpjStatus("loading");
+    try {
+      const result = await buscarCNPJ(cnpj);
+      if (!result) { setCnpjStatus("notfound"); return; }
       const cepMasked = result.cep ? maskCEP(result.cep) : "";
       setFormData(prev => ({
         ...prev,
@@ -922,12 +939,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         optante_simples: result.optanteSimples ?? prev.optante_simples,
         pais: result.pais || prev.pais || "Brasil",
       }));
-      // Cidade/UF sempre pelo CEP
+      setCnpjStatus("ok");
       if (cepMasked && cepMasked.replace(/\D/g, '').length === 8) {
         await handleCEPLookup(cepMasked);
       }
+    } catch {
+      setCnpjStatus("error");
     }
   };
+
 
 
   const handleAddContatoVinculado = async (contatoId: string) => {
