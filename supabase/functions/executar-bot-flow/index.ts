@@ -829,12 +829,9 @@ async function executeBroadcast(
         const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
         console.log("[broadcast] enviando resumo p/", telefone, "origem:", origemResumo);
         try {
+          // Texto SEMPRE separado da mídia (mesma sequência dos destinatários).
           const r1 = await invokeSend({
-            estabelecimento_id: estabelecimentoId, telefone,
-            text: mediaUrlPre ? undefined : parte1,
-            caption: mediaUrlPre ? parte1 : undefined,
-            fileUrl: mediaUrlPre || undefined,
-            contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
+            estabelecimento_id: estabelecimentoId, telefone, text: parte1,
             whatsappSessionId: cfg.whatsappSessionId || null,
             whatsappSessionName: cfg.whatsappSessionName || null,
             botFlowId: botFlowId || null,
@@ -843,6 +840,21 @@ async function executeBroadcast(
           if (!r1.ok) {
             console.warn("[broadcast] falha parte1 resumo:", telefone, r1.reason);
             return;
+          }
+          if (mediaUrlPre) {
+            const rmid = await invokeSend({
+              estabelecimento_id: estabelecimentoId, telefone,
+              fileUrl: mediaUrlPre,
+              contentType: mediaType === "video" ? "video" : inferContentType(mediaUrlPre),
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origemResumo}_midia`,
+            });
+            if (!rmid.ok) {
+              console.warn("[broadcast] falha midia resumo:", telefone, rmid.reason);
+              return;
+            }
           }
           if (depoisMask) {
             const rd = await invokeSend({
