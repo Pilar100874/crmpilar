@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import { axe } from "vitest-axe";
-import "vitest-axe/extend-expect";
 import { useState } from "react";
 import { LookupStatusMessage, type LookupStatus, type LookupKind } from "./LookupStatusMessage";
 import { CnpjField } from "./CnpjField";
@@ -16,7 +15,12 @@ vi.mock("@/integrations/supabase/client", () => ({
 // ------- Helpers -------
 async function expectNoA11yViolations(container: HTMLElement) {
   const results = await axe(container);
-  expect(results).toHaveNoViolations();
+  const violations = (results as { violations: Array<{ id: string; description: string; nodes: unknown[] }> }).violations;
+  if (violations.length > 0) {
+    const detail = violations.map((v) => `${v.id} (${v.nodes.length} nós): ${v.description}`).join("\n");
+    throw new Error(`Violações de acessibilidade encontradas:\n${detail}`);
+  }
+  expect(violations).toEqual([]);
 }
 
 const cnpjOk = {
