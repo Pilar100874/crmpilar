@@ -429,18 +429,18 @@ async function executeBroadcast(
   }
 
   const _mediaVarName = (cfg.mediaVar || "last_generated_media_url").trim();
-  const preTemMidia = !!cfg.usarMensagemPreDefinida
-    && !!String(baseCtx[_mediaVarName] || baseCtx.last_generated_media_url || "").trim();
 
   let msg = "";
   if (cfg.usarMensagemPreDefinida) {
     const varName = cfg.preDefinidaVar || "last_mensagem_pre_definida";
-    const fromVar = preTemMidia ? "" : String(baseCtx[varName] ?? "");
-    const extra = interp(cfg.message || "", baseCtx);
-    msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n");
+    // Sempre inclui a frase pré-definida (mesmo quando há mídia — vira legenda da imagem/vídeo).
+    const fromVar = String(baseCtx[varName] ?? "").trim();
+    const extra = interp(cfg.message || "", baseCtx).trim();
+    msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n\n");
   } else {
     msg = interp(cfg.message || "", baseCtx);
   }
+
 
   const _ft = cfg.filtroTipo || "todos";
   const modoEspecifico = _ft === "especifico";
