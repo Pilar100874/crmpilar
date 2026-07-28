@@ -1805,7 +1805,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 onRetry={() => handleCNPJLookup(formData.cpf_cnpj)}
               />
             )}
-            {field.id === "cep" && !fieldErrors[field.id] && (
+            {field.id === "cep" && isBrasil && !fieldErrors[field.id] && (
               <LookupStatusMessage
                 kind="cep"
                 status={cepStatus}
