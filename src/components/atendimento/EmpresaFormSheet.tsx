@@ -204,27 +204,32 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     const maskedValue = clean.length <= 11 ? maskCPF(value) : maskCNPJ(value);
     setFormData(prev => ({ ...prev, cpf_cnpj: maskedValue }));
 
-    // Se for CNPJ completo (14 dígitos), buscar dados
+    // Se for CNPJ completo (14 dígitos), buscar dados. Se não encontrar, mantém os campos
+    // editáveis para preenchimento manual pelo usuário.
     if (clean.length === 14) {
       const data = await lookupCNPJ(clean);
       if (data) {
+        const cepMasked = data.cep ? maskCEP(data.cep) : "";
         setFormData(prev => ({
           ...prev,
           nome: data.nome || prev.nome,
           nome_fantasia: data.fantasia || prev.nome_fantasia,
-          cep: data.cep ? maskCEP(data.cep) : prev.cep,
+          cep: cepMasked || prev.cep,
           endereco: data.logradouro + (data.numero ? ', ' + data.numero : '') || prev.endereco,
           numero: data.numero || prev.numero,
           bairro: data.bairro || prev.bairro,
-          cidade: data.municipio || prev.cidade,
-          estado: data.uf || prev.estado,
           telefone: data.telefone ? maskPhone(data.telefone) : prev.telefone,
           email: data.email || prev.email,
         }));
+        // UF/Cidade sempre vêm pelo CEP — dispara a busca automaticamente
+        if (cepMasked) {
+          await handleCEPChange(cepMasked);
+        }
         toast.success("Dados preenchidos automaticamente via CNPJ");
       }
     }
   };
+
 
   // Buscar CEP automaticamente
   const handleCEPChange = async (value: string) => {
