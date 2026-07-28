@@ -731,24 +731,33 @@ async function executeBroadcast(
           cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
         }
         if (cPhone) {
-          const contato = await invokeSend({
-            estabelecimento_id: estabelecimentoId, telefone: d.phone,
-            contact: { nome: cNome, whatsapp: cPhone },
-            whatsappSessionId: cfg.whatsappSessionId || null,
-            whatsappSessionName: cfg.whatsappSessionName || null,
-            botFlowId: botFlowId || null,
-            origem: `${origem}_contato`,
-          });
-          providerStatus = contato.providerStatus || providerStatus;
-          if (!contato.ok) {
-            ok = false;
-            invalid = contato.invalid;
-            sendReason = contato.reason || "Falha ao confirmar envio do contato";
-            console.warn("[broadcast] falha enviar contato p/", d.phone, sendReason);
+          // Dedup: não repete o mesmo contato para o mesmo destinatário
+          const jaSet = contatoJaEnviado.get(d.phone) || new Set<string>();
+          if (jaSet.has(cPhone)) {
+            console.log("[broadcast] contato duplicado ignorado p/", d.phone, "->", cPhone);
+          } else {
+            const contato = await invokeSend({
+              estabelecimento_id: estabelecimentoId, telefone: d.phone,
+              contact: { nome: cNome, whatsapp: cPhone },
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origem}_contato`,
+            });
+            jaSet.add(cPhone);
+            contatoJaEnviado.set(d.phone, jaSet);
+            providerStatus = contato.providerStatus || providerStatus;
+            if (!contato.ok) {
+              ok = false;
+              invalid = contato.invalid;
+              sendReason = contato.reason || "Falha ao confirmar envio do contato";
+              console.warn("[broadcast] falha enviar contato p/", d.phone, sendReason);
+            }
           }
         } else {
           console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
         }
+
       }
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
