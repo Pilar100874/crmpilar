@@ -308,14 +308,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       const missingStandard = companyFields.filter((f) => !existingIds.has(f.id));
       if (missingStandard.length === 0) return mapped;
       const result = [...mapped];
+      const insertAfter = (afterId: string, f: CustomField) => {
+        const idx = result.findIndex((x) => x.id === afterId);
+        if (idx >= 0) result.splice(idx + 1, 0, f);
+        else result.push(f);
+      };
       for (const f of missingStandard) {
-        if (f.id === 'whatsapp') {
-          const idx = result.findIndex((x) => x.id === 'telefone');
-          if (idx >= 0) result.splice(idx + 1, 0, f);
-          else result.push(f);
-        } else {
-          result.push(f);
+        if (f.id === 'whatsapp') insertAfter('telefone', f);
+        else if (f.id === 'pais') {
+          const idx = result.findIndex((x) => x.id === 'cep');
+          if (idx >= 0) result.splice(idx, 0, f); else result.push(f);
         }
+        else if (f.id === 'numero') insertAfter('address', f);
+        else if (f.id === 'complemento') insertAfter('numero', f);
+        else result.push(f);
       }
       return result;
     }
