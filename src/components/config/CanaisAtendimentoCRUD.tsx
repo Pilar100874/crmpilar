@@ -43,6 +43,8 @@ interface WhatsAppSession {
   status: string;
   qr_code: string | null;
   bot_flow_id: string | null;
+  auto_reconnect_days?: number | null;
+  last_reconnect_at?: string | null;
 }
 
 type EvolutionDiagnosticStatus = "ok" | "warning" | "error" | "info";
