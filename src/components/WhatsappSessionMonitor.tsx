@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Loader2, Ghost } from "lucide-react";
+import { AlertTriangle, RefreshCw, Loader2, Ghost, QrCode } from "lucide-react";
 import { toast } from "sonner";
 
 type SessionRow = {
@@ -32,10 +32,11 @@ type SessionRow = {
   // preenchido só para zumbis
   pending?: number;
   total?: number;
-  reason?: "down" | "zombie";
+  reason?: "down" | "zombie" | "qr";
 };
 
-const HEALTHY_STATES = new Set(["WORKING", "SCAN_QR_CODE"]);
+// WORKING = ok. SCAN_QR_CODE agora dispara alerta próprio (precisa ler QR).
+const HEALTHY_STATES = new Set(["WORKING"]);
 const POLL_MS = 45_000;
 // Intervalo de checagem de zumbi é mais espaçado (chama Evolution API por sessão).
 const ZOMBIE_POLL_MS = 3 * 60_000;
@@ -45,17 +46,20 @@ const SNOOZE_MS = 5 * 60_000;
 const ZOMBIE_MIN_PENDING = 5; // pelo menos 5 mensagens pendentes
 const ZOMBIE_WINDOW_MIN = 15; // nos últimos 15 minutos
 
+
 export default function WhatsappSessionMonitor() {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [downSessions, setDownSessions] = useState<SessionRow[]>([]);
   const [zombieSessions, setZombieSessions] = useState<SessionRow[]>([]);
+  const [qrSessions, setQrSessions] = useState<SessionRow[]>([]);
   const [open, setOpen] = useState(false);
   const [reconnecting, setReconnecting] = useState<string | null>(null);
   const [restarting, setRestarting] = useState<string | null>(null);
   const snoozedUntilRef = useRef<number>(0);
   const lastZombieCheckRef = useRef<number>(0);
+  const notifiedQrRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -70,9 +74,34 @@ export default function WhatsappSessionMonitor() {
       const admin = (roleRows || []).some((r: any) => r.role === "admin");
       setIsAdmin(admin);
       setEstabelecimentoId(estId);
+      // Pede permissão de notificação do navegador só para admins.
+      if (admin && typeof window !== "undefined" && "Notification" in window) {
+        try {
+          if (Notification.permission === "default") {
+            await Notification.requestPermission();
+          }
+        } catch { /* ignore */ }
+      }
     })();
     return () => { mounted = false; };
   }, []);
+
+  const notifyQr = (s: SessionRow) => {
+    if (notifiedQrRef.current.has(s.id)) return;
+    notifiedQrRef.current.add(s.id);
+    const title = "WhatsApp precisa de QR Code";
+    const body = `Sessão "${s.session_name}" foi desvinculada. Escaneie o QR Code para reconectar.`;
+    toast.warning(title, { description: body, duration: 15_000 });
+    try {
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        const n = new Notification(title, { body, tag: `wa-qr-${s.id}`, requireInteraction: true });
+        n.onclick = () => {
+          window.focus();
+          navigate("/atendimento-config?tab=canais");
+        };
+      }
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     if (!isAdmin || !estabelecimentoId) return;
@@ -84,8 +113,23 @@ export default function WhatsappSessionMonitor() {
         .eq("estabelecimento_id", estabelecimentoId);
       if (error || !data) return;
 
+      const qr: SessionRow[] = data
+        .filter((s) => String(s.status || "").toUpperCase() === "SCAN_QR_CODE")
+        .map((s) => ({ ...s, reason: "qr" as const }));
+      setQrSessions(qr);
+
+      // Dispara notificação para QR recém-detectados; limpa memória dos que saíram.
+      const currentQrIds = new Set(qr.map((s) => s.id));
+      for (const id of Array.from(notifiedQrRef.current)) {
+        if (!currentQrIds.has(id)) notifiedQrRef.current.delete(id);
+      }
+      qr.forEach(notifyQr);
+
       const down: SessionRow[] = data
-        .filter((s) => !HEALTHY_STATES.has(String(s.status || "").toUpperCase()))
+        .filter((s) => {
+          const st = String(s.status || "").toUpperCase();
+          return st !== "SCAN_QR_CODE" && !HEALTHY_STATES.has(st);
+        })
         .map((s) => ({ ...s, reason: "down" as const }));
       setDownSessions(down);
 
@@ -120,15 +164,17 @@ export default function WhatsappSessionMonitor() {
         setZombieSessions(zombies);
       }
 
-      const shouldOpen = (down.length > 0 || zombies.length > 0) && Date.now() > snoozedUntilRef.current;
+      const hasIssue = down.length > 0 || zombies.length > 0 || qr.length > 0;
+      const shouldOpen = hasIssue && Date.now() > snoozedUntilRef.current;
       if (shouldOpen) setOpen(true);
-      else if (down.length === 0 && zombies.length === 0) setOpen(false);
+      else if (!hasIssue) setOpen(false);
     };
 
     check();
     const id = setInterval(check, POLL_MS);
     return () => clearInterval(id);
   }, [isAdmin, estabelecimentoId]);
+
 
   const reconnect = async (s: SessionRow) => {
     try {
@@ -197,8 +243,9 @@ export default function WhatsappSessionMonitor() {
 
   if (!isAdmin) return null;
 
-  const totalIssues = downSessions.length + zombieSessions.length;
-  const onlyZombies = downSessions.length === 0 && zombieSessions.length > 0;
+  const totalIssues = downSessions.length + zombieSessions.length + qrSessions.length;
+  const onlyQr = downSessions.length === 0 && zombieSessions.length === 0 && qrSessions.length > 0;
+  const onlyZombies = downSessions.length === 0 && qrSessions.length === 0 && zombieSessions.length > 0;
 
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) snooze(); }}>
@@ -212,20 +259,47 @@ export default function WhatsappSessionMonitor() {
                 <AlertTriangle className="h-7 w-7 text-destructive" />
               )}
             </span>
-            {onlyZombies
-              ? "WhatsApp travado (mensagens não estão saindo)"
-              : "Sessão do WhatsApp caiu"}
+            {onlyQr
+              ? "WhatsApp precisa de QR Code"
+              : onlyZombies
+                ? "WhatsApp travado (mensagens não estão saindo)"
+                : "Sessão do WhatsApp caiu"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-base">
-            {onlyZombies
-              ? `${zombieSessions.length === 1 ? "Uma sessão aparece como conectada" : `${zombieSessions.length} sessões aparecem como conectadas`}, mas mensagens estão acumulando em PENDING no Evolution. Isso geralmente indica que o celular pareado está offline ou a instância travou.`
-              : totalIssues === 1
-                ? "Uma sessão do WhatsApp está desconectada. Reconecte agora para não perder mensagens."
-                : `${totalIssues} sessões do WhatsApp com problema. Verifique abaixo.`}
+            {onlyQr
+              ? `${qrSessions.length === 1 ? "Uma sessão está aguardando" : `${qrSessions.length} sessões estão aguardando`} leitura de QR Code para reconectar. Abra as configurações e escaneie com o celular pareado.`
+              : onlyZombies
+                ? `${zombieSessions.length === 1 ? "Uma sessão aparece como conectada" : `${zombieSessions.length} sessões aparecem como conectadas`}, mas mensagens estão acumulando em PENDING no Evolution. Isso geralmente indica que o celular pareado está offline ou a instância travou.`
+                : totalIssues === 1
+                  ? "Uma sessão do WhatsApp está com problema. Verifique abaixo."
+                  : `${totalIssues} sessões do WhatsApp com problema. Verifique abaixo.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
+
         <div className="max-h-72 overflow-y-auto space-y-2 rounded-lg border bg-muted/30 p-3">
+          {qrSessions.map((s) => (
+            <div
+              key={`qr-${s.id}`}
+              className="flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/5 p-3 shadow-sm"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 truncate font-semibold">
+                  <QrCode className="h-4 w-4 text-primary" />
+                  {s.session_name}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Aguardando leitura do QR Code
+                  {s.phone_number ? ` · ${s.phone_number}` : ""}
+                </div>
+              </div>
+              <Button size="sm" onClick={openConfig}>
+                <QrCode className="mr-2 h-4 w-4" /> Ler QR Code
+              </Button>
+            </div>
+          ))}
+
+
           {downSessions.map((s) => (
             <div key={s.id} className="flex items-center justify-between gap-3 rounded-md bg-background p-3 shadow-sm">
               <div className="min-w-0">
