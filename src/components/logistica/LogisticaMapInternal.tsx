@@ -163,6 +163,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   onParadaClick,
   className = 'h-full w-full',
   fitBounds = true,
+  fitBoundsPadding,
   compactIcons = false,
   disableInteraction = false,
   focusVeiculoId,
