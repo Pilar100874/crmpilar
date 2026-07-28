@@ -8,6 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import OAuthConsent from "./pages/OAuthConsent";
+import DevLookupE2E from "./pages/DevLookupE2E";
 
 import Dashboard from "./pages/Dashboard";
 import Atendimento from "./pages/Atendimento";
@@ -349,6 +350,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/dev/lookup-e2e" element={<DevLookupE2E />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/espelho-funcionario/:token" element={<EspelhoFuncionario />} />
             <Route path="/ponto/totem" element={<PontoTotem />} />
