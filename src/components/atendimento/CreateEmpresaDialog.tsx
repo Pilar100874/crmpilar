@@ -86,6 +86,8 @@ export function CreateEmpresaDialog({
       toast.error("Nome Fantasia é obrigatório");
       return;
     }
+    const _dc = (await import("@/lib/docValidation")).validateCpfCnpjField(formData.cnpj);
+    if (!_dc.ok) { toast.error(_dc.message!); return; }
 
     setSaving(true);
     try {
