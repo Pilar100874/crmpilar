@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("evolution-manager", {
         body: {
-          action: "restart",
+          action: "start",
           estabelecimentoId: s.estabelecimento_id,
           sessionId: s.id,
           sessionName: s.session_name,
