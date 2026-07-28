@@ -159,7 +159,7 @@ describe("Contrato — normalização de CNPJ (buscarCNPJ)", () => {
     }
     expect(r.cnpj).toBe(VALID);
     expect(r.razaoSocial).toBe("MINIMO LTDA");
-    expect(r.nomeFantasia).toBe("");
+    expect(r.nomeFantasia).toBe("MINIMO LTDA"); // contrato: nomeFantasia cai para razaoSocial quando ausente
     expect(r.telefone).toBe("");
     expect(r.cep).toBe("");
     expect(r.logradouro).toBe("");
