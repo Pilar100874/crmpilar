@@ -1031,9 +1031,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const handleSaveEmpresa = async () => {
     const errors: Record<string, string> = {};
 
+    const isBrasil = (formData.pais || "Brasil") === "Brasil";
+
     // Validar campos obrigatórios da empresa com base na configuração
     const requiredIds = formFieldsToRender.filter(f => f.required).map(f => f.id);
     requiredIds.forEach((fieldId) => {
+      // Fora do Brasil, CEP não é obrigatório (país pode não ter código postal padronizado)
+      if (!isBrasil && fieldId === "cep") return;
       if (!formData[fieldId]?.toString().trim()) {
         errors[fieldId] = "Campo obrigatório";
       }
@@ -1048,7 +1052,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     }
 
-    if (formData.cep && !validateCEP(formData.cep)) {
+    if (isBrasil && formData.cep && !validateCEP(formData.cep)) {
       errors.cep = "CEP inválido";
     }
 
