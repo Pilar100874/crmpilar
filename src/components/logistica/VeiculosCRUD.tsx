@@ -148,6 +148,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     configurar_tracker_ao_salvar: true,
     ativo: true,
     tipo_dispositivo: 'rastreador' as 'rastreador' | 'app' | 'nenhum',
+    tracker_expect_sms_reply: false,
   });
 
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
@@ -326,6 +327,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         configurar_tracker_ao_salvar: !(veiculo as any).tracker_model_id ? true : false,
         ativo: veiculo.ativo,
         tipo_dispositivo: linkedDevice ? 'app' : (linkedTracker ? 'rastreador' : 'nenhum'),
+        tracker_expect_sms_reply: !!(veiculo as any).tracker_expect_sms_reply,
       });
     } else {
       setSelectedVeiculo(null);
@@ -345,6 +347,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         configurar_tracker_ao_salvar: true,
         ativo: true,
         tipo_dispositivo: 'rastreador',
+        tracker_expect_sms_reply: false,
       });
     }
     setDispositivoTab('selecionar');
@@ -470,6 +473,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             tipo_chip: formData.tipo_chip || 'm2m',
             tracker_model_id: formData.tracker_model_id || null,
             apn_operadora: opSel?.apn || null,
+            tracker_expect_sms_reply: !!formData.tracker_expect_sms_reply,
           } as any)
           .eq('id', veiculoId);
       }
