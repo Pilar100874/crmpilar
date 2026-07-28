@@ -422,6 +422,45 @@ function buildEvolutionNumberVariants(toNumberOnly: string): string[] {
   return variants;
 }
 
+// Pergunta ao próprio Evolution qual é o JID canônico do número (resolve LID novo do WhatsApp).
+async function resolveEvolutionCanonicalJids(base: string, apiKey: string, sessionName: string, toNumberOnly: string): Promise<string[]> {
+  try {
+    const candidates = buildBrazilWhatsappDigitCandidates(toNumberOnly);
+    if (!candidates.length) return [];
+    const url = `${base}/chat/whatsappNumbers/${encodeURIComponent(sessionName)}`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: apiKey },
+      body: JSON.stringify({ numbers: candidates }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json().catch(() => null) as any;
+    const list = Array.isArray(data) ? data : (Array.isArray(data?.numbers) ? data.numbers : []);
+    const out: string[] = [];
+    for (const item of list) {
+      if (!item?.exists) continue;
+      const jid = item?.jid || item?.wid || item?.lid;
+      if (jid && typeof jid === "string" && !out.includes(jid)) out.push(jid);
+    }
+    console.log("[AGENT][EVO] resolveCanonicalJids:", toNumberOnly, "->", JSON.stringify(out));
+    return out;
+  } catch (e: any) {
+    console.log("[AGENT][EVO] resolveCanonicalJids error:", e?.message || e);
+    return [];
+  }
+}
+
+async function buildEvolutionVariantsWithCanonicalJid(base: string, apiKey: string, sessionName: string, toNumberOnly: string): Promise<string[]> {
+  const canonical = await resolveEvolutionCanonicalJids(base, apiKey, sessionName, toNumberOnly);
+  const fallback = buildEvolutionNumberVariants(toNumberOnly);
+  const merged: string[] = [];
+  for (const v of [...canonical, ...fallback]) {
+    if (!merged.includes(v)) merged.push(v);
+  }
+  return merged;
+}
+
 function extractEvolutionMessages(data: any): any[] {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.messages?.records)) return data.messages.records;
