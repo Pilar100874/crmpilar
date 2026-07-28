@@ -25,6 +25,8 @@ import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
+import { buscarCNPJ } from "@/lib/cadastros/cnpjService";
+import { buscarCEP } from "@/lib/cadastros/cepService";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
