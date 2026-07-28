@@ -1678,6 +1678,26 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </div>
         );
       default:
+        {
+          const isCepDriven = field.id === "city" || field.id === "state";
+          if (isCepDriven) {
+            return (
+              <div className="relative">
+                <Input
+                  id={field.id}
+                  value={displayValue}
+                  readOnly
+                  disabled={isDisabled}
+                  placeholder={formData.cep ? "Preenchido pelo CEP" : "Informe o CEP"}
+                  className="bg-muted/40 cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Campo preenchido automaticamente pelo CEP.
+                </p>
+              </div>
+            );
+          }
+        }
         return (
           <div className="relative">
             <Input
