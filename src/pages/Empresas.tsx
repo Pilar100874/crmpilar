@@ -1680,12 +1680,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     };
 
+    const isBrasil = (formData.pais || "Brasil") === "Brasil";
+
     const handleFieldChange = (value: any) => {
       let maskedValue = value;
 
       if (field.id === "cpf_cnpj") {
         maskedValue = formData.company_type === "Pessoa Física" ? maskCPF(value) : maskCNPJ(value);
-      } else if (field.id === "cep") {
+      } else if (field.id === "cep" && isBrasil) {
         maskedValue = maskCEP(value);
       } else if (field.type === "phone") {
         maskedValue = maskWhatsApp(value);
@@ -1705,13 +1707,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           handleCNPJLookup(maskedValue);
         }, 400);
       }
-      if (field.id === "cep" && clean.length === 8) {
+      if (field.id === "cep" && isBrasil && clean.length === 8) {
         if (cepDebounceRef.current) window.clearTimeout(cepDebounceRef.current);
         cepDebounceRef.current = window.setTimeout(() => {
           handleCEPLookup(maskedValue);
         }, 400);
       }
     };
+
 
     switch (field.type) {
       case "select":
