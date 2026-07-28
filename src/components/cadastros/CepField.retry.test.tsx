@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { useState } from "react";
 import { CepField } from "./CepField";
 import { clearCepCache } from "@/lib/cadastros/cepService";
@@ -25,19 +24,17 @@ function Harness({ onLookup }: { onLookup: (r: any) => void }) {
   return <CepField value={value} onChange={setValue} onLookup={onLookup} />;
 }
 
+function fillCep() {
+  const input = screen.getByPlaceholderText("00000-000") as HTMLInputElement;
+  fireEvent.change(input, { target: { value: VALID_MASKED } });
+}
+
 describe("CepField — botão 'Tentar novamente' (integração)", () => {
   const originalFetch = global.fetch;
-  beforeEach(() => { clearCepCache(); vi.useFakeTimers(); });
-  afterEach(() => { global.fetch = originalFetch; vi.useRealTimers(); vi.restoreAllMocks(); });
-
-  async function typeCep(user: ReturnType<typeof userEvent.setup>) {
-    const input = screen.getByPlaceholderText("00000-000");
-    await user.type(input, VALID_MASKED);
-    await vi.advanceTimersByTimeAsync(500);
-  }
+  beforeEach(() => { clearCepCache(); });
+  afterEach(() => { global.fetch = originalFetch; vi.restoreAllMocks(); });
 
   it("após not-found ({ erro: true }): retry limpa cache e traz novo endereço", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const fetchSpy = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ erro: true }) })
       .mockResolvedValueOnce(okPayload);
@@ -45,23 +42,20 @@ describe("CepField — botão 'Tentar novamente' (integração)", () => {
     const onLookup = vi.fn();
 
     render(<Harness onLookup={onLookup} />);
-    await typeCep(user);
+    fillCep();
 
-    await waitFor(() => expect(screen.getByText(/CEP não encontrado/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/CEP não encontrado/i)).toBeInTheDocument(), { timeout: 2000 });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(onLookup).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: /Tentar novamente/i }));
-    await vi.runAllTimersAsync();
+    fireEvent.click(screen.getByRole("button", { name: /Tentar novamente/i }));
 
-    await waitFor(() => expect(onLookup).toHaveBeenCalledWith(expect.objectContaining({ logradouro: "Avenida Paulista" })));
+    await waitFor(() => expect(onLookup).toHaveBeenCalledWith(expect.objectContaining({ logradouro: "Avenida Paulista" })), { timeout: 2000 });
     expect(fetchSpy).toHaveBeenCalledTimes(2);
-    // Mensagem de erro sumiu (não ficou grudada de estado anterior)
     expect(screen.queryByText(/CEP não encontrado/i)).not.toBeInTheDocument();
   });
 
   it("após erro de rede: retry refaz a chamada e finaliza com sucesso", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const fetchSpy = vi.fn()
       .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce(okPayload);
@@ -69,14 +63,16 @@ describe("CepField — botão 'Tentar novamente' (integração)", () => {
     const onLookup = vi.fn();
 
     render(<Harness onLookup={onLookup} />);
-    await typeCep(user);
+    fillCep();
 
-    await waitFor(() => expect(screen.getByText(/CEP não encontrado|Falha ao consultar CEP/i)).toBeInTheDocument());
+    await waitFor(
+      () => expect(screen.getByText(/CEP não encontrado|Falha ao consultar CEP/i)).toBeInTheDocument(),
+      { timeout: 2000 },
+    );
 
-    await user.click(screen.getByRole("button", { name: /Tentar novamente/i }));
-    await vi.runAllTimersAsync();
+    fireEvent.click(screen.getByRole("button", { name: /Tentar novamente/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2), { timeout: 2000 });
     expect(onLookup).toHaveBeenCalledTimes(1);
     const urls = fetchSpy.mock.calls.map((c) => String(c[0]));
     expect(urls[0]).toContain(VALID_CEP);
