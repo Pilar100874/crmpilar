@@ -287,6 +287,31 @@ function buildNumberVariants(phone: string): string[] {
   return variants;
 }
 
+// Consulta o próprio Evolution pelo JID canônico do número (resolve LID novo do WhatsApp).
+async function resolveCanonicalJids(base: string, headers: Record<string, string>, instance: string, phone: string): Promise<string[]> {
+  try {
+    const candidates = buildBrazilWhatsappDigitCandidates(phone);
+    if (!candidates.length) return [];
+    const { resp, data } = await evoFetch(`${base}/chat/whatsappNumbers/${encodeURIComponent(instance)}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ numbers: candidates }),
+    });
+    if (!resp.ok) return [];
+    const list = Array.isArray(data) ? data : (Array.isArray(data?.numbers) ? data.numbers : []);
+    const out: string[] = [];
+    for (const item of list) {
+      if (!item?.exists) continue;
+      const jid = item?.jid || item?.wid || item?.lid;
+      if (jid && typeof jid === "string" && !out.includes(jid)) out.push(jid);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+
 type DiagnosticStep = {
   id: string;
   title: string;
