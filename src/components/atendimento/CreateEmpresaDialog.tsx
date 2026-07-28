@@ -281,28 +281,12 @@ export function CreateEmpresaDialog({
               />
             </div>
 
-            {/* Cidade + UF */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="cidade">Cidade</Label>
-                <Input
-                  id="cidade"
-                  value={formData.cidade}
-                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                  placeholder="Cidade"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="estado">UF</Label>
-                <Input
-                  id="estado"
-                  value={formData.estado}
-                  onChange={(e) => setFormData({ ...formData, estado: e.target.value.toUpperCase().slice(0, 2) })}
-                  placeholder="UF"
-                  maxLength={2}
-                />
-              </div>
-            </div>
+            {/* Cidade + UF + IBGE */}
+            <UfCidadeIbge
+              value={{ uf: formData.estado || "", cidade: formData.cidade || "", ibge: (formData as any).codigo_ibge || "" }}
+              onChange={(v) => setFormData({ ...formData, estado: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
+            />
+
           </div>
         </ScrollArea>
 
