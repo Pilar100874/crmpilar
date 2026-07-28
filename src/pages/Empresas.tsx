@@ -874,32 +874,48 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const handleCEPLookup = async (cep: string) => {
-    const result = await lookupCEP(cep);
+    const result = await buscarCEP(cep);
     if (result) {
       setFormData(prev => ({
         ...prev,
         cep: maskCEP(result.cep),
-        address: result.logradouro,
-        neighborhood: result.bairro,
-        city: result.localidade,
+        address: result.logradouro || prev.address,
+        neighborhood: result.bairro || prev.neighborhood,
+        city: result.cidade,
         state: result.uf,
       }));
+      // Auto-focus no número após auto-preencher endereço
+      setTimeout(() => {
+        const el = document.getElementById("numero") as HTMLInputElement | null;
+        el?.focus();
+      }, 60);
     }
   };
 
   const handleCNPJLookup = async (cnpj: string) => {
-    const result = await lookupCNPJ(cnpj);
+    const result = await buscarCNPJ(cnpj);
     if (result) {
       const cepMasked = result.cep ? maskCEP(result.cep) : "";
       setFormData(prev => ({
         ...prev,
-        company_name: result.nome,
-        company_fantasia: result.fantasia,
-        telefone: maskWhatsApp(result.telefone),
-        email: result.email,
+        company_name: result.razaoSocial || prev.company_name,
+        company_fantasia: result.nomeFantasia || prev.company_fantasia,
+        telefone: result.telefone ? maskWhatsApp(result.telefone) : prev.telefone,
+        email: result.email || prev.email,
         cep: cepMasked || prev.cep,
-        address: result.logradouro,
-        neighborhood: result.bairro,
+        address: result.logradouro || prev.address,
+        numero: result.numero || prev.numero,
+        complemento: result.complemento || prev.complemento,
+        neighborhood: result.bairro || prev.neighborhood,
+        data_fundacao: result.dataAbertura || prev.data_fundacao,
+        situacao_cadastral: result.situacaoCadastral || prev.situacao_cadastral,
+        porte: result.porte || prev.porte,
+        natureza_juridica: result.naturezaJuridica || prev.natureza_juridica,
+        capital_social: result.capitalSocial ?? prev.capital_social,
+        regime_tributario: result.regimeTributario || prev.regime_tributario,
+        optante_mei: result.optanteMei ?? prev.optante_mei,
+        optante_simples: result.optanteSimples ?? prev.optante_simples,
+        pais: result.pais || prev.pais || "Brasil",
       }));
       // Cidade/UF sempre pelo CEP
       if (cepMasked && cepMasked.replace(/\D/g, '').length === 8) {
