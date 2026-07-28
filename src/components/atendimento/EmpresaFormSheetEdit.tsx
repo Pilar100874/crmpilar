@@ -12,6 +12,7 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCNPJ, maskCPF, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { validateCpfCnpjField } from "@/lib/docValidation";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { EmpresaFormulariosTab } from "@/components/empresas/EmpresaFormulariosTab";
