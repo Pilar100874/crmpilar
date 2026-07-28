@@ -1773,9 +1773,47 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             {fieldErrors[field.id] && (
               <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
             )}
-            {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
+            {(field.id === "cpf_cnpj" && (cnpjLoading || cnpjStatus === "loading")) || (field.id === "cep" && (cepLoading || cepStatus === "loading")) ? (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
             ) : null}
+            {field.id === "cpf_cnpj" && !fieldErrors[field.id] && (
+              <>
+                {cnpjStatus === "loading" && (
+                  <p className="text-xs text-muted-foreground mt-1">Consultando CNPJ…</p>
+                )}
+                {cnpjStatus === "ok" && (
+                  <p className="text-xs text-emerald-600 mt-1">CNPJ encontrado — dados preenchidos automaticamente.</p>
+                )}
+                {cnpjStatus === "invalid" && (
+                  <p className="text-xs text-amber-600 mt-1">CNPJ inválido — verifique os dígitos.</p>
+                )}
+                {cnpjStatus === "notfound" && (
+                  <p className="text-xs text-amber-600 mt-1">Nenhum resultado encontrado para este CNPJ.</p>
+                )}
+                {cnpjStatus === "error" && (
+                  <p className="text-xs text-red-500 mt-1">Falha ao consultar o CNPJ. Tente novamente.</p>
+                )}
+              </>
+            )}
+            {field.id === "cep" && !fieldErrors[field.id] && (
+              <>
+                {cepStatus === "loading" && (
+                  <p className="text-xs text-muted-foreground mt-1">Consultando CEP…</p>
+                )}
+                {cepStatus === "ok" && (
+                  <p className="text-xs text-emerald-600 mt-1">Endereço preenchido a partir do CEP.</p>
+                )}
+                {cepStatus === "invalid" && (
+                  <p className="text-xs text-amber-600 mt-1">CEP incompleto — informe os 8 dígitos.</p>
+                )}
+                {cepStatus === "notfound" && (
+                  <p className="text-xs text-amber-600 mt-1">CEP não encontrado.</p>
+                )}
+                {cepStatus === "error" && (
+                  <p className="text-xs text-red-500 mt-1">Falha ao consultar o CEP. Tente novamente.</p>
+                )}
+              </>
+            )}
             {(field.type === "phone" || field.id === "telefone") && displayValue && (
               <Button
                 variant="ghost"
