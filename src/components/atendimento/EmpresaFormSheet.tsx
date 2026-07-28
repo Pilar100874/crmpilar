@@ -276,6 +276,13 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       return;
     }
 
+    const docCheck = validateCpfCnpjField(formData.cpf_cnpj);
+    if (!docCheck.ok) {
+      toast.error(docCheck.message!);
+      setActiveTab("empresa");
+      return;
+    }
+
     setSaving(true);
     try {
       if (!estabelecimentoId) {
