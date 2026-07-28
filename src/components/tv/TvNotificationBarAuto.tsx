@@ -6,7 +6,8 @@ import TvNotificationBar from "./TvNotificationBar";
  * O app Android injeta esse parâmetro na URL ao abrir uma tela interna.
  */
 export default function TvNotificationBarAuto({ deviceId: forcedId }: { deviceId?: string | null }) {
-  const id = forcedId || new URLSearchParams(window.location.search).get("device_id");
+  const params = new URLSearchParams(window.location.search);
+  const id = forcedId || params.get("device_id") || params.get("device");
   useEffect(() => {}, []);
   if (!id) return null;
   return <TvNotificationBar deviceId={id} />;
