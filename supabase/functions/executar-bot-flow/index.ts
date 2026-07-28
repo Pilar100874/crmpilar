@@ -435,14 +435,16 @@ async function executeBroadcast(
   const _mediaVarName = (cfg.mediaVar || "last_generated_media_url").trim();
 
   let msg = "";
+  let fraseTexto = "";
+  let extraTexto = "";
   if (cfg.usarMensagemPreDefinida) {
     const varName = cfg.preDefinidaVar || "last_mensagem_pre_definida";
-    // Sempre inclui a frase pré-definida (mesmo quando há mídia — vira legenda da imagem/vídeo).
-    const fromVar = String(baseCtx[varName] ?? "").trim();
-    const extra = interp(cfg.message || "", baseCtx).trim();
-    msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n\n");
+    fraseTexto = String(baseCtx[varName] ?? "").trim();
+    extraTexto = interp(cfg.message || "", baseCtx).trim();
+    msg = [fraseTexto, extraTexto].filter((s) => s && s.trim()).join("\n\n");
   } else {
     msg = interp(cfg.message || "", baseCtx);
+    extraTexto = msg;
   }
 
 
