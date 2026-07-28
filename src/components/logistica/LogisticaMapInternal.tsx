@@ -294,9 +294,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         map.fitBounds(bounds, {
           paddingTopLeft: fitBoundsPadding.topLeft ?? [50, 50],
           paddingBottomRight: fitBoundsPadding.bottomRight ?? [50, 50],
+          maxZoom: 18,
         });
       } else {
-        map.fitBounds(bounds, { padding: [50, 50] });
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
       }
     }
   }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
