@@ -27,6 +27,7 @@ import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { buscarCNPJ } from "@/lib/cadastros/cnpjService";
 import { buscarCEP } from "@/lib/cadastros/cepService";
+import { LookupStatusMessage, type LookupStatus } from "@/components/cadastros/LookupStatusMessage";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
