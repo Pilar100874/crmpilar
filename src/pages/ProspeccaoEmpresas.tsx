@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { validateCNPJ, validateEmail } from '@/lib/validators';
 import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { buscarCNPJ } from '@/lib/cadastros/cnpjService';
+import { buscarCEP } from '@/lib/cadastros/cepService';
 
 // ===== Helpers de normalização/enriquecimento =====
 const UF_VALIDAS = new Set(['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO']);
@@ -65,24 +67,10 @@ const normSite = (v?: string | null): string | null => {
   return s.startsWith('http') ? s : `https://${s.replace(/^\/+/, '')}`;
 };
 
-// Enriquecer via BrasilAPI (CNPJ → Receita)
-const fetchCNPJ = async (cnpjDigits: string): Promise<any | null> => {
-  try {
-    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjDigits}`);
-    if (!r.ok) return null;
-    return await r.json();
-  } catch { return null; }
-};
+// Consultas CNPJ/CEP são feitas pelo serviço unificado (cache + cancelamento):
+// `buscarCNPJ` e `buscarCEP` de `@/lib/cadastros/*`. Não replique fetches aqui.
 
-// Enriquecer via ViaCEP
-const fetchCEP = async (cepDigits: string): Promise<any | null> => {
-  try {
-    const r = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d?.erro ? null : d;
-  } catch { return null; }
-};
+
 
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
@@ -284,30 +272,26 @@ export default function ProspeccaoEmpresas() {
       let cnae_principal = r.cnae_principal?.trim() || null;
       let cnae_descricao = r.cnae_descricao?.trim() || null;
 
-      // ===== 2) Enriquecer via CNPJ (Receita/BrasilAPI) =====
+      // ===== 2) Enriquecer via CNPJ (serviço unificado com cache) =====
       if (cnpj) {
-        const dig = removeMask(cnpj);
-        const receita = await fetchCNPJ(dig);
+        const receita = await buscarCNPJ(removeMask(cnpj));
         if (receita) {
           enriquecidos++;
-          nome = nome || receita.razao_social || receita.nome_fantasia || '';
-          nome_fantasia = nome_fantasia || receita.nome_fantasia || null;
+          nome = nome || receita.razaoSocial || receita.nomeFantasia || '';
+          nome_fantasia = nome_fantasia || receita.nomeFantasia || null;
           if (!endereco) {
-            const tipo = receita.descricao_tipo_de_logradouro || '';
-            const log = receita.logradouro || '';
             const num = receita.numero ? `, ${receita.numero}` : '';
             const comp = receita.complemento ? ` - ${receita.complemento}` : '';
-            endereco = `${tipo} ${log}${num}${comp}`.trim() || null;
+            endereco = `${receita.logradouro || ''}${num}${comp}`.trim() || null;
           }
           bairro = bairro || receita.bairro || null;
-          cidade = cidade || receita.municipio || null;
+          cidade = cidade || receita.cidade || null;
           uf = uf || normUF(receita.uf);
           cep = cep || normCEP(receita.cep);
-          cnae_principal = cnae_principal || (receita.cnae_fiscal ? String(receita.cnae_fiscal) : null);
-          cnae_descricao = cnae_descricao || receita.cnae_fiscal_descricao || null;
-          // Enriquecer telefone a partir da Receita se ainda não temos
-          if (!telefone) {
-            const telReceita = normWhats(receita.ddd_telefone_1 || receita.ddd_telefone_2 || '');
+          cnae_principal = cnae_principal || (receita.cnaePrincipal?.codigo || null);
+          cnae_descricao = cnae_descricao || (receita.cnaePrincipal?.descricao || null);
+          if (!telefone && receita.telefone) {
+            const telReceita = normWhats(receita.telefone);
             if (telReceita) telefone = telReceita;
           }
         }
@@ -316,17 +300,18 @@ export default function ProspeccaoEmpresas() {
       // Fallback: se ainda não temos telefone, usar o whatsapp
       if (!telefone) telefone = whatsapp;
 
-      // ===== 3) Enriquecer via CEP (ViaCEP) se ainda faltar endereço/cidade/UF =====
+      // ===== 3) Enriquecer via CEP (serviço unificado com cache) =====
       if (cep && (!endereco || !cidade || !uf || !bairro)) {
-        const via = await fetchCEP(removeMask(cep));
+        const via = await buscarCEP(removeMask(cep));
         if (via) {
           enriquecidos++;
           endereco = endereco || via.logradouro || null;
           bairro = bairro || via.bairro || null;
-          cidade = cidade || via.localidade || null;
+          cidade = cidade || via.cidade || null;
           uf = uf || normUF(via.uf);
         }
       }
+
 
       // ===== 4) Validações mínimas =====
       if (!nome) {
