@@ -420,11 +420,26 @@ async function runDiagnostic(params: {
     details: { webhookUrl: params.webhookUrl },
   });
 
-  const variants = buildNumberVariants(params.phone);
+  const canonicalJids = await resolveCanonicalJids(params.base, params.headers, params.instance, params.phone);
+  const rawVariants = buildNumberVariants(params.phone);
+  const variants: string[] = [];
+  for (const v of [...canonicalJids, ...rawVariants]) if (!variants.includes(v)) variants.push(v);
+
+  addStep({
+    id: "resolve-jid",
+    title: "Resolução do JID no WhatsApp",
+    status: canonicalJids.length ? "ok" : "warning",
+    message: canonicalJids.length
+      ? `Evolution reconheceu ${canonicalJids.length} JID canônico(s) para o número: ${canonicalJids.join(", ")}`
+      : "Evolution não retornou nenhum JID canônico para o número. Vamos tentar formatos padrão como fallback.",
+    details: { canonicalJids, fallback: rawVariants },
+  });
+
   if (!variants.length) {
     addStep({ id: "phone", title: "Número de teste", status: "error", message: "Número inválido para teste." });
     return { ok: false, conclusion: "Informe um WhatsApp válido com DDD e país.", startedAt, finishedAt: new Date().toISOString(), steps };
   }
+
 
   let delivered = false;
   let pending = false;
