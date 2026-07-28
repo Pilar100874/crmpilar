@@ -5,7 +5,14 @@ import { defineConfig, devices } from "@playwright/test";
  * O dev server do Lovable já roda em http://localhost:8080 — não sobe webServer aqui.
  * Rode com: `bunx playwright test`
  */
-const CHROMIUM_PATH = "/nix/store/nw961dvpvik5m19kbay4cg27wxgl3sdv-playwright-chromium-headless-shell/chrome-linux/headless_shell";
+const CHROMIUM_PATH =
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+  "/nix/store/nw961dvpvik5m19kbay4cg27wxgl3sdv-playwright-chromium-headless-shell/chrome-linux/headless_shell";
+
+// Impede o Playwright de procurar builds versionados quando usamos o binário do nix.
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH || process.env.PLAYWRIGHT_BROWSERS_PATH === "/") {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = "0";
+}
 
 export default defineConfig({
   testDir: "./e2e",
