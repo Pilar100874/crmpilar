@@ -5,6 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
  * O dev server do Lovable já roda em http://localhost:8080 — não sobe webServer aqui.
  * Rode com: `bunx playwright test`
  */
+const CHROMIUM_PATH = "/nix/store/nw961dvpvik5m19kbay4cg27wxgl3sdv-playwright-chromium-headless-shell/chrome-linux/headless_shell";
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
@@ -17,6 +19,13 @@ export default defineConfig({
     viewport: { width: 1280, height: 900 },
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { executablePath: CHROMIUM_PATH },
+      },
+    },
   ],
 });
+
