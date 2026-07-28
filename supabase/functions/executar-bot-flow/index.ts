@@ -311,11 +311,12 @@ async function gravarLogAutomacao(
         items.push({ tipo: "texto", conteudo: `⚠️ Envio abortado: ${b.error}`, titulo: "Aviso do sistema" });
       }
       if (b.textoAntes) items.push({ tipo: "texto", conteudo: b.textoAntes, titulo: "Texto antes" });
+      if (b.mensagem) {
+        items.push({ tipo: "texto", conteudo: b.mensagem });
+      }
       if (b.mediaUrl) {
         const tipoMidia = b.mediaType === "video" ? "video" : "imagem";
-        items.push({ tipo: tipoMidia, url: b.mediaUrl, legenda: b.mensagem || undefined });
-      } else if (b.mensagem) {
-        items.push({ tipo: "texto", conteudo: b.mensagem });
+        items.push({ tipo: tipoMidia, url: b.mediaUrl });
       }
       if (b.textoDepois) items.push({ tipo: "texto", conteudo: b.textoDepois, titulo: "Texto depois" });
     }
@@ -685,24 +686,40 @@ async function executeBroadcast(
           sendReason = pre.reason || "Falha ao confirmar envio do texto inicial";
         }
       }
-      if (ok && !invalid) {
-        const r = await invokeSend({
+      // Envia SEMPRE o texto (frase pré-definida) e a mídia como MENSAGENS SEPARADAS
+      // (nunca como legenda), para respeitar a sequência: texto → imagem → texto → contato.
+      if (ok && !invalid && msgInterp && msgInterp.trim()) {
+        const rt = await invokeSend({
           estabelecimento_id: estabelecimentoId, telefone: d.phone,
-          text: msgInterp || undefined,
-          caption: mediaUrlPre ? msgInterp : undefined,
-          fileUrl: mediaUrlPre || undefined,
-          contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
+          text: msgInterp,
           whatsappSessionId: cfg.whatsappSessionId || null,
           whatsappSessionName: cfg.whatsappSessionName || null,
           botFlowId: botFlowId || null,
-          origem,
+          origem: `${origem}_texto`,
         });
-        ok = r.ok;
-        invalid = r.invalid;
-        sendReason = r.reason;
-        providerStatus = r.providerStatus || providerStatus;
-        messageId = r.messageId || messageId;
-        attempts = r.attempts || attempts;
+        ok = rt.ok;
+        invalid = rt.invalid;
+        sendReason = rt.reason;
+        providerStatus = rt.providerStatus || providerStatus;
+        messageId = rt.messageId || messageId;
+        attempts = rt.attempts || attempts;
+      }
+      if (ok && !invalid && mediaUrlPre) {
+        const rm = await invokeSend({
+          estabelecimento_id: estabelecimentoId, telefone: d.phone,
+          fileUrl: mediaUrlPre,
+          contentType: mediaType === "video" ? "video" : inferContentType(mediaUrlPre),
+          whatsappSessionId: cfg.whatsappSessionId || null,
+          whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
+          origem: `${origem}_midia`,
+        });
+        ok = rm.ok;
+        invalid = rm.invalid;
+        sendReason = rm.reason;
+        providerStatus = rm.providerStatus || providerStatus;
+        messageId = rm.messageId || messageId;
+        attempts = rm.attempts || attempts;
       }
       if (ok && depois && !invalid) {
         const post = await invokeSend({
@@ -813,12 +830,9 @@ async function executeBroadcast(
         const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
         console.log("[broadcast] enviando resumo p/", telefone, "origem:", origemResumo);
         try {
+          // Texto SEMPRE separado da mídia (mesma sequência dos destinatários).
           const r1 = await invokeSend({
-            estabelecimento_id: estabelecimentoId, telefone,
-            text: mediaUrlPre ? undefined : parte1,
-            caption: mediaUrlPre ? parte1 : undefined,
-            fileUrl: mediaUrlPre || undefined,
-            contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
+            estabelecimento_id: estabelecimentoId, telefone, text: parte1,
             whatsappSessionId: cfg.whatsappSessionId || null,
             whatsappSessionName: cfg.whatsappSessionName || null,
             botFlowId: botFlowId || null,
@@ -827,6 +841,21 @@ async function executeBroadcast(
           if (!r1.ok) {
             console.warn("[broadcast] falha parte1 resumo:", telefone, r1.reason);
             return;
+          }
+          if (mediaUrlPre) {
+            const rmid = await invokeSend({
+              estabelecimento_id: estabelecimentoId, telefone,
+              fileUrl: mediaUrlPre,
+              contentType: mediaType === "video" ? "video" : inferContentType(mediaUrlPre),
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origemResumo}_midia`,
+            });
+            if (!rmid.ok) {
+              console.warn("[broadcast] falha midia resumo:", telefone, rmid.reason);
+              return;
+            }
           }
           if (depoisMask) {
             const rd = await invokeSend({
