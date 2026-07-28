@@ -435,14 +435,16 @@ async function executeBroadcast(
   const _mediaVarName = (cfg.mediaVar || "last_generated_media_url").trim();
 
   let msg = "";
+  let fraseTexto = "";
+  let extraTexto = "";
   if (cfg.usarMensagemPreDefinida) {
     const varName = cfg.preDefinidaVar || "last_mensagem_pre_definida";
-    // Sempre inclui a frase pré-definida (mesmo quando há mídia — vira legenda da imagem/vídeo).
-    const fromVar = String(baseCtx[varName] ?? "").trim();
-    const extra = interp(cfg.message || "", baseCtx).trim();
-    msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n\n");
+    fraseTexto = String(baseCtx[varName] ?? "").trim();
+    extraTexto = interp(cfg.message || "", baseCtx).trim();
+    msg = [fraseTexto, extraTexto].filter((s) => s && s.trim()).join("\n\n");
   } else {
     msg = interp(cfg.message || "", baseCtx);
+    extraTexto = msg;
   }
 
 
@@ -671,7 +673,10 @@ async function executeBroadcast(
     };
     const antes = interp(cfg.textoAntes || "", perCtx).trim();
     const depois = interp(cfg.textoDepois || "", perCtx).trim();
-    const msgInterp = interp(msg, perCtx);
+    // Se há mídia com a frase pré-definida embutida na imagem/vídeo, NÃO reenvia a frase como texto.
+    const msgInterp = (cfg.usarMensagemPreDefinida && mediaUrlPre)
+      ? interp(extraTexto || "", perCtx)
+      : interp(msg, perCtx);
 
     let ok = true;
     let invalid = false;
@@ -733,7 +738,25 @@ async function executeBroadcast(
         messageId = rm.messageId || messageId;
         attempts = rm.attempts || attempts;
       }
-      // ===== Contato — vem LOGO APÓS a mensagem, ANTES do "texto depois" =====
+      // ===== Texto DEPOIS — vem antes do card de contato =====
+      if (ok && depois && !invalid) {
+        const post = await sendStep({
+          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
+          whatsappSessionId: cfg.whatsappSessionId || null,
+          whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
+          origem: `${origem}_depois`,
+        });
+        providerStatus = post.providerStatus || providerStatus;
+        messageId = post.messageId || messageId;
+        attempts = post.attempts || attempts;
+        if (!post.ok) {
+          ok = false;
+          invalid = post.invalid;
+          sendReason = post.reason || "Falha ao confirmar envio do texto final";
+        }
+      }
+      // ===== Contato — cartão do gerente vem POR ÚLTIMO (após "texto depois") =====
       const enviarContato = !!(cfg.enviarContato || cfg.enviarContatoGerente);
       if (ok && !invalid && enviarContato) {
         const contatoTipo = cfg.contatoTipo || "gerente_do_vendedor";
@@ -773,23 +796,6 @@ async function executeBroadcast(
           console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
         }
       }
-      if (ok && depois && !invalid) {
-        const post = await sendStep({
-          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
-          whatsappSessionId: cfg.whatsappSessionId || null,
-          whatsappSessionName: cfg.whatsappSessionName || null,
-          botFlowId: botFlowId || null,
-          origem: `${origem}_depois`,
-        });
-        providerStatus = post.providerStatus || providerStatus;
-        messageId = post.messageId || messageId;
-        attempts = post.attempts || attempts;
-        if (!post.ok) {
-          ok = false;
-          invalid = post.invalid;
-          sendReason = post.reason || "Falha ao confirmar envio do texto final";
-        }
-      }
 
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
@@ -825,7 +831,10 @@ async function executeBroadcast(
       const maskVars = (s: string) => (s || "").replace(/\{\{[^}]+\}\}/g, "XXX");
       const antesMask = maskVars(cfg.textoAntes || "").trim();
       const depoisMask = maskVars(cfg.textoDepois || "").trim();
-      const msgMask = cfg.usarMensagemPreDefinida ? msg : maskVars(cfg.message || "").trim();
+      // Quando há mídia com frase embutida, o resumo também não repete o texto da frase.
+      const msgMask = cfg.usarMensagemPreDefinida
+        ? (mediaUrlPre ? maskVars(extraTexto || "").trim() : msg)
+        : maskVars(cfg.message || "").trim();
       const cabecalho = `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}`;
 
       // Contato usado no resumo (mesma opção do "Enviar contato logo após a mensagem")
@@ -899,6 +908,16 @@ async function executeBroadcast(
             });
             if (!rmid.ok) { console.warn("[broadcast] falha midia resumo:", telefone, rmid.reason); return; }
           }
+          if (depoisMask) {
+            const rd = await sendStep({
+              estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origemResumo}_depois`,
+            });
+            if (!rd.ok) { console.warn("[broadcast] falha depois resumo:", telefone, rd.reason); return; }
+          }
           if (enviarContatoResumo && contatoResumoPhone) {
             const rc = await sendStep({
               estabelecimento_id: estabelecimentoId, telefone,
@@ -909,16 +928,6 @@ async function executeBroadcast(
               origem: `${origemResumo}_contato`,
             });
             if (!rc.ok) { console.warn("[broadcast] falha contato resumo:", telefone, rc.reason); return; }
-          }
-          if (depoisMask) {
-            const rd = await sendStep({
-              estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
-              whatsappSessionId: cfg.whatsappSessionId || null,
-              whatsappSessionName: cfg.whatsappSessionName || null,
-              botFlowId: botFlowId || null,
-              origem: `${origemResumo}_depois`,
-            });
-            if (!rd.ok) { console.warn("[broadcast] falha depois resumo:", telefone, rd.reason); return; }
           }
           const rs = await sendStep({
             estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
