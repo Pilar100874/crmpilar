@@ -53,24 +53,43 @@ export async function fetchCep(cep: string): Promise<ViaCepResponse | null> {
   }
 }
 
+export type CidadeIBGE = { nome: string; ibge: string };
 const cidadesCache: Record<string, string[]> = {};
-export async function fetchCidades(uf: string): Promise<string[]> {
+const cidadesDetCache: Record<string, CidadeIBGE[]> = {};
+
+export async function fetchCidadesDetalhado(uf: string): Promise<CidadeIBGE[]> {
   if (!uf || uf.length !== 2) return [];
   const key = uf.toUpperCase();
-  if (cidadesCache[key]) return cidadesCache[key];
+  if (cidadesDetCache[key]) return cidadesDetCache[key];
   try {
     const res = await fetch(
       `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${key}/municipios?orderBy=nome`
     );
     if (!res.ok) return [];
-    const data = (await res.json()) as { nome: string }[];
-    const list = data.map((c) => c.nome);
-    cidadesCache[key] = list;
+    const data = (await res.json()) as { id: number; nome: string }[];
+    const list: CidadeIBGE[] = data.map((c) => ({ nome: c.nome, ibge: String(c.id) }));
+    cidadesDetCache[key] = list;
+    cidadesCache[key] = list.map((c) => c.nome);
     return list;
   } catch {
     return [];
   }
 }
+
+export async function fetchCidades(uf: string): Promise<string[]> {
+  if (!uf || uf.length !== 2) return [];
+  const key = uf.toUpperCase();
+  if (cidadesCache[key]) return cidadesCache[key];
+  const det = await fetchCidadesDetalhado(uf);
+  return det.map((c) => c.nome);
+}
+
+export function findIbgeByCidade(uf: string, cidade: string): string {
+  const list = cidadesDetCache[(uf || "").toUpperCase()] || [];
+  const match = list.find((c) => c.nome.toLowerCase() === (cidade || "").toLowerCase());
+  return match?.ibge || "";
+}
+
 
 export type CnpjData = {
   razao_social?: string;
