@@ -36,6 +36,8 @@ interface Props {
   /** Layout: 'grid' (default) or 'stack' */
   layout?: "grid" | "stack";
   labels?: { uf?: string; cidade?: string; ibge?: string };
+  /** Se true, UF e Cidade são somente leitura (preenchidos via CEP). IBGE continua auto-resolvido. */
+  readOnly?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export function UfCidadeIbge({
   showIbge = true,
   layout = "grid",
   labels,
+  readOnly = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [cidades, setCidades] = useState<CidadeIBGE[]>([]);
