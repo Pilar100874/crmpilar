@@ -75,6 +75,60 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [enviandoSms, setEnviandoSms] = useState(false);
   const [configurandoTracker, setConfigurandoTracker] = useState(false);
+  const [verificandoEntrega, setVerificandoEntrega] = useState(false);
+  const [deliveryStatuses, setDeliveryStatuses] = useState<Record<string, { entregue_at: string | null; status: string; erro_mensagem: string | null }>>({});
+
+  // Reseta status de entrega quando trocar de veículo e busca automaticamente ao abrir
+  useEffect(() => {
+    setDeliveryStatuses({});
+    if (!selectedVeiculo) return;
+    const log = (selectedVeiculo as any).tracker_config_log;
+    if (!Array.isArray(log) || log.length === 0) return;
+    const ids = log.map((l: any) => l.provider_message_id).filter(Boolean);
+    if (ids.length === 0) return;
+    supabase
+      .from('sms_queue')
+      .select('id, entregue_at, status, erro_mensagem')
+      .in('id', ids)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, any> = {};
+        data.forEach((r: any) => { map[r.id] = r; });
+        setDeliveryStatuses(map);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVeiculo?.id]);
+
+  const verificarEntregaSms = async () => {
+    if (!selectedVeiculo) return;
+    const log = (selectedVeiculo as any).tracker_config_log;
+    if (!Array.isArray(log) || log.length === 0) {
+      toast.info('Nenhum SMS enviado ainda para conferir entrega.');
+      return;
+    }
+    const ids = log.map((l: any) => l.provider_message_id).filter(Boolean);
+    if (ids.length === 0) {
+      toast.warning('Este log é anterior à captura de entrega. Reenvie os parâmetros para acompanhar o DLR.');
+      return;
+    }
+    setVerificandoEntrega(true);
+    try {
+      const { data, error } = await supabase
+        .from('sms_queue')
+        .select('id, entregue_at, status, erro_mensagem')
+        .in('id', ids);
+      if (error) throw error;
+      const map: Record<string, any> = {};
+      (data || []).forEach((r: any) => { map[r.id] = r; });
+      setDeliveryStatuses(map);
+      const entregues = (data || []).filter((r: any) => r.entregue_at).length;
+      toast.success(`${entregues}/${ids.length} SMS confirmados como entregues no chip do rastreador.`);
+    } catch (e: any) {
+      toast.error(e.message || 'Falha ao consultar status de entrega');
+    } finally {
+      setVerificandoEntrega(false);
+    }
+  };
   const [bulkOpen, setBulkOpen] = useState(false);
   const [mainTab, setMainTab] = useState<'veiculos' | 'dispositivos'>('veiculos');
   const [urlCopiada, setUrlCopiada] = useState(false);
@@ -1353,24 +1407,64 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   <div className="rounded-md border bg-background p-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium">Último resultado:</span>
-                      {renderTrackerStatusBadge(selectedVeiculo)}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2"
+                          disabled={verificandoEntrega}
+                          onClick={verificarEntregaSms}
+                          title="Consulta o gateway/chip do rastreador e mostra se cada SMS foi entregue"
+                        >
+                          {verificandoEntrega
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <RefreshCw className="h-3 w-3" />}
+                          <span className="ml-1 text-[11px]">Verificar entrega</span>
+                        </Button>
+                        {renderTrackerStatusBadge(selectedVeiculo)}
+                      </div>
                     </div>
                     {Array.isArray((selectedVeiculo as any).tracker_config_log) &&
                       (selectedVeiculo as any).tracker_config_log.length > 0 && (
-                      <div className="space-y-1 max-h-24 overflow-y-auto">
-                        {((selectedVeiculo as any).tracker_config_log as any[]).map((l, i) => (
-                          <div key={i} className="text-xs flex items-start gap-2">
-                            {l.ok
-                              ? <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
-                              : <AlertCircle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />}
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium">{l.label}</span>
-                              {l.erro && <div className="text-destructive text-[10px] break-words">{l.erro}</div>}
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {((selectedVeiculo as any).tracker_config_log as any[]).map((l, i) => {
+                          const dlr = l.provider_message_id ? deliveryStatuses[l.provider_message_id] : undefined;
+                          return (
+                            <div key={i} className="text-xs flex items-start gap-2">
+                              {l.ok
+                                ? <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                                : <AlertCircle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <span className="font-medium">{l.label}</span>
+                                  {l.ok && dlr && (
+                                    dlr.entregue_at
+                                      ? <Badge variant="default" className="h-4 text-[9px] px-1 bg-green-600">Entregue no chip</Badge>
+                                      : dlr.status === 'erro'
+                                        ? <Badge variant="destructive" className="h-4 text-[9px] px-1">Não entregue</Badge>
+                                        : <Badge variant="outline" className="h-4 text-[9px] px-1">Aguardando confirmação</Badge>
+                                  )}
+                                  {l.ok && l.provider_message_id && !dlr && (
+                                    <Badge variant="outline" className="h-4 text-[9px] px-1">Clique em Verificar entrega</Badge>
+                                  )}
+                                </div>
+                                {l.erro && <div className="text-destructive text-[10px] break-words">{l.erro}</div>}
+                                {dlr?.entregue_at && (
+                                  <div className="text-muted-foreground text-[10px]">
+                                    entregue {new Date(dlr.entregue_at).toLocaleString('pt-BR')}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
+                    <p className="text-[10px] text-muted-foreground mt-2">
+                      "Entregue no chip" = a operadora confirmou que o SMS chegou no chip do rastreador (DLR).
+                      A resposta com <code>ok</code> do próprio rastreador exige captura de SMS de entrada — em breve.
+                    </p>
                   </div>
                 )}
               </div>
