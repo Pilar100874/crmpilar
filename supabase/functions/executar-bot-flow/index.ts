@@ -682,7 +682,7 @@ async function executeBroadcast(
     const startedAt = new Date().toISOString();
     try {
       if (antes) {
-        const pre = await invokeSend({
+        const pre = await sendStep({
           estabelecimento_id: estabelecimentoId, telefone: d.phone, text: antes,
           whatsappSessionId: cfg.whatsappSessionId || null,
           whatsappSessionName: cfg.whatsappSessionName || null,
@@ -701,7 +701,7 @@ async function executeBroadcast(
       // Envia SEMPRE o texto (frase pré-definida) e a mídia como MENSAGENS SEPARADAS
       // (nunca como legenda), para respeitar a sequência: texto → imagem → texto → contato.
       if (ok && !invalid && msgInterp && msgInterp.trim()) {
-        const rt = await invokeSend({
+        const rt = await sendStep({
           estabelecimento_id: estabelecimentoId, telefone: d.phone,
           text: msgInterp,
           whatsappSessionId: cfg.whatsappSessionId || null,
@@ -717,7 +717,7 @@ async function executeBroadcast(
         attempts = rt.attempts || attempts;
       }
       if (ok && !invalid && mediaUrlPre) {
-        const rm = await invokeSend({
+        const rm = await sendStep({
           estabelecimento_id: estabelecimentoId, telefone: d.phone,
           fileUrl: mediaUrlPre,
           contentType: mediaType === "video" ? "video" : inferContentType(mediaUrlPre),
@@ -734,7 +734,7 @@ async function executeBroadcast(
         attempts = rm.attempts || attempts;
       }
       if (ok && depois && !invalid) {
-        const post = await invokeSend({
+        const post = await sendStep({
           estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
           whatsappSessionId: cfg.whatsappSessionId || null,
           whatsappSessionName: cfg.whatsappSessionName || null,
@@ -768,7 +768,7 @@ async function executeBroadcast(
           if (jaSet.has(cPhone)) {
             console.log("[broadcast] contato duplicado ignorado p/", d.phone, "->", cPhone);
           } else {
-            const contato = await invokeSend({
+            const contato = await sendStep({
               estabelecimento_id: estabelecimentoId, telefone: d.phone,
               contact: { nome: cNome, whatsapp: cPhone },
               whatsappSessionId: cfg.whatsappSessionId || null,
@@ -843,7 +843,7 @@ async function executeBroadcast(
         console.log("[broadcast] enviando resumo p/", telefone, "origem:", origemResumo);
         try {
           // Texto SEMPRE separado da mídia (mesma sequência dos destinatários).
-          const r1 = await invokeSend({
+          const r1 = await sendStep({
             estabelecimento_id: estabelecimentoId, telefone, text: parte1,
             whatsappSessionId: cfg.whatsappSessionId || null,
             whatsappSessionName: cfg.whatsappSessionName || null,
@@ -855,7 +855,7 @@ async function executeBroadcast(
             return;
           }
           if (mediaUrlPre) {
-            const rmid = await invokeSend({
+            const rmid = await sendStep({
               estabelecimento_id: estabelecimentoId, telefone,
               fileUrl: mediaUrlPre,
               contentType: mediaType === "video" ? "video" : inferContentType(mediaUrlPre),
@@ -870,7 +870,7 @@ async function executeBroadcast(
             }
           }
           if (depoisMask) {
-            const rd = await invokeSend({
+            const rd = await sendStep({
               estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
               whatsappSessionId: cfg.whatsappSessionId || null,
               whatsappSessionName: cfg.whatsappSessionName || null,
@@ -882,7 +882,7 @@ async function executeBroadcast(
               return;
             }
           }
-          const rs = await invokeSend({
+          const rs = await sendStep({
             estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
             whatsappSessionId: cfg.whatsappSessionId || null,
             whatsappSessionName: cfg.whatsappSessionName || null,
