@@ -272,30 +272,26 @@ export default function ProspeccaoEmpresas() {
       let cnae_principal = r.cnae_principal?.trim() || null;
       let cnae_descricao = r.cnae_descricao?.trim() || null;
 
-      // ===== 2) Enriquecer via CNPJ (Receita/BrasilAPI) =====
+      // ===== 2) Enriquecer via CNPJ (serviço unificado com cache) =====
       if (cnpj) {
-        const dig = removeMask(cnpj);
-        const receita = await fetchCNPJ(dig);
+        const receita = await buscarCNPJ(removeMask(cnpj));
         if (receita) {
           enriquecidos++;
-          nome = nome || receita.razao_social || receita.nome_fantasia || '';
-          nome_fantasia = nome_fantasia || receita.nome_fantasia || null;
+          nome = nome || receita.razaoSocial || receita.nomeFantasia || '';
+          nome_fantasia = nome_fantasia || receita.nomeFantasia || null;
           if (!endereco) {
-            const tipo = receita.descricao_tipo_de_logradouro || '';
-            const log = receita.logradouro || '';
             const num = receita.numero ? `, ${receita.numero}` : '';
             const comp = receita.complemento ? ` - ${receita.complemento}` : '';
-            endereco = `${tipo} ${log}${num}${comp}`.trim() || null;
+            endereco = `${receita.logradouro || ''}${num}${comp}`.trim() || null;
           }
           bairro = bairro || receita.bairro || null;
-          cidade = cidade || receita.municipio || null;
+          cidade = cidade || receita.cidade || null;
           uf = uf || normUF(receita.uf);
           cep = cep || normCEP(receita.cep);
-          cnae_principal = cnae_principal || (receita.cnae_fiscal ? String(receita.cnae_fiscal) : null);
-          cnae_descricao = cnae_descricao || receita.cnae_fiscal_descricao || null;
-          // Enriquecer telefone a partir da Receita se ainda não temos
-          if (!telefone) {
-            const telReceita = normWhats(receita.ddd_telefone_1 || receita.ddd_telefone_2 || '');
+          cnae_principal = cnae_principal || (receita.cnaePrincipal?.codigo || null);
+          cnae_descricao = cnae_descricao || (receita.cnaePrincipal?.descricao || null);
+          if (!telefone && receita.telefone) {
+            const telReceita = normWhats(receita.telefone);
             if (telReceita) telefone = telReceita;
           }
         }
@@ -304,17 +300,18 @@ export default function ProspeccaoEmpresas() {
       // Fallback: se ainda não temos telefone, usar o whatsapp
       if (!telefone) telefone = whatsapp;
 
-      // ===== 3) Enriquecer via CEP (ViaCEP) se ainda faltar endereço/cidade/UF =====
+      // ===== 3) Enriquecer via CEP (serviço unificado com cache) =====
       if (cep && (!endereco || !cidade || !uf || !bairro)) {
-        const via = await fetchCEP(removeMask(cep));
+        const via = await buscarCEP(removeMask(cep));
         if (via) {
           enriquecidos++;
           endereco = endereco || via.logradouro || null;
           bairro = bairro || via.bairro || null;
-          cidade = cidade || via.localidade || null;
+          cidade = cidade || via.cidade || null;
           uf = uf || normUF(via.uf);
         }
       }
+
 
       // ===== 4) Validações mínimas =====
       if (!nome) {
