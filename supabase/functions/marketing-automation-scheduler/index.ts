@@ -51,6 +51,12 @@ function shouldRun(config: any, lastRunISO: string | null): boolean {
       if (lastLocal && sameDay(lastLocal, now)) return false;
       return true;
     }
+    case "dia_util": {
+      const dow = now.getUTCDay(); // 0=Dom, 6=Sab
+      if (dow === 0 || dow === 6) return false;
+      if (lastLocal && sameDay(lastLocal, now)) return false;
+      return true;
+    }
     case "semanal": {
       const dia = parseInt(config.dia_semana ?? "-1", 10);
       if (now.getUTCDay() !== dia) return false;

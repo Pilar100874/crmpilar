@@ -660,6 +660,7 @@ export default function NovaAutomacaoDialog({
                   <SelectContent>
                     <SelectItem value="data_especifica">Data específica</SelectItem>
                     <SelectItem value="diario">Todo dia</SelectItem>
+                    <SelectItem value="dia_util">Todo dia útil (seg a sex)</SelectItem>
                     <SelectItem value="semanal">1 vez por semana</SelectItem>
                     <SelectItem value="quinzenal">A cada 15 dias</SelectItem>
                     <SelectItem value="mensal">1 vez por mês</SelectItem>
