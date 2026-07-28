@@ -113,6 +113,24 @@ serve(async (req) => {
     const results = [];
     for (const a of eligible) {
       try {
+        // Reivindica o slot ANTES de invocar para evitar duplo disparo
+        // (o execute atualiza last_executed_at só após terminar; enquanto isso,
+        // o scheduler do minuto seguinte pode re-executar a mesma automação).
+        const claimISO = new Date().toISOString();
+        const newCfg = { ...(a.config || {}), last_executed_at: claimISO };
+        const prevLast = a.config?.last_executed_at ?? null;
+        let claimQuery = supabase
+          .from("marketing_automations")
+          .update({ config: newCfg })
+          .eq("id", a.id);
+        claimQuery = prevLast === null
+          ? claimQuery.is("config->>last_executed_at", null)
+          : claimQuery.eq("config->>last_executed_at", prevLast);
+        const { data: claimed, error: claimErr } = await claimQuery.select("id");
+        if (claimErr || !claimed || claimed.length === 0) {
+          console.warn(`⚠️ Slot já reivindicado para ${a.id}, pulando (evita duplo disparo)`);
+          continue;
+        }
         const r = await supabase.functions.invoke("marketing-automation-execute", {
           body: { automationId: a.id },
         });
