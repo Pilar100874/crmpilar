@@ -51,7 +51,7 @@ test.describe("Fluxo E2E — consulta de CNPJ com debounce, loading, retry e can
     const calls: string[] = [];
     await page.route("**/brasilapi.com.br/api/cnpj/**", async (route: Route, req: Request) => {
       calls.push(req.url());
-      await new Promise((r) => setTimeout(r, 250)); // deixa o loading visível
+      await new Promise((r) => setTimeout(r, 1200)); // deixa o loading visível
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(cnpjPayload("ACME LTDA")) });
     });
 
@@ -152,7 +152,7 @@ test.describe("Fluxo E2E — consulta de CEP com debounce, loading, retry e canc
     const calls: string[] = [];
     await page.route("**/viacep.com.br/ws/**", async (route: Route, req: Request) => {
       calls.push(req.url());
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, 1200));
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(cepPayload) });
     });
 
