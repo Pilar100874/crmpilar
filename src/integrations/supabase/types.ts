@@ -4185,13 +4185,22 @@ export type Database = {
       customers: {
         Row: {
           ativo: boolean
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          cpf: string | null
           created_at: string | null
           custom_fields: Json | null
+          data_nascimento: string | null
           email: string
           empresa_id: string | null
           estabelecimento_id: string | null
+          estado: string | null
           id: string
+          logradouro: string | null
           nome: string
+          numero: string | null
           tags: string[] | null
           tel: string | null
           telefone: string
@@ -4202,13 +4211,22 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
           created_at?: string | null
           custom_fields?: Json | null
+          data_nascimento?: string | null
           email: string
           empresa_id?: string | null
           estabelecimento_id?: string | null
+          estado?: string | null
           id?: string
+          logradouro?: string | null
           nome: string
+          numero?: string | null
           tags?: string[] | null
           tel?: string | null
           telefone: string
@@ -4219,13 +4237,22 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf?: string | null
           created_at?: string | null
           custom_fields?: Json | null
+          data_nascimento?: string | null
           email?: string
           empresa_id?: string | null
           estabelecimento_id?: string | null
+          estado?: string | null
           id?: string
+          logradouro?: string | null
           nome?: string
+          numero?: string | null
           tags?: string[] | null
           tel?: string | null
           telefone?: string
@@ -6255,12 +6282,14 @@ export type Database = {
         Row: {
           ativo: boolean
           bairro: string | null
+          capital_social: number | null
           cep: string | null
           cidade: string | null
           cnae_descricao: string | null
           cnae_principal: string | null
           cnaes_secundarios: string[] | null
           cnpj: string | null
+          complemento: string | null
           contato_cargo: string | null
           contato_email: string | null
           contato_nome: string | null
@@ -6279,13 +6308,19 @@ export type Database = {
           ja_respondeu_whatsapp: boolean
           latitude: number | null
           longitude: number | null
+          natureza_juridica: string | null
           nome: string | null
           nome_fantasia: string | null
+          numero: string | null
           observacoes_internas: string | null
+          optante_mei: boolean | null
+          optante_simples: boolean | null
           origem_prospeccao: string | null
+          pais: string | null
           porte: string | null
           prioridade: string | null
           produtos_interesse: Json | null
+          regime_tributario: string | null
           score_motivo: string | null
           score_prospect: number | null
           segmento_id: string | null
@@ -6307,12 +6342,14 @@ export type Database = {
         Insert: {
           ativo?: boolean
           bairro?: string | null
+          capital_social?: number | null
           cep?: string | null
           cidade?: string | null
           cnae_descricao?: string | null
           cnae_principal?: string | null
           cnaes_secundarios?: string[] | null
           cnpj?: string | null
+          complemento?: string | null
           contato_cargo?: string | null
           contato_email?: string | null
           contato_nome?: string | null
@@ -6331,13 +6368,19 @@ export type Database = {
           ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
+          natureza_juridica?: string | null
           nome?: string | null
           nome_fantasia?: string | null
+          numero?: string | null
           observacoes_internas?: string | null
+          optante_mei?: boolean | null
+          optante_simples?: boolean | null
           origem_prospeccao?: string | null
+          pais?: string | null
           porte?: string | null
           prioridade?: string | null
           produtos_interesse?: Json | null
+          regime_tributario?: string | null
           score_motivo?: string | null
           score_prospect?: number | null
           segmento_id?: string | null
@@ -6359,12 +6402,14 @@ export type Database = {
         Update: {
           ativo?: boolean
           bairro?: string | null
+          capital_social?: number | null
           cep?: string | null
           cidade?: string | null
           cnae_descricao?: string | null
           cnae_principal?: string | null
           cnaes_secundarios?: string[] | null
           cnpj?: string | null
+          complemento?: string | null
           contato_cargo?: string | null
           contato_email?: string | null
           contato_nome?: string | null
@@ -6383,13 +6428,19 @@ export type Database = {
           ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
+          natureza_juridica?: string | null
           nome?: string | null
           nome_fantasia?: string | null
+          numero?: string | null
           observacoes_internas?: string | null
+          optante_mei?: boolean | null
+          optante_simples?: boolean | null
           origem_prospeccao?: string | null
+          pais?: string | null
           porte?: string | null
           prioridade?: string | null
           produtos_interesse?: Json | null
+          regime_tributario?: string | null
           score_motivo?: string | null
           score_prospect?: number | null
           segmento_id?: string | null
