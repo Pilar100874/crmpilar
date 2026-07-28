@@ -121,10 +121,19 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
     if (open) {
       setFormData({
         name: initialData?.nome || "",
+        cpf: "",
+        data_nascimento: "",
         email: initialData?.email || "",
         phone: initialData?.telefone || "",
         tel: "",
         position: "",
+        cep: "",
+        logradouro: "",
+        numero: "",
+        complemento: "",
+        bairro: "",
+        cidade: "",
+        estado: "",
       });
       setEmpresasVinculadas([]);
       setSegmentosSelecionados([]);
