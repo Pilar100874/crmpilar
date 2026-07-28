@@ -1,3 +1,4 @@
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -566,8 +567,13 @@ export default function PontoFuncionarios() {
                 <Label>CEP</Label>
                 <MaskedInput mask={maskCEP} value={f.cep} onValueChange={(v) => setF({ ...f, cep: v })} placeholder="00000-000" />
               </div>
-              <div><Label>Cidade</Label><Input value={f.cidade} onChange={(e) => setF({ ...f, cidade: e.target.value })} /></div>
-              <div><Label>UF</Label><Input maxLength={2} value={f.uf} onChange={(e) => setF({ ...f, uf: e.target.value.toUpperCase() })} /></div>
+              <div className="sm:col-span-2">
+                <UfCidadeIbge
+                  value={{ uf: f.uf || "", cidade: f.cidade || "", ibge: (f as any).codigo_ibge || "" }}
+                  onChange={(v) => setF({ ...f, uf: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
+                />
+              </div>
+
               <div>
                 <Label>Tipo de local</Label>
                 <Select value={f.tipo_local || undefined} onValueChange={(v) => setF({ ...f, tipo_local: v })}>

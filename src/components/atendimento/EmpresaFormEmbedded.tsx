@@ -1,3 +1,4 @@
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -526,26 +527,12 @@ export function EmpresaFormEmbedded({
               />
             </div>
 
-            {/* Cidade + UF */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2 space-y-2">
-                <Label>Cidade</Label>
-                <Input
-                  value={formData.cidade}
-                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                  placeholder="Cidade"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>UF</Label>
-                <Input
-                  value={formData.estado}
-                  onChange={(e) => setFormData({ ...formData, estado: e.target.value.toUpperCase().slice(0, 2) })}
-                  placeholder="UF"
-                  maxLength={2}
-                />
-              </div>
-            </div>
+            {/* Cidade + UF + IBGE */}
+            <UfCidadeIbge
+              value={{ uf: formData.estado || "", cidade: formData.cidade || "", ibge: (formData as any).codigo_ibge || "" }}
+              onChange={(v) => setFormData({ ...formData, estado: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
+            />
+
           </TabsContent>
 
           <TabsContent value="contatos" className="space-y-4">

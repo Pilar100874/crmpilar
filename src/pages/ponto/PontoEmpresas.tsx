@@ -1,3 +1,4 @@
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { useEffect, useState } from "react";
 import { Plus, Building2, Trash2, Pencil, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -358,29 +359,13 @@ export default function PontoEmpresas() {
                 <p className="mt-1 text-xs text-destructive">CEP inválido</p>
               )}
             </div>
-            <div className="sm:col-span-4">
-              <Label>Endereço</Label>
-              <Input
-                value={form.endereco}
-                onChange={(e) => setForm({ ...form, endereco: e.target.value })}
-                placeholder="Rua, número, bairro"
+            <div className="sm:col-span-6">
+              <UfCidadeIbge
+                value={{ uf: form.uf || "", cidade: form.cidade || "", ibge: (form as any).codigo_ibge || "" }}
+                onChange={(v) => setForm({ ...form, uf: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
               />
             </div>
-            <div className="sm:col-span-2">
-              <Label>UF</Label>
-              <UfSelect
-                value={form.uf}
-                onChange={(v) => setForm({ ...form, uf: v, cidade: "" })}
-              />
-            </div>
-            <div className="sm:col-span-4">
-              <Label>Cidade</Label>
-              <CidadeSelect
-                uf={form.uf}
-                value={form.cidade}
-                onChange={(v) => setForm({ ...form, cidade: v })}
-              />
-            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
