@@ -471,6 +471,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Lookup hooks
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
+  const cnpjDebounceRef = React.useRef<number | null>(null);
+  const cepDebounceRef = React.useRef<number | null>(null);
 
   // Carregar estabelecimento
   useEffect(() => {
