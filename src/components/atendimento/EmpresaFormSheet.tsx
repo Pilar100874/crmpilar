@@ -1,5 +1,5 @@
 import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Save, X, Building2, Phone, Mail, MapPin, FileText, Plus, Trash2, Search, User } from "lucide-react";
 import { toast } from "@/lib/toast-config";
@@ -50,11 +51,12 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [saving, setSaving] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("empresa");
-  
+  const numeroInputRef = useRef<HTMLInputElement | null>(null);
+
   // Hooks para busca automática
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
-  
+
   // Form data
   const [formData, setFormData] = useState<Record<string, any>>({
     company_type: "Pessoa Jurídica",
@@ -64,13 +66,27 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     cep: "",
     endereco: "",
     numero: "",
+    complemento: "",
     bairro: "",
     cidade: "",
     estado: "",
+    pais: "Brasil",
     inscricao: "",
     telefone: "",
     email: "",
     segmento_id: "",
+    // Novos campos do padrão de cadastro
+    situacao_cadastral: "",
+    data_abertura: "",
+    natureza_juridica: "",
+    capital_social: "",
+    porte: "",
+    regime_tributario: "",
+    optante_mei: null as boolean | null,
+    optante_simples: null as boolean | null,
+    cnae_principal: "",
+    cnae_descricao: "",
+    cnaes_secundarios: [] as { codigo: string; descricao: string }[],
   });
   
   // Custom fields
@@ -124,13 +140,26 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
         cep: initialData?.cep || "",
         endereco: initialData?.endereco || "",
         numero: initialData?.numero || "",
+        complemento: initialData?.complemento || "",
         bairro: initialData?.bairro || "",
         cidade: initialData?.cidade || "",
         estado: initialData?.estado || "",
+        pais: "Brasil",
         inscricao: "",
         telefone: initialData?.telefone || "",
         email: initialData?.email || "",
         segmento_id: "",
+        situacao_cadastral: "",
+        data_abertura: "",
+        natureza_juridica: "",
+        capital_social: "",
+        porte: "",
+        regime_tributario: "",
+        optante_mei: null,
+        optante_simples: null,
+        cnae_principal: "",
+        cnae_descricao: "",
+        cnaes_secundarios: [],
       });
       setContatosVinculados([]);
       setCriarNovoContato(false);
@@ -198,14 +227,17 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     setSegmentos(data || []);
   };
   
-  // Buscar CNPJ automaticamente na Receita Federal
+  // Foco no campo Número (Nubank-style: quando endereço vem preenchido, cursor vai para o Número)
+  const focusNumero = () => {
+    setTimeout(() => numeroInputRef.current?.focus(), 80);
+  };
+
+  // Buscar CNPJ automaticamente
   const handleCNPJChange = async (value: string) => {
     const clean = value.replace(/\D/g, "");
     const maskedValue = clean.length <= 11 ? maskCPF(value) : maskCNPJ(value);
     setFormData(prev => ({ ...prev, cpf_cnpj: maskedValue }));
 
-    // Se for CNPJ completo (14 dígitos), buscar dados. Se não encontrar, mantém os campos
-    // editáveis para preenchimento manual pelo usuário.
     if (clean.length === 14) {
       const data = await lookupCNPJ(clean);
       if (data) {
@@ -215,15 +247,29 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           nome: data.nome || prev.nome,
           nome_fantasia: data.fantasia || prev.nome_fantasia,
           cep: cepMasked || prev.cep,
-          endereco: data.logradouro + (data.numero ? ', ' + data.numero : '') || prev.endereco,
+          endereco: data.logradouro || prev.endereco,
           numero: data.numero || prev.numero,
+          complemento: data.complemento || prev.complemento,
           bairro: data.bairro || prev.bairro,
           telefone: data.telefone ? maskPhone(data.telefone) : prev.telefone,
           email: data.email || prev.email,
+          situacao_cadastral: data.situacaoCadastral || prev.situacao_cadastral,
+          data_abertura: data.dataAbertura || prev.data_abertura,
+          natureza_juridica: data.naturezaJuridica || prev.natureza_juridica,
+          capital_social: data.capitalSocial != null ? String(data.capitalSocial) : prev.capital_social,
+          porte: data.porte || prev.porte,
+          regime_tributario: data.regimeTributario || prev.regime_tributario,
+          optante_mei: data.optanteMei ?? prev.optante_mei,
+          optante_simples: data.optanteSimples ?? prev.optante_simples,
+          cnae_principal: data.cnaePrincipal || prev.cnae_principal,
+          cnae_descricao: data.cnaePrincipalDescricao || prev.cnae_descricao,
+          cnaes_secundarios: data.cnaesSecundarios || prev.cnaes_secundarios,
+          pais: data.pais || prev.pais || "Brasil",
         }));
-        // UF/Cidade sempre vêm pelo CEP — dispara a busca automaticamente
         if (cepMasked) {
-          await handleCEPChange(cepMasked);
+          await handleCEPChange(cepMasked, /*focusNumero*/ !data.numero);
+        } else if (!data.numero) {
+          focusNumero();
         }
         toast.success("Dados preenchidos automaticamente via CNPJ");
       }
@@ -232,7 +278,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
 
 
   // Buscar CEP automaticamente
-  const handleCEPChange = async (value: string) => {
+  const handleCEPChange = async (value: string, shouldFocusNumero = true) => {
     const maskedValue = maskCEP(value);
     setFormData(prev => ({ ...prev, cep: maskedValue }));
 
@@ -248,6 +294,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           estado: data.uf || prev.estado,
         }));
         toast.success("Endereço preenchido automaticamente");
+        if (shouldFocusNumero) focusNumero();
       }
     }
   };
@@ -351,6 +398,11 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       }
 
       // Criar empresa
+      const capitalNum = formData.capital_social ? Number(String(formData.capital_social).replace(",", ".")) : null;
+      const cnaesSecundarios = Array.isArray(formData.cnaes_secundarios) && formData.cnaes_secundarios.length > 0
+        ? formData.cnaes_secundarios.map((c: any) => c.codigo).filter(Boolean)
+        : null;
+
       const { data: newEmpresa, error } = await supabase
         .from("empresas")
         .insert({
@@ -361,12 +413,26 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           telefone: formData.telefone?.trim() || null,
           cep: formData.cep?.trim() || null,
           endereco: formData.endereco?.trim() || null,
+          numero: formData.numero?.trim() || null,
+          complemento: formData.complemento?.trim() || null,
           bairro: formData.bairro?.trim() || null,
           cidade: formData.cidade?.trim() || null,
           estado: formData.estado?.trim() || null,
+          pais: formData.pais?.trim() || "Brasil",
           estabelecimento_id: estabelecimentoId,
           segmento_id: formData.segmento_id || null,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
+          situacao_cadastral: formData.situacao_cadastral || null,
+          data_fundacao: formData.data_abertura || null,
+          natureza_juridica: formData.natureza_juridica || null,
+          capital_social: !isNaN(capitalNum as any) ? capitalNum : null,
+          porte: formData.porte || null,
+          regime_tributario: formData.regime_tributario || null,
+          optante_mei: formData.optante_mei,
+          optante_simples: formData.optante_simples,
+          cnae_principal: formData.cnae_principal || null,
+          cnae_descricao: formData.cnae_descricao || null,
+          cnaes_secundarios: cnaesSecundarios,
           latitude,
           longitude,
         })
@@ -592,11 +658,22 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 <div className="space-y-2">
                   <Label>Número</Label>
                   <Input
+                    ref={numeroInputRef}
                     value={formData.numero}
                     onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
                     placeholder="Nº"
                   />
                 </div>
+              </div>
+
+              {/* Complemento */}
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  value={formData.complemento}
+                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                  placeholder="Sala, andar, referência..."
+                />
               </div>
 
               {/* Bairro */}
@@ -614,6 +691,69 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 value={{ uf: formData.estado || "", cidade: formData.cidade || "", ibge: (formData as any).codigo_ibge || "" }}
                 onChange={(v) => setFormData({ ...formData, estado: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
               />
+
+              {/* País */}
+              <div className="space-y-2">
+                <Label>País</Label>
+                <Input value={formData.pais || "Brasil"} readOnly className="bg-muted/50" />
+              </div>
+
+              {/* Dados Fiscais / Cadastrais (auto-preenchidos via CNPJ, editáveis) */}
+              <Card className="p-4 space-y-3 bg-muted/20">
+                <Label className="text-xs font-semibold uppercase text-muted-foreground">Dados Fiscais</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Situação Cadastral</Label>
+                    <Input value={formData.situacao_cadastral || ""} onChange={(e) => setFormData({ ...formData, situacao_cadastral: e.target.value })} placeholder="Ativa" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Data de Abertura</Label>
+                    <Input type="date" value={formData.data_abertura || ""} onChange={(e) => setFormData({ ...formData, data_abertura: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Natureza Jurídica</Label>
+                    <Input value={formData.natureza_juridica || ""} onChange={(e) => setFormData({ ...formData, natureza_juridica: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Capital Social</Label>
+                    <Input inputMode="decimal" value={formData.capital_social || ""} onChange={(e) => setFormData({ ...formData, capital_social: e.target.value })} placeholder="0,00" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Porte</Label>
+                    <Input value={formData.porte || ""} onChange={(e) => setFormData({ ...formData, porte: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Regime Tributário</Label>
+                    <Input value={formData.regime_tributario || ""} onChange={(e) => setFormData({ ...formData, regime_tributario: e.target.value })} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 pt-1">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={!!formData.optante_mei} onCheckedChange={(v) => setFormData({ ...formData, optante_mei: !!v })} />
+                    MEI
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={!!formData.optante_simples} onCheckedChange={(v) => setFormData({ ...formData, optante_simples: !!v })} />
+                    Simples Nacional
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">CNAE Principal</Label>
+                    <Input value={formData.cnae_principal ? `${formData.cnae_principal} — ${formData.cnae_descricao || ""}` : ""} readOnly className="bg-muted/50" />
+                  </div>
+                  {Array.isArray(formData.cnaes_secundarios) && formData.cnaes_secundarios.length > 0 && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">CNAEs Secundários ({formData.cnaes_secundarios.length})</Label>
+                      <div className="max-h-24 overflow-y-auto text-xs space-y-1 border rounded p-2 bg-background">
+                        {formData.cnaes_secundarios.map((c: any) => (
+                          <div key={c.codigo}><span className="font-mono">{c.codigo}</span> — {c.descricao}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
 
             </TabsContent>
 

@@ -1,65 +1,122 @@
-## O que vai ser construído
 
-### 1. Banco de dados (migração)
+# Padrão único de Cadastro (Empresa / Pessoa) em todo o sistema
 
-Nova tabela `bot_response_tracking` para rastrear cada envio que aguarda resposta:
-- `empresa_id`, `contato_telefone`, `flow_id`, `flow_nome`, `block_id`, `bot_execution_id`
-- `enviado_em`, `respondido_em` (nullable), `resposta_texto`
-- `timeout_horas`, `expira_em`, `status` (`aguardando` / `respondeu` / `sem_resposta`)
-- `estabelecimento_id`
-- RLS por estabelecimento + GRANTs corretos
+## Objetivo
 
-Novos campos em `empresas`:
-- `ja_respondeu_whatsapp` (bool, default false) — flag rápida "já respondeu algum bot"
-- `ultima_resposta_bot_em` (timestamptz)
-- `ultima_resposta_bot_nome` (text) — nome do fluxo/rotina que fez responder
+Unificar todos os cadastros de empresa e pessoa em um único fluxo "CNPJ-first / CPF-first" com auto-preenchimento, cache, máscaras, validação Zod, foco automático no Número e experiência estilo Nubank/Mercado Livre.
 
-Trigger em mensagens recebidas do WhatsApp: quando chega mensagem de um `telefone` que tem tracking `aguardando` e não expirou → marca `respondido`, atualiza empresa (`ja_respondeu_whatsapp=true`, timestamp, nome do fluxo).
+## 1. Camada de serviços (nova base compartilhada)
 
-Cron job (5 em 5 min) marca trackings vencidos como `sem_resposta`.
+Criar em `src/lib/cadastros/`:
 
-### 2. Novo bloco "Envio com espera de resposta" (bot builder)
+- `cnpjService.ts` — `buscarCNPJ(cnpj)` com cache in-memory (Map por CNPJ), debounce, cancelamento via AbortController, retry 1x, fallback BrasilAPI → edge `consultar-cnpj`. Retorna objeto normalizado com todos os campos exigidos (situação, abertura, natureza jurídica, capital social, porte, MEI, Simples, CNAE principal + secundários, país="Brasil").
+- `cepService.ts` — `buscarCEP(cep)` com cache e cancelamento (ViaCEP).
+- `cpfService.ts` — só validação de dígitos (LGPD).
+- `enderecoAutofill.ts` — helper que, dado um CEP, resolve UF/cidade + carrega municípios IBGE e devolve código IBGE.
+- `schemas.ts` — schemas Zod: `empresaSchema`, `pessoaFisicaSchema`, `enderecoSchema`.
 
-- Baseado no `BroadcastVendedoresConfig` mas fixado para audiência = **Empresas** (com filtros: cliente/prospect/ambos, segmento, gerente vinculado, whatsapp válido, e novo filtro **"apenas quem já respondeu"**).
-- Campos: mensagem, mídia (via mensagem pré-definida ou upload), `timeout_horas` (default 24), sessão WhatsApp.
-- **Duas saídas no ReactFlow**: `respondeu` e `sem_resposta`.
-- Executor (`FlowSimulator` + `workflowActionsExecutor`): grava um `bot_response_tracking` por destinatário e pausa o fluxo por empresa até resolver.
-- Poller do executor (ou realtime na tabela) roteia para a saída certa quando trackings mudam de status.
+## 2. Componentes reutilizáveis (novos)
 
-### 3. Filtro "já respondeu" no Envio em Massa
+Em `src/components/cadastros/`:
 
-- Em `BroadcastVendedoresConfig` e no filtro de empresas do `useContactsFilter*`: adicionar toggle "Somente empresas que já responderam algum bot" usando `empresas.ja_respondeu_whatsapp`.
+- `CnpjField.tsx` — input com máscara, loading, validação de dígitos, consulta automática ao completar, ícone de status, mensagem de erro, exposição via `onLookup(data)`.
+- `CpfField.tsx` — máscara + validação.
+- `CepField.tsx` — máscara + ViaCEP automático, expõe `onLookup(data)`, dispara foco no `NumeroField` irmão.
+- `NumeroEnderecoField.tsx` — input controlado; recebe ref para autofoco após CEP/CNPJ.
+- `EmpresaFormCore.tsx` — formulário completo padronizado (CNPJ primeiro, todos os campos listados: razão, fantasia, situação, abertura, natureza, capital, porte, regime, MEI, Simples, CNAE principal, lista de CNAEs secundários, email, telefone, endereço com UF/cidade travados por CEP + IBGE readonly, país). Usa `react-hook-form` + Zod.
+- `PessoaFisicaFormCore.tsx` — formulário curto (CPF, nome, nascimento, celular, email, CEP, número, complemento).
 
-### 4. Tela "Monitor de Respostas" (Marketing → Envio em Massa, nova aba)
+Ambos os cores expõem `defaultValues`, `onSubmit`, `mode` (create/edit) e são consumidos pelas telas existentes sem duplicar lógica.
 
-- Lista por campanha/fluxo: total enviado, respondeu, sem resposta, aguardando.
-- Detalhe por linha: empresa, telefone, enviado_em, respondido_em, texto da resposta, status, link para abrir a empresa.
-- Filtros: fluxo, período, status, segmento.
-- Export CSV.
+## 3. Telas a refatorar (todas passam a consumir os cores)
 
-### 5. Ícone de alertas no cadastro de empresa
+Listas principais:
+- `src/pages/Empresas.tsx` — Empresas, Vendedores, Transportadoras.
+- `src/pages/ProspeccaoEmpresas.tsx` — cadastro manual de prospect.
+- `src/components/atendimento/EmpresaFormSheet.tsx` — CRM.
+- `src/components/atendimento/ContatoFormSheet.tsx` — CRM pessoa física.
+- `src/components/NovaEmpresaDialog.tsx` / `NovoContatoDialog.tsx` — passam a delegar aos cores.
 
-Componente `EmpresaAlertsBadge` (⚠️ com Popover) exibido no header do card/lista de empresas, agregando:
-- WhatsApp inválido (`whatsapp_status='invalid'`)
-- Não respondeu ao último bot (último `bot_response_tracking` = `sem_resposta`) — mostra qual bot
-- Sem contato há X dias (configurável, default 60) — baseado em última mensagem/atendimento
-- Dados cadastrais incompletos (falta e-mail, endereço ou CNPJ)
+Bot / atendimento:
+- Cadastro rápido de empresa/contato disparado por blocos do bot que criam registros.
 
-Popover lista cada problema em uma linha. Aparece em `Empresas.tsx` (lista e header do form) e no `UnifiedDetailsPanel`.
+Ponto:
+- `Empresas`, `Filiais`, `Funcionários` do módulo Ponto (Filiais e Empresas usam mesmo padrão CNPJ-first; Funcionários usam PessoaFisicaFormCore).
+
+Ecommerce:
+- Cadastro de comprador (empresa B2B) e cliente PF no checkout admin.
+
+Qualquer outra tela que hoje capture CNPJ/CPF isolado ganha `CnpjField`/`CpfField` (busca automática + máscara).
+
+## 4. Campos adicionados no schema `empresas`
+
+Migration adicionando colunas que hoje não existem (quando aplicável):
+- `situacao_cadastral text`
+- `data_abertura date`
+- `natureza_juridica text`
+- `capital_social numeric`
+- `porte text`
+- `regime_tributario text`
+- `optante_mei boolean`
+- `optante_simples boolean`
+- `cnae_principal text`
+- `cnaes_secundarios jsonb`
+- `pais text default 'Brasil'`
+
+Todas nullable, sem afetar dados existentes. GRANTs e RLS preservados.
+
+Tabela `pessoas` — se não existir separada (hoje é `customers`), adicionar `data_nascimento date` em `customers` (nullable).
+
+## 5. Fluxo UX garantido
+
+Empresa:
+```
+CNPJ (máscara) → validação dígitos → consulta automática (loading, cache, sem duplicar)
+   → preenche tudo → se Número vazio, foca Número → Salvar
+```
+
+CEP dentro da empresa:
+```
+CEP completo → ViaCEP → preenche logradouro/bairro/UF/cidade + IBGE → foca Número
+```
+
+Pessoa Física:
+```
+CPF → valida → Nome → Nascimento → Celular → Email → CEP → ViaCEP → Número → Salvar
+```
+
+- Se CNPJ/CEP não encontrado: permite cadastro manual (sem travar), mantendo UF/Cidade guiados por CEP quando houver.
+- Debounce 500ms nas consultas; AbortController cancela requisição anterior; toast de erro discreto.
+
+## 6. Máscaras e validações
+
+Reaproveita `src/lib/masks.ts` e `src/lib/validators.ts` existentes (CPF, CNPJ, CEP, telefone, data). Adiciona schemas Zod centrais em `schemas.ts` para uso em `react-hook-form`. Validação também server-side reutilizando `validateCpfCnpjField` já existente.
+
+## 7. Ordem de execução
+
+1. Migration de colunas novas em `empresas` (+ `data_nascimento` em `customers`).
+2. Criar `src/lib/cadastros/*` (serviços + schemas).
+3. Criar `src/components/cadastros/*` (fields + cores).
+4. Refatorar `Empresas.tsx` (Empresas/Vendedores/Transportadoras).
+5. Refatorar `EmpresaFormSheet.tsx` e `ContatoFormSheet.tsx` (CRM/atendimento).
+6. Refatorar `ProspeccaoEmpresas.tsx`.
+7. Refatorar telas de Ponto (Empresas, Filiais, Funcionários).
+8. Refatorar cadastro do Ecommerce (comprador B2B / PF).
+9. Ajustar blocos do Bot que criam registros para chamar os cores.
+10. Smoke-test em cada tela: build + navegação manual pelas rotas.
 
 ## Detalhes técnicos
 
-- Reuso: aproveitar `BroadcastVendedoresConfig`, executores existentes de WhatsApp e `markWhatsappStatus` já implementado.
-- Roteamento das saídas do novo bloco: usar edges nomeadas (`sourceHandle: 'respondeu' | 'sem_resposta'`) — mesma abordagem do `ABTestConfig`.
-- Trigger de resposta: hook no ponto onde mensagens recebidas de WhatsApp já são persistidas (edge function do webhook) — chama uma RPC `mark_bot_response(telefone, texto)` que atualiza tracking + empresa.
-- Cron: `pg_cron` chamando `mark_expired_bot_responses()` a cada 5 min.
-- Todas as telas/labels em português (memória do projeto).
-- Confirmação de exclusão via `DeleteConfirmDialog` onde aplicável.
+- `react-hook-form` + `@hookform/resolvers/zod` já disponíveis no projeto (usados em outras telas).
+- Cache CNPJ/CEP: `Map<string, Promise<Result>>` — mesma chamada em voo é reaproveitada, evita duplicidade.
+- AbortController armazenado em ref; cancela ao digitar novo valor ou desmontar.
+- IBGE continua via `UfCidadeIbge` existente (não duplicar lógica); os cores injetam UF/Cidade já resolvidos pelo CEP.
+- Consulta CNPJ: BrasilAPI primeiro (público, sem custo). Fallback edge `consultar-cnpj` para email/telefone quando faltar.
+- Nenhuma consulta CPF a serviços de dados pessoais será feita (LGPD).
+- Tipagem: `EmpresaFormValues` e `PessoaFisicaFormValues` exportadas de `schemas.ts`.
+- Sem mudança em RLS ou grants existentes; migration só adiciona colunas nullable.
 
-## Fora do escopo (posso fazer em seguida se quiser)
+## Risco / mitigação
 
-- Reenvio automático antes do timeout.
-- Alerta por "palavra-chave" em vez de qualquer resposta.
-- Notificação push ao gerente quando alguém responde.
-
-Confirma que posso seguir com esse plano?
+- Refatoração ampla → mantenho as telas atuais funcionando durante a migração, um arquivo por vez; cada refatoração compila antes de seguir.
+- Se algum consumidor específico tiver campo custom (ex.: transportadora tem `tipo_transporte`), o core aceita `extraFields` renderizados após o bloco padrão.

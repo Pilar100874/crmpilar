@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2, MapPin } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
-import { maskPhone, maskWhatsApp } from "@/lib/masks";
+import { maskPhone, maskWhatsApp, maskCEP } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { validateCpfCnpjField } from "@/lib/docValidation";
+import { CpfField } from "@/components/cadastros/CpfField";
+import { CepField } from "@/components/cadastros/CepField";
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 
 interface CustomField {
@@ -38,14 +42,24 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [saving, setSaving] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("contato");
-  
+  const numeroInputRef = useRef<HTMLInputElement | null>(null);
+
   // Form data
   const [formData, setFormData] = useState<Record<string, any>>({
     name: initialData?.nome || "",
+    cpf: "",
+    data_nascimento: "",
     email: initialData?.email || "",
     phone: initialData?.telefone || "",
     tel: "",
     position: "",
+    cep: "",
+    logradouro: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
   });
   
   // Custom fields
@@ -107,10 +121,19 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
     if (open) {
       setFormData({
         name: initialData?.nome || "",
+        cpf: "",
+        data_nascimento: "",
         email: initialData?.email || "",
         phone: initialData?.telefone || "",
         tel: "",
         position: "",
+        cep: "",
+        logradouro: "",
+        numero: "",
+        complemento: "",
+        bairro: "",
+        cidade: "",
+        estado: "",
       });
       setEmpresasVinculadas([]);
       setSegmentosSelecionados([]);
@@ -179,6 +202,14 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       return;
     }
 
+    // Valida CPF quando preenchido
+    const cpfCheck = validateCpfCnpjField(formData.cpf, { label: "CPF" });
+    if (!cpfCheck.ok) {
+      toast.error(cpfCheck.message || "CPF inválido");
+      setActiveTab("contato");
+      return;
+    }
+
     if (segmentosSelecionados.length === 0) {
       toast.error("Selecione pelo menos 1 segmento");
       setActiveTab("vinculos");
@@ -242,9 +273,18 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         .from("customers")
         .insert({
           nome: formData.name.trim(),
+          cpf: formData.cpf?.replace(/\D/g, "") || null,
+          data_nascimento: formData.data_nascimento || null,
           email: formData.email?.trim() || null,
           telefone: formData.phone?.trim() || null,
           tel: formData.tel?.trim() || null,
+          cep: formData.cep?.trim() || null,
+          logradouro: formData.logradouro?.trim() || null,
+          numero: formData.numero?.trim() || null,
+          complemento: formData.complemento?.trim() || null,
+          bairro: formData.bairro?.trim() || null,
+          cidade: formData.cidade?.trim() || null,
+          estado: formData.estado?.trim() || null,
           estabelecimento_id: estabelecimentoId,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
         })
@@ -378,6 +418,24 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 />
               </div>
 
+              {/* CPF (com validação) */}
+              <CpfField
+                value={formData.cpf}
+                onChange={(v) => setFormData({ ...formData, cpf: v })}
+                label="CPF"
+              />
+
+              {/* Data de nascimento */}
+              <div className="space-y-2">
+                <Label>Data de nascimento</Label>
+                <Input
+                  type="date"
+                  value={formData.data_nascimento}
+                  onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                />
+              </div>
+
+
               {/* Email */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -427,6 +485,71 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                   placeholder="Cargo na empresa"
                 />
               </div>
+
+              {/* CEP com busca automática */}
+              <CepField
+                value={formData.cep}
+                onChange={(v) => setFormData({ ...formData, cep: v })}
+                onLookup={(addr) => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    cep: addr.cep || prev.cep,
+                    logradouro: addr.logradouro || "",
+                    bairro: addr.bairro || "",
+                    cidade: addr.cidade || "",
+                    estado: addr.uf || "",
+                  }));
+                  setTimeout(() => numeroInputRef.current?.focus(), 100);
+                }}
+              />
+
+              {/* Endereço + Número */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-2 space-y-2">
+                  <Label>Endereço</Label>
+                  <Input
+                    value={formData.logradouro}
+                    onChange={(e) => setFormData({ ...formData, logradouro: e.target.value })}
+                    placeholder="Rua, Avenida..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Número</Label>
+                  <Input
+                    ref={numeroInputRef}
+                    value={formData.numero}
+                    onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                    placeholder="Nº"
+                  />
+                </div>
+              </div>
+
+              {/* Complemento */}
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  value={formData.complemento}
+                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                  placeholder="Apto, sala, referência..."
+                />
+              </div>
+
+              {/* Bairro */}
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input
+                  value={formData.bairro}
+                  onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                  placeholder="Bairro"
+                />
+              </div>
+
+              {/* Cidade + UF + IBGE */}
+              <UfCidadeIbge
+                value={{ uf: formData.estado || "", cidade: formData.cidade || "", ibge: (formData as any).codigo_ibge || "" }}
+                onChange={(v) => setFormData({ ...formData, estado: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
+              />
+
 
               {/* Campos customizados */}
               {contactFields
