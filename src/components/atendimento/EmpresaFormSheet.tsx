@@ -658,11 +658,22 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 <div className="space-y-2">
                   <Label>Número</Label>
                   <Input
+                    ref={numeroInputRef}
                     value={formData.numero}
                     onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
                     placeholder="Nº"
                   />
                 </div>
+              </div>
+
+              {/* Complemento */}
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  value={formData.complemento}
+                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                  placeholder="Sala, andar, referência..."
+                />
               </div>
 
               {/* Bairro */}
@@ -680,6 +691,69 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 value={{ uf: formData.estado || "", cidade: formData.cidade || "", ibge: (formData as any).codigo_ibge || "" }}
                 onChange={(v) => setFormData({ ...formData, estado: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
               />
+
+              {/* País */}
+              <div className="space-y-2">
+                <Label>País</Label>
+                <Input value={formData.pais || "Brasil"} readOnly className="bg-muted/50" />
+              </div>
+
+              {/* Dados Fiscais / Cadastrais (auto-preenchidos via CNPJ, editáveis) */}
+              <Card className="p-4 space-y-3 bg-muted/20">
+                <Label className="text-xs font-semibold uppercase text-muted-foreground">Dados Fiscais</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Situação Cadastral</Label>
+                    <Input value={formData.situacao_cadastral || ""} onChange={(e) => setFormData({ ...formData, situacao_cadastral: e.target.value })} placeholder="Ativa" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Data de Abertura</Label>
+                    <Input type="date" value={formData.data_abertura || ""} onChange={(e) => setFormData({ ...formData, data_abertura: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Natureza Jurídica</Label>
+                    <Input value={formData.natureza_juridica || ""} onChange={(e) => setFormData({ ...formData, natureza_juridica: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Capital Social</Label>
+                    <Input inputMode="decimal" value={formData.capital_social || ""} onChange={(e) => setFormData({ ...formData, capital_social: e.target.value })} placeholder="0,00" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Porte</Label>
+                    <Input value={formData.porte || ""} onChange={(e) => setFormData({ ...formData, porte: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Regime Tributário</Label>
+                    <Input value={formData.regime_tributario || ""} onChange={(e) => setFormData({ ...formData, regime_tributario: e.target.value })} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 pt-1">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={!!formData.optante_mei} onCheckedChange={(v) => setFormData({ ...formData, optante_mei: !!v })} />
+                    MEI
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={!!formData.optante_simples} onCheckedChange={(v) => setFormData({ ...formData, optante_simples: !!v })} />
+                    Simples Nacional
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">CNAE Principal</Label>
+                    <Input value={formData.cnae_principal ? `${formData.cnae_principal} — ${formData.cnae_descricao || ""}` : ""} readOnly className="bg-muted/50" />
+                  </div>
+                  {Array.isArray(formData.cnaes_secundarios) && formData.cnaes_secundarios.length > 0 && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">CNAEs Secundários ({formData.cnaes_secundarios.length})</Label>
+                      <div className="max-h-24 overflow-y-auto text-xs space-y-1 border rounded p-2 bg-background">
+                        {formData.cnaes_secundarios.map((c: any) => (
+                          <div key={c.codigo}><span className="font-mono">{c.codigo}</span> — {c.descricao}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
 
             </TabsContent>
 
