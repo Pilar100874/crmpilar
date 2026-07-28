@@ -1760,7 +1760,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         );
       default:
         {
-          const isCepDriven = field.id === "city" || field.id === "state";
+          const isCepDriven = (field.id === "city" || field.id === "state") && isBrasil;
           if (isCepDriven) {
             return (
               <div className="relative">
