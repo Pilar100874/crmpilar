@@ -398,6 +398,11 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       }
 
       // Criar empresa
+      const capitalNum = formData.capital_social ? Number(String(formData.capital_social).replace(",", ".")) : null;
+      const cnaesSecundarios = Array.isArray(formData.cnaes_secundarios) && formData.cnaes_secundarios.length > 0
+        ? formData.cnaes_secundarios.map((c: any) => c.codigo).filter(Boolean)
+        : null;
+
       const { data: newEmpresa, error } = await supabase
         .from("empresas")
         .insert({
@@ -408,12 +413,26 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           telefone: formData.telefone?.trim() || null,
           cep: formData.cep?.trim() || null,
           endereco: formData.endereco?.trim() || null,
+          numero: formData.numero?.trim() || null,
+          complemento: formData.complemento?.trim() || null,
           bairro: formData.bairro?.trim() || null,
           cidade: formData.cidade?.trim() || null,
           estado: formData.estado?.trim() || null,
+          pais: formData.pais?.trim() || "Brasil",
           estabelecimento_id: estabelecimentoId,
           segmento_id: formData.segmento_id || null,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
+          situacao_cadastral: formData.situacao_cadastral || null,
+          data_fundacao: formData.data_abertura || null,
+          natureza_juridica: formData.natureza_juridica || null,
+          capital_social: !isNaN(capitalNum as any) ? capitalNum : null,
+          porte: formData.porte || null,
+          regime_tributario: formData.regime_tributario || null,
+          optante_mei: formData.optante_mei,
+          optante_simples: formData.optante_simples,
+          cnae_principal: formData.cnae_principal || null,
+          cnae_descricao: formData.cnae_descricao || null,
+          cnaes_secundarios: cnaesSecundarios,
           latitude,
           longitude,
         })
