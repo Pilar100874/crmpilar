@@ -273,9 +273,18 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         .from("customers")
         .insert({
           nome: formData.name.trim(),
+          cpf: formData.cpf?.replace(/\D/g, "") || null,
+          data_nascimento: formData.data_nascimento || null,
           email: formData.email?.trim() || null,
           telefone: formData.phone?.trim() || null,
           tel: formData.tel?.trim() || null,
+          cep: formData.cep?.trim() || null,
+          logradouro: formData.logradouro?.trim() || null,
+          numero: formData.numero?.trim() || null,
+          complemento: formData.complemento?.trim() || null,
+          bairro: formData.bairro?.trim() || null,
+          cidade: formData.cidade?.trim() || null,
+          estado: formData.estado?.trim() || null,
           estabelecimento_id: estabelecimentoId,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
         })
