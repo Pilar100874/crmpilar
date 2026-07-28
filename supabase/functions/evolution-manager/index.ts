@@ -287,6 +287,31 @@ function buildNumberVariants(phone: string): string[] {
   return variants;
 }
 
+// Consulta o próprio Evolution pelo JID canônico do número (resolve LID novo do WhatsApp).
+async function resolveCanonicalJids(base: string, headers: Record<string, string>, instance: string, phone: string): Promise<string[]> {
+  try {
+    const candidates = buildBrazilWhatsappDigitCandidates(phone);
+    if (!candidates.length) return [];
+    const { resp, data } = await evoFetch(`${base}/chat/whatsappNumbers/${encodeURIComponent(instance)}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ numbers: candidates }),
+    });
+    if (!resp.ok) return [];
+    const list = Array.isArray(data) ? data : (Array.isArray(data?.numbers) ? data.numbers : []);
+    const out: string[] = [];
+    for (const item of list) {
+      if (!item?.exists) continue;
+      const jid = item?.jid || item?.wid || item?.lid;
+      if (jid && typeof jid === "string" && !out.includes(jid)) out.push(jid);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+
 type DiagnosticStep = {
   id: string;
   title: string;
@@ -395,11 +420,26 @@ async function runDiagnostic(params: {
     details: { webhookUrl: params.webhookUrl },
   });
 
-  const variants = buildNumberVariants(params.phone);
+  const canonicalJids = await resolveCanonicalJids(params.base, params.headers, params.instance, params.phone);
+  const rawVariants = buildNumberVariants(params.phone);
+  const variants: string[] = [];
+  for (const v of [...canonicalJids, ...rawVariants]) if (!variants.includes(v)) variants.push(v);
+
+  addStep({
+    id: "resolve-jid",
+    title: "Resolução do JID no WhatsApp",
+    status: canonicalJids.length ? "ok" : "warning",
+    message: canonicalJids.length
+      ? `Evolution reconheceu ${canonicalJids.length} JID canônico(s) para o número: ${canonicalJids.join(", ")}`
+      : "Evolution não retornou nenhum JID canônico para o número. Vamos tentar formatos padrão como fallback.",
+    details: { canonicalJids, fallback: rawVariants },
+  });
+
   if (!variants.length) {
     addStep({ id: "phone", title: "Número de teste", status: "error", message: "Número inválido para teste." });
     return { ok: false, conclusion: "Informe um WhatsApp válido com DDD e país.", startedAt, finishedAt: new Date().toISOString(), steps };
   }
+
 
   let delivered = false;
   let pending = false;
