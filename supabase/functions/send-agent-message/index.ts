@@ -642,7 +642,7 @@ async function sendEvolutionText(toNumberOnly: string, text: string, sessionName
   const endpoint = `${base}/message/sendText/${encodeURIComponent(sessionName)}`;
   let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
 
-  for (const [index, variant] of buildEvolutionNumberVariants(number).entries()) {
+  for (const [index, variant] of (await buildEvolutionVariantsWithCanonicalJid(base, apiKey, sessionName, number)).entries()) {
     const r = await fetchWithRetry(index === 0 ? "EVO sendText" : "EVO sendText jid-fallback", endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: apiKey },
@@ -684,7 +684,7 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
     : "application/octet-stream";
 
   let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
-  for (const [index, variant] of buildEvolutionNumberVariants(number).entries()) {
+  for (const [index, variant] of (await buildEvolutionVariantsWithCanonicalJid(base, apiKey, sessionName, number)).entries()) {
     let endpoint: string; let body: Record<string, unknown>;
     if (evoType === "audio") {
       endpoint = `${base}/message/sendWhatsAppAudio/${encodeURIComponent(sessionName)}`;
@@ -778,7 +778,7 @@ async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: stri
   if (!contactDigits) return { ok: false, reason: "contact_missing_phone" };
   const displayName = (contact.nome || contactDigits).trim();
   let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
-  for (const [index, variant] of buildEvolutionNumberVariants(number).entries()) {
+  for (const [index, variant] of (await buildEvolutionVariantsWithCanonicalJid(base, apiKey, sessionName, number)).entries()) {
     const body = {
       number: variant,
       contact: [{
