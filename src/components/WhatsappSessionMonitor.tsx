@@ -243,8 +243,9 @@ export default function WhatsappSessionMonitor() {
 
   if (!isAdmin) return null;
 
-  const totalIssues = downSessions.length + zombieSessions.length;
-  const onlyZombies = downSessions.length === 0 && zombieSessions.length > 0;
+  const totalIssues = downSessions.length + zombieSessions.length + qrSessions.length;
+  const onlyQr = downSessions.length === 0 && zombieSessions.length === 0 && qrSessions.length > 0;
+  const onlyZombies = downSessions.length === 0 && qrSessions.length === 0 && zombieSessions.length > 0;
 
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) snooze(); }}>
@@ -258,18 +259,23 @@ export default function WhatsappSessionMonitor() {
                 <AlertTriangle className="h-7 w-7 text-destructive" />
               )}
             </span>
-            {onlyZombies
-              ? "WhatsApp travado (mensagens não estão saindo)"
-              : "Sessão do WhatsApp caiu"}
+            {onlyQr
+              ? "WhatsApp precisa de QR Code"
+              : onlyZombies
+                ? "WhatsApp travado (mensagens não estão saindo)"
+                : "Sessão do WhatsApp caiu"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-base">
-            {onlyZombies
-              ? `${zombieSessions.length === 1 ? "Uma sessão aparece como conectada" : `${zombieSessions.length} sessões aparecem como conectadas`}, mas mensagens estão acumulando em PENDING no Evolution. Isso geralmente indica que o celular pareado está offline ou a instância travou.`
-              : totalIssues === 1
-                ? "Uma sessão do WhatsApp está desconectada. Reconecte agora para não perder mensagens."
-                : `${totalIssues} sessões do WhatsApp com problema. Verifique abaixo.`}
+            {onlyQr
+              ? `${qrSessions.length === 1 ? "Uma sessão está aguardando" : `${qrSessions.length} sessões estão aguardando`} leitura de QR Code para reconectar. Abra as configurações e escaneie com o celular pareado.`
+              : onlyZombies
+                ? `${zombieSessions.length === 1 ? "Uma sessão aparece como conectada" : `${zombieSessions.length} sessões aparecem como conectadas`}, mas mensagens estão acumulando em PENDING no Evolution. Isso geralmente indica que o celular pareado está offline ou a instância travou.`
+                : totalIssues === 1
+                  ? "Uma sessão do WhatsApp está com problema. Verifique abaixo."
+                  : `${totalIssues} sessões do WhatsApp com problema. Verifique abaixo.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
+
 
         <div className="max-h-72 overflow-y-auto space-y-2 rounded-lg border bg-muted/30 p-3">
           {downSessions.map((s) => (
