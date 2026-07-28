@@ -278,6 +278,28 @@ export default function WhatsappSessionMonitor() {
 
 
         <div className="max-h-72 overflow-y-auto space-y-2 rounded-lg border bg-muted/30 p-3">
+          {qrSessions.map((s) => (
+            <div
+              key={`qr-${s.id}`}
+              className="flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/5 p-3 shadow-sm"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 truncate font-semibold">
+                  <QrCode className="h-4 w-4 text-primary" />
+                  {s.session_name}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Aguardando leitura do QR Code
+                  {s.phone_number ? ` · ${s.phone_number}` : ""}
+                </div>
+              </div>
+              <Button size="sm" onClick={openConfig}>
+                <QrCode className="mr-2 h-4 w-4" /> Ler QR Code
+              </Button>
+            </div>
+          ))}
+
+
           {downSessions.map((s) => (
             <div key={s.id} className="flex items-center justify-between gap-3 rounded-md bg-background p-3 shadow-sm">
               <div className="min-w-0">
