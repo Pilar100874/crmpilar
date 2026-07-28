@@ -247,6 +247,9 @@ export function EmpresaFormEmbedded({
       return;
     }
 
+    const _docCheck = validateCpfCnpjField(formData.cpf_cnpj);
+    if (!_docCheck.ok) { toast.error(_docCheck.message!); return; }
+
     setSaving(true);
     try {
       if (!estabelecimentoId) {
