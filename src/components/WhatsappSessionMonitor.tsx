@@ -32,10 +32,11 @@ type SessionRow = {
   // preenchido só para zumbis
   pending?: number;
   total?: number;
-  reason?: "down" | "zombie";
+  reason?: "down" | "zombie" | "qr";
 };
 
-const HEALTHY_STATES = new Set(["WORKING", "SCAN_QR_CODE"]);
+// WORKING = ok. SCAN_QR_CODE agora dispara alerta próprio (precisa ler QR).
+const HEALTHY_STATES = new Set(["WORKING"]);
 const POLL_MS = 45_000;
 // Intervalo de checagem de zumbi é mais espaçado (chama Evolution API por sessão).
 const ZOMBIE_POLL_MS = 3 * 60_000;
@@ -44,6 +45,7 @@ const SNOOZE_MS = 5 * 60_000;
 // Limiares para considerar sessão zumbi (WORKING mas com PENDING acumulando).
 const ZOMBIE_MIN_PENDING = 5; // pelo menos 5 mensagens pendentes
 const ZOMBIE_WINDOW_MIN = 15; // nos últimos 15 minutos
+
 
 export default function WhatsappSessionMonitor() {
   const navigate = useNavigate();
