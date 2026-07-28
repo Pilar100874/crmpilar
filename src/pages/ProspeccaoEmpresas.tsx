@@ -67,24 +67,10 @@ const normSite = (v?: string | null): string | null => {
   return s.startsWith('http') ? s : `https://${s.replace(/^\/+/, '')}`;
 };
 
-// Enriquecer via BrasilAPI (CNPJ → Receita)
-const fetchCNPJ = async (cnpjDigits: string): Promise<any | null> => {
-  try {
-    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjDigits}`);
-    if (!r.ok) return null;
-    return await r.json();
-  } catch { return null; }
-};
+// Consultas CNPJ/CEP são feitas pelo serviço unificado (cache + cancelamento):
+// `buscarCNPJ` e `buscarCEP` de `@/lib/cadastros/*`. Não replique fetches aqui.
 
-// Enriquecer via ViaCEP
-const fetchCEP = async (cepDigits: string): Promise<any | null> => {
-  try {
-    const r = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d?.erro ? null : d;
-  } catch { return null; }
-};
+
 
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
