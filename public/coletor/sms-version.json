@@ -1,6 +1,6 @@
 {
-  "version": "1.5.1",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.5.1/pilar-sms-v1.5.1.apk",
-  "filename": "pilar-sms-v1.5.1.apk",
-  "notas": "v1.5.1: retry automático por SIM/fallback, recuperação de fila travada e log detalhado do retorno Android."
+  "version": "1.6.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.6.0/pilar-sms-v1.6.0.apk",
+  "filename": "pilar-sms-v1.6.0.apk",
+  "notas": "v1.6.0: retry automático por SIM/fallback, recuperação de fila travada e log detalhado do retorno Android."
 }
