@@ -238,10 +238,53 @@ function isFinalErrorStatus(status?: string) {
   return value === "ERROR" || value === "FAILED" || value === "FAILURE";
 }
 
-function buildNumberVariants(phone: string): string[] {
-  const digits = String(phone || "").replace(/\D/g, "");
+function buildBrazilWhatsappDigitCandidates(raw: string): string[] {
+  const digits = String(raw || "").replace(/\D/g, "");
   if (!digits) return [];
-  return Array.from(new Set([digits, `${digits}@s.whatsapp.net`]));
+
+  const out: string[] = [];
+  const push = (value?: string | null) => {
+    const clean = String(value || "").replace(/\D/g, "");
+    if (clean && !out.includes(clean)) out.push(clean);
+  };
+
+  const normalizeNational = (national: string): string | null => {
+    const clean = String(national || "").replace(/\D/g, "");
+    if (clean.length < 10) return null;
+    const ddd = clean.slice(0, 2);
+    const local = clean.slice(2);
+    if (clean.length === 10) return /^[6-9]/.test(local) ? `${ddd}9${local}` : clean;
+    if (clean.length === 12 && local.length === 10 && local.startsWith("99")) return `${ddd}${local.slice(1)}`;
+    if (clean.length === 11) return clean;
+    return null;
+  };
+
+  const addBrazilVariants = (national: string) => {
+    const clean = String(national || "").replace(/\D/g, "");
+    const normalized = normalizeNational(clean);
+    if (normalized) push(`55${normalized}`);
+    if (clean.length >= 10) push(`55${clean}`);
+    if (normalized && normalized.length === 11) {
+      const ddd = normalized.slice(0, 2);
+      const local = normalized.slice(2);
+      if (local.startsWith("9")) push(`55${ddd}${local.slice(1)}`);
+    }
+  };
+
+  if (digits.startsWith("55")) addBrazilVariants(digits.slice(2));
+  else if (digits.length >= 10 && digits.length <= 12) addBrazilVariants(digits);
+  push(digits);
+  return out;
+}
+
+function buildNumberVariants(phone: string): string[] {
+  const variants: string[] = [];
+  for (const digits of buildBrazilWhatsappDigitCandidates(phone)) {
+    if (!variants.includes(digits)) variants.push(digits);
+    const jid = `${digits}@s.whatsapp.net`;
+    if (!variants.includes(jid)) variants.push(jid);
+  }
+  return variants;
 }
 
 type DiagnosticStep = {

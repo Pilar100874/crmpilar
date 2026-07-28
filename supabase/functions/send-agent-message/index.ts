@@ -358,10 +358,68 @@ function evolutionStatusIsFinalError(status?: string): boolean {
   return s === "ERROR" || s === "FAILED" || s === "FAILURE";
 }
 
-function buildEvolutionNumberVariants(toNumberOnly: string): string[] {
-  const digits = String(toNumberOnly || "").replace(/\D/g, "");
+function buildBrazilWhatsappDigitCandidates(raw: string): string[] {
+  const digits = String(raw || "").replace(/\D/g, "");
   if (!digits) return [];
-  return Array.from(new Set([digits, `${digits}@s.whatsapp.net`]));
+
+  const out: string[] = [];
+  const push = (value?: string | null) => {
+    const clean = String(value || "").replace(/\D/g, "");
+    if (clean && !out.includes(clean)) out.push(clean);
+  };
+
+  const normalizeNational = (national: string): string | null => {
+    const clean = String(national || "").replace(/\D/g, "");
+    if (clean.length < 10) return null;
+    const ddd = clean.slice(0, 2);
+    const local = clean.slice(2);
+
+    // Brasil móvel atual: DDD + 9 dígitos. Se vier DDD + 8 dígitos móvel, tenta inserir o 9º dígito.
+    if (clean.length === 10) {
+      return /^[6-9]/.test(local) ? `${ddd}9${local}` : clean;
+    }
+
+    // Caso comum de cadastro com 9 duplicado: 55 + DDD + 10 dígitos iniciando por 99.
+    // Ex.: 55119999611194 -> 5511999611194.
+    if (clean.length === 12 && local.length === 10 && local.startsWith("99")) {
+      return `${ddd}${local.slice(1)}`;
+    }
+
+    if (clean.length === 11) return clean;
+    return null;
+  };
+
+  const addBrazilVariants = (national: string) => {
+    const clean = String(national || "").replace(/\D/g, "");
+    const normalized = normalizeNational(clean);
+    if (normalized) push(`55${normalized}`);
+
+    // Também testa a forma original, porque alguns WhatsApps Business usam número fixo.
+    if (clean.length >= 10) push(`55${clean}`);
+
+    if (normalized && normalized.length === 11) {
+      const ddd = normalized.slice(0, 2);
+      const local = normalized.slice(2);
+      if (local.startsWith("9")) push(`55${ddd}${local.slice(1)}`);
+    }
+  };
+
+  if (digits.startsWith("55")) addBrazilVariants(digits.slice(2));
+  else if (digits.length >= 10 && digits.length <= 12) addBrazilVariants(digits);
+
+  push(digits);
+  return out;
+}
+
+function buildEvolutionNumberVariants(toNumberOnly: string): string[] {
+  const candidates = buildBrazilWhatsappDigitCandidates(toNumberOnly);
+  const variants: string[] = [];
+  for (const digits of candidates) {
+    if (!variants.includes(digits)) variants.push(digits);
+    const jid = `${digits}@s.whatsapp.net`;
+    if (!variants.includes(jid)) variants.push(jid);
+  }
+  return variants;
 }
 
 function extractEvolutionMessages(data: any): any[] {
@@ -561,7 +619,10 @@ async function sendEvolutionText(toNumberOnly: string, text: string, sessionName
       return lastResult;
     }
     const inv = detectInvalidFromText(r.bodyTxt);
-    if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+    if (inv.invalid) {
+      lastResult = { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+      continue;
+    }
     const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
     lastResult = { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
   }
@@ -583,30 +644,39 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
     : ln.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     : "application/octet-stream";
 
-  let endpoint: string; let body: Record<string, unknown>;
-  if (evoType === "audio") {
-    endpoint = `${base}/message/sendWhatsAppAudio/${encodeURIComponent(sessionName)}`;
-    body = { number, audio: mediaUrl };
-  } else {
-    endpoint = `${base}/message/sendMedia/${encodeURIComponent(sessionName)}`;
-    body = { number, mediatype: evoType, mimetype: mime, media: mediaUrl, fileName: inferredName, ...(caption ? { caption } : {}) };
+  let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
+  for (const [index, variant] of buildEvolutionNumberVariants(number).entries()) {
+    let endpoint: string; let body: Record<string, unknown>;
+    if (evoType === "audio") {
+      endpoint = `${base}/message/sendWhatsAppAudio/${encodeURIComponent(sessionName)}`;
+      body = { number: variant, audio: mediaUrl };
+    } else {
+      endpoint = `${base}/message/sendMedia/${encodeURIComponent(sessionName)}`;
+      body = { number: variant, mediatype: evoType, mimetype: mime, media: mediaUrl, fileName: inferredName, ...(caption ? { caption } : {}) };
+    }
+    const r = await fetchWithRetry(index === 0 ? "EVO sendMedia" : "EVO sendMedia fallback", endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+    });
+    console.log("[AGENT][EVO] sendMedia:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts, "variant:", variant.includes("@") ? "jid" : "digits");
+    const ack = parseEvolutionAck(r.bodyTxt);
+    if (r.ok) {
+      const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
+      if (checked.ok) return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+      lastResult = { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+      if (evolutionStatusIsFinalError(checked.status || ack.status)) continue;
+      return lastResult;
+    }
+    const inv = detectInvalidFromText(r.bodyTxt);
+    if (inv.invalid) {
+      lastResult = { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+      continue;
+    }
+    const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+    lastResult = { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
   }
-  const r = await fetchWithRetry("EVO sendMedia", endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: apiKey },
-    body: JSON.stringify(body),
-  });
-  console.log("[AGENT][EVO] sendMedia:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
-  const ack = parseEvolutionAck(r.bodyTxt);
-  if (r.ok) {
-    const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
-    if (!checked.ok) return { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
-    return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
-  }
-  const inv = detectInvalidFromText(r.bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
-  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
-  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
+  return lastResult;
 }
 
 
@@ -665,33 +735,42 @@ function buildVCard(nome: string, whatsapp: string): string {
 async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: string; whatsapp: string }, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
   if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
-  const contactDigits = String(contact.whatsapp).replace(/\D/g, "");
+  const contactDigits = buildBrazilWhatsappDigitCandidates(contact.whatsapp)[0] || String(contact.whatsapp).replace(/\D/g, "");
   if (!contactDigits) return { ok: false, reason: "contact_missing_phone" };
   const displayName = (contact.nome || contactDigits).trim();
-  const body = {
-    number,
-    contact: [{
-      fullName: displayName,
-      wuid: contactDigits,
-      phoneNumber: `+${contactDigits}`,
-    }],
-  };
-  const r = await fetchWithRetry("EVO sendContact", `${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: apiKey },
-    body: JSON.stringify(body),
-  });
-  console.log("[AGENT][EVO] sendContact:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts);
-  const ack = parseEvolutionAck(r.bodyTxt);
-  if (r.ok) {
-    const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
-    if (!checked.ok) return { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
-    return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+  let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
+  for (const [index, variant] of buildEvolutionNumberVariants(number).entries()) {
+    const body = {
+      number: variant,
+      contact: [{
+        fullName: displayName,
+        wuid: contactDigits,
+        phoneNumber: `+${contactDigits}`,
+      }],
+    };
+    const r = await fetchWithRetry(index === 0 ? "EVO sendContact" : "EVO sendContact fallback", `${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+    });
+    console.log("[AGENT][EVO] sendContact:", r.status, (r.bodyTxt || "").slice(0, 200), "attempts:", r.attempts, "variant:", variant.includes("@") ? "jid" : "digits");
+    const ack = parseEvolutionAck(r.bodyTxt);
+    if (r.ok) {
+      const checked = await verifyEvolutionAck(base, apiKey, sessionName, ack);
+      if (checked.ok) return { ok: true, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+      lastResult = { ok: false, reason: checked.reason, attempts: r.attempts, messageId: ack.messageId, providerStatus: checked.status || ack.status };
+      if (evolutionStatusIsFinalError(checked.status || ack.status)) continue;
+      return lastResult;
+    }
+    const inv = detectInvalidFromText(r.bodyTxt);
+    if (inv.invalid) {
+      lastResult = { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
+      continue;
+    }
+    const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
+    lastResult = { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
   }
-  const inv = detectInvalidFromText(r.bodyTxt);
-  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason, attempts: r.attempts };
-  const reason = r.networkError ? `net_${r.networkError}` : failureReason(r.bodyTxt, r.status);
-  return { ok: false, reason: `${reason}${r.attempts > 1 ? `_after_${r.attempts}_tentativas` : ""}`, attempts: r.attempts };
+  return lastResult;
 }
 
 
