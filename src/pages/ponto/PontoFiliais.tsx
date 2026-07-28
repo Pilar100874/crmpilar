@@ -17,6 +17,7 @@ import { CidadeSelect } from "@/components/ui/cidade-select";
 import { maskCNPJ, maskCEP } from "@/lib/masks";
 import { validateCNPJ, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
 import { fetchCep, fetchCnpj } from "@/lib/brAddress";
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 
 type Filial = {
   id: string;

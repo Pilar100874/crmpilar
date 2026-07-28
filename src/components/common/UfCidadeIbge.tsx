@@ -36,6 +36,8 @@ interface Props {
   /** Layout: 'grid' (default) or 'stack' */
   layout?: "grid" | "stack";
   labels?: { uf?: string; cidade?: string; ibge?: string };
+  /** Se true, UF e Cidade são somente leitura (preenchidos via CEP). IBGE continua auto-resolvido. */
+  readOnly?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export function UfCidadeIbge({
   showIbge = true,
   layout = "grid",
   labels,
+  readOnly = true,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [cidades, setCidades] = useState<CidadeIBGE[]>([]);
@@ -106,65 +109,83 @@ export function UfCidadeIbge({
   return (
     <div className={containerClass}>
       <div className={layout === "grid" ? "sm:col-span-1" : ""}>
-        <Label className="text-xs">{labels?.uf ?? "UF"}</Label>
-        <Select value={uf || undefined} onValueChange={setUf} disabled={disabled}>
-          <SelectTrigger>
-            <SelectValue placeholder="UF" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
-            {UFS.map((u) => (
-              <SelectItem key={u.sigla} value={u.sigla}>
-                {u.sigla} — {u.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label className="text-xs flex items-center gap-1">
+          {readOnly && <Lock className="h-3 w-3" />} {labels?.uf ?? "UF"}
+        </Label>
+        {readOnly ? (
+          <Input value={uf} readOnly placeholder="—" className="bg-muted/40" />
+        ) : (
+          <Select value={uf || undefined} onValueChange={setUf} disabled={disabled}>
+            <SelectTrigger>
+              <SelectValue placeholder="UF" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              {UFS.map((u) => (
+                <SelectItem key={u.sigla} value={u.sigla}>
+                  {u.sigla} — {u.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className={layout === "grid" ? (showIbge ? "sm:col-span-3" : "sm:col-span-4") : ""}>
-        <Label className="text-xs">{labels?.cidade ?? "Cidade"}</Label>
-        <Popover open={open} onOpenChange={(o) => !cityDisabled && setOpen(o)}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              role="combobox"
-              disabled={cityDisabled}
-              className={cn("w-full justify-between font-normal", !cidade && "text-muted-foreground")}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
-                </span>
-              ) : (
-                cidade || (uf ? "Selecione a cidade" : "Selecione a UF primeiro")
-              )}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-            <Command>
-              <CommandInput placeholder="Buscar cidade..." />
-              <CommandList>
-                <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
-                <CommandGroup>
-                  {cidades.map((c) => (
-                    <CommandItem key={c.ibge} value={c.nome} onSelect={() => setCidade(c)}>
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          cidade === c.nome ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {c.nome}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <Label className="text-xs flex items-center gap-1">
+          {readOnly && <Lock className="h-3 w-3" />} {labels?.cidade ?? "Cidade"}
+        </Label>
+        {readOnly ? (
+          <Input
+            value={loading ? "Carregando..." : cidade}
+            readOnly
+            placeholder={uf ? "Preenchido pelo CEP" : "Informe o CEP"}
+            className="bg-muted/40"
+          />
+        ) : (
+          <Popover open={open} onOpenChange={(o) => !cityDisabled && setOpen(o)}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                role="combobox"
+                disabled={cityDisabled}
+                className={cn("w-full justify-between font-normal", !cidade && "text-muted-foreground")}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
+                  </span>
+                ) : (
+                  cidade || (uf ? "Selecione a cidade" : "Selecione a UF primeiro")
+                )}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+              <Command>
+                <CommandInput placeholder="Buscar cidade..." />
+                <CommandList>
+                  <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                  <CommandGroup>
+                    {cidades.map((c) => (
+                      <CommandItem key={c.ibge} value={c.nome} onSelect={() => setCidade(c)}>
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            cidade === c.nome ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {c.nome}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
+
 
       {showIbge && (
         <div className={layout === "grid" ? "sm:col-span-2" : ""}>
