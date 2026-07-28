@@ -174,13 +174,13 @@ describe("CnpjField — axe nos estados loading/erro/cancelamento", () => {
     await expectNoA11yViolations(container);
   });
 
-  it("após erro de rede: aria-invalid=true no input e sem violações axe", async () => {
+  it("após falha de rede (fetch rejeitado): mostra retry acessível e sem violações axe", async () => {
+    // buscarCNPJ engole o erro de rede e retorna null → status vira 'notfound'
     global.fetch = vi.fn().mockRejectedValueOnce(new Error("down")) as any;
     const { container } = render(<Harness />);
     fireEvent.change(screen.getByPlaceholderText("00.000.000/0000-00"), { target: { value: "11.222.333/0001-81" } });
-    await waitFor(() => expect(screen.getByText(/Falha ao consultar CNPJ|CNPJ não encontrado/i)).toBeInTheDocument(), { timeout: 2000 });
-    const input = screen.getByPlaceholderText("00.000.000/0000-00");
-    expect(input.getAttribute("aria-invalid")).toBe("true");
+    await waitFor(() => expect(screen.getByText(/CNPJ não encontrado/i)).toBeInTheDocument(), { timeout: 2000 });
+    expect(screen.getByRole("button", { name: /Tentar novamente/i })).toHaveAccessibleName();
     await expectNoA11yViolations(container);
   });
 });
@@ -221,13 +221,12 @@ describe("CepField — axe nos estados loading/erro", () => {
     await expectNoA11yViolations(container);
   });
 
-  it("após erro de rede: aria-invalid=true e sem violações axe", async () => {
+  it("após falha de rede: retry visível e sem violações axe", async () => {
     global.fetch = vi.fn().mockRejectedValueOnce(new Error("offline")) as any;
     const { container } = render(<Harness />);
     fireEvent.change(screen.getByPlaceholderText("00000-000"), { target: { value: "01310-100" } });
-    await waitFor(() => expect(screen.getByText(/Falha ao consultar CEP|CEP não encontrado/i)).toBeInTheDocument(), { timeout: 2000 });
-    const input = screen.getByPlaceholderText("00000-000");
-    expect(input.getAttribute("aria-invalid")).toBe("true");
+    await waitFor(() => expect(screen.getByText(/CEP não encontrado/i)).toBeInTheDocument(), { timeout: 2000 });
+    expect(screen.getByRole("button", { name: /Tentar novamente/i })).toHaveAccessibleName();
     await expectNoA11yViolations(container);
   });
 });
