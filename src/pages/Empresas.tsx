@@ -888,20 +888,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const handleCNPJLookup = async (cnpj: string) => {
     const result = await lookupCNPJ(cnpj);
     if (result) {
+      const cepMasked = result.cep ? maskCEP(result.cep) : "";
       setFormData(prev => ({
         ...prev,
         company_name: result.nome,
         company_fantasia: result.fantasia,
         telefone: maskWhatsApp(result.telefone),
         email: result.email,
-        cep: maskCEP(result.cep),
+        cep: cepMasked || prev.cep,
         address: result.logradouro,
         neighborhood: result.bairro,
-        city: result.municipio,
-        state: result.uf,
       }));
+      // Cidade/UF sempre pelo CEP
+      if (cepMasked && cepMasked.replace(/\D/g, '').length === 8) {
+        await handleCEPLookup(cepMasked);
+      }
     }
   };
+
 
   const handleAddContatoVinculado = async (contatoId: string) => {
     const contato = contatos.find(c => c.id === contatoId);
@@ -1674,6 +1678,26 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </div>
         );
       default:
+        {
+          const isCepDriven = field.id === "city" || field.id === "state";
+          if (isCepDriven) {
+            return (
+              <div className="relative">
+                <Input
+                  id={field.id}
+                  value={displayValue}
+                  readOnly
+                  disabled={isDisabled}
+                  placeholder={formData.cep ? "Preenchido pelo CEP" : "Informe o CEP"}
+                  className="bg-muted/40 cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Campo preenchido automaticamente pelo CEP.
+                </p>
+              </div>
+            );
+          }
+        }
         return (
           <div className="relative">
             <Input
