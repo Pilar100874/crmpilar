@@ -43,21 +43,10 @@ serve(async (req) => {
       }
     }
 
-    const { data: autos } = await admin
-      .from("marketing_automations")
-      .select("id, estabelecimento_id")
-      .eq("active", true)
-      .limit(100);
-    for (const a of autos ?? []) {
-      try {
-        await admin.functions.invoke("marketing-automation-scheduler", {
-          body: { automation_id: a.id, estabelecimento_id: a.estabelecimento_id },
-        });
-        resultado.automacoes++;
-      } catch (e: any) {
-        resultado.erros.push(`auto:${a.id}:${e.message}`);
-      }
-    }
+    // NOTA: a execução periódica de marketing_automations é feita pelo cron
+    // dedicado "marketing-automation-scheduler-every-minute". NÃO invocar aqui
+    // para evitar disparo duplicado (o poller rodava a cada 5 min e chamava
+    // o scheduler N vezes, competindo com o cron do próprio scheduler).
 
     await admin.from("cron_health").upsert({
       poller: "marketing-poller",
