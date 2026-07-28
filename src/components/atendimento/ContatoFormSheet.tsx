@@ -496,7 +496,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                     cep: addr.cep || prev.cep,
                     logradouro: addr.logradouro || "",
                     bairro: addr.bairro || "",
-                    cidade: addr.localidade || "",
+                    cidade: addr.cidade || "",
                     estado: addr.uf || "",
                   }));
                   setTimeout(() => numeroInputRef.current?.focus(), 100);
