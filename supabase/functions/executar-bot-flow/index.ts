@@ -733,25 +733,9 @@ async function executeBroadcast(
         messageId = rm.messageId || messageId;
         attempts = rm.attempts || attempts;
       }
-      if (ok && depois && !invalid) {
-        const post = await sendStep({
-          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
-          whatsappSessionId: cfg.whatsappSessionId || null,
-          whatsappSessionName: cfg.whatsappSessionName || null,
-          botFlowId: botFlowId || null,
-          origem: `${origem}_depois`,
-        });
-        providerStatus = post.providerStatus || providerStatus;
-        messageId = post.messageId || messageId;
-        attempts = post.attempts || attempts;
-        if (!post.ok) {
-          ok = false;
-          invalid = post.invalid;
-          sendReason = post.reason || "Falha ao confirmar envio do texto final";
-        }
-      }
+      // ===== Contato — vem LOGO APÓS a mensagem, ANTES do "texto depois" =====
       const enviarContato = !!(cfg.enviarContato || cfg.enviarContatoGerente);
-      if (ok && enviarContato) {
+      if (ok && !invalid && enviarContato) {
         const contatoTipo = cfg.contatoTipo || "gerente_do_vendedor";
         let cNome = "";
         let cPhone = "";
@@ -763,7 +747,6 @@ async function executeBroadcast(
           cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
         }
         if (cPhone) {
-          // Dedup: não repete o mesmo contato para o mesmo destinatário
           const jaSet = contatoJaEnviado.get(d.phone) || new Set<string>();
           if (jaSet.has(cPhone)) {
             console.log("[broadcast] contato duplicado ignorado p/", d.phone, "->", cPhone);
@@ -789,8 +772,25 @@ async function executeBroadcast(
         } else {
           console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
         }
-
       }
+      if (ok && depois && !invalid) {
+        const post = await sendStep({
+          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
+          whatsappSessionId: cfg.whatsappSessionId || null,
+          whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
+          origem: `${origem}_depois`,
+        });
+        providerStatus = post.providerStatus || providerStatus;
+        messageId = post.messageId || messageId;
+        attempts = post.attempts || attempts;
+        if (!post.ok) {
+          ok = false;
+          invalid = post.invalid;
+          sendReason = post.reason || "Falha ao confirmar envio do texto final";
+        }
+      }
+
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
       ok = false;
