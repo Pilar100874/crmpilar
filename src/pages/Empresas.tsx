@@ -473,6 +473,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
   const cnpjDebounceRef = React.useRef<number | null>(null);
   const cepDebounceRef = React.useRef<number | null>(null);
+  type LookupStatus = "idle" | "loading" | "ok" | "invalid" | "notfound" | "error";
+  const [cnpjStatus, setCnpjStatus] = useState<LookupStatus>("idle");
+  const [cepStatus, setCepStatus] = useState<LookupStatus>("idle");
 
   // Carregar estabelecimento
   useEffect(() => {
@@ -876,27 +879,44 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const handleCEPLookup = async (cep: string) => {
-    const result = await buscarCEP(cep);
-    if (result) {
-      setFormData(prev => ({
-        ...prev,
-        cep: maskCEP(result.cep),
-        address: result.logradouro || prev.address,
-        neighborhood: result.bairro || prev.neighborhood,
-        city: result.cidade,
-        state: result.uf,
-      }));
-      // Auto-focus no número após auto-preencher endereço
-      setTimeout(() => {
-        const el = document.getElementById("numero") as HTMLInputElement | null;
-        el?.focus();
-      }, 60);
+    const digits = (cep || "").replace(/\D/g, "");
+    if (digits.length !== 8) {
+      setCepStatus(digits.length === 0 ? "idle" : "invalid");
+      return;
+    }
+    setCepStatus("loading");
+    try {
+      const result = await buscarCEP(cep);
+      if (result) {
+        setFormData(prev => ({
+          ...prev,
+          cep: maskCEP(result.cep),
+          address: result.logradouro || prev.address,
+          neighborhood: result.bairro || prev.neighborhood,
+          city: result.cidade,
+          state: result.uf,
+        }));
+        setCepStatus("ok");
+        setTimeout(() => {
+          const el = document.getElementById("numero") as HTMLInputElement | null;
+          el?.focus();
+        }, 60);
+      } else {
+        setCepStatus("notfound");
+      }
+    } catch {
+      setCepStatus("error");
     }
   };
 
   const handleCNPJLookup = async (cnpj: string) => {
-    const result = await buscarCNPJ(cnpj);
-    if (result) {
+    const digits = (cnpj || "").replace(/\D/g, "");
+    if (digits.length === 0) { setCnpjStatus("idle"); return; }
+    if (digits.length !== 14) { setCnpjStatus("invalid"); return; }
+    setCnpjStatus("loading");
+    try {
+      const result = await buscarCNPJ(cnpj);
+      if (!result) { setCnpjStatus("notfound"); return; }
       const cepMasked = result.cep ? maskCEP(result.cep) : "";
       setFormData(prev => ({
         ...prev,
@@ -919,12 +939,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         optante_simples: result.optanteSimples ?? prev.optante_simples,
         pais: result.pais || prev.pais || "Brasil",
       }));
-      // Cidade/UF sempre pelo CEP
+      setCnpjStatus("ok");
       if (cepMasked && cepMasked.replace(/\D/g, '').length === 8) {
         await handleCEPLookup(cepMasked);
       }
+    } catch {
+      setCnpjStatus("error");
     }
   };
+
 
 
   const handleAddContatoVinculado = async (contatoId: string) => {
@@ -1750,9 +1773,47 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             {fieldErrors[field.id] && (
               <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
             )}
-            {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
+            {(field.id === "cpf_cnpj" && (cnpjLoading || cnpjStatus === "loading")) || (field.id === "cep" && (cepLoading || cepStatus === "loading")) ? (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
             ) : null}
+            {field.id === "cpf_cnpj" && !fieldErrors[field.id] && (
+              <>
+                {cnpjStatus === "loading" && (
+                  <p className="text-xs text-muted-foreground mt-1">Consultando CNPJ…</p>
+                )}
+                {cnpjStatus === "ok" && (
+                  <p className="text-xs text-emerald-600 mt-1">CNPJ encontrado — dados preenchidos automaticamente.</p>
+                )}
+                {cnpjStatus === "invalid" && (
+                  <p className="text-xs text-amber-600 mt-1">CNPJ inválido — verifique os dígitos.</p>
+                )}
+                {cnpjStatus === "notfound" && (
+                  <p className="text-xs text-amber-600 mt-1">Nenhum resultado encontrado para este CNPJ.</p>
+                )}
+                {cnpjStatus === "error" && (
+                  <p className="text-xs text-red-500 mt-1">Falha ao consultar o CNPJ. Tente novamente.</p>
+                )}
+              </>
+            )}
+            {field.id === "cep" && !fieldErrors[field.id] && (
+              <>
+                {cepStatus === "loading" && (
+                  <p className="text-xs text-muted-foreground mt-1">Consultando CEP…</p>
+                )}
+                {cepStatus === "ok" && (
+                  <p className="text-xs text-emerald-600 mt-1">Endereço preenchido a partir do CEP.</p>
+                )}
+                {cepStatus === "invalid" && (
+                  <p className="text-xs text-amber-600 mt-1">CEP incompleto — informe os 8 dígitos.</p>
+                )}
+                {cepStatus === "notfound" && (
+                  <p className="text-xs text-amber-600 mt-1">CEP não encontrado.</p>
+                )}
+                {cepStatus === "error" && (
+                  <p className="text-xs text-red-500 mt-1">Falha ao consultar o CEP. Tente novamente.</p>
+                )}
+              </>
+            )}
             {(field.type === "phone" || field.id === "telefone") && displayValue && (
               <Button
                 variant="ghost"
