@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2, MapPin } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
-import { maskPhone, maskWhatsApp } from "@/lib/masks";
+import { maskPhone, maskWhatsApp, maskCEP } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { validateCpfCnpjField } from "@/lib/docValidation";
+import { CpfField } from "@/components/cadastros/CpfField";
+import { CepField } from "@/components/cadastros/CepField";
+import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 
 interface CustomField {
