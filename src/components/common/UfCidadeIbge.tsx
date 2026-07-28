@@ -52,7 +52,7 @@ export function UfCidadeIbge({
   showIbge = true,
   layout = "grid",
   labels,
-  readOnly = false,
+  readOnly = true,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [cidades, setCidades] = useState<CidadeIBGE[]>([]);
