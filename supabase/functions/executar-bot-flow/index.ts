@@ -129,7 +129,9 @@ serve(async (req) => {
                   const variations = Math.max(1, Math.min(6, cfg.variations || 1));
                   const { data: gen } = await supabase.functions.invoke("bot-generate-ai-media", {
                     body: {
-                      prompt: `Crie uma peça de ${mediaType === "video" ? "vídeo curto" : "imagem"} destacando o texto: "${frase}"`,
+                      prompt: mediaType === "video"
+                        ? `Crie um vídeo curto publicitário que inclua, exibido em texto legível na cena, exatamente a frase: "${frase}". Não altere as palavras, não traduza, não abrevie. Português do Brasil.`
+                        : `Crie uma imagem publicitária com a frase escrita de forma grande, legível e centralizada: "${frase}". Renderize o texto EXATAMENTE como escrito, sem trocar palavras, sem abreviar e sem erros de ortografia. Português do Brasil. Tipografia limpa, alto contraste com o fundo.`,
                       basePrompt: cfg.basePrompt || "",
                       variations,
                       estabelecimentoId: estId,
@@ -139,6 +141,7 @@ serve(async (req) => {
                       preset: cfg.styleSource === "preset" ? (cfg.preset || "") : "",
                     },
                   });
+
                   const urls: string[] = Array.isArray(gen?.images)
                     ? gen.images.filter(Boolean)
                     : (gen?.items || gen?.results || []).map((it: any) => it?.url).filter(Boolean);
@@ -429,18 +432,18 @@ async function executeBroadcast(
   }
 
   const _mediaVarName = (cfg.mediaVar || "last_generated_media_url").trim();
-  const preTemMidia = !!cfg.usarMensagemPreDefinida
-    && !!String(baseCtx[_mediaVarName] || baseCtx.last_generated_media_url || "").trim();
 
   let msg = "";
   if (cfg.usarMensagemPreDefinida) {
     const varName = cfg.preDefinidaVar || "last_mensagem_pre_definida";
-    const fromVar = preTemMidia ? "" : String(baseCtx[varName] ?? "");
-    const extra = interp(cfg.message || "", baseCtx);
-    msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n");
+    // Sempre inclui a frase pré-definida (mesmo quando há mídia — vira legenda da imagem/vídeo).
+    const fromVar = String(baseCtx[varName] ?? "").trim();
+    const extra = interp(cfg.message || "", baseCtx).trim();
+    msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n\n");
   } else {
     msg = interp(cfg.message || "", baseCtx);
   }
+
 
   const _ft = cfg.filtroTipo || "todos";
   const modoEspecifico = _ft === "especifico";
@@ -621,8 +624,11 @@ async function executeBroadcast(
 
   let enviados = 0, falhas = 0, invalidos = 0;
   const detalhes: any[] = [];
+  // Evita reenvio do mesmo cartão de contato para o mesmo destinatário (phone -> Set de telefones do contato já enviados).
+  const contatoJaEnviado = new Map<string, Set<string>>();
   type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
   const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string }; itens: ResumoItem[] }>();
+
   const invokeSend = async (body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke("send-agent-message", { body });
     const ok = !error && (data as any)?.success !== false;
@@ -728,24 +734,33 @@ async function executeBroadcast(
           cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
         }
         if (cPhone) {
-          const contato = await invokeSend({
-            estabelecimento_id: estabelecimentoId, telefone: d.phone,
-            contact: { nome: cNome, whatsapp: cPhone },
-            whatsappSessionId: cfg.whatsappSessionId || null,
-            whatsappSessionName: cfg.whatsappSessionName || null,
-            botFlowId: botFlowId || null,
-            origem: `${origem}_contato`,
-          });
-          providerStatus = contato.providerStatus || providerStatus;
-          if (!contato.ok) {
-            ok = false;
-            invalid = contato.invalid;
-            sendReason = contato.reason || "Falha ao confirmar envio do contato";
-            console.warn("[broadcast] falha enviar contato p/", d.phone, sendReason);
+          // Dedup: não repete o mesmo contato para o mesmo destinatário
+          const jaSet = contatoJaEnviado.get(d.phone) || new Set<string>();
+          if (jaSet.has(cPhone)) {
+            console.log("[broadcast] contato duplicado ignorado p/", d.phone, "->", cPhone);
+          } else {
+            const contato = await invokeSend({
+              estabelecimento_id: estabelecimentoId, telefone: d.phone,
+              contact: { nome: cNome, whatsapp: cPhone },
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origem}_contato`,
+            });
+            jaSet.add(cPhone);
+            contatoJaEnviado.set(d.phone, jaSet);
+            providerStatus = contato.providerStatus || providerStatus;
+            if (!contato.ok) {
+              ok = false;
+              invalid = contato.invalid;
+              sendReason = contato.reason || "Falha ao confirmar envio do contato";
+              console.warn("[broadcast] falha enviar contato p/", d.phone, sendReason);
+            }
           }
         } else {
           console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
         }
+
       }
     } catch (e) {
       console.warn("[broadcast] erro no envio destinatário:", d.phone, e);
