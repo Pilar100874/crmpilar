@@ -1651,6 +1651,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       setFormData(prev => ({ ...prev, [field.id]: maskedValue }));
       setFieldErrors(prev => ({ ...prev, [field.id]: '' }));
+
+      // Auto-consulta com debounce (cache + cancel gerenciados nos services)
+      const clean = String(maskedValue).replace(/\D/g, "");
+      if (field.id === "cpf_cnpj" && formData.company_type === "Pessoa Jurídica" && clean.length === 14) {
+        if (cnpjDebounceRef.current) window.clearTimeout(cnpjDebounceRef.current);
+        cnpjDebounceRef.current = window.setTimeout(() => {
+          checkDuplicateCnpjCpf(maskedValue);
+          handleCNPJLookup(maskedValue);
+        }, 400);
+      }
+      if (field.id === "cep" && clean.length === 8) {
+        if (cepDebounceRef.current) window.clearTimeout(cepDebounceRef.current);
+        cepDebounceRef.current = window.setTimeout(() => {
+          handleCEPLookup(maskedValue);
+        }, 400);
+      }
     };
 
     switch (field.type) {
