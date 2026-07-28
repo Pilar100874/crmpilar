@@ -486,6 +486,71 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 />
               </div>
 
+              {/* CEP com busca automática */}
+              <CepField
+                value={formData.cep}
+                onChange={(v) => setFormData({ ...formData, cep: v })}
+                onLookup={(addr) => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    cep: addr.cep || prev.cep,
+                    logradouro: addr.logradouro || "",
+                    bairro: addr.bairro || "",
+                    cidade: addr.localidade || "",
+                    estado: addr.uf || "",
+                  }));
+                  setTimeout(() => numeroInputRef.current?.focus(), 100);
+                }}
+              />
+
+              {/* Endereço + Número */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-2 space-y-2">
+                  <Label>Endereço</Label>
+                  <Input
+                    value={formData.logradouro}
+                    onChange={(e) => setFormData({ ...formData, logradouro: e.target.value })}
+                    placeholder="Rua, Avenida..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Número</Label>
+                  <Input
+                    ref={numeroInputRef}
+                    value={formData.numero}
+                    onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                    placeholder="Nº"
+                  />
+                </div>
+              </div>
+
+              {/* Complemento */}
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  value={formData.complemento}
+                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                  placeholder="Apto, sala, referência..."
+                />
+              </div>
+
+              {/* Bairro */}
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input
+                  value={formData.bairro}
+                  onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                  placeholder="Bairro"
+                />
+              </div>
+
+              {/* Cidade + UF + IBGE */}
+              <UfCidadeIbge
+                value={{ uf: formData.estado || "", cidade: formData.cidade || "", ibge: (formData as any).codigo_ibge || "" }}
+                onChange={(v) => setFormData({ ...formData, estado: v.uf, cidade: v.cidade, codigo_ibge: v.ibge } as any)}
+              />
+
+
               {/* Campos customizados */}
               {contactFields
                 .filter(f => !["name", "phone", "tel", "email", "position"].includes(f.id))
