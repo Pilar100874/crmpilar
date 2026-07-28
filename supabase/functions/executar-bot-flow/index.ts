@@ -908,6 +908,16 @@ async function executeBroadcast(
             });
             if (!rmid.ok) { console.warn("[broadcast] falha midia resumo:", telefone, rmid.reason); return; }
           }
+          if (depoisMask) {
+            const rd = await sendStep({
+              estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origemResumo}_depois`,
+            });
+            if (!rd.ok) { console.warn("[broadcast] falha depois resumo:", telefone, rd.reason); return; }
+          }
           if (enviarContatoResumo && contatoResumoPhone) {
             const rc = await sendStep({
               estabelecimento_id: estabelecimentoId, telefone,
@@ -918,16 +928,6 @@ async function executeBroadcast(
               origem: `${origemResumo}_contato`,
             });
             if (!rc.ok) { console.warn("[broadcast] falha contato resumo:", telefone, rc.reason); return; }
-          }
-          if (depoisMask) {
-            const rd = await sendStep({
-              estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
-              whatsappSessionId: cfg.whatsappSessionId || null,
-              whatsappSessionName: cfg.whatsappSessionName || null,
-              botFlowId: botFlowId || null,
-              origem: `${origemResumo}_depois`,
-            });
-            if (!rd.ok) { console.warn("[broadcast] falha depois resumo:", telefone, rd.reason); return; }
           }
           const rs = await sendStep({
             estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
