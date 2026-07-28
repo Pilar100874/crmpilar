@@ -630,6 +630,11 @@ async function executeBroadcast(
   type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
   const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string }; itens: ResumoItem[] }>();
 
+  // Pausa entre etapas para garantir a ordem correta no WhatsApp (Baileys pode
+  // inverter mensagens enviadas quase simultaneamente).
+  const STEP_DELAY_MS = 1500;
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
   const invokeSend = async (body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke("send-agent-message", { body });
     const ok = !error && (data as any)?.success !== false;
@@ -644,6 +649,13 @@ async function executeBroadcast(
       attempts: (data as any)?.attempts || null,
     };
   };
+  // Envia uma etapa e aguarda a pausa antes de retornar, garantindo sequência.
+  const sendStep = async (body: Record<string, unknown>) => {
+    const r = await invokeSend(body);
+    await sleep(STEP_DELAY_MS);
+    return r;
+  };
+
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   for (const d of destinatarios) {
