@@ -738,7 +738,25 @@ async function executeBroadcast(
         messageId = rm.messageId || messageId;
         attempts = rm.attempts || attempts;
       }
-      // ===== Contato — vem LOGO APÓS a mensagem, ANTES do "texto depois" =====
+      // ===== Texto DEPOIS — vem antes do card de contato =====
+      if (ok && depois && !invalid) {
+        const post = await sendStep({
+          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
+          whatsappSessionId: cfg.whatsappSessionId || null,
+          whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
+          origem: `${origem}_depois`,
+        });
+        providerStatus = post.providerStatus || providerStatus;
+        messageId = post.messageId || messageId;
+        attempts = post.attempts || attempts;
+        if (!post.ok) {
+          ok = false;
+          invalid = post.invalid;
+          sendReason = post.reason || "Falha ao confirmar envio do texto final";
+        }
+      }
+      // ===== Contato — cartão do gerente vem POR ÚLTIMO (após "texto depois") =====
       const enviarContato = !!(cfg.enviarContato || cfg.enviarContatoGerente);
       if (ok && !invalid && enviarContato) {
         const contatoTipo = cfg.contatoTipo || "gerente_do_vendedor";
@@ -776,23 +794,6 @@ async function executeBroadcast(
           }
         } else {
           console.warn("[broadcast] contato pulado — sem telefone (tipo:", contatoTipo, ")");
-        }
-      }
-      if (ok && depois && !invalid) {
-        const post = await sendStep({
-          estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
-          whatsappSessionId: cfg.whatsappSessionId || null,
-          whatsappSessionName: cfg.whatsappSessionName || null,
-          botFlowId: botFlowId || null,
-          origem: `${origem}_depois`,
-        });
-        providerStatus = post.providerStatus || providerStatus;
-        messageId = post.messageId || messageId;
-        attempts = post.attempts || attempts;
-        if (!post.ok) {
-          ok = false;
-          invalid = post.invalid;
-          sendReason = post.reason || "Falha ao confirmar envio do texto final";
         }
       }
 
