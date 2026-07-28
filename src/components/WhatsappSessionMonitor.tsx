@@ -53,11 +53,13 @@ export default function WhatsappSessionMonitor() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [downSessions, setDownSessions] = useState<SessionRow[]>([]);
   const [zombieSessions, setZombieSessions] = useState<SessionRow[]>([]);
+  const [qrSessions, setQrSessions] = useState<SessionRow[]>([]);
   const [open, setOpen] = useState(false);
   const [reconnecting, setReconnecting] = useState<string | null>(null);
   const [restarting, setRestarting] = useState<string | null>(null);
   const snoozedUntilRef = useRef<number>(0);
   const lastZombieCheckRef = useRef<number>(0);
+  const notifiedQrRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -72,9 +74,34 @@ export default function WhatsappSessionMonitor() {
       const admin = (roleRows || []).some((r: any) => r.role === "admin");
       setIsAdmin(admin);
       setEstabelecimentoId(estId);
+      // Pede permissão de notificação do navegador só para admins.
+      if (admin && typeof window !== "undefined" && "Notification" in window) {
+        try {
+          if (Notification.permission === "default") {
+            await Notification.requestPermission();
+          }
+        } catch { /* ignore */ }
+      }
     })();
     return () => { mounted = false; };
   }, []);
+
+  const notifyQr = (s: SessionRow) => {
+    if (notifiedQrRef.current.has(s.id)) return;
+    notifiedQrRef.current.add(s.id);
+    const title = "WhatsApp precisa de QR Code";
+    const body = `Sessão "${s.session_name}" foi desvinculada. Escaneie o QR Code para reconectar.`;
+    toast.warning(title, { description: body, duration: 15_000 });
+    try {
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        const n = new Notification(title, { body, tag: `wa-qr-${s.id}`, requireInteraction: true });
+        n.onclick = () => {
+          window.focus();
+          navigate("/atendimento-config?tab=canais");
+        };
+      }
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     if (!isAdmin || !estabelecimentoId) return;
@@ -86,8 +113,23 @@ export default function WhatsappSessionMonitor() {
         .eq("estabelecimento_id", estabelecimentoId);
       if (error || !data) return;
 
+      const qr: SessionRow[] = data
+        .filter((s) => String(s.status || "").toUpperCase() === "SCAN_QR_CODE")
+        .map((s) => ({ ...s, reason: "qr" as const }));
+      setQrSessions(qr);
+
+      // Dispara notificação para QR recém-detectados; limpa memória dos que saíram.
+      const currentQrIds = new Set(qr.map((s) => s.id));
+      for (const id of Array.from(notifiedQrRef.current)) {
+        if (!currentQrIds.has(id)) notifiedQrRef.current.delete(id);
+      }
+      qr.forEach(notifyQr);
+
       const down: SessionRow[] = data
-        .filter((s) => !HEALTHY_STATES.has(String(s.status || "").toUpperCase()))
+        .filter((s) => {
+          const st = String(s.status || "").toUpperCase();
+          return st !== "SCAN_QR_CODE" && !HEALTHY_STATES.has(st);
+        })
         .map((s) => ({ ...s, reason: "down" as const }));
       setDownSessions(down);
 
@@ -122,15 +164,17 @@ export default function WhatsappSessionMonitor() {
         setZombieSessions(zombies);
       }
 
-      const shouldOpen = (down.length > 0 || zombies.length > 0) && Date.now() > snoozedUntilRef.current;
+      const hasIssue = down.length > 0 || zombies.length > 0 || qr.length > 0;
+      const shouldOpen = hasIssue && Date.now() > snoozedUntilRef.current;
       if (shouldOpen) setOpen(true);
-      else if (down.length === 0 && zombies.length === 0) setOpen(false);
+      else if (!hasIssue) setOpen(false);
     };
 
     check();
     const id = setInterval(check, POLL_MS);
     return () => clearInterval(id);
   }, [isAdmin, estabelecimentoId]);
+
 
   const reconnect = async (s: SessionRow) => {
     try {
