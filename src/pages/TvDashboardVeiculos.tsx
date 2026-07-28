@@ -319,8 +319,31 @@ export default function TvDashboardVeiculos() {
     };
   }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
 
-  const veiculosFiltrados = useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
+  const statusOrder: Record<VeiculoStatus, number> = { movendo: 0, parado: 1, offline: 2 };
+  const veiculosFiltrados = useMemo(
+    () => [...filterByGrupo(veiculos, grupoId)].sort((a, b) => {
+      const so = statusOrder[a.status] - statusOrder[b.status];
+      if (so !== 0) return so;
+      // dentro de "movendo", mais rápidos primeiro
+      if (a.status === 'movendo' && b.status === 'movendo') {
+        return (b.ultima_posicao?.velocidade || 0) - (a.ultima_posicao?.velocidade || 0);
+      }
+      return (a.placa || '').localeCompare(b.placa || '');
+    }),
+    [veiculos, grupoId]
+  );
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
+
+  // Padding do mapa para não deixar veículos atrás dos painéis
+  const fitBoundsPadding = useMemo(() => {
+    if (isMobile) {
+      // Lista aparece embaixo (max 55vh) quando aberta; senão FAB pequeno
+      const bottom = listaAberta ? Math.round(window.innerHeight * 0.55) + 24 : 90;
+      return { topLeft: [60, 20] as [number, number], bottomRight: [20, bottom] as [number, number] };
+    }
+    // Desktop/tablet: painel direito 256px + margens; topo com relógio/botões
+    return { topLeft: [80, 20] as [number, number], bottomRight: [20, 288] as [number, number] };
+  }, [isMobile, listaAberta]);
 
   // Follow mode: recentraliza no veículo fixado toda vez que houver nova posição
   useEffect(() => {
@@ -506,6 +529,7 @@ export default function TvDashboardVeiculos() {
               paradasMarcadas={paradasMarcadas}
               className="absolute inset-0"
               fitBounds={!pinnedVeiculoId}
+              fitBoundsPadding={fitBoundsPadding}
               compactIcons
               focusVeiculoId={focusVeiculoId || undefined}
               focusTrigger={focusTrigger}

@@ -28,6 +28,7 @@ interface LazyLogisticaMapProps {
   onParadaClick?: (parada: ParadaMarcada) => void;
   className?: string;
   fitBounds?: boolean;
+  fitBoundsPadding?: { topLeft?: [number, number]; bottomRight?: [number, number] };
   compactIcons?: boolean;
   disableInteraction?: boolean;
   focusVeiculoId?: string;

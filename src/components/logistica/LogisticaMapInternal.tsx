@@ -144,6 +144,7 @@ interface LogisticaMapInternalProps {
   onParadaClick?: (parada: ParadaMarcada) => void;
   className?: string;
   fitBounds?: boolean;
+  fitBoundsPadding?: { topLeft?: [number, number]; bottomRight?: [number, number] };
   compactIcons?: boolean;
   disableInteraction?: boolean;
   focusVeiculoId?: string;
@@ -162,6 +163,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   onParadaClick,
   className = 'h-full w-full',
   fitBounds = true,
+  fitBoundsPadding,
   compactIcons = false,
   disableInteraction = false,
   focusVeiculoId,
@@ -288,9 +290,16 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     // Fit bounds if enabled
     if (fitBounds && allPoints.length > 0) {
       const bounds = L.latLngBounds(allPoints);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      if (fitBoundsPadding && (fitBoundsPadding.topLeft || fitBoundsPadding.bottomRight)) {
+        map.fitBounds(bounds, {
+          paddingTopLeft: fitBoundsPadding.topLeft ?? [50, 50],
+          paddingBottomRight: fitBoundsPadding.bottomRight ?? [50, 50],
+        });
+      } else {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
     }
-  }, [veiculos, fitBounds, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
 
   // Focus/zoom on a specific vehicle when requested (e.g., double click on list)
   useEffect(() => {
