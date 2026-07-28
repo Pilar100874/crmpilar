@@ -673,7 +673,10 @@ async function executeBroadcast(
     };
     const antes = interp(cfg.textoAntes || "", perCtx).trim();
     const depois = interp(cfg.textoDepois || "", perCtx).trim();
-    const msgInterp = interp(msg, perCtx);
+    // Se há mídia com a frase pré-definida embutida na imagem/vídeo, NÃO reenvia a frase como texto.
+    const msgInterp = (cfg.usarMensagemPreDefinida && mediaUrlPre)
+      ? interp(extraTexto || "", perCtx)
+      : interp(msg, perCtx);
 
     let ok = true;
     let invalid = false;
