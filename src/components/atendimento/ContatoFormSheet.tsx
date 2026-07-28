@@ -202,6 +202,14 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       return;
     }
 
+    // Valida CPF quando preenchido
+    const cpfCheck = validateCpfCnpjField(formData.cpf, { label: "CPF" });
+    if (!cpfCheck.ok) {
+      toast.error(cpfCheck.message || "CPF inválido");
+      setActiveTab("contato");
+      return;
+    }
+
     if (segmentosSelecionados.length === 0) {
       toast.error("Selecione pelo menos 1 segmento");
       setActiveTab("vinculos");
