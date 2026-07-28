@@ -311,11 +311,12 @@ async function gravarLogAutomacao(
         items.push({ tipo: "texto", conteudo: `⚠️ Envio abortado: ${b.error}`, titulo: "Aviso do sistema" });
       }
       if (b.textoAntes) items.push({ tipo: "texto", conteudo: b.textoAntes, titulo: "Texto antes" });
+      if (b.mensagem) {
+        items.push({ tipo: "texto", conteudo: b.mensagem });
+      }
       if (b.mediaUrl) {
         const tipoMidia = b.mediaType === "video" ? "video" : "imagem";
-        items.push({ tipo: tipoMidia, url: b.mediaUrl, legenda: b.mensagem || undefined });
-      } else if (b.mensagem) {
-        items.push({ tipo: "texto", conteudo: b.mensagem });
+        items.push({ tipo: tipoMidia, url: b.mediaUrl });
       }
       if (b.textoDepois) items.push({ tipo: "texto", conteudo: b.textoDepois, titulo: "Texto depois" });
     }
