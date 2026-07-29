@@ -271,7 +271,37 @@ export default function TvSignageDashboards() {
                       )}
                     </div>
                   )}
+                  {isVeiculosRoute(edit.rota_interna) && (
+                    <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                      <Label className="text-xs">Grupos de veículos exibidos (opcional)</Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Selecione um ou mais grupos. Se nada for escolhido, todos os veículos serão exibidos.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                        {gruposVeiculos.map((g) => {
+                          const on = veicGrupos.includes(g.id);
+                          return (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => updateVeicGrupos(on ? veicGrupos.filter((x) => x !== g.id) : [...veicGrupos, g.id])}
+                              className={`px-2 py-1 rounded-md text-xs border ${on ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                            >
+                              {g.nome}
+                            </button>
+                          );
+                        })}
+                        {gruposVeiculos.length === 0 && <span className="text-xs text-muted-foreground">Nenhum grupo de veículos cadastrado</span>}
+                      </div>
+                      {veicGrupos.length > 0 && (
+                        <button type="button" className="text-[11px] underline text-muted-foreground" onClick={() => updateVeicGrupos([])}>
+                          Limpar seleção (mostrar todos)
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </>
+
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
