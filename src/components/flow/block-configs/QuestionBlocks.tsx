@@ -12,6 +12,8 @@ import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch,
 import { FormattingToolbar } from "./FormattingToolbar";
 import { WaitingMessageField } from "./WaitingMessageField";
 import { DefaultableTextField } from "./DefaultableTextField";
+import { AskDocLiveTester } from "./AskDocLiveTester";
+
 
 
 interface ConfigProps {
