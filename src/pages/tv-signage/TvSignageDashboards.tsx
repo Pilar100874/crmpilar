@@ -18,6 +18,7 @@ export default function TvSignageDashboards() {
   const [grupos, setGrupos] = useState<any[]>([]);
   const [camerasList, setCamerasList] = useState<any[]>([]);
   const [apresentacoes, setApresentacoes] = useState<any[]>([]);
+  const [gruposVeiculos, setGruposVeiculos] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
@@ -28,7 +29,9 @@ export default function TvSignageDashboards() {
     supabase.from("cameras_grupos").select("id,nome,cor").eq("ativo", true).order("nome").then(({ data }) => setGrupos(data || []));
     supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
+    supabase.from("logistica_grupos").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setGruposVeiculos(data || []));
   }, []);
+
 
   // Deriva query params atuais quando a rota é /tv/cameras
   const parseCamsCfg = (rota: string | null | undefined) => {
