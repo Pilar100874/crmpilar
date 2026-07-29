@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check, Mail, Zap, Paintbrush, LifeBuoy
+  Settings, Check, Mail, Zap, Paintbrush, LifeBuoy, PanelLeft, PanelLeftClose
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
