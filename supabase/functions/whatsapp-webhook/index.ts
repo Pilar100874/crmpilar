@@ -845,8 +845,10 @@ serve(async (req) => {
 
 
     if (!flowData) {
-      await respond("Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.");
-      return new Response(JSON.stringify({ success: true }), {
+      // Sem bot de recepção ativo: NÃO responde nada (evita respostas automáticas
+      // indesejadas em números usados apenas para automação/disparo).
+      console.log("[FLOW] Nenhum bot de recepção ativo para este número — silêncio.");
+      return new Response(JSON.stringify({ success: true, no_reception_bot: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
