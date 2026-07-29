@@ -2250,8 +2250,10 @@ serve(async (req) => {
             }
           }
           
+        } // end of if(!shouldReturn) guard for normalization/validation/API
           // Se não houver erro, prossegue para o próximo nó
           if (!shouldReturn) {
+
             delete context.pendingNodeId;
             
             // Continua para o próximo nó
