@@ -769,9 +769,9 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
       <ConfigSection title="Cadastro automático">
         <ConfigSwitch
           label="Criar/atualizar Empresa automaticamente"
-          description="Após consultar a Receita, cadastra a empresa (ou atualiza se o CNPJ já existir) no Listas › Empresas com todos os campos disponíveis. O ID fica salvo na variável empresa_id para uso nos próximos blocos."
+          info="Após consultar a Receita, cadastra a empresa (ou atualiza se o CNPJ já existir) no Listas › Empresas com todos os campos disponíveis. O ID fica salvo na variável empresa_id para uso nos próximos blocos."
           checked={!!config.criarEmpresa}
-          onCheckedChange={(v) => handleConfigChange("criarEmpresa", v)}
+          onChange={(v) => handleConfigChange("criarEmpresa", v)}
         />
       </ConfigSection>
 
