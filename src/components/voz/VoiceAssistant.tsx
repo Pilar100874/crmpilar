@@ -203,10 +203,19 @@ export default function VoiceAssistant() {
   const fallbackTimerRef = useRef<number | null>(null);
   const usingAudioFallbackRef = useRef(false);
 
+  // iOS/iPad Safari: webkitSpeechRecognition existe mas dispara "function error"
+  // ao iniciar (não suportado de fato). Tratar como sem Web Speech.
+  const isIOS = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    const iPadOS = navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1;
+    return /iPad|iPhone|iPod/.test(ua) || iPadOS;
+  }, []);
+
   const hasWebSpeech = useMemo(
-    () => typeof window !== "undefined" &&
+    () => typeof window !== "undefined" && !isIOS &&
       !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition),
-    []
+    [isIOS]
   );
 
   // ---------- carrega config + comandos custom ----------
@@ -408,7 +417,7 @@ export default function VoiceAssistant() {
   }, []);
 
   const startWake = useCallback(() => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR: any = hasWebSpeech ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
     shouldWakeRef.current = true;
     if (!SR) {
       setWakeUnavailable(true);
@@ -495,7 +504,7 @@ export default function VoiceAssistant() {
   // ---------- Ditado (Web Speech nativo, transcrição em tempo real) ----------
   const startDictationNow = useCallback(() => {
     if (isRecording || processing) return;
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR: any = hasWebSpeech ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
     if (!SR) {
       startAudioFallback(lastDictationRequestRef.current.holdToTalk ? 8000 : 6500);
       return;
