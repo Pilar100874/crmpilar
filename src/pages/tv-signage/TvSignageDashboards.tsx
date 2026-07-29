@@ -55,6 +55,18 @@ export default function TvSignageDashboards() {
   };
   const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
   const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
+  const isVeiculosRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/veiculos";
+  const veicGrupos = (() => {
+    const r = edit?.rota_interna || "";
+    if (!isVeiculosRoute(r)) return [] as string[];
+    const q = r.indexOf("?");
+    if (q < 0) return [] as string[];
+    return (new URLSearchParams(r.slice(q + 1)).get("grupos") || "").split(",").map((s: string) => s.trim()).filter(Boolean);
+  })();
+  const updateVeicGrupos = (next: string[]) => {
+    setEdit({ ...edit, rota_interna: next.length ? `/tv/veiculos?grupos=${next.join(",")}` : "/tv/veiculos" });
+  };
+
   const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
   const apresId = (() => {
     const r = edit?.rota_interna || "";
