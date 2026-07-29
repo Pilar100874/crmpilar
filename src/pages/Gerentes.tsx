@@ -398,7 +398,7 @@ export default function Gerentes() {
                 <tbody>
                   {filtrados.map(g => (
                     <tr key={g.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
-                      <td className="p-2 sm:p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] text-center transition-colors duration-150" style={{ width: 120, minWidth: 120 }}>
+                      <td className="p-2 sm:p-3 sticky left-0 z-20 bg-card group-hover:bg-muted border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] text-center transition-colors duration-150 whitespace-nowrap" style={{ width: 120, minWidth: 120 }}>
                         <Button variant="outline" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8 rounded-full hover:bg-primary hover:text-primary-foreground border-primary/20">
                           <Pencil className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline text-xs">Vínculos</span>

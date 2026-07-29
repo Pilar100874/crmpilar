@@ -2336,8 +2336,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       {tableColumns.filter(col => col.visible).map((column, index) => {
                         if (column.id === 'actions') {
                           return (
-                            <td key="actions" className="p-2 sm:p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] transition-colors duration-150">
-                              <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
+                            <td key="actions" className="p-2 sm:p-3 sticky left-0 z-20 bg-card group-hover:bg-muted border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] transition-colors duration-150">
+                              <div className="flex items-center justify-center gap-1 flex-nowrap whitespace-nowrap">
                                 <Button
                                   size="sm"
                                   variant="outline"
