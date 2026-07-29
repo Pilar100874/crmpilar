@@ -970,15 +970,15 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto relative">
               <table className="w-full">
-                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
+                <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">
                   <tr>
-                    <th className="px-4 py-3.5 w-[30px]"></th>
+                    <th className="px-4 py-3.5 w-[36px] sticky left-0 z-30 bg-muted"></th>
                     {visibleContatosColumns.map((column) => (
                       <th
                         key={column.id}
-                        className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative"
+                        className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider relative ${column.id === 'actions' ? 'sticky left-[36px] z-30 bg-muted text-foreground text-center border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]' : 'text-muted-foreground/80'}`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
@@ -1036,8 +1036,8 @@ export default function Todos() {
 
                     return (
                       <>
-                        <tr key={contato.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
-                          <td className="p-3">
+                        <tr key={contato.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
+                          <td className="p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 w-[36px] transition-colors duration-150">
                             <div className="flex items-center gap-1">
                               {hasEmpresas && (
                                 <Button
@@ -1058,7 +1058,7 @@ export default function Todos() {
                           {visibleContatosColumns.map(col => {
                             if (col.id === "actions") {
                               return (
-                                <td key={col.id} className="p-3">
+                                <td key={col.id} className="p-2 sm:p-3 sticky left-[36px] z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] text-center transition-colors duration-150">
                                   <Button
                                     variant="outline"
                                     size="sm"
@@ -1136,15 +1136,15 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto relative">
               <table className="w-full">
-                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
+                <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">
                   <tr>
-                    <th className="px-4 py-3.5 w-[30px]"></th>
+                    <th className="px-4 py-3.5 w-[36px] sticky left-0 z-30 bg-muted"></th>
                     {visibleEmpresasColumns.map((column) => (
                       <th
                         key={column.id}
-                        className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative"
+                        className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider relative ${column.id === 'actions' ? 'sticky left-[36px] z-30 bg-muted text-foreground text-center border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]' : 'text-muted-foreground/80'}`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
@@ -1202,8 +1202,8 @@ export default function Todos() {
 
                     return (
                       <>
-                        <tr key={empresa.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
-                          <td className="p-3">
+                        <tr key={empresa.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
+                          <td className="p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 w-[36px] transition-colors duration-150">
                             <div className="flex items-center gap-1">
                               {hasContatos && (
                                 <Button
@@ -1224,7 +1224,7 @@ export default function Todos() {
                           {visibleEmpresasColumns.map(col => {
                             if (col.id === "actions") {
                               return (
-                                <td key={col.id} className="p-3">
+                                <td key={col.id} className="p-2 sm:p-3 sticky left-[36px] z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] text-center transition-colors duration-150">
                                   <Button
                                     variant="outline"
                                     size="sm"

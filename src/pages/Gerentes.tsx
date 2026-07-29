@@ -383,11 +383,11 @@ export default function Gerentes() {
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
               <table className="w-full table-fixed">
-                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
+                <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">
                   <tr>
-                    <th className="text-center px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-foreground sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20" style={{ width: 120 }}>
+                    <th className="text-center px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-foreground sticky left-0 z-30 bg-muted border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]" style={{ width: 120, minWidth: 120 }}>
                       Ações
                     </th>
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
@@ -397,9 +397,9 @@ export default function Gerentes() {
                 </thead>
                 <tbody>
                   {filtrados.map(g => (
-                    <tr key={g.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200 group">
-                      <td className="p-3 sticky left-0 bg-gradient-to-l from-background via-background to-background/95 border-r border-border/30 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.15)] text-center">
-                        <Button variant="ghost" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8">
+                    <tr key={g.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
+                      <td className="p-2 sm:p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] text-center transition-colors duration-150" style={{ width: 120, minWidth: 120 }}>
+                        <Button variant="outline" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8 rounded-full hover:bg-primary hover:text-primary-foreground border-primary/20">
                           <Pencil className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline text-xs">Vínculos</span>
                         </Button>
