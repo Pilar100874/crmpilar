@@ -206,6 +206,86 @@ function parseEmpresaReviewCommand(text: string): { field?: string; value?: stri
   return { field, value, rawKey };
 }
 
+// Validação inline de campos editados no fluxo de revisão da empresa.
+// Retorna string com o erro ou null se o valor for válido/aceitável.
+function validateEmpresaField(field: string, rawValue: string): string | null {
+  const value = String(rawValue ?? "").trim();
+  if (!value) {
+    // Campos obrigatórios não podem ficar vazios
+    if (["razao_social", "cep", "logradouro", "municipio", "uf"].includes(field)) {
+      return "não pode ficar vazio";
+    }
+    return null;
+  }
+  switch (field) {
+    case "razao_social":
+    case "nome_fantasia":
+      if (value.length < 2) return "mínimo 2 caracteres";
+      if (value.length > 200) return "máximo 200 caracteres";
+      return null;
+    case "cep": {
+      const d = value.replace(/\D/g, "");
+      if (d.length !== 8) return "CEP deve conter 8 dígitos (ex.: 01310-100)";
+      return null;
+    }
+    case "uf": {
+      const uf = value.toUpperCase();
+      const ufs = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
+      if (!ufs.includes(uf)) return "UF inválida (use sigla de 2 letras, ex.: SP)";
+      return null;
+    }
+    case "municipio":
+    case "bairro":
+    case "logradouro":
+      if (value.length < 2) return "mínimo 2 caracteres";
+      return null;
+    case "atividade_principal_codigo": {
+      const d = value.replace(/\D/g, "");
+      if (d.length !== 7) return "CNAE deve conter 7 dígitos (ex.: 4711302)";
+      return null;
+    }
+    case "atividade_principal":
+      if (value.length < 3) return "descrição de CNAE muito curta";
+      return null;
+    case "email": {
+      const emails = value.split(/[;,]\s*/).filter(Boolean);
+      for (const e of emails) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return `e-mail inválido: ${e}`;
+      }
+      return null;
+    }
+    case "telefone": {
+      const d = value.replace(/\D/g, "");
+      if (d.length < 10 || d.length > 13) return "telefone deve ter 10 a 13 dígitos (com DDD)";
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+// Valida o objeto inteiro antes de persistir. Retorna lista de erros.
+function validateEmpresaInfo(info: any): string[] {
+  const errors: string[] = [];
+  const checkFields = [
+    "razao_social", "nome_fantasia", "cep", "uf", "municipio", "bairro",
+    "logradouro", "atividade_principal_codigo", "atividade_principal",
+    "email", "telefone",
+  ];
+  for (const f of checkFields) {
+    const v = info?.[f];
+    if (v === undefined || v === null || v === "") {
+      if (["razao_social", "cep", "logradouro", "municipio", "uf"].includes(f)) {
+        errors.push(`• *${f}*: obrigatório`);
+      }
+      continue;
+    }
+    const err = validateEmpresaField(f, String(v));
+    if (err) errors.push(`• *${f}*: ${err}`);
+  }
+  return errors;
+}
+
 function buildEmpresaPayload(info: any, estabelecimentoId: string, waFrom?: string) {
   const cnpjNorm = String(info.__cnpj_norm || info.cnpj || "").replace(/\D/g, "");
   const nome = info.razao_social || info.nome_fantasia || `CNPJ ${cnpjNorm}`;
@@ -1966,17 +2046,27 @@ serve(async (req) => {
           const pending = context.vars.__empresa_pending as any;
 
           if (["ok","confirmar","confirma","sim","s","persistir","salvar"].includes(lower)) {
-            await persistEmpresaFromInfo(pending, estabelecimentoId!, context, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-            delete context.vars.__empresa_review;
-            delete context.vars.__empresa_pending;
-            delete context.pendingNodeId;
-            await respond("✅ Cadastro confirmado e salvo!");
-            const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
-            if (nextEdge) {
-              const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
-              if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            const errors = validateEmpresaInfo(pending);
+            if (errors.length > 0) {
+              await respond(
+                "🚫 *Não é possível salvar ainda.* Corrija os campos abaixo:\n\n" +
+                errors.join("\n") +
+                "\n\nEnvie *campo: valor* para corrigir (ex.: `cep: 01310-100`)."
+              );
+              shouldReturn = true;
+            } else {
+              await persistEmpresaFromInfo(pending, estabelecimentoId!, context, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+              delete context.vars.__empresa_review;
+              delete context.vars.__empresa_pending;
+              delete context.pendingNodeId;
+              await respond("✅ Cadastro confirmado e salvo!");
+              const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+              if (nextEdge) {
+                const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
+                if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+              }
+              shouldReturn = true;
             }
-            shouldReturn = true;
           } else if (["cancelar","cancel","nao","n","desistir"].includes(lower)) {
             delete context.vars.__empresa_review;
             delete context.vars.__empresa_pending;
@@ -1986,10 +2076,38 @@ serve(async (req) => {
           } else {
             const parsed = parseEmpresaReviewCommand(raw);
             if (parsed && parsed.field) {
-              pending[parsed.field] = parsed.value;
-              context.vars.__empresa_pending = pending;
-              await respond(buildEmpresaReviewSummary(pending) + `\n\n✏️ Campo *${parsed.rawKey}* atualizado.\n\nResponda *OK* para confirmar, *cancelar* para desistir, ou envie outro *campo: valor*.`);
-              shouldReturn = true;
+              // Normaliza o valor conforme o tipo de campo antes de validar.
+              let normValue = parsed.value ?? "";
+              if (parsed.field === "cep") {
+                const d = normValue.replace(/\D/g, "").slice(0, 8);
+                normValue = d.length === 8 ? d.replace(/^(\d{5})(\d{3})$/, "$1-$2") : d;
+              } else if (parsed.field === "uf") {
+                normValue = normValue.toUpperCase().slice(0, 2);
+              } else if (parsed.field === "atividade_principal_codigo") {
+                normValue = normValue.replace(/\D/g, "").slice(0, 7);
+              } else if (parsed.field === "telefone") {
+                normValue = normValue.replace(/\D/g, "").slice(0, 13);
+              } else if (parsed.field === "email") {
+                normValue = normValue.toLowerCase();
+              }
+              const err = validateEmpresaField(parsed.field, normValue);
+              if (err) {
+                await respond(`🚫 Valor inválido para *${parsed.rawKey}*: ${err}.\n\nEnvie novamente no formato *${parsed.rawKey}: valor*.`);
+                shouldReturn = true;
+              } else {
+                pending[parsed.field] = normValue;
+                context.vars.__empresa_pending = pending;
+                const remaining = validateEmpresaInfo(pending);
+                const suffix = remaining.length > 0
+                  ? `\n\n⚠️ Ainda há pendências:\n${remaining.join("\n")}\n\nCorrija-as antes de confirmar.`
+                  : "\n\n✅ Todos os campos estão consistentes. Responda *OK* para salvar.";
+                await respond(
+                  buildEmpresaReviewSummary(pending) +
+                  `\n\n✏️ Campo *${parsed.rawKey}* atualizado.` +
+                  suffix
+                );
+                shouldReturn = true;
+              }
             } else if (parsed) {
               await respond(`⚠️ Campo "${parsed.rawKey}" não reconhecido.\n\nCampos válidos: razao_social, nome_fantasia, endereco, numero, complemento, bairro, cidade, uf, cep, cnae, porte, socio_nome, telefone, email.`);
               shouldReturn = true;
@@ -2133,9 +2251,14 @@ serve(async (req) => {
                     // Mantém pendingNodeId — a próxima mensagem cai no handler de revisão
                     context.vars.__empresa_pending = pendingInfo;
                     context.vars.__empresa_review = true;
+                    const initialErrors = validateEmpresaInfo(pendingInfo);
+                    const initialSuffix = initialErrors.length > 0
+                      ? `\n\n⚠️ *Pendências detectadas antes de salvar:*\n${initialErrors.join("\n")}\n\nCorrija-as enviando *campo: valor* antes de confirmar.`
+                      : "\n\n✅ Todos os campos estão consistentes. Responda *OK* para salvar.";
                     await respond(
                       buildEmpresaReviewSummary(pendingInfo) +
-                        "\n\nResponda *OK* para confirmar, *cancelar* para desistir, ou envie *campo: valor* para corrigir (ex.: `razao_social: Nova Razão`).\n\n" +
+                        initialSuffix +
+                        "\n\nEnvie *campo: valor* para corrigir (ex.: `razao_social: Nova Razão`), ou *cancelar* para desistir.\n\n" +
                         "Campos aceitos: razao_social, nome_fantasia, endereco, numero, complemento, bairro, cidade, uf, cep, cnae, porte, socio_nome, telefone, email."
                     );
                     shouldReturn = true;
