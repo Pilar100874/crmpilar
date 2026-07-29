@@ -2125,65 +2125,28 @@ serve(async (req) => {
                   }
                 }
 
-                // Cadastro automático em empresas (upsert por CNPJ + estabelecimento)
+                // Cadastro automático em empresas (com opção de revisão prévia)
                 if (cfg.criarEmpresa && estabelecimentoId) {
-                  try {
-                    const sb2 = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-                    const cnpjNorm = String(userResponse).replace(/\D/g, "");
-                    const nome = cnpjInfo.razao_social || cnpjInfo.nome_fantasia || `CNPJ ${cnpjNorm}`;
-                    const enderecoTxt = [cnpjInfo.logradouro, cnpjInfo.numero, cnpjInfo.complemento]
-                      .filter(Boolean).join(", ");
-                    const payload: any = {
-                      estabelecimento_id: estabelecimentoId,
-                      nome,
-                      nome_fantasia: cnpjInfo.nome_fantasia || null,
-                      cnpj: cnpjNorm,
-                      email: cnpjInfo.email || null,
-                      telefone: cnpjInfo.telefone || null,
-                      whatsapp: context.vars.from || cnpjInfo.telefone || null,
-                      endereco: enderecoTxt || null,
-                      bairro: cnpjInfo.bairro || null,
-                      cidade: cnpjInfo.municipio || null,
-                      estado: cnpjInfo.uf || null,
-                      cep: (cnpjInfo.cep || "").replace(/\D/g, "") || null,
-                      cnae_principal: cnpjInfo.atividade_principal_codigo || null,
-                      cnae_descricao: cnpjInfo.atividade_principal || null,
-                      porte: cnpjInfo.porte || null,
-                      situacao_cadastral: cnpjInfo.situacao || null,
-                      data_fundacao: cnpjInfo.abertura || null,
-                      tipo_cliente: "B2B",
-                      status_comercial: "prospect",
-                      origem_prospeccao: "bot-cnpj",
-                      custom_fields: {
-                        natureza_juridica: cnpjInfo.natureza_juridica || null,
-                        capital_social: cnpjInfo.capital_social || null,
-                        regime_tributario: cnpjInfo.regime_tributario || null,
-                        simples_optante: cnpjInfo.simples_optante || null,
-                        simei_optante: cnpjInfo.simei_optante || null,
-                        socio_nome: cnpjInfo.socio_nome || null,
-                        socio_qualificacao: cnpjInfo.socio_qualificacao || null,
-                      },
-                    };
-                    const { data: existente } = await sb2
-                      .from("empresas")
-                      .select("id")
-                      .eq("estabelecimento_id", estabelecimentoId)
-                      .eq("cnpj", cnpjNorm)
-                      .maybeSingle();
-                    if (existente?.id) {
-                      await sb2.from("empresas").update(payload).eq("id", existente.id);
-                      context.vars.empresa_id = existente.id;
-                    } else {
-                      const { data: nova } = await sb2.from("empresas").insert(payload).select("id").single();
-                      if (nova?.id) context.vars.empresa_id = nova.id;
-                    }
-                    console.log("[FLOW] Empresa cadastrada/atualizada:", context.vars.empresa_id);
-                  } catch (empErr) {
-                    console.error("[FLOW] Falha no cadastro automático de empresa:", empErr);
+                  const cnpjNorm = String(userResponse).replace(/\D/g, "");
+                  const pendingInfo = { ...cnpjInfo, __cnpj_norm: cnpjNorm };
+                  if (cfg.revisarAntesDeSalvar) {
+                    // Mantém pendingNodeId — a próxima mensagem cai no handler de revisão
+                    context.vars.__empresa_pending = pendingInfo;
+                    context.vars.__empresa_review = true;
+                    await respond(
+                      buildEmpresaReviewSummary(pendingInfo) +
+                        "\n\nResponda *OK* para confirmar, *cancelar* para desistir, ou envie *campo: valor* para corrigir (ex.: `razao_social: Nova Razão`).\n\n" +
+                        "Campos aceitos: razao_social, nome_fantasia, endereco, numero, complemento, bairro, cidade, uf, cep, cnae, porte, socio_nome, telefone, email."
+                    );
+                    shouldReturn = true;
+                  } else {
+                    await persistEmpresaFromInfo(pendingInfo, estabelecimentoId, context, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                    await respond("CNPJ consultado com sucesso!");
                   }
+                } else {
+                  await respond("CNPJ consultado com sucesso!");
                 }
 
-                await respond("CNPJ consultado com sucesso!");
               }
             } catch (err) {
               console.error("[FLOW] CNPJ API exception:", err);
