@@ -203,10 +203,19 @@ export default function VoiceAssistant() {
   const fallbackTimerRef = useRef<number | null>(null);
   const usingAudioFallbackRef = useRef(false);
 
+  // iOS/iPad Safari: webkitSpeechRecognition existe mas dispara "function error"
+  // ao iniciar (não suportado de fato). Tratar como sem Web Speech.
+  const isIOS = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    const iPadOS = navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1;
+    return /iPad|iPhone|iPod/.test(ua) || iPadOS;
+  }, []);
+
   const hasWebSpeech = useMemo(
-    () => typeof window !== "undefined" &&
+    () => typeof window !== "undefined" && !isIOS &&
       !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition),
-    []
+    [isIOS]
   );
 
   // ---------- carrega config + comandos custom ----------
