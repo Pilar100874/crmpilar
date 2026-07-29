@@ -10,6 +10,8 @@ import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle, Instagram, Facebo
 import { toast } from "@/lib/toast-config";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { maskCNPJ } from "@/lib/masks";
+import { evaluateAskInput, normalizeAskInput, type AskKind } from "@/lib/cadastros/askValidation";
+
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
