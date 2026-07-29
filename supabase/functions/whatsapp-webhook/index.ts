@@ -1824,20 +1824,38 @@ serve(async (req) => {
       else if (pendingNode?.data?.type?.startsWith("ask_")) {
         const cfg = pendingNode.data.config || {};
         const variable = cfg.variable || "resposta";
-        const userResponse = (context.vars.userMessage || "").trim();
+        let userResponse = (context.vars.userMessage || "").trim();
         const blockType = pendingNode.data.type;
-        
+
+        // Normalização em tempo real para CNPJ/CEP: aceita qualquer formato,
+        // reduz a dígitos e reaplica a máscara padrão antes de validar/consultar.
+        if (blockType === "ask_cnpj") {
+          const digits = userResponse.replace(/\D/g, "").slice(0, 14);
+          if (digits.length === 14) {
+            userResponse = digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+          } else {
+            userResponse = digits;
+          }
+        } else if (blockType === "ask_cep") {
+          const digits = userResponse.replace(/\D/g, "").slice(0, 8);
+          if (digits.length === 8) {
+            userResponse = digits.replace(/^(\d{5})(\d{3})$/, "$1-$2");
+          } else {
+            userResponse = digits;
+          }
+        }
+
         console.log("[FLOW] Processing ask block:", {
           blockType,
           variable,
           userResponse,
           hasConfig: !!cfg
         });
-        
+
         // Validação baseada no tipo de bloco
         let isValid = true;
         let errorMessage = "";
-        
+
         if (blockType === "ask_email") {
           isValid = validateEmail(userResponse);
           errorMessage = cfg.errorMessage || "Por favor, informe um email válido.";
@@ -1845,12 +1863,31 @@ serve(async (req) => {
           isValid = validatePhone(userResponse);
           errorMessage = cfg.errorMessage || "Por favor, informe um telefone válido.";
         } else if (blockType === "ask_cnpj") {
-          isValid = validateCNPJ(userResponse);
-          errorMessage = cfg.errorMessage || "Por favor, informe um CNPJ válido no formato XX.XXX.XXX/XXXX-XX.";
+          const digits = userResponse.replace(/\D/g, "");
+          if (digits.length === 0) {
+            isValid = false;
+            errorMessage = "Não consegui identificar o CNPJ. Envie os 14 dígitos.";
+          } else if (digits.length < 14) {
+            isValid = false;
+            errorMessage = `CNPJ incompleto (${digits.length}/14 dígitos). Envie os 14 dígitos, com ou sem pontuação.`;
+          } else if (!validateCNPJ(digits)) {
+            isValid = false;
+            errorMessage = cfg.errorMessage || "CNPJ inválido — os dígitos não conferem. Confira e envie novamente.";
+          }
         } else if (blockType === "ask_cep") {
-          isValid = validateCEP(userResponse);
-          errorMessage = cfg.errorMessage || "Por favor, informe um CEP válido no formato XXXXX-XXX.";
+          const digits = userResponse.replace(/\D/g, "");
+          if (digits.length === 0) {
+            isValid = false;
+            errorMessage = "Não consegui identificar o CEP. Envie os 8 dígitos.";
+          } else if (digits.length < 8) {
+            isValid = false;
+            errorMessage = `CEP incompleto (${digits.length}/8 dígitos). Envie os 8 dígitos, com ou sem hífen.`;
+          } else if (!validateCEP(digits)) {
+            isValid = false;
+            errorMessage = cfg.errorMessage || "CEP inválido — envie os 8 dígitos no formato XXXXX-XXX.";
+          }
         } else if (blockType === "ask_number") {
+
           const num = parseFloat(userResponse);
           if (isNaN(num)) {
             isValid = false;
