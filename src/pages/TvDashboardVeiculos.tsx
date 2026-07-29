@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -80,6 +80,13 @@ export default function TvDashboardVeiculos() {
   const [focusTrigger, setFocusTrigger] = useState(0);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
+  const [searchParams] = useSearchParams();
+  // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
+  const gruposFixos = useMemo(
+    () => (searchParams.get('grupos') || '').split(',').map(s => s.trim()).filter(Boolean),
+    [searchParams]
+  );
+
 
   const handleFocus = useCallback((id: string) => {
     setFocusVeiculoId(id);
@@ -320,8 +327,14 @@ export default function TvDashboardVeiculos() {
   }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
 
   const statusOrder: Record<VeiculoStatus, number> = { movendo: 0, parado: 1, offline: 2 };
-  const veiculosFiltrados = useMemo(
-    () => [...filterByGrupo(veiculos, grupoId)].sort((a, b) => {
+  const veiculosFiltrados = useMemo(() => {
+    const base = gruposFixos.length
+      ? veiculos.filter(v => {
+          const gid = (v as any).logistica_grupo_id || (v as any).grupo_id;
+          return gid && gruposFixos.includes(gid);
+        })
+      : filterByGrupo(veiculos, grupoId);
+    return [...base].sort((a, b) => {
       const so = statusOrder[a.status] - statusOrder[b.status];
       if (so !== 0) return so;
       // dentro de "movendo", mais rápidos primeiro
@@ -329,9 +342,9 @@ export default function TvDashboardVeiculos() {
         return (b.ultima_posicao?.velocidade || 0) - (a.ultima_posicao?.velocidade || 0);
       }
       return (a.placa || '').localeCompare(b.placa || '');
-    }),
-    [veiculos, grupoId]
-  );
+    });
+  }, [veiculos, grupoId, gruposFixos]);
+
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
 
   // Padding do mapa para não deixar veículos atrás dos painéis
@@ -561,9 +574,18 @@ export default function TvDashboardVeiculos() {
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
-          <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
-            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
-          </div>
+          {gruposFixos.length > 0 ? (
+            <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl text-sm font-medium">
+              {gruposFixos.length === 1
+                ? unidades.find(u => u.id === gruposFixos[0])?.nome || 'Grupo'
+                : `${gruposFixos.length} grupos`}
+            </div>
+          ) : (
+            <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
+              <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
+            </div>
+          )}
+
           <Button
             variant="secondary"
             size="sm"

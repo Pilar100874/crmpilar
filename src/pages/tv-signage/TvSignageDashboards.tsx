@@ -18,6 +18,7 @@ export default function TvSignageDashboards() {
   const [grupos, setGrupos] = useState<any[]>([]);
   const [camerasList, setCamerasList] = useState<any[]>([]);
   const [apresentacoes, setApresentacoes] = useState<any[]>([]);
+  const [gruposVeiculos, setGruposVeiculos] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
@@ -28,7 +29,9 @@ export default function TvSignageDashboards() {
     supabase.from("cameras_grupos").select("id,nome,cor").eq("ativo", true).order("nome").then(({ data }) => setGrupos(data || []));
     supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
+    supabase.from("logistica_grupos").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setGruposVeiculos(data || []));
   }, []);
+
 
   // Deriva query params atuais quando a rota é /tv/cameras
   const parseCamsCfg = (rota: string | null | undefined) => {
@@ -52,6 +55,18 @@ export default function TvSignageDashboards() {
   };
   const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
   const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
+  const isVeiculosRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/veiculos";
+  const veicGrupos = (() => {
+    const r = edit?.rota_interna || "";
+    if (!isVeiculosRoute(r)) return [] as string[];
+    const q = r.indexOf("?");
+    if (q < 0) return [] as string[];
+    return (new URLSearchParams(r.slice(q + 1)).get("grupos") || "").split(",").map((s: string) => s.trim()).filter(Boolean);
+  })();
+  const updateVeicGrupos = (next: string[]) => {
+    setEdit({ ...edit, rota_interna: next.length ? `/tv/veiculos?grupos=${next.join(",")}` : "/tv/veiculos" });
+  };
+
   const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
   const apresId = (() => {
     const r = edit?.rota_interna || "";
@@ -256,7 +271,37 @@ export default function TvSignageDashboards() {
                       )}
                     </div>
                   )}
+                  {isVeiculosRoute(edit.rota_interna) && (
+                    <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                      <Label className="text-xs">Grupos de veículos exibidos (opcional)</Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Selecione um ou mais grupos. Se nada for escolhido, todos os veículos serão exibidos.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                        {gruposVeiculos.map((g) => {
+                          const on = veicGrupos.includes(g.id);
+                          return (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => updateVeicGrupos(on ? veicGrupos.filter((x) => x !== g.id) : [...veicGrupos, g.id])}
+                              className={`px-2 py-1 rounded-md text-xs border ${on ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                            >
+                              {g.nome}
+                            </button>
+                          );
+                        })}
+                        {gruposVeiculos.length === 0 && <span className="text-xs text-muted-foreground">Nenhum grupo de veículos cadastrado</span>}
+                      </div>
+                      {veicGrupos.length > 0 && (
+                        <button type="button" className="text-[11px] underline text-muted-foreground" onClick={() => updateVeicGrupos([])}>
+                          Limpar seleção (mostrar todos)
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </>
+
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
