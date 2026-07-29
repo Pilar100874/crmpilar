@@ -417,10 +417,13 @@ export default function VoiceAssistant() {
   }, []);
 
   const startWake = useCallback(() => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR: any = hasWebSpeech ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
     shouldWakeRef.current = true;
     if (!SR) {
       setWakeUnavailable(true);
+      setWakeListening(false);
+      return;
+    }
       setWakeListening(false);
       return;
     }
