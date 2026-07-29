@@ -151,6 +151,16 @@ interface ProspeccaoRow {
   observacoes_internas?: string | null;
 }
 
+type CampoOrigem = 'prospect' | 'receita' | 'cep';
+interface PreviewImportItem {
+  rowId: string;
+  nomeOriginal: string;
+  payload: Record<string, any>;
+  origens: Record<string, CampoOrigem>;
+  enriquecido: boolean;
+  aviso?: string;
+}
+
 export default function ProspeccaoEmpresas() {
   const [rows, setRows] = useState<ProspeccaoRow[]>([]);
   const [loading, setLoading] = useState(false);
