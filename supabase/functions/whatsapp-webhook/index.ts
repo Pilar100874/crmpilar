@@ -142,7 +142,138 @@ function extractEvolutionText(msg: any): string {
   );
 }
 
+// ============================================================
+// Empresa (CNPJ) — payload, resumo p/ revisão e persistência
+// ============================================================
+
+// Mapa amigável campo → chave interna do cnpjInfo. Aceita variações comuns
+// (com/sem acento, sinônimos) para tornar a correção via texto tolerante.
+const EMPRESA_REVIEW_FIELDS: Record<string, string> = {
+  razao_social: "razao_social", razaosocial: "razao_social", razao: "razao_social",
+  nome: "razao_social", nome_empresa: "razao_social",
+  nome_fantasia: "nome_fantasia", fantasia: "nome_fantasia",
+  endereco: "logradouro", logradouro: "logradouro", rua: "logradouro",
+  numero: "numero", nro: "numero", num: "numero",
+  complemento: "complemento", compl: "complemento",
+  bairro: "bairro",
+  cidade: "municipio", municipio: "municipio",
+  uf: "uf", estado: "uf",
+  cep: "cep",
+  cnae: "atividade_principal", atividade: "atividade_principal",
+  cnae_codigo: "atividade_principal_codigo",
+  porte: "porte",
+  socio_nome: "socio_nome", socio: "socio_nome", socios: "socio_nome",
+  socio_qualificacao: "socio_qualificacao",
+  telefone: "telefone", fone: "telefone",
+  email: "email", "e-mail": "email",
+  natureza_juridica: "natureza_juridica", natureza: "natureza_juridica",
+};
+
+function buildEmpresaReviewSummary(info: any): string {
+  const enderecoTxt = [info.logradouro, info.numero, info.complemento].filter(Boolean).join(", ");
+  const lines = [
+    "📋 *Confira os dados retornados pela Receita:*",
+    "",
+    `• *Razão Social:* ${info.razao_social || "-"}`,
+    `• *Nome Fantasia:* ${info.nome_fantasia || "-"}`,
+    `• *CNPJ:* ${info.__cnpj_norm || info.cnpj || "-"}`,
+    `• *Endereço:* ${enderecoTxt || "-"}`,
+    `• *Bairro:* ${info.bairro || "-"}`,
+    `• *Cidade/UF:* ${(info.municipio || "-")}/${info.uf || "-"}`,
+    `• *CEP:* ${info.cep || "-"}`,
+    `• *CNAE:* ${info.atividade_principal_codigo || ""} ${info.atividade_principal || ""}`.trim(),
+    `• *Porte:* ${info.porte || "-"}`,
+    `• *Situação:* ${info.situacao || "-"}`,
+    `• *Sócio principal:* ${info.socio_nome || "-"}`,
+    `• *Telefone:* ${info.telefone || "-"}`,
+    `• *E-mail:* ${info.email || "-"}`,
+  ];
+  return lines.join("\n");
+}
+
+function normalizeReviewKey(raw: string): string {
+  return raw.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+}
+
+function parseEmpresaReviewCommand(text: string): { field?: string; value?: string; rawKey?: string } | null {
+  const m = String(text || "").match(/^\s*([^:=]{2,40})\s*[:=]\s*(.+)$/);
+  if (!m) return null;
+  const rawKey = normalizeReviewKey(m[1]);
+  const value = m[2].trim();
+  const field = EMPRESA_REVIEW_FIELDS[rawKey];
+  return { field, value, rawKey };
+}
+
+function buildEmpresaPayload(info: any, estabelecimentoId: string, waFrom?: string) {
+  const cnpjNorm = String(info.__cnpj_norm || info.cnpj || "").replace(/\D/g, "");
+  const nome = info.razao_social || info.nome_fantasia || `CNPJ ${cnpjNorm}`;
+  const enderecoTxt = [info.logradouro, info.numero, info.complemento].filter(Boolean).join(", ");
+  return {
+    estabelecimento_id: estabelecimentoId,
+    nome,
+    nome_fantasia: info.nome_fantasia || null,
+    cnpj: cnpjNorm,
+    email: info.email || null,
+    telefone: info.telefone || null,
+    whatsapp: waFrom || info.telefone || null,
+    endereco: enderecoTxt || null,
+    bairro: info.bairro || null,
+    cidade: info.municipio || null,
+    estado: info.uf || null,
+    cep: (info.cep || "").replace(/\D/g, "") || null,
+    cnae_principal: info.atividade_principal_codigo || null,
+    cnae_descricao: info.atividade_principal || null,
+    porte: info.porte || null,
+    situacao_cadastral: info.situacao || null,
+    data_fundacao: info.abertura || null,
+    tipo_cliente: "B2B",
+    status_comercial: "prospect",
+    origem_prospeccao: "bot-cnpj",
+    custom_fields: {
+      natureza_juridica: info.natureza_juridica || null,
+      capital_social: info.capital_social || null,
+      regime_tributario: info.regime_tributario || null,
+      simples_optante: info.simples_optante || null,
+      simei_optante: info.simei_optante || null,
+      socio_nome: info.socio_nome || null,
+      socio_qualificacao: info.socio_qualificacao || null,
+    },
+  } as any;
+}
+
+async function persistEmpresaFromInfo(
+  info: any, estabelecimentoId: string, context: any,
+  supabaseUrl: string, serviceKey: string
+): Promise<string | null> {
+  try {
+    const sb = createClient(supabaseUrl, serviceKey);
+    const payload = buildEmpresaPayload(info, estabelecimentoId, context?.vars?.from);
+    const { data: existente } = await sb
+      .from("empresas").select("id")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("cnpj", payload.cnpj)
+      .maybeSingle();
+    let id: string | null = null;
+    if (existente?.id) {
+      await sb.from("empresas").update(payload).eq("id", existente.id);
+      id = existente.id;
+    } else {
+      const { data: nova } = await sb.from("empresas").insert(payload).select("id").single();
+      id = nova?.id ?? null;
+    }
+    if (id) context.vars.empresa_id = id;
+    console.log("[FLOW] Empresa cadastrada/atualizada:", id);
+    return id;
+  } catch (empErr) {
+    console.error("[FLOW] Falha no cadastro automático de empresa:", empErr);
+    return null;
+  }
+}
+
 serve(async (req) => {
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   // Healthcheck + verificação (Meta)
