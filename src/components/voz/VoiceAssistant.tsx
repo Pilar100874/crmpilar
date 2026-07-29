@@ -352,7 +352,7 @@ export default function VoiceAssistant() {
     return String(data?.text || data?.transcription || data?.transcript || data?.resposta || "").trim();
   }, []);
 
-  const startAudioFallback = useCallback(async (durationMs = 6500) => {
+  const startAudioFallback = useCallback(async (durationMs = 15000) => {
     if (usingAudioFallbackRef.current || isRecording || processing) return;
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       toast.error("Não consegui acessar o microfone deste navegador.");
@@ -366,10 +366,32 @@ export default function VoiceAssistant() {
       setWakeListening(false);
       usingAudioFallbackRef.current = true;
       mediaChunksRef.current = [];
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } as any,
+      });
       mediaStreamRef.current = stream;
-      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm" });
+
+      // Escolhe o melhor mimeType suportado pelo navegador.
+      // iPad/iOS Safari só grava mp4/aac; Chrome/Firefox usam webm/opus.
+      const candidates = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4;codecs=mp4a.40.2",
+        "audio/mp4",
+        "audio/aac",
+      ];
+      const chosenMime = candidates.find((m) => {
+        try { return (MediaRecorder as any).isTypeSupported?.(m); } catch { return false; }
+      }) || "";
+      const ext = chosenMime.includes("mp4") || chosenMime.includes("aac") ? "mp4"
+        : chosenMime.includes("webm") ? "webm"
+        : "webm";
+
+      const recorder = chosenMime
+        ? new MediaRecorder(stream, { mimeType: chosenMime })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
+      const recMime = recorder.mimeType || chosenMime || "audio/webm";
       recorder.ondataavailable = (event) => {
         if (event.data?.size) mediaChunksRef.current.push(event.data);
       };
@@ -381,9 +403,16 @@ export default function VoiceAssistant() {
         mediaRecorderRef.current = null;
         usingAudioFallbackRef.current = false;
         setIsRecording(false);
+        const blob = new Blob(chunks, { type: recMime });
+        if (blob.size < 2048) {
+          setInterimText("");
+          toast.error("Gravação muito curta. Toque no microfone e fale novamente.");
+          return;
+        }
         setInterimText("Transcrevendo áudio…");
         try {
-          const texto = await transcreverAudioFallback(new Blob(chunks, { type: "audio/webm" }));
+          const named = new File([blob], `pilar-audio.${ext}`, { type: recMime });
+          const texto = await transcreverAudioFallback(named);
           setInterimText("");
           if (texto) processarTextoRef.current(texto);
           else toast.error("Não escutei nada. Fale novamente ou digite abaixo.");
@@ -392,9 +421,10 @@ export default function VoiceAssistant() {
           toast.error(e.message || "Não consegui transcrever o áudio.");
         }
       };
-      recorder.start(250);
+      // iOS Safari não aceita timeslice em algumas versões — grava tudo e emite no stop.
+      recorder.start();
       setIsRecording(true);
-      setInterimText("Ouvindo por áudio…");
+      setInterimText("Ouvindo… toque no microfone para parar.");
       fallbackTimerRef.current = window.setTimeout(() => stopAudioFallback(), durationMs);
     } catch (e: any) {
       usingAudioFallbackRef.current = false;
@@ -403,6 +433,7 @@ export default function VoiceAssistant() {
       toast.error(e?.message || "Permissão de microfone negada.");
     }
   }, [isRecording, processing, stopAudioFallback, transcreverAudioFallback]);
+
 
   const stopWake = useCallback(() => {
     shouldWakeRef.current = false;
