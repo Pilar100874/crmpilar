@@ -116,52 +116,9 @@ export default defineTool({
         origem: enriched.origem ?? "claude-code",
         status: "novo",
       })
-    const { data, error } = await sb
-      .from("prospeccao_empresas")
-      .insert({
-        user_id: ctx.getUserId(),
-        nome: input.nome,
-        nome_fantasia: input.nome_fantasia ?? null,
-        cnpj: input.cnpj ?? null,
-        email: input.email ?? null,
-        telefone: input.telefone ?? null,
-        whatsapp: input.whatsapp ?? null,
-        site: input.site ?? null,
-        endereco: input.endereco ?? null,
-        bairro: input.bairro ?? null,
-        cidade: input.cidade ?? null,
-        estado: input.estado ?? null,
-        cep: input.cep ?? null,
-        cnae_principal: input.cnae_principal ?? null,
-        cnae_descricao: input.cnae_descricao ?? null,
-        segmento_nome: input.segmento_nome ?? null,
-        descricao: input.descricao ?? null,
-        redes_sociais: input.redes_sociais ?? {},
-        fontes: input.fontes ?? [],
-        contato_nome: input.contato_nome ?? null,
-        contato_cargo: input.contato_cargo ?? null,
-        contato_email: input.contato_email ?? null,
-        contato_telefone: input.contato_telefone ?? null,
-        porte: input.porte ?? null,
-        faturamento_estimado: input.faturamento_estimado ?? null,
-        funcionarios_estimado: input.funcionarios_estimado ?? null,
-        data_fundacao: input.data_fundacao ?? null,
-        situacao_cadastral: input.situacao_cadastral ?? null,
-        score: input.score ?? null,
-        score_motivo: input.score_motivo ?? null,
-        produtos_interesse: input.produtos_interesse ?? [],
-        prioridade: input.prioridade ?? null,
-        latitude: input.latitude ?? null,
-        longitude: input.longitude ?? null,
-        tags: input.tags ?? [],
-        observacoes_internas: input.observacoes_internas ?? null,
-        extras: input.extras ?? {},
-        origem: input.origem ?? "claude-code",
-        status: "novo",
-      })
       .select("id, nome")
       .single();
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error || !data) return { content: [{ type: "text", text: error?.message || "erro" }], isError: true };
     return {
       content: [{ type: "text", text: `Adicionada: ${data.nome} (id ${data.id})` }],
       structuredContent: { id: data.id, nome: data.nome },
