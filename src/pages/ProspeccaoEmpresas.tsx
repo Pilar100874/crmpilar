@@ -881,11 +881,11 @@ export default function ProspeccaoEmpresas() {
             </Button>
             <Button
               size="sm"
-              onClick={importarSelecionadas}
-              disabled={importando || selecionadas.size === 0}
+              onClick={prepararImportacao}
+              disabled={preparandoPreview || importando || selecionadas.size === 0}
             >
               <Download className="h-4 w-4 mr-2" />
-              Importar selecionadas ({selecionadas.size})
+              {preparandoPreview ? 'Consultando Receita/CEP…' : `Revisar e importar (${selecionadas.size})`}
             </Button>
           </div>
         </CardHeader>
