@@ -159,6 +159,8 @@ export default function ProspeccaoEmpresas() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [importando, setImportando] = useState(false);
+  const [preparandoPreview, setPreparandoPreview] = useState(false);
+  const [previewImport, setPreviewImport] = useState<PreviewImportItem[] | null>(null);
   const [metodo, setMetodo] = useState<'wizard' | 'mcp' | null>(null);
 
   const limparTudo = async () => {
