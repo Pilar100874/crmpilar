@@ -287,19 +287,31 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       allPoints.push([parada.lat, parada.lng]);
     });
 
-    // Fit bounds if enabled
+    // Fit bounds if enabled — centraliza todos os pontos com o maior zoom possível
     if (fitBounds && allPoints.length > 0) {
+      map.invalidateSize();
       const bounds = L.latLngBounds(allPoints);
-      if (fitBoundsPadding && (fitBoundsPadding.topLeft || fitBoundsPadding.bottomRight)) {
+
+      // Um único ponto (ou todos praticamente no mesmo lugar): zoom máximo direto
+      const isSinglePoint =
+        allPoints.length === 1 ||
+        (Math.abs(bounds.getNorth() - bounds.getSouth()) < 0.0005 &&
+          Math.abs(bounds.getEast() - bounds.getWest()) < 0.0005);
+
+      if (isSinglePoint) {
+        map.setView(bounds.getCenter(), 17, { animate: false });
+      } else if (fitBoundsPadding && (fitBoundsPadding.topLeft || fitBoundsPadding.bottomRight)) {
         map.fitBounds(bounds, {
-          paddingTopLeft: fitBoundsPadding.topLeft ?? [50, 50],
-          paddingBottomRight: fitBoundsPadding.bottomRight ?? [50, 50],
+          paddingTopLeft: fitBoundsPadding.topLeft ?? [24, 24],
+          paddingBottomRight: fitBoundsPadding.bottomRight ?? [24, 24],
           maxZoom: 18,
+          animate: false,
         });
       } else {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 18, animate: false });
       }
     }
+
   }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
 
   // Focus/zoom on a specific vehicle when requested (e.g., double click on list)
