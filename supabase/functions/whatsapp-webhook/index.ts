@@ -1911,7 +1911,65 @@ serve(async (req) => {
                     console.log(`[FLOW] Saved CNPJ field: ${varNameStr} = ${cnpjInfo[apiFieldStr]}`);
                   }
                 }
-                
+
+                // Cadastro automático em empresas (upsert por CNPJ + estabelecimento)
+                if (cfg.criarEmpresa && estabelecimentoId) {
+                  try {
+                    const sb2 = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                    const cnpjNorm = String(userResponse).replace(/\D/g, "");
+                    const nome = cnpjInfo.razao_social || cnpjInfo.nome_fantasia || `CNPJ ${cnpjNorm}`;
+                    const enderecoTxt = [cnpjInfo.logradouro, cnpjInfo.numero, cnpjInfo.complemento]
+                      .filter(Boolean).join(", ");
+                    const payload: any = {
+                      estabelecimento_id: estabelecimentoId,
+                      nome,
+                      nome_fantasia: cnpjInfo.nome_fantasia || null,
+                      cnpj: cnpjNorm,
+                      email: cnpjInfo.email || null,
+                      telefone: cnpjInfo.telefone || null,
+                      whatsapp: context.vars.from || cnpjInfo.telefone || null,
+                      endereco: enderecoTxt || null,
+                      bairro: cnpjInfo.bairro || null,
+                      cidade: cnpjInfo.municipio || null,
+                      estado: cnpjInfo.uf || null,
+                      cep: (cnpjInfo.cep || "").replace(/\D/g, "") || null,
+                      cnae_principal: cnpjInfo.atividade_principal_codigo || null,
+                      cnae_descricao: cnpjInfo.atividade_principal || null,
+                      porte: cnpjInfo.porte || null,
+                      situacao_cadastral: cnpjInfo.situacao || null,
+                      data_fundacao: cnpjInfo.abertura || null,
+                      tipo_cliente: "B2B",
+                      status_comercial: "prospect",
+                      origem_prospeccao: "bot-cnpj",
+                      custom_fields: {
+                        natureza_juridica: cnpjInfo.natureza_juridica || null,
+                        capital_social: cnpjInfo.capital_social || null,
+                        regime_tributario: cnpjInfo.regime_tributario || null,
+                        simples_optante: cnpjInfo.simples_optante || null,
+                        simei_optante: cnpjInfo.simei_optante || null,
+                        socio_nome: cnpjInfo.socio_nome || null,
+                        socio_qualificacao: cnpjInfo.socio_qualificacao || null,
+                      },
+                    };
+                    const { data: existente } = await sb2
+                      .from("empresas")
+                      .select("id")
+                      .eq("estabelecimento_id", estabelecimentoId)
+                      .eq("cnpj", cnpjNorm)
+                      .maybeSingle();
+                    if (existente?.id) {
+                      await sb2.from("empresas").update(payload).eq("id", existente.id);
+                      context.vars.empresa_id = existente.id;
+                    } else {
+                      const { data: nova } = await sb2.from("empresas").insert(payload).select("id").single();
+                      if (nova?.id) context.vars.empresa_id = nova.id;
+                    }
+                    console.log("[FLOW] Empresa cadastrada/atualizada:", context.vars.empresa_id);
+                  } catch (empErr) {
+                    console.error("[FLOW] Falha no cadastro automático de empresa:", empErr);
+                  }
+                }
+
                 await respond("CNPJ consultado com sucesso!");
               }
             } catch (err) {
@@ -1952,7 +2010,24 @@ serve(async (req) => {
                     console.log(`[FLOW] Saved CEP field: ${varNameStr} = ${cepData[apiFieldStr]}`);
                   }
                 }
-                
+
+                // Atualiza endereço da empresa criada pelo bloco CNPJ, se solicitado
+                if (cfg.atualizarEmpresa && context.vars.empresa_id) {
+                  try {
+                    const sb3 = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                    await sb3.from("empresas").update({
+                      cep: cleanCEP,
+                      endereco: cepData.logradouro || null,
+                      bairro: cepData.bairro || null,
+                      cidade: cepData.localidade || null,
+                      estado: cepData.uf || null,
+                    }).eq("id", context.vars.empresa_id);
+                    console.log("[FLOW] Endereço da empresa atualizado:", context.vars.empresa_id);
+                  } catch (endErr) {
+                    console.error("[FLOW] Falha ao atualizar endereço da empresa:", endErr);
+                  }
+                }
+
                 await respond("CEP consultado com sucesso!");
               }
             } catch (err) {

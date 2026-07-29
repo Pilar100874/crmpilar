@@ -766,6 +766,15 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
         }}
       />
 
+      <ConfigSection title="Cadastro automático">
+        <ConfigSwitch
+          label="Criar/atualizar Empresa automaticamente"
+          info="Após consultar a Receita, cadastra a empresa (ou atualiza se o CNPJ já existir) no Listas › Empresas com todos os campos disponíveis. O ID fica salvo na variável empresa_id para uso nos próximos blocos."
+          checked={!!config.criarEmpresa}
+          onChange={(v) => handleConfigChange("criarEmpresa", v)}
+        />
+      </ConfigSection>
+
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-foreground/80">
@@ -853,6 +862,16 @@ export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selecte
           if ("waitingMessage" in patch) handleConfigChange("waitingMessage", patch.waitingMessage);
         }}
       />
+
+      <ConfigSection title="Cadastro automático">
+        <ConfigSwitch
+          label="Atualizar endereço da Empresa criada pelo bloco CNPJ"
+          info="Se um bloco CNPJ anterior tiver cadastrado a empresa (variável empresa_id), o endereço dela é atualizado com os dados do CEP."
+          checked={!!config.atualizarEmpresa}
+          onChange={(v) => handleConfigChange("atualizarEmpresa", v)}
+        />
+      </ConfigSection>
+
 
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />

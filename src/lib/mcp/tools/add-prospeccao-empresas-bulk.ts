@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { enrichWithCnpj } from "./_cnpjEnrich";
 
 function supabaseForUser(ctx: ToolContext) {
   return createClient(process.env.SUPABASE_URL!, (process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!, {
@@ -64,7 +65,8 @@ export default defineTool({
     }
     const sb = supabaseForUser(ctx);
     const userId = ctx.getUserId();
-    const rows = empresas.map((e) => ({
+    const enrichedList = await Promise.all(empresas.map((e) => enrichWithCnpj(e as any)));
+    const rows = enrichedList.map((e: any) => ({
       user_id: userId,
       nome: e.nome,
       nome_fantasia: e.nome_fantasia ?? null,
