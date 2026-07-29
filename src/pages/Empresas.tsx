@@ -2372,7 +2372,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       >
                         {displayLabel} 
                         {field.required && <span className="text-destructive ml-1">*</span>}
-                        {fieldLocked && <span className="text-xs text-muted-foreground ml-2">(preenchido automaticamente)</span>}
+                        {fieldLocked && <span className="text-xs text-muted-foreground ml-2">(editável)</span>}
                       </Label>
                       <div className={field.id === 'company_type' || field.id === 'cpf_cnpj' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
                         {renderField(field, finalDisabled)}
