@@ -2343,9 +2343,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     (isPessoaFisica ? false : !cnpjPreenchido)
                   );
 
-                  // Pessoa Física não tem lookup automático — todos os campos são editáveis
-                  // Em edição, também liberamos os campos travados para permitir ajustes
-                  const fieldLocked = isPessoaFisica || editingEmpresa ? false : field.locked;
+                  // Todos os campos permitem edição manual — mesmo após auto-preenchimento
+                  // (usuário pode ajustar WhatsApp/telefone/site/e-mail/endereço quando quiser).
+                  // Cidade/UF continuam guiadas pelo CEP no Brasil via `isCepDriven` em renderField.
+                  const fieldLocked = false;
                   
                   // Rótulos dinâmicos para Pessoa Física
                   let displayLabel = field.label;
@@ -2371,7 +2372,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       >
                         {displayLabel} 
                         {field.required && <span className="text-destructive ml-1">*</span>}
-                        {fieldLocked && <span className="text-xs text-muted-foreground ml-2">(preenchido automaticamente)</span>}
+                        {fieldLocked && <span className="text-xs text-muted-foreground ml-2">(editável)</span>}
                       </Label>
                       <div className={field.id === 'company_type' || field.id === 'cpf_cnpj' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
                         {renderField(field, finalDisabled)}
