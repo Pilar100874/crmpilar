@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check, Mail, Zap, Paintbrush, LifeBuoy
+  Settings, Check, Mail, Zap, Paintbrush, LifeBuoy, PanelLeft, PanelLeftClose
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
@@ -78,6 +80,7 @@ export default function Config() {
   const secaoParam = searchParams.get('secao');
   
   const [activeSection, setActiveSection] = useState<string | null>(secaoParam);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
@@ -139,106 +142,167 @@ export default function Config() {
     }
   };
 
-  // Se há uma seção ativa, mostra o conteúdo dela
-  if (activeSection && activeSectionData) {
-    return (
-      <div className="min-h-full bg-background">
-        {/* Header padrão do sistema */}
-        <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 sm:px-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBack}
-              className="shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", activeSectionData.bgColor)}>
-              <activeSectionData.icon className={cn("h-5 w-5", activeSectionData.iconColor)} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-lg font-bold tracking-tight sm:text-2xl">
-                {activeSectionData.title}
-              </h1>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
-                {activeSectionData.description}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Conteúdo da seção */}
-        <div className="mx-auto max-w-6xl p-4 sm:p-6">
-          {renderSectionContent()}
-        </div>
-      </div>
+  const renderMenuButton = (section: ConfigSection) => {
+    const active = activeSection === section.id;
+    const button = (
+      <button
+        key={section.id}
+        onClick={() => handleSectionClick(section.id)}
+        className={cn(
+          "hub-menu-item flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground",
+          active && "is-active",
+          isMenuCollapsed && "justify-center"
+        )}
+      >
+        <section.icon className={cn("h-4 w-4 shrink-0", active ? "" : "opacity-70")} />
+        {!isMenuCollapsed && <span className="truncate text-sm">{section.title}</span>}
+      </button>
     );
-  }
+    if (isMenuCollapsed) {
+      return (
+        <Tooltip key={section.id}>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent side="right">{section.title}</TooltipContent>
+        </Tooltip>
+      );
+    }
+    return button;
+  };
 
-  // Menu principal
   return (
-    <div className="min-h-full bg-background">
-      {/* Header padrão do sistema */}
-      <div className="border-b bg-card">
-        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+    <div className="h-full min-h-screen flex flex-col bg-background text-foreground">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
+        <div className="flex items-center gap-3 px-3 py-3 sm:px-5">
           <div className="hidden">
             <SubMenuHeader
               title="Configurações"
               onOpenSubmenu={() => openSubmenu("Configurações")}
             />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            {activeSectionData ? (
+              <activeSectionData.icon className="h-5 w-5" />
+            ) : (
               <Settings className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold tracking-tight sm:text-2xl">
-                Configurações
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                Gerencie preferências, integrações e a aparência da plataforma
-              </p>
-            </div>
+            )}
           </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+              {activeSectionData ? activeSectionData.title : "Configurações"}
+            </h1>
+            <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block">
+              {activeSectionData
+                ? activeSectionData.description
+                : "Gerencie preferências, integrações e a aparência da plataforma"}
+            </p>
+          </div>
+          {activeSection && (
+            <Button variant="ghost" size="sm" onClick={handleBack} className="shrink-0">
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Voltar
+            </Button>
+          )}
         </div>
-      </div>
+      </header>
 
-      {/* Grid de cards */}
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {CONFIG_SECTIONS.map((section) => (
-            <Card
-              key={section.id}
-              onClick={() => handleSectionClick(section.id)}
-              className="group relative cursor-pointer overflow-hidden border bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+      <div className="flex-1 overflow-hidden">
+        <div className="flex h-full flex-col lg:flex-row">
+          {/* Mobile/Tablet: seletor */}
+          <div className="border-b bg-muted/30 p-3 lg:hidden">
+            <Select
+              value={activeSection ?? "__home__"}
+              onValueChange={(v) => (v === "__home__" ? handleBack() : handleSectionClick(v))}
             >
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                  <div className={cn(
-                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/50 transition-transform group-hover:scale-110",
-                    section.bgColor
-                  )}>
-                    <section.icon className={cn("h-5 w-5", section.iconColor)} />
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                <SelectItem value="__home__">
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Visão geral</span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-semibold sm:text-base">
-                      {section.title}
-                    </h3>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                      {section.description}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </SelectItem>
+                {CONFIG_SECTIONS.map((section) => (
+                  <SelectItem key={section.id} value={section.id}>
+                    <div className="flex items-center gap-2">
+                      <section.icon className="h-4 w-4" />
+                      <span>{section.title}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Desktop: menu lateral */}
+          <div
+            className={cn(
+              "hub-menu hidden transition-all duration-300 lg:flex lg:shrink-0 lg:flex-col lg:gap-1 lg:overflow-y-auto lg:border-r lg:p-3",
+              isMenuCollapsed ? "lg:w-16" : "lg:w-64"
+            )}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+              className="mb-2 self-end"
+            >
+              {isMenuCollapsed ? (
+                <PanelLeft className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </Button>
+            <TooltipProvider delayDuration={0}>
+              {CONFIG_SECTIONS.map(renderMenuButton)}
+            </TooltipProvider>
+          </div>
+
+          <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
+            {activeSection && activeSectionData ? (
+              renderSectionContent()
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {CONFIG_SECTIONS.map((section) => (
+                  <Card
+                    key={section.id}
+                    onClick={() => handleSectionClick(section.id)}
+                    className="group relative cursor-pointer overflow-hidden border bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                  >
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/50 transition-transform group-hover:scale-110",
+                            section.bgColor
+                          )}
+                        >
+                          <section.icon className={cn("h-5 w-5", section.iconColor)} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-sm font-semibold sm:text-base">
+                            {section.title}
+                          </h3>
+                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                            {section.description}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </div>
   );
 }
+
 
 // ============================================
 // Componente de Notificações
