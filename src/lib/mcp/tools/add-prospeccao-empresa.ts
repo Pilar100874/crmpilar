@@ -72,6 +72,50 @@ export default defineTool({
       return { content: [{ type: "text", text: "Não autenticado." }], isError: true };
     }
     const sb = supabaseForUser(ctx);
+    const enriched = await enrichWithCnpj(input as any);
+    const { data, error } = await sb
+      .from("prospeccao_empresas")
+      .insert({
+        user_id: ctx.getUserId(),
+        nome: enriched.nome,
+        nome_fantasia: enriched.nome_fantasia ?? null,
+        cnpj: enriched.cnpj ?? null,
+        email: enriched.email ?? null,
+        telefone: enriched.telefone ?? null,
+        whatsapp: enriched.whatsapp ?? null,
+        site: enriched.site ?? null,
+        endereco: enriched.endereco ?? null,
+        bairro: enriched.bairro ?? null,
+        cidade: enriched.cidade ?? null,
+        estado: enriched.estado ?? null,
+        cep: enriched.cep ?? null,
+        cnae_principal: enriched.cnae_principal ?? null,
+        cnae_descricao: enriched.cnae_descricao ?? null,
+        segmento_nome: enriched.segmento_nome ?? null,
+        descricao: enriched.descricao ?? null,
+        redes_sociais: enriched.redes_sociais ?? {},
+        fontes: enriched.fontes ?? [],
+        contato_nome: enriched.contato_nome ?? null,
+        contato_cargo: enriched.contato_cargo ?? null,
+        contato_email: enriched.contato_email ?? null,
+        contato_telefone: enriched.contato_telefone ?? null,
+        porte: enriched.porte ?? null,
+        faturamento_estimado: enriched.faturamento_estimado ?? null,
+        funcionarios_estimado: enriched.funcionarios_estimado ?? null,
+        data_fundacao: enriched.data_fundacao ?? null,
+        situacao_cadastral: enriched.situacao_cadastral ?? null,
+        score: enriched.score ?? null,
+        score_motivo: enriched.score_motivo ?? null,
+        produtos_interesse: enriched.produtos_interesse ?? [],
+        prioridade: enriched.prioridade ?? null,
+        latitude: enriched.latitude ?? null,
+        longitude: enriched.longitude ?? null,
+        tags: enriched.tags ?? [],
+        observacoes_internas: enriched.observacoes_internas ?? null,
+        extras: enriched.extras ?? {},
+        origem: enriched.origem ?? "claude-code",
+        status: "novo",
+      })
     const { data, error } = await sb
       .from("prospeccao_empresas")
       .insert({
