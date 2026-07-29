@@ -327,8 +327,14 @@ export default function TvDashboardVeiculos() {
   }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
 
   const statusOrder: Record<VeiculoStatus, number> = { movendo: 0, parado: 1, offline: 2 };
-  const veiculosFiltrados = useMemo(
-    () => [...filterByGrupo(veiculos, grupoId)].sort((a, b) => {
+  const veiculosFiltrados = useMemo(() => {
+    const base = gruposFixos.length
+      ? veiculos.filter(v => {
+          const gid = (v as any).logistica_grupo_id || (v as any).grupo_id;
+          return gid && gruposFixos.includes(gid);
+        })
+      : filterByGrupo(veiculos, grupoId);
+    return [...base].sort((a, b) => {
       const so = statusOrder[a.status] - statusOrder[b.status];
       if (so !== 0) return so;
       // dentro de "movendo", mais rápidos primeiro
@@ -336,9 +342,9 @@ export default function TvDashboardVeiculos() {
         return (b.ultima_posicao?.velocidade || 0) - (a.ultima_posicao?.velocidade || 0);
       }
       return (a.placa || '').localeCompare(b.placa || '');
-    }),
-    [veiculos, grupoId]
-  );
+    });
+  }, [veiculos, grupoId, gruposFixos]);
+
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
 
   // Padding do mapa para não deixar veículos atrás dos painéis
