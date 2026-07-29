@@ -2001,8 +2001,10 @@ serve(async (req) => {
         }
 
 
+        if (!shouldReturn) {
         // Normalização em tempo real para CNPJ/CEP: aceita qualquer formato,
         // reduz a dígitos e reaplica a máscara padrão antes de validar/consultar.
+
         if (blockType === "ask_cnpj") {
           const digits = userResponse.replace(/\D/g, "").slice(0, 14);
           if (digits.length === 14) {
