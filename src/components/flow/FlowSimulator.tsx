@@ -10,6 +10,8 @@ import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle, Instagram, Facebo
 import { toast } from "@/lib/toast-config";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { maskCNPJ } from "@/lib/masks";
+import { evaluateAskInput, normalizeAskInput, type AskKind } from "@/lib/cadastros/askValidation";
+
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -1357,8 +1359,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         addBotMessage(question, node.id);
         setIsWaitingInput(true);
         setPendingVariable(variable);
+        if (type === "ask_cnpj" || type === "ask_cep") setCurrentBlockType(type);
         console.log("⏳ Waiting for input, pendingVariable set to:", variable);
         break;
+
 
       case "condition":
         addSystemMessage("🔀 Avaliando condições...");
@@ -5985,40 +5989,91 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
 
           
-          <div className="flex gap-2">
-            {/* Botão de anexar arquivo - sempre visível */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              title="Anexar arquivo"
-              className={`flex-shrink-0 rounded-full ${channel === 'telegram' ? 'bg-[#2B5278] hover:bg-[#3A6B92] text-white border-transparent' : ''}`}
-            >
-              📎
-            </Button>
-            
-            <Input
-              placeholder="Digite sua mensagem..."
-              value={selectedFile ? `📎 ${selectedFile.name}` : input}
-              onChange={(e) => {
-                if (!selectedFile) setInput(e.target.value);
-              }}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !selectedFile) handleSendMessage();
-              }}
-              readOnly={!!selectedFile}
-              className={`rounded-full ${channel === 'telegram' ? 'bg-[#212D3B] text-white border-gray-600 placeholder:text-gray-400' : ''}`}
-            />
-            
-            <Button
-              size="icon"
-              onClick={handleSendMessage}
-              disabled={!selectedFile && !input.trim()}
-              className={`rounded-full ${channelStyle.headerBg} ${channelStyle.headerText}`}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
+          {(() => {
+            const isAskDoc = currentBlockType === "ask_cnpj" || currentBlockType === "ask_cep";
+            const askKind: AskKind | null = isAskDoc ? (currentBlockType as AskKind) : null;
+            const evalRes = askKind && !selectedFile ? evaluateAskInput(askKind, input) : null;
+            const disableSend = !!(evalRes && !evalRes.canSubmit);
+            const inputPlaceholder = askKind === "cnpj"
+              ? "00.000.000/0000-00"
+              : askKind === "cep"
+              ? "00000-000"
+              : "Digite sua mensagem...";
+            return (
+              <>
+                <div className="flex gap-2">
+                  {/* Botão de anexar arquivo - sempre visível */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Anexar arquivo"
+                    className={`flex-shrink-0 rounded-full ${channel === 'telegram' ? 'bg-[#2B5278] hover:bg-[#3A6B92] text-white border-transparent' : ''}`}
+                  >
+                    📎
+                  </Button>
+
+                  <Input
+                    placeholder={inputPlaceholder}
+                    value={selectedFile ? `📎 ${selectedFile.name}` : input}
+                    onChange={(e) => {
+                      if (selectedFile) return;
+                      if (askKind) {
+                        setInput(normalizeAskInput(askKind, e.target.value).masked);
+                      } else {
+                        setInput(e.target.value);
+                      }
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !selectedFile && !disableSend) handleSendMessage();
+                    }}
+                    inputMode={askKind ? "numeric" : undefined}
+                    maxLength={askKind === "cnpj" ? 18 : askKind === "cep" ? 9 : undefined}
+                    aria-invalid={evalRes?.status === "invalid" || undefined}
+                    aria-describedby={askKind ? "ask-doc-status" : undefined}
+                    readOnly={!!selectedFile}
+                    className={`rounded-full ${channel === 'telegram' ? 'bg-[#212D3B] text-white border-gray-600 placeholder:text-gray-400' : ''}`}
+                  />
+
+                  <Button
+                    size="icon"
+                    onClick={handleSendMessage}
+                    disabled={(!selectedFile && !input.trim()) || disableSend}
+                    className={`rounded-full ${channelStyle.headerBg} ${channelStyle.headerText}`}
+                    aria-label="Enviar mensagem"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                {askKind && (
+                  <div
+                    id="ask-doc-status"
+                    role={evalRes?.status === "invalid" ? "alert" : "status"}
+                    aria-live={evalRes?.status === "invalid" ? "assertive" : "polite"}
+                    aria-atomic="true"
+                    className={`mt-1 min-h-[1.25rem] text-xs px-3 ${
+                      evalRes?.status === "valid" ? "text-emerald-600"
+                      : evalRes?.status === "invalid" ? "text-destructive"
+                      : "text-muted-foreground"
+                    }`}
+                  >
+                    {evalRes?.message}
+                    {evalRes?.status === "invalid" && (
+                      <button
+                        type="button"
+                        onClick={() => setInput("")}
+                        className="ml-2 inline-flex items-center gap-1 text-primary hover:underline"
+                        aria-label={`Limpar ${askKind.toUpperCase()} e tentar novamente`}
+                      >
+                        <RefreshCw className="w-3 h-3" aria-hidden="true" /> Tentar novamente
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
         </div>
       </CardContent>
 
