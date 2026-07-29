@@ -2010,7 +2010,24 @@ serve(async (req) => {
                     console.log(`[FLOW] Saved CEP field: ${varNameStr} = ${cepData[apiFieldStr]}`);
                   }
                 }
-                
+
+                // Atualiza endereço da empresa criada pelo bloco CNPJ, se solicitado
+                if (cfg.atualizarEmpresa && context.vars.empresa_id) {
+                  try {
+                    const sb3 = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                    await sb3.from("empresas").update({
+                      cep: cleanCEP,
+                      endereco: cepData.logradouro || null,
+                      bairro: cepData.bairro || null,
+                      cidade: cepData.localidade || null,
+                      estado: cepData.uf || null,
+                    }).eq("id", context.vars.empresa_id);
+                    console.log("[FLOW] Endereço da empresa atualizado:", context.vars.empresa_id);
+                  } catch (endErr) {
+                    console.error("[FLOW] Falha ao atualizar endereço da empresa:", endErr);
+                  }
+                }
+
                 await respond("CEP consultado com sucesso!");
               }
             } catch (err) {
