@@ -80,6 +80,7 @@ export default function Config() {
   const secaoParam = searchParams.get('secao');
   
   const [activeSection, setActiveSection] = useState<string | null>(secaoParam);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
