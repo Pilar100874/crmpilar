@@ -574,9 +574,18 @@ export default function TvDashboardVeiculos() {
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
-          <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
-            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
-          </div>
+          {gruposFixos.length > 0 ? (
+            <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl text-sm font-medium">
+              {gruposFixos.length === 1
+                ? unidades.find(u => u.id === gruposFixos[0])?.nome || 'Grupo'
+                : `${gruposFixos.length} grupos`}
+            </div>
+          ) : (
+            <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
+              <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
+            </div>
+          )}
+
           <Button
             variant="secondary"
             size="sm"
