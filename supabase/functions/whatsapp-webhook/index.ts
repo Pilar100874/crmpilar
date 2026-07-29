@@ -206,6 +206,86 @@ function parseEmpresaReviewCommand(text: string): { field?: string; value?: stri
   return { field, value, rawKey };
 }
 
+// Validação inline de campos editados no fluxo de revisão da empresa.
+// Retorna string com o erro ou null se o valor for válido/aceitável.
+function validateEmpresaField(field: string, rawValue: string): string | null {
+  const value = String(rawValue ?? "").trim();
+  if (!value) {
+    // Campos obrigatórios não podem ficar vazios
+    if (["razao_social", "cep", "logradouro", "municipio", "uf"].includes(field)) {
+      return "não pode ficar vazio";
+    }
+    return null;
+  }
+  switch (field) {
+    case "razao_social":
+    case "nome_fantasia":
+      if (value.length < 2) return "mínimo 2 caracteres";
+      if (value.length > 200) return "máximo 200 caracteres";
+      return null;
+    case "cep": {
+      const d = value.replace(/\D/g, "");
+      if (d.length !== 8) return "CEP deve conter 8 dígitos (ex.: 01310-100)";
+      return null;
+    }
+    case "uf": {
+      const uf = value.toUpperCase();
+      const ufs = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
+      if (!ufs.includes(uf)) return "UF inválida (use sigla de 2 letras, ex.: SP)";
+      return null;
+    }
+    case "municipio":
+    case "bairro":
+    case "logradouro":
+      if (value.length < 2) return "mínimo 2 caracteres";
+      return null;
+    case "atividade_principal_codigo": {
+      const d = value.replace(/\D/g, "");
+      if (d.length !== 7) return "CNAE deve conter 7 dígitos (ex.: 4711302)";
+      return null;
+    }
+    case "atividade_principal":
+      if (value.length < 3) return "descrição de CNAE muito curta";
+      return null;
+    case "email": {
+      const emails = value.split(/[;,]\s*/).filter(Boolean);
+      for (const e of emails) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return `e-mail inválido: ${e}`;
+      }
+      return null;
+    }
+    case "telefone": {
+      const d = value.replace(/\D/g, "");
+      if (d.length < 10 || d.length > 13) return "telefone deve ter 10 a 13 dígitos (com DDD)";
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+// Valida o objeto inteiro antes de persistir. Retorna lista de erros.
+function validateEmpresaInfo(info: any): string[] {
+  const errors: string[] = [];
+  const checkFields = [
+    "razao_social", "nome_fantasia", "cep", "uf", "municipio", "bairro",
+    "logradouro", "atividade_principal_codigo", "atividade_principal",
+    "email", "telefone",
+  ];
+  for (const f of checkFields) {
+    const v = info?.[f];
+    if (v === undefined || v === null || v === "") {
+      if (["razao_social", "cep", "logradouro", "municipio", "uf"].includes(f)) {
+        errors.push(`• *${f}*: obrigatório`);
+      }
+      continue;
+    }
+    const err = validateEmpresaField(f, String(v));
+    if (err) errors.push(`• *${f}*: ${err}`);
+  }
+  return errors;
+}
+
 function buildEmpresaPayload(info: any, estabelecimentoId: string, waFrom?: string) {
   const cnpjNorm = String(info.__cnpj_norm || info.cnpj || "").replace(/\D/g, "");
   const nome = info.razao_social || info.nome_fantasia || `CNPJ ${cnpjNorm}`;
