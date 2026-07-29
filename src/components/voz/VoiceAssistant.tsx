@@ -504,7 +504,7 @@ export default function VoiceAssistant() {
   // ---------- Ditado (Web Speech nativo, transcrição em tempo real) ----------
   const startDictationNow = useCallback(() => {
     if (isRecording || processing) return;
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR: any = hasWebSpeech ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
     if (!SR) {
       startAudioFallback(lastDictationRequestRef.current.holdToTalk ? 8000 : 6500);
       return;
