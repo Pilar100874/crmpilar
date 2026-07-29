@@ -1357,8 +1357,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         addBotMessage(question, node.id);
         setIsWaitingInput(true);
         setPendingVariable(variable);
+        if (type === "ask_cnpj" || type === "ask_cep") setCurrentBlockType(type);
         console.log("⏳ Waiting for input, pendingVariable set to:", variable);
         break;
+
 
       case "condition":
         addSystemMessage("🔀 Avaliando condições...");
