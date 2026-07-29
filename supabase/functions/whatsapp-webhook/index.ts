@@ -601,11 +601,11 @@ serve(async (req) => {
       // Busca o estabelecimento_id e bot_flow_id atrelados à sessão
       const { data: sessionData } = await supabase
         .from("whatsapp_sessions")
-        .select("estabelecimento_id, bot_flow_id")
+        .select("id, estabelecimento_id, bot_flow_id")
         .eq("session_name", evolutionSession)
         .maybeSingle();
 
-      // 1) Se a sessão estiver vinculada a um bot específico, usa esse bot
+      // 1) Se a sessão estiver vinculada a um bot específico E ele for de recepção, usa esse bot
       if (sessionData?.bot_flow_id) {
         const { data } = await supabase
           .from("bot_flows")
@@ -617,37 +617,56 @@ serve(async (req) => {
           console.log("[EVOLUTION] Bot via session.bot_flow_id:", { botName: data?.name, canais: data?.canais });
           flowData = data;
         } else if (data) {
-          console.log("[EVOLUTION] Bot vinculado é de automação (sem canal whatsapp) — não responde:", data?.name);
+          console.log(
+            "[EVOLUTION] Bot vinculado é de automação (sem canal whatsapp) — buscando bot de recepção do mesmo número:",
+            data?.name,
+          );
         }
       }
 
-      // 2) Fallback: bot de recepção ativo do estabelecimento configurado para Evolution
+      // 2) Fallback: qualquer bot de RECEPÇÃO ativo do estabelecimento.
+      // O mesmo número pode estar vinculado a vários bots (ex.: automação de marketing
+      // + recepção); somente o de recepção responde mensagens entrantes.
       if (!flowData && sessionData?.estabelecimento_id) {
-        const { data } = await supabase
+        const { data: candidatos } = await supabase
           .from("bot_flows")
           .select("*")
           .eq("active", true)
           .eq("estabelecimento_id", sessionData.estabelecimento_id)
           .contains("canais", ["whatsapp"])
-          .eq("whatsapp_type", "evolution")
-          .maybeSingle();
+          .order("updated_at", { ascending: false });
 
-        console.log("[EVOLUTION] Bot fallback search:", { found: !!data, botName: data?.name });
-        flowData = data && isReceptionBot(data) ? data : null;
+        const receptions = (candidatos || []).filter(isReceptionBot);
+
+        // Preferência: bot amarrado à mesma sessão/número > tipo evolution > qualquer um
+        flowData =
+          receptions.find((b: any) => b.whatsapp_session_id && b.whatsapp_session_id === sessionData.id) ||
+          receptions.find((b: any) => b.session_name && b.session_name === evolutionSession) ||
+          receptions.find((b: any) => b.whatsapp_type === "evolution") ||
+          receptions[0] ||
+          null;
+
+        console.log("[EVOLUTION] Bot de recepção resolvido:", {
+          total: receptions.length,
+          botName: flowData?.name || null,
+        });
       }
     } else {
       // Para Meta, busca bot de recepção ativo configurado para WhatsApp Business
-      const { data } = await supabase
+      const { data: candidatos } = await supabase
         .from("bot_flows")
         .select("*")
         .eq("active", true)
         .contains("canais", ["whatsapp"])
-        .eq("whatsapp_type", "business")
-        .maybeSingle();
+        .order("updated_at", { ascending: false });
 
-      console.log("[META] Bot search result:", { found: !!data, botName: data?.name, whatsappType: data?.whatsapp_type });
-      flowData = data && isReceptionBot(data) ? data : null;
+      const receptions = (candidatos || []).filter(isReceptionBot);
+      flowData =
+        receptions.find((b: any) => b.whatsapp_type === "business") || receptions[0] || null;
+
+      console.log("[META] Bot search result:", { found: !!flowData, botName: flowData?.name });
     }
+
 
 
     if (!estabelecimentoId && flowData?.estabelecimento_id) {
