@@ -2093,12 +2093,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </thead>
                 <tbody>
                   {sortedEmpresas.map((empresa) => (
-                    <tr key={empresa.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200 group">
+                    <tr key={empresa.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
                       {tableColumns.filter(col => col.visible).map((column, index) => {
                         if (column.id === 'actions') {
                           return (
-                              <td key="actions" className="p-3 sticky left-0 bg-gradient-to-l from-background via-background to-background/95 border-r border-border/30 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.15)] transition-all duration-200">
-                               <div className="flex items-center justify-center gap-2">
+                              <td key="actions" className="p-2 sm:p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] transition-colors duration-150">
+                               <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
                                 <EmpresaAlertsBadge empresa={empresa as any} />
 
                                 <Button
