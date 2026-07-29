@@ -424,9 +424,6 @@ export default function VoiceAssistant() {
       setWakeListening(false);
       return;
     }
-      setWakeListening(false);
-      return;
-    }
     if (wakeRecogRef.current) {
       setWakeListening(true);
       return;
