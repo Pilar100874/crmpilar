@@ -1028,6 +1028,85 @@ export default function ProspeccaoEmpresas() {
         title="Limpar toda a lista"
         description={`Excluir ${filtradas.length} registro(s) da prospecção? Esta ação não pode ser desfeita.`}
       />
+
+      <Dialog open={!!previewImport} onOpenChange={(o) => !o && !importando && setPreviewImport(null)}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Confirmar dados enriquecidos
+            </DialogTitle>
+            <DialogDescription>
+              Revise os dados abaixo antes de gravar no cadastro. Campos com selo{' '}
+              <Badge variant="secondary" className="mx-1">Receita</Badge> vieram da Receita Federal e{' '}
+              <Badge variant="secondary" className="mx-1">CEP</Badge> vieram do ViaCEP; os demais são do próprio prospect.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="overflow-y-auto space-y-3 pr-1">
+            {(previewImport || []).map((prev) => {
+              const p = prev.payload;
+              const origemBadge = (campo: string) => {
+                const o = prev.origens[campo];
+                if (!o || o === 'prospect') return null;
+                return <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">{o === 'receita' ? 'Receita' : 'CEP'}</Badge>;
+              };
+              const linha = (label: string, campo: string, valor: any) => (
+                <div className="text-xs">
+                  <span className="text-muted-foreground">{label}:</span>{' '}
+                  <span className="font-medium">{valor || <span className="text-muted-foreground italic">—</span>}</span>
+                  {origemBadge(campo)}
+                </div>
+              );
+              return (
+                <div key={prev.rowId} className="border rounded-lg p-3 bg-card">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-semibold text-sm">{p.nome || prev.nomeOriginal}</div>
+                    {prev.enriquecido && (
+                      <Badge variant="outline" className="gap-1 text-[10px]">
+                        <Sparkles className="h-3 w-3" /> Enriquecido
+                      </Badge>
+                    )}
+                  </div>
+                  {prev.aviso && (
+                    <Alert className="mb-2 py-2">
+                      <AlertDescription className="text-xs">{prev.aviso}</AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
+                    {linha('Razão social', 'nome', p.nome)}
+                    {linha('Nome fantasia', 'nome_fantasia', p.nome_fantasia)}
+                    {linha('CNPJ', 'cnpj', p.cnpj)}
+                    {linha('Situação', 'situacao_cadastral', p.situacao_cadastral)}
+                    {linha('Porte', 'porte', p.porte)}
+                    {linha('Abertura', 'data_fundacao', p.data_fundacao)}
+                    {linha('E-mail', 'email', p.email)}
+                    {linha('Telefone', 'telefone', p.telefone)}
+                    {linha('WhatsApp', 'whatsapp', p.whatsapp)}
+                    {linha('Site', 'site', p.site)}
+                    {linha('CEP', 'cep', p.cep)}
+                    {linha('Endereço', 'endereco', p.endereco)}
+                    {linha('Bairro', 'bairro', p.bairro)}
+                    {linha('Cidade', 'cidade', p.cidade)}
+                    {linha('UF', 'estado', p.estado)}
+                    {linha('CNAE', 'cnae_principal', p.cnae_principal ? `${p.cnae_principal}${p.cnae_descricao ? ' · ' + p.cnae_descricao : ''}` : null)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t">
+            <Button variant="outline" onClick={() => setPreviewImport(null)} disabled={importando}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarImportacao} disabled={importando}>
+              <Download className="h-4 w-4 mr-2" />
+              {importando ? 'Gravando…' : `Confirmar e importar (${(previewImport || []).length})`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
