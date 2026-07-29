@@ -1036,8 +1036,8 @@ export default function Todos() {
 
                     return (
                       <>
-                        <tr key={contato.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
-                          <td className="p-3">
+                        <tr key={contato.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
+                          <td className="p-3 sticky left-0 z-20 bg-card group-hover:bg-muted/60 w-[36px] transition-colors duration-150">
                             <div className="flex items-center gap-1">
                               {hasEmpresas && (
                                 <Button
@@ -1058,7 +1058,7 @@ export default function Todos() {
                           {visibleContatosColumns.map(col => {
                             if (col.id === "actions") {
                               return (
-                                <td key={col.id} className="p-3">
+                                <td key={col.id} className="p-2 sm:p-3 sticky left-[36px] z-20 bg-card group-hover:bg-muted/60 border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)] text-center transition-colors duration-150">
                                   <Button
                                     variant="outline"
                                     size="sm"
