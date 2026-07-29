@@ -777,6 +777,8 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
         />
       </ConfigSection>
 
+      <AskDocLiveTester kind="cnpj" />
+
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-foreground/80">
@@ -785,6 +787,7 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
         </p>
       </div>
     </div>
+
   );
 };
 
