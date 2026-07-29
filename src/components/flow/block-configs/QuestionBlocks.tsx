@@ -775,7 +775,16 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
           checked={!!config.criarEmpresa}
           onChange={(v) => handleConfigChange("criarEmpresa", v)}
         />
+        {!!config.criarEmpresa && (
+          <ConfigSwitch
+            label="Revisar e editar dados antes de salvar"
+            info="Envia ao usuário um resumo dos dados retornados pela Receita e aguarda confirmação. Ele pode responder 'OK' para confirmar ou 'campo: valor' (ex.: 'razao_social: Nova Razão') para corrigir qualquer campo antes da gravação."
+            checked={!!config.revisarAntesDeSalvar}
+            onChange={(v) => handleConfigChange("revisarAntesDeSalvar", v)}
+          />
+        )}
       </ConfigSection>
+
 
       <AskDocLiveTester kind="cnpj" />
 
