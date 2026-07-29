@@ -2251,9 +2251,14 @@ serve(async (req) => {
                     // Mantém pendingNodeId — a próxima mensagem cai no handler de revisão
                     context.vars.__empresa_pending = pendingInfo;
                     context.vars.__empresa_review = true;
+                    const initialErrors = validateEmpresaInfo(pendingInfo);
+                    const initialSuffix = initialErrors.length > 0
+                      ? `\n\n⚠️ *Pendências detectadas antes de salvar:*\n${initialErrors.join("\n")}\n\nCorrija-as enviando *campo: valor* antes de confirmar.`
+                      : "\n\n✅ Todos os campos estão consistentes. Responda *OK* para salvar.";
                     await respond(
                       buildEmpresaReviewSummary(pendingInfo) +
-                        "\n\nResponda *OK* para confirmar, *cancelar* para desistir, ou envie *campo: valor* para corrigir (ex.: `razao_social: Nova Razão`).\n\n" +
+                        initialSuffix +
+                        "\n\nEnvie *campo: valor* para corrigir (ex.: `razao_social: Nova Razão`), ou *cancelar* para desistir.\n\n" +
                         "Campos aceitos: razao_social, nome_fantasia, endereco, numero, complemento, bairro, cidade, uf, cep, cnae, porte, socio_nome, telefone, email."
                     );
                     shouldReturn = true;
