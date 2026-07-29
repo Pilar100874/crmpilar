@@ -17,9 +17,17 @@ Deno.serve(async (req) => {
     const upstream = new FormData();
     upstream.append('model', 'openai/gpt-4o-mini-transcribe');
     upstream.append('language', 'pt');
-    const name = (file as File).name || 'audio.webm';
-    const ext = name.includes('.') ? name.split('.').pop() : 'webm';
+    const originalName = (file as File).name || '';
+    const type = (file as File).type || '';
+    let ext = originalName.includes('.') ? originalName.split('.').pop()!.toLowerCase() : '';
+    if (!ext) {
+      if (type.includes('mp4') || type.includes('aac') || type.includes('m4a')) ext = 'mp4';
+      else if (type.includes('wav')) ext = 'wav';
+      else if (type.includes('mpeg') || type.includes('mp3')) ext = 'mp3';
+      else ext = 'webm';
+    }
     upstream.append('file', file, `recording.${ext}`);
+
 
     const r = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
       method: 'POST',
