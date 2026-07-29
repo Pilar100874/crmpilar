@@ -423,7 +423,8 @@ var add_prospeccao_empresas_bulk_default = defineTool6({
     }
     const sb = supabaseForUser6(ctx);
     const userId = ctx.getUserId();
-    const rows = empresas.map((e) => ({
+    const enrichedList = await Promise.all(empresas.map((e) => enrichWithCnpj(e)));
+    const rows = enrichedList.map((e) => ({
       user_id: userId,
       nome: e.nome,
       nome_fantasia: e.nome_fantasia ?? null,
