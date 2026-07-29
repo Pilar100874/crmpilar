@@ -255,19 +255,23 @@ export default function ProspeccaoEmpresas() {
     setConfirmDelete(null);
   };
 
-  const importarSelecionadas = async () => {
+  // Etapa 1: monta o preview enriquecido via Receita + CEP (sem gravar nada)
+  const prepararImportacao = async () => {
     if (selecionadas.size === 0) return toast.info('Selecione ao menos uma empresa');
-    const estabId = await getEstabelecimentoId();
-    if (!estabId) return toast.error('Estabelecimento não encontrado para o usuário atual');
-    setImportando(true);
-    let ok = 0, fail = 0, enriquecidos = 0;
-    const errosDetalhe: string[] = [];
+    setPreparandoPreview(true);
+    const previews: PreviewImportItem[] = [];
 
     for (const id of selecionadas) {
       const r = rows.find((x) => x.id === id);
       if (!r || r.empresa_id) continue;
 
-      // ===== 1) Normalização básica =====
+      const origens: Record<string, CampoOrigem> = {};
+      const set = (k: string, v: any, origem: CampoOrigem) => {
+        if (v === undefined || v === null || v === '') return;
+        if (origens[k]) return; // primeiro que preencheu vence
+        origens[k] = origem;
+      };
+
       let cnpj = normCNPJ(r.cnpj);
       let cep = normCEP(r.cep);
       let uf = normUF(r.estado);
@@ -284,80 +288,147 @@ export default function ProspeccaoEmpresas() {
       let cnae_principal = r.cnae_principal?.trim() || null;
       let cnae_descricao = r.cnae_descricao?.trim() || null;
 
-      // ===== 2) Enriquecer via CNPJ (serviço unificado com cache) =====
+      set('nome', nome, 'prospect');
+      set('nome_fantasia', nome_fantasia, 'prospect');
+      set('cnpj', cnpj, 'prospect');
+      set('email', email, 'prospect');
+      set('telefone', telefone, 'prospect');
+      set('whatsapp', whatsapp, 'prospect');
+      set('site', site, 'prospect');
+      set('endereco', endereco, 'prospect');
+      set('bairro', bairro, 'prospect');
+      set('cidade', cidade, 'prospect');
+      set('estado', uf, 'prospect');
+      set('cep', cep, 'prospect');
+      set('cnae_principal', cnae_principal, 'prospect');
+      set('cnae_descricao', cnae_descricao, 'prospect');
+
+      let enriquecido = false;
+      let porte = r.porte ?? null;
+      let situacao_cadastral = r.situacao_cadastral ?? null;
+      let data_fundacao = r.data_fundacao ?? null;
+
       if (cnpj) {
         const receita = await buscarCNPJ(removeMask(cnpj));
         if (receita) {
-          enriquecidos++;
-          nome = nome || receita.razaoSocial || receita.nomeFantasia || '';
-          nome_fantasia = nome_fantasia || receita.nomeFantasia || null;
+          enriquecido = true;
+          if (!nome && (receita.razaoSocial || receita.nomeFantasia)) {
+            nome = receita.razaoSocial || receita.nomeFantasia || '';
+            set('nome', nome, 'receita');
+          }
+          if (!nome_fantasia && receita.nomeFantasia) {
+            nome_fantasia = receita.nomeFantasia;
+            set('nome_fantasia', nome_fantasia, 'receita');
+          }
           if (!endereco) {
             const num = receita.numero ? `, ${receita.numero}` : '';
             const comp = receita.complemento ? ` - ${receita.complemento}` : '';
-            endereco = `${receita.logradouro || ''}${num}${comp}`.trim() || null;
+            const e = `${receita.logradouro || ''}${num}${comp}`.trim();
+            if (e) { endereco = e; set('endereco', endereco, 'receita'); }
           }
-          bairro = bairro || receita.bairro || null;
-          cidade = cidade || receita.cidade || null;
-          uf = uf || normUF(receita.uf);
-          cep = cep || normCEP(receita.cep);
-          cnae_principal = cnae_principal || (receita.cnaePrincipal?.codigo || null);
-          cnae_descricao = cnae_descricao || (receita.cnaePrincipal?.descricao || null);
+          if (!bairro && receita.bairro) { bairro = receita.bairro; set('bairro', bairro, 'receita'); }
+          if (!cidade && receita.cidade) { cidade = receita.cidade; set('cidade', cidade, 'receita'); }
+          if (!uf && receita.uf) { uf = normUF(receita.uf); set('estado', uf, 'receita'); }
+          if (!cep && receita.cep) { cep = normCEP(receita.cep); set('cep', cep, 'receita'); }
+          if (!cnae_principal && receita.cnaePrincipal?.codigo) {
+            cnae_principal = receita.cnaePrincipal.codigo;
+            set('cnae_principal', cnae_principal, 'receita');
+          }
+          if (!cnae_descricao && receita.cnaePrincipal?.descricao) {
+            cnae_descricao = receita.cnaePrincipal.descricao;
+            set('cnae_descricao', cnae_descricao, 'receita');
+          }
           if (!telefone && receita.telefone) {
-            const telReceita = normWhats(receita.telefone);
-            if (telReceita) telefone = telReceita;
+            const t = normWhats(receita.telefone);
+            if (t) { telefone = t; set('telefone', telefone, 'receita'); }
+          }
+          if (!porte && (receita as any).porte) { porte = (receita as any).porte; set('porte', porte, 'receita'); }
+          if (!situacao_cadastral && (receita as any).situacaoCadastral) {
+            situacao_cadastral = (receita as any).situacaoCadastral;
+            set('situacao_cadastral', situacao_cadastral, 'receita');
+          }
+          if (!data_fundacao && (receita as any).dataAbertura) {
+            data_fundacao = (receita as any).dataAbertura;
+            set('data_fundacao', data_fundacao, 'receita');
           }
         }
       }
-
-      // Fallback: se ainda não temos telefone, usar o whatsapp
       if (!telefone) telefone = whatsapp;
 
-      // ===== 3) Enriquecer via CEP (serviço unificado com cache) =====
       if (cep && (!endereco || !cidade || !uf || !bairro)) {
         const via = await buscarCEP(removeMask(cep));
         if (via) {
-          enriquecidos++;
-          endereco = endereco || via.logradouro || null;
-          bairro = bairro || via.bairro || null;
-          cidade = cidade || via.cidade || null;
-          uf = uf || normUF(via.uf);
+          enriquecido = true;
+          if (!endereco && via.logradouro) { endereco = via.logradouro; set('endereco', endereco, 'cep'); }
+          if (!bairro && via.bairro) { bairro = via.bairro; set('bairro', bairro, 'cep'); }
+          if (!cidade && via.cidade) { cidade = via.cidade; set('cidade', cidade, 'cep'); }
+          if (!uf && via.uf) { uf = normUF(via.uf); set('estado', uf, 'cep'); }
         }
       }
 
+      const payload = {
+        rowRef: r,
+        nome, nome_fantasia, cnpj, email, telefone, whatsapp, site,
+        endereco, bairro, cidade, estado: uf, cep,
+        cnae_principal, cnae_descricao,
+        porte, situacao_cadastral, data_fundacao,
+      };
 
-      // ===== 4) Validações mínimas =====
-      if (!nome) {
-        fail++;
-        errosDetalhe.push(`${r.nome || '(sem nome)'}: nome obrigatório`);
-        continue;
-      }
+      previews.push({
+        rowId: r.id,
+        nomeOriginal: r.nome || '(sem nome)',
+        payload,
+        origens,
+        enriquecido,
+        aviso: !nome ? 'Nome vazio — será ignorada na gravação' : undefined,
+      });
+    }
+
+    setPreparandoPreview(false);
+    if (previews.length === 0) return toast.info('Nada a importar (todas já foram importadas).');
+    setPreviewImport(previews);
+  };
+
+  // Etapa 2: efetivamente grava usando o payload já revisado
+  const confirmarImportacao = async () => {
+    if (!previewImport) return;
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return toast.error('Estabelecimento não encontrado para o usuário atual');
+    setImportando(true);
+    let ok = 0, fail = 0;
+    const errosDetalhe: string[] = [];
+
+    for (const prev of previewImport) {
+      const p = prev.payload as any;
+      const r = p.rowRef as ProspeccaoRow;
+      if (!p.nome) { fail++; errosDetalhe.push(`${prev.nomeOriginal}: nome obrigatório`); continue; }
 
       const { data: emp, error } = await supabase
         .from('empresas')
         .insert({
           estabelecimento_id: estabId,
-          nome,
-          nome_fantasia,
-          cnpj,
-          email,
-          telefone,
-          whatsapp,
-          whatsapps_vinculados: whatsapp ? [whatsapp] : [],
-          endereco,
-          bairro,
-          cidade,
-          estado: uf,
-          cep,
-          cnae_principal,
-          cnae_descricao,
-          site,
+          nome: p.nome,
+          nome_fantasia: p.nome_fantasia,
+          cnpj: p.cnpj,
+          email: p.email,
+          telefone: p.telefone,
+          whatsapp: p.whatsapp,
+          whatsapps_vinculados: p.whatsapp ? [p.whatsapp] : [],
+          endereco: p.endereco,
+          bairro: p.bairro,
+          cidade: p.cidade,
+          estado: p.estado,
+          cep: p.cep,
+          cnae_principal: p.cnae_principal,
+          cnae_descricao: p.cnae_descricao,
+          site: p.site,
           latitude: r.latitude ?? null,
           longitude: r.longitude ?? null,
-          porte: r.porte ?? null,
+          porte: p.porte,
           faturamento_estimado: r.faturamento_estimado ?? null,
           funcionarios_estimado: r.funcionarios_estimado ?? null,
-          data_fundacao: r.data_fundacao ?? null,
-          situacao_cadastral: r.situacao_cadastral ?? null,
+          data_fundacao: p.data_fundacao,
+          situacao_cadastral: p.situacao_cadastral,
           score_prospect: r.score ?? null,
           score_motivo: r.score_motivo ?? null,
           produtos_interesse: r.produtos_interesse ?? [],
@@ -380,13 +451,9 @@ export default function ProspeccaoEmpresas() {
         } as any)
         .select('id')
         .single();
-      if (error || !emp) {
-        fail++;
-        errosDetalhe.push(`${nome}: ${error?.message || 'erro'}`);
-        continue;
-      }
+      if (error || !emp) { fail++; errosDetalhe.push(`${p.nome}: ${error?.message || 'erro'}`); continue; }
 
-      // Vincular segmento de prospect (find-or-create com is_prospect=true)
+      // Segmento prospect (find-or-create) — mantém comportamento anterior
       const segNome = (r.segmento_nome || '').trim();
       if (segNome) {
         try {
@@ -411,38 +478,26 @@ export default function ProspeccaoEmpresas() {
             segId = novo?.id ?? null;
           }
           if (segId) {
-            await supabase
-              .from('empresa_vinculos')
-              .insert({
-                empresa_id: emp.id,
-                segmento_id: segId,
-                estabelecimento_id: estabId,
-              } as any);
+            await supabase.from('empresa_vinculos').insert({
+              empresa_id: emp.id, segmento_id: segId, estabelecimento_id: estabId,
+            } as any);
           }
-        } catch (e) {
-          console.warn('Falha ao vincular segmento prospect', e);
-        }
+        } catch (e) { console.warn('Falha ao vincular segmento prospect', e); }
       }
 
-      // Criar contato (prospect) vinculado à empresa, se veio decisor
       if (r.contato_nome) {
         try {
-          const telContato = normWhats(r.contato_telefone) || normWhats(r.contato_telefone) || (r.contato_telefone ?? null);
+          const telContato = normWhats(r.contato_telefone) || (r.contato_telefone ?? null);
           await supabase.from('customers').insert({
             estabelecimento_id: estabId,
             empresa_id: emp.id,
             nome: r.contato_nome,
             telefone: telContato,
             email: normEmail(r.contato_email),
-            tipo_operador: false, // false = prospect
-            custom_fields: {
-              position: r.contato_cargo || null,
-              origem: r.origem || 'claude-code',
-            },
+            tipo_operador: false,
+            custom_fields: { position: r.contato_cargo || null, origem: r.origem || 'claude-code' },
           } as any);
-        } catch (e) {
-          console.warn('Falha ao criar contato prospect', e);
-        }
+        } catch (e) { console.warn('Falha ao criar contato prospect', e); }
       }
 
       await supabase
@@ -453,11 +508,13 @@ export default function ProspeccaoEmpresas() {
     }
 
     setImportando(false);
+    setPreviewImport(null);
     setSelecionadas(new Set());
-    if (ok > 0) toast.success(`${ok} importadas como prospect${enriquecidos ? ` · ${enriquecidos} enriquecimentos (Receita/CEP)` : ''}`);
+    if (ok > 0) toast.success(`${ok} importada(s) como prospect`);
     if (fail > 0) toast.error(`${fail} com erro: ${errosDetalhe.slice(0, 3).join(' | ')}${errosDetalhe.length > 3 ? '…' : ''}`);
     carregar();
   };
+
 
 
   const scrollTo = (id: string) => {
