@@ -1958,6 +1958,49 @@ serve(async (req) => {
         let userResponse = (context.vars.userMessage || "").trim();
         const blockType = pendingNode.data.type;
 
+        // Modo revisão de empresa (após CNPJ): usuário pode confirmar, cancelar
+        // ou corrigir campos por texto antes da gravação em `empresas`.
+        if (blockType === "ask_cnpj" && context.vars.__empresa_review === true && context.vars.__empresa_pending) {
+          const raw = String(context.vars.userMessage || "").trim();
+          const lower = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const pending = context.vars.__empresa_pending as any;
+
+          if (["ok","confirmar","confirma","sim","s","persistir","salvar"].includes(lower)) {
+            await persistEmpresaFromInfo(pending, estabelecimentoId!, context, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            delete context.vars.__empresa_review;
+            delete context.vars.__empresa_pending;
+            delete context.pendingNodeId;
+            await respond("✅ Cadastro confirmado e salvo!");
+            const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+            if (nextEdge) {
+              const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
+              if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            }
+            shouldReturn = true;
+          } else if (["cancelar","cancel","nao","n","desistir"].includes(lower)) {
+            delete context.vars.__empresa_review;
+            delete context.vars.__empresa_pending;
+            await respond("❌ Cadastro cancelado. Envie o CNPJ novamente para tentar de novo.");
+            await executeNode(pendingNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            shouldReturn = true;
+          } else {
+            const parsed = parseEmpresaReviewCommand(raw);
+            if (parsed && parsed.field) {
+              pending[parsed.field] = parsed.value;
+              context.vars.__empresa_pending = pending;
+              await respond(buildEmpresaReviewSummary(pending) + `\n\n✏️ Campo *${parsed.rawKey}* atualizado.\n\nResponda *OK* para confirmar, *cancelar* para desistir, ou envie outro *campo: valor*.`);
+              shouldReturn = true;
+            } else if (parsed) {
+              await respond(`⚠️ Campo "${parsed.rawKey}" não reconhecido.\n\nCampos válidos: razao_social, nome_fantasia, endereco, numero, complemento, bairro, cidade, uf, cep, cnae, porte, socio_nome, telefone, email.`);
+              shouldReturn = true;
+            } else {
+              await respond("Responda *OK* para confirmar, *cancelar* para desistir, ou envie *campo: valor* para corrigir (ex.: `razao_social: Nova Razão`).");
+              shouldReturn = true;
+            }
+          }
+        }
+
+
         // Normalização em tempo real para CNPJ/CEP: aceita qualquer formato,
         // reduz a dígitos e reaplica a máscara padrão antes de validar/consultar.
         if (blockType === "ask_cnpj") {
