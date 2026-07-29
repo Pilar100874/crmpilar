@@ -80,6 +80,13 @@ export default function TvDashboardVeiculos() {
   const [focusTrigger, setFocusTrigger] = useState(0);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
+  const [searchParams] = useSearchParams();
+  // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
+  const gruposFixos = useMemo(
+    () => (searchParams.get('grupos') || '').split(',').map(s => s.trim()).filter(Boolean),
+    [searchParams]
+  );
+
 
   const handleFocus = useCallback((id: string) => {
     setFocusVeiculoId(id);
