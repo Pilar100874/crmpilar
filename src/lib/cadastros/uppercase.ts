@@ -1,0 +1,46 @@
+/**
+ * Padroniza os valores dos cadastros em CAIXA ALTA.
+ * E-mails e URLs (site) ficam de fora para não quebrar links/logins.
+ */
+const KEEP_LOWER = new Set(["email", "e_mail", "site", "website", "url", "contact_email", "contato_email"]);
+
+export function isUppercaseExemptField(fieldId?: string, fieldType?: string): boolean {
+  if (fieldType === "email" || fieldType === "url") return true;
+  if (!fieldId) return false;
+  const id = fieldId.toLowerCase();
+  if (KEEP_LOWER.has(id)) return true;
+  return id.includes("email") || id.includes("site") || id.includes("url") || id.includes("senha") || id.includes("password");
+}
+
+/** Converte um valor para caixa alta se for texto. */
+export function toUpper<T>(value: T): T {
+  return (typeof value === "string" ? (value.toUpperCase() as unknown as T) : value);
+}
+
+/** Converte um valor de campo respeitando exceções (e-mail/site). */
+export function upperField(fieldId: string | undefined, value: any, fieldType?: string) {
+  if (isUppercaseExemptField(fieldId, fieldType)) return value;
+  return toUpper(value);
+}
+
+/** Converte todos os valores string de um objeto (respeitando exceções). */
+export function upperObject<T extends Record<string, any>>(obj: T): T {
+  const out: any = Array.isArray(obj) ? [...(obj as any)] : { ...obj };
+  for (const key of Object.keys(out)) {
+    const v = out[key];
+    if (typeof v === "string") {
+      out[key] = isUppercaseExemptField(key) ? v : v.toUpperCase();
+    } else if (v && typeof v === "object" && !Array.isArray(v)) {
+      out[key] = upperObject(v);
+    } else if (Array.isArray(v)) {
+      out[key] = v.map((item) =>
+        typeof item === "string"
+          ? (isUppercaseExemptField(key) ? item : item.toUpperCase())
+          : item && typeof item === "object"
+          ? upperObject(item)
+          : item
+      );
+    }
+  }
+  return out as T;
+}
