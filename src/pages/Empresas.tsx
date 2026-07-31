@@ -26,6 +26,7 @@ import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { buscarCNPJ } from "@/lib/cadastros/cnpjService";
+import { upperField, upperObject, isUppercaseExemptField } from "@/lib/cadastros/uppercase";
 import { buscarCEP } from "@/lib/cadastros/cepService";
 import { LookupStatusMessage, type LookupStatus } from "@/components/cadastros/LookupStatusMessage";
 import { supabase } from "@/integrations/supabase/client";
@@ -298,7 +299,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           type: cfg.field_type,
           category: 'company',
           options: opts,
-          required: cfg.field_id === 'telefone' ? false : !!cfg.required,
+          required: cfg.field_id === 'telefone' ? false : (cfg.field_id === 'company_fantasia' ? true : !!cfg.required),
           locked: !!cfg.locked,
         };
       });
@@ -695,6 +696,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       });
     }
     
+    // Qualquer valor que venha do banco é exibido em CAIXA ALTA
+    Object.assign(data, upperObject(data));
+    if (!String(data.company_fantasia || "").trim()) {
+      data.company_fantasia = String(data.company_name || "");
+    }
     setFormData(data);
     setFormSnapshot(JSON.stringify(data));
 
@@ -903,10 +909,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         setFormData(prev => ({
           ...prev,
           cep: maskCEP(result.cep),
-          address: result.logradouro || prev.address,
-          neighborhood: result.bairro || prev.neighborhood,
-          city: result.cidade,
-          state: result.uf,
+          address: (result.logradouro || prev.address || "").toUpperCase(),
+          neighborhood: (result.bairro || prev.neighborhood || "").toUpperCase(),
+          city: (result.cidade || "").toUpperCase(),
+          state: (result.uf || "").toUpperCase(),
         }));
         setCepStatus("ok");
         setTimeout(() => {
@@ -930,21 +936,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       const result = await buscarCNPJ(cnpj);
       if (!result) { setCnpjStatus("notfound"); return; }
       const cepMasked = result.cep ? maskCEP(result.cep) : "";
+      const up = (v: any) => (typeof v === "string" ? v.toUpperCase() : v);
       setFormData(prev => ({
         ...prev,
-        company_name: result.razaoSocial || prev.company_name,
-        company_fantasia: result.nomeFantasia || prev.company_fantasia,
+        company_name: up(result.razaoSocial || prev.company_name),
+        company_fantasia: up(result.nomeFantasia || prev.company_fantasia || result.razaoSocial || ""),
         telefone: result.telefone ? maskWhatsApp(result.telefone) : prev.telefone,
         email: result.email || prev.email,
         cep: cepMasked || prev.cep,
-        address: result.logradouro || prev.address,
-        numero: result.numero || prev.numero,
-        complemento: result.complemento || prev.complemento,
-        neighborhood: result.bairro || prev.neighborhood,
+        address: up(result.logradouro || prev.address),
+        numero: up(result.numero || prev.numero),
+        complemento: up(result.complemento || prev.complemento),
+        neighborhood: up(result.bairro || prev.neighborhood),
         data_fundacao: result.dataAbertura || prev.data_fundacao,
-        situacao_cadastral: result.situacaoCadastral || prev.situacao_cadastral,
+        situacao_cadastral: up(result.situacaoCadastral || prev.situacao_cadastral),
         porte: result.porte || prev.porte,
-        natureza_juridica: result.naturezaJuridica || prev.natureza_juridica,
+        natureza_juridica: up(result.naturezaJuridica || prev.natureza_juridica),
         capital_social: result.capitalSocial ?? prev.capital_social,
         regime_tributario: result.regimeTributario || prev.regime_tributario,
         optante_mei: result.optanteMei ?? prev.optante_mei,
@@ -1029,6 +1036,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const handleSaveEmpresa = async () => {
+    // Sugestão automática: se não informado, "Como prefere ser chamado" recebe o Nome
+    if (!String(formData.company_fantasia || "").trim() && String(formData.company_name || "").trim()) {
+      formData.company_fantasia = String(formData.company_name).toUpperCase();
+      setFormData(prev => ({ ...prev, company_fantasia: String(prev.company_name || "").toUpperCase() }));
+    }
     const errors: Record<string, string> = {};
 
     const isBrasil = (formData.pais || "Brasil") === "Brasil";
@@ -1146,6 +1158,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         tags: toArr(formData.tags),
         observacoes_internas: formData.observacoes_internas || null,
       };
+
+      // Padroniza todos os textos do cadastro em CAIXA ALTA (exceto e-mail/site)
+      Object.assign(empresaPayload, upperObject(empresaPayload));
+
+
 
 
       let empresaId: string;
@@ -1696,7 +1713,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         maskedValue = maskPhone(value);
       }
 
-      setFormData(prev => ({ ...prev, [field.id]: maskedValue }));
+      // Todos os campos de texto do cadastro ficam em CAIXA ALTA (exceto e-mail/site e listas de seleção)
+      if (field.type !== "select" && field.type !== "checkbox") {
+        maskedValue = upperField(field.id, maskedValue, field.type);
+      }
+
+      setFormData(prev => {
+        const next: any = { ...prev, [field.id]: maskedValue };
+        // Sugestão: "Como prefere ser chamado" acompanha o Nome enquanto não for editado manualmente
+        if (field.id === "company_name") {
+          const anterior = String(prev.company_fantasia || "");
+          if (!anterior || anterior === String(prev.company_name || "")) {
+            next.company_fantasia = maskedValue;
+          }
+        }
+        return next;
+      });
       setFieldErrors(prev => ({ ...prev, [field.id]: '' }));
 
       // Auto-consulta com debounce (cache + cancel gerenciados nos services)
