@@ -1112,6 +1112,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         processedValue = maskCEP(newValue);
       } else if (field.id === "phone" || field.type === "phone") {
         processedValue = maskWhatsApp(newValue);
+      } else if (isEmailField(field.id, field.type)) {
+        processedValue = newValue.toLowerCase();
       }
       
       // Limpar dados da empresa ao mudar o tipo de pessoa
