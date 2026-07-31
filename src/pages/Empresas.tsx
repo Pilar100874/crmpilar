@@ -696,6 +696,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       });
     }
     
+    // Qualquer valor que venha do banco é exibido em CAIXA ALTA
+    Object.assign(data, upperObject(data));
+    if (!String(data.company_fantasia || "").trim()) {
+      data.company_fantasia = String(data.company_name || "");
+    }
     setFormData(data);
     setFormSnapshot(JSON.stringify(data));
 
