@@ -56,13 +56,13 @@ export function upperObject<T extends Record<string, any>>(obj: T): T {
   for (const key of Object.keys(out)) {
     const v = out[key];
     if (typeof v === "string") {
-      out[key] = isUppercaseExemptField(key) ? v : v.toUpperCase();
+      out[key] = isEmailField(key) ? normalizeEmail(v) : isUppercaseExemptField(key) ? v : v.toUpperCase();
     } else if (v && typeof v === "object" && !Array.isArray(v)) {
       out[key] = upperObject(v);
     } else if (Array.isArray(v)) {
       out[key] = v.map((item) =>
         typeof item === "string"
-          ? (isUppercaseExemptField(key) ? item : item.toUpperCase())
+          ? (isEmailField(key) ? normalizeEmail(item) : isUppercaseExemptField(key) ? item : item.toUpperCase())
           : item && typeof item === "object"
           ? upperObject(item)
           : item
