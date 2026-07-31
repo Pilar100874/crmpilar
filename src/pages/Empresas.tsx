@@ -948,7 +948,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         porte: result.porte || prev.porte,
         natureza_juridica: up(result.naturezaJuridica || prev.natureza_juridica),
         capital_social: result.capitalSocial ?? prev.capital_social,
-        regime_tributario: up(result.regimeTributario || prev.regime_tributario),
+        regime_tributario: result.regimeTributario || prev.regime_tributario,
         optante_mei: result.optanteMei ?? prev.optante_mei,
         optante_simples: result.optanteSimples ?? prev.optante_simples,
         pais: result.pais || prev.pais || "Brasil",
