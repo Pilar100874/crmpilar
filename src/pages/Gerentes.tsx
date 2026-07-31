@@ -35,10 +35,14 @@ export default function Gerentes() {
 
   const [vendedoresLista, setVendedoresLista] = useState<Empresa[]>([]);
   const [empresasLista, setEmpresasLista] = useState<Empresa[]>([]);
-  const [vinculosVendedores, setVinculosVendedores] = useState<Array<{ id: string; vendedor_empresa_id: string }>>([]);
+  const [vinculosVendedores, setVinculosVendedores] = useState<
+    Array<{ vendedor_empresa_id: string; gvId?: string; evId?: string }>
+  >([]);
   const [vinculosEmpresas, setVinculosEmpresas] = useState<Array<{ id: string; empresa_id: string }>>([]);
   const [novosVendedores, setNovosVendedores] = useState<string[]>([]);
   const [novasEmpresas, setNovasEmpresas] = useState<string[]>([]);
+  const [contagemVendedores, setContagemVendedores] = useState<Record<string, number>>({});
+
 
   useEffect(() => {
     (async () => {
@@ -51,7 +55,9 @@ export default function Gerentes() {
     if (estabelecimentoId) {
       loadGerentes();
       loadListas();
+      loadContagemVendedores();
     }
+
   }, [estabelecimentoId]);
 
   const loadGerentes = async () => {
@@ -98,12 +104,30 @@ export default function Gerentes() {
 
   const loadVinculos = async (gerenteId: string) => {
     if (!estabelecimentoId) return;
+    // Fonte 1: tabela gerente_vendedores (vínculo criado pela tela do gerente)
     const { data: vv } = await supabase
       .from("gerente_vendedores")
       .select("id, vendedor_empresa_id")
       .eq("gerente_usuario_id", gerenteId)
       .eq("estabelecimento_id", estabelecimentoId);
-    setVinculosVendedores(vv || []);
+
+    // Fonte 2: empresa_vinculos (vínculo criado pela tela do vendedor)
+    const { data: evVend } = await supabase
+      .from("empresa_vinculos")
+      .select("id, vendedor_id")
+      .eq("usuario_id", gerenteId)
+      .eq("estabelecimento_id", estabelecimentoId)
+      .not("vendedor_id", "is", null);
+
+    const mapa = new Map<string, { vendedor_empresa_id: string; gvId?: string; evId?: string }>();
+    (vv || []).forEach((r: any) => {
+      mapa.set(r.vendedor_empresa_id, { vendedor_empresa_id: r.vendedor_empresa_id, gvId: r.id });
+    });
+    (evVend || []).forEach((r: any) => {
+      const atual = mapa.get(r.vendedor_id) || { vendedor_empresa_id: r.vendedor_id };
+      mapa.set(r.vendedor_id, { ...atual, evId: r.id });
+    });
+    setVinculosVendedores(Array.from(mapa.values()));
 
     const { data: ve } = await supabase
       .from("empresa_vinculos")
@@ -115,26 +139,106 @@ export default function Gerentes() {
     setVinculosEmpresas(ve || []);
   };
 
+  const loadContagemVendedores = async () => {
+    if (!estabelecimentoId) return;
+    const [{ data: gv }, { data: ev }] = await Promise.all([
+      supabase
+        .from("gerente_vendedores")
+        .select("gerente_usuario_id, vendedor_empresa_id")
+        .eq("estabelecimento_id", estabelecimentoId),
+      supabase
+        .from("empresa_vinculos")
+        .select("usuario_id, vendedor_id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .not("vendedor_id", "is", null)
+        .not("usuario_id", "is", null),
+    ]);
+    const porGerente: Record<string, Set<string>> = {};
+    (gv || []).forEach((r: any) => {
+      (porGerente[r.gerente_usuario_id] ||= new Set()).add(r.vendedor_empresa_id);
+    });
+    (ev || []).forEach((r: any) => {
+      (porGerente[r.usuario_id] ||= new Set()).add(r.vendedor_id);
+    });
+    const contagem: Record<string, number> = {};
+    Object.entries(porGerente).forEach(([k, v]) => { contagem[k] = v.size; });
+    setContagemVendedores(contagem);
+  };
+
   const adicionarVendedores = async () => {
     if (!editing || !estabelecimentoId || novosVendedores.length === 0) return;
-    const rows = novosVendedores.map(vid => ({
+
+    // Um vendedor só pode ter 1 gerente: verifica se já pertence a outro
+    const { data: jaVinculados } = await supabase
+      .from("empresa_vinculos")
+      .select("vendedor_id, usuario_id")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .in("vendedor_id", novosVendedores)
+      .not("usuario_id", "is", null);
+
+    const ocupados = (jaVinculados || []).filter((r: any) => r.usuario_id !== editing.id);
+    if (ocupados.length > 0) {
+      const nomes = ocupados
+        .map((r: any) => {
+          const v = vendedoresLista.find(x => x.id === r.vendedor_id);
+          return v?.nome_fantasia || v?.nome || "vendedor";
+        })
+        .join(", ");
+      toast.error(`Já possuem outro gerente: ${nomes}. Remova o vínculo atual pela tela do vendedor.`);
+      return;
+    }
+
+    const permitidos = novosVendedores;
+    const gvRows = permitidos.map(vid => ({
       gerente_usuario_id: editing.id,
       vendedor_empresa_id: vid,
       estabelecimento_id: estabelecimentoId,
     }));
-    const { error } = await supabase.from("gerente_vendedores").insert(rows);
-    if (error) { toast.error("Erro: " + error.message); return; }
+    const { error } = await supabase.from("gerente_vendedores").insert(gvRows);
+    if (error && !error.message.includes("duplicate")) {
+      toast.error("Erro: " + error.message);
+      return;
+    }
+
+    // Espelha na tela do vendedor (empresa_vinculos)
+    const jaEspelhados = new Set((jaVinculados || []).map((r: any) => r.vendedor_id));
+    const evRows = permitidos
+      .filter(vid => !jaEspelhados.has(vid))
+      .map(vid => ({
+        empresa_id: vid,
+        usuario_id: editing.id,
+        segmento_id: null,
+        vendedor_id: vid,
+        transportadora_id: null,
+        estabelecimento_id: estabelecimentoId,
+      }));
+    if (evRows.length > 0) {
+      const { error: evErr } = await supabase.from("empresa_vinculos").insert(evRows);
+      if (evErr && !evErr.message.includes("duplicate")) {
+        toast.error("Erro ao espelhar vínculo: " + evErr.message);
+      }
+    }
+
     toast.success("Vendedores vinculados!");
     setNovosVendedores([]);
     await loadVinculos(editing.id);
+    await loadContagemVendedores();
   };
 
-  const removerVendedor = async (id: string) => {
-    const { error } = await supabase.from("gerente_vendedores").delete().eq("id", id);
-    if (error) { toast.error("Erro: " + error.message); return; }
+  const removerVendedor = async (v: { gvId?: string; evId?: string }) => {
+    if (v.gvId) {
+      const { error } = await supabase.from("gerente_vendedores").delete().eq("id", v.gvId);
+      if (error) { toast.error("Erro: " + error.message); return; }
+    }
+    if (v.evId) {
+      const { error } = await supabase.from("empresa_vinculos").delete().eq("id", v.evId);
+      if (error) { toast.error("Erro: " + error.message); return; }
+    }
     toast.success("Vínculo removido");
     if (editing) await loadVinculos(editing.id);
+    await loadContagemVendedores();
   };
+
 
   const adicionarEmpresas = async () => {
     if (!editing || !estabelecimentoId || novasEmpresas.length === 0) return;
@@ -242,14 +346,21 @@ export default function Gerentes() {
                     {vinculosVendedores.map(v => {
                       const vend = vendedoresLista.find(x => x.id === v.vendedor_empresa_id);
                       return (
-                        <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
-                          <p className="text-sm font-medium">{vend?.nome_fantasia || vend?.nome || "Vendedor removido"}</p>
-                          <Button variant="ghost" size="sm" onClick={() => removerVendedor(v.id)}>
+                        <div key={v.vendedor_empresa_id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{vend?.nome_fantasia || vend?.nome || "Vendedor removido"}</p>
+                            {vend?.cnpj && <p className="text-xs text-muted-foreground">{vend.cnpj}</p>}
+                            {!v.gvId && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5">Vinculado pela tela do vendedor</p>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => removerVendedor(v)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       );
                     })}
+
                   </div>
                 )}
               </div>
@@ -393,6 +504,7 @@ export default function Gerentes() {
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">E-mail</th>
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Telefone</th>
+                    <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80" style={{ width: 130 }}>Vendedores</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -407,6 +519,12 @@ export default function Gerentes() {
                       <td className="px-3 sm:px-4 py-3 text-sm font-medium">{g.nome}</td>
                       <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.email}</td>
                       <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.whatsapp || "-"}</td>
+                      <td className="px-3 sm:px-4 py-3 text-sm">
+                        <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">
+                          {contagemVendedores[g.id] || 0}
+                        </span>
+                      </td>
+
                     </tr>
                   ))}
                 </tbody>
