@@ -1149,6 +1149,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         observacoes_internas: formData.observacoes_internas || null,
       };
 
+      // Padroniza todos os textos do cadastro em CAIXA ALTA (exceto e-mail/site)
+      Object.assign(empresaPayload, upperObject(empresaPayload));
+
+
+
 
       let empresaId: string;
 
