@@ -299,7 +299,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           type: cfg.field_type,
           category: 'company',
           options: opts,
-          required: cfg.field_id === 'telefone' ? false : !!cfg.required,
+          required: cfg.field_id === 'telefone' ? false : (cfg.field_id === 'company_fantasia' ? true : !!cfg.required),
           locked: !!cfg.locked,
         };
       });
