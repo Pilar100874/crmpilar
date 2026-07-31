@@ -7,6 +7,8 @@ export interface FilteredCheckboxItem {
   id: string;
   label: string;
   extra?: string;
+  /** Texto adicional usado apenas na busca (não é exibido) */
+  searchableText?: string;
 }
 
 interface FilteredCheckboxListProps {
