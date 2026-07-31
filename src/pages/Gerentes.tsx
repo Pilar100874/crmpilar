@@ -35,10 +35,14 @@ export default function Gerentes() {
 
   const [vendedoresLista, setVendedoresLista] = useState<Empresa[]>([]);
   const [empresasLista, setEmpresasLista] = useState<Empresa[]>([]);
-  const [vinculosVendedores, setVinculosVendedores] = useState<Array<{ id: string; vendedor_empresa_id: string }>>([]);
+  const [vinculosVendedores, setVinculosVendedores] = useState<
+    Array<{ vendedor_empresa_id: string; gvId?: string; evId?: string }>
+  >([]);
   const [vinculosEmpresas, setVinculosEmpresas] = useState<Array<{ id: string; empresa_id: string }>>([]);
   const [novosVendedores, setNovosVendedores] = useState<string[]>([]);
   const [novasEmpresas, setNovasEmpresas] = useState<string[]>([]);
+  const [contagemVendedores, setContagemVendedores] = useState<Record<string, number>>({});
+
 
   useEffect(() => {
     (async () => {
