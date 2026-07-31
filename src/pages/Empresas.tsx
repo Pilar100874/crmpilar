@@ -26,6 +26,7 @@ import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { buscarCNPJ } from "@/lib/cadastros/cnpjService";
+import { upperField, upperObject, isUppercaseExemptField } from "@/lib/cadastros/uppercase";
 import { buscarCEP } from "@/lib/cadastros/cepService";
 import { LookupStatusMessage, type LookupStatus } from "@/components/cadastros/LookupStatusMessage";
 import { supabase } from "@/integrations/supabase/client";
