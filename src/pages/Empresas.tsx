@@ -1031,6 +1031,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const handleSaveEmpresa = async () => {
+    // Sugestão automática: se não informado, "Como prefere ser chamado" recebe o Nome
+    if (!String(formData.company_fantasia || "").trim() && String(formData.company_name || "").trim()) {
+      formData.company_fantasia = String(formData.company_name).toUpperCase();
+      setFormData(prev => ({ ...prev, company_fantasia: String(prev.company_name || "").toUpperCase() }));
+    }
     const errors: Record<string, string> = {};
 
     const isBrasil = (formData.pais || "Brasil") === "Brasil";
