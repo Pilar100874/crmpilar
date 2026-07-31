@@ -945,7 +945,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         neighborhood: up(result.bairro || prev.neighborhood),
         data_fundacao: result.dataAbertura || prev.data_fundacao,
         situacao_cadastral: up(result.situacaoCadastral || prev.situacao_cadastral),
-        porte: up(result.porte || prev.porte),
+        porte: result.porte || prev.porte,
         natureza_juridica: up(result.naturezaJuridica || prev.natureza_juridica),
         capital_social: result.capitalSocial ?? prev.capital_social,
         regime_tributario: up(result.regimeTributario || prev.regime_tributario),
