@@ -55,7 +55,9 @@ export default function Gerentes() {
     if (estabelecimentoId) {
       loadGerentes();
       loadListas();
+      loadContagemVendedores();
     }
+
   }, [estabelecimentoId]);
 
   const loadGerentes = async () => {
