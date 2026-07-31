@@ -26,6 +26,7 @@ import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { isEmailField, normalizeEmail } from "@/lib/cadastros/uppercase";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
@@ -1415,7 +1416,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           nome: formData.company_name,
           cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
           telefone: formData.phone || '',
-          email: formData.email || '',
+          email: normalizeEmail(formData.email || ''),
           endereco: formData.address,
           cidade: formData.city,
           estado: formData.state,
@@ -1467,7 +1468,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         nome: formData.name || '',
         telefone: formData.phone || '',
         tel: formData.tel || null,
-        email: formData.email || '',
+        email: normalizeEmail(formData.email || ''),
         empresa_id: null, // Mantém null pois usamos tabela de junção
         tipo_operador: empresasVinculadas.length > 0 ? true : false, // true = cliente, false = prospect
         custom_fields: {

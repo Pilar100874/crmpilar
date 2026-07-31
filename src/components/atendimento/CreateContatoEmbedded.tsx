@@ -59,7 +59,7 @@ export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: Creat
         .from("customers")
         .insert({
           nome: formData.nome.trim(),
-          email: formData.email.trim() || null,
+          email: formData.email.trim().toLowerCase() || null,
           telefone: formData.telefone.trim() || null,
           tel: formData.tel.trim() || null,
           estabelecimento_id: estabelecimentoId,
@@ -127,7 +127,7 @@ export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: Creat
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                 placeholder="email@exemplo.com"
               />
             </div>
