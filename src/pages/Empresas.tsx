@@ -1698,7 +1698,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         maskedValue = maskPhone(value);
       }
 
-      setFormData(prev => ({ ...prev, [field.id]: maskedValue }));
+      // Todos os campos de cadastro ficam em CAIXA ALTA (exceto e-mail/site)
+      maskedValue = upperField(field.id, maskedValue, field.type);
+
+      setFormData(prev => {
+        const next: any = { ...prev, [field.id]: maskedValue };
+        // Sugestão: "Como prefere ser chamado" acompanha o Nome enquanto não for editado manualmente
+        if (field.id === "company_name") {
+          const anterior = String(prev.company_fantasia || "");
+          if (!anterior || anterior === String(prev.company_name || "")) {
+            next.company_fantasia = maskedValue;
+          }
+        }
+        return next;
+      });
       setFieldErrors(prev => ({ ...prev, [field.id]: '' }));
 
       // Auto-consulta com debounce (cache + cancel gerenciados nos services)
