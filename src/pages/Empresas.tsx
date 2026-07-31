@@ -1708,8 +1708,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         maskedValue = maskPhone(value);
       }
 
-      // Todos os campos de cadastro ficam em CAIXA ALTA (exceto e-mail/site)
-      maskedValue = upperField(field.id, maskedValue, field.type);
+      // Todos os campos de texto do cadastro ficam em CAIXA ALTA (exceto e-mail/site e listas de seleção)
+      if (field.type !== "select" && field.type !== "checkbox") {
+        maskedValue = upperField(field.id, maskedValue, field.type);
+      }
 
       setFormData(prev => {
         const next: any = { ...prev, [field.id]: maskedValue };
