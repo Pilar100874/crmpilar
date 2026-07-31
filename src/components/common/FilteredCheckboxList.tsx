@@ -7,6 +7,8 @@ export interface FilteredCheckboxItem {
   id: string;
   label: string;
   extra?: string;
+  /** Texto adicional usado apenas na busca (não é exibido) */
+  searchableText?: string;
 }
 
 interface FilteredCheckboxListProps {
@@ -45,7 +47,8 @@ export function FilteredCheckboxList({
     return items.filter(
       (i) =>
         i.label.toLowerCase().includes(term) ||
-        (i.extra?.toLowerCase().includes(term) ?? false)
+        (i.extra?.toLowerCase().includes(term) ?? false) ||
+        (i.searchableText?.toLowerCase().includes(term) ?? false)
     );
   }, [items, search]);
 

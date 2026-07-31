@@ -316,7 +316,16 @@ export default function Gerentes() {
                     idPrefix="v"
                     items={vendedoresLista
                       .filter((v) => !idsVend.has(v.id))
-                      .map((v) => ({ id: v.id, label: v.nome_fantasia || v.nome }))}
+                      .map((v) => {
+                        const label = v.nome_fantasia || v.nome;
+                        const extra = v.nome_fantasia && v.nome && v.nome_fantasia !== v.nome ? v.nome : undefined;
+                        return {
+                          id: v.id,
+                          label,
+                          extra,
+                          searchableText: `${v.nome_fantasia || ""} ${v.nome || ""}`.trim(),
+                        };
+                      })}
                     selected={novosVendedores}
                     onToggle={(id, checked) =>
                       setNovosVendedores(
@@ -325,7 +334,7 @@ export default function Gerentes() {
                           : novosVendedores.filter((x) => x !== id)
                       )
                     }
-                    searchPlaceholder="Buscar vendedor..."
+                    searchPlaceholder="Buscar vendedor por nome ou nome fantasia..."
                     emptyText="Todos os vendedores já foram vinculados."
                     maxHeightClass="max-h-[260px]"
                   />
