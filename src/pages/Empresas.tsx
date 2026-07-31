@@ -904,10 +904,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         setFormData(prev => ({
           ...prev,
           cep: maskCEP(result.cep),
-          address: result.logradouro || prev.address,
-          neighborhood: result.bairro || prev.neighborhood,
-          city: result.cidade,
-          state: result.uf,
+          address: (result.logradouro || prev.address || "").toUpperCase(),
+          neighborhood: (result.bairro || prev.neighborhood || "").toUpperCase(),
+          city: (result.cidade || "").toUpperCase(),
+          state: (result.uf || "").toUpperCase(),
         }));
         setCepStatus("ok");
         setTimeout(() => {
