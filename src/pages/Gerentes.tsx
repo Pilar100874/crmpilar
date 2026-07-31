@@ -344,14 +344,21 @@ export default function Gerentes() {
                     {vinculosVendedores.map(v => {
                       const vend = vendedoresLista.find(x => x.id === v.vendedor_empresa_id);
                       return (
-                        <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
-                          <p className="text-sm font-medium">{vend?.nome_fantasia || vend?.nome || "Vendedor removido"}</p>
-                          <Button variant="ghost" size="sm" onClick={() => removerVendedor(v.id)}>
+                        <div key={v.vendedor_empresa_id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{vend?.nome_fantasia || vend?.nome || "Vendedor removido"}</p>
+                            {vend?.cnpj && <p className="text-xs text-muted-foreground">{vend.cnpj}</p>}
+                            {!v.gvId && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5">Vinculado pela tela do vendedor</p>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => removerVendedor(v)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       );
                     })}
+
                   </div>
                 )}
               </div>
