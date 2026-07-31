@@ -504,6 +504,7 @@ export default function Gerentes() {
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">E-mail</th>
                     <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Telefone</th>
+                    <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80" style={{ width: 130 }}>Vendedores</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -518,6 +519,12 @@ export default function Gerentes() {
                       <td className="px-3 sm:px-4 py-3 text-sm font-medium">{g.nome}</td>
                       <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.email}</td>
                       <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.whatsapp || "-"}</td>
+                      <td className="px-3 sm:px-4 py-3 text-sm">
+                        <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">
+                          {contagemVendedores[g.id] || 0}
+                        </span>
+                      </td>
+
                     </tr>
                   ))}
                 </tbody>
