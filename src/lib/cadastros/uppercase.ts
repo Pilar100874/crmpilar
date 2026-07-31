@@ -4,11 +4,24 @@
  */
 const KEEP_LOWER = new Set(["email", "e_mail", "site", "website", "url", "contact_email", "contato_email"]);
 
+/** Campos controlados por listas de seleção — não podem mudar de caixa (quebrariam o valor da opção). */
+const KEEP_AS_IS = new Set([
+  "pais",
+  "tipo_cliente",
+  "company_type",
+  "porte",
+  "prioridade",
+  "status_comercial",
+  "regime_tributario",
+  "tipo",
+  "status",
+]);
+
 export function isUppercaseExemptField(fieldId?: string, fieldType?: string): boolean {
-  if (fieldType === "email" || fieldType === "url") return true;
+  if (fieldType === "email" || fieldType === "url" || fieldType === "select") return true;
   if (!fieldId) return false;
   const id = fieldId.toLowerCase();
-  if (KEEP_LOWER.has(id)) return true;
+  if (KEEP_LOWER.has(id) || KEEP_AS_IS.has(id)) return true;
   return id.includes("email") || id.includes("site") || id.includes("url") || id.includes("senha") || id.includes("password");
 }
 
