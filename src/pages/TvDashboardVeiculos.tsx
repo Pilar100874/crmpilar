@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { useFullscreen } from '@/hooks/useFullscreen';
@@ -498,6 +499,13 @@ export default function TvDashboardVeiculos() {
                               >
                                 {veiculo.ultima_posicao.ignicao ? <KeyRound className="h-3 w-3" /> : <Power className="h-3 w-3" />}
                               </span>
+                            )}
+                            {typeof veiculo.ultima_posicao.corte_combustivel === 'boolean' && (
+                              <CorteCombustivelBadge
+                                corte={veiculo.ultima_posicao.corte_combustivel}
+                                compact
+                                className="bg-white/10 text-white/80"
+                              />
                             )}
                           </>
                         )}

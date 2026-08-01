@@ -141,8 +141,8 @@ function forwardPosition(payload) {
 
 // ---------- Servidor TCP ----------
 
-// Cache de estado por IMEI (para incluir ignição em posições posteriores)
-const stateByImei = new Map(); // imei -> { ignition: bool, ignitionAt: iso }
+// Cache de estado por IMEI (para incluir ignição e corte de combustível em posições posteriores)
+const stateByImei = new Map(); // imei -> { ignition: bool, ignitionAt: iso, fuelCut: bool, fuelCutAt: iso }
 
 const server = net.createServer((socket) => {
   const remote = `${socket.remoteAddress}:${socket.remotePort}`;
@@ -225,18 +225,23 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
     case 0x13:
     case 0x23: {
       // Heartbeat / status — TerminalInformation no primeiro byte
+      // bit 0 (0x01) = oil/electricity connected (combustível liberado)
       // bit 1 (0x02) = ACC ligada (carro ligado)
       const imei = getImei();
       if (content.length >= 1 && imei) {
         const terminalInfo = content[0];
         const ignition = (terminalInfo & 0x02) !== 0;
+        const fuelCut = (terminalInfo & 0x01) === 0; // 0 = desconectado/cortado
         const prev = stateByImei.get(imei) || {};
         if (prev.ignition !== ignition) {
           console.log(`🔑 IGNIÇÃO ${ignition ? 'LIGADA' : 'DESLIGADA'} imei=${imei}`);
         }
-        stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString() });
-        // Envia status para o backend (sem coordenadas) para atualizar ignição
-        forwardPosition({ source: 'gt06-bridge-status', imei, ignition, timestamp: new Date().toISOString() });
+        if (prev.fuelCut !== fuelCut) {
+          console.log(`⛽ CORTE COMBUSTÍVEL ${fuelCut ? 'ATIVO' : 'LIBERADO'} imei=${imei}`);
+        }
+        stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString(), fuelCut, fuelCutAt: new Date().toISOString() });
+        // Envia status para o backend (sem coordenadas) para atualizar ignição e corte
+        forwardPosition({ source: 'gt06-bridge-status', imei, ignition, fuel_cut: fuelCut, timestamp: new Date().toISOString() });
       }
       console.log(`💓 Heartbeat imei=${imei || '?'}`);
       socket.write(buildResponse(protocol, serial));
@@ -251,20 +256,22 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
         const imei = getImei();
         // Tenta ler ACC do pacote estendido (após 18 bytes de GPS + LBS ~8 bytes)
         let ignition = stateByImei.get(imei)?.ignition;
+        let fuelCut = stateByImei.get(imei)?.fuelCut;
         if (content.length >= 27) {
           // byte 26 costuma ser ACC status em pacotes estendidos J-series
           const accByte = content[26];
           if (accByte === 0 || accByte === 1) {
             ignition = accByte === 1;
-            stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString() });
+            stateByImei.set(imei, { ...stateByImei.get(imei), ignition, ignitionAt: new Date().toISOString() });
           }
         }
-        console.log(`📍 imei=${imei} lat=${loc.latitude.toFixed(6)} lon=${loc.longitude.toFixed(6)} v=${loc.speed_kmh}km/h sats=${loc.satellites} fix=${loc.gps_fixed} acc=${ignition}`);
+        console.log(`📍 imei=${imei} lat=${loc.latitude.toFixed(6)} lon=${loc.longitude.toFixed(6)} v=${loc.speed_kmh}km/h sats=${loc.satellites} fix=${loc.gps_fixed} acc=${ignition} fuelCut=${fuelCut}`);
         forwardPosition({
           source: 'gt06-bridge',
           imei,
           protocol: '0x' + protocol.toString(16),
           ignition: typeof ignition === 'boolean' ? ignition : undefined,
+          fuel_cut: typeof fuelCut === 'boolean' ? fuelCut : undefined,
           ...loc,
         });
       }
@@ -276,9 +283,9 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
       // Alarme (contém localização)
       const loc = parseLocation(content);
       const imei = getImei();
-      const ignition = stateByImei.get(imei)?.ignition;
+      const state = stateByImei.get(imei) || {};
       console.log(`🚨 Alarme imei=${imei}`);
-      if (loc) forwardPosition({ source: 'gt06-bridge', imei, alarm: true, protocol: '0x' + protocol.toString(16), ignition, ...loc });
+      if (loc) forwardPosition({ source: 'gt06-bridge', imei, alarm: true, protocol: '0x' + protocol.toString(16), ignition: state.ignition, fuel_cut: state.fuelCut, ...loc });
       socket.write(buildResponse(protocol, serial));
       break;
     }

@@ -13,6 +13,7 @@ interface PosicaoPayload {
   direcao?: number;
   dataHora?: string;
   ignicao?: boolean;
+  corte_combustivel?: boolean;
   token?: string;
 }
 
@@ -202,6 +203,7 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
       velocidade: velocidadeFinal,
       direcao: payload.direcao,
       ignicao: typeof payload.ignicao === 'boolean' ? payload.ignicao : null,
+      corte_combustivel: typeof payload.corte_combustivel === 'boolean' ? payload.corte_combustivel : null,
       data_hora: dataHoraAtual
     })
     .select()
@@ -620,9 +622,9 @@ Deno.serve(async (req) => {
         
         console.log('Converted Traccar Client payload:', payload);
       } else if (rawPayload.source === 'gt06-bridge-status' && rawPayload.imei) {
-        // Status-only (heartbeat) — atualiza última posição do veículo apenas com ignição
+        // Status-only (heartbeat) — atualiza última posição do veículo com ignição e corte de combustível
         const veiculoInfo = await findVeiculoInfo(supabase, String(rawPayload.imei));
-        if (veiculoInfo && typeof rawPayload.ignition === 'boolean') {
+        if (veiculoInfo) {
           const { data: ultima } = await supabase
             .from('veiculo_posicoes')
             .select('id')
@@ -631,7 +633,12 @@ Deno.serve(async (req) => {
             .limit(1)
             .maybeSingle();
           if (ultima) {
-            await supabase.from('veiculo_posicoes').update({ ignicao: rawPayload.ignition }).eq('id', ultima.id);
+            const updateData: Record<string, boolean> = {};
+            if (typeof rawPayload.ignition === 'boolean') updateData.ignicao = rawPayload.ignition;
+            if (typeof rawPayload.fuel_cut === 'boolean') updateData.corte_combustivel = rawPayload.fuel_cut;
+            if (Object.keys(updateData).length > 0) {
+              await supabase.from('veiculo_posicoes').update(updateData).eq('id', ultima.id);
+            }
           }
         }
         return new Response(
@@ -654,6 +661,7 @@ Deno.serve(async (req) => {
           direcao: typeof rawPayload.heading === 'number' ? rawPayload.heading : undefined,
           dataHora: rawPayload.timestamp || new Date().toISOString(),
           ignicao: typeof rawPayload.ignition === 'boolean' ? rawPayload.ignition : undefined,
+          corte_combustivel: typeof rawPayload.fuel_cut === 'boolean' ? rawPayload.fuel_cut : undefined,
           token: rawPayload.token,
         };
         console.log('Converted GT06 bridge payload:', payload);

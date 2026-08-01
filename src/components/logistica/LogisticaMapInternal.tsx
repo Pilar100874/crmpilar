@@ -261,6 +261,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
               ${typeof veiculo.ultima_posicao?.ignicao === 'boolean'
                 ? `<p>Ignição: <strong style="color:${veiculo.ultima_posicao.ignicao ? '#059669' : '#6b7280'}">${veiculo.ultima_posicao.ignicao ? '🔑 Ligado' : '⏻ Desligado'}</strong></p>`
                 : ''}
+              ${typeof veiculo.ultima_posicao?.corte_combustivel === 'boolean'
+                ? `<p>Combustível: <strong style="color:${veiculo.ultima_posicao.corte_combustivel ? '#dc2626' : '#059669'}">${veiculo.ultima_posicao.corte_combustivel ? '⛽ Cortado' : '⛽ Liberado'}</strong></p>`
+                : ''}
             </div>
           `);
 

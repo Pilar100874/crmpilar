@@ -2,6 +2,8 @@ import React from 'react';
 import { X, Car, User, MessageCircle, Gauge } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
+import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 
 interface FocusLegendProps {
   veiculo?: VeiculoComStatus;
@@ -15,6 +17,7 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
   const wa = telefone ? formatWhatsappNumber(telefone) : null;
   const vel = veiculo.ultima_posicao ? Math.round(veiculo.ultima_posicao.velocidade) : null;
   const ign = veiculo.ultima_posicao?.ignicao;
+  const corte = veiculo.ultima_posicao?.corte_combustivel;
 
   return (
     <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto">
@@ -46,12 +49,10 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
             {vel} km/h
           </div>
         )}
-        {typeof ign === 'boolean' && (
-          <div
-            className={`flex items-center gap-1 border-l pl-3 font-medium ${ign ? 'text-emerald-600' : 'text-muted-foreground'}`}
-            title="Sensor de ignição"
-          >
-            {ign ? '🔑 Ligado' : '⏻ Desligado'}
+        {(typeof ign === 'boolean' || typeof corte === 'boolean') && (
+          <div className="flex items-center gap-2 border-l pl-3">
+            <IgnicaoBadge ignicao={ign} compact />
+            <CorteCombustivelBadge corte={corte} compact />
           </div>
         )}
         <button
