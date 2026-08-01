@@ -500,6 +500,13 @@ export default function TvDashboardVeiculos() {
                                 {veiculo.ultima_posicao.ignicao ? <KeyRound className="h-3 w-3" /> : <Power className="h-3 w-3" />}
                               </span>
                             )}
+                            {typeof veiculo.ultima_posicao.corte_combustivel === 'boolean' && (
+                              <CorteCombustivelBadge
+                                corte={veiculo.ultima_posicao.corte_combustivel}
+                                compact
+                                className="bg-white/10 text-white/80"
+                              />
+                            )}
                           </>
                         )}
                         <button
