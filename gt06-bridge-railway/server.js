@@ -256,20 +256,22 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
         const imei = getImei();
         // Tenta ler ACC do pacote estendido (após 18 bytes de GPS + LBS ~8 bytes)
         let ignition = stateByImei.get(imei)?.ignition;
+        let fuelCut = stateByImei.get(imei)?.fuelCut;
         if (content.length >= 27) {
           // byte 26 costuma ser ACC status em pacotes estendidos J-series
           const accByte = content[26];
           if (accByte === 0 || accByte === 1) {
             ignition = accByte === 1;
-            stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString() });
+            stateByImei.set(imei, { ...stateByImei.get(imei), ignition, ignitionAt: new Date().toISOString() });
           }
         }
-        console.log(`📍 imei=${imei} lat=${loc.latitude.toFixed(6)} lon=${loc.longitude.toFixed(6)} v=${loc.speed_kmh}km/h sats=${loc.satellites} fix=${loc.gps_fixed} acc=${ignition}`);
+        console.log(`📍 imei=${imei} lat=${loc.latitude.toFixed(6)} lon=${loc.longitude.toFixed(6)} v=${loc.speed_kmh}km/h sats=${loc.satellites} fix=${loc.gps_fixed} acc=${ignition} fuelCut=${fuelCut}`);
         forwardPosition({
           source: 'gt06-bridge',
           imei,
           protocol: '0x' + protocol.toString(16),
           ignition: typeof ignition === 'boolean' ? ignition : undefined,
+          fuel_cut: typeof fuelCut === 'boolean' ? fuelCut : undefined,
           ...loc,
         });
       }
