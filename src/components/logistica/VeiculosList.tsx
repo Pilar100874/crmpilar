@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
