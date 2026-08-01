@@ -141,8 +141,8 @@ function forwardPosition(payload) {
 
 // ---------- Servidor TCP ----------
 
-// Cache de estado por IMEI (para incluir ignição em posições posteriores)
-const stateByImei = new Map(); // imei -> { ignition: bool, ignitionAt: iso }
+// Cache de estado por IMEI (para incluir ignição e corte de combustível em posições posteriores)
+const stateByImei = new Map(); // imei -> { ignition: bool, ignitionAt: iso, fuelCut: bool, fuelCutAt: iso }
 
 const server = net.createServer((socket) => {
   const remote = `${socket.remoteAddress}:${socket.remotePort}`;
