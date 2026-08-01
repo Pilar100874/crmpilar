@@ -154,7 +154,31 @@ export function NotasWorkspace({ entidadeTipo, entidadeId, entidadeNome, classNa
   const saidas = saidasDe(selecionada);
 
   return (
-    <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_240px]", className)}>
+    <Tabs value={aba} onValueChange={setAba} className={cn("space-y-4", className)}>
+      <TabsList>
+        <TabsTrigger value="notas">
+          <FileText className="mr-1 h-4 w-4" /> Notas
+        </TabsTrigger>
+        <TabsTrigger value="grafo">
+          <Network className="mr-1 h-4 w-4" /> Teia de conhecimento
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="grafo">
+        <NotasGrafo
+          notas={notas}
+          links={links}
+          agentes={agentes}
+          onAbrirNota={(n) => {
+            abrirNota(n);
+            setAba("notas");
+          }}
+        />
+      </TabsContent>
+
+      <TabsContent value="notas">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_240px]">
+
       {/* Lista */}
       <Card className="flex min-h-[320px] flex-col overflow-hidden">
         <div className="space-y-2 border-b p-3">
