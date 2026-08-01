@@ -556,9 +556,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                               <span className="font-medium text-sm">{v.placa}</span>
                             </div>
                             <div className="flex items-center gap-1">
+                              <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
+                              <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
                               <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
                                 {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                               </Badge>
+
                               <button
                                 onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
                                 title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
@@ -686,9 +689,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         <span className="font-medium text-sm">{v.placa}</span>
                       </div>
                       <div className="flex items-center gap-1">
+                        <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
+                        <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
                         <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
                           {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                         </Badge>
+
                         <button
                           onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
                           title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
