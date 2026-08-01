@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeftRight,
   FileText,
   Link2,
+  Network,
   Plus,
   Save,
   Search,
@@ -16,12 +17,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useNotas, type Nota } from "@/hooks/useNotas";
 import { normalizarTitulo, resumoNota } from "@/lib/notas/wikilinks";
 import { NotaMarkdown } from "./NotaMarkdown";
+import { NotasGrafo, type AgenteGrafo } from "./NotasGrafo";
 
 interface NotasWorkspaceProps {
   entidadeTipo?: "empresa" | "contato" | "kb_artigo";
@@ -31,7 +36,7 @@ interface NotasWorkspaceProps {
 }
 
 export function NotasWorkspace({ entidadeTipo, entidadeId, entidadeNome, className }: NotasWorkspaceProps) {
-  const { notas, loading, salvarNota, excluirNota, alternarFavorito, backlinksDe, saidasDe } = useNotas({
+  const { notas, links, loading, salvarNota, excluirNota, alternarFavorito, backlinksDe, saidasDe } = useNotas({
     entidadeTipo,
     entidadeId,
   });
@@ -44,8 +49,28 @@ export function NotasWorkspace({ entidadeTipo, entidadeId, entidadeNome, classNa
   const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [excluirAlvo, setExcluirAlvo] = useState<Nota | null>(null);
+  const [aba, setAba] = useState("notas");
+  const [agentes, setAgentes] = useState<AgenteGrafo[]>([]);
+
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+      const { data } = await supabase
+        .from("chat_agents")
+        .select("id,nome,cor")
+        .eq("estabelecimento_id", estabId)
+        .eq("ativo", true);
+      if (!cancelado && data) setAgentes(data as AgenteGrafo[]);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   const selecionada = useMemo(() => notas.find((n) => n.id === selecionadaId) || null, [notas, selecionadaId]);
+
 
   const todasTags = useMemo(() => {
     const set = new Set<string>();
