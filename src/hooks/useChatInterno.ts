@@ -108,8 +108,12 @@ export function useChatInterno() {
 
       const userName = userData?.nome || 'Usuário';
 
+      supabase.getChannels()
+        .filter((c) => c.topic === `realtime:presence-chat-${estabelecimentoId}`)
+        .forEach((c) => supabase.removeChannel(c));
+
       const channel = supabase.channel(
-        `presence-chat-${estabelecimentoId}-${Math.random().toString(36).slice(2)}`,
+        `presence-chat-${estabelecimentoId}`,
         { config: { presence: { key: usuarioAtualId } } }
       )
         .on('presence', { event: 'sync' }, () => {
@@ -506,7 +510,7 @@ export function useChatInterno() {
     console.log('[ChatInterno] Configurando subscription de videochamada');
 
     const videoChamadaChannel = supabase
-      .channel(`videochamada-${usuarioAtualId}-${Math.random().toString(36).slice(2)}`)
+      .channel(`videochamada-${usuarioAtualId}`)
       .on('broadcast', { event: 'call-offer' }, async (payload) => {
         console.log('[ChatInterno] Oferta de videochamada recebida:', payload);
         
