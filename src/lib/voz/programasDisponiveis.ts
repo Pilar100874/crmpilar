@@ -34,6 +34,8 @@ export const PROGRAMAS_DISPONIVEIS: ProgramaDisponivel[] = [
   // Cadastros / Listas
   { path: "/listas", label: "Listas (Hub)", categoria: "Cadastros" },
   { path: "/empresas", label: "Empresas", categoria: "Cadastros" },
+  { path: "/notas", label: "Notas", categoria: "Cadastros" },
+  { path: "/base-conhecimento", label: "Base de Conhecimento", categoria: "Cadastros" },
   { path: "/contatos", label: "Contatos", categoria: "Cadastros" },
   { path: "/vinculos-empresas", label: "Vínculos de Empresas", categoria: "Cadastros" },
   { path: "/vinculos-contatos", label: "Vínculos de Contatos", categoria: "Cadastros" },
