@@ -143,6 +143,8 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Outras rotas úteis (fora do menu principal, mas acessíveis por voz) ============
   { path: "/empresas", titulo: "Empresas", aliases: ["cadastro de empresas", "clientes"] },
+  { path: "/notas", titulo: "Notas", aliases: ["notas", "minhas notas", "bloco de notas", "notas interligadas"] },
+  { path: "/base-conhecimento", titulo: "Base de Conhecimento", aliases: ["base de conhecimento", "artigos", "conhecimento"] },
   { path: "/contatos", titulo: "Contatos", aliases: ["cadastro de contatos"] },
   { path: "/vinculos-empresas", titulo: "Vínculos de Empresas", aliases: ["vinculo empresas", "vinculo de empresas", "vinculos empresa gerente", "vinculo empresa gerente"] },
   { path: "/vinculos-contatos", titulo: "Vínculos de Contatos", aliases: ["vinculo contatos", "vinculo de contatos", "vinculo contato gerente"] },

@@ -16,7 +16,8 @@ import { DeleteWithDependenciesDialog } from "@/components/common/DeleteWithDepe
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye, NotebookPen } from "lucide-react";
+import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
@@ -97,6 +98,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [empresasParaVincular, setEmpresasParaVincular] = useState<Array<{ id: string; nome_fantasia: string; nome: string; cnpj?: string }>>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
+  const [notasEmpresa, setNotasEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("nao_prospect");
@@ -2159,6 +2161,18 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 <Button
                                   size="sm"
                                   variant="outline"
+                                  className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNotasEmpresa(empresa);
+                                  }}
+                                  title="Notas da empresa"
+                                >
+                                  <NotebookPen className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
                                   className="h-8 px-2 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 border-destructive/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -3663,6 +3677,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         onOpenChange={(v) => !v && setConvertProspect(null)}
         onConverted={() => estabelecimentoId && fetchEmpresas(estabelecimentoId)}
       />
+
+      {notasEmpresa && (
+        <NotasEntidadeDialog
+          open={!!notasEmpresa}
+          onOpenChange={(v) => !v && setNotasEmpresa(null)}
+          entidadeTipo="empresa"
+          entidadeId={notasEmpresa.id}
+          entidadeNome={(notasEmpresa as any).company_fantasia || (notasEmpresa as any).company_name}
+        />
+      )}
     </>
+
   );
 }

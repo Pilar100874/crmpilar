@@ -10497,6 +10497,87 @@ export type Database = {
           },
         ]
       }
+      nota_links: {
+        Row: {
+          created_at: string
+          destino_id: string | null
+          destino_titulo: string
+          id: string
+          origem_id: string
+        }
+        Insert: {
+          created_at?: string
+          destino_id?: string | null
+          destino_titulo: string
+          id?: string
+          origem_id: string
+        }
+        Update: {
+          created_at?: string
+          destino_id?: string | null
+          destino_titulo?: string
+          id?: string
+          origem_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nota_links_destino_id_fkey"
+            columns: ["destino_id"]
+            isOneToOne: false
+            referencedRelation: "notas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nota_links_origem_id_fkey"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "notas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas: {
+        Row: {
+          autor_id: string | null
+          conteudo: string
+          created_at: string
+          entidade_id: string | null
+          entidade_tipo: string | null
+          estabelecimento_id: string | null
+          favorito: boolean
+          id: string
+          tags: string[]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          autor_id?: string | null
+          conteudo?: string
+          created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          estabelecimento_id?: string | null
+          favorito?: boolean
+          id?: string
+          tags?: string[]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          autor_id?: string | null
+          conteudo?: string
+          created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          estabelecimento_id?: string | null
+          favorito?: boolean
+          id?: string
+          tags?: string[]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notificacoes_config: {
         Row: {
           campanha_concluida_enabled: boolean | null

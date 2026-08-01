@@ -3,6 +3,8 @@ import Layout from "@/components/Layout";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import KnowledgeBaseCRUD from "@/components/config/KnowledgeBaseCRUD";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NotasWorkspace } from "@/components/notas/NotasWorkspace";
 
 export default function BaseConhecimento() {
   const navigate = useNavigate();
@@ -42,10 +44,24 @@ export default function BaseConhecimento() {
         <div>
           <h1 className="text-3xl font-bold">Base de Conhecimento</h1>
           <p className="text-muted-foreground">
-            Gerencie artigos e categorias da base de conhecimento
+            Gerencie artigos, categorias e notas interligadas da base de conhecimento
           </p>
         </div>
-        <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />
+
+        <Tabs defaultValue="artigos" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="artigos">Artigos</TabsTrigger>
+            <TabsTrigger value="notas">Notas interligadas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="artigos">
+            <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />
+          </TabsContent>
+
+          <TabsContent value="notas">
+            <NotasWorkspace entidadeTipo="kb_artigo" />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

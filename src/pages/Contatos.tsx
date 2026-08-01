@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User, AlertCircle } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User, AlertCircle, NotebookPen } from "lucide-react";
+import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
@@ -112,6 +113,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [notasContato, setNotasContato] = useState<Contact | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null); // Contato selecionado para visualização no painel lateral
   const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
@@ -2372,6 +2374,18 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNotasContato(contact);
+                                  }}
+                                  title="Notas do contato"
+                                >
+                                  <NotebookPen className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="h-8 px-2 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 border-destructive/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -3264,6 +3278,17 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         subtitle={viewingVinculo?.subtitle}
         fields={viewingVinculo?.fields || []}
       />
+
+      {notasContato && (
+        <NotasEntidadeDialog
+          open={!!notasContato}
+          onOpenChange={(o) => { if (!o) setNotasContato(null); }}
+          entidadeTipo="contato"
+          entidadeId={(notasContato as any).id}
+          entidadeNome={(notasContato as any).name || (notasContato as any).nome}
+        />
+      )}
+
 
     </div>
   );

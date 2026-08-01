@@ -24,6 +24,8 @@ import Funil from "./pages/Funil";
 import Conteudos from "./pages/Conteudos";
 import Contatos from "./pages/Contatos";
 import Empresas from "./pages/Empresas";
+import Notas from "./pages/Notas";
+import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
 import VinculosEmpresas from "./pages/VinculosEmpresas";
 import VinculosContatos from "./pages/VinculosContatos";
@@ -374,6 +376,8 @@ const App = () => (
               <Route path="/conteudos" element={<Conteudos />} />
               <Route path="/contatos" element={<Contatos />} />
               <Route path="/empresas" element={<Empresas />} />
+              <Route path="/notas" element={<Notas />} />
+              <Route path="/base-conhecimento" element={<BaseConhecimento />} />
               <Route path="/todos" element={<Todos />} />
               <Route path="/vinculos-empresas" element={<VinculosEmpresas />} />
               <Route path="/vinculos-contatos" element={<VinculosContatos />} />
