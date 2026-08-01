@@ -260,10 +260,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
               <p>Velocidade: ${Math.round(veiculo.ultima_posicao?.velocidade || 0)} km/h</p>
               ${typeof veiculo.ultima_posicao?.ignicao === 'boolean'
                 ? `<p>Ignição: <strong style="color:${veiculo.ultima_posicao.ignicao ? '#059669' : '#6b7280'}">${veiculo.ultima_posicao.ignicao ? '🔑 Ligado' : '⏻ Desligado'}</strong></p>`
-                : ''}
+                : `<p>Ignição: <strong style="color:#6b7280">Sem sinal</strong></p>`}
               ${typeof veiculo.ultima_posicao?.corte_combustivel === 'boolean'
                 ? `<p>Combustível: <strong style="color:${veiculo.ultima_posicao.corte_combustivel ? '#dc2626' : '#059669'}">${veiculo.ultima_posicao.corte_combustivel ? '⛽ Cortado' : '⛽ Liberado'}</strong></p>`
-                : ''}
+                : `<p>Combustível: <strong style="color:#6b7280">Sem sinal</strong></p>`}
+
             </div>
           `);
 
