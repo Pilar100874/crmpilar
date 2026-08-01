@@ -3677,6 +3677,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         onOpenChange={(v) => !v && setConvertProspect(null)}
         onConverted={() => estabelecimentoId && fetchEmpresas(estabelecimentoId)}
       />
+
+      {notasEmpresa && (
+        <NotasEntidadeDialog
+          open={!!notasEmpresa}
+          onOpenChange={(v) => !v && setNotasEmpresa(null)}
+          entidadeTipo="empresa"
+          entidadeId={notasEmpresa.id}
+          entidadeNome={(notasEmpresa as any).company_fantasia || (notasEmpresa as any).company_name}
+        />
+      )}
     </>
+
   );
 }
