@@ -31,7 +31,7 @@ const getTipoIconSvg = (tipo?: string) => {
   return TIPO_ICON_SVG[tipo.toLowerCase()] ?? '';
 };
 
-const createVeiculoIcon = (status: string, compact = false, customColor?: string, tipoVeiculo?: string) => {
+const createVeiculoIcon = (status: string, compact = false, customColor?: string, tipoVeiculo?: string, ignicao?: boolean | null) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
   const size = compact ? 18 : 30;
@@ -41,9 +41,13 @@ const createVeiculoIcon = (status: string, compact = false, customColor?: string
   const inner = svgPath
     ? `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>`
     : '';
+  const badgeSize = compact ? 8 : 12;
+  const ignBadge = typeof ignicao === 'boolean'
+    ? `<div title="${ignicao ? 'Ignição ligada' : 'Ignição desligada'}" style="position:absolute; top:-2px; right:-2px; width:${badgeSize}px; height:${badgeSize}px; border-radius:50%; border:1.5px solid white; background:${ignicao ? '#059669' : '#9ca3af'}; display:flex; align-items:center; justify-content:center; font-size:${badgeSize - 4}px; line-height:1; color:white;">${ignicao ? '&#9679;' : ''}</div>`
+    : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
-    html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">${inner}</div>`,
+    html: `<div style="position:relative; width: ${size}px; height: ${size}px;"><div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">${inner}</div>${ignBadge}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -245,9 +249,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
       if (existingMarker) {
         existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo));
+        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo, veiculo.ultima_posicao?.ignicao));
       } else {
-        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo) })
+        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo, veiculo.ultima_posicao?.ignicao) })
           .addTo(map)
           .bindPopup(`
             <div class="text-sm">
