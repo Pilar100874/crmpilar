@@ -49,12 +49,10 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
             {vel} km/h
           </div>
         )}
-        {typeof ign === 'boolean' && (
-          <div
-            className={`flex items-center gap-1 border-l pl-3 font-medium ${ign ? 'text-emerald-600' : 'text-muted-foreground'}`}
-            title="Sensor de ignição"
-          >
-            {ign ? '🔑 Ligado' : '⏻ Desligado'}
+        {(typeof ign === 'boolean' || typeof corte === 'boolean') && (
+          <div className="flex items-center gap-2 border-l pl-3">
+            <IgnicaoBadge ignicao={ign} compact />
+            <CorteCombustivelBadge corte={corte} compact />
           </div>
         )}
         <button
