@@ -225,18 +225,23 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
     case 0x13:
     case 0x23: {
       // Heartbeat / status — TerminalInformation no primeiro byte
+      // bit 0 (0x01) = oil/electricity connected (combustível liberado)
       // bit 1 (0x02) = ACC ligada (carro ligado)
       const imei = getImei();
       if (content.length >= 1 && imei) {
         const terminalInfo = content[0];
         const ignition = (terminalInfo & 0x02) !== 0;
+        const fuelCut = (terminalInfo & 0x01) === 0; // 0 = desconectado/cortado
         const prev = stateByImei.get(imei) || {};
         if (prev.ignition !== ignition) {
           console.log(`🔑 IGNIÇÃO ${ignition ? 'LIGADA' : 'DESLIGADA'} imei=${imei}`);
         }
-        stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString() });
-        // Envia status para o backend (sem coordenadas) para atualizar ignição
-        forwardPosition({ source: 'gt06-bridge-status', imei, ignition, timestamp: new Date().toISOString() });
+        if (prev.fuelCut !== fuelCut) {
+          console.log(`⛽ CORTE COMBUSTÍVEL ${fuelCut ? 'ATIVO' : 'LIBERADO'} imei=${imei}`);
+        }
+        stateByImei.set(imei, { ignition, ignitionAt: new Date().toISOString(), fuelCut, fuelCutAt: new Date().toISOString() });
+        // Envia status para o backend (sem coordenadas) para atualizar ignição e corte
+        forwardPosition({ source: 'gt06-bridge-status', imei, ignition, fuel_cut: fuelCut, timestamp: new Date().toISOString() });
       }
       console.log(`💓 Heartbeat imei=${imei || '?'}`);
       socket.write(buildResponse(protocol, serial));
