@@ -98,6 +98,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [empresasParaVincular, setEmpresasParaVincular] = useState<Array<{ id: string; nome_fantasia: string; nome: string; cnpj?: string }>>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
+  const [notasEmpresa, setNotasEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("nao_prospect");
