@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
@@ -146,11 +147,13 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
 
                 {veiculo.ultima_posicao && (
                   <div className="space-y-1 text-[10px] sm:text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Gauge className="h-3 w-3" />
                       {Math.round(veiculo.ultima_posicao.velocidade)} km/h
                       <IgnicaoBadge ignicao={veiculo.ultima_posicao.ignicao} className="ml-1" />
+                      <CorteCombustivelBadge corte={veiculo.ultima_posicao.corte_combustivel} />
                     </div>
+
                     <div className="flex items-center gap-2">
                       <Clock className="h-3 w-3" />
                       {formatDistanceToNow(new Date(veiculo.ultima_posicao.data_hora), {

@@ -28,6 +28,8 @@ import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { VehicleLegend } from '@/components/logistica/VehicleLegend';
+import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -556,9 +558,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                               <span className="font-medium text-sm">{v.placa}</span>
                             </div>
                             <div className="flex items-center gap-1">
+                              <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
+                              <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
                               <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
                                 {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                               </Badge>
+
                               <button
                                 onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
                                 title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
@@ -686,9 +691,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         <span className="font-medium text-sm">{v.placa}</span>
                       </div>
                       <div className="flex items-center gap-1">
+                        <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
+                        <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
                         <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
                           {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                         </Badge>
+
                         <button
                           onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
                           title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
