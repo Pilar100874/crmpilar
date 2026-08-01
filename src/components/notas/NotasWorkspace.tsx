@@ -351,5 +351,8 @@ export function NotasWorkspace({ entidadeTipo, entidadeId, entidadeNome, classNa
         itemName={excluirAlvo?.titulo}
       />
     </div>
+      </TabsContent>
+    </Tabs>
   );
+
 }
