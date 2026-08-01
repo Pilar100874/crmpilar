@@ -509,6 +509,10 @@ export function useChatInterno() {
 
     console.log('[ChatInterno] Configurando subscription de videochamada');
 
+    supabase.getChannels()
+      .filter((c) => c.topic === `realtime:videochamada-${usuarioAtualId}`)
+      .forEach((c) => supabase.removeChannel(c));
+
     const videoChamadaChannel = supabase
       .channel(`videochamada-${usuarioAtualId}`)
       .on('broadcast', { event: 'call-offer' }, async (payload) => {
