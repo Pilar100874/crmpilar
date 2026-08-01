@@ -3,6 +3,8 @@ import Layout from "@/components/Layout";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import KnowledgeBaseCRUD from "@/components/config/KnowledgeBaseCRUD";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NotasWorkspace } from "@/components/notas/NotasWorkspace";
 
 export default function BaseConhecimento() {
   const navigate = useNavigate();
