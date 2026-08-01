@@ -112,6 +112,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [notasContato, setNotasContato] = useState<Contact | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null); // Contato selecionado para visualização no painel lateral
   const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
