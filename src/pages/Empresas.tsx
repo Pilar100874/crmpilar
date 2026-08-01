@@ -2159,6 +2159,18 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 <Button
                                   size="sm"
                                   variant="outline"
+                                  className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNotasEmpresa(empresa);
+                                  }}
+                                  title="Notas da empresa"
+                                >
+                                  <NotebookPen className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
                                   className="h-8 px-2 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 border-destructive/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
