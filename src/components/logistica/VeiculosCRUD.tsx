@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -63,6 +64,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dispositivos, setDispositivos] = useState<DispositivoAprovado[]>([]);
   const [trackerModels, setTrackerModels] = useState<TrackerModelLite[]>([]);
   const [ultimasPosicoes, setUltimasPosicoes] = useState<Record<string, string>>({});
+  const [ignicaoPorVeiculo, setIgnicaoPorVeiculo] = useState<Record<string, boolean | null>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [comunicacaoFilter, setComunicacaoFilter] = useState<'todos' | 'online' | 'inativo' | 'sem_sinal' | 'offline'>('todos');
@@ -202,14 +204,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       if (!ids.length) return;
       const { data: pos } = await supabase
         .from('veiculo_posicoes')
-        .select('veiculo_id, data_hora')
+        .select('veiculo_id, data_hora, ignicao')
         .in('veiculo_id', ids)
         .order('data_hora', { ascending: false });
       const map: Record<string, string> = {};
+      const ign: Record<string, boolean | null> = {};
       (pos || []).forEach((p: any) => {
-        if (!map[p.veiculo_id]) map[p.veiculo_id] = p.data_hora;
+        if (!map[p.veiculo_id]) {
+          map[p.veiculo_id] = p.data_hora;
+          ign[p.veiculo_id] = typeof p.ignicao === 'boolean' ? p.ignicao : null;
+        }
       });
       setUltimasPosicoes(map);
+      setIgnicaoPorVeiculo(ign);
     } catch (e) {
       console.error('Error refreshing positions:', e);
     }
@@ -247,16 +254,22 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       if (ids.length) {
         const { data: pos } = await supabase
           .from('veiculo_posicoes')
-          .select('veiculo_id, data_hora')
+          .select('veiculo_id, data_hora, ignicao')
           .in('veiculo_id', ids)
           .order('data_hora', { ascending: false });
         const map: Record<string, string> = {};
+        const ign: Record<string, boolean | null> = {};
         (pos || []).forEach((p: any) => {
-          if (!map[p.veiculo_id]) map[p.veiculo_id] = p.data_hora;
+          if (!map[p.veiculo_id]) {
+            map[p.veiculo_id] = p.data_hora;
+            ign[p.veiculo_id] = typeof p.ignicao === 'boolean' ? p.ignicao : null;
+          }
         });
         setUltimasPosicoes(map);
+        setIgnicaoPorVeiculo(ign);
       } else {
         setUltimasPosicoes({});
+        setIgnicaoPorVeiculo({});
       }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -852,6 +865,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Grupo</TableHead>
               <TableHead>Rastreador</TableHead>
               <TableHead>Telefone (SIM)</TableHead>
+              <TableHead>Ignição</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[180px]">Ações</TableHead>
             </TableRow>
@@ -881,6 +895,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 </TableCell>
                 <TableCell className="font-mono text-xs">
                   {(veiculo as any).telefone_sms || <span className="text-muted-foreground">—</span>}
+                </TableCell>
+                <TableCell>
+                  <IgnicaoBadge ignicao={ignicaoPorVeiculo[veiculo.id]} />
                 </TableCell>
                 <TableCell>
                   <Badge variant={veiculo.ativo ? 'default' : 'secondary'}>
