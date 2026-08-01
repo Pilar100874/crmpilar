@@ -24,6 +24,8 @@ import Funil from "./pages/Funil";
 import Conteudos from "./pages/Conteudos";
 import Contatos from "./pages/Contatos";
 import Empresas from "./pages/Empresas";
+import Notas from "./pages/Notas";
+import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
 import VinculosEmpresas from "./pages/VinculosEmpresas";
 import VinculosContatos from "./pages/VinculosContatos";
