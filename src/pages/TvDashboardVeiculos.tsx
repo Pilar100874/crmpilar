@@ -488,25 +488,26 @@ export default function TvDashboardVeiculos() {
                           <>
                             <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
                             <span>{km}km</span>
-                            {typeof veiculo.ultima_posicao.ignicao === 'boolean' && (
-                              <span
-                                title={veiculo.ultima_posicao.ignicao ? 'Ignição ligada' : 'Ignição desligada'}
-                                className={`inline-flex items-center gap-0.5 px-1 rounded ${
-                                  veiculo.ultima_posicao.ignicao
-                                    ? 'bg-emerald-500/20 text-emerald-300'
-                                    : 'bg-white/10 text-white/50'
-                                }`}
-                              >
-                                {veiculo.ultima_posicao.ignicao ? <KeyRound className="h-3 w-3" /> : <Power className="h-3 w-3" />}
-                              </span>
-                            )}
-                            {typeof veiculo.ultima_posicao.corte_combustivel === 'boolean' && (
-                              <CorteCombustivelBadge
-                                corte={veiculo.ultima_posicao.corte_combustivel}
-                                compact
-                                className="bg-white/10 text-white/80"
-                              />
-                            )}
+                            <span
+                              title={
+                                typeof veiculo.ultima_posicao.ignicao === 'boolean'
+                                  ? veiculo.ultima_posicao.ignicao ? 'Ignição ligada' : 'Ignição desligada'
+                                  : 'Sem informação de ignição'
+                              }
+                              className={`inline-flex items-center gap-0.5 px-1 rounded ${
+                                veiculo.ultima_posicao.ignicao
+                                  ? 'bg-emerald-500/20 text-emerald-300'
+                                  : 'bg-white/10 text-white/50'
+                              }`}
+                            >
+                              {veiculo.ultima_posicao.ignicao ? <KeyRound className="h-3 w-3" /> : <Power className="h-3 w-3" />}
+                            </span>
+                            <CorteCombustivelBadge
+                              corte={veiculo.ultima_posicao.corte_combustivel}
+                              compact
+                              className="bg-white/10 text-white/80"
+                            />
+
                           </>
                         )}
                         <button

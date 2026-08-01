@@ -49,12 +49,11 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
             {vel} km/h
           </div>
         )}
-        {(typeof ign === 'boolean' || typeof corte === 'boolean') && (
-          <div className="flex items-center gap-2 border-l pl-3">
-            <IgnicaoBadge ignicao={ign} compact />
-            <CorteCombustivelBadge corte={corte} compact />
-          </div>
-        )}
+        <div className="flex items-center gap-2 border-l pl-3">
+          <IgnicaoBadge ignicao={ign} />
+          <CorteCombustivelBadge corte={corte} />
+        </div>
+
         <button
           onClick={onClose}
           className="ml-1 rounded-full hover:bg-accent p-1"
