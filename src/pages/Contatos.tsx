@@ -2372,6 +2372,18 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNotasContato(contact);
+                                  }}
+                                  title="Notas do contato"
+                                >
+                                  <NotebookPen className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="h-8 px-2 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 border-destructive/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
