@@ -30,8 +30,6 @@ import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { VehicleLegend } from '@/components/logistica/VehicleLegend';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
-import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
-import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
