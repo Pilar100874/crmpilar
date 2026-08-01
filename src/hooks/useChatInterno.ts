@@ -94,6 +94,9 @@ export function useChatInterno() {
     if (!estabelecimentoId) return;
 
     // Get user name from localStorage or fetch it
+    let cancelled = false;
+    let localChannel: any = null;
+
     const setupPresence = async () => {
       const { data: userData } = await supabase
         .from('usuarios')
@@ -101,9 +104,14 @@ export function useChatInterno() {
         .eq('id', usuarioAtualId)
         .single();
 
+      if (cancelled) return;
+
       const userName = userData?.nome || 'Usuário';
 
-      const channel = supabase.channel(`presence-chat-${estabelecimentoId}`)
+      const channel = supabase.channel(
+        `presence-chat-${estabelecimentoId}-${Math.random().toString(36).slice(2)}`,
+        { config: { presence: { key: usuarioAtualId } } }
+      )
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
           const users: OnlineUser[] = [];
@@ -132,14 +140,16 @@ export function useChatInterno() {
           }
         });
 
+      localChannel = channel;
       setPresenceChannel(channel);
     };
 
     setupPresence();
 
     return () => {
-      if (presenceChannel) {
-        supabase.removeChannel(presenceChannel);
+      cancelled = true;
+      if (localChannel) {
+        supabase.removeChannel(localChannel);
       }
     };
   }, [usuarioAtualId]);
