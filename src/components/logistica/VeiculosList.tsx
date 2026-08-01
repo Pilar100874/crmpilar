@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
+import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
@@ -148,18 +149,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                     <div className="flex items-center gap-2">
                       <Gauge className="h-3 w-3" />
                       {Math.round(veiculo.ultima_posicao.velocidade)} km/h
-                      {typeof veiculo.ultima_posicao.ignicao === 'boolean' && (
-                        <span
-                          className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                            veiculo.ultima_posicao.ignicao
-                              ? 'bg-emerald-500/15 text-emerald-600'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                          title="Sensor de ignição (carro ligado)"
-                        >
-                          {veiculo.ultima_posicao.ignicao ? '🔑 Ligado' : '⏻ Desligado'}
-                        </span>
-                      )}
+                      <IgnicaoBadge ignicao={veiculo.ultima_posicao.ignicao} className="ml-1" />
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-3 w-3" />
