@@ -17,6 +17,7 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
   const wa = telefone ? formatWhatsappNumber(telefone) : null;
   const vel = veiculo.ultima_posicao ? Math.round(veiculo.ultima_posicao.velocidade) : null;
   const ign = veiculo.ultima_posicao?.ignicao;
+  const corte = veiculo.ultima_posicao?.corte_combustivel;
 
   return (
     <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto">
