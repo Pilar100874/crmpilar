@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -165,37 +165,30 @@ export function useAvisosSistema() {
   };
 
   // Realtime subscription for avisos_sistema and avisos_lidos
+  const carregarRef = useRef(carregarAvisos);
+  useEffect(() => {
+    carregarRef.current = carregarAvisos;
+  }, [carregarAvisos]);
+
   useEffect(() => {
     const channel = supabase
-      .channel('avisos-sistema-realtime')
+      .channel(`avisos-sistema-realtime-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'avisos_sistema',
-        },
-        () => {
-          carregarAvisos();
-        }
+        { event: '*', schema: 'public', table: 'avisos_sistema' },
+        () => carregarRef.current()
       )
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'avisos_lidos',
-        },
-        () => {
-          carregarAvisos();
-        }
+        { event: '*', schema: 'public', table: 'avisos_lidos' },
+        () => carregarRef.current()
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [carregarAvisos]);
+  }, []);
 
   useEffect(() => {
     carregarAvisos();
