@@ -283,9 +283,9 @@ function handlePacket(protocol, content, serial, rawPacket, socket, setImei, get
       // Alarme (contém localização)
       const loc = parseLocation(content);
       const imei = getImei();
-      const ignition = stateByImei.get(imei)?.ignition;
+      const state = stateByImei.get(imei) || {};
       console.log(`🚨 Alarme imei=${imei}`);
-      if (loc) forwardPosition({ source: 'gt06-bridge', imei, alarm: true, protocol: '0x' + protocol.toString(16), ignition, ...loc });
+      if (loc) forwardPosition({ source: 'gt06-bridge', imei, alarm: true, protocol: '0x' + protocol.toString(16), ignition: state.ignition, fuel_cut: state.fuelCut, ...loc });
       socket.write(buildResponse(protocol, serial));
       break;
     }
