@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { useFullscreen } from '@/hooks/useFullscreen';
