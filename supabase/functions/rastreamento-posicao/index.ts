@@ -13,6 +13,7 @@ interface PosicaoPayload {
   direcao?: number;
   dataHora?: string;
   ignicao?: boolean;
+  corte_combustivel?: boolean;
   token?: string;
 }
 
