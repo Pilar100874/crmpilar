@@ -2,6 +2,8 @@ import React from 'react';
 import { X, Car, User, MessageCircle, Gauge } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
+import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
+import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 
 interface FocusLegendProps {
   veiculo?: VeiculoComStatus;
