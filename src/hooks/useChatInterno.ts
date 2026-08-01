@@ -94,6 +94,9 @@ export function useChatInterno() {
     if (!estabelecimentoId) return;
 
     // Get user name from localStorage or fetch it
+    let cancelled = false;
+    let localChannel: any = null;
+
     const setupPresence = async () => {
       const { data: userData } = await supabase
         .from('usuarios')
@@ -101,9 +104,18 @@ export function useChatInterno() {
         .eq('id', usuarioAtualId)
         .single();
 
+      if (cancelled) return;
+
       const userName = userData?.nome || 'Usuário';
 
-      const channel = supabase.channel(`presence-chat-${estabelecimentoId}`)
+      supabase.getChannels()
+        .filter((c) => c.topic === `realtime:presence-chat-${estabelecimentoId}`)
+        .forEach((c) => supabase.removeChannel(c));
+
+      const channel = supabase.channel(
+        `presence-chat-${estabelecimentoId}`,
+        { config: { presence: { key: usuarioAtualId } } }
+      )
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
           const users: OnlineUser[] = [];
@@ -132,14 +144,16 @@ export function useChatInterno() {
           }
         });
 
+      localChannel = channel;
       setPresenceChannel(channel);
     };
 
     setupPresence();
 
     return () => {
-      if (presenceChannel) {
-        supabase.removeChannel(presenceChannel);
+      cancelled = true;
+      if (localChannel) {
+        supabase.removeChannel(localChannel);
       }
     };
   }, [usuarioAtualId]);
@@ -323,7 +337,7 @@ export function useChatInterno() {
     if (!conversaAtual) return;
 
     const channel = supabase
-      .channel(`chat-interno-${conversaAtual.id}`)
+      .channel(`chat-interno-${conversaAtual.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -427,7 +441,7 @@ export function useChatInterno() {
     console.log('[ChatInterno] Configurando subscription global para:', usuarioAtualId);
 
     const globalChannel = supabase
-      .channel(`chat-interno-global-${usuarioAtualId}`)
+      .channel(`chat-interno-global-${usuarioAtualId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -494,6 +508,10 @@ export function useChatInterno() {
     }
 
     console.log('[ChatInterno] Configurando subscription de videochamada');
+
+    supabase.getChannels()
+      .filter((c) => c.topic === `realtime:videochamada-${usuarioAtualId}`)
+      .forEach((c) => supabase.removeChannel(c));
 
     const videoChamadaChannel = supabase
       .channel(`videochamada-${usuarioAtualId}`)
