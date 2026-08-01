@@ -42,10 +42,24 @@ export default function BaseConhecimento() {
         <div>
           <h1 className="text-3xl font-bold">Base de Conhecimento</h1>
           <p className="text-muted-foreground">
-            Gerencie artigos e categorias da base de conhecimento
+            Gerencie artigos, categorias e notas interligadas da base de conhecimento
           </p>
         </div>
-        <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />
+
+        <Tabs defaultValue="artigos" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="artigos">Artigos</TabsTrigger>
+            <TabsTrigger value="notas">Notas interligadas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="artigos">
+            <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />
+          </TabsContent>
+
+          <TabsContent value="notas">
+            <NotasWorkspace entidadeTipo="kb_artigo" />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
