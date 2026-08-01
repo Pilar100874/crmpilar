@@ -3279,6 +3279,17 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         fields={viewingVinculo?.fields || []}
       />
 
+      {notasContato && (
+        <NotasEntidadeDialog
+          open={!!notasContato}
+          onOpenChange={(o) => { if (!o) setNotasContato(null); }}
+          entidadeTipo="contato"
+          entidadeId={(notasContato as any).id}
+          entidadeNome={(notasContato as any).name || (notasContato as any).nome}
+        />
+      )}
+
+
     </div>
   );
 }
