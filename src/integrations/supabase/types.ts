@@ -22459,6 +22459,7 @@ export type Database = {
       }
       veiculo_posicoes: {
         Row: {
+          corte_combustivel: boolean | null
           created_at: string
           data_hora: string
           direcao: number | null
@@ -22470,6 +22471,7 @@ export type Database = {
           velocidade: number | null
         }
         Insert: {
+          corte_combustivel?: boolean | null
           created_at?: string
           data_hora?: string
           direcao?: number | null
@@ -22481,6 +22483,7 @@ export type Database = {
           velocidade?: number | null
         }
         Update: {
+          corte_combustivel?: boolean | null
           created_at?: string
           data_hora?: string
           direcao?: number | null

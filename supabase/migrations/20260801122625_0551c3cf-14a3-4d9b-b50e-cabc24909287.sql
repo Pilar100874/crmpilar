@@ -1,0 +1,1 @@
+ALTER TABLE public.veiculo_posicoes ADD COLUMN IF NOT EXISTS corte_combustivel boolean;
