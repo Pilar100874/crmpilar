@@ -333,7 +333,7 @@ export function useChatInterno() {
     if (!conversaAtual) return;
 
     const channel = supabase
-      .channel(`chat-interno-${conversaAtual.id}`)
+      .channel(`chat-interno-${conversaAtual.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -437,7 +437,7 @@ export function useChatInterno() {
     console.log('[ChatInterno] Configurando subscription global para:', usuarioAtualId);
 
     const globalChannel = supabase
-      .channel(`chat-interno-global-${usuarioAtualId}`)
+      .channel(`chat-interno-global-${usuarioAtualId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -506,7 +506,7 @@ export function useChatInterno() {
     console.log('[ChatInterno] Configurando subscription de videochamada');
 
     const videoChamadaChannel = supabase
-      .channel(`videochamada-${usuarioAtualId}`)
+      .channel(`videochamada-${usuarioAtualId}-${Math.random().toString(36).slice(2)}`)
       .on('broadcast', { event: 'call-offer' }, async (payload) => {
         console.log('[ChatInterno] Oferta de videochamada recebida:', payload);
         
