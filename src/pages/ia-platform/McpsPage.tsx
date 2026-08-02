@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { agentRunner, type McpProbeResult } from "@/lib/aip/runner";
 import { Pencil, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
