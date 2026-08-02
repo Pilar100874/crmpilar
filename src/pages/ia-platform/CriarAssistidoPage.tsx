@@ -165,16 +165,27 @@ const FREQUENCIAS = [
 const TITULOS: Record<PassoId, { titulo: string; ajuda: string }> = {
   tipo: { titulo: "O que você quer criar?", ajuda: "Escolha uma opção. Depois é só ir preenchendo." },
   basico: { titulo: "Conte o que precisa", ajuda: "Explique com suas palavras, sem termos técnicos." },
-  referencias: { titulo: "Imagens de referência", ajuda: "Envie do computador ou escolha da galeria. É opcional." },
-  conhecimento: { titulo: "Conhecimento", ajuda: "Instruções e materiais que o agente deve seguir." },
-  ferramentas: { titulo: "Ferramentas", ajuda: "O que o agente pode acessar para trabalhar." },
-  agenda: { titulo: "Quando deve rodar?", ajuda: "Escolha a frequência e o horário." },
+  referencias: {
+    titulo: "Imagens de referência",
+    ajuda:
+      "Exemplos visuais para o agente copiar o estilo (logo, cores, fotos que você gosta). É opcional.",
+  },
+  conhecimento: {
+    titulo: "Conhecimento",
+    ajuda: "O que o agente precisa saber: instruções, regras e materiais da sua empresa.",
+  },
+  ferramentas: {
+    titulo: "Ferramentas",
+    ajuda: "O que o agente pode fazer e a quais sistemas ele pode se conectar.",
+  },
+  agenda: { titulo: "Quando deve rodar?", ajuda: "Escolha a frequência e o horário em que ele trabalha sozinho." },
   execucao: {
     titulo: "Como deve executar?",
-    ajuda: "De uma vez só ou passo a passo, como no Claude Code.",
+    ajuda: "Tudo de uma vez ou dividido em etapas, para você acompanhar e corrigir no caminho.",
   },
   revisao: { titulo: "Revisão", ajuda: "Confira e crie. Você pode editar depois." },
 };
+
 
 interface EtapaExecucao {
   id: string;
