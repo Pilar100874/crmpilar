@@ -122,24 +122,6 @@ export default function ServidorMonitorPage() {
     };
   }, [auto, carregar]);
 
-  const executarUpdate = async (forcar: boolean) => {
-    setAtualizando(true);
-    try {
-      const r = await agentRunner.atualizar(forcar);
-      if (r?.ok) {
-        toast.success("Atualização disparada — o servidor vai reiniciar em instantes.");
-        setTimeout(() => void carregar(), 8000);
-      } else {
-        toast.error(r?.erro ?? "Não foi possível atualizar o servidor");
-      }
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setAtualizando(false);
-      setConfirmarUpdate(false);
-    }
-  };
-
   const limpar = async () => {
     try {
       const r = await agentRunner.limparRuns();
