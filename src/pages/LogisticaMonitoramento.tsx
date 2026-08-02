@@ -476,36 +476,41 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Card className="p-2 sm:p-3">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm">
             <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary" />
               <Car className="h-4 w-4 text-primary" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Total</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold">{stats.total}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums">{stats.total}</p>
           </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-green-500">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-green-500/20">
             <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
               <Activity className="h-4 w-4 text-green-500" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Movendo</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Movendo</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-green-600">{stats.movendo}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums text-green-600">{stats.movendo}</p>
           </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-amber-500">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-amber-500/20">
             <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
               <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Parado</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Parado</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.parado}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums text-amber-600">{stats.parado}</p>
           </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-gray-400">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-muted-foreground/20">
             <div className="flex items-center gap-2">
-              <WifiOff className="h-4 w-4 text-gray-400" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Offline</span>
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+              <WifiOff className="h-4 w-4 text-muted-foreground" />
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Offline</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-gray-500">{stats.offline}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums text-muted-foreground">{stats.offline}</p>
           </Card>
         </div>
       </div>
+
 
       {/* Content - Mobile optimized */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
