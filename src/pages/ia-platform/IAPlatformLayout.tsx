@@ -21,6 +21,7 @@ import {
   Server,
   Activity,
   Rocket,
+  Sparkles,
   BookMarked,
   SlidersHorizontal,
 
@@ -33,6 +34,7 @@ import { AppRole, ROLES_MONITOR, carregarAcessoAip, temAlgumaRole } from "@/lib/
 
 const AREAS = [
   { to: "", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "criar", label: "Criar com assistente", icon: Sparkles },
   { to: "wizard-inicial", label: "Wizard inicial", icon: Rocket },
   { to: "manual", label: "Manual de uso", icon: BookMarked },
   { to: "agentes", label: "Agentes", icon: Bot },
