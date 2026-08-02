@@ -20,6 +20,9 @@ import {
   Bell,
   Server,
   Activity,
+  Rocket,
+  BookMarked,
+  SlidersHorizontal,
 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +33,8 @@ import { AppRole, ROLES_MONITOR, carregarAcessoAip, temAlgumaRole } from "@/lib/
 
 const AREAS = [
   { to: "", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "wizard-inicial", label: "Wizard inicial", icon: Rocket },
+  { to: "manual", label: "Manual de uso", icon: BookMarked },
   { to: "agentes", label: "Agentes", icon: Bot },
   { to: "skills", label: "Skills", icon: BookOpen },
   { to: "tools", label: "Tools", icon: Wrench },
@@ -48,6 +53,7 @@ const AREAS = [
   { to: "notificacoes", label: "Notificações", icon: Bell },
   { to: "motor", label: "Motor de execução", icon: Server },
   { to: "monitor-servidor", label: "Monitor do servidor", icon: Activity, roles: ROLES_MONITOR },
+  { to: "config-servidor", label: "Config. do servidor", icon: SlidersHorizontal, roles: ROLES_MONITOR },
 
 ];
 

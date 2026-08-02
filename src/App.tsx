@@ -46,6 +46,9 @@ import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
 import AipRotinasPage from "./pages/ia-platform/RotinasPage";
 import AipMotorPage from "./pages/ia-platform/MotorPage";
 import AipServidorMonitorPage from "./pages/ia-platform/ServidorMonitorPage";
+import AipConfigServidorPage from "./pages/ia-platform/ConfigServidorPage";
+import AipWizardInicialPage from "./pages/ia-platform/WizardInicialPage";
+import AipManualPage from "./pages/ia-platform/ManualPage";
 import RequireAipRole from "./components/ia-platform/RequireAipRole";
 import { ROLES_MONITOR } from "./lib/aip/rbac";
 
@@ -422,6 +425,16 @@ const App = () => (
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
                 <Route path="rotinas" element={<AipRotinasPage />} />
                 <Route path="motor" element={<AipMotorPage />} />
+                <Route path="wizard-inicial" element={<AipWizardInicialPage />} />
+                <Route path="manual" element={<AipManualPage />} />
+                <Route
+                  path="config-servidor"
+                  element={
+                    <RequireAipRole roles={ROLES_MONITOR}>
+                      <AipConfigServidorPage />
+                    </RequireAipRole>
+                  }
+                />
                 <Route
                   path="monitor-servidor"
                   element={
