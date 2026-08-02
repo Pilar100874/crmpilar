@@ -12,9 +12,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Ban, Eye, RefreshCw } from "lucide-react";
+import { Ban, Eye, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { agentRunner } from "@/lib/aip/runner";
+import { executarWorkflow } from "@/lib/aip/execute";
 
 const CORES: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   concluida: "default",
@@ -31,6 +32,7 @@ export default function ExecucoesPage() {
   const [filtro, setFiltro] = useState("todos");
   const [detalhe, setDetalhe] = useState<AipExecution | null>(null);
   const [steps, setSteps] = useState<any[]>([]);
+  const [reexecutando, setReexecutando] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(refetch, 15000);
@@ -43,8 +45,35 @@ export default function ExecucoesPage() {
       .select("*")
       .eq("execution_id", detalhe.id)
       .order("ordem", { ascending: true })
+      .order("tentativa", { ascending: true })
       .then(({ data }: any) => setSteps(data ?? []));
-  }, [detalhe]);
+  }, [detalhe, reexecutando]);
+
+  /** Retry manual: reexecuta a execução a partir do bloco que falhou. */
+  const reexecutar = async (e: AipExecution, nodeId?: string) => {
+    setReexecutando(e.id);
+    let erroFinal: string | null = null;
+    try {
+      await executarWorkflow(
+        { executionId: e.id, retryNodeId: nodeId, origem: "retry" },
+        (ev) => {
+          if (ev.evento === "retry") {
+            toast.info(`Nova tentativa (${ev.tentativa}/${ev.tentativas_max}) em "${ev.titulo}"`);
+          }
+          if (ev.evento === "fim") {
+            if (ev.status === "erro") erroFinal = ev.erro ?? "Falha na reexecução";
+          }
+        },
+      );
+      if (erroFinal) toast.error(erroFinal);
+      else toast.success("Reexecução concluída");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setReexecutando(null);
+      refetch();
+    }
+  };
 
   const filtrados = useMemo(
     () =>
@@ -124,6 +153,21 @@ export default function ExecucoesPage() {
                       <Button size="sm" variant="outline" onClick={() => setDetalhe(e)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
+                      {["erro", "cancelada"].includes(e.status) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={reexecutando === e.id}
+                          title="Reexecutar do ponto do erro"
+                          onClick={() => reexecutar(e)}
+                        >
+                          {reexecutando === e.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      )}
                       {["executando", "pendente", "aguardando_aprovacao"].includes(e.status) && (
                         <Button size="sm" variant="outline" onClick={() => cancelar(e)}>
                           <Ban className="h-3.5 w-3.5 text-destructive" />
@@ -199,6 +243,11 @@ export default function ExecucoesPage() {
                               {s.ordem}. {s.titulo ?? s.node_id}
                             </span>
                             <div className="flex items-center gap-1">
+                              {Number(s.tentativas_max ?? 1) > 1 || Number(s.tentativa ?? 1) > 1 ? (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  tentativa {s.tentativa ?? 1}/{s.tentativas_max ?? 1}
+                                </Badge>
+                              ) : null}
                               {s.duracao_ms != null && (
                                 <Badge variant="outline" className="text-[10px]">{s.duracao_ms} ms</Badge>
                               )}
@@ -209,6 +258,22 @@ export default function ExecucoesPage() {
                           </div>
                           {s.tipo && <p className="text-[11px] text-muted-foreground">{s.tipo}</p>}
                           {s.logs && <p className="text-xs text-muted-foreground">{s.logs}</p>}
+                          {s.status === "erro" && detalhe && ["erro", "cancelada"].includes(detalhe.status) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              disabled={reexecutando === detalhe.id}
+                              onClick={() => reexecutar(detalhe, s.node_id)}
+                            >
+                              {reexecutando === detalhe.id ? (
+                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              ) : (
+                                <RotateCcw className="mr-1 h-3 w-3" />
+                              )}
+                              Reexecutar a partir desta etapa
+                            </Button>
+                          )}
                           {s.output && Object.keys(s.output).length > 0 && (
                             <pre className="max-h-32 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[11px]">
                               {JSON.stringify(s.output, null, 2)}
