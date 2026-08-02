@@ -420,6 +420,8 @@ const App = () => (
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
                 <Route path="rotinas" element={<AipRotinasPage />} />
                 <Route path="motor" element={<AipMotorPage />} />
+                <Route path="monitor-servidor" element={<AipServidorMonitorPage />} />
+
 
               </Route>
               <Route path="/base-conhecimento" element={<BaseConhecimento />} />
