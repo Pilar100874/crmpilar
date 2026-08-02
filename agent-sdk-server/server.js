@@ -275,7 +275,99 @@ app.post("/status", (req, res) => {
   res.json(resto);
 });
 
+/**
+ * Diagnóstico de servidores MCP.
+ * O navegador não consegue fazer esse handshake (CORS), então o runner faz a
+ * chamada JSON-RPC no servidor e devolve o status real + lista de ferramentas.
+ *
+ * Body: { endpoint, tipo?, cabecalhos?, timeout_ms? }
+ */
+app.post("/mcp/probe", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const { endpoint, cabecalhos, timeout_ms } = req.body || {};
+  if (!endpoint) return res.status(400).json({ ok: false, erro: "endpoint obrigatório" });
+
+  const iniciou = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Number(timeout_ms) || 10000);
+
+  const chamar = (metodo, params) =>
+    fetch(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        // Exigido pelo MCP Streamable HTTP — sem isso o servidor responde 406.
+        Accept: "application/json, text/event-stream",
+        ...(cabecalhos && typeof cabecalhos === "object" ? cabecalhos : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method: metodo, params }),
+    });
+
+  const extrair = (texto) => {
+    for (const linha of texto.split("\n")) {
+      const conteudo = linha.startsWith("data:") ? linha.slice(5).trim() : linha.trim();
+      if (!conteudo || conteudo === "[DONE]") continue;
+      try {
+        return JSON.parse(conteudo);
+      } catch {
+        /* próxima linha */
+      }
+    }
+    return null;
+  };
+
+  try {
+    const init = await chamar("initialize", {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "aip-runner", version: "1.0.0" },
+    });
+    const infoServidor = extrair(await init.text())?.result?.serverInfo ?? null;
+
+    const lista = await chamar("tools/list", {});
+    const corpo = await lista.text();
+    const parsed = extrair(corpo);
+    clearTimeout(timer);
+
+    const ferramentas = (parsed?.result?.tools ?? []).map((t) => ({
+      name: t.name,
+      description: t.description ?? "",
+    }));
+
+    if (!lista.ok || parsed?.error) {
+      return res.json({
+        ok: false,
+        status: "erro",
+        http: lista.status,
+        erro: parsed?.error?.message || `HTTP ${lista.status}`,
+        latencia_ms: Date.now() - iniciou,
+      });
+    }
+
+    res.json({
+      ok: true,
+      status: "conectado",
+      http: lista.status,
+      servidor: infoServidor,
+      ferramentas,
+      total_ferramentas: ferramentas.length,
+      latencia_ms: Date.now() - iniciou,
+      verificado_em: now(),
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    res.json({
+      ok: false,
+      status: "erro",
+      erro: e.name === "AbortError" ? "Tempo esgotado no handshake" : e.message,
+      latencia_ms: Date.now() - iniciou,
+    });
+  }
+});
+
 app.get("/", (_req, res) => res.send("AIP Agent SDK Server online"));
+
 
 const porta = process.env.PORT || 8080;
 app.listen(porta, () => console.log(`AIP Agent SDK Server ouvindo na porta ${porta}`));

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { agentRunner, type McpProbeResult } from "@/lib/aip/runner";
 import { Pencil, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ export default function McpsPage() {
   const [form, setForm] = useState<Partial<AipMcp>>(vazio);
   const [excluir, setExcluir] = useState<AipMcp | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
+  const [testandoTodos, setTestandoTodos] = useState(false);
 
   const filtrados = useMemo(
     () => items.filter((m) => `${m.nome} ${m.endpoint}`.toLowerCase().includes(busca.toLowerCase())),
@@ -52,41 +54,84 @@ export default function McpsPage() {
     if (ok) setAberto(false);
   };
 
-  const testarConexao = async (m: AipMcp) => {
+  /** Handshake direto do navegador (fallback quando não há runner remoto). */
+  const probeDireto = async (endpoint: string) => {
+    const iniciou = Date.now();
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    });
+    const texto = await res.text();
+    let ferramentas: Array<{ name: string; description?: string }> = [];
+    try {
+      const json = JSON.parse(texto.replace(/^data:\s*/gm, "").trim().split("\n")[0]);
+      ferramentas = json?.result?.tools ?? [];
+    } catch {
+      /* resposta não JSON */
+    }
+    return {
+      ok: res.ok,
+      status: res.ok ? "conectado" : "erro",
+      http: res.status,
+      erro: res.ok ? undefined : `HTTP ${res.status}`,
+      ferramentas,
+      latencia_ms: Date.now() - iniciou,
+    } as McpProbeResult;
+  };
+
+  const testarConexao = async (m: AipMcp, silencioso = false) => {
     setTestando(m.id);
     try {
-      const res = await fetch(m.endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json, text/event-stream",
-        },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
-      });
-      const texto = await res.text();
-      let ferramentas: Array<{ name: string; description?: string }> = [];
+      let r: McpProbeResult;
+      let via = "runner";
       try {
-        const json = JSON.parse(texto.replace(/^data:\s*/gm, "").trim().split("\n")[0]);
-        ferramentas = json?.result?.tools ?? [];
+        r = await agentRunner.mcpProbe(m.endpoint);
+        // Proxy sem AIP_RUNNER_URL responde simulado: cai para o handshake local.
+        if (r?.simulado || r?.status === undefined) throw new Error("runner indisponível");
       } catch {
-        /* resposta não JSON */
+        via = "navegador";
+        r = await probeDireto(m.endpoint);
       }
+
       await update(m.id, {
-        status: res.ok ? "conectado" : "erro",
-        ferramentas,
+        status: r.ok ? "conectado" : "erro",
+        ferramentas: r.ferramentas ?? [],
         ultimo_handshake: new Date().toISOString(),
-        ultimo_erro: res.ok ? null : `HTTP ${res.status}`,
+        ultimo_erro: r.ok ? null : (r.erro ?? "Falha no handshake"),
       });
-      toast[res.ok ? "success" : "error"](
-        res.ok ? `Conectado — ${ferramentas.length} ferramenta(s)` : `Falha HTTP ${res.status}`,
-      );
+
+      if (!silencioso) {
+        toast[r.ok ? "success" : "error"](
+          r.ok
+            ? `${m.nome}: conectado — ${r.ferramentas?.length ?? 0} ferramenta(s) em ${r.latencia_ms ?? 0}ms (via ${via})`
+            : `${m.nome}: ${r.erro ?? "falha na conexão"}`,
+        );
+      }
+      return r.ok;
     } catch (e: any) {
       await update(m.id, { status: "erro", ultimo_erro: e.message });
-      toast.error(`Erro de conexão: ${e.message}`);
+      if (!silencioso) toast.error(`Erro de conexão: ${e.message}`);
+      return false;
     } finally {
       setTestando(null);
     }
   };
+
+  const testarTodos = async () => {
+    if (!filtrados.length) return;
+    setTestandoTodos(true);
+    let ok = 0;
+    for (const m of filtrados) {
+      if (await testarConexao(m, true)) ok++;
+    }
+    setTestandoTodos(false);
+    toast.success(`${ok} de ${filtrados.length} servidor(es) MCP conectado(s)`);
+  };
+
 
   return (
     <>
@@ -103,6 +148,22 @@ export default function McpsPage() {
         vazio={filtrados.length === 0}
         vazioTexto="Nenhum servidor MCP cadastrado."
       >
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            O teste usa o servidor de execução (Claude Agent SDK) para fazer o handshake real; sem runner
+            configurado, o navegador tenta direto.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={testandoTodos || !filtrados.length}
+            onClick={testarTodos}
+          >
+            <RefreshCw className={`mr-1 h-3.5 w-3.5 ${testandoTodos ? "animate-spin" : ""}`} />
+            Testar todos
+          </Button>
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtrados.map((m) => (
             <Card key={m.id} className="transition-all hover:shadow-md">
