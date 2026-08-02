@@ -166,19 +166,28 @@ export default function SkillsPage() {
         vazio={filtrados.length === 0}
         vazioTexto="Nenhuma skill cadastrada."
         acoes={
-          <Button variant="outline" asChild disabled={importando}>
-            <label className="cursor-pointer">
-              <Upload className="mr-2 h-4 w-4" />
-              Importar .md (vários)
-              <input
-                type="file"
-                multiple
-                accept=".md,.markdown,.txt,text/markdown,text/plain"
-                className="hidden"
-                onChange={importar}
-              />
-            </label>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild disabled={importando}>
+              <label className="cursor-pointer">
+                <FolderArchive className="mr-2 h-4 w-4" />
+                Importar pasta (.zip)
+                <input type="file" accept=".zip,application/zip" className="hidden" onChange={importarZip} />
+              </label>
+            </Button>
+            <Button variant="outline" asChild disabled={importando}>
+              <label className="cursor-pointer">
+                <Upload className="mr-2 h-4 w-4" />
+                Importar .md (vários)
+                <input
+                  type="file"
+                  multiple
+                  accept=".md,.markdown,.txt,text/markdown,text/plain"
+                  className="hidden"
+                  onChange={importar}
+                />
+              </label>
+            </Button>
+          </div>
         }
       >
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
