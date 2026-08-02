@@ -409,6 +409,8 @@ const App = () => (
                 <Route path="playground" element={<PlaygroundPage />} />
                 <Route path="historico" element={<HistoricoPage />} />
                 <Route path="seguranca" element={<SegurancaPage />} />
+                <Route path="notificacoes" element={<AipNotificacoesPage />} />
+
               </Route>
               <Route path="/base-conhecimento" element={<BaseConhecimento />} />
               <Route path="/todos" element={<Todos />} />
