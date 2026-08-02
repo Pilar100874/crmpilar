@@ -138,6 +138,24 @@ export default function PlaygroundPage() {
       <Card>
         <CardContent className="space-y-4 p-4">
           <div className="space-y-2">
+            <Label>Motor de execução</Label>
+            <Select value={motor} onValueChange={(v) => trocarMotor(v as MotorExecucao)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MOTORES.map((m) => (
+                  <SelectItem key={m.valor} value={m.valor}>
+                    {m.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {MOTORES.find((m) => m.valor === motor)?.descricao}
+            </p>
+          </div>
+          <div className="space-y-2">
             <Label>Agente</Label>
             <Select value={agentId} onValueChange={setAgentId}>
               <SelectTrigger>
