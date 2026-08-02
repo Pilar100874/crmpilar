@@ -23,9 +23,12 @@ import {
   CalendarClock,
   Check,
   CheckCircle2,
+  Clapperboard,
   FileText,
   Image as ImageIcon,
   Info,
+  LayoutTemplate,
+
   Loader2,
   MessageSquare,
   Sparkle,
@@ -124,7 +127,32 @@ const TIPOS: TipoCriacao[] = [
     dica: "Escolha as ferramentas de busca/navegação no passo de ferramentas.",
     criaRotina: true,
   },
+  {
+    id: "landpage",
+    titulo: "Landing page",
+    subtitulo: "Página de captura ou de vendas pronta para publicar.",
+    icone: LayoutTemplate,
+    passos: ["tipo", "basico", "referencias", "conhecimento", "ferramentas", "execucao", "revisao"],
+    modelo: "claude-sonnet-4-5",
+    exemploObjetivo:
+      "Criar uma landing page de captura para o lançamento do produto, com headline, benefícios, prova social, FAQ e formulário de contato.",
+    dica: "Envie logo, cores da marca e prints de páginas que você gosta como referência. Descreva o público e a oferta.",
+    criaRotina: false,
+  },
+  {
+    id: "video_longo",
+    titulo: "Vídeos longos",
+    subtitulo: "Vídeos de 1 a 10 minutos, com roteiro, narração e cenas.",
+    icone: Clapperboard,
+    passos: ["tipo", "basico", "referencias", "conhecimento", "ferramentas", "execucao", "revisao"],
+    modelo: "claude-sonnet-4-5",
+    exemploObjetivo:
+      "Produzir um vídeo de 3 minutos apresentando a empresa: roteiro em blocos, narração, legendas e trilha, no formato 16:9.",
+    dica: "Vídeos longos são montados por etapas (roteiro → cenas → narração → montagem). Ative o modo por etapas na execução.",
+    criaRotina: false,
+  },
 ];
+
 
 const FREQUENCIAS = [
   { id: "diaria", rotulo: "Todo dia", cron: (h: string, m: string) => `${m} ${h} * * *` },
