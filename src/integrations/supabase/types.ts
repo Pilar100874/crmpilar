@@ -1544,6 +1544,9 @@ export type Database = {
           usuario_id: string | null
           wizard_id: string | null
           workflow_id: string | null
+          workflow_snapshot: Json | null
+          workflow_versao: number | null
+          workflow_version_id: string | null
         }
         Insert: {
           agent_id?: string | null
@@ -1579,6 +1582,9 @@ export type Database = {
           usuario_id?: string | null
           wizard_id?: string | null
           workflow_id?: string | null
+          workflow_snapshot?: Json | null
+          workflow_versao?: number | null
+          workflow_version_id?: string | null
         }
         Update: {
           agent_id?: string | null
@@ -1614,6 +1620,9 @@ export type Database = {
           usuario_id?: string | null
           wizard_id?: string | null
           workflow_id?: string | null
+          workflow_snapshot?: Json | null
+          workflow_versao?: number | null
+          workflow_version_id?: string | null
         }
         Relationships: [
           {
@@ -1635,6 +1644,13 @@ export type Database = {
             columns: ["workflow_id"]
             isOneToOne: false
             referencedRelation: "aip_workflows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aip_executions_workflow_version_id_fkey"
+            columns: ["workflow_version_id"]
+            isOneToOne: false
+            referencedRelation: "aip_workflow_versions"
             referencedColumns: ["id"]
           },
         ]
