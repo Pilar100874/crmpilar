@@ -195,7 +195,7 @@ const COMUNS: Exemplo[] = [
     objetivo: "Coletar dados em portais que não têm API.",
     passos: [
       "Cadastre as credenciais do portal em Credenciais.",
-      "Use o motor remoto — navegação costuma demorar.",
+      "Navegação costuma demorar: acompanhe pelo monitor do servidor.",
       "Prefira rodar de madrugada.",
     ],
     prompt:
@@ -358,7 +358,7 @@ export default function ManualPage() {
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>• Comece sempre com dry-run antes de ativar uma rotina.</p>
           <p>• Use aprovação humana em qualquer etapa que envie mensagem ou altere dados.</p>
-          <p>• Tarefas longas (vídeo, Playwright) devem rodar no motor remoto.</p>
+          <p>• Tarefas longas (vídeo, Playwright) rodam no servidor Claude Agent SDK.</p>
           <p>• Guarde chaves em Credenciais ou Configurações do servidor, nunca no texto do prompt.</p>
           <p>• Revise o histórico de execuções para ajustar prompts que erram com frequência.</p>
         </CardContent>
