@@ -25,6 +25,10 @@ app.use(express.json({ limit: "25mb" }));
 
 const RUNNER_KEY = process.env.RUNNER_KEY || "";
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+const DEPLOY_HOOK = process.env.RAILWAY_DEPLOY_HOOK_URL || "";
+const VERSAO = process.env.APP_VERSION || "1.1.0";
+const INICIADO_EM = new Date().toISOString();
+
 const supabase =
   process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -196,11 +200,16 @@ app.post("/health", (req, res) => {
   if (!autenticar(req, res)) return;
   res.json({
     ok: true,
-    versao: "1.0.0",
+    versao: VERSAO,
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+    uptime_s: Math.round(process.uptime()),
+    iniciado_em: INICIADO_EM,
     anthropic: Boolean(ANTHROPIC_API_KEY),
     supabase: Boolean(supabase),
+    atualizacao_disponivel: Boolean(DEPLOY_HOOK),
     execucoes_ativas: [...runs.values()].filter((r) => r.status === "executando").length,
   });
+
 });
 
 app.post("/start", (req, res) => {
@@ -366,8 +375,101 @@ app.post("/mcp/probe", async (req, res) => {
   }
 });
 
-app.get("/", (_req, res) => res.send("AIP Agent SDK Server online"));
+/**
+ * Painel de monitoramento: estado do processo + execuções conhecidas.
+ * Body opcional: { limite? }
+ */
+app.post("/runs", (req, res) => {
+  if (!autenticar(req, res)) return;
+  const limite = Number(req.body?.limite) || 50;
+  const lista = [...runs.values()]
+    .map(({ listeners, ...r }) => ({
+      ...r,
+      ouvintes: listeners.size,
+      caracteres: r.texto?.length ?? 0,
+      texto: undefined,
+      previa: (r.texto ?? "").slice(-400),
+      duracao_ms:
+        new Date(r.finalizado_em ?? now()).getTime() - new Date(r.criado_em).getTime(),
+    }))
+    .sort((a, b) => (a.criado_em < b.criado_em ? 1 : -1))
+    .slice(0, limite);
 
+  const contagem = lista.reduce((acc, r) => {
+    acc[r.status] = (acc[r.status] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const mem = process.memoryUsage();
+  res.json({
+    ok: true,
+    servidor: {
+      versao: VERSAO,
+      commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+      ambiente: process.env.RAILWAY_ENVIRONMENT_NAME ?? process.env.NODE_ENV ?? "producao",
+      node: process.version,
+      uptime_s: Math.round(process.uptime()),
+      iniciado_em: INICIADO_EM,
+      memoria_mb: Math.round(mem.rss / 1048576),
+      heap_mb: Math.round(mem.heapUsed / 1048576),
+      anthropic: Boolean(ANTHROPIC_API_KEY),
+      supabase: Boolean(supabase),
+      atualizacao_disponivel: Boolean(DEPLOY_HOOK),
+    },
+    contagem,
+    total: runs.size,
+    execucoes: lista,
+    verificado_em: now(),
+  });
+});
+
+/** Limpa execuções finalizadas da memória. */
+app.post("/runs/limpar", (req, res) => {
+  if (!autenticar(req, res)) return;
+  let removidas = 0;
+  for (const [id, r] of runs) {
+    if (["concluida", "erro", "cancelada"].includes(r.status) && r.listeners.size === 0) {
+      runs.delete(id);
+      removidas++;
+    }
+  }
+  res.json({ ok: true, removidas, restantes: runs.size });
+});
+
+/**
+ * Atualização do servidor: dispara o Deploy Hook do Railway (redeploy da
+ * última versão do repositório). Configure RAILWAY_DEPLOY_HOOK_URL no Railway.
+ */
+app.post("/update", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  if (!DEPLOY_HOOK) {
+    return res.json({
+      ok: false,
+      erro: "RAILWAY_DEPLOY_HOOK_URL não configurada no servidor",
+    });
+  }
+  const ativas = [...runs.values()].filter((r) => r.status === "executando").length;
+  if (ativas > 0 && !req.body?.forcar) {
+    return res.json({ ok: false, erro: `${ativas} execução(ões) em andamento`, ativas });
+  }
+  try {
+    const r = await fetch(DEPLOY_HOOK, { method: "POST" });
+    const texto = await r.text();
+    res.json({
+      ok: r.ok,
+      http: r.status,
+      resposta: texto.slice(0, 500),
+      versao_atual: VERSAO,
+      disparado_em: now(),
+      ...(r.ok ? {} : { erro: `HTTP ${r.status}` }),
+    });
+  } catch (e) {
+    res.json({ ok: false, erro: e.message });
+  }
+});
+
+app.get("/", (_req, res) => res.send("AIP Agent SDK Server online"));
 
 const porta = process.env.PORT || 8080;
 app.listen(porta, () => console.log(`AIP Agent SDK Server ouvindo na porta ${porta}`));
+

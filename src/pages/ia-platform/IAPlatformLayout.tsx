@@ -19,6 +19,8 @@ import {
   Lock,
   Bell,
   Server,
+  Activity,
+
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -43,6 +45,8 @@ const AREAS = [
   { to: "rotinas", label: "Rotinas", icon: CalendarClock },
   { to: "notificacoes", label: "Notificações", icon: Bell },
   { to: "motor", label: "Motor de execução", icon: Server },
+  { to: "monitor-servidor", label: "Monitor do servidor", icon: Activity },
+
 ];
 
 export default function IAPlatformLayout() {
