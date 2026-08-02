@@ -286,8 +286,10 @@ Deno.serve(async (req) => {
             .update({
               status: "executando",
               erro: null,
+              finalizado_em: null,
               retomado_em: new Date().toISOString(),
               retomado_por: userData.user.id,
+              retentativas: Number(execAtual.retentativas ?? 0) + 1,
             })
             .eq("id", execAtual.id);
         }
@@ -308,6 +310,15 @@ Deno.serve(async (req) => {
           last: ctxSalvo.last ?? null,
         };
         let indice = Number(ctxSalvo.indice ?? 0);
+
+        // Retry manual a partir de um bloco específico (ponto do erro)
+        const retryNodeId: string | undefined = body.retry_node_id ?? execAtual?.retomado_de_node_id ?? undefined;
+        if (retomar && retryNodeId) {
+          const pos = ordem.findIndex((n: any) => n.id === retryNodeId);
+          if (pos >= 0) indice = pos;
+        }
+        if (indice >= ordem.length) indice = Math.max(0, ordem.length - 1);
+
         let tokensIn = Number(execAtual.tokens_input ?? 0);
         let tokensOut = Number(execAtual.tokens_output ?? 0);
         let ultimoTexto: string = execAtual.resposta ?? "";
@@ -317,7 +328,7 @@ Deno.serve(async (req) => {
           const node = ordem[indice];
           const titulo = String(node.data?.label ?? node.data?.nome ?? node.id);
           const tipo = `${node.data?.categoria ?? "bloco"}/${node.data?.slug ?? "custom"}`;
-          const inicioEtapa = Date.now();
+
 
           // 3a. Retomada automática: consome a decisão já registrada -------
           if (String(node.data?.slug ?? "") === "human-approval") {
