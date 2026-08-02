@@ -168,6 +168,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
