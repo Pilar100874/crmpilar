@@ -513,7 +513,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
 
       {/* Content - Mobile optimized */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden relative gap-2 p-2">
+
         {/* Mobile/Tablet floating buttons */}
         <div className="lg:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
           <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
