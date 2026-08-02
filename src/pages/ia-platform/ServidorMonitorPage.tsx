@@ -344,28 +344,6 @@ export default function ServidorMonitorPage() {
         </>
       )}
 
-      <AlertDialog open={confirmarUpdate} onOpenChange={setConfirmarUpdate}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Atualizar o servidor de execução?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Isso dispara um novo deploy no Railway com a última versão do código. O servidor
-              reinicia e execuções em andamento são perdidas.
-              {ativas > 0 && (
-                <strong className="mt-2 block text-destructive">
-                  {ativas} execução(ões) rodando agora.
-                </strong>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void executarUpdate(ativas > 0)}>
-              {ativas > 0 ? "Atualizar mesmo assim" : "Atualizar agora"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
