@@ -566,7 +566,11 @@ export default function RotinasPage() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button variant="secondary" onClick={() => form && testarDryRun(form)}>
+              <TestTube2 className="mr-1 h-4 w-4" /> Testar (dry-run)
+            </Button>
+            <div className="flex gap-2">
             <Button variant="outline" onClick={() => setForm(null)}>
               Cancelar
             </Button>
