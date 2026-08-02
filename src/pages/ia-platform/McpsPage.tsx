@@ -18,8 +18,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { agentRunner, type McpProbeResult } from "@/lib/aip/runner";
-import { Pencil, Plug, RefreshCw, Trash2 } from "lucide-react";
+import { CATALOGO_MCPS, type McpPreset } from "@/lib/aip/catalogIntegracoes";
+import { Pencil, Plug, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
 
 const vazio: Partial<AipMcp> = {
   nome: "",
@@ -41,6 +43,21 @@ export default function McpsPage() {
   const [excluir, setExcluir] = useState<AipMcp | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
   const [testandoTodos, setTestandoTodos] = useState(false);
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
+
+  const usarPreset = (p: McpPreset) => {
+    setEditando(null);
+    setForm({
+      ...vazio,
+      nome: p.nome,
+      endpoint: p.endpoint,
+      tipo: p.tipo,
+      descricao: p.descricao,
+    });
+    setCatalogoAberto(false);
+    setAberto(true);
+  };
+
 
   const filtrados = useMemo(
     () => items.filter((m) => `${m.nome} ${m.endpoint}`.toLowerCase().includes(busca.toLowerCase())),
@@ -146,13 +163,19 @@ export default function McpsPage() {
         novoLabel="Novo MCP"
         loading={loading}
         vazio={filtrados.length === 0}
-        vazioTexto="Nenhum servidor MCP cadastrado."
+        vazioTexto="Nenhum servidor MCP cadastrado. Escolha um do catálogo pronto."
+        acoes={
+          <Button size="sm" variant="outline" onClick={() => setCatalogoAberto(true)}>
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> Catálogo pronto
+          </Button>
+        }
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            O teste usa o servidor de execução (Claude Agent SDK) para fazer o handshake real; sem runner
-            configurado, o navegador tenta direto.
+          <p className="max-w-2xl text-xs text-muted-foreground">
+            MCP é um “plug” que dá ao agente acesso a um sistema inteiro (Notion, GitHub, o próprio Pilar...).
+            Escolha no catálogo, salve e clique em <strong>Testar</strong> para ver as ferramentas disponíveis.
           </p>
+
           <Button
             size="sm"
             variant="outline"
@@ -302,6 +325,39 @@ export default function McpsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={catalogoAberto} onOpenChange={setCatalogoAberto}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Catálogo de servidores MCP
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {CATALOGO_MCPS.map((p) => (
+              <Card key={p.slug} className="transition-all hover:shadow-md">
+                <CardContent className="space-y-2 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{p.icone}</span>
+                    <p className="truncate font-medium">{p.nome}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{p.paraQue}</p>
+                  {p.precisaCredencial && (
+                    <Badge variant="outline" className="text-[10px]">
+                      Pede login/credencial
+                    </Badge>
+                  )}
+                  <Button size="sm" className="w-full" onClick={() => usarPreset(p)}>
+                    Adicionar
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
 
       <DeleteConfirmDialog
         open={!!excluir}

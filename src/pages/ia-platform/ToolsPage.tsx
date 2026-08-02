@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Pencil, PlayCircle, Trash2, Wrench } from "lucide-react";
+import { GRUPOS_TOOLS, type ToolPreset } from "@/lib/aip/catalogIntegracoes";
+import { ChevronDown, ChevronUp, Pencil, PlayCircle, Sparkles, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
+
 
 const vazio: Partial<AipTool> = {
   nome: "",
@@ -45,6 +47,27 @@ export default function ToolsPage() {
   const [form, setForm] = useState<Partial<AipTool>>(vazio);
   const [excluir, setExcluir] = useState<AipTool | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
+  const [avancado, setAvancado] = useState(false);
+
+  const usarPreset = (p: ToolPreset) => {
+    setEditando(null);
+    setForm({
+      ...vazio,
+      nome: p.nome,
+      categoria: p.categoria,
+      descricao: p.descricao,
+      tipo: p.tipo,
+      endpoint: p.endpoint,
+      metodo: p.metodo,
+      credencial_ref: p.credencial_ref ?? "",
+      input_schema: p.input_schema ?? {},
+    });
+    setCatalogoAberto(false);
+    setAvancado(false);
+    setAberto(true);
+  };
+
 
   const filtrados = useMemo(
     () =>
@@ -98,8 +121,18 @@ export default function ToolsPage() {
         novoLabel="Nova tool"
         loading={loading}
         vazio={filtrados.length === 0}
-        vazioTexto="Nenhuma tool cadastrada."
+        vazioTexto="Nenhuma tool cadastrada. Comece pelo catálogo pronto."
+        acoes={
+          <Button size="sm" variant="outline" onClick={() => setCatalogoAberto(true)}>
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> Catálogo pronto
+          </Button>
+        }
       >
+        <p className="mb-3 text-xs text-muted-foreground">
+          Tool é uma ação que o agente pode executar (enviar WhatsApp, consultar CNPJ, gerar imagem...).
+          Use o <strong>catálogo pronto</strong> para adicionar em 1 clique — depois é só trocar a URL e a chave.
+        </p>
+
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtrados.map((t) => (
             <Card key={t.id} className="transition-all hover:shadow-md">
@@ -222,51 +255,67 @@ export default function ToolsPage() {
                 onChange={(e) => setForm({ ...form, descricao: e.target.value })}
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Input schema (JSON)</Label>
-                <Textarea
-                  rows={6}
-                  className="font-mono text-xs"
-                  defaultValue={JSON.stringify(form.input_schema ?? {}, null, 2)}
-                  onChange={(e) => parseJson(e.target.value, "input_schema")}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Output schema (JSON)</Label>
-                <Textarea
-                  rows={6}
-                  className="font-mono text-xs"
-                  defaultValue={JSON.stringify(form.output_schema ?? {}, null, 2)}
-                  onChange={(e) => parseJson(e.target.value, "output_schema")}
-                />
-              </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full justify-center"
+              onClick={() => setAvancado((v) => !v)}
+            >
+              {avancado ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}
+              {avancado ? "Ocultar opções avançadas" : "Mostrar opções avançadas (JSON, timeout)"}
+            </Button>
+            {avancado && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Input schema (JSON)</Label>
+                    <Textarea
+                      rows={6}
+                      className="font-mono text-xs"
+                      defaultValue={JSON.stringify(form.input_schema ?? {}, null, 2)}
+                      onChange={(e) => parseJson(e.target.value, "input_schema")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Output schema (JSON)</Label>
+                    <Textarea
+                      rows={6}
+                      className="font-mono text-xs"
+                      defaultValue={JSON.stringify(form.output_schema ?? {}, null, 2)}
+                      onChange={(e) => parseJson(e.target.value, "output_schema")}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Timeout (s)</Label>
+                    <Input
+                      type="number"
+                      value={form.timeout_seg ?? 30}
+                      onChange={(e) => setForm({ ...form, timeout_seg: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Retentativas</Label>
+                    <Input
+                      type="number"
+                      value={form.retry ?? 1}
+                      onChange={(e) => setForm({ ...form, retry: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+            <div className="space-y-2">
+              <Label>Credencial (nome do secret)</Label>
+              <Input
+                value={form.credencial_ref ?? ""}
+                onChange={(e) => setForm({ ...form, credencial_ref: e.target.value })}
+                placeholder="Ex.: RESEND_API_KEY (a chave fica no Cofre de credenciais)"
+              />
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Credencial (nome do secret)</Label>
-                <Input
-                  value={form.credencial_ref ?? ""}
-                  onChange={(e) => setForm({ ...form, credencial_ref: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Timeout (s)</Label>
-                <Input
-                  type="number"
-                  value={form.timeout_seg ?? 30}
-                  onChange={(e) => setForm({ ...form, timeout_seg: Number(e.target.value) })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Retentativas</Label>
-                <Input
-                  type="number"
-                  value={form.retry ?? 1}
-                  onChange={(e) => setForm({ ...form, retry: Number(e.target.value) })}
-                />
-              </div>
-            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAberto(false)}>
@@ -276,6 +325,46 @@ export default function ToolsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={catalogoAberto} onOpenChange={setCatalogoAberto}>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Catálogo de tools prontas
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Escolha o que o agente deve saber fazer. Nós já preenchemos o formulário — você só ajusta a URL e a chave.
+          </p>
+          <div className="space-y-6">
+            {GRUPOS_TOOLS.map((g) => (
+              <section key={g.slug} className="space-y-3">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                  <span>{g.icone}</span> {g.nome}
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {g.itens.map((p) => (
+                    <Card key={p.slug} className="transition-all hover:shadow-md">
+                      <CardContent className="space-y-2 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{p.icone}</span>
+                          <p className="truncate font-medium">{p.nome}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{p.paraQue}</p>
+                        <Button size="sm" className="w-full" onClick={() => usarPreset(p)}>
+                          Adicionar
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
 
       <DeleteConfirmDialog
         open={!!excluir}
