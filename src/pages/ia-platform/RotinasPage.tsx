@@ -323,6 +323,14 @@ export default function RotinasPage() {
                       <Play className="h-3.5 w-3.5" />
                     )}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    title="Testar (dry-run)"
+                    onClick={() => testarDryRun(r)}
+                  >
+                    <TestTube2 className="h-3.5 w-3.5" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => abrirHistorico(r)}>
                     <History className="h-3.5 w-3.5" />
                   </Button>
