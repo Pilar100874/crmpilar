@@ -88,8 +88,6 @@ export default function ServidorMonitorPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [auto, setAuto] = useState(true);
-  const [atualizando, setAtualizando] = useState(false);
-  const [confirmarUpdate, setConfirmarUpdate] = useState(false);
   const [selecionada, setSelecionada] = useState<RunResumo | null>(null);
   const timer = useRef<number | null>(null);
 
