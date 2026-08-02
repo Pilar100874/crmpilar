@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Dependências úteis para Playwright / Remotion (opcional, comente se não usar)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates fonts-liberation ffmpeg git \
+    ca-certificates fonts-liberation ffmpeg jq curl python3 bash git \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json ./
