@@ -943,6 +943,18 @@ export default function CriarAssistidoPage() {
           </div>
         </CardContent>
       </Card>
+
+      <DeleteConfirmDialog
+        open={!!receitaExcluir}
+        onOpenChange={(o) => !o && setReceitaExcluir(null)}
+        itemName={receitaExcluir?.nome}
+        onConfirm={async () => {
+          if (!receitaExcluir) return;
+          await removerReceita(receitaExcluir.id);
+          if (receitaId === receitaExcluir.id) setReceitaId(null);
+          setReceitaExcluir(null);
+        }}
+      />
     </div>
   );
 }
