@@ -277,8 +277,34 @@ Deno.serve(async (req) => {
         if (wfErr || !wf) throw new Error("Workflow não encontrado ou sem permissão");
         estabelecimentoId = wf.estabelecimento_id;
 
-        const nodes: any[] = wf.flow_data?.nodes ?? [];
-        const edges: any[] = wf.flow_data?.edges ?? [];
+        // Snapshot imutável: retomadas usam SEMPRE o snapshot gravado na execução.
+        const versaoAtual = Number(wf.versao ?? 1);
+        let snapshot: any = execAtual?.workflow_snapshot ?? null;
+        let versaoSnapshot: number = Number(execAtual?.workflow_versao ?? versaoAtual);
+        let versionId: string | null = execAtual?.workflow_version_id ?? null;
+
+        if (!snapshot) {
+          const { data: ver } = await supabase
+            .from("aip_workflow_versions")
+            .select("id, versao, flow_data")
+            .eq("workflow_id", wfId)
+            .eq("versao", versaoAtual)
+            .maybeSingle();
+          versionId = ver?.id ?? null;
+          versaoSnapshot = Number(ver?.versao ?? versaoAtual);
+          snapshot = {
+            workflow_id: wfId,
+            nome: wf.nome,
+            descricao: wf.descricao ?? null,
+            versao: versaoSnapshot,
+            version_id: versionId,
+            flow_data: ver?.flow_data ?? wf.flow_data ?? { nodes: [], edges: [] },
+            capturado_em: new Date().toISOString(),
+          };
+        }
+
+        const nodes: any[] = snapshot.flow_data?.nodes ?? [];
+        const edges: any[] = snapshot.flow_data?.edges ?? [];
         if (nodes.length === 0) throw new Error("Workflow sem blocos para executar");
         const ordem = ordenarNos(nodes, edges);
 
@@ -290,6 +316,9 @@ Deno.serve(async (req) => {
             .insert({
               estabelecimento_id: estabelecimentoId,
               workflow_id: wfId,
+              workflow_versao: versaoSnapshot,
+              workflow_version_id: versionId,
+              workflow_snapshot: snapshot,
               origem: String(body.origem ?? "workflow"),
               usuario_id: userData.user.id,
               status: "executando",
@@ -305,20 +334,24 @@ Deno.serve(async (req) => {
           if (error) throw new Error(`Não foi possível criar a execução: ${error.message}`);
           execAtual = data;
         } else {
-          await supabase
-            .from("aip_executions")
-            .update({
-              status: "executando",
-              erro: null,
-              finalizado_em: null,
-              cancelamento_solicitado: false,
-              motivo_interrupcao: null,
-              cancelado_em: null,
-              retomado_em: new Date().toISOString(),
-              retomado_por: userData.user.id,
-              retentativas: Number(execAtual.retentativas ?? 0) + 1,
-            })
-            .eq("id", execAtual.id);
+          const patch: Record<string, unknown> = {
+            status: "executando",
+            erro: null,
+            finalizado_em: null,
+            cancelamento_solicitado: false,
+            motivo_interrupcao: null,
+            cancelado_em: null,
+            retomado_em: new Date().toISOString(),
+            retomado_por: userData.user.id,
+            retentativas: Number(execAtual.retentativas ?? 0) + 1,
+          };
+          // grava o snapshot apenas se a execução ainda não tiver um (execuções antigas)
+          if (!execAtual.workflow_snapshot) {
+            patch.workflow_snapshot = snapshot;
+            patch.workflow_versao = versaoSnapshot;
+            patch.workflow_version_id = versionId;
+          }
+          await supabase.from("aip_executions").update(patch).eq("id", execAtual.id);
         }
 
         executionId = execAtual.id;
@@ -327,8 +360,10 @@ Deno.serve(async (req) => {
           execution_id: executionId,
           status: "executando",
           total_etapas: ordem.length,
-          workflow: wf.nome,
+          workflow: snapshot.nome ?? wf.nome,
+          workflow_versao: versaoSnapshot,
         });
+
 
         // 2. Contexto (retomada preserva os passos já concluídos) ---------
         const ctxSalvo: Json = execAtual.contexto ?? {};

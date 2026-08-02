@@ -27,6 +27,8 @@ import { Save, ArrowLeft, Trash2, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { FlowExportImportGeneric } from "@/components/flow/FlowExportImportGeneric";
 import { WorkflowRunPanel } from "@/components/ia-platform/WorkflowRunPanel";
+import { WorkflowVersionsDialog } from "@/components/ia-platform/WorkflowVersionsDialog";
+
 
 export default function WorkflowBuilderPage() {
   const { id } = useParams();
@@ -110,15 +112,26 @@ export default function WorkflowBuilderPage() {
     if (!nome.trim()) return toast.error("Informe o nome do workflow");
     setSalvando(true);
     const flow_data = { nodes, edges };
+    const nota = window.prompt("Observação desta versão (opcional):", "") ?? "";
     if (!id || id === "novo") {
       const { data, error } = await db
         .from("aip_workflows")
         .insert({ estabelecimento_id: estabelecimentoId, nome, descricao, flow_data, versao: 1 })
         .select()
         .single();
+      if (error) {
+        setSalvando(false);
+        return toast.error(`Erro ao salvar: ${error.message}`);
+      }
+      await db.from("aip_workflow_versions").insert({
+        estabelecimento_id: estabelecimentoId,
+        workflow_id: data.id,
+        versao: 1,
+        flow_data,
+        nota: nota || "Versão inicial",
+      });
       setSalvando(false);
-      if (error) return toast.error(`Erro ao salvar: ${error.message}`);
-      toast.success("Workflow criado");
+      toast.success("Workflow criado (v1)");
       navigate(`/ia-platform/workflows/${data.id}`, { replace: true });
       return;
     }
@@ -133,12 +146,14 @@ export default function WorkflowBuilderPage() {
         workflow_id: id,
         versao: novaVersao,
         flow_data,
+        nota: nota || null,
       });
       setVersao(novaVersao);
     }
     setSalvando(false);
     toast[error ? "error" : "success"](error ? `Erro: ${error.message}` : `Salvo (v${novaVersao})`);
   };
+
 
   const config = (selecionado?.data as any)?.config ?? {};
 
@@ -199,6 +214,16 @@ export default function WorkflowBuilderPage() {
                 if (nomeImportado) setNome(nomeImportado);
               }}
             />
+            <WorkflowVersionsDialog
+              workflowId={id && id !== "novo" ? id : undefined}
+              versaoAtual={versao}
+              onRestaurar={(n, e) => {
+                setNodes(n);
+                setEdges(e);
+                setSelecionado(null);
+              }}
+            />
+
             <Button size="sm" onClick={salvar} disabled={salvando}>
               <Save className="mr-1 h-4 w-4" /> Salvar
             </Button>
