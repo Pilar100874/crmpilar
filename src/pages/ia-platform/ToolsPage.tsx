@@ -47,6 +47,27 @@ export default function ToolsPage() {
   const [form, setForm] = useState<Partial<AipTool>>(vazio);
   const [excluir, setExcluir] = useState<AipTool | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
+  const [avancado, setAvancado] = useState(false);
+
+  const usarPreset = (p: ToolPreset) => {
+    setEditando(null);
+    setForm({
+      ...vazio,
+      nome: p.nome,
+      categoria: p.categoria,
+      descricao: p.descricao,
+      tipo: p.tipo,
+      endpoint: p.endpoint,
+      metodo: p.metodo,
+      credencial_ref: p.credencial_ref ?? "",
+      input_schema: p.input_schema ?? {},
+    });
+    setCatalogoAberto(false);
+    setAvancado(false);
+    setAberto(true);
+  };
+
 
   const filtrados = useMemo(
     () =>
