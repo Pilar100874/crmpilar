@@ -25,6 +25,10 @@ app.use(express.json({ limit: "25mb" }));
 
 const RUNNER_KEY = process.env.RUNNER_KEY || "";
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+const DEPLOY_HOOK = process.env.RAILWAY_DEPLOY_HOOK_URL || "";
+const VERSAO = process.env.APP_VERSION || "1.1.0";
+const INICIADO_EM = new Date().toISOString();
+
 const supabase =
   process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
