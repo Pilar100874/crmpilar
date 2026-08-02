@@ -255,51 +255,67 @@ export default function ToolsPage() {
                 onChange={(e) => setForm({ ...form, descricao: e.target.value })}
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Input schema (JSON)</Label>
-                <Textarea
-                  rows={6}
-                  className="font-mono text-xs"
-                  defaultValue={JSON.stringify(form.input_schema ?? {}, null, 2)}
-                  onChange={(e) => parseJson(e.target.value, "input_schema")}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Output schema (JSON)</Label>
-                <Textarea
-                  rows={6}
-                  className="font-mono text-xs"
-                  defaultValue={JSON.stringify(form.output_schema ?? {}, null, 2)}
-                  onChange={(e) => parseJson(e.target.value, "output_schema")}
-                />
-              </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full justify-center"
+              onClick={() => setAvancado((v) => !v)}
+            >
+              {avancado ? <ChevronUp className="mr-1 h-3.5 w-3.5" /> : <ChevronDown className="mr-1 h-3.5 w-3.5" />}
+              {avancado ? "Ocultar opções avançadas" : "Mostrar opções avançadas (JSON, timeout)"}
+            </Button>
+            {avancado && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Input schema (JSON)</Label>
+                    <Textarea
+                      rows={6}
+                      className="font-mono text-xs"
+                      defaultValue={JSON.stringify(form.input_schema ?? {}, null, 2)}
+                      onChange={(e) => parseJson(e.target.value, "input_schema")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Output schema (JSON)</Label>
+                    <Textarea
+                      rows={6}
+                      className="font-mono text-xs"
+                      defaultValue={JSON.stringify(form.output_schema ?? {}, null, 2)}
+                      onChange={(e) => parseJson(e.target.value, "output_schema")}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Timeout (s)</Label>
+                    <Input
+                      type="number"
+                      value={form.timeout_seg ?? 30}
+                      onChange={(e) => setForm({ ...form, timeout_seg: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Retentativas</Label>
+                    <Input
+                      type="number"
+                      value={form.retry ?? 1}
+                      onChange={(e) => setForm({ ...form, retry: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+            <div className="space-y-2">
+              <Label>Credencial (nome do secret)</Label>
+              <Input
+                value={form.credencial_ref ?? ""}
+                onChange={(e) => setForm({ ...form, credencial_ref: e.target.value })}
+                placeholder="Ex.: RESEND_API_KEY (a chave fica no Cofre de credenciais)"
+              />
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Credencial (nome do secret)</Label>
-                <Input
-                  value={form.credencial_ref ?? ""}
-                  onChange={(e) => setForm({ ...form, credencial_ref: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Timeout (s)</Label>
-                <Input
-                  type="number"
-                  value={form.timeout_seg ?? 30}
-                  onChange={(e) => setForm({ ...form, timeout_seg: Number(e.target.value) })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Retentativas</Label>
-                <Input
-                  type="number"
-                  value={form.retry ?? 1}
-                  onChange={(e) => setForm({ ...form, retry: Number(e.target.value) })}
-                />
-              </div>
-            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAberto(false)}>
