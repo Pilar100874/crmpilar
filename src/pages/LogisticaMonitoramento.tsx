@@ -70,6 +70,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
   const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
+  const [showVeiculosPanel, setShowVeiculosPanel] = useState(true);
+
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const zoomToVehicle = useCallback((id: string) => {
