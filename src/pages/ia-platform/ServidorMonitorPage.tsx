@@ -152,7 +152,7 @@ export default function ServidorMonitorPage() {
         <div>
           <h2 className="text-xl font-semibold">Monitor do servidor</h2>
           <p className="text-sm text-muted-foreground">
-            Saúde do motor remoto (Railway), o que está rodando agora e atualização da versão.
+            Saúde do motor remoto (Railway) e o que está rodando agora.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -165,14 +165,6 @@ export default function ServidorMonitorPage() {
           <Button variant="outline" size="sm" onClick={() => void carregar(false)}>
             <RefreshCw className={cn("mr-2 h-4 w-4", carregando && "animate-spin")} />
             Atualizar
-          </Button>
-          <Button size="sm" onClick={() => setConfirmarUpdate(true)} disabled={atualizando || !online}>
-            {atualizando ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RotateCw className="mr-2 h-4 w-4" />
-            )}
-            Atualizar servidor
           </Button>
         </div>
       </div>
