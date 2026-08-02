@@ -41,6 +41,8 @@ import AssetsPage from "./pages/ia-platform/AssetsPage";
 import PlaygroundPage from "./pages/ia-platform/PlaygroundPage";
 import HistoricoPage from "./pages/ia-platform/HistoricoPage";
 import SegurancaPage from "./pages/ia-platform/SegurancaPage";
+import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
+
 import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
 import VinculosEmpresas from "./pages/VinculosEmpresas";
