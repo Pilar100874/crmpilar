@@ -24,7 +24,17 @@ import {
 } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarClock, History, Loader2, Pencil, Play, Plus, RefreshCw, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  History,
+  Loader2,
+  Pencil,
+  Play,
+  Plus,
+  RefreshCw,
+  TestTube2,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -35,6 +45,8 @@ import {
   proximaExecucao,
 } from "@/lib/aip/cron";
 import { useConectores } from "@/lib/aip/conectores";
+import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
+import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
 
 interface Rotina {
   id: string;
