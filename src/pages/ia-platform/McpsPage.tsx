@@ -326,6 +326,39 @@ export default function McpsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={catalogoAberto} onOpenChange={setCatalogoAberto}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Catálogo de servidores MCP
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {CATALOGO_MCPS.map((p) => (
+              <Card key={p.slug} className="transition-all hover:shadow-md">
+                <CardContent className="space-y-2 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{p.icone}</span>
+                    <p className="truncate font-medium">{p.nome}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{p.paraQue}</p>
+                  {p.precisaCredencial && (
+                    <Badge variant="outline" className="text-[10px]">
+                      Pede login/credencial
+                    </Badge>
+                  )}
+                  <Button size="sm" className="w-full" onClick={() => usarPreset(p)}>
+                    Adicionar
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
