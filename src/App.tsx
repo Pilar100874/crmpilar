@@ -41,6 +41,7 @@ import AssetsPage from "./pages/ia-platform/AssetsPage";
 import PlaygroundPage from "./pages/ia-platform/PlaygroundPage";
 import HistoricoPage from "./pages/ia-platform/HistoricoPage";
 import SegurancaPage from "./pages/ia-platform/SegurancaPage";
+import AipCredenciaisPage from "./pages/ia-platform/CredenciaisPage";
 import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
 import AipRotinasPage from "./pages/ia-platform/RotinasPage";
 
@@ -412,6 +413,7 @@ const App = () => (
                 <Route path="playground" element={<PlaygroundPage />} />
                 <Route path="historico" element={<HistoricoPage />} />
                 <Route path="seguranca" element={<SegurancaPage />} />
+                <Route path="credenciais" element={<AipCredenciaisPage />} />
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
                 <Route path="rotinas" element={<AipRotinasPage />} />
 
