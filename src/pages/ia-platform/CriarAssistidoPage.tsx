@@ -1083,6 +1083,7 @@ export default function CriarAssistidoPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       <DeleteConfirmDialog
         open={!!receitaExcluir}
