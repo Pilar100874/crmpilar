@@ -77,7 +77,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Criação de imagens",
     subtitulo: "Posts, banners e fotos de produto.",
     icone: ImageIcon,
-    passos: ["tipo", "basico", "referencias", "conhecimento", "revisao"],
+    passos: ["tipo", "basico", "referencias", "conhecimento", "execucao", "revisao"],
     modelo: "google/gemini-3.6-flash",
     exemploObjetivo:
       "Criar imagens quadradas de produto com fundo escuro, luz suave e espaço no topo para o título.",
@@ -89,7 +89,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Criação de vídeos",
     subtitulo: "Clipes curtos para redes sociais e campanhas.",
     icone: Video,
-    passos: ["tipo", "basico", "referencias", "conhecimento", "ferramentas", "revisao"],
+    passos: ["tipo", "basico", "referencias", "conhecimento", "ferramentas", "execucao", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Gerar vídeos de 10 segundos no formato 9:16 apresentando o produto, com movimento suave de câmera.",
@@ -101,7 +101,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Textos e respostas",
     subtitulo: "Rascunhos de e-mail, respostas e resumos.",
     icone: MessageSquare,
-    passos: ["tipo", "basico", "conhecimento", "ferramentas", "revisao"],
+    passos: ["tipo", "basico", "conhecimento", "ferramentas", "execucao", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Escrever respostas cordiais para clientes seguindo as políticas internas da empresa.",
@@ -113,7 +113,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Pesquisa e coleta de dados",
     subtitulo: "Buscar informações em sites, portais e no sistema.",
     icone: Sparkle,
-    passos: ["tipo", "basico", "conhecimento", "ferramentas", "agenda", "revisao"],
+    passos: ["tipo", "basico", "conhecimento", "ferramentas", "execucao", "agenda", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Buscar novas oportunidades publicadas hoje e trazer órgão, objeto, valor e prazo de cada uma.",
@@ -137,6 +137,10 @@ const TITULOS: Record<PassoId, { titulo: string; ajuda: string }> = {
   conhecimento: { titulo: "Conhecimento", ajuda: "Instruções e materiais que o agente deve seguir." },
   ferramentas: { titulo: "Ferramentas", ajuda: "O que o agente pode acessar para trabalhar." },
   agenda: { titulo: "Quando deve rodar?", ajuda: "Escolha a frequência e o horário." },
+  execucao: {
+    titulo: "Como deve executar?",
+    ajuda: "De uma vez só ou passo a passo, como no Claude Code.",
+  },
   revisao: { titulo: "Revisão", ajuda: "Confira e crie. Você pode editar depois." },
 };
 
