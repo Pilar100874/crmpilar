@@ -398,7 +398,23 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, [fetchVeiculos]);
 
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
-  const veiculosFiltrados = filterByGrupo(veiculos, grupoId);
+  const veiculosDoGrupo = filterByGrupo(veiculos, grupoId);
+
+  const alertVeiculoIds = React.useMemo(
+    () => new Set(alerts.map(a => a.veiculoId)),
+    [alerts]
+  );
+
+  const veiculosFiltrados = React.useMemo(() => {
+    switch (quickFilter) {
+      case 'movendo': return veiculosDoGrupo.filter(v => v.status === 'movendo');
+      case 'parado': return veiculosDoGrupo.filter(v => v.status === 'parado');
+      case 'offline': return veiculosDoGrupo.filter(v => v.status === 'offline');
+      case 'alertas': return veiculosDoGrupo.filter(v => alertVeiculoIds.has(v.id));
+      default: return veiculosDoGrupo;
+    }
+  }, [veiculosDoGrupo, quickFilter, alertVeiculoIds]);
+
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
@@ -409,10 +425,11 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, [pinnedVeiculoId, veiculos]);
 
   const stats = {
-    total: veiculosFiltrados.length,
-    movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
-    parado: veiculosFiltrados.filter(v => v.status === 'parado').length,
-    offline: veiculosFiltrados.filter(v => v.status === 'offline').length
+    total: veiculosDoGrupo.length,
+    movendo: veiculosDoGrupo.filter(v => v.status === 'movendo').length,
+    parado: veiculosDoGrupo.filter(v => v.status === 'parado').length,
+    offline: veiculosDoGrupo.filter(v => v.status === 'offline').length,
+    alertas: veiculosDoGrupo.filter(v => alertVeiculoIds.has(v.id)).length
   };
 
   const getAlertIcon = (type: string) => {
