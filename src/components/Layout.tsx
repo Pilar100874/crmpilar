@@ -233,6 +233,7 @@ export const menuItems: MenuItem[] = [
   },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
+  { id: "Agentes IA", title: "Agentes IA", url: "/ia-platform", icon: LucideIcons.BrainCircuit },
   {
     id: "TV",
     title: "TV",
