@@ -1,0 +1,21 @@
+{
+  "name": "aip-agent-sdk-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Servidor de execução (Claude Agent SDK) da Plataforma de Agentes IA do CRM Pilar",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.5",
+    "@supabase/supabase-js": "^2.45.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
