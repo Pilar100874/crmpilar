@@ -319,6 +319,64 @@ Deno.serve(async (req) => {
           const tipo = `${node.data?.categoria ?? "bloco"}/${node.data?.slug ?? "custom"}`;
           const inicioEtapa = Date.now();
 
+          // 3a. Retomada automática: consome a decisão já registrada -------
+          if (String(node.data?.slug ?? "") === "human-approval") {
+            const { data: aprov } = await supabase
+              .from("aip_approvals")
+              .select("*")
+              .eq("execution_id", executionId)
+              .eq("node_id", node.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (aprov && aprov.status === "rejeitado") {
+              await supabase
+                .from("aip_executions")
+                .update({
+                  status: "cancelada",
+                  etapa_atual: null,
+                  erro: `Aprovação rejeitada por ${aprov.decidido_por_nome ?? "usuário"}`,
+                  contexto: { ...ctx, indice },
+                  duracao_ms: Date.now() - t0,
+                  finalizado_em: new Date().toISOString(),
+                })
+                .eq("id", executionId);
+              sse(controller, "fim", { status: "cancelada", execution_id: executionId, erro: "Aprovação rejeitada" });
+              return finalizar();
+            }
+
+            if (aprov && aprov.status === "aprovado") {
+              const decisao = {
+                aprovado: true,
+                comentario: aprov.comentario ?? "",
+                selecionados: aprov.selecionados ?? [],
+                aprovado_por: aprov.decidido_por_nome ?? null,
+                aprovado_por_id: aprov.decidido_por ?? null,
+                aprovado_em: aprov.decidido_em ?? null,
+              };
+              ctx.steps[node.id] = decisao;
+              const logAprov = `Aprovado por ${decisao.aprovado_por ?? "usuário"}${
+                decisao.aprovado_em ? ` em ${new Date(decisao.aprovado_em).toLocaleString("pt-BR")}` : ""
+              }`;
+              await supabase
+                .from("aip_execution_steps")
+                .update({ status: "concluida", output: decisao, logs: logAprov })
+                .eq("execution_id", executionId)
+                .eq("node_id", node.id)
+                .eq("status", "aguardando_aprovacao");
+              sse(controller, "etapa_fim", {
+                node_id: node.id,
+                ordem: indice + 1,
+                status: "concluida",
+                logs: logAprov,
+                output: decisao,
+              });
+              continue;
+            }
+          }
+
+
           const { data: step } = await supabase
             .from("aip_execution_steps")
             .insert({
