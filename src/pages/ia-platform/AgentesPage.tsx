@@ -1,3 +1,4 @@
+import { ModeloSelect } from "@/components/ia-platform/ModeloSelect";
 import { useMemo, useState } from "react";
 import { useAipTable } from "@/lib/aip/db";
 import { AipAgent, AipSkill, AipTool, AipMcp, MODELOS_IA } from "@/lib/aip/types";

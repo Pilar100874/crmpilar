@@ -1,3 +1,4 @@
+import { ModeloSelect } from "@/components/ia-platform/ModeloSelect";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, useEstabelecimento, useAipTable } from "@/lib/aip/db";
