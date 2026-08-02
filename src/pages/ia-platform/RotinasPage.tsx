@@ -39,11 +39,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FUSOS,
-  PRESETS_CRON,
   cronValido,
   descreverCron,
   proximaExecucao,
 } from "@/lib/aip/cron";
+import AgendamentoAmigavel from "@/components/ia-platform/AgendamentoAmigavel";
 import { useConectores } from "@/lib/aip/conectores";
 import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
 import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
