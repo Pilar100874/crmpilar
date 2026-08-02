@@ -1709,6 +1709,90 @@ export type Database = {
         }
         Relationships: []
       }
+      aip_notification_settings: {
+        Row: {
+          created_at: string
+          emails: string[]
+          estabelecimento_id: string
+          id: string
+          notificar_aprovacao: boolean
+          notificar_fim: boolean
+          notificar_inicio: boolean
+          ui_ativo: boolean
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          emails?: string[]
+          estabelecimento_id: string
+          id?: string
+          notificar_aprovacao?: boolean
+          notificar_fim?: boolean
+          notificar_inicio?: boolean
+          ui_ativo?: boolean
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          emails?: string[]
+          estabelecimento_id?: string
+          id?: string
+          notificar_aprovacao?: boolean
+          notificar_fim?: boolean
+          notificar_inicio?: boolean
+          ui_ativo?: boolean
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      aip_notifications: {
+        Row: {
+          approval_id: string | null
+          created_at: string
+          estabelecimento_id: string
+          evento: string
+          execution_id: string | null
+          id: string
+          lida: boolean
+          mensagem: string | null
+          nivel: string
+          payload: Json
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          approval_id?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          evento: string
+          execution_id?: string | null
+          id?: string
+          lida?: boolean
+          mensagem?: string | null
+          nivel?: string
+          payload?: Json
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          approval_id?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          evento?: string
+          execution_id?: string | null
+          id?: string
+          lida?: boolean
+          mensagem?: string | null
+          nivel?: string
+          payload?: Json
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       aip_permissions: {
         Row: {
           acoes: string[]

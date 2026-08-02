@@ -14,9 +14,11 @@ import {
   TerminalSquare,
   History,
   ShieldCheck,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import AipNotificacoesBell from "@/components/ia-platform/AipNotificacoesBell";
 
 const AREAS = [
   { to: "", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -33,6 +35,7 @@ const AREAS = [
   { to: "playground", label: "Playground", icon: TerminalSquare },
   { to: "historico", label: "Histórico", icon: History },
   { to: "seguranca", label: "Segurança", icon: ShieldCheck },
+  { to: "notificacoes", label: "Notificações", icon: Bell },
 ];
 
 export default function IAPlatformLayout() {
@@ -81,8 +84,9 @@ export default function IAPlatformLayout() {
       </aside>
 
       <main className="min-h-0 flex-1 overflow-auto">
-        <div className="border-b border-border bg-background/80 px-4 py-3 backdrop-blur lg:px-6">
+        <div className="flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur lg:px-6">
           <h1 className="text-lg font-semibold">{atual?.label ?? "Plataforma de Agentes IA"}</h1>
+          <AipNotificacoesBell />
         </div>
         <div className="p-4 lg:p-6">
           <Outlet />
