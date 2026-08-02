@@ -97,7 +97,12 @@ const vazio = (): Partial<Rotina> => ({
   fuso: "America/Sao_Paulo",
   timeout_ms: 120000,
   retry_max: 1,
+  max_concorrencia: 1,
+  retry_backoff_ms: 30000,
+  retry_fator: 2,
+  bloquear_duplicados: true,
   ativo: true,
+
 });
 
 const dt = (v?: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
