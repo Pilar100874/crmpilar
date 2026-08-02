@@ -47,6 +47,8 @@ import {
 import { useConectores } from "@/lib/aip/conectores";
 import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
 import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
+import { RotinaRunsDialog } from "@/components/ia-platform/RotinaRunsDialog";
+
 
 interface Rotina {
   id: string;
