@@ -165,16 +165,27 @@ const FREQUENCIAS = [
 const TITULOS: Record<PassoId, { titulo: string; ajuda: string }> = {
   tipo: { titulo: "O que você quer criar?", ajuda: "Escolha uma opção. Depois é só ir preenchendo." },
   basico: { titulo: "Conte o que precisa", ajuda: "Explique com suas palavras, sem termos técnicos." },
-  referencias: { titulo: "Imagens de referência", ajuda: "Envie do computador ou escolha da galeria. É opcional." },
-  conhecimento: { titulo: "Conhecimento", ajuda: "Instruções e materiais que o agente deve seguir." },
-  ferramentas: { titulo: "Ferramentas", ajuda: "O que o agente pode acessar para trabalhar." },
-  agenda: { titulo: "Quando deve rodar?", ajuda: "Escolha a frequência e o horário." },
+  referencias: {
+    titulo: "Imagens de referência",
+    ajuda:
+      "Exemplos visuais para o agente copiar o estilo (logo, cores, fotos que você gosta). É opcional.",
+  },
+  conhecimento: {
+    titulo: "Conhecimento",
+    ajuda: "O que o agente precisa saber: instruções, regras e materiais da sua empresa.",
+  },
+  ferramentas: {
+    titulo: "Ferramentas",
+    ajuda: "O que o agente pode fazer e a quais sistemas ele pode se conectar.",
+  },
+  agenda: { titulo: "Quando deve rodar?", ajuda: "Escolha a frequência e o horário em que ele trabalha sozinho." },
   execucao: {
     titulo: "Como deve executar?",
-    ajuda: "De uma vez só ou passo a passo, como no Claude Code.",
+    ajuda: "Tudo de uma vez ou dividido em etapas, para você acompanhar e corrigir no caminho.",
   },
   revisao: { titulo: "Revisão", ajuda: "Confira e crie. Você pode editar depois." },
 };
+
 
 interface EtapaExecucao {
   id: string;
@@ -633,9 +644,15 @@ export default function CriarAssistidoPage() {
           {passoAtual === "conhecimento" && (
             <div className="space-y-5">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <p className="mb-1 flex items-center gap-1.5 text-sm font-medium">
                   <BookOpen className="h-4 w-4" /> Skills já cadastradas (opcional)
                 </p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Skill é um "treinamento" salvo: um texto com instruções, regras ou o jeito de
+                  falar da sua empresa. Marque as que o agente deve seguir. Se não marcar nenhuma,
+                  ele usa só o que você escreveu no passo anterior.
+                </p>
+
                 {skills.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhuma skill cadastrada ainda.</p>
                 ) : (
@@ -706,9 +723,15 @@ export default function CriarAssistidoPage() {
           {passoAtual === "ferramentas" && (
             <div className="space-y-5">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <p className="mb-1 flex items-center gap-1.5 text-sm font-medium">
                   <Wrench className="h-4 w-4" /> Ferramentas (opcional)
                 </p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Ferramenta é uma ação que o agente consegue executar sozinho: buscar dados no
+                  sistema, pesquisar na internet, enviar WhatsApp, gerar imagem ou vídeo. Marque só
+                  o que ele realmente precisa usar.
+                </p>
+
                 {tools.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhuma ferramenta cadastrada ainda.</p>
                 ) : (
@@ -739,7 +762,13 @@ export default function CriarAssistidoPage() {
               <Separator />
 
               <div>
-                <p className="mb-2 text-sm font-medium">Servidores MCP (opcional)</p>
+                <p className="mb-1 text-sm font-medium">Servidores MCP (opcional)</p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  MCP é uma "tomada" que conecta o agente a um sistema de fora (Google, Notion,
+                  banco de dados, etc.). Marque um servidor só se o agente precisar acessar esse
+                  sistema. Na dúvida, deixe desmarcado.
+                </p>
+
                 {mcps.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhum MCP cadastrado ainda.</p>
                 ) : (
