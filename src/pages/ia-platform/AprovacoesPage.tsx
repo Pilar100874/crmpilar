@@ -248,8 +248,27 @@ export default function AprovacoesPage() {
                     </div>
                   </>
                 )}
-                {a.status !== "pendente" && a.comentario && (
-                  <p className="text-xs text-muted-foreground">Comentário: {a.comentario}</p>
+                {a.status !== "pendente" && (
+                  <div className="space-y-1 rounded-lg bg-muted/60 p-2 text-xs text-muted-foreground">
+                    <p>
+                      {a.status === "aprovado" ? "Aprovado" : "Rejeitado"} por{" "}
+                      <span className="font-medium text-foreground">{a.decidido_por_nome ?? "usuário"}</span>
+                      {a.decidido_em && ` em ${new Date(a.decidido_em).toLocaleString("pt-BR")}`}
+                    </p>
+                    {a.comentario && <p>Comentário: {a.comentario}</p>}
+                    {a.status === "aprovado" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-1 h-7"
+                        disabled={retomando === a.id}
+                        onClick={() => retomarExecucao(a)}
+                      >
+                        <PlayCircle className="mr-1 h-3.5 w-3.5" />
+                        {retomando === a.id ? "Retomando…" : "Retomar execução"}
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {a.status === "pendente" && opcoes.length > 0 && (
                   <label className="flex items-center gap-2 text-xs text-muted-foreground">
