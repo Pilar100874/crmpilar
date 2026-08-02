@@ -1,7 +1,8 @@
-import { CalendarClock,
-  NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
+  CalendarClock,
   LayoutDashboard,
+
   Bot,
   BookOpen,
   Wrench,
