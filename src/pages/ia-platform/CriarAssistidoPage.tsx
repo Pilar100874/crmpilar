@@ -751,7 +751,13 @@ export default function CriarAssistidoPage() {
               <Separator />
 
               <div>
-                <p className="mb-2 text-sm font-medium">Servidores MCP (opcional)</p>
+                <p className="mb-1 text-sm font-medium">Servidores MCP (opcional)</p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  MCP é uma "tomada" que conecta o agente a um sistema de fora (Google, Notion,
+                  banco de dados, etc.). Marque um servidor só se o agente precisar acessar esse
+                  sistema. Na dúvida, deixe desmarcado.
+                </p>
+
                 {mcps.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhum MCP cadastrado ainda.</p>
                 ) : (
