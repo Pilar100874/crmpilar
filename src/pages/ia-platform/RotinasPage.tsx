@@ -44,6 +44,8 @@ import {
   proximaExecucao,
 } from "@/lib/aip/cron";
 import AgendamentoAmigavel from "@/components/ia-platform/AgendamentoAmigavel";
+import { ModeloSelect } from "@/components/ia-platform/ModeloSelect";
+
 import { useConectores } from "@/lib/aip/conectores";
 import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
 import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
