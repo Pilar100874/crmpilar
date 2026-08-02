@@ -37,7 +37,15 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-type PassoId = "tipo" | "basico" | "referencias" | "conhecimento" | "ferramentas" | "agenda" | "revisao";
+type PassoId =
+  | "tipo"
+  | "basico"
+  | "referencias"
+  | "conhecimento"
+  | "ferramentas"
+  | "execucao"
+  | "agenda"
+  | "revisao";
 
 interface TipoCriacao {
   id: string;
