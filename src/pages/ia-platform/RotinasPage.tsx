@@ -116,6 +116,7 @@ export default function RotinasPage() {
   const [executando, setExecutando] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<Rotina | null>(null);
   const [historico, setHistorico] = useState<{ rotina: Rotina; runs: any[] } | null>(null);
+  const [dryRun, setDryRun] = useState<{ nome: string; resultado: ResultadoDryRun } | null>(null);
 
   useEffect(() => {
     const t = setInterval(refetch, 30000);
