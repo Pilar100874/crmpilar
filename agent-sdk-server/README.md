@@ -49,6 +49,13 @@ Todas as rotas são `POST` e exigem o header `X-Runner-Key`.
 | `/cancel` | `{ execution_id }` | `{ ok }` |
 | `/status` | `{ execution_id }` | estado da execução |
 | `/mcp/probe` | `{ endpoint, cabecalhos?, timeout_ms? }` | handshake JSON-RPC com um servidor MCP; devolve status, ferramentas e latência (usado pela tela **Agentes IA → MCP**) |
+| `/runs` | `{ limite? }` | painel de monitoramento: uptime, memória, versão/commit e execuções em memória (tela **Agentes IA → Monitor do servidor**) |
+| `/runs/limpar` | `{}` | remove da memória as execuções já finalizadas |
+| `/update` | `{ forcar? }` | dispara o Deploy Hook do Railway para atualizar o servidor (requer `RAILWAY_DEPLOY_HOOK_URL`) |
+
+> Para o botão **Atualizar servidor** funcionar, crie um *Deploy Hook* no Railway
+> (Settings → Deploys) e salve a URL na variável `RAILWAY_DEPLOY_HOOK_URL`.
+
 
 ### Exemplo de payload enviado pelo Lovable
 
