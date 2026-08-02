@@ -29,7 +29,11 @@ const LogisticaDashboard: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
-  const veiculosFiltrados = React.useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
+  const veiculosPorGrupo = React.useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
+  const veiculosFiltrados = React.useMemo(
+    () => (statusFilter === 'todos' ? veiculosPorGrupo : veiculosPorGrupo.filter(v => v.status === statusFilter)),
+    [veiculosPorGrupo, statusFilter]
+  );
 
 
   useEffect(() => {
