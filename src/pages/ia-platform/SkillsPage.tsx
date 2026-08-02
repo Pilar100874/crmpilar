@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAipTable } from "@/lib/aip/db";
 import { AipSkill } from "@/lib/aip/types";
 import { AipToolbar } from "@/components/ia-platform/AipToolbar";
