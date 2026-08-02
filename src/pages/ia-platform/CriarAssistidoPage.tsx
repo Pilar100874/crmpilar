@@ -687,6 +687,84 @@ export default function CriarAssistidoPage() {
             </div>
           )}
 
+          {/* 5.5 Execução */}
+          {passoAtual === "execucao" && (
+            <div className="space-y-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    id: "unica" as const,
+                    titulo: "De uma vez só",
+                    texto: "O agente recebe o pedido e devolve o resultado final.",
+                  },
+                  {
+                    id: "etapas" as const,
+                    titulo: "Passo a passo (como no Claude Code)",
+                    texto: "Você define as etapas e o agente cumpre uma de cada vez, em ordem.",
+                  },
+                ].map((op) => (
+                  <button
+                    key={op.id}
+                    type="button"
+                    onClick={() => {
+                      setModoExecucao(op.id);
+                      if (op.id === "etapas" && etapas.length === 0) novaEtapa();
+                    }}
+                    className={cn(
+                      "rounded-xl border-2 p-4 text-left transition-colors",
+                      modoExecucao === op.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted",
+                    )}
+                  >
+                    <p className="font-medium">{op.titulo}</p>
+                    <p className="text-sm text-muted-foreground">{op.texto}</p>
+                  </button>
+                ))}
+              </div>
+
+              {modoExecucao === "etapas" && (
+                <div className="space-y-3">
+                  {etapas.map((e, i) => (
+                    <div key={e.id} className="space-y-2 rounded-lg border border-border p-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{i + 1}</Badge>
+                        <Input
+                          value={e.titulo}
+                          onChange={(ev) => atualizarEtapa(e.id, "titulo", ev.target.value)}
+                          placeholder="Nome da etapa (ex.: Coletar dados)"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removerEtapa(e.id)}
+                          aria-label="Remover etapa"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        rows={2}
+                        value={e.instrucao}
+                        onChange={(ev) => atualizarEtapa(e.id, "instrucao", ev.target.value)}
+                        placeholder="O que fazer nesta etapa"
+                      />
+                    </div>
+                  ))}
+                  <Button variant="outline" onClick={novaEtapa}>
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar etapa
+                  </Button>
+                </div>
+              )}
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  O modelo de IA escolhido ({modelo}) e as skills, tools e MCPs selecionados ficam
+                  gravados junto quando você salvar o modelo.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
           {/* 6. Agenda */}
           {passoAtual === "agenda" && (
             <div className="space-y-4">
@@ -755,6 +833,12 @@ export default function CriarAssistidoPage() {
                 ["Imagens de referência", `${referencias.length}`],
                 ["Skills", `${skillIds.length}${mdConteudo ? " + 1 novo material" : ""}`],
                 ["Ferramentas", `${toolIds.length} tools · ${mcpIds.length} MCPs`],
+                [
+                  "Execução",
+                  modoExecucao === "etapas"
+                    ? `Passo a passo (${etapas.length} etapas)`
+                    : "De uma vez só",
+                ],
                 ...(tipo.criaRotina ? [["Agendamento", `${cron} (criada desativada)`]] : []),
               ].map(([rotulo, valor]) => (
                 <div key={rotulo} className="flex flex-col gap-0.5 rounded-lg border border-border p-3">
@@ -777,20 +861,36 @@ export default function CriarAssistidoPage() {
             <Button variant="ghost" onClick={voltar} disabled={indice === 0 || salvando}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
             </Button>
-            {passoAtual === "revisao" ? (
-              <Button onClick={criar} disabled={salvando}>
-                {salvando ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                Criar agora
-              </Button>
-            ) : (
-              <Button onClick={avancar} disabled={!tipo || salvando}>
-                Continuar <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {tipo && (
+                <Button
+                  variant="outline"
+                  onClick={salvarModelo}
+                  disabled={salvandoModelo || salvando}
+                >
+                  {salvandoModelo ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  {receitaId ? "Salvar alterações" : "Salvar modelo"}
+                </Button>
+              )}
+              {passoAtual === "revisao" ? (
+                <Button onClick={criar} disabled={salvando}>
+                  {salvando ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="mr-2 h-4 w-4" />
+                  )}
+                  Criar agora
+                </Button>
+              ) : (
+                <Button onClick={avancar} disabled={!tipo || salvando}>
+                  Continuar <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
