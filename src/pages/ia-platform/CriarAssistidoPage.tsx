@@ -694,18 +694,8 @@ export default function CriarAssistidoPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Modelo de IA</Label>
-                <Select value={modelo} onValueChange={setModelo}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODELOS_IA.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ModeloSelect value={modelo} onChange={setModelo} />
+
                 <p className="text-xs text-muted-foreground">
                   Já vem preenchido com a melhor opção para este tipo. Só mude se souber o que quer.
                 </p>
