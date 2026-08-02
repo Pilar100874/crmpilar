@@ -283,7 +283,12 @@ Deno.serve(async (req) => {
         } else {
           await supabase
             .from("aip_executions")
-            .update({ status: "executando", erro: null })
+            .update({
+              status: "executando",
+              erro: null,
+              retomado_em: new Date().toISOString(),
+              retomado_por: userData.user.id,
+            })
             .eq("id", execAtual.id);
         }
         executionId = execAtual.id;
