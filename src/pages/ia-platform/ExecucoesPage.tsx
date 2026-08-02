@@ -149,6 +149,16 @@ export default function ExecucoesPage() {
                   <td className="p-3">{e.origem}</td>
                   <td className="p-3">{e.modelo ?? "—"}</td>
                   <td className="p-3">
+                    {(e as any).workflow_versao ? (
+                      <Badge variant="outline" title="Snapshot imutável do workflow usado nesta execução">
+                        v{(e as any).workflow_versao}
+                      </Badge>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="p-3">
+
                     <Badge variant={CORES[e.status] ?? "outline"}>{e.status.replace("_", " ")}</Badge>
                   </td>
                   <td className="p-3">{(e.tokens_input ?? 0) + (e.tokens_output ?? 0)}</td>
