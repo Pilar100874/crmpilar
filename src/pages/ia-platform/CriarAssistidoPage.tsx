@@ -31,6 +31,9 @@ import {
   Upload,
   Video,
   Wand2,
+  Plus,
+  Save,
+  Trash2,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
