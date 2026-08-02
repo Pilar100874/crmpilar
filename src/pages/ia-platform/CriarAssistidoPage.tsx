@@ -712,9 +712,15 @@ export default function CriarAssistidoPage() {
           {passoAtual === "ferramentas" && (
             <div className="space-y-5">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <p className="mb-1 flex items-center gap-1.5 text-sm font-medium">
                   <Wrench className="h-4 w-4" /> Ferramentas (opcional)
                 </p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Ferramenta é uma ação que o agente consegue executar sozinho: buscar dados no
+                  sistema, pesquisar na internet, enviar WhatsApp, gerar imagem ou vídeo. Marque só
+                  o que ele realmente precisa usar.
+                </p>
+
                 {tools.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhuma ferramenta cadastrada ainda.</p>
                 ) : (
