@@ -105,7 +105,37 @@ export const agentRunner = {
    */
   mcpProbe: (endpoint: string, cabecalhos?: Record<string, string>) =>
     callProxy("mcp/probe", { endpoint, cabecalhos }) as Promise<McpProbeResult>,
+  /**
+   * Executa um script de uma skill no formato pasta Claude Code.
+   * Os arquivos da skill são enviados e recriados num workspace isolado do runner.
+   */
+  execSkillScript: (payload: SkillExecPayload) =>
+    callProxy("skill/exec", payload as any) as Promise<SkillExecResult>,
 };
+
+export interface SkillExecPayload {
+  skill_slug: string;
+  /** Arquivos da skill com caminho relativo (ex.: scripts/preflight.sh). */
+  arquivos: Array<{ caminho: string; conteudo: string }>;
+  /** Script a rodar, ex.: "scripts/preflight.sh". */
+  script: string;
+  args?: string[];
+  env?: Record<string, string>;
+  timeout_ms?: number;
+}
+
+export interface SkillExecResult {
+  ok: boolean;
+  codigo?: number;
+  expirou?: boolean;
+  workspace?: string;
+  stdout?: string;
+  stderr?: string;
+  artefatos?: Array<{ caminho: string; tamanho_bytes: number }>;
+  duracao_ms?: number;
+  erro?: string;
+  simulado?: boolean;
+}
 
 
 
