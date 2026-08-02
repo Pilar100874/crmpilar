@@ -8,6 +8,7 @@ export interface EventoExecucao {
     | "etapa_fim"
     | "texto"
     | "aprovacao"
+    | "retry"
     | "fim";
   execution_id?: string;
   status?: string;
@@ -22,6 +23,9 @@ export interface EventoExecucao {
   logs?: string | null;
   output?: unknown;
   duracao_ms?: number;
+  tentativa?: number;
+  tentativas_max?: number;
+  aguardando_ms?: number;
   tokens?: number;
   resposta?: string;
   erro?: string;
@@ -33,6 +37,11 @@ export interface ExecutarOpts {
   input?: Record<string, unknown>;
   modelo?: string;
   origem?: string;
+  /** Reexecuta a partir de um bloco específico (ponto do erro). */
+  retryNodeId?: string;
+  /** Tentativas automáticas por bloco (1 = sem retry). */
+  retryMax?: number;
+  retryDelayMs?: number;
   signal?: AbortSignal;
 }
 
@@ -61,6 +70,9 @@ export async function executarWorkflow(
       input: opts.input ?? {},
       modelo: opts.modelo,
       origem: opts.origem ?? "workflow",
+      retry_node_id: opts.retryNodeId,
+      retry_max: opts.retryMax,
+      retry_delay_ms: opts.retryDelayMs,
     }),
   });
 
