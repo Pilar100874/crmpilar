@@ -24,10 +24,15 @@ import {
   Sparkles,
   BookMarked,
   SlidersHorizontal,
-
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import AipNotificacoesBell from "@/components/ia-platform/AipNotificacoesBell";
 import { useEffect, useState } from "react";
 import { AppRole, ROLES_MONITOR, carregarAcessoAip, temAlgumaRole } from "@/lib/aip/rbac";
