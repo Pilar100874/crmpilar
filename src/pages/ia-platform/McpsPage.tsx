@@ -43,6 +43,21 @@ export default function McpsPage() {
   const [excluir, setExcluir] = useState<AipMcp | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
   const [testandoTodos, setTestandoTodos] = useState(false);
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
+
+  const usarPreset = (p: McpPreset) => {
+    setEditando(null);
+    setForm({
+      ...vazio,
+      nome: p.nome,
+      endpoint: p.endpoint,
+      tipo: p.tipo,
+      descricao: p.descricao,
+    });
+    setCatalogoAberto(false);
+    setAberto(true);
+  };
+
 
   const filtrados = useMemo(
     () => items.filter((m) => `${m.nome} ${m.endpoint}`.toLowerCase().includes(busca.toLowerCase())),
