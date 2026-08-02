@@ -24,7 +24,17 @@ import {
 } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarClock, History, Loader2, Pencil, Play, Plus, RefreshCw, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  History,
+  Loader2,
+  Pencil,
+  Play,
+  Plus,
+  RefreshCw,
+  TestTube2,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -35,6 +45,8 @@ import {
   proximaExecucao,
 } from "@/lib/aip/cron";
 import { useConectores } from "@/lib/aip/conectores";
+import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
+import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
 
 interface Rotina {
   id: string;
@@ -104,6 +116,7 @@ export default function RotinasPage() {
   const [executando, setExecutando] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<Rotina | null>(null);
   const [historico, setHistorico] = useState<{ rotina: Rotina; runs: any[] } | null>(null);
+  const [dryRun, setDryRun] = useState<{ nome: string; resultado: ResultadoDryRun } | null>(null);
 
   useEffect(() => {
     const t = setInterval(refetch, 30000);
@@ -195,6 +208,19 @@ export default function RotinasPage() {
       refetch();
     }
   };
+
+  const testarDryRun = (r: Partial<Rotina>) => {
+    const resultado = simularRotina(r as any, {
+      conectores,
+      workflows: workflows as any,
+      agentes: agentes as any,
+    });
+    setDryRun({ nome: r.nome ?? "", resultado });
+    if (resultado.ok) toast.success("Simulação concluída sem erros");
+    else toast.error("A simulação encontrou pendências");
+  };
+
+
 
   const abrirHistorico = async (r: Rotina) => {
     const { data } = await db
@@ -296,6 +322,14 @@ export default function RotinasPage() {
                     ) : (
                       <Play className="h-3.5 w-3.5" />
                     )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    title="Testar (dry-run)"
+                    onClick={() => testarDryRun(r)}
+                  >
+                    <TestTube2 className="h-3.5 w-3.5" />
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => abrirHistorico(r)}>
                     <History className="h-3.5 w-3.5" />
@@ -532,7 +566,11 @@ export default function RotinasPage() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button variant="secondary" onClick={() => form && testarDryRun(form)}>
+              <TestTube2 className="mr-1 h-4 w-4" /> Testar (dry-run)
+            </Button>
+            <div className="flex gap-2">
             <Button variant="outline" onClick={() => setForm(null)}>
               Cancelar
             </Button>
@@ -540,6 +578,7 @@ export default function RotinasPage() {
               {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               Salvar
             </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -580,6 +619,14 @@ export default function RotinasPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <RotinaDryRunDialog
+        open={!!dryRun}
+        onOpenChange={(o) => !o && setDryRun(null)}
+        nome={dryRun?.nome ?? ""}
+        resultado={dryRun?.resultado ?? null}
+      />
+
 
       <DeleteConfirmDialog
         open={!!excluir}
