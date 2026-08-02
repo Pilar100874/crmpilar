@@ -36,7 +36,15 @@ Deno.serve(async (req) => {
 
     // RBAC: ações administrativas (monitor do servidor / redeploy / cancelar)
     // só podem ser executadas por perfis admin ou gestor.
-    const ACOES_ADMIN = ["runs", "runs/limpar", "update", "cancel", "health", "mcp/probe"];
+    const ACOES_ADMIN = [
+      "runs",
+      "runs/limpar",
+      "update",
+      "cancel",
+      "health",
+      "mcp/probe",
+      "skill/exec",
+    ];
     if (ACOES_ADMIN.includes(action)) {
       const { data: usuario } = await supabase
         .from("usuarios")
