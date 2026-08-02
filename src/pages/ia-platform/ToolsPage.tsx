@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Pencil, PlayCircle, Trash2, Wrench } from "lucide-react";
+import { GRUPOS_TOOLS, type ToolPreset } from "@/lib/aip/catalogIntegracoes";
+import { ChevronDown, ChevronUp, Pencil, PlayCircle, Sparkles, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
+
 
 const vazio: Partial<AipTool> = {
   nome: "",
