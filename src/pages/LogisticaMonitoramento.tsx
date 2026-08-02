@@ -36,6 +36,100 @@ const statusConfig = {
   offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500', borderColor: 'border-gray-400' }
 };
 
+const VeiculoRow: React.FC<{
+  v: VeiculoComStatus;
+  selected: boolean;
+  pinned: boolean;
+  onSelect: () => void;
+  onPin: () => void;
+}> = ({ v, selected, pinned, onSelect, onPin }) => {
+  const config = statusConfig[v.status];
+  return (
+    <div
+      onClick={onSelect}
+      onDoubleClick={onSelect}
+      className={cn(
+        "p-2 rounded-lg cursor-pointer transition-all border",
+        selected
+          ? "bg-primary/10 border-primary ring-1 ring-primary"
+          : `bg-card/60 hover:bg-accent border-border/60 ${config.borderColor} border-l-4`
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={cn("h-2 w-2 rounded-full shrink-0", config.color, v.status === 'movendo' && 'animate-pulse')} />
+          {v.status !== 'offline' ? (
+            <Wifi className="h-3 w-3 text-green-500 shrink-0" />
+          ) : (
+            <WifiOff className="h-3 w-3 text-destructive shrink-0" />
+          )}
+          <span className="font-medium text-sm truncate">{v.placa}</span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
+          <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
+          <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+            {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+          </Badge>
+          <button
+            onClick={(e) => { e.stopPropagation(); onPin(); }}
+            title={pinned ? 'Desafixar' : 'Fixar no mapa'}
+            className={cn("p-1 rounded hover:bg-accent", pinned ? 'text-primary' : 'text-muted-foreground')}
+          >
+            <Pin className={cn("h-3 w-3", pinned && 'fill-current')} />
+          </button>
+        </div>
+      </div>
+      {v.motorista_atual ? (
+        <div className="mt-1 space-y-0.5">
+          <p className="text-xs font-medium truncate flex items-center gap-1">
+            <User className="h-3 w-3 text-primary" />
+            {v.motorista_atual.nome}
+          </p>
+          {v.motorista_atual.telefone && (() => {
+            const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
+            return wa ? (
+              <a
+                href={`https://web.whatsapp.com/send?phone=${wa}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
+              >
+                <MessageCircle className="h-3 w-3" />
+                {v.motorista_atual.telefone}
+              </a>
+            ) : null;
+          })()}
+        </div>
+      ) : v.motorista && (
+        <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
+      )}
+    </div>
+  );
+};
+
+const AlertRow: React.FC<{
+  alert: VehicleAlert;
+  icon: React.ReactNode;
+  onClick: () => void;
+}> = ({ alert, icon, onClick }) => (
+  <div
+    className="p-2 rounded-lg bg-card/70 border border-border/60 text-xs cursor-pointer hover:bg-accent transition-colors"
+    onClick={onClick}
+  >
+    <div className="flex items-center gap-2 mb-1">
+      {icon}
+      <span className="font-medium">{alert.placa}</span>
+    </div>
+    <p className="text-muted-foreground">{alert.message}</p>
+    <p className="text-[10px] text-muted-foreground mt-1">
+      {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
+    </p>
+  </div>
+);
+
+
 interface AlertConfig {
   speedLimit: number;
   stoppedMinutes: number;
