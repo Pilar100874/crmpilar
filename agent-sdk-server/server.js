@@ -200,11 +200,16 @@ app.post("/health", (req, res) => {
   if (!autenticar(req, res)) return;
   res.json({
     ok: true,
-    versao: "1.0.0",
+    versao: VERSAO,
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+    uptime_s: Math.round(process.uptime()),
+    iniciado_em: INICIADO_EM,
     anthropic: Boolean(ANTHROPIC_API_KEY),
     supabase: Boolean(supabase),
+    atualizacao_disponivel: Boolean(DEPLOY_HOOK),
     execucoes_ativas: [...runs.values()].filter((r) => r.status === "executando").length,
   });
+
 });
 
 app.post("/start", (req, res) => {
