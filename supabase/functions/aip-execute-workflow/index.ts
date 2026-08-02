@@ -410,17 +410,26 @@ Deno.serve(async (req) => {
 
             // Aprovação humana: pausa a execução e salva o ponto de retomada
             if (r.aprovacao) {
-              await supabase
+              const { data: pendente } = await supabase
                 .from("aip_approvals")
-                .insert({
-                  estabelecimento_id: estabelecimentoId,
-                  execution_id: executionId,
-                  node_id: node.id,
-                  titulo: r.aprovacao.titulo,
-                  instrucoes: r.aprovacao.instrucoes ?? null,
-                  tipo: r.aprovacao.tipo,
-                  payload: r.aprovacao.payload,
-                });
+                .select("id")
+                .eq("execution_id", executionId)
+                .eq("node_id", node.id)
+                .eq("status", "pendente")
+                .maybeSingle();
+              if (!pendente) {
+                await supabase
+                  .from("aip_approvals")
+                  .insert({
+                    estabelecimento_id: estabelecimentoId,
+                    execution_id: executionId,
+                    node_id: node.id,
+                    titulo: r.aprovacao.titulo,
+                    instrucoes: r.aprovacao.instrucoes ?? null,
+                    tipo: r.aprovacao.tipo,
+                    payload: r.aprovacao.payload,
+                  });
+              }
               if (step)
                 await supabase
                   .from("aip_execution_steps")
@@ -434,6 +443,7 @@ Deno.serve(async (req) => {
                 .from("aip_executions")
                 .update({
                   status: "aguardando_aprovacao",
+                  pausado_em: new Date().toISOString(),
                   contexto: { ...ctx, indice },
                   tokens_input: tokensIn,
                   tokens_output: tokensOut,
