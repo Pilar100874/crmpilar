@@ -34,6 +34,20 @@ export default function ExecucoesPage() {
   const [detalhe, setDetalhe] = useState<AipExecution | null>(null);
   const [steps, setSteps] = useState<any[]>([]);
   const [reexecutando, setReexecutando] = useState<string | null>(null);
+  const [exportando, setExportando] = useState<string | null>(null);
+
+  const exportar = async (id: string, formato: "pdf" | "json") => {
+    setExportando(`${id}-${formato}`);
+    try {
+      if (formato === "pdf") await exportarRelatorioPDF(id);
+      else await exportarRelatorioJSON(id);
+      toast.success(`Relatório ${formato.toUpperCase()} gerado`);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setExportando(null);
+    }
+  };
 
   useEffect(() => {
     const t = setInterval(refetch, 15000);
