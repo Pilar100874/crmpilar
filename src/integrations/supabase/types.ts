@@ -1489,6 +1489,116 @@ export type Database = {
         }
         Relationships: []
       }
+      aip_credenciais: {
+        Row: {
+          ambiente: string
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          dados: Json
+          descricao: string | null
+          estabelecimento_id: string
+          expira_em: string | null
+          id: string
+          mascara: string | null
+          nome: string
+          provedor: string
+          rotacao_dias: number | null
+          rotacionado_em: string | null
+          rotacionado_por: string | null
+          segredo_cifrado: string | null
+          ultimo_uso: string | null
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ambiente?: string
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dados?: Json
+          descricao?: string | null
+          estabelecimento_id: string
+          expira_em?: string | null
+          id?: string
+          mascara?: string | null
+          nome: string
+          provedor: string
+          rotacao_dias?: number | null
+          rotacionado_em?: string | null
+          rotacionado_por?: string | null
+          segredo_cifrado?: string | null
+          ultimo_uso?: string | null
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ambiente?: string
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dados?: Json
+          descricao?: string | null
+          estabelecimento_id?: string
+          expira_em?: string | null
+          id?: string
+          mascara?: string | null
+          nome?: string
+          provedor?: string
+          rotacao_dias?: number | null
+          rotacionado_em?: string | null
+          rotacionado_por?: string | null
+          segredo_cifrado?: string | null
+          ultimo_uso?: string | null
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
+      aip_credencial_versoes: {
+        Row: {
+          created_at: string
+          credencial_id: string
+          criado_por: string | null
+          estabelecimento_id: string
+          id: string
+          mascara: string | null
+          motivo: string | null
+          segredo_cifrado: string | null
+          versao: number
+        }
+        Insert: {
+          created_at?: string
+          credencial_id: string
+          criado_por?: string | null
+          estabelecimento_id: string
+          id?: string
+          mascara?: string | null
+          motivo?: string | null
+          segredo_cifrado?: string | null
+          versao: number
+        }
+        Update: {
+          created_at?: string
+          credencial_id?: string
+          criado_por?: string | null
+          estabelecimento_id?: string
+          id?: string
+          mascara?: string | null
+          motivo?: string | null
+          segredo_cifrado?: string | null
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_credencial_versoes_credencial_id_fkey"
+            columns: ["credencial_id"]
+            isOneToOne: false
+            referencedRelation: "aip_credenciais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aip_execution_steps: {
         Row: {
           created_at: string
@@ -25582,6 +25692,7 @@ export type Database = {
       }
       admins_present: { Args: never; Returns: boolean }
       aggregate_heatmap_daily: { Args: never; Returns: undefined }
+      aip_pode_gerenciar_credenciais: { Args: never; Returns: boolean }
       auto_close_support_tickets: { Args: never; Returns: undefined }
       check_catalog_expiration: { Args: never; Returns: undefined }
       check_customer_dependencies: {

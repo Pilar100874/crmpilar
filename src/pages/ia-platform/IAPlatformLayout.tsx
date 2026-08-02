@@ -16,6 +16,7 @@ import {
   TerminalSquare,
   History,
   ShieldCheck,
+  Lock,
   Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ const AREAS = [
   { to: "playground", label: "Playground", icon: TerminalSquare },
   { to: "historico", label: "Histórico", icon: History },
   { to: "seguranca", label: "Segurança", icon: ShieldCheck },
+  { to: "credenciais", label: "Credenciais", icon: Lock },
   { to: "rotinas", label: "Rotinas", icon: CalendarClock },
   { to: "notificacoes", label: "Notificações", icon: Bell },
 ];
