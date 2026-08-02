@@ -681,7 +681,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             <SheetTrigger asChild>
               <Button variant="secondary" size="sm" className="shadow-lg">
                 <List className="h-4 w-4 mr-2" />
-                Veículos ({stats.total})
+                Veículos ({veiculosFiltrados.length})
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
