@@ -636,42 +636,14 @@ export default function RotinasPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Histórico ---------------------------------------------------- */}
-      <Dialog open={!!historico} onOpenChange={(o) => !o && setHistorico(null)}>
-        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Histórico — {historico?.rotina.nome}</DialogTitle>
-          </DialogHeader>
-          {historico?.runs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum disparo registrado ainda.</p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {historico?.runs.map((run) => (
-                <li key={run.id} className="space-y-1 py-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm">{dt(run.iniciado_em)}</span>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="secondary" className="text-[10px]">{run.origem}</Badge>
-                      {run.duracao_ms != null && (
-                        <Badge variant="outline" className="text-[10px]">{run.duracao_ms} ms</Badge>
-                      )}
-                      <Badge variant={run.status === "erro" ? "destructive" : "outline"}>
-                        {run.status}
-                      </Badge>
-                    </div>
-                  </div>
-                  {run.erro && <p className="text-xs text-destructive">{run.erro}</p>}
-                  {run.detalhes?.resposta && (
-                    <pre className="max-h-32 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[11px]">
-                      {run.detalhes.resposta}
-                    </pre>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Histórico detalhado por disparo -------------------------------- */}
+      <RotinaRunsDialog
+        open={!!historico}
+        onOpenChange={(o) => !o && setHistorico(null)}
+        rotinaId={historico?.rotina.id}
+        rotinaNome={historico?.rotina.nome}
+      />
+
 
       <RotinaDryRunDialog
         open={!!dryRun}
