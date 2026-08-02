@@ -1063,6 +1063,1067 @@ export type Database = {
         }
         Relationships: []
       }
+      aip_agent_versions: {
+        Row: {
+          agent_id: string
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string
+          id: string
+          nota: string | null
+          snapshot: Json
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id: string
+          id?: string
+          nota?: string | null
+          snapshot?: Json
+          updated_at?: string
+          versao: number
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nota?: string | null
+          snapshot?: Json
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_agent_versions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "aip_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_agents: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          limite_custo: number | null
+          limite_tempo_seg: number | null
+          mcp_ids: string[]
+          modelo_ia: string
+          nome: string
+          prompt_principal: string
+          skill_ids: string[]
+          tags: string[]
+          tool_ids: string[]
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          limite_custo?: number | null
+          limite_tempo_seg?: number | null
+          mcp_ids?: string[]
+          modelo_ia?: string
+          nome: string
+          prompt_principal?: string
+          skill_ids?: string[]
+          tags?: string[]
+          tool_ids?: string[]
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          limite_custo?: number | null
+          limite_tempo_seg?: number | null
+          mcp_ids?: string[]
+          modelo_ia?: string
+          nome?: string
+          prompt_principal?: string
+          skill_ids?: string[]
+          tags?: string[]
+          tool_ids?: string[]
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
+      aip_api_keys: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          escopos: string[]
+          estabelecimento_id: string
+          expira_em: string | null
+          hash: string
+          id: string
+          nome: string
+          prefixo: string
+          ultimo_uso: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          escopos?: string[]
+          estabelecimento_id: string
+          expira_em?: string | null
+          hash: string
+          id?: string
+          nome: string
+          prefixo: string
+          ultimo_uso?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          escopos?: string[]
+          estabelecimento_id?: string
+          expira_em?: string | null
+          hash?: string
+          id?: string
+          nome?: string
+          prefixo?: string
+          ultimo_uso?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aip_approvals: {
+        Row: {
+          comentario: string | null
+          created_at: string
+          decidido_em: string | null
+          decidido_por: string | null
+          estabelecimento_id: string
+          execution_id: string
+          id: string
+          instrucoes: string | null
+          node_id: string | null
+          payload: Json
+          selecionados: Json
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          estabelecimento_id: string
+          execution_id: string
+          id?: string
+          instrucoes?: string | null
+          node_id?: string | null
+          payload?: Json
+          selecionados?: Json
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          estabelecimento_id?: string
+          execution_id?: string
+          id?: string
+          instrucoes?: string | null
+          node_id?: string | null
+          payload?: Json
+          selecionados?: Json
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_approvals_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "aip_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_asset_versions: {
+        Row: {
+          asset_id: string
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string
+          id: string
+          metadata: Json
+          storage_path: string | null
+          updated_at: string
+          url: string | null
+          versao: number
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id: string
+          id?: string
+          metadata?: Json
+          storage_path?: string | null
+          updated_at?: string
+          url?: string | null
+          versao: number
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          id?: string
+          metadata?: Json
+          storage_path?: string | null
+          updated_at?: string
+          url?: string | null
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_asset_versions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "aip_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_assets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string
+          execution_id: string | null
+          id: string
+          metadata: Json
+          mime_type: string | null
+          nome: string
+          storage_path: string | null
+          tamanho_bytes: number | null
+          tipo: string
+          updated_at: string
+          url: string | null
+          versao: number
+          workflow_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id: string
+          execution_id?: string | null
+          id?: string
+          metadata?: Json
+          mime_type?: string | null
+          nome: string
+          storage_path?: string | null
+          tamanho_bytes?: number | null
+          tipo?: string
+          updated_at?: string
+          url?: string | null
+          versao?: number
+          workflow_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          execution_id?: string | null
+          id?: string
+          metadata?: Json
+          mime_type?: string | null
+          nome?: string
+          storage_path?: string | null
+          tamanho_bytes?: number | null
+          tipo?: string
+          updated_at?: string
+          url?: string | null
+          versao?: number
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_assets_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "aip_executions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aip_assets_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "aip_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_audit_log: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhes: Json
+          estabelecimento_id: string
+          id: string
+          recurso_id: string | null
+          recurso_tipo: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhes?: Json
+          estabelecimento_id: string
+          id?: string
+          recurso_id?: string | null
+          recurso_tipo?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhes?: Json
+          estabelecimento_id?: string
+          id?: string
+          recurso_id?: string | null
+          recurso_tipo?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      aip_execution_steps: {
+        Row: {
+          created_at: string
+          custo: number
+          duracao_ms: number | null
+          estabelecimento_id: string
+          execution_id: string
+          id: string
+          input: Json
+          logs: string | null
+          node_id: string | null
+          ordem: number
+          output: Json
+          status: string
+          tipo: string | null
+          titulo: string | null
+          tokens_input: number
+          tokens_output: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custo?: number
+          duracao_ms?: number | null
+          estabelecimento_id: string
+          execution_id: string
+          id?: string
+          input?: Json
+          logs?: string | null
+          node_id?: string | null
+          ordem?: number
+          output?: Json
+          status?: string
+          tipo?: string | null
+          titulo?: string | null
+          tokens_input?: number
+          tokens_output?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custo?: number
+          duracao_ms?: number | null
+          estabelecimento_id?: string
+          execution_id?: string
+          id?: string
+          input?: Json
+          logs?: string | null
+          node_id?: string | null
+          ordem?: number
+          output?: Json
+          status?: string
+          tipo?: string | null
+          titulo?: string | null
+          tokens_input?: number
+          tokens_output?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_execution_steps_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "aip_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_executions: {
+        Row: {
+          agent_id: string | null
+          contexto: Json
+          created_at: string
+          custo: number
+          duracao_ms: number | null
+          erro: string | null
+          estabelecimento_id: string
+          etapa_atual: string | null
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string
+          input: Json
+          modelo: string | null
+          origem: string
+          prompt: string | null
+          remote_run_id: string | null
+          resposta: string | null
+          status: string
+          tokens_input: number
+          tokens_output: number
+          updated_at: string
+          usuario_id: string | null
+          wizard_id: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          contexto?: Json
+          created_at?: string
+          custo?: number
+          duracao_ms?: number | null
+          erro?: string | null
+          estabelecimento_id: string
+          etapa_atual?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          input?: Json
+          modelo?: string | null
+          origem?: string
+          prompt?: string | null
+          remote_run_id?: string | null
+          resposta?: string | null
+          status?: string
+          tokens_input?: number
+          tokens_output?: number
+          updated_at?: string
+          usuario_id?: string | null
+          wizard_id?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          contexto?: Json
+          created_at?: string
+          custo?: number
+          duracao_ms?: number | null
+          erro?: string | null
+          estabelecimento_id?: string
+          etapa_atual?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          input?: Json
+          modelo?: string | null
+          origem?: string
+          prompt?: string | null
+          remote_run_id?: string | null
+          resposta?: string | null
+          status?: string
+          tokens_input?: number
+          tokens_output?: number
+          updated_at?: string
+          usuario_id?: string | null
+          wizard_id?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_executions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "aip_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aip_executions_wizard_id_fkey"
+            columns: ["wizard_id"]
+            isOneToOne: false
+            referencedRelation: "aip_wizards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aip_executions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "aip_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_mcps: {
+        Row: {
+          ambiente: string
+          created_at: string
+          created_by: string | null
+          credencial_ref: string | null
+          descricao: string | null
+          endpoint: string
+          estabelecimento_id: string
+          ferramentas: Json
+          id: string
+          nome: string
+          status: string
+          tipo: string
+          ultimo_erro: string | null
+          ultimo_handshake: string | null
+          updated_at: string
+        }
+        Insert: {
+          ambiente?: string
+          created_at?: string
+          created_by?: string | null
+          credencial_ref?: string | null
+          descricao?: string | null
+          endpoint: string
+          estabelecimento_id: string
+          ferramentas?: Json
+          id?: string
+          nome: string
+          status?: string
+          tipo?: string
+          ultimo_erro?: string | null
+          ultimo_handshake?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ambiente?: string
+          created_at?: string
+          created_by?: string | null
+          credencial_ref?: string | null
+          descricao?: string | null
+          endpoint?: string
+          estabelecimento_id?: string
+          ferramentas?: Json
+          id?: string
+          nome?: string
+          status?: string
+          tipo?: string
+          ultimo_erro?: string | null
+          ultimo_handshake?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aip_permissions: {
+        Row: {
+          acoes: string[]
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          perfil: string | null
+          recurso_id: string | null
+          recurso_tipo: string
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acoes?: string[]
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          perfil?: string | null
+          recurso_id?: string | null
+          recurso_tipo: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acoes?: string[]
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          perfil?: string | null
+          recurso_id?: string | null
+          recurso_tipo?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      aip_resources: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          config: Json
+          config_schema: Json
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string | null
+          icone: string | null
+          id: string
+          is_padrao: boolean
+          nome: string
+          slug: string
+          subcategoria: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          config?: Json
+          config_schema?: Json
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          icone?: string | null
+          id?: string
+          is_padrao?: boolean
+          nome: string
+          slug: string
+          subcategoria?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          config?: Json
+          config_schema?: Json
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          icone?: string | null
+          id?: string
+          is_padrao?: boolean
+          nome?: string
+          slug?: string
+          subcategoria?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aip_skill_files: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          skill_id: string
+          storage_path: string
+          tamanho_bytes: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          skill_id: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          skill_id?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_skill_files_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "aip_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_skill_versions: {
+        Row: {
+          conteudo_md: string
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string
+          id: string
+          nota: string | null
+          skill_id: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          conteudo_md?: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id: string
+          id?: string
+          nota?: string | null
+          skill_id: string
+          updated_at?: string
+          versao: number
+        }
+        Update: {
+          conteudo_md?: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nota?: string | null
+          skill_id?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_skill_versions_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "aip_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_skills: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          conteudo_md: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          slug: string | null
+          status: string
+          tags: string[]
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          conteudo_md?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          slug?: string | null
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          conteudo_md?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          slug?: string | null
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
+      aip_tools: {
+        Row: {
+          categoria: string
+          created_at: string
+          created_by: string | null
+          credencial_ref: string | null
+          descricao: string | null
+          endpoint: string | null
+          estabelecimento_id: string
+          id: string
+          input_schema: Json
+          metodo: string
+          nome: string
+          output_schema: Json
+          permissoes: string[]
+          retry: number
+          status: string
+          tags: string[]
+          timeout_seg: number
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          created_by?: string | null
+          credencial_ref?: string | null
+          descricao?: string | null
+          endpoint?: string | null
+          estabelecimento_id: string
+          id?: string
+          input_schema?: Json
+          metodo?: string
+          nome: string
+          output_schema?: Json
+          permissoes?: string[]
+          retry?: number
+          status?: string
+          tags?: string[]
+          timeout_seg?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          created_by?: string | null
+          credencial_ref?: string | null
+          descricao?: string | null
+          endpoint?: string | null
+          estabelecimento_id?: string
+          id?: string
+          input_schema?: Json
+          metodo?: string
+          nome?: string
+          output_schema?: Json
+          permissoes?: string[]
+          retry?: number
+          status?: string
+          tags?: string[]
+          timeout_seg?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aip_usage_limits: {
+        Row: {
+          bloquear_ao_exceder: boolean
+          created_at: string
+          custo_max_dia: number | null
+          escopo: string
+          estabelecimento_id: string
+          execucoes_max_dia: number | null
+          id: string
+          referencia_id: string | null
+          tokens_max_dia: number | null
+          updated_at: string
+        }
+        Insert: {
+          bloquear_ao_exceder?: boolean
+          created_at?: string
+          custo_max_dia?: number | null
+          escopo?: string
+          estabelecimento_id: string
+          execucoes_max_dia?: number | null
+          id?: string
+          referencia_id?: string | null
+          tokens_max_dia?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bloquear_ao_exceder?: boolean
+          created_at?: string
+          custo_max_dia?: number | null
+          escopo?: string
+          estabelecimento_id?: string
+          execucoes_max_dia?: number | null
+          id?: string
+          referencia_id?: string | null
+          tokens_max_dia?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aip_wizards: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          entrega: Json
+          estabelecimento_id: string
+          etapas: Json
+          icone: string | null
+          id: string
+          nome: string
+          updated_at: string
+          workflow_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          entrega?: Json
+          estabelecimento_id: string
+          etapas?: Json
+          icone?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          entrega?: Json
+          estabelecimento_id?: string
+          etapas?: Json
+          icone?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_wizards_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "aip_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_workflow_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id: string
+          nota: string | null
+          updated_at: string
+          versao: number
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id: string
+          flow_data?: Json
+          id?: string
+          nota?: string | null
+          updated_at?: string
+          versao: number
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          flow_data?: Json
+          id?: string
+          nota?: string | null
+          updated_at?: string
+          versao?: number
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_workflow_versions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "aip_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_workflows: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id: string
+          nome: string
+          tags: string[]
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          flow_data?: Json
+          id?: string
+          nome: string
+          tags?: string[]
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          flow_data?: Json
+          id?: string
+          nome?: string
+          tags?: string[]
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       api_endpoints: {
         Row: {
           active: boolean | null

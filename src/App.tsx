@@ -25,6 +25,22 @@ import Conteudos from "./pages/Conteudos";
 import Contatos from "./pages/Contatos";
 import Empresas from "./pages/Empresas";
 import Notas from "./pages/Notas";
+import IAPlatformLayout from "./pages/ia-platform/IAPlatformLayout";
+import IAPlatformDashboard from "./pages/ia-platform/IAPlatformDashboard";
+import AgentesPage from "./pages/ia-platform/AgentesPage";
+import SkillsPage from "./pages/ia-platform/SkillsPage";
+import ToolsPage from "./pages/ia-platform/ToolsPage";
+import McpsPage from "./pages/ia-platform/McpsPage";
+import RecursosPage from "./pages/ia-platform/RecursosPage";
+import WizardsPage from "./pages/ia-platform/WizardsPage";
+import WorkflowsPage from "./pages/ia-platform/WorkflowsPage";
+import WorkflowBuilderPage from "./pages/ia-platform/WorkflowBuilderPage";
+import AprovacoesPage from "./pages/ia-platform/AprovacoesPage";
+import ExecucoesPage from "./pages/ia-platform/ExecucoesPage";
+import AssetsPage from "./pages/ia-platform/AssetsPage";
+import PlaygroundPage from "./pages/ia-platform/PlaygroundPage";
+import HistoricoPage from "./pages/ia-platform/HistoricoPage";
+import SegurancaPage from "./pages/ia-platform/SegurancaPage";
 import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
 import VinculosEmpresas from "./pages/VinculosEmpresas";
@@ -377,6 +393,23 @@ const App = () => (
               <Route path="/contatos" element={<Contatos />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/notas" element={<Notas />} />
+              <Route path="/ia-platform" element={<IAPlatformLayout />}>
+                <Route index element={<IAPlatformDashboard />} />
+                <Route path="agentes" element={<AgentesPage />} />
+                <Route path="skills" element={<SkillsPage />} />
+                <Route path="tools" element={<ToolsPage />} />
+                <Route path="mcps" element={<McpsPage />} />
+                <Route path="recursos" element={<RecursosPage />} />
+                <Route path="wizards" element={<WizardsPage />} />
+                <Route path="workflows" element={<WorkflowsPage />} />
+                <Route path="workflows/:id" element={<WorkflowBuilderPage />} />
+                <Route path="aprovacoes" element={<AprovacoesPage />} />
+                <Route path="execucoes" element={<ExecucoesPage />} />
+                <Route path="assets" element={<AssetsPage />} />
+                <Route path="playground" element={<PlaygroundPage />} />
+                <Route path="historico" element={<HistoricoPage />} />
+                <Route path="seguranca" element={<SegurancaPage />} />
+              </Route>
               <Route path="/base-conhecimento" element={<BaseConhecimento />} />
               <Route path="/todos" element={<Todos />} />
               <Route path="/vinculos-empresas" element={<VinculosEmpresas />} />
