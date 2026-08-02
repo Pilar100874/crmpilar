@@ -375,143 +375,220 @@ Deno.serve(async (req) => {
               continue;
             }
           }
+          // 3b. Tentativas (retry automático configurável por bloco) -------
+          const cfgNo: Json = node.data?.config ?? {};
+          const paramsNo: Json = cfgNo.params ?? {};
+          const retryCfg: Json = cfgNo.retry ?? {};
+          const tentativasMax = Math.max(
+            1,
+            Math.min(
+              5,
+              Number(
+                retryCfg.tentativas ??
+                  cfgNo.retry_max ??
+                  paramsNo.retry_max ??
+                  body.retry_max ??
+                  1,
+              ) || 1,
+            ),
+          );
+          const retryDelay = Math.max(
+            0,
+            Math.min(
+              20000,
+              Number(retryCfg.delay_ms ?? paramsNo.retry_delay_ms ?? body.retry_delay_ms ?? 1500) || 0,
+            ),
+          );
 
+          let tentativa = 0;
+          let concluiuEtapa = false;
 
-          const { data: step } = await supabase
-            .from("aip_execution_steps")
-            .insert({
-              estabelecimento_id: estabelecimentoId,
-              execution_id: executionId,
+          while (tentativa < tentativasMax && !concluiuEtapa) {
+            tentativa++;
+            const inicioTentativa = Date.now();
+
+            const { data: step } = await supabase
+              .from("aip_execution_steps")
+              .insert({
+                estabelecimento_id: estabelecimentoId,
+                execution_id: executionId,
+                node_id: node.id,
+                tipo,
+                titulo,
+                status: "executando",
+                input: { config: node.data?.config ?? {} },
+                ordem: indice + 1,
+                tentativa,
+                tentativas_max: tentativasMax,
+              })
+              .select()
+              .single();
+
+            await supabase
+              .from("aip_executions")
+              .update({ etapa_atual: tentativa > 1 ? `${titulo} (tentativa ${tentativa}/${tentativasMax})` : titulo })
+              .eq("id", executionId);
+
+            sse(controller, "etapa_inicio", {
+              step_id: step?.id ?? null,
               node_id: node.id,
-              tipo,
-              titulo,
-              status: "executando",
-              input: { config: node.data?.config ?? {} },
               ordem: indice + 1,
-            })
-            .select()
-            .single();
+              titulo,
+              tipo,
+              tentativa,
+              tentativas_max: tentativasMax,
+            });
 
-          await supabase
-            .from("aip_executions")
-            .update({ etapa_atual: titulo })
-            .eq("id", executionId);
+            try {
+              const r = await executarNo(node, ctx, modeloExec);
 
-          sse(controller, "etapa_inicio", {
-            step_id: step?.id ?? null,
-            node_id: node.id,
-            ordem: indice + 1,
-            titulo,
-            tipo,
-          });
-
-          try {
-            const r = await executarNo(node, ctx, modeloExec);
-
-            // Aprovação humana: pausa a execução e salva o ponto de retomada
-            if (r.aprovacao) {
-              const { data: pendente } = await supabase
-                .from("aip_approvals")
-                .select("id")
-                .eq("execution_id", executionId)
-                .eq("node_id", node.id)
-                .eq("status", "pendente")
-                .maybeSingle();
-              if (!pendente) {
-                await supabase
+              // Aprovação humana: pausa a execução e salva o ponto de retomada
+              if (r.aprovacao) {
+                const { data: pendente } = await supabase
                   .from("aip_approvals")
-                  .insert({
-                    estabelecimento_id: estabelecimentoId,
-                    execution_id: executionId,
-                    node_id: node.id,
-                    titulo: r.aprovacao.titulo,
-                    instrucoes: r.aprovacao.instrucoes ?? null,
-                    tipo: r.aprovacao.tipo,
-                    payload: r.aprovacao.payload,
-                  });
+                  .select("id")
+                  .eq("execution_id", executionId)
+                  .eq("node_id", node.id)
+                  .eq("status", "pendente")
+                  .maybeSingle();
+                if (!pendente) {
+                  await supabase
+                    .from("aip_approvals")
+                    .insert({
+                      estabelecimento_id: estabelecimentoId,
+                      execution_id: executionId,
+                      node_id: node.id,
+                      titulo: r.aprovacao.titulo,
+                      instrucoes: r.aprovacao.instrucoes ?? null,
+                      tipo: r.aprovacao.tipo,
+                      payload: r.aprovacao.payload,
+                    });
+                }
+                if (step)
+                  await supabase
+                    .from("aip_execution_steps")
+                    .update({
+                      status: "aguardando_aprovacao",
+                      logs: "Aguardando decisão humana",
+                      duracao_ms: Date.now() - inicioTentativa,
+                    })
+                    .eq("id", step.id);
+                await supabase
+                  .from("aip_executions")
+                  .update({
+                    status: "aguardando_aprovacao",
+                    pausado_em: new Date().toISOString(),
+                    contexto: { ...ctx, indice },
+                    tokens_input: tokensIn,
+                    tokens_output: tokensOut,
+                    resposta: ultimoTexto || null,
+                  })
+                  .eq("id", executionId);
+                sse(controller, "aprovacao", { node_id: node.id, titulo: r.aprovacao.titulo });
+                sse(controller, "fim", { status: "aguardando_aprovacao", execution_id: executionId });
+                return finalizar();
               }
+
+              tokensIn += r.tokens_input ?? 0;
+              tokensOut += r.tokens_output ?? 0;
+              ctx.steps[node.id] = r.output;
+              ctx.last = r.texto ?? r.output;
+              if (r.texto) ultimoTexto = r.texto;
+
+              const logConcluida =
+                tentativa > 1 ? `${r.logs ? `${r.logs} — ` : ""}Sucesso na tentativa ${tentativa}` : r.logs ?? null;
+
               if (step)
                 await supabase
                   .from("aip_execution_steps")
                   .update({
-                    status: "aguardando_aprovacao",
-                    logs: "Aguardando decisão humana",
-                    duracao_ms: Date.now() - inicioEtapa,
+                    status: "concluida",
+                    output: r.output,
+                    logs: logConcluida,
+                    tokens_input: r.tokens_input ?? 0,
+                    tokens_output: r.tokens_output ?? 0,
+                    duracao_ms: Date.now() - inicioTentativa,
                   })
                   .eq("id", step.id);
+
+              if (r.texto) sse(controller, "texto", { node_id: node.id, texto: r.texto });
+              sse(controller, "etapa_fim", {
+                step_id: step?.id ?? null,
+                node_id: node.id,
+                ordem: indice + 1,
+                status: "concluida",
+                duracao_ms: Date.now() - inicioTentativa,
+                logs: logConcluida,
+                output: r.output,
+                tentativa,
+              });
+              concluiuEtapa = true;
+            } catch (erroEtapa) {
+              const msg = (erroEtapa as Error).message;
+              const podeRetentar = tentativa < tentativasMax;
+
+              if (step)
+                await supabase
+                  .from("aip_execution_steps")
+                  .update({
+                    status: "erro",
+                    logs: podeRetentar ? `${msg} — nova tentativa automática (${tentativa}/${tentativasMax})` : msg,
+                    duracao_ms: Date.now() - inicioTentativa,
+                  })
+                  .eq("id", step.id);
+
+              sse(controller, "etapa_fim", {
+                node_id: node.id,
+                ordem: indice + 1,
+                status: "erro",
+                erro: msg,
+                tentativa,
+                tentativas_max: tentativasMax,
+              });
+
+              if (podeRetentar) {
+                const espera = retryDelay * Math.pow(2, tentativa - 1);
+                sse(controller, "retry", {
+                  node_id: node.id,
+                  ordem: indice + 1,
+                  titulo,
+                  tentativa: tentativa + 1,
+                  tentativas_max: tentativasMax,
+                  aguardando_ms: espera,
+                  erro: msg,
+                });
+                if (espera > 0) await new Promise((r) => setTimeout(r, Math.min(espera, 20000)));
+                continue;
+              }
+
+              // Esgotou as tentativas: para no ponto do erro (permite retry manual)
               await supabase
                 .from("aip_executions")
                 .update({
-                  status: "aguardando_aprovacao",
-                  pausado_em: new Date().toISOString(),
+                  status: "erro",
+                  erro: `${titulo}: ${msg}`,
+                  etapa_atual: titulo,
                   contexto: { ...ctx, indice },
+                  retomado_de_node_id: node.id,
                   tokens_input: tokensIn,
                   tokens_output: tokensOut,
-                  resposta: ultimoTexto || null,
+                  duracao_ms: Date.now() - t0,
+                  finalizado_em: new Date().toISOString(),
                 })
                 .eq("id", executionId);
-              sse(controller, "aprovacao", { node_id: node.id, titulo: r.aprovacao.titulo });
-              sse(controller, "fim", { status: "aguardando_aprovacao", execution_id: executionId });
+              sse(controller, "fim", {
+                status: "erro",
+                erro: msg,
+                execution_id: executionId,
+                node_id: node.id,
+                ordem: indice + 1,
+                tentativas: tentativa,
+              });
               return finalizar();
             }
-
-            tokensIn += r.tokens_input ?? 0;
-            tokensOut += r.tokens_output ?? 0;
-            ctx.steps[node.id] = r.output;
-            ctx.last = r.texto ?? r.output;
-            if (r.texto) ultimoTexto = r.texto;
-
-            if (step)
-              await supabase
-                .from("aip_execution_steps")
-                .update({
-                  status: "concluida",
-                  output: r.output,
-                  logs: r.logs ?? null,
-                  tokens_input: r.tokens_input ?? 0,
-                  tokens_output: r.tokens_output ?? 0,
-                  duracao_ms: Date.now() - inicioEtapa,
-                })
-                .eq("id", step.id);
-
-            if (r.texto) sse(controller, "texto", { node_id: node.id, texto: r.texto });
-            sse(controller, "etapa_fim", {
-              step_id: step?.id ?? null,
-              node_id: node.id,
-              ordem: indice + 1,
-              status: "concluida",
-              duracao_ms: Date.now() - inicioEtapa,
-              logs: r.logs ?? null,
-              output: r.output,
-            });
-          } catch (erroEtapa) {
-            const msg = (erroEtapa as Error).message;
-            if (step)
-              await supabase
-                .from("aip_execution_steps")
-                .update({
-                  status: "erro",
-                  logs: msg,
-                  duracao_ms: Date.now() - inicioEtapa,
-                })
-                .eq("id", step.id);
-            await supabase
-              .from("aip_executions")
-              .update({
-                status: "erro",
-                erro: `${titulo}: ${msg}`,
-                contexto: { ...ctx, indice },
-                tokens_input: tokensIn,
-                tokens_output: tokensOut,
-                duracao_ms: Date.now() - t0,
-                finalizado_em: new Date().toISOString(),
-              })
-              .eq("id", executionId);
-            sse(controller, "etapa_fim", { node_id: node.id, ordem: indice + 1, status: "erro", erro: msg });
-            sse(controller, "fim", { status: "erro", erro: msg, execution_id: executionId });
-            return finalizar();
           }
         }
+
 
         // 4. Conclusão ----------------------------------------------------
         await supabase
