@@ -474,41 +474,26 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              <Car className="h-4 w-4 text-primary" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Total</span>
+        {/* Stats compactos */}
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', Icon: Car },
+            { label: 'Movendo', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', Icon: Activity },
+            { label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', Icon: Clock },
+            { label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', Icon: WifiOff },
+          ].map(({ label, value, dot, text, Icon }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 shadow-sm"
+            >
+              <span className={cn("h-2 w-2 rounded-full", dot, label === 'Movendo' && 'animate-pulse')} />
+              <Icon className={cn("h-3.5 w-3.5", text)} />
+              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+              <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums">{stats.total}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-green-500/20">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <Activity className="h-4 w-4 text-green-500" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Movendo</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums text-green-600">{stats.movendo}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-amber-500/20">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Parado</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums text-amber-600">{stats.parado}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-muted-foreground/20">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
-              <WifiOff className="h-4 w-4 text-muted-foreground" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Offline</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums text-muted-foreground">{stats.offline}</p>
-          </Card>
+          ))}
         </div>
+
       </div>
 
 
