@@ -185,6 +185,33 @@ export default function ExecucoesPage() {
                       <Button size="sm" variant="outline" onClick={() => setDetalhe(e)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Exportar relatório em PDF"
+                        disabled={exportando === `${e.id}-pdf`}
+                        onClick={() => exportar(e.id, "pdf")}
+                      >
+                        {exportando === `${e.id}-pdf` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Exportar relatório em JSON"
+                        disabled={exportando === `${e.id}-json`}
+                        onClick={() => exportar(e.id, "json")}
+                      >
+                        {exportando === `${e.id}-json` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <FileJson className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+
                       {["erro", "cancelada"].includes(e.status) && (
                         <Button
                           size="sm"
