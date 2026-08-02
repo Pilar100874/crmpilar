@@ -27,6 +27,8 @@ import { Save, ArrowLeft, Trash2, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { FlowExportImportGeneric } from "@/components/flow/FlowExportImportGeneric";
 import { WorkflowRunPanel } from "@/components/ia-platform/WorkflowRunPanel";
+import { WorkflowVersionsDialog } from "@/components/ia-platform/WorkflowVersionsDialog";
+
 
 export default function WorkflowBuilderPage() {
   const { id } = useParams();
