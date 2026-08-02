@@ -127,6 +127,7 @@ export default function SkillsPage() {
         onBusca={setBusca}
         onNovo={() => {
           setEditando(null);
+          setPendentes([]);
           setForm(vazio);
           setAberto(true);
         }}
@@ -135,11 +136,17 @@ export default function SkillsPage() {
         vazio={filtrados.length === 0}
         vazioTexto="Nenhuma skill cadastrada."
         acoes={
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild disabled={importando}>
             <label className="cursor-pointer">
               <Upload className="mr-2 h-4 w-4" />
-              Importar .md
-              <input type="file" accept=".md,text/markdown" className="hidden" onChange={importar} />
+              Importar .md (vários)
+              <input
+                type="file"
+                multiple
+                accept=".md,.markdown,.txt,text/markdown,text/plain"
+                className="hidden"
+                onChange={importar}
+              />
             </label>
           </Button>
         }
