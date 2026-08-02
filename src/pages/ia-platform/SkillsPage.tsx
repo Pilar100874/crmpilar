@@ -21,7 +21,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { SkillArquivosMd, enviarArquivosSkill } from "@/components/ia-platform/SkillArquivosMd";
 import { SkillScriptsRunner } from "@/components/ia-platform/SkillScriptsRunner";
 import { importarSkillZip } from "@/lib/aip/skillZip";
-import { BookOpen, Copy, Download, FolderArchive, Pencil, Trash2, Upload } from "lucide-react";
+import { BookOpen, Copy, Download, FolderArchive, Pencil, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS = ["rascunho", "publicada", "arquivada"];
@@ -46,6 +46,7 @@ const slugify = (v: string) =>
     .replace(/^-|-$/g, "");
 
 export default function SkillsPage() {
+  const navigate = useNavigate();
   const { items, loading, estabelecimentoId, create, update, remove } = useAipTable<AipSkill>("aip_skills");
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
