@@ -53,6 +53,19 @@ const AREAS = [
 
 export default function IAPlatformLayout() {
   const location = useLocation();
+  const [roles, setRoles] = useState<AppRole[] | null>(null);
+
+  useEffect(() => {
+    carregarAcessoAip()
+      .then((a) => setRoles(a.roles))
+      .catch(() => setRoles([]));
+  }, []);
+
+  // Esconde itens restritos enquanto as roles não forem confirmadas.
+  const areas = AREAS.filter(
+    (a) => !("roles" in a) || (roles ? temAlgumaRole(roles, a.roles as AppRole[]) : false),
+  );
+
   const atual = AREAS.find((a) =>
     a.end
       ? location.pathname.replace(/\/$/, "").endsWith("/ia-platform")
