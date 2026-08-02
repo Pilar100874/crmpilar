@@ -326,6 +326,46 @@ export default function ToolsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={catalogoAberto} onOpenChange={setCatalogoAberto}>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Catálogo de tools prontas
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Escolha o que o agente deve saber fazer. Nós já preenchemos o formulário — você só ajusta a URL e a chave.
+          </p>
+          <div className="space-y-6">
+            {GRUPOS_TOOLS.map((g) => (
+              <section key={g.slug} className="space-y-3">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                  <span>{g.icone}</span> {g.nome}
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {g.itens.map((p) => (
+                    <Card key={p.slug} className="transition-all hover:shadow-md">
+                      <CardContent className="space-y-2 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{p.icone}</span>
+                          <p className="truncate font-medium">{p.nome}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{p.paraQue}</p>
+                        <Button size="sm" className="w-full" onClick={() => usarPreset(p)}>
+                          Adicionar
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
