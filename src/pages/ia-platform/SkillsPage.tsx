@@ -325,7 +325,14 @@ export default function SkillsPage() {
             </div>
 
             {editando ? (
-              <SkillArquivosMd skillId={editando.id} />
+              <>
+                <SkillArquivosMd skillId={editando.id} />
+                <SkillScriptsRunner
+                  skillId={editando.id}
+                  skillSlug={editando.slug}
+                  conteudoMd={form.conteudo_md}
+                />
+              </>
             ) : pendentes.length ? (
               <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
                 {pendentes.length} arquivo(s) serão anexados como conhecimento ao salvar.
