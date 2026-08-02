@@ -12,10 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Ban, Eye, Loader2, RefreshCw, RotateCcw } from "lucide-react";
+import { Ban, Eye, FileJson, FileText, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { agentRunner } from "@/lib/aip/runner";
 import { executarWorkflow, cancelarExecucao } from "@/lib/aip/execute";
+import { exportarRelatorioJSON, exportarRelatorioPDF } from "@/lib/aip/report";
 
 const CORES: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   concluida: "default",
