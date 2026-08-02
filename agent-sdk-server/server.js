@@ -1,5 +1,9 @@
 import express from "express";
 import cors from "cors";
+import os from "node:os";
+import path from "node:path";
+import fs from "node:fs/promises";
+import { spawn, spawnSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
 /**
