@@ -29,6 +29,7 @@ import IAPlatformLayout from "./pages/ia-platform/IAPlatformLayout";
 import IAPlatformDashboard from "./pages/ia-platform/IAPlatformDashboard";
 import AgentesPage from "./pages/ia-platform/AgentesPage";
 import SkillsPage from "./pages/ia-platform/SkillsPage";
+import AipSkillAssistentePage from "./pages/ia-platform/SkillAssistentePage";
 import ToolsPage from "./pages/ia-platform/ToolsPage";
 import McpsPage from "./pages/ia-platform/McpsPage";
 import RecursosPage from "./pages/ia-platform/RecursosPage";
