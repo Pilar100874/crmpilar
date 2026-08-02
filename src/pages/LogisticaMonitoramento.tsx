@@ -747,8 +747,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </ScrollArea>
         </div>
 
-        {/* Map - Full height on mobile */}
-        <div className="flex-1 relative h-full min-h-0">
+        {/* Map - altura fixa dentro da área visível */}
+        <div className="flex-1 relative min-h-0 overflow-hidden rounded-xl border border-border/60 shadow-sm bg-card">
+
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando...</div>
