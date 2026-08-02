@@ -511,7 +511,6 @@ pre{background:#fafbfc;border:1px solid var(--line);border-radius:var(--r);paddi
 <header>
   <div class="row"><div class="logo">P</div><span class="dot" id="dot" style="background:#8b95a5"></span><h1>Pilar · Motor de Agentes IA</h1><span class="mut" id="sub">carregando…</span></div>
   <div class="row">
-  <div class="row">
     <input id="key" type="password" placeholder="Runner Key" style="width:200px"/>
     <button onclick="salvar()">Conectar</button>
     <button class="ghost" onclick="carregar()">Atualizar</button>
