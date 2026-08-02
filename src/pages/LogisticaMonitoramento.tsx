@@ -683,20 +683,22 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                     onClick={() => zoomToVehicle(v.id)}
                     onDoubleClick={() => zoomToVehicle(v.id)}
                     className={cn(
-                      "p-2 rounded-lg cursor-pointer transition-all",
-                      isSelected 
-                        ? "bg-primary/10 border-2 border-primary" 
-                        : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
+                      "p-2 rounded-lg cursor-pointer transition-all border",
+                      isSelected
+                        ? "bg-primary/10 border-primary ring-1 ring-primary"
+                        : `bg-background/60 hover:bg-accent border-border/60 ${config.borderColor} border-l-4`
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
+                        <span className={cn("h-2 w-2 rounded-full", config.color, v.status === 'movendo' && 'animate-pulse')} />
                         {v.status !== 'offline' ? (
                           <Wifi className="h-3 w-3 text-green-500" />
                         ) : (
                           <WifiOff className="h-3 w-3 text-destructive" />
                         )}
                         <span className="font-medium text-sm">{v.placa}</span>
+
                       </div>
                       <div className="flex items-center gap-1">
                         <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
