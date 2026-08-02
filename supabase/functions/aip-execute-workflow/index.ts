@@ -607,6 +607,8 @@ Deno.serve(async (req) => {
           .update({
             status: "concluida",
             etapa_atual: null,
+            retomado_de_node_id: null,
+
             resposta: ultimoTexto || null,
             contexto: { ...ctx, indice },
             tokens_input: tokensIn,
