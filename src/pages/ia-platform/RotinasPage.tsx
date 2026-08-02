@@ -48,6 +48,8 @@ import { useConectores } from "@/lib/aip/conectores";
 import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
 import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
 import { RotinaRunsDialog } from "@/components/ia-platform/RotinaRunsDialog";
+import { ConectoresSyncStatus } from "@/components/ia-platform/ConectoresSyncStatus";
+
 
 
 interface Rotina {
@@ -261,6 +263,14 @@ export default function RotinasPage() {
 
   return (
     <>
+      <div className="mb-4 px-4 pt-4 sm:px-6">
+        <ConectoresSyncStatus
+          conectores={conectores}
+          ultimaSync={ultimaSync}
+          sincronizando={sincronizando}
+          onSincronizar={() => sincronizar()}
+        />
+      </div>
       <AipToolbar
         busca={busca}
         onBusca={setBusca}
@@ -274,6 +284,8 @@ export default function RotinasPage() {
         }
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+
+
           {filtrados.map((r) => (
             <Card key={r.id} className="transition-shadow hover:shadow-md">
               <CardContent className="space-y-3 p-4">
