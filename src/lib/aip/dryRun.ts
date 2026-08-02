@@ -10,7 +10,7 @@ import type { ConectorRegistro } from "@/lib/aip/conectores";
 export type NivelCheck = "ok" | "alerta" | "erro";
 
 export interface CheckDryRun {
-  grupo: "Cadastro" | "Alvo" | "Conectores" | "Inputs" | "Agendamento";
+  grupo: "Cadastro" | "Alvo" | "Conectores" | "Inputs" | "Agendamento" | "Políticas de execução";
   titulo: string;
   nivel: NivelCheck;
   detalhe?: string;
