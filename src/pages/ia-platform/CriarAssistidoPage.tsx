@@ -19,7 +19,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   BookOpen,
+  FileSearch,
+  Megaphone,
+  Presentation,
+  Workflow,
   CalendarClock,
   Check,
   CheckCircle2,
