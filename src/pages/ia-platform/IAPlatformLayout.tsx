@@ -45,7 +45,7 @@ const AREAS = [
   { to: "rotinas", label: "Rotinas", icon: CalendarClock },
   { to: "notificacoes", label: "Notificações", icon: Bell },
   { to: "motor", label: "Motor de execução", icon: Server },
-  { to: "monitor-servidor", label: "Monitor do servidor", icon: Activity },
+  { to: "monitor-servidor", label: "Monitor do servidor", icon: Activity, roles: ROLES_MONITOR },
 
 ];
 
