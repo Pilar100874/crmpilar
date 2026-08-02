@@ -65,7 +65,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Rotina agendada",
     subtitulo: "Algo que roda sozinho todo dia, semana ou mês.",
     icone: CalendarClock,
-    passos: ["tipo", "basico", "conhecimento", "ferramentas", "agenda", "revisao"],
+    passos: ["tipo", "basico", "conhecimento", "ferramentas", "execucao", "agenda", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Todo dia às 8h, resumir as vendas do dia anterior e enviar o resumo no WhatsApp do time comercial.",
