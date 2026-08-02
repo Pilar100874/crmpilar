@@ -39,11 +39,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FUSOS,
-  PRESETS_CRON,
   cronValido,
   descreverCron,
   proximaExecucao,
 } from "@/lib/aip/cron";
+import AgendamentoAmigavel from "@/components/ia-platform/AgendamentoAmigavel";
 import { useConectores } from "@/lib/aip/conectores";
 import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
 import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
@@ -475,22 +475,11 @@ export default function RotinasPage() {
                 </div>
               )}
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label>Agendamento (cron)</Label>
-                  <Input
-                    value={form.cron_expressao ?? ""}
-                    onChange={(e) => setForm({ ...form, cron_expressao: e.target.value })}
-                    placeholder="0 8 * * *"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {descreverCron(form.cron_expressao ?? "", form.fuso ?? "America/Sao_Paulo")}
-                  </p>
-                </div>
+              <div className="space-y-3">
                 <div className="space-y-1">
                   <Label>Fuso horário</Label>
                   <Select value={form.fuso} onValueChange={(v) => setForm({ ...form, fuso: v })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="sm:max-w-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -502,21 +491,14 @@ export default function RotinasPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <AgendamentoAmigavel
+                  valor={form.cron_expressao ?? "0 8 * * *"}
+                  onChange={(cron) => setForm({ ...form, cron_expressao: cron })}
+                  fuso={form.fuso ?? "America/Sao_Paulo"}
+                />
               </div>
 
-              <div className="flex flex-wrap gap-1">
-                {PRESETS_CRON.map((p) => (
-                  <Button
-                    key={p.valor}
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => setForm({ ...form, cron_expressao: p.valor })}
-                  >
-                    {p.label}
-                  </Button>
-                ))}
-              </div>
 
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
