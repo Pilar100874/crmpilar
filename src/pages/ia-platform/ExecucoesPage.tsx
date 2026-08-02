@@ -134,6 +134,8 @@ export default function ExecucoesPage() {
                 <th className="p-3">Início</th>
                 <th className="p-3">Origem</th>
                 <th className="p-3">Modelo</th>
+                <th className="p-3">Versão</th>
+
                 <th className="p-3">Status</th>
                 <th className="p-3">Tokens</th>
                 <th className="p-3">Custo</th>
