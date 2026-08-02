@@ -31,7 +31,12 @@ export interface RotinaDryRunEntrada {
   fuso?: string | null;
   timeout_ms?: number | null;
   retry_max?: number | null;
+  max_concorrencia?: number | null;
+  retry_backoff_ms?: number | null;
+  retry_fator?: number | null;
+  bloquear_duplicados?: boolean | null;
   ativo?: boolean | null;
+
 }
 
 export interface ResultadoDryRun {
