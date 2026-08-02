@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarClock, History, Loader2, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, History, Loader2, Pencil, Play, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -456,7 +456,24 @@ export default function RotinasPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Conectores disponíveis para a rotina</Label>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label>Conectores disponíveis para a rotina</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {ultimaSync ? `Atualizado ${ultimaSync.toLocaleString("pt-BR")}` : "Nunca sincronizado"}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      disabled={sincronizando}
+                      onClick={() => sincronizar()}
+                    >
+                      <RefreshCw className={`mr-1 h-3.5 w-3.5 ${sincronizando ? "animate-spin" : ""}`} />
+                      Atualizar
+                    </Button>
+                  </div>
+                </div>
                 <ScrollArea className="h-40 rounded-lg border border-border p-2">
                   <div className="flex flex-wrap gap-1">
                     {conectoresDisponiveis.map((c) => {
