@@ -82,11 +82,14 @@ async function ferramentasDoApp() {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/mcp/.mcp/list-tools`, {
       headers: { Authorization: `Bearer ${ANON_KEY}`, apikey: ANON_KEY },
     });
-    if (!res.ok) return { itens: [], erro: `HTTP ${res.status}` };
+    // 401/403: o servidor MCP do app é protegido por OAuth — isso é esperado e
+    // não significa indisponibilidade; o cliente (Claude Code) autentica sozinho.
+    if (res.status === 401 || res.status === 403) return { itens: [], erro: null, protegido: true };
+    if (!res.ok) return { itens: [], erro: `HTTP ${res.status}`, protegido: false };
     const j = await res.json();
-    return { itens: (j.tools ?? j.result?.tools ?? []) as any[], erro: null as string | null };
+    return { itens: (j.tools ?? j.result?.tools ?? []) as any[], erro: null as string | null, protegido: false };
   } catch (e) {
-    return { itens: [] as any[], erro: (e as Error).message };
+    return { itens: [] as any[], erro: (e as Error).message, protegido: false };
   }
 }
 
@@ -171,7 +174,11 @@ async function sincronizar(db: any, estabelecimentoId: string) {
     status: app.erro ? "erro" : "conectado",
     disponivel: !app.erro,
     ferramentas: app.itens,
-    metadados: { endpoint: `${SUPABASE_URL}/functions/v1/mcp`, total: app.itens.length },
+    metadados: {
+      endpoint: `${SUPABASE_URL}/functions/v1/mcp`,
+      total: app.itens.length,
+      protegido_por_oauth: app.protegido,
+    },
     ultimo_erro: app.erro,
   });
 
