@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { CalendarClock,
+  NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Bot,
@@ -35,6 +36,7 @@ const AREAS = [
   { to: "playground", label: "Playground", icon: TerminalSquare },
   { to: "historico", label: "Histórico", icon: History },
   { to: "seguranca", label: "Segurança", icon: ShieldCheck },
+  { to: "rotinas", label: "Rotinas", icon: CalendarClock },
   { to: "notificacoes", label: "Notificações", icon: Bell },
 ];
 

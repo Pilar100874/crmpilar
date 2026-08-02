@@ -30,7 +30,9 @@ export type AipTable =
   | "aip_api_keys"
   | "aip_usage_limits"
   | "aip_permissions"
-  | "aip_audit_log";
+  | "aip_audit_log"
+  | "aip_rotinas"
+  | "aip_rotina_runs";
 
 export function useEstabelecimento() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
