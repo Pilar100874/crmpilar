@@ -134,18 +134,8 @@ export default function PlaygroundPage() {
           </div>
           <div className="space-y-2">
             <Label>Modelo</Label>
-            <Select value={modelo} onValueChange={setModelo} disabled={agentId !== "nenhum"}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MODELOS_IA.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ModeloSelect value={modelo} onChange={setModelo} disabled={agentId !== "nenhum"} />
+
           </div>
           <div className="space-y-2">
             <Label>Prompt</Label>
