@@ -121,8 +121,18 @@ export default function ToolsPage() {
         novoLabel="Nova tool"
         loading={loading}
         vazio={filtrados.length === 0}
-        vazioTexto="Nenhuma tool cadastrada."
+        vazioTexto="Nenhuma tool cadastrada. Comece pelo catálogo pronto."
+        acoes={
+          <Button size="sm" variant="outline" onClick={() => setCatalogoAberto(true)}>
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> Catálogo pronto
+          </Button>
+        }
       >
+        <p className="mb-3 text-xs text-muted-foreground">
+          Tool é uma ação que o agente pode executar (enviar WhatsApp, consultar CNPJ, gerar imagem...).
+          Use o <strong>catálogo pronto</strong> para adicionar em 1 clique — depois é só trocar a URL e a chave.
+        </p>
+
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtrados.map((t) => (
             <Card key={t.id} className="transition-all hover:shadow-md">
