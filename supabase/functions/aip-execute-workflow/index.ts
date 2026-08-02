@@ -1,0 +1,488 @@
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+/**
+ * Motor de execução dos workflows da Plataforma de Agentes IA.
+ *
+ * - Percorre os blocos do Workflow Builder em ordem topológica
+ * - Persiste `aip_executions` (execução) e `aip_execution_steps` (histórico por etapa)
+ * - Faz streaming SSE dos eventos para a UI (status, logs, texto do modelo)
+ * - Pausa em blocos de aprovação humana (cria `aip_approvals`) e permite retomar
+ */
+
+const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const MODELO_PADRAO = "google/gemini-3.6-flash";
+
+type Json = Record<string, any>;
+
+const enc = new TextEncoder();
+
+function sse(controller: ReadableStreamDefaultController, evento: string, dados: Json) {
+  controller.enqueue(enc.encode(`data: ${JSON.stringify({ evento, ...dados })}\n\n`));
+}
+
+/** Interpola {{input.x}}, {{steps.<id>}}, {{last}} no texto. */
+function interpolar(texto: string, ctx: Json): string {
+  if (!texto) return "";
+  return texto.replace(/\{\{\s*([\w.\-]+)\s*\}\}/g, (_m, caminho: string) => {
+    const partes = caminho.split(".");
+    let atual: any = ctx;
+    for (const p of partes) {
+      if (atual == null) return "";
+      atual = atual[p];
+    }
+    if (atual == null) return "";
+    return typeof atual === "string" ? atual : JSON.stringify(atual);
+  });
+}
+
+/** Ordena os nós seguindo as conexões a partir dos blocos sem entrada. */
+function ordenarNos(nodes: any[], edges: any[]): any[] {
+  if (nodes.length === 0) return [];
+  const porId = new Map(nodes.map((n) => [n.id, n]));
+  const temEntrada = new Set(edges.map((e) => e.target));
+  const raizes = nodes.filter((n) => !temEntrada.has(n.id));
+  const inicio = raizes.length > 0 ? raizes : [nodes[0]];
+  const visitados = new Set<string>();
+  const ordem: any[] = [];
+  const fila = [...inicio];
+  while (fila.length) {
+    const atual = fila.shift()!;
+    if (!atual || visitados.has(atual.id)) continue;
+    visitados.add(atual.id);
+    ordem.push(atual);
+    edges
+      .filter((e) => e.source === atual.id)
+      .forEach((e) => {
+        const alvo = porId.get(e.target);
+        if (alvo && !visitados.has(alvo.id)) fila.push(alvo);
+      });
+  }
+  // blocos soltos entram no fim, preservando a ordem do canvas
+  nodes.forEach((n) => {
+    if (!visitados.has(n.id)) ordem.push(n);
+  });
+  return ordem;
+}
+
+async function chamarModelo(modelo: string, prompt: string, sistema?: string) {
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
+  const mensagens: Json[] = [];
+  if (sistema) mensagens.push({ role: "system", content: sistema });
+  mensagens.push({ role: "user", content: prompt });
+
+  const body: Json = { model: modelo, messages: mensagens };
+  if (modelo.startsWith("openai/gpt-5.6")) body.reasoning_effort = "none";
+
+  const res = await fetch(GATEWAY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": LOVABLE_API_KEY },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 429) throw new Error("Limite de requisições da IA atingido. Tente novamente em instantes.");
+  if (res.status === 402) throw new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
+  if (!res.ok) throw new Error(`Falha na IA (${res.status}): ${(await res.text()).slice(0, 300)}`);
+  const data = await res.json();
+  return {
+    texto: String(data?.choices?.[0]?.message?.content ?? ""),
+    tokens_input: Number(data?.usage?.prompt_tokens ?? 0),
+    tokens_output: Number(data?.usage?.completion_tokens ?? 0),
+  };
+}
+
+interface ResultadoNo {
+  output: Json;
+  texto?: string;
+  tokens_input?: number;
+  tokens_output?: number;
+  logs?: string;
+  aprovacao?: { titulo: string; instrucoes?: string; tipo: string; payload: Json };
+}
+
+async function executarNo(node: any, ctx: Json, modeloExec: string): Promise<ResultadoNo> {
+  const data = node.data ?? {};
+  const config = data.config ?? {};
+  const params: Json = config.params ?? {};
+  const categoria = String(data.categoria ?? "");
+  const slug = String(data.slug ?? "");
+  const prompt = interpolar(String(config.prompt ?? ""), ctx);
+
+  // --- Helpers ---------------------------------------------------------
+  if (categoria === "helpers") {
+    switch (slug) {
+      case "delay": {
+        const ms = Math.min(Number(params.ms ?? params.segundos ? Number(params.segundos) * 1000 : 1000), 15000);
+        await new Promise((r) => setTimeout(r, ms));
+        return { output: { aguardou_ms: ms }, logs: `Aguardou ${ms}ms` };
+      }
+      case "template-prompt":
+        return { output: { texto: prompt }, texto: prompt };
+      case "regex": {
+        const alvo = interpolar(String(params.texto ?? "{{last}}"), ctx);
+        const re = new RegExp(String(params.padrao ?? ".*"), String(params.flags ?? "g"));
+        const achados = alvo.match(re) ?? [];
+        return { output: { achados }, logs: `${achados.length} ocorrência(s)` };
+      }
+      case "json-parser": {
+        const bruto = interpolar(String(params.texto ?? "{{last}}"), ctx);
+        try {
+          return { output: { json: JSON.parse(bruto) } };
+        } catch (e) {
+          throw new Error(`JSON inválido: ${(e as Error).message}`);
+        }
+      }
+      case "if":
+      case "else": {
+        const esq = interpolar(String(params.valor ?? "{{last}}"), ctx);
+        const dir = interpolar(String(params.comparar ?? ""), ctx);
+        const op = String(params.operador ?? "contem");
+        const ok =
+          op === "igual" ? esq === dir : op === "diferente" ? esq !== dir : esq.includes(dir);
+        return { output: { condicao: ok }, logs: `Condição ${op}: ${ok}` };
+      }
+      case "merge":
+        return { output: { merge: ctx.steps } };
+      case "split": {
+        const alvo = interpolar(String(params.texto ?? "{{last}}"), ctx);
+        return { output: { partes: alvo.split(String(params.separador ?? "\n")) } };
+      }
+      case "human-approval":
+        return {
+          output: {},
+          aprovacao: {
+            titulo: String(config.titulo ?? data.label ?? "Aprovação necessária"),
+            instrucoes: prompt || String(config.instrucoes ?? ""),
+            tipo: String(params.tipo ?? "texto"),
+            payload: { contexto: ctx.last ?? null, node_id: node.id },
+          },
+        };
+      default:
+        return { output: { ok: true }, logs: `Bloco ${slug} sem efeito colateral` };
+    }
+  }
+
+  // --- Webhook / integrações HTTP --------------------------------------
+  if (slug === "webhook" || params.url) {
+    const url = interpolar(String(params.url ?? ""), ctx);
+    if (!url) throw new Error("Informe params.url para este bloco");
+    const metodo = String(params.metodo ?? "POST").toUpperCase();
+    const res = await fetch(url, {
+      method: metodo,
+      headers: { "Content-Type": "application/json", ...(params.headers ?? {}) },
+      body: metodo === "GET" ? undefined : JSON.stringify(params.body ?? { prompt, contexto: ctx.last ?? null }),
+    });
+    const texto = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${texto.slice(0, 300)}`);
+    let corpo: any = texto;
+    try {
+      corpo = JSON.parse(texto);
+    } catch { /* texto puro */ }
+    return { output: { status: res.status, corpo }, logs: `${metodo} ${url} → ${res.status}` };
+  }
+
+  // --- Qualquer bloco com prompt vira chamada de IA ---------------------
+  if (prompt) {
+    const modelo = String(config.modelo ?? params.modelo ?? modeloExec);
+    const r = await chamarModelo(modelo, prompt, config.sistema ? String(config.sistema) : undefined);
+    return {
+      output: { texto: r.texto, modelo },
+      texto: r.texto,
+      tokens_input: r.tokens_input,
+      tokens_output: r.tokens_output,
+      logs: `Modelo ${modelo}`,
+    };
+  }
+
+  return {
+    output: { ignorado: true },
+    logs: `Bloco "${categoria}/${slug}" sem prompt nem URL configurados — nada a executar.`,
+  };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: "Não autenticado" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const workflowId: string | undefined = body.workflow_id;
+  const retomar: string | undefined = body.execution_id;
+  const entrada: Json = body.input ?? {};
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const t0 = Date.now();
+      let executionId = retomar ?? null;
+      let estabelecimentoId: string | null = null;
+
+      const finalizar = () => {
+        try {
+          controller.enqueue(enc.encode("data: [DONE]\n\n"));
+          controller.close();
+        } catch { /* já fechado */ }
+      };
+
+      try {
+        // 1. Workflow + execução -----------------------------------------
+        let execAtual: any = null;
+        if (retomar) {
+          const { data } = await supabase.from("aip_executions").select("*").eq("id", retomar).maybeSingle();
+          if (!data) throw new Error("Execução não encontrada");
+          execAtual = data;
+          estabelecimentoId = data.estabelecimento_id;
+        }
+
+        const wfId = workflowId ?? execAtual?.workflow_id;
+        if (!wfId) throw new Error("Workflow não informado");
+
+        const { data: wf, error: wfErr } = await supabase
+          .from("aip_workflows")
+          .select("*")
+          .eq("id", wfId)
+          .maybeSingle();
+        if (wfErr || !wf) throw new Error("Workflow não encontrado ou sem permissão");
+        estabelecimentoId = wf.estabelecimento_id;
+
+        const nodes: any[] = wf.flow_data?.nodes ?? [];
+        const edges: any[] = wf.flow_data?.edges ?? [];
+        if (nodes.length === 0) throw new Error("Workflow sem blocos para executar");
+        const ordem = ordenarNos(nodes, edges);
+
+        const modeloExec = String(body.modelo ?? MODELO_PADRAO);
+
+        if (!execAtual) {
+          const { data, error } = await supabase
+            .from("aip_executions")
+            .insert({
+              estabelecimento_id: estabelecimentoId,
+              workflow_id: wfId,
+              origem: String(body.origem ?? "workflow"),
+              usuario_id: userData.user.id,
+              status: "executando",
+              modelo: modeloExec,
+              input: entrada,
+              contexto: {},
+              iniciado_em: new Date().toISOString(),
+            })
+            .select()
+            .single();
+          if (error) throw new Error(`Não foi possível criar a execução: ${error.message}`);
+          execAtual = data;
+        } else {
+          await supabase
+            .from("aip_executions")
+            .update({ status: "executando", erro: null })
+            .eq("id", execAtual.id);
+        }
+        executionId = execAtual.id;
+
+        sse(controller, "execucao", {
+          execution_id: executionId,
+          status: "executando",
+          total_etapas: ordem.length,
+          workflow: wf.nome,
+        });
+
+        // 2. Contexto (retomada preserva os passos já concluídos) ---------
+        const ctxSalvo: Json = execAtual.contexto ?? {};
+        const ctx: Json = {
+          input: { ...(execAtual.input ?? {}), ...entrada },
+          steps: ctxSalvo.steps ?? {},
+          last: ctxSalvo.last ?? null,
+        };
+        let indice = Number(ctxSalvo.indice ?? 0);
+        let tokensIn = Number(execAtual.tokens_input ?? 0);
+        let tokensOut = Number(execAtual.tokens_output ?? 0);
+        let ultimoTexto: string = execAtual.resposta ?? "";
+
+        // 3. Loop de execução --------------------------------------------
+        for (; indice < ordem.length; indice++) {
+          const node = ordem[indice];
+          const titulo = String(node.data?.label ?? node.data?.nome ?? node.id);
+          const tipo = `${node.data?.categoria ?? "bloco"}/${node.data?.slug ?? "custom"}`;
+          const inicioEtapa = Date.now();
+
+          const { data: step } = await supabase
+            .from("aip_execution_steps")
+            .insert({
+              estabelecimento_id: estabelecimentoId,
+              execution_id: executionId,
+              node_id: node.id,
+              tipo,
+              titulo,
+              status: "executando",
+              input: { config: node.data?.config ?? {} },
+              ordem: indice + 1,
+            })
+            .select()
+            .single();
+
+          await supabase
+            .from("aip_executions")
+            .update({ etapa_atual: titulo })
+            .eq("id", executionId);
+
+          sse(controller, "etapa_inicio", {
+            step_id: step?.id ?? null,
+            node_id: node.id,
+            ordem: indice + 1,
+            titulo,
+            tipo,
+          });
+
+          try {
+            const r = await executarNo(node, ctx, modeloExec);
+
+            // Aprovação humana: pausa a execução e salva o ponto de retomada
+            if (r.aprovacao) {
+              await supabase
+                .from("aip_approvals")
+                .insert({
+                  estabelecimento_id: estabelecimentoId,
+                  execution_id: executionId,
+                  node_id: node.id,
+                  titulo: r.aprovacao.titulo,
+                  instrucoes: r.aprovacao.instrucoes ?? null,
+                  tipo: r.aprovacao.tipo,
+                  payload: r.aprovacao.payload,
+                });
+              if (step)
+                await supabase
+                  .from("aip_execution_steps")
+                  .update({
+                    status: "aguardando_aprovacao",
+                    logs: "Aguardando decisão humana",
+                    duracao_ms: Date.now() - inicioEtapa,
+                  })
+                  .eq("id", step.id);
+              await supabase
+                .from("aip_executions")
+                .update({
+                  status: "aguardando_aprovacao",
+                  contexto: { ...ctx, indice },
+                  tokens_input: tokensIn,
+                  tokens_output: tokensOut,
+                  resposta: ultimoTexto || null,
+                })
+                .eq("id", executionId);
+              sse(controller, "aprovacao", { node_id: node.id, titulo: r.aprovacao.titulo });
+              sse(controller, "fim", { status: "aguardando_aprovacao", execution_id: executionId });
+              return finalizar();
+            }
+
+            tokensIn += r.tokens_input ?? 0;
+            tokensOut += r.tokens_output ?? 0;
+            ctx.steps[node.id] = r.output;
+            ctx.last = r.texto ?? r.output;
+            if (r.texto) ultimoTexto = r.texto;
+
+            if (step)
+              await supabase
+                .from("aip_execution_steps")
+                .update({
+                  status: "concluida",
+                  output: r.output,
+                  logs: r.logs ?? null,
+                  tokens_input: r.tokens_input ?? 0,
+                  tokens_output: r.tokens_output ?? 0,
+                  duracao_ms: Date.now() - inicioEtapa,
+                })
+                .eq("id", step.id);
+
+            if (r.texto) sse(controller, "texto", { node_id: node.id, texto: r.texto });
+            sse(controller, "etapa_fim", {
+              step_id: step?.id ?? null,
+              node_id: node.id,
+              ordem: indice + 1,
+              status: "concluida",
+              duracao_ms: Date.now() - inicioEtapa,
+              logs: r.logs ?? null,
+              output: r.output,
+            });
+          } catch (erroEtapa) {
+            const msg = (erroEtapa as Error).message;
+            if (step)
+              await supabase
+                .from("aip_execution_steps")
+                .update({
+                  status: "erro",
+                  logs: msg,
+                  duracao_ms: Date.now() - inicioEtapa,
+                })
+                .eq("id", step.id);
+            await supabase
+              .from("aip_executions")
+              .update({
+                status: "erro",
+                erro: `${titulo}: ${msg}`,
+                contexto: { ...ctx, indice },
+                tokens_input: tokensIn,
+                tokens_output: tokensOut,
+                duracao_ms: Date.now() - t0,
+                finalizado_em: new Date().toISOString(),
+              })
+              .eq("id", executionId);
+            sse(controller, "etapa_fim", { node_id: node.id, ordem: indice + 1, status: "erro", erro: msg });
+            sse(controller, "fim", { status: "erro", erro: msg, execution_id: executionId });
+            return finalizar();
+          }
+        }
+
+        // 4. Conclusão ----------------------------------------------------
+        await supabase
+          .from("aip_executions")
+          .update({
+            status: "concluida",
+            etapa_atual: null,
+            resposta: ultimoTexto || null,
+            contexto: { ...ctx, indice },
+            tokens_input: tokensIn,
+            tokens_output: tokensOut,
+            duracao_ms: Date.now() - t0,
+            finalizado_em: new Date().toISOString(),
+          })
+          .eq("id", executionId);
+
+        sse(controller, "fim", {
+          status: "concluida",
+          execution_id: executionId,
+          duracao_ms: Date.now() - t0,
+          tokens: tokensIn + tokensOut,
+          resposta: ultimoTexto,
+        });
+        finalizar();
+      } catch (e) {
+        const msg = (e as Error).message;
+        if (executionId) {
+          await supabase
+            .from("aip_executions")
+            .update({
+              status: "erro",
+              erro: msg,
+              duracao_ms: Date.now() - t0,
+              finalizado_em: new Date().toISOString(),
+            })
+            .eq("id", executionId);
+        }
+        sse(controller, "fim", { status: "erro", erro: msg, execution_id: executionId });
+        finalizar();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+  });
+});
