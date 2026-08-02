@@ -663,13 +663,14 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
 
         {/* Desktop Vehicle List */}
-        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 border-r bg-background overflow-hidden flex-col">
-          <div className="p-2 sm:p-3 border-b flex items-center justify-between">
-            <h3 className="font-medium text-sm flex items-center gap-2">
-              <Car className="h-4 w-4" />
-              Veículos
+        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 rounded-xl border border-border/60 bg-card/70 backdrop-blur-md shadow-sm overflow-hidden flex-col">
+          <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
+            <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+              <Car className="h-3.5 w-3.5" />
+              Veículos ({veiculosFiltrados.length})
             </h3>
           </div>
+
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
               {veiculosFiltrados.map(v => {
