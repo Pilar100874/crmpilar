@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,13 +32,24 @@ import {
   Upload,
   Video,
   Wand2,
+  Plus,
+  Save,
+  Trash2,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-type PassoId = "tipo" | "basico" | "referencias" | "conhecimento" | "ferramentas" | "agenda" | "revisao";
+type PassoId =
+  | "tipo"
+  | "basico"
+  | "referencias"
+  | "conhecimento"
+  | "ferramentas"
+  | "execucao"
+  | "agenda"
+  | "revisao";
 
 interface TipoCriacao {
   id: string;
@@ -57,7 +69,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Rotina agendada",
     subtitulo: "Algo que roda sozinho todo dia, semana ou mês.",
     icone: CalendarClock,
-    passos: ["tipo", "basico", "conhecimento", "ferramentas", "agenda", "revisao"],
+    passos: ["tipo", "basico", "conhecimento", "ferramentas", "execucao", "agenda", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Todo dia às 8h, resumir as vendas do dia anterior e enviar o resumo no WhatsApp do time comercial.",
@@ -69,7 +81,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Criação de imagens",
     subtitulo: "Posts, banners e fotos de produto.",
     icone: ImageIcon,
-    passos: ["tipo", "basico", "referencias", "conhecimento", "revisao"],
+    passos: ["tipo", "basico", "referencias", "conhecimento", "execucao", "revisao"],
     modelo: "google/gemini-3.6-flash",
     exemploObjetivo:
       "Criar imagens quadradas de produto com fundo escuro, luz suave e espaço no topo para o título.",
@@ -81,7 +93,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Criação de vídeos",
     subtitulo: "Clipes curtos para redes sociais e campanhas.",
     icone: Video,
-    passos: ["tipo", "basico", "referencias", "conhecimento", "ferramentas", "revisao"],
+    passos: ["tipo", "basico", "referencias", "conhecimento", "ferramentas", "execucao", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Gerar vídeos de 10 segundos no formato 9:16 apresentando o produto, com movimento suave de câmera.",
@@ -93,7 +105,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Textos e respostas",
     subtitulo: "Rascunhos de e-mail, respostas e resumos.",
     icone: MessageSquare,
-    passos: ["tipo", "basico", "conhecimento", "ferramentas", "revisao"],
+    passos: ["tipo", "basico", "conhecimento", "ferramentas", "execucao", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Escrever respostas cordiais para clientes seguindo as políticas internas da empresa.",
@@ -105,7 +117,7 @@ const TIPOS: TipoCriacao[] = [
     titulo: "Pesquisa e coleta de dados",
     subtitulo: "Buscar informações em sites, portais e no sistema.",
     icone: Sparkle,
-    passos: ["tipo", "basico", "conhecimento", "ferramentas", "agenda", "revisao"],
+    passos: ["tipo", "basico", "conhecimento", "ferramentas", "execucao", "agenda", "revisao"],
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Buscar novas oportunidades publicadas hoje e trazer órgão, objeto, valor e prazo de cada uma.",
@@ -129,8 +141,37 @@ const TITULOS: Record<PassoId, { titulo: string; ajuda: string }> = {
   conhecimento: { titulo: "Conhecimento", ajuda: "Instruções e materiais que o agente deve seguir." },
   ferramentas: { titulo: "Ferramentas", ajuda: "O que o agente pode acessar para trabalhar." },
   agenda: { titulo: "Quando deve rodar?", ajuda: "Escolha a frequência e o horário." },
+  execucao: {
+    titulo: "Como deve executar?",
+    ajuda: "De uma vez só ou passo a passo, como no Claude Code.",
+  },
   revisao: { titulo: "Revisão", ajuda: "Confira e crie. Você pode editar depois." },
 };
+
+interface EtapaExecucao {
+  id: string;
+  titulo: string;
+  instrucao: string;
+}
+
+interface AipReceita {
+  id: string;
+  nome: string;
+  tipo: string;
+  objetivo: string | null;
+  detalhes: string | null;
+  modelo: string | null;
+  skill_ids: string[];
+  tool_ids: string[];
+  mcp_ids: string[];
+  referencias: ReferenciaSelecionada[];
+  md_nome: string | null;
+  md_conteudo: string | null;
+  modo_execucao: "unica" | "etapas";
+  etapas: EtapaExecucao[];
+  agenda: { frequencia?: string; hora?: string; minuto?: string };
+  updated_at: string;
+}
 
 export default function CriarAssistidoPage() {
   const navigate = useNavigate();
@@ -157,6 +198,13 @@ export default function CriarAssistidoPage() {
   const [frequencia, setFrequencia] = useState("diaria");
   const [hora, setHora] = useState("08");
   const [minuto, setMinuto] = useState("00");
+  const [modoExecucao, setModoExecucao] = useState<"unica" | "etapas">("unica");
+  const [etapas, setEtapas] = useState<EtapaExecucao[]>([]);
+  const [receitaId, setReceitaId] = useState<string | null>(null);
+  const [salvandoModelo, setSalvandoModelo] = useState(false);
+  const [receitaExcluir, setReceitaExcluir] = useState<AipReceita | null>(null);
+  const { items: receitas, create: criarReceita, update: atualizarReceita, remove: removerReceita } =
+    useAipTable<AipReceita>("aip_receitas", { orderBy: "updated_at" });
 
   const tipo = useMemo(() => TIPOS.find((t) => t.id === tipoId) ?? null, [tipoId]);
   const passos: PassoId[] = tipo?.passos ?? ["tipo"];
@@ -206,11 +254,84 @@ export default function CriarAssistidoPage() {
           .map((r) => `- ${r.nome}: ${r.url}`)
           .join("\n")}`,
       );
+    if (modoExecucao === "etapas" && etapas.length) {
+      partes.push(
+        `\nExecute passo a passo, na ordem, confirmando a conclusão de cada etapa antes de seguir:\n${etapas
+          .map((e, i) => `${i + 1}. ${e.titulo}${e.instrucao ? ` — ${e.instrucao}` : ""}`)
+          .join("\n")}`,
+      );
+    } else {
+      partes.push("\nExecute tudo em uma única passada e devolva o resultado final.");
+    }
     partes.push(
       "\nResponda sempre em português do Brasil. Se faltar alguma informação, liste o que precisa antes de executar.",
     );
     return partes.join("\n");
   };
+
+  /** Dados que representam o que foi montado no assistente. */
+  const snapshot = () => ({
+    nome: nome.trim() || "Rascunho sem nome",
+    tipo: tipo?.id ?? "rotina",
+    objetivo,
+    detalhes,
+    modelo,
+    skill_ids: skillIds,
+    tool_ids: toolIds,
+    mcp_ids: mcpIds,
+    referencias,
+    md_nome: mdNome,
+    md_conteudo: mdConteudo,
+    modo_execucao: modoExecucao,
+    etapas,
+    agenda: { frequencia, hora, minuto },
+  });
+
+  const salvarModelo = async () => {
+    if (!tipo) return toast.warning("Escolha primeiro o que você quer criar");
+    setSalvandoModelo(true);
+    try {
+      if (receitaId) {
+        await atualizarReceita(receitaId, snapshot() as any);
+      } else {
+        const criada = await criarReceita(snapshot() as any);
+        if (criada) setReceitaId(criada.id);
+      }
+    } finally {
+      setSalvandoModelo(false);
+    }
+  };
+
+  const carregarModelo = (r: AipReceita) => {
+    setReceitaId(r.id);
+    setTipoId(r.tipo);
+    setNome(r.nome ?? "");
+    setObjetivo(r.objetivo ?? "");
+    setDetalhes(r.detalhes ?? "");
+    setModelo(r.modelo ?? MODELOS_IA[1]);
+    setSkillIds(r.skill_ids ?? []);
+    setToolIds(r.tool_ids ?? []);
+    setMcpIds(r.mcp_ids ?? []);
+    setReferencias(r.referencias ?? []);
+    setMdNome(r.md_nome ?? "");
+    setMdConteudo(r.md_conteudo ?? "");
+    setModoExecucao(r.modo_execucao ?? "unica");
+    setEtapas(r.etapas ?? []);
+    setFrequencia(r.agenda?.frequencia ?? "diaria");
+    setHora(r.agenda?.hora ?? "08");
+    setMinuto(r.agenda?.minuto ?? "00");
+    setIndice(1);
+    toast.success(`Modelo "${r.nome}" carregado`);
+  };
+
+  const novaEtapa = () =>
+    setEtapas((e) => [
+      ...e,
+      { id: crypto.randomUUID(), titulo: `Etapa ${e.length + 1}`, instrucao: "" },
+    ]);
+  const atualizarEtapa = (id: string, campo: "titulo" | "instrucao", valor: string) =>
+    setEtapas((e) => e.map((x) => (x.id === id ? { ...x, [campo]: valor } : x)));
+  const removerEtapa = (id: string) => setEtapas((e) => e.filter((x) => x.id !== id));
 
   const criar = async () => {
     if (!estabelecimentoId || !tipo) return;
@@ -256,26 +377,47 @@ export default function CriarAssistidoPage() {
         .single();
       if (erroAgente) throw new Error(erroAgente.message);
 
+      /** Guarda o modelo usado (o "como foi feito") junto do que foi criado. */
+      const registrarReceita = async (rotinaId?: string | null) => {
+        const payload = {
+          ...snapshot(),
+          skill_ids: idsSkills,
+          agent_id: agente.id,
+          rotina_id: rotinaId ?? null,
+        } as any;
+        if (receitaId) await atualizarReceita(receitaId, payload);
+        else {
+          const criada = await criarReceita(payload);
+          if (criada) setReceitaId(criada.id);
+        }
+      };
+
       if (tipo.criaRotina) {
         const { data: auth } = await supabase.auth.getUser();
-        const { error: erroRotina } = await db.from("aip_rotinas").insert({
-          estabelecimento_id: estabelecimentoId,
-          nome: nome.trim(),
-          descricao: objetivo.trim().slice(0, 300),
-          tipo_alvo: "agente",
-          agent_id: agente.id,
-          prompt: montarPrompt(),
-          modelo,
-          cron_expressao: cron,
-          ativo: false,
-          criado_por: auth?.user?.id ?? null,
-        });
+        const { data: rotina, error: erroRotina } = await db
+          .from("aip_rotinas")
+          .insert({
+            estabelecimento_id: estabelecimentoId,
+            nome: nome.trim(),
+            descricao: objetivo.trim().slice(0, 300),
+            tipo_alvo: "agente",
+            agent_id: agente.id,
+            prompt: montarPrompt(),
+            modelo,
+            cron_expressao: cron,
+            ativo: false,
+            criado_por: auth?.user?.id ?? null,
+          })
+          .select()
+          .single();
         if (erroRotina) throw new Error(erroRotina.message);
+        await registrarReceita(rotina?.id ?? null);
         toast.success("Criado! A rotina foi salva desativada — faça um teste antes de ativar.");
         navigate("/ia-platform/rotinas");
         return;
       }
 
+      await registrarReceita();
       toast.success("Agente criado com sucesso!");
       navigate("/ia-platform/agentes");
     } catch (e) {
@@ -326,22 +468,67 @@ export default function CriarAssistidoPage() {
         <CardContent className="space-y-5">
           {/* 1. Tipo */}
           {passoAtual === "tipo" && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {TIPOS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => escolherTipo(t)}
-                  className={cn(
-                    "rounded-xl border-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
-                    tipoId === t.id ? "border-primary bg-primary/5" : "border-border",
-                  )}
-                >
-                  <t.icone className="mb-2 h-6 w-6 text-primary" />
-                  <p className="font-medium">{t.titulo}</p>
-                  <p className="text-sm text-muted-foreground">{t.subtitulo}</p>
-                </button>
-              ))}
+            <div className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {TIPOS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => escolherTipo(t)}
+                    className={cn(
+                      "rounded-xl border-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
+                      tipoId === t.id ? "border-primary bg-primary/5" : "border-border",
+                    )}
+                  >
+                    <t.icone className="mb-2 h-6 w-6 text-primary" />
+                    <p className="font-medium">{t.titulo}</p>
+                    <p className="text-sm text-muted-foreground">{t.subtitulo}</p>
+                  </button>
+                ))}
+              </div>
+
+              {receitas.length > 0 && (
+                <div className="space-y-2">
+                  <Separator />
+                  <p className="flex items-center gap-1.5 text-sm font-medium">
+                    <Save className="h-4 w-4" /> Modelos salvos
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Continue de onde parou ou reaproveite uma montagem anterior.
+                  </p>
+                  <div className="space-y-1">
+                    {receitas.map((r) => (
+                      <div
+                        key={r.id}
+                        className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{r.nome}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {r.modelo ?? "—"} ·{" "}
+                            {r.modo_execucao === "etapas"
+                              ? `${(r.etapas ?? []).length} etapas`
+                              : "execução única"}{" "}
+                            · {(r.skill_ids ?? []).length} skills ·{" "}
+                            {(r.tool_ids ?? []).length} tools · {(r.mcp_ids ?? []).length} MCPs
+                          </p>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => carregarModelo(r)}>
+                          Abrir
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Excluir modelo"
+                          onClick={() => setReceitaExcluir(r)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -550,6 +737,84 @@ export default function CriarAssistidoPage() {
             </div>
           )}
 
+          {/* 5.5 Execução */}
+          {passoAtual === "execucao" && (
+            <div className="space-y-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    id: "unica" as const,
+                    titulo: "De uma vez só",
+                    texto: "O agente recebe o pedido e devolve o resultado final.",
+                  },
+                  {
+                    id: "etapas" as const,
+                    titulo: "Passo a passo (como no Claude Code)",
+                    texto: "Você define as etapas e o agente cumpre uma de cada vez, em ordem.",
+                  },
+                ].map((op) => (
+                  <button
+                    key={op.id}
+                    type="button"
+                    onClick={() => {
+                      setModoExecucao(op.id);
+                      if (op.id === "etapas" && etapas.length === 0) novaEtapa();
+                    }}
+                    className={cn(
+                      "rounded-xl border-2 p-4 text-left transition-colors",
+                      modoExecucao === op.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted",
+                    )}
+                  >
+                    <p className="font-medium">{op.titulo}</p>
+                    <p className="text-sm text-muted-foreground">{op.texto}</p>
+                  </button>
+                ))}
+              </div>
+
+              {modoExecucao === "etapas" && (
+                <div className="space-y-3">
+                  {etapas.map((e, i) => (
+                    <div key={e.id} className="space-y-2 rounded-lg border border-border p-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{i + 1}</Badge>
+                        <Input
+                          value={e.titulo}
+                          onChange={(ev) => atualizarEtapa(e.id, "titulo", ev.target.value)}
+                          placeholder="Nome da etapa (ex.: Coletar dados)"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removerEtapa(e.id)}
+                          aria-label="Remover etapa"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        rows={2}
+                        value={e.instrucao}
+                        onChange={(ev) => atualizarEtapa(e.id, "instrucao", ev.target.value)}
+                        placeholder="O que fazer nesta etapa"
+                      />
+                    </div>
+                  ))}
+                  <Button variant="outline" onClick={novaEtapa}>
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar etapa
+                  </Button>
+                </div>
+              )}
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  O modelo de IA escolhido ({modelo}) e as skills, tools e MCPs selecionados ficam
+                  gravados junto quando você salvar o modelo.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
           {/* 6. Agenda */}
           {passoAtual === "agenda" && (
             <div className="space-y-4">
@@ -618,6 +883,12 @@ export default function CriarAssistidoPage() {
                 ["Imagens de referência", `${referencias.length}`],
                 ["Skills", `${skillIds.length}${mdConteudo ? " + 1 novo material" : ""}`],
                 ["Ferramentas", `${toolIds.length} tools · ${mcpIds.length} MCPs`],
+                [
+                  "Execução",
+                  modoExecucao === "etapas"
+                    ? `Passo a passo (${etapas.length} etapas)`
+                    : "De uma vez só",
+                ],
                 ...(tipo.criaRotina ? [["Agendamento", `${cron} (criada desativada)`]] : []),
               ].map(([rotulo, valor]) => (
                 <div key={rotulo} className="flex flex-col gap-0.5 rounded-lg border border-border p-3">
@@ -640,23 +911,51 @@ export default function CriarAssistidoPage() {
             <Button variant="ghost" onClick={voltar} disabled={indice === 0 || salvando}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
             </Button>
-            {passoAtual === "revisao" ? (
-              <Button onClick={criar} disabled={salvando}>
-                {salvando ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                Criar agora
-              </Button>
-            ) : (
-              <Button onClick={avancar} disabled={!tipo || salvando}>
-                Continuar <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {tipo && (
+                <Button
+                  variant="outline"
+                  onClick={salvarModelo}
+                  disabled={salvandoModelo || salvando}
+                >
+                  {salvandoModelo ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  {receitaId ? "Salvar alterações" : "Salvar modelo"}
+                </Button>
+              )}
+              {passoAtual === "revisao" ? (
+                <Button onClick={criar} disabled={salvando}>
+                  {salvando ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="mr-2 h-4 w-4" />
+                  )}
+                  Criar agora
+                </Button>
+              ) : (
+                <Button onClick={avancar} disabled={!tipo || salvando}>
+                  Continuar <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      <DeleteConfirmDialog
+        open={!!receitaExcluir}
+        onOpenChange={(o) => !o && setReceitaExcluir(null)}
+        itemName={receitaExcluir?.nome}
+        onConfirm={async () => {
+          if (!receitaExcluir) return;
+          await removerReceita(receitaExcluir.id);
+          if (receitaId === receitaExcluir.id) setReceitaId(null);
+          setReceitaExcluir(null);
+        }}
+      />
     </div>
   );
 }

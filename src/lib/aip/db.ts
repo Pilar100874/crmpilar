@@ -35,7 +35,8 @@ export type AipTable =
   | "aip_rotina_runs"
   | "aip_conectores"
   | "aip_credenciais"
-  | "aip_credencial_versoes";
+  | "aip_credencial_versoes"
+  | "aip_receitas";
 
 export function useEstabelecimento() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
