@@ -119,8 +119,37 @@ export default function SkillsPage() {
     }
   };
 
+  /** Importa uma skill no formato pasta Claude Code (.zip com SKILL.md + references/ + scripts/). */
+  const importarZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImportando(true);
+    try {
+      const skill = await importarSkillZip(file);
+      setEditando(null);
+      setPendentes(skill.anexos);
+      setForm({
+        ...vazio,
+        nome: skill.nome,
+        slug: skill.slug,
+        descricao: skill.descricao,
+        conteudo_md: skill.conteudoMd,
+        categoria: skill.totalScripts > 0 ? "pipeline" : "conhecimento",
+        tags: ["claude-code"],
+      });
+      setAberto(true);
+      toast.success(
+        `Skill lida: ${skill.totalReferencias} referência(s) e ${skill.totalScripts} script(s).`,
+      );
+    } catch (err: any) {
+      toast.error(err?.message ?? "Não foi possível ler o zip");
+    } finally {
+      setImportando(false);
+    }
+  };
 
-  return (
+
     <>
       <AipToolbar
         busca={busca}
