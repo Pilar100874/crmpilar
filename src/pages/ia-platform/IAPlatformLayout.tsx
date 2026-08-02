@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Lock,
   Bell,
+  Server,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -41,6 +42,7 @@ const AREAS = [
   { to: "credenciais", label: "Credenciais", icon: Lock },
   { to: "rotinas", label: "Rotinas", icon: CalendarClock },
   { to: "notificacoes", label: "Notificações", icon: Bell },
+  { to: "motor", label: "Motor de execução", icon: Server },
 ];
 
 export default function IAPlatformLayout() {
