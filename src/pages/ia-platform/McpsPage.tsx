@@ -163,13 +163,19 @@ export default function McpsPage() {
         novoLabel="Novo MCP"
         loading={loading}
         vazio={filtrados.length === 0}
-        vazioTexto="Nenhum servidor MCP cadastrado."
+        vazioTexto="Nenhum servidor MCP cadastrado. Escolha um do catálogo pronto."
+        acoes={
+          <Button size="sm" variant="outline" onClick={() => setCatalogoAberto(true)}>
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> Catálogo pronto
+          </Button>
+        }
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            O teste usa o servidor de execução (Claude Agent SDK) para fazer o handshake real; sem runner
-            configurado, o navegador tenta direto.
+          <p className="max-w-2xl text-xs text-muted-foreground">
+            MCP é um “plug” que dá ao agente acesso a um sistema inteiro (Notion, GitHub, o próprio Pilar...).
+            Escolha no catálogo, salve e clique em <strong>Testar</strong> para ver as ferramentas disponíveis.
           </p>
+
           <Button
             size="sm"
             variant="outline"
