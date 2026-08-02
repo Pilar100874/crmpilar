@@ -11,7 +11,7 @@ import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { List, X, Info, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { List, X, Info, PanelLeftClose, PanelLeft, Car, Activity, Clock, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
