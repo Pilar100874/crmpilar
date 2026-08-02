@@ -473,30 +473,44 @@ const PAINEL_HTML = `<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>AIP Agent SDK Server — Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--bg:#0b1020;--card:#141a2e;--line:#232b45;--fg:#e6ebff;--mut:#93a0c4;--pri:#6d8bff;--ok:#34d399;--err:#f87171;--wrn:#fbbf24}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#151d3a,#0b1020)}
-h1{font-size:17px;margin:0}.mut{color:var(--mut)}
-main{padding:20px 24px;display:grid;gap:18px;max-width:1200px;margin:0 auto}
+:root{color-scheme:light;--bg:#f7f8fa;--card:#ffffff;--line:#e4e8ee;--fg:#2c323b;--mut:#6b7787;--pri:#f97316;--pri-2:#fb9a4b;--dark:#2b303b;--ok:#16a34a;--err:#dc2626;--wrn:#f59e0b;--r:6px;
+--sh:0 1px 2px 0 rgba(40,30,20,.05);--sh-lg:0 10px 15px -3px rgba(40,30,20,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--dark);color:#fff;box-shadow:var(--sh-lg)}
+header .mut{color:#aab3c0}
+.logo{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;background:linear-gradient(135deg,#f97316,#fb9a4b);box-shadow:0 0 18px rgba(249,115,22,.35)}
+h1{font-size:16px;margin:0;font-weight:600;letter-spacing:-.01em}
+.mut{color:var(--mut)}
+main{padding:22px 24px 40px;display:grid;gap:18px;max-width:1200px;margin:0 auto}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
-.card h3{margin:0 0 6px;font-size:12px;font-weight:500;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
-.card p{margin:0;font-size:20px;font-weight:600}
-input,button{font:inherit;border-radius:9px;border:1px solid var(--line);padding:8px 12px;background:#0f1530;color:var(--fg)}
-button{cursor:pointer;background:var(--pri);border-color:var(--pri);color:#08102a;font-weight:600}
-button.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-weight:500}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
-th{color:var(--mut);font-weight:500}
-.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:#1e2745}
-.b-executando{background:#233a6b;color:#a9c3ff}.b-concluida{background:#0f3a2c;color:var(--ok)}
-.b-erro{background:#3a1717;color:var(--err)}.b-cancelada{background:#3a2c12;color:var(--wrn)}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
-pre{background:#0f1530;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;max-height:260px;white-space:pre-wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--sh);transition:box-shadow .2s,transform .2s}
+.grid .card:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+.card h3{margin:0 0 6px;font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.card p{margin:0;font-size:20px;font-weight:600;color:var(--dark)}
+input,button{font:inherit;border-radius:var(--r);border:1px solid rgba(255,255,255,.18);padding:8px 12px;background:rgba(255,255,255,.08);color:#fff}
+input::placeholder{color:#9aa4b2}
+button{cursor:pointer;background:linear-gradient(135deg,#f97316,#fb9a4b);border-color:transparent;color:#fff;font-weight:600;transition:filter .15s}
+button:hover{filter:brightness(1.07)}
+button.ghost{background:transparent;color:#e7eaef;border-color:rgba(255,255,255,.2);font-weight:500}
+button.ghost:hover{background:rgba(255,255,255,.1)}
+main button{border-color:var(--line)}main button.ghost{color:var(--fg);border-color:var(--line);background:#fff}
+main button.ghost:hover{background:#fff5ec;border-color:var(--pri);color:var(--pri)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}
+tbody tr:hover{background:#fffaf5}
+th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:500;background:#eef1f5;color:var(--mut)}
+.b-executando{background:#fff1e3;color:#c2410c}.b-concluida{background:#e8f7ee;color:var(--ok)}
+.b-erro{background:#fdeaea;color:var(--err)}.b-cancelada{background:#fef4e2;color:#b45309}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+pre{background:#fafbfc;border:1px solid var(--line);border-radius:var(--r);padding:12px;overflow:auto;max-height:260px;white-space:pre-wrap}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 </style></head><body>
 <header>
-  <div class="row"><span class="dot" id="dot" style="background:var(--mut)"></span><h1>AIP Agent SDK Server</h1><span class="mut" id="sub">carregando…</span></div>
+  <div class="row"><div class="logo">P</div><span class="dot" id="dot" style="background:#8b95a5"></span><h1>Pilar · Motor de Agentes IA</h1><span class="mut" id="sub">carregando…</span></div>
+  <div class="row">
   <div class="row">
     <input id="key" type="password" placeholder="Runner Key" style="width:200px"/>
     <button onclick="salvar()">Conectar</button>
