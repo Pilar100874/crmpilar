@@ -801,14 +801,15 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
 
         {/* Desktop Alerts Panel */}
-        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 border-l bg-background overflow-hidden flex-col">
+        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 rounded-xl border border-border/60 bg-card/70 backdrop-blur-md shadow-sm overflow-hidden flex-col">
           <div 
-            className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
+            className="px-3 py-2 border-b border-border/60 flex items-center justify-between cursor-pointer"
             onClick={() => setShowAlerts(!showAlerts)}
           >
-            <h3 className="font-medium text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
+            <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5" />
               Alertas
+
               {alerts.length > 0 && (
                 <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
               )}
