@@ -209,6 +209,19 @@ export default function RotinasPage() {
     }
   };
 
+  const testarDryRun = (r: Partial<Rotina>) => {
+    const resultado = simularRotina(r as any, {
+      conectores,
+      workflows: workflows as any,
+      agentes: agentes as any,
+    });
+    setDryRun({ nome: r.nome ?? "", resultado });
+    if (resultado.ok) toast.success("Simulação concluída sem erros");
+    else toast.error("A simulação encontrou pendências");
+  };
+
+
+
   const abrirHistorico = async (r: Rotina) => {
     const { data } = await db
       .from("aip_rotina_runs")
