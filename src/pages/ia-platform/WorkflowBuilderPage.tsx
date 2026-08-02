@@ -309,10 +309,26 @@ export default function WorkflowBuilderPage() {
                     />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label>Tempo limite da etapa (segundos)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={600}
+                    step={10}
+                    value={Math.round(Number(config.timeout_ms ?? 120000) / 1000)}
+                    onChange={(e) => {
+                      const seg = Math.max(0, Math.min(600, Number(e.target.value) || 0));
+                      atualizarConfig("timeout_ms", seg * 1000);
+                    }}
+                  />
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   Em caso de falha, o bloco é repetido automaticamente (backoff exponencial). Se todas as
                   tentativas falharem, a execução para nesse ponto e pode ser reexecutada manualmente.
+                  O tempo limite interrompe a etapa (0 = sem limite) e o motivo fica registrado no histórico.
                 </p>
+
                 <div className="space-y-2">
                   <Label>Parâmetros (JSON)</Label>
                   <Textarea

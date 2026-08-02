@@ -1439,12 +1439,14 @@ export type Database = {
           id: string
           input: Json
           logs: string | null
+          motivo_interrupcao: string | null
           node_id: string | null
           ordem: number
           output: Json
           status: string
           tentativa: number
           tentativas_max: number
+          timeout_ms: number | null
           tipo: string | null
           titulo: string | null
           tokens_input: number
@@ -1460,12 +1462,14 @@ export type Database = {
           id?: string
           input?: Json
           logs?: string | null
+          motivo_interrupcao?: string | null
           node_id?: string | null
           ordem?: number
           output?: Json
           status?: string
           tentativa?: number
           tentativas_max?: number
+          timeout_ms?: number | null
           tipo?: string | null
           titulo?: string | null
           tokens_input?: number
@@ -1481,12 +1485,14 @@ export type Database = {
           id?: string
           input?: Json
           logs?: string | null
+          motivo_interrupcao?: string | null
           node_id?: string | null
           ordem?: number
           output?: Json
           status?: string
           tentativa?: number
           tentativas_max?: number
+          timeout_ms?: number | null
           tipo?: string | null
           titulo?: string | null
           tokens_input?: number
@@ -1506,6 +1512,9 @@ export type Database = {
       aip_executions: {
         Row: {
           agent_id: string | null
+          cancelado_em: string | null
+          cancelado_por: string | null
+          cancelamento_solicitado: boolean
           contexto: Json
           created_at: string
           custo: number
@@ -1518,6 +1527,7 @@ export type Database = {
           iniciado_em: string
           input: Json
           modelo: string | null
+          motivo_interrupcao: string | null
           origem: string
           pausado_em: string | null
           prompt: string | null
@@ -1537,6 +1547,9 @@ export type Database = {
         }
         Insert: {
           agent_id?: string | null
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          cancelamento_solicitado?: boolean
           contexto?: Json
           created_at?: string
           custo?: number
@@ -1549,6 +1562,7 @@ export type Database = {
           iniciado_em?: string
           input?: Json
           modelo?: string | null
+          motivo_interrupcao?: string | null
           origem?: string
           pausado_em?: string | null
           prompt?: string | null
@@ -1568,6 +1582,9 @@ export type Database = {
         }
         Update: {
           agent_id?: string | null
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          cancelamento_solicitado?: boolean
           contexto?: Json
           created_at?: string
           custo?: number
@@ -1580,6 +1597,7 @@ export type Database = {
           iniciado_em?: string
           input?: Json
           modelo?: string | null
+          motivo_interrupcao?: string | null
           origem?: string
           pausado_em?: string | null
           prompt?: string | null
