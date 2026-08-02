@@ -150,7 +150,87 @@ export const CATALOGO_RECURSOS: CatalogCategory[] = [
       i("json-parser", "JSON Parser", "{}", "Interpretar JSON"),
     ],
   },
+  {
+    slug: "crm-vendas",
+    nome: "CRM e Vendas (Pilar)",
+    icone: "🏛️",
+    itens: [
+      i("pilar-empresas", "Empresas", "🏢", "Consulta e cadastro de empresas do CRM"),
+      i("pilar-contatos", "Contatos", "👤", "Contatos vinculados às empresas"),
+      i("pilar-produtos", "Produtos e estoque", "📦", "Preços, saldo e ficha de produtos"),
+      i("pilar-orcamentos", "Orçamentos", "🧾", "Criação e consulta de orçamentos"),
+      i("pilar-prospeccao", "Prospecção", "🔎", "Grava empresas pesquisadas na web"),
+      i("pilar-funil", "Funil de vendas", "📈", "Oportunidades e etapas do funil"),
+      i("pilar-atendimento", "Atendimento", "🎧", "Tickets e conversas do omnichannel"),
+    ],
+  },
+  {
+    slug: "produtividade",
+    nome: "Produtividade",
+    icone: "🗂️",
+    itens: [
+      i("google-sheets", "Google Sheets", "📊", "Ler e escrever planilhas"),
+      i("google-calendar", "Google Calendar", "📅", "Agenda e compromissos"),
+      i("gmail", "Gmail", "📧", "Leitura e envio de e-mails"),
+      i("notion", "Notion", "📝", "Páginas e bases do Notion"),
+      i("trello", "Trello", "🗒️", "Cartões e quadros"),
+      i("jira", "Jira", "🧭", "Issues e sprints"),
+      i("github", "GitHub", "🐙", "Repositórios, issues e PRs"),
+    ],
+  },
+  {
+    slug: "ia",
+    nome: "Modelos de IA",
+    icone: "🧠",
+    itens: [
+      i("claude", "Claude", "🤖", "Modelos Anthropic Claude"),
+      i("gpt", "GPT", "💡", "Modelos OpenAI"),
+      i("gemini", "Gemini", "✨", "Modelos Google Gemini"),
+      i("embeddings", "Embeddings", "🧬", "Vetores para busca semântica"),
+      i("rag", "RAG / Base de conhecimento", "📚", "Busca em documentos internos"),
+      i("ocr", "OCR", "🔠", "Extrair texto de imagens e PDFs"),
+      i("classificador", "Classificador", "🏷️", "Classificar textos e intenções"),
+    ],
+  },
+  {
+    slug: "financeiro",
+    nome: "Financeiro e pagamentos",
+    icone: "💳",
+    itens: [
+      i("stripe", "Stripe", "💳", "Cobranças e assinaturas"),
+      i("mercado-pago", "Mercado Pago", "🛒", "Pagamentos e PIX"),
+      i("asaas", "Asaas", "🏦", "Boletos, PIX e cobranças"),
+      i("nfe", "Nota fiscal", "🧾", "Emissão e consulta de NF-e"),
+      i("cotacao", "Cotação de moedas", "💱", "Câmbio e índices"),
+    ],
+  },
+  {
+    slug: "dados-publicos",
+    nome: "Dados públicos",
+    icone: "🔍",
+    itens: [
+      i("cnpj", "Consulta CNPJ", "🏛️", "Dados da Receita Federal"),
+      i("cep", "Consulta CEP", "📍", "Endereço pelo CEP"),
+      i("licitacoes", "Licitações", "📢", "Editais e oportunidades públicas"),
+      i("clima", "Clima", "🌦️", "Previsão do tempo"),
+      i("geocoding", "Geocoding", "🗺️", "Endereço para latitude/longitude"),
+      i("rotas", "Rotas e distância", "🛣️", "Cálculo de rotas e tempo"),
+    ],
+  },
+  {
+    slug: "analytics",
+    nome: "Analytics e relatórios",
+    icone: "📈",
+    itens: [
+      i("google-analytics", "Google Analytics", "📉", "Métricas de site"),
+      i("posthog", "PostHog", "📊", "Produto, flags e experimentos"),
+      i("dashboard-pilar", "Dashboard Pilar", "🧮", "Indicadores internos do sistema"),
+      i("csv-export", "Exportar CSV", "📤", "Gerar arquivo de dados"),
+      i("grafico", "Gerar gráfico", "📌", "Imagem de gráfico a partir de dados"),
+    ],
+  },
 ];
+
 
 export function findCatalogItem(categoria: string, slug: string) {
   return CATALOGO_RECURSOS.find((c) => c.slug === categoria)?.itens.find((x) => x.slug === slug);
