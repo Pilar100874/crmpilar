@@ -263,6 +263,14 @@ export default function RotinasPage() {
 
   return (
     <>
+      <div className="mb-4 px-4 pt-4 sm:px-6">
+        <ConectoresSyncStatus
+          conectores={conectores}
+          ultimaSync={ultimaSync}
+          sincronizando={sincronizando}
+          onSincronizar={() => sincronizar()}
+        />
+      </div>
       <AipToolbar
         busca={busca}
         onBusca={setBusca}
@@ -275,15 +283,8 @@ export default function RotinasPage() {
           </Button>
         }
       >
-        <div className="mb-4">
-          <ConectoresSyncStatus
-            conectores={conectores}
-            ultimaSync={ultimaSync}
-            sincronizando={sincronizando}
-            onSincronizar={() => sincronizar()}
-          />
-        </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+
 
           {filtrados.map((r) => (
             <Card key={r.id} className="transition-shadow hover:shadow-md">
