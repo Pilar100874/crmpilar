@@ -40,6 +40,44 @@ export interface McpProbeResult {
   simulado?: boolean;
 }
 
+export interface RunResumo {
+  id: string;
+  status: string;
+  criado_em: string;
+  finalizado_em?: string;
+  duracao_ms?: number;
+  tokens_input?: number;
+  tokens_output?: number;
+  custo?: number;
+  erro?: string;
+  ouvintes?: number;
+  caracteres?: number;
+  previa?: string;
+}
+
+export interface RunsResult {
+  ok: boolean;
+  simulado?: boolean;
+  motivo?: string;
+  servidor?: {
+    versao?: string;
+    commit?: string | null;
+    ambiente?: string;
+    node?: string;
+    uptime_s?: number;
+    iniciado_em?: string;
+    memoria_mb?: number;
+    heap_mb?: number;
+    anthropic?: boolean;
+    supabase?: boolean;
+    atualizacao_disponivel?: boolean;
+  };
+  contagem?: Record<string, number>;
+  total?: number;
+  execucoes?: RunResumo[];
+  verificado_em?: string;
+}
+
 export const agentRunner = {
   start: (payload: StartRunPayload) => callProxy("start", payload as any),
   resume: (executionId: string, approvalId: string, resultado: unknown) =>
@@ -47,6 +85,20 @@ export const agentRunner = {
   cancel: (executionId: string) => callProxy("cancel", { execution_id: executionId }),
   status: (executionId: string) => callProxy("status", { execution_id: executionId }),
   health: () => callProxy("health", {}),
+  /** Painel de monitoramento: estado do processo + execuções em memória. */
+  runs: (limite = 50) => callProxy("runs", { limite }) as Promise<RunsResult>,
+  /** Remove execuções finalizadas da memória do servidor. */
+  limparRuns: () =>
+    callProxy("runs/limpar", {}) as Promise<{ ok: boolean; removidas?: number; restantes?: number }>,
+  /** Dispara o redeploy (Deploy Hook do Railway) para atualizar o servidor. */
+  atualizar: (forcar = false) =>
+    callProxy("update", { forcar }) as Promise<{
+      ok: boolean;
+      erro?: string;
+      ativas?: number;
+      versao_atual?: string;
+      disparado_em?: string;
+    }>,
   /**
    * Handshake real com um servidor MCP feito pelo runner (sem CORS no navegador).
    * Retorna status da conexão, ferramentas expostas e latência.
@@ -54,6 +106,7 @@ export const agentRunner = {
   mcpProbe: (endpoint: string, cabecalhos?: Record<string, string>) =>
     callProxy("mcp/probe", { endpoint, cabecalhos }) as Promise<McpProbeResult>,
 };
+
 
 
 /** Stream SSE da execução (repassado pelo proxy). */
