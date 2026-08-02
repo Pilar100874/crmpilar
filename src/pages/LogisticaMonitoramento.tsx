@@ -36,6 +36,100 @@ const statusConfig = {
   offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500', borderColor: 'border-gray-400' }
 };
 
+const VeiculoRow: React.FC<{
+  v: VeiculoComStatus;
+  selected: boolean;
+  pinned: boolean;
+  onSelect: () => void;
+  onPin: () => void;
+}> = ({ v, selected, pinned, onSelect, onPin }) => {
+  const config = statusConfig[v.status];
+  return (
+    <div
+      onClick={onSelect}
+      onDoubleClick={onSelect}
+      className={cn(
+        "p-2 rounded-lg cursor-pointer transition-all border",
+        selected
+          ? "bg-primary/10 border-primary ring-1 ring-primary"
+          : `bg-card/60 hover:bg-accent border-border/60 ${config.borderColor} border-l-4`
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={cn("h-2 w-2 rounded-full shrink-0", config.color, v.status === 'movendo' && 'animate-pulse')} />
+          {v.status !== 'offline' ? (
+            <Wifi className="h-3 w-3 text-green-500 shrink-0" />
+          ) : (
+            <WifiOff className="h-3 w-3 text-destructive shrink-0" />
+          )}
+          <span className="font-medium text-sm truncate">{v.placa}</span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
+          <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
+          <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+            {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+          </Badge>
+          <button
+            onClick={(e) => { e.stopPropagation(); onPin(); }}
+            title={pinned ? 'Desafixar' : 'Fixar no mapa'}
+            className={cn("p-1 rounded hover:bg-accent", pinned ? 'text-primary' : 'text-muted-foreground')}
+          >
+            <Pin className={cn("h-3 w-3", pinned && 'fill-current')} />
+          </button>
+        </div>
+      </div>
+      {v.motorista_atual ? (
+        <div className="mt-1 space-y-0.5">
+          <p className="text-xs font-medium truncate flex items-center gap-1">
+            <User className="h-3 w-3 text-primary" />
+            {v.motorista_atual.nome}
+          </p>
+          {v.motorista_atual.telefone && (() => {
+            const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
+            return wa ? (
+              <a
+                href={`https://web.whatsapp.com/send?phone=${wa}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
+              >
+                <MessageCircle className="h-3 w-3" />
+                {v.motorista_atual.telefone}
+              </a>
+            ) : null;
+          })()}
+        </div>
+      ) : v.motorista && (
+        <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
+      )}
+    </div>
+  );
+};
+
+const AlertRow: React.FC<{
+  alert: VehicleAlert;
+  icon: React.ReactNode;
+  onClick: () => void;
+}> = ({ alert, icon, onClick }) => (
+  <div
+    className="p-2 rounded-lg bg-card/70 border border-border/60 text-xs cursor-pointer hover:bg-accent transition-colors"
+    onClick={onClick}
+  >
+    <div className="flex items-center gap-2 mb-1">
+      {icon}
+      <span className="font-medium">{alert.placa}</span>
+    </div>
+    <p className="text-muted-foreground">{alert.message}</p>
+    <p className="text-[10px] text-muted-foreground mt-1">
+      {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
+    </p>
+  </div>
+);
+
+
 interface AlertConfig {
   speedLimit: number;
   stoppedMinutes: number;
@@ -70,6 +164,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
   const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
+  const [showVeiculosPanel, setShowVeiculosPanel] = useState(true);
+
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const zoomToVehicle = useCallback((id: string) => {
@@ -474,286 +570,34 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              <Car className="h-4 w-4 text-primary" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Total</span>
+        {/* Stats compactos */}
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', Icon: Car },
+            { label: 'Movendo', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', Icon: Activity },
+            { label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', Icon: Clock },
+            { label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', Icon: WifiOff },
+          ].map(({ label, value, dot, text, Icon }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 shadow-sm"
+            >
+              <span className={cn("h-2 w-2 rounded-full", dot, label === 'Movendo' && 'animate-pulse')} />
+              <Icon className={cn("h-3.5 w-3.5", text)} />
+              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+              <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums">{stats.total}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-green-500/20">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <Activity className="h-4 w-4 text-green-500" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Movendo</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums text-green-600">{stats.movendo}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-amber-500/20">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Parado</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums text-amber-600">{stats.parado}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-muted-foreground/20">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
-              <WifiOff className="h-4 w-4 text-muted-foreground" />
-              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Offline</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tabular-nums text-muted-foreground">{stats.offline}</p>
-          </Card>
+          ))}
         </div>
+
       </div>
 
 
-      {/* Content - Mobile optimized */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden relative gap-2 p-2">
+      {/* Content - mapa como foco principal, painéis flutuantes por cima */}
+      <div className="flex-1 min-h-0 relative overflow-hidden p-2">
 
-        {/* Mobile/Tablet floating buttons */}
-        <div className="lg:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
-          <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
-            <SheetTrigger asChild>
-              <Button variant="secondary" size="sm" className="shadow-lg">
-                <List className="h-4 w-4 mr-2" />
-                Veículos ({stats.total})
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
-              <div className="h-full flex flex-col">
-                <div className="p-3 border-b">
-                  <h3 className="font-medium flex items-center gap-2">
-                    <Car className="h-4 w-4" />
-                    Veículos
-                  </h3>
-                </div>
-                <ScrollArea className="flex-1">
-                  <div className="p-2 space-y-1">
-                    {veiculosFiltrados.map(v => {
-                      const config = statusConfig[v.status];
-                      const isSelected = selectedVeiculoId === v.id;
-                      return (
-                        <div
-                          key={v.id}
-                          onClick={() => {
-                            zoomToVehicle(v.id);
-                            setMobileVehicleListOpen(false);
-                          }}
-                          onDoubleClick={() => {
-                            zoomToVehicle(v.id);
-                            setMobileVehicleListOpen(false);
-                          }}
-                          className={cn(
-                            "p-2 rounded-lg cursor-pointer transition-all",
-                            isSelected 
-                              ? "bg-primary/10 border-2 border-primary" 
-                              : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {v.status !== 'offline' ? (
-                                <Wifi className="h-3 w-3 text-green-500" />
-                              ) : (
-                                <WifiOff className="h-3 w-3 text-destructive" />
-                              )}
-                              <span className="font-medium text-sm">{v.placa}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
-                              <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
-                              <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                                {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                              </Badge>
-
-                              <button
-                                onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
-                                title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
-                                className={cn(
-                                  "p-1 rounded hover:bg-accent",
-                                  pinnedVeiculoId === v.id ? 'text-primary' : 'text-muted-foreground'
-                                )}
-                              >
-                                <Pin className={cn("h-3 w-3", pinnedVeiculoId === v.id && 'fill-current')} />
-                              </button>
-                            </div>
-                          </div>
-                          {v.motorista_atual ? (
-                            <div className="mt-1 space-y-0.5">
-                              <p className="text-xs font-medium truncate flex items-center gap-1">
-                                <User className="h-3 w-3 text-primary" />
-                                {v.motorista_atual.nome}
-                              </p>
-                              {v.motorista_atual.telefone && (() => {
-                                const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
-                                return wa ? (
-                                  <a
-                                    href={`https://web.whatsapp.com/send?phone=${wa}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
-                                  >
-                                    <MessageCircle className="h-3 w-3" />
-                                    {v.motorista_atual.telefone}
-                                  </a>
-                                ) : null;
-                              })()}
-                            </div>
-                          ) : v.motorista && (
-                            <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          {alerts.length > 0 && (
-            <Sheet open={mobileAlertsOpen} onOpenChange={setMobileAlertsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="secondary" size="sm" className="shadow-lg">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Alertas ({alerts.length})
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[85vw] sm:w-[320px] p-0">
-                <div className="h-full flex flex-col">
-                  <div className="p-3 border-b">
-                    <h3 className="font-medium flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Alertas
-                    </h3>
-                  </div>
-                  <ScrollArea className="flex-1">
-                    <div className="p-2 space-y-2">
-                      {alerts.map((alert, index) => (
-                        <div 
-                          key={`${alert.veiculoId}-${alert.type}-${index}`}
-                          className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
-                          onClick={() => {
-                            setSelectedVeiculoId(alert.veiculoId);
-                            setMobileAlertsOpen(false);
-                          }}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            {getAlertIcon(alert.type)}
-                            <span className="font-medium">{alert.placa}</span>
-                          </div>
-                          <p className="text-muted-foreground">{alert.message}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
-        </div>
-
-        {/* Desktop Vehicle List */}
-        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 rounded-xl border border-border/60 bg-card/70 backdrop-blur-md shadow-sm overflow-hidden flex-col">
-          <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
-            <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-              <Car className="h-3.5 w-3.5" />
-              Veículos ({veiculosFiltrados.length})
-            </h3>
-          </div>
-
-          <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
-              {veiculosFiltrados.map(v => {
-                const config = statusConfig[v.status];
-                const isSelected = selectedVeiculoId === v.id;
-                
-                return (
-                  <div
-                    key={v.id}
-                    onClick={() => zoomToVehicle(v.id)}
-                    onDoubleClick={() => zoomToVehicle(v.id)}
-                    className={cn(
-                      "p-2 rounded-lg cursor-pointer transition-all border",
-                      isSelected
-                        ? "bg-primary/10 border-primary ring-1 ring-primary"
-                        : `bg-background/60 hover:bg-accent border-border/60 ${config.borderColor} border-l-4`
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={cn("h-2 w-2 rounded-full", config.color, v.status === 'movendo' && 'animate-pulse')} />
-                        {v.status !== 'offline' ? (
-                          <Wifi className="h-3 w-3 text-green-500" />
-                        ) : (
-                          <WifiOff className="h-3 w-3 text-destructive" />
-                        )}
-                        <span className="font-medium text-sm">{v.placa}</span>
-
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
-                        <CorteCombustivelBadge corte={v.ultima_posicao?.corte_combustivel} compact />
-                        <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                          {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                        </Badge>
-
-                        <button
-                          onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
-                          title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
-                          className={cn(
-                            "p-1 rounded hover:bg-accent",
-                            pinnedVeiculoId === v.id ? 'text-primary' : 'text-muted-foreground'
-                          )}
-                        >
-                          <Pin className={cn("h-3 w-3", pinnedVeiculoId === v.id && 'fill-current')} />
-                        </button>
-                      </div>
-                    </div>
-                    {v.motorista_atual ? (
-                      <div className="mt-1 space-y-0.5">
-                        <p className="text-xs font-medium truncate flex items-center gap-1">
-                          <User className="h-3 w-3 text-primary" />
-                          {v.motorista_atual.nome}
-                        </p>
-                        {v.motorista_atual.telefone && (() => {
-                          const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
-                          return wa ? (
-                            <a
-                              href={`https://web.whatsapp.com/send?phone=${wa}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
-                            >
-                              <MessageCircle className="h-3 w-3" />
-                              {v.motorista_atual.telefone}
-                            </a>
-                          ) : null;
-                        })()}
-                      </div>
-                    ) : v.motorista && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Map - altura fixa dentro da área visível */}
-        <div className="flex-1 relative min-h-0 overflow-hidden rounded-xl border border-border/60 shadow-sm bg-card">
-
+        {/* Mapa em tela cheia da área */}
+        <div className="absolute inset-2 overflow-hidden rounded-xl border border-border/60 shadow-sm bg-card">
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando...</div>
@@ -775,20 +619,17 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
                 fitBounds={!pinnedVeiculoId}
+                fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}
+                compactIcons
               />
               <FocusLegend
                 veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
                 onClose={() => setFocusVehicle(null)}
               />
-              <VehicleLegend
-                veiculos={veiculosComPosicao}
-                selectedId={focusVehicle?.id ?? selectedVeiculoId}
-                onVeiculoClick={zoomToVehicle}
-              />
             </>
           )}
-          
-          {/* Fullscreen toggle button */}
+
+          {/* Expandir mapa */}
           <Button
             variant="outline"
             size="icon"
@@ -800,51 +641,161 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </Button>
         </div>
 
-        {/* Desktop Alerts Panel */}
-        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 rounded-xl border border-border/60 bg-card/70 backdrop-blur-md shadow-sm overflow-hidden flex-col">
-          <div 
-            className="px-3 py-2 border-b border-border/60 flex items-center justify-between cursor-pointer"
-            onClick={() => setShowAlerts(!showAlerts)}
-          >
-            <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Alertas
+        {/* Mobile/Tablet floating buttons */}
+        <div className="lg:hidden absolute top-4 left-4 right-4 z-[500] flex justify-between">
+          <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
+            <SheetTrigger asChild>
+              <Button variant="secondary" size="sm" className="shadow-lg">
+                <List className="h-4 w-4 mr-2" />
+                Veículos ({stats.total})
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
+              <div className="h-full flex flex-col">
+                <div className="p-3 border-b">
+                  <h3 className="font-medium flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    Veículos
+                  </h3>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-1">
+                    {veiculosFiltrados.map(v => (
+                      <VeiculoRow
+                        key={v.id}
+                        v={v}
+                        selected={selectedVeiculoId === v.id}
+                        pinned={pinnedVeiculoId === v.id}
+                        onSelect={() => { zoomToVehicle(v.id); setMobileVehicleListOpen(false); }}
+                        onPin={() => togglePin(v.id)}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </SheetContent>
+          </Sheet>
 
-              {alerts.length > 0 && (
-                <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
-              )}
-            </h3>
-            {showAlerts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {alerts.length > 0 && (
+            <Sheet open={mobileAlertsOpen} onOpenChange={setMobileAlertsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="secondary" size="sm" className="shadow-lg">
+                  <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
+                  Alertas ({alerts.length})
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[85vw] sm:w-[320px] p-0">
+                <div className="h-full flex flex-col">
+                  <div className="p-3 border-b">
+                    <h3 className="font-medium flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Alertas
+                    </h3>
+                  </div>
+                  <ScrollArea className="flex-1">
+                    <div className="p-2 space-y-2">
+                      {alerts.map((alert, index) => (
+                        <AlertRow
+                          key={`${alert.veiculoId}-${alert.type}-${index}`}
+                          alert={alert}
+                          icon={getAlertIcon(alert.type)}
+                          onClick={() => { zoomToVehicle(alert.veiculoId); setMobileAlertsOpen(false); }}
+                        />
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
+
+        {/* Painel flutuante de veículos (desktop) */}
+        {showVeiculosPanel ? (
+          <div className="hidden lg:flex absolute top-4 left-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
+            <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
+              <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+                <Car className="h-3.5 w-3.5" />
+                Veículos ({veiculosFiltrados.length})
+              </h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowVeiculosPanel(false)} title="Recolher">
+                <Minimize2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {veiculosFiltrados.map(v => (
+                  <VeiculoRow
+                    key={v.id}
+                    v={v}
+                    selected={selectedVeiculoId === v.id}
+                    pinned={pinnedVeiculoId === v.id}
+                    onSelect={() => zoomToVehicle(v.id)}
+                    onPin={() => togglePin(v.id)}
+                  />
+                ))}
+                {veiculosFiltrados.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum veículo</p>
+                )}
+              </div>
+            </ScrollArea>
           </div>
-          {showAlerts && (
+        ) : (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="hidden lg:flex absolute top-4 left-4 z-[500] shadow-lg"
+            onClick={() => setShowVeiculosPanel(true)}
+          >
+            <List className="h-4 w-4 mr-2" />
+            Veículos ({veiculosFiltrados.length})
+          </Button>
+        )}
+
+        {/* Painel flutuante de alertas (desktop) */}
+        {showAlerts ? (
+          <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
+            <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
+              <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+                <AlertTriangle className={cn("h-3.5 w-3.5", alerts.length > 0 && "text-destructive")} />
+                Alertas
+                {alerts.length > 0 && (
+                  <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
+                )}
+              </h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowAlerts(false)} title="Recolher">
+                <Minimize2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-2">
                 {alerts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    Nenhum alerta
-                  </p>
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta</p>
                 ) : (
                   alerts.map((alert, index) => (
-                    <div 
+                    <AlertRow
                       key={`${alert.veiculoId}-${alert.type}-${index}`}
-                      className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
-                      onClick={() => setSelectedVeiculoId(alert.veiculoId)}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        {getAlertIcon(alert.type)}
-                        <span className="font-medium">{alert.placa}</span>
-                      </div>
-                      <p className="text-muted-foreground">{alert.message}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
-                      </p>
-                    </div>
+                      alert={alert}
+                      icon={getAlertIcon(alert.type)}
+                      onClick={() => zoomToVehicle(alert.veiculoId)}
+                    />
                   ))
                 )}
               </div>
             </ScrollArea>
-          )}
-        </div>
+          </div>
+        ) : (
+          <Button
+            variant={alerts.length > 0 ? 'destructive' : 'secondary'}
+            size="sm"
+            className="hidden lg:flex absolute top-4 right-4 z-[500] shadow-lg"
+            onClick={() => setShowAlerts(true)}
+          >
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Alertas {alerts.length > 0 ? `(${alerts.length})` : ''}
+          </Button>
+        )}
+
       </div>
     </div>
   );
