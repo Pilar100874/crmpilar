@@ -633,9 +633,15 @@ export default function CriarAssistidoPage() {
           {passoAtual === "conhecimento" && (
             <div className="space-y-5">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <p className="mb-1 flex items-center gap-1.5 text-sm font-medium">
                   <BookOpen className="h-4 w-4" /> Skills já cadastradas (opcional)
                 </p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Skill é um "treinamento" salvo: um texto com instruções, regras ou o jeito de
+                  falar da sua empresa. Marque as que o agente deve seguir. Se não marcar nenhuma,
+                  ele usa só o que você escreveu no passo anterior.
+                </p>
+
                 {skills.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhuma skill cadastrada ainda.</p>
                 ) : (
