@@ -372,26 +372,47 @@ export default function CriarAssistidoPage() {
         .single();
       if (erroAgente) throw new Error(erroAgente.message);
 
+      /** Guarda o modelo usado (o "como foi feito") junto do que foi criado. */
+      const registrarReceita = async (rotinaId?: string | null) => {
+        const payload = {
+          ...snapshot(),
+          skill_ids: idsSkills,
+          agent_id: agente.id,
+          rotina_id: rotinaId ?? null,
+        } as any;
+        if (receitaId) await atualizarReceita(receitaId, payload);
+        else {
+          const criada = await criarReceita(payload);
+          if (criada) setReceitaId(criada.id);
+        }
+      };
+
       if (tipo.criaRotina) {
         const { data: auth } = await supabase.auth.getUser();
-        const { error: erroRotina } = await db.from("aip_rotinas").insert({
-          estabelecimento_id: estabelecimentoId,
-          nome: nome.trim(),
-          descricao: objetivo.trim().slice(0, 300),
-          tipo_alvo: "agente",
-          agent_id: agente.id,
-          prompt: montarPrompt(),
-          modelo,
-          cron_expressao: cron,
-          ativo: false,
-          criado_por: auth?.user?.id ?? null,
-        });
+        const { data: rotina, error: erroRotina } = await db
+          .from("aip_rotinas")
+          .insert({
+            estabelecimento_id: estabelecimentoId,
+            nome: nome.trim(),
+            descricao: objetivo.trim().slice(0, 300),
+            tipo_alvo: "agente",
+            agent_id: agente.id,
+            prompt: montarPrompt(),
+            modelo,
+            cron_expressao: cron,
+            ativo: false,
+            criado_por: auth?.user?.id ?? null,
+          })
+          .select()
+          .single();
         if (erroRotina) throw new Error(erroRotina.message);
+        await registrarReceita(rotina?.id ?? null);
         toast.success("Criado! A rotina foi salva desativada — faça um teste antes de ativar.");
         navigate("/ia-platform/rotinas");
         return;
       }
 
+      await registrarReceita();
       toast.success("Agente criado com sucesso!");
       navigate("/ia-platform/agentes");
     } catch (e) {
