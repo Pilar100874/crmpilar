@@ -43,12 +43,14 @@ const slugify = (v: string) =>
     .replace(/^-|-$/g, "");
 
 export default function SkillsPage() {
-  const { items, loading, create, update, remove } = useAipTable<AipSkill>("aip_skills");
+  const { items, loading, estabelecimentoId, create, update, remove } = useAipTable<AipSkill>("aip_skills");
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
   const [editando, setEditando] = useState<AipSkill | null>(null);
   const [form, setForm] = useState<Partial<AipSkill>>(vazio);
   const [excluir, setExcluir] = useState<AipSkill | null>(null);
+  const [pendentes, setPendentes] = useState<File[]>([]);
+  const [importando, setImportando] = useState(false);
 
   const filtrados = useMemo(
     () =>
@@ -63,10 +65,23 @@ export default function SkillsPage() {
   const salvar = async () => {
     if (!form.nome?.trim()) return toast.error("Informe o nome da skill");
     const payload = { ...form, slug: form.slug?.trim() || slugify(form.nome) };
-    const ok = editando
-      ? await update(editando.id, { ...payload, versao: (editando.versao ?? 1) + 1 })
-      : await create(payload);
-    if (ok) setAberto(false);
+    if (editando) {
+      const ok = await update(editando.id, { ...payload, versao: (editando.versao ?? 1) + 1 });
+      if (ok) setAberto(false);
+      return;
+    }
+    const criada = await create(payload);
+    if (!criada) return;
+    if (pendentes.length && estabelecimentoId) {
+      try {
+        await enviarArquivosSkill(criada.id, estabelecimentoId, pendentes);
+        toast.success(`${pendentes.length} arquivo(s) anexado(s)`);
+      } catch (err: any) {
+        toast.error(err?.message ?? "Falha ao anexar arquivos");
+      }
+    }
+    setPendentes([]);
+    setEditando(criada);
   };
 
   const exportar = (s: AipSkill) => {
@@ -78,24 +93,32 @@ export default function SkillsPage() {
     URL.revokeObjectURL(a.href);
   };
 
-  const importar = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const conteudo = String(ev.target?.result ?? "");
+  /** Importa vários .md: o 1º vira o conteúdo base e todos ficam anexados como conhecimento. */
+  const importar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+    setImportando(true);
+    try {
+      const principal = files[0];
+      const conteudo = await principal.text();
+      const base = principal.name.replace(/\.(md|markdown|txt)$/i, "");
       setEditando(null);
+      setPendentes(files);
       setForm({
         ...vazio,
-        nome: file.name.replace(/\.md$/i, ""),
-        slug: slugify(file.name.replace(/\.md$/i, "")),
+        nome: base,
+        slug: slugify(base),
+        descricao:
+          files.length > 1 ? `Skill criada a partir de ${files.length} arquivos Markdown.` : "",
         conteudo_md: conteudo,
       });
       setAberto(true);
-    };
-    reader.readAsText(file);
-    e.target.value = "";
+    } finally {
+      setImportando(false);
+    }
   };
+
 
   return (
     <>
