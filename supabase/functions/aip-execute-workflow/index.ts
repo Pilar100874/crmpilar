@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
               workflow_version_id: versionId,
               workflow_snapshot: snapshot,
               origem: String(body.origem ?? "workflow"),
-              usuario_id: userData.user.id,
+              usuario_id: usuarioId,
               status: "executando",
               modelo: modeloExec,
               input: entrada,
@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
             motivo_interrupcao: null,
             cancelado_em: null,
             retomado_em: new Date().toISOString(),
-            retomado_por: userData.user.id,
+            retomado_por: usuarioId,
             retentativas: Number(execAtual.retentativas ?? 0) + 1,
           };
           // grava o snapshot apenas se a execução ainda não tiver um (execuções antigas)
