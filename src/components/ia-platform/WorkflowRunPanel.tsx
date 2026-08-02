@@ -12,7 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Play, Square, CheckCircle2, XCircle, Loader2, Clock, ExternalLink } from "lucide-react";
+import { Play, Square, CheckCircle2, XCircle, Loader2, Clock, ExternalLink, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { executarWorkflow, EventoExecucao } from "@/lib/aip/execute";
@@ -27,6 +27,8 @@ interface EtapaUI {
   logs?: string | null;
   erro?: string;
   texto?: string;
+  tentativa?: number;
+  tentativas_max?: number;
 }
 
 interface Props {
@@ -61,6 +63,7 @@ export function WorkflowRunPanel({
   const [statusFinal, setStatusFinal] = useState<string | null>(null);
   const [execId, setExecId] = useState<string | null>(executionId ?? null);
   const [saida, setSaida] = useState("");
+  const [nodeErro, setNodeErro] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const aplicarEvento = useCallback((e: EventoExecucao) => {
@@ -78,6 +81,8 @@ export function WorkflowRunPanel({
             titulo: e.titulo ?? e.node_id!,
             tipo: e.tipo,
             status: "executando",
+            tentativa: e.tentativa ?? 1,
+            tentativas_max: e.tentativas_max ?? 1,
           },
         ]);
         break;
@@ -90,7 +95,9 @@ export function WorkflowRunPanel({
       case "etapa_fim":
         setEtapas((prev) =>
           prev.map((et) =>
-            et.node_id === e.node_id && et.ordem === e.ordem
+            et.node_id === e.node_id &&
+            et.ordem === e.ordem &&
+            (et.tentativa ?? 1) === (e.tentativa ?? et.tentativa ?? 1)
               ? {
                   ...et,
                   status: (e.status as EtapaUI["status"]) ?? "concluida",
@@ -100,6 +107,11 @@ export function WorkflowRunPanel({
                 }
               : et,
           ),
+        );
+        break;
+      case "retry":
+        toast.info(
+          `Falha em "${e.titulo}" — nova tentativa automática (${e.tentativa}/${e.tentativas_max})`,
         );
         break;
       case "aprovacao":
@@ -112,14 +124,17 @@ export function WorkflowRunPanel({
       case "fim":
         setStatusFinal(e.status ?? "concluida");
         if (e.resposta) setSaida(e.resposta);
-        if (e.status === "erro") toast.error(e.erro ?? "Execução falhou");
+        if (e.status === "erro") {
+          setNodeErro(e.node_id ?? null);
+          toast.error(e.erro ?? "Execução falhou");
+        }
         else if (e.status === "aguardando_aprovacao") toast.info("Execução pausada: aprovação humana pendente");
         else toast.success("Execução concluída");
         break;
     }
   }, []);
 
-  const iniciar = async () => {
+  const iniciar = async (retry?: { executionId: string; retryNodeId?: string }) => {
     let input: Record<string, unknown> = {};
     if (inputTexto.trim()) {
       try {
@@ -128,14 +143,17 @@ export function WorkflowRunPanel({
         return toast.error("Entrada inválida: informe um JSON válido");
       }
     }
-    setEtapas([]);
+    if (!retry) setEtapas([]);
     setSaida("");
     setStatusFinal(null);
+    setNodeErro(null);
     setRodando(true);
     abortRef.current = new AbortController();
     try {
       await executarWorkflow(
-        { workflowId, executionId, input, signal: abortRef.current.signal },
+        retry
+          ? { executionId: retry.executionId, retryNodeId: retry.retryNodeId, origem: "retry", signal: abortRef.current.signal }
+          : { workflowId, executionId, input, signal: abortRef.current.signal },
         aplicarEvento,
       );
     } catch (err) {
@@ -177,12 +195,21 @@ export function WorkflowRunPanel({
 
         <div className="flex items-center gap-2">
           {!rodando ? (
-            <Button onClick={iniciar} className="flex-1">
+            <Button onClick={() => iniciar()} className="flex-1">
               <Play className="mr-2 h-4 w-4" /> {statusFinal ? "Executar novamente" : "Executar"}
             </Button>
           ) : (
             <Button variant="outline" onClick={parar} className="flex-1">
               <Square className="mr-2 h-4 w-4" /> Parar acompanhamento
+            </Button>
+          )}
+          {!rodando && statusFinal === "erro" && execId && (
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => iniciar({ executionId: execId, retryNodeId: nodeErro ?? undefined })}
+            >
+              <RotateCcw className="mr-2 h-4 w-4" /> Reexecutar do erro
             </Button>
           )}
           {execId && (
@@ -210,12 +237,17 @@ export function WorkflowRunPanel({
           ) : (
             <ul className="divide-y divide-border">
               {etapas.map((e) => (
-                <li key={`${e.node_id}-${e.ordem}`} className="space-y-1 p-3">
+                <li key={`${e.node_id}-${e.ordem}-${e.tentativa ?? 1}`} className="space-y-1 p-3">
                   <div className="flex items-center gap-2">
                     {ICONE[e.status]}
                     <span className="flex-1 truncate text-sm font-medium">
                       {e.ordem}. {e.titulo}
                     </span>
+                    {(e.tentativa ?? 1) > 1 && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        tentativa {e.tentativa}/{e.tentativas_max ?? e.tentativa}
+                      </Badge>
+                    )}
                     {e.duracao_ms != null && (
                       <Badge variant="outline" className="text-[10px]">
                         {e.duracao_ms} ms

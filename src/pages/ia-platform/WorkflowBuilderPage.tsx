@@ -276,6 +276,43 @@ export default function WorkflowBuilderPage() {
                     onChange={(e) => atualizarConfig("prompt", e.target.value)}
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>Tentativas automáticas</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={Number((config.retry as any)?.tentativas ?? 1)}
+                      onChange={(e) =>
+                        atualizarConfig("retry", {
+                          ...((config.retry as any) ?? {}),
+                          tentativas: Math.max(1, Math.min(5, Number(e.target.value) || 1)),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Espera entre tentativas (ms)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20000}
+                      step={500}
+                      value={Number((config.retry as any)?.delay_ms ?? 1500)}
+                      onChange={(e) =>
+                        atualizarConfig("retry", {
+                          ...((config.retry as any) ?? {}),
+                          delay_ms: Math.max(0, Math.min(20000, Number(e.target.value) || 0)),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Em caso de falha, o bloco é repetido automaticamente (backoff exponencial). Se todas as
+                  tentativas falharem, a execução para nesse ponto e pode ser reexecutada manualmente.
+                </p>
                 <div className="space-y-2">
                   <Label>Parâmetros (JSON)</Label>
                   <Textarea

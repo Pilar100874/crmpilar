@@ -1443,6 +1443,8 @@ export type Database = {
           ordem: number
           output: Json
           status: string
+          tentativa: number
+          tentativas_max: number
           tipo: string | null
           titulo: string | null
           tokens_input: number
@@ -1462,6 +1464,8 @@ export type Database = {
           ordem?: number
           output?: Json
           status?: string
+          tentativa?: number
+          tentativas_max?: number
           tipo?: string | null
           titulo?: string | null
           tokens_input?: number
@@ -1481,6 +1485,8 @@ export type Database = {
           ordem?: number
           output?: Json
           status?: string
+          tentativa?: number
+          tentativas_max?: number
           tipo?: string | null
           titulo?: string | null
           tokens_input?: number
@@ -1517,6 +1523,8 @@ export type Database = {
           prompt: string | null
           remote_run_id: string | null
           resposta: string | null
+          retentativas: number
+          retomado_de_node_id: string | null
           retomado_em: string | null
           retomado_por: string | null
           status: string
@@ -1546,6 +1554,8 @@ export type Database = {
           prompt?: string | null
           remote_run_id?: string | null
           resposta?: string | null
+          retentativas?: number
+          retomado_de_node_id?: string | null
           retomado_em?: string | null
           retomado_por?: string | null
           status?: string
@@ -1575,6 +1585,8 @@ export type Database = {
           prompt?: string | null
           remote_run_id?: string | null
           resposta?: string | null
+          retentativas?: number
+          retomado_de_node_id?: string | null
           retomado_em?: string | null
           retomado_por?: string | null
           status?: string
