@@ -42,6 +42,7 @@ import PlaygroundPage from "./pages/ia-platform/PlaygroundPage";
 import HistoricoPage from "./pages/ia-platform/HistoricoPage";
 import SegurancaPage from "./pages/ia-platform/SegurancaPage";
 import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
+import AipRotinasPage from "./pages/ia-platform/RotinasPage";
 
 import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
@@ -412,6 +413,7 @@ const App = () => (
                 <Route path="historico" element={<HistoricoPage />} />
                 <Route path="seguranca" element={<SegurancaPage />} />
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
+                <Route path="rotinas" element={<AipRotinasPage />} />
 
               </Route>
               <Route path="/base-conhecimento" element={<BaseConhecimento />} />

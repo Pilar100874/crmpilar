@@ -226,22 +226,37 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const authHeader = req.headers.get("Authorization") ?? "";
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  const body = await req.json().catch(() => ({}));
 
-  const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData?.user) {
-    return new Response(JSON.stringify({ error: "Não autenticado" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  // Chamada interna (agendador de rotinas): usa a service role e o usuário informado.
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const interno =
+    req.headers.get("x-aip-internal") === "1" &&
+    serviceKey.length > 0 &&
+    authHeader === `Bearer ${serviceKey}`;
+
+  const supabase = interno
+    ? createClient(Deno.env.get("SUPABASE_URL")!, serviceKey)
+    : createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+  let usuarioId: string | null = body.usuario_id ?? null;
+  if (!interno) {
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    usuarioId = userData.user.id;
   }
 
-  const body = await req.json().catch(() => ({}));
   const workflowId: string | undefined = body.workflow_id;
   const retomar: string | undefined = body.execution_id;
   const entrada: Json = body.input ?? {};
+
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -320,7 +335,7 @@ Deno.serve(async (req) => {
               workflow_version_id: versionId,
               workflow_snapshot: snapshot,
               origem: String(body.origem ?? "workflow"),
-              usuario_id: userData.user.id,
+              usuario_id: usuarioId,
               status: "executando",
               modelo: modeloExec,
               input: entrada,
@@ -342,7 +357,7 @@ Deno.serve(async (req) => {
             motivo_interrupcao: null,
             cancelado_em: null,
             retomado_em: new Date().toISOString(),
-            retomado_por: userData.user.id,
+            retomado_por: usuarioId,
             retentativas: Number(execAtual.retentativas ?? 0) + 1,
           };
           // grava o snapshot apenas se a execução ainda não tiver um (execuções antigas)

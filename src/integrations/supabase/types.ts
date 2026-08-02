@@ -1880,6 +1880,158 @@ export type Database = {
         }
         Relationships: []
       }
+      aip_rotina_runs: {
+        Row: {
+          created_at: string
+          detalhes: Json
+          duracao_ms: number | null
+          erro: string | null
+          estabelecimento_id: string
+          execution_id: string | null
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string
+          origem: string
+          rotina_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detalhes?: Json
+          duracao_ms?: number | null
+          erro?: string | null
+          estabelecimento_id: string
+          execution_id?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          origem?: string
+          rotina_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detalhes?: Json
+          duracao_ms?: number | null
+          erro?: string | null
+          estabelecimento_id?: string
+          execution_id?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          origem?: string
+          rotina_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_rotina_runs_rotina_id_fkey"
+            columns: ["rotina_id"]
+            isOneToOne: false
+            referencedRelation: "aip_rotinas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aip_rotinas: {
+        Row: {
+          agent_id: string | null
+          ativo: boolean
+          conectores: Json
+          created_at: string
+          criado_por: string | null
+          cron_expressao: string
+          descricao: string | null
+          estabelecimento_id: string
+          fuso: string
+          id: string
+          input: Json
+          modelo: string | null
+          nome: string
+          prompt: string | null
+          proxima_execucao: string | null
+          retry_max: number
+          timeout_ms: number
+          tipo_alvo: string
+          ultima_execucao: string | null
+          ultima_execution_id: string | null
+          ultimo_erro: string | null
+          ultimo_status: string | null
+          updated_at: string
+          workflow_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          ativo?: boolean
+          conectores?: Json
+          created_at?: string
+          criado_por?: string | null
+          cron_expressao?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          fuso?: string
+          id?: string
+          input?: Json
+          modelo?: string | null
+          nome: string
+          prompt?: string | null
+          proxima_execucao?: string | null
+          retry_max?: number
+          timeout_ms?: number
+          tipo_alvo?: string
+          ultima_execucao?: string | null
+          ultima_execution_id?: string | null
+          ultimo_erro?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          ativo?: boolean
+          conectores?: Json
+          created_at?: string
+          criado_por?: string | null
+          cron_expressao?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          fuso?: string
+          id?: string
+          input?: Json
+          modelo?: string | null
+          nome?: string
+          prompt?: string | null
+          proxima_execucao?: string | null
+          retry_max?: number
+          timeout_ms?: number
+          tipo_alvo?: string
+          ultima_execucao?: string | null
+          ultima_execution_id?: string | null
+          ultimo_erro?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_rotinas_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "aip_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aip_rotinas_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "aip_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aip_skill_files: {
         Row: {
           created_at: string
