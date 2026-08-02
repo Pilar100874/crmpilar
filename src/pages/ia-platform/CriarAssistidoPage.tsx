@@ -201,6 +201,7 @@ export default function CriarAssistidoPage() {
   const [etapas, setEtapas] = useState<EtapaExecucao[]>([]);
   const [receitaId, setReceitaId] = useState<string | null>(null);
   const [salvandoModelo, setSalvandoModelo] = useState(false);
+  const [receitaExcluir, setReceitaExcluir] = useState<AipReceita | null>(null);
   const { items: receitas, create: criarReceita, update: atualizarReceita, remove: removerReceita } =
     useAipTable<AipReceita>("aip_receitas", { orderBy: "updated_at" });
 
