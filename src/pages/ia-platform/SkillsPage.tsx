@@ -149,7 +149,7 @@ export default function SkillsPage() {
     }
   };
 
-
+  return (
     <>
       <AipToolbar
         busca={busca}
