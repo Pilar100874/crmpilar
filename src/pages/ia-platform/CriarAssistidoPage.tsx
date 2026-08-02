@@ -249,11 +249,84 @@ export default function CriarAssistidoPage() {
           .map((r) => `- ${r.nome}: ${r.url}`)
           .join("\n")}`,
       );
+    if (modoExecucao === "etapas" && etapas.length) {
+      partes.push(
+        `\nExecute passo a passo, na ordem, confirmando a conclusão de cada etapa antes de seguir:\n${etapas
+          .map((e, i) => `${i + 1}. ${e.titulo}${e.instrucao ? ` — ${e.instrucao}` : ""}`)
+          .join("\n")}`,
+      );
+    } else {
+      partes.push("\nExecute tudo em uma única passada e devolva o resultado final.");
+    }
     partes.push(
       "\nResponda sempre em português do Brasil. Se faltar alguma informação, liste o que precisa antes de executar.",
     );
     return partes.join("\n");
   };
+
+  /** Dados que representam o que foi montado no assistente. */
+  const snapshot = () => ({
+    nome: nome.trim() || "Rascunho sem nome",
+    tipo: tipo?.id ?? "rotina",
+    objetivo,
+    detalhes,
+    modelo,
+    skill_ids: skillIds,
+    tool_ids: toolIds,
+    mcp_ids: mcpIds,
+    referencias,
+    md_nome: mdNome,
+    md_conteudo: mdConteudo,
+    modo_execucao: modoExecucao,
+    etapas,
+    agenda: { frequencia, hora, minuto },
+  });
+
+  const salvarModelo = async () => {
+    if (!tipo) return toast.warning("Escolha primeiro o que você quer criar");
+    setSalvandoModelo(true);
+    try {
+      if (receitaId) {
+        await atualizarReceita(receitaId, snapshot() as any);
+      } else {
+        const criada = await criarReceita(snapshot() as any);
+        if (criada) setReceitaId(criada.id);
+      }
+    } finally {
+      setSalvandoModelo(false);
+    }
+  };
+
+  const carregarModelo = (r: AipReceita) => {
+    setReceitaId(r.id);
+    setTipoId(r.tipo);
+    setNome(r.nome ?? "");
+    setObjetivo(r.objetivo ?? "");
+    setDetalhes(r.detalhes ?? "");
+    setModelo(r.modelo ?? MODELOS_IA[1]);
+    setSkillIds(r.skill_ids ?? []);
+    setToolIds(r.tool_ids ?? []);
+    setMcpIds(r.mcp_ids ?? []);
+    setReferencias(r.referencias ?? []);
+    setMdNome(r.md_nome ?? "");
+    setMdConteudo(r.md_conteudo ?? "");
+    setModoExecucao(r.modo_execucao ?? "unica");
+    setEtapas(r.etapas ?? []);
+    setFrequencia(r.agenda?.frequencia ?? "diaria");
+    setHora(r.agenda?.hora ?? "08");
+    setMinuto(r.agenda?.minuto ?? "00");
+    setIndice(1);
+    toast.success(`Modelo "${r.nome}" carregado`);
+  };
+
+  const novaEtapa = () =>
+    setEtapas((e) => [
+      ...e,
+      { id: crypto.randomUUID(), titulo: `Etapa ${e.length + 1}`, instrucao: "" },
+    ]);
+  const atualizarEtapa = (id: string, campo: "titulo" | "instrucao", valor: string) =>
+    setEtapas((e) => e.map((x) => (x.id === id ? { ...x, [campo]: valor } : x)));
+  const removerEtapa = (id: string) => setEtapas((e) => e.filter((x) => x.id !== id));
 
   const criar = async () => {
     if (!estabelecimentoId || !tipo) return;
