@@ -48,6 +48,7 @@ Todas as rotas são `POST` e exigem o header `X-Runner-Key`.
 | `/resume` | `{ execution_id, approval_id, resultado }` | `{ ok }` |
 | `/cancel` | `{ execution_id }` | `{ ok }` |
 | `/status` | `{ execution_id }` | estado da execução |
+| `/mcp/probe` | `{ endpoint, cabecalhos?, timeout_ms? }` | handshake JSON-RPC com um servidor MCP; devolve status, ferramentas e latência (usado pela tela **Agentes IA → MCP**) |
 
 ### Exemplo de payload enviado pelo Lovable
 
