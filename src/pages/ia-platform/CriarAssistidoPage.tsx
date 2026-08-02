@@ -466,22 +466,67 @@ export default function CriarAssistidoPage() {
         <CardContent className="space-y-5">
           {/* 1. Tipo */}
           {passoAtual === "tipo" && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {TIPOS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => escolherTipo(t)}
-                  className={cn(
-                    "rounded-xl border-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
-                    tipoId === t.id ? "border-primary bg-primary/5" : "border-border",
-                  )}
-                >
-                  <t.icone className="mb-2 h-6 w-6 text-primary" />
-                  <p className="font-medium">{t.titulo}</p>
-                  <p className="text-sm text-muted-foreground">{t.subtitulo}</p>
-                </button>
-              ))}
+            <div className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {TIPOS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => escolherTipo(t)}
+                    className={cn(
+                      "rounded-xl border-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
+                      tipoId === t.id ? "border-primary bg-primary/5" : "border-border",
+                    )}
+                  >
+                    <t.icone className="mb-2 h-6 w-6 text-primary" />
+                    <p className="font-medium">{t.titulo}</p>
+                    <p className="text-sm text-muted-foreground">{t.subtitulo}</p>
+                  </button>
+                ))}
+              </div>
+
+              {receitas.length > 0 && (
+                <div className="space-y-2">
+                  <Separator />
+                  <p className="flex items-center gap-1.5 text-sm font-medium">
+                    <Save className="h-4 w-4" /> Modelos salvos
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Continue de onde parou ou reaproveite uma montagem anterior.
+                  </p>
+                  <div className="space-y-1">
+                    {receitas.map((r) => (
+                      <div
+                        key={r.id}
+                        className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{r.nome}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {r.modelo ?? "—"} ·{" "}
+                            {r.modo_execucao === "etapas"
+                              ? `${(r.etapas ?? []).length} etapas`
+                              : "execução única"}{" "}
+                            · {(r.skill_ids ?? []).length} skills ·{" "}
+                            {(r.tool_ids ?? []).length} tools · {(r.mcp_ids ?? []).length} MCPs
+                          </p>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => carregarModelo(r)}>
+                          Abrir
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Excluir modelo"
+                          onClick={() => setReceitaExcluir(r)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
