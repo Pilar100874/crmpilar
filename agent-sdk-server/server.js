@@ -237,6 +237,17 @@ async function persistir(run) {
   }
 }
 
+/** Verifica (com cache) quais binários usados pelos scripts de skill existem. */
+let binariosCache = null;
+function binariosDisponiveis() {
+  if (binariosCache) return binariosCache;
+  const nomes = ["bash", "ffmpeg", "ffprobe", "jq", "curl", "python3", "higgsfield"];
+  binariosCache = Object.fromEntries(
+    nomes.map((n) => [n, spawnSync("which", [n]).status === 0]),
+  );
+  return binariosCache;
+}
+
 app.post("/health", (req, res) => {
   if (!autenticar(req, res)) return;
   res.json({
@@ -248,6 +259,7 @@ app.post("/health", (req, res) => {
     anthropic: Boolean(cfg.ANTHROPIC_API_KEY),
     supabase: Boolean(getSupabase()),
     atualizacao_disponivel: Boolean(deployHook()),
+    binarios: binariosDisponiveis(),
     execucoes_ativas: [...runs.values()].filter((r) => r.status === "executando").length,
   });
 
