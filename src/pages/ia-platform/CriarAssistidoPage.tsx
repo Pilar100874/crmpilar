@@ -144,6 +144,31 @@ const TITULOS: Record<PassoId, { titulo: string; ajuda: string }> = {
   revisao: { titulo: "Revisão", ajuda: "Confira e crie. Você pode editar depois." },
 };
 
+interface EtapaExecucao {
+  id: string;
+  titulo: string;
+  instrucao: string;
+}
+
+interface AipReceita {
+  id: string;
+  nome: string;
+  tipo: string;
+  objetivo: string | null;
+  detalhes: string | null;
+  modelo: string | null;
+  skill_ids: string[];
+  tool_ids: string[];
+  mcp_ids: string[];
+  referencias: ReferenciaSelecionada[];
+  md_nome: string | null;
+  md_conteudo: string | null;
+  modo_execucao: "unica" | "etapas";
+  etapas: EtapaExecucao[];
+  agenda: { frequencia?: string; hora?: string; minuto?: string };
+  updated_at: string;
+}
+
 export default function CriarAssistidoPage() {
   const navigate = useNavigate();
   const estabelecimentoId = useEstabelecimento();
@@ -169,6 +194,12 @@ export default function CriarAssistidoPage() {
   const [frequencia, setFrequencia] = useState("diaria");
   const [hora, setHora] = useState("08");
   const [minuto, setMinuto] = useState("00");
+  const [modoExecucao, setModoExecucao] = useState<"unica" | "etapas">("unica");
+  const [etapas, setEtapas] = useState<EtapaExecucao[]>([]);
+  const [receitaId, setReceitaId] = useState<string | null>(null);
+  const [salvandoModelo, setSalvandoModelo] = useState(false);
+  const { items: receitas, create: criarReceita, update: atualizarReceita, remove: removerReceita } =
+    useAipTable<AipReceita>("aip_receitas", { orderBy: "updated_at" });
 
   const tipo = useMemo(() => TIPOS.find((t) => t.id === tipoId) ?? null, [tipoId]);
   const passos: PassoId[] = tipo?.passos ?? ["tipo"];
