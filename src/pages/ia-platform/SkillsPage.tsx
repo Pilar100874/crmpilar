@@ -284,10 +284,22 @@ export default function SkillsPage() {
                 onChange={(e) => setForm({ ...form, conteudo_md: e.target.value })}
               />
             </div>
+
+            {editando ? (
+              <SkillArquivosMd skillId={editando.id} />
+            ) : pendentes.length ? (
+              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                {pendentes.length} arquivo(s) serão anexados como conhecimento ao salvar.
+              </p>
+            ) : (
+              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                Salve a skill para anexar arquivos .md de conhecimento.
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAberto(false)}>
-              Cancelar
+              Fechar
             </Button>
             <Button onClick={salvar}>Salvar</Button>
           </DialogFooter>
