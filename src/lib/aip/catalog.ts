@@ -55,6 +55,7 @@ export const CATALOGO_RECURSOS: CatalogCategory[] = [
       i("flux", "Flux", "🌀", "Geração de imagens com Flux"),
       i("gpt-image", "GPT Image", "🎨", "Geração de imagens OpenAI"),
       i("ideogram", "Ideogram", "🔤", "Imagens com tipografia"),
+      i("higgsfield-image", "Higgsfield Image", "✨", "Imagens cinematográficas com Higgsfield"),
       i("upscaler", "Upscaler", "🔍", "Aumento de resolução"),
       i("remove-background", "Remove Background", "✂️", "Remoção de fundo"),
     ],
@@ -67,9 +68,23 @@ export const CATALOGO_RECURSOS: CatalogCategory[] = [
       i("kling", "Kling", "🎞️", "Geração de vídeo Kling"),
       i("runway", "Runway", "🚀", "Geração de vídeo Runway"),
       i("veo", "Veo", "📹", "Geração de vídeo Veo"),
+      i("higgsfield", "Higgsfield", "🌌", "Vídeos com movimentos de câmera Higgsfield"),
+      i("remotion", "Remotion", "⚛️", "Vídeo programático em React (Remotion)"),
       i("ffmpeg", "FFmpeg", "🛠️", "Edição e conversão de vídeo"),
     ],
   },
+  {
+    slug: "automacao",
+    nome: "Automação / Navegador",
+    icone: "🤖",
+    itens: [
+      i("playwright", "Playwright", "🎭", "Automação de navegador, scraping e testes E2E"),
+      i("playwright-screenshot", "Playwright Screenshot", "📸", "Captura de telas e PDFs de páginas"),
+      i("http-request", "HTTP Request", "🌐", "Requisição HTTP genérica"),
+      i("claude-code", "Claude Code", "🧠", "Rotina executada pelo Claude Agent SDK"),
+    ],
+  },
+
   {
     slug: "audio",
     nome: "Áudio",
