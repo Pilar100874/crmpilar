@@ -25,6 +25,8 @@ import {
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AipNotificacoesBell from "@/components/ia-platform/AipNotificacoesBell";
+import { useEffect, useState } from "react";
+import { AppRole, ROLES_MONITOR, carregarAcessoAip, temAlgumaRole } from "@/lib/aip/rbac";
 
 const AREAS = [
   { to: "", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -45,12 +47,25 @@ const AREAS = [
   { to: "rotinas", label: "Rotinas", icon: CalendarClock },
   { to: "notificacoes", label: "Notificações", icon: Bell },
   { to: "motor", label: "Motor de execução", icon: Server },
-  { to: "monitor-servidor", label: "Monitor do servidor", icon: Activity },
+  { to: "monitor-servidor", label: "Monitor do servidor", icon: Activity, roles: ROLES_MONITOR },
 
 ];
 
 export default function IAPlatformLayout() {
   const location = useLocation();
+  const [roles, setRoles] = useState<AppRole[] | null>(null);
+
+  useEffect(() => {
+    carregarAcessoAip()
+      .then((a) => setRoles(a.roles))
+      .catch(() => setRoles([]));
+  }, []);
+
+  // Esconde itens restritos enquanto as roles não forem confirmadas.
+  const areas = AREAS.filter(
+    (a) => !("roles" in a) || (roles ? temAlgumaRole(roles, a.roles as AppRole[]) : false),
+  );
+
   const atual = AREAS.find((a) =>
     a.end
       ? location.pathname.replace(/\/$/, "").endsWith("/ia-platform")
@@ -72,7 +87,7 @@ export default function IAPlatformLayout() {
         </div>
         <ScrollArea className="lg:h-[calc(100%-73px)]">
           <nav className="flex gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-visible">
-            {AREAS.map((area) => (
+            {areas.map((area) => (
               <NavLink
                 key={area.to || "dashboard"}
                 to={area.to}

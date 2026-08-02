@@ -46,6 +46,8 @@ import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
 import AipRotinasPage from "./pages/ia-platform/RotinasPage";
 import AipMotorPage from "./pages/ia-platform/MotorPage";
 import AipServidorMonitorPage from "./pages/ia-platform/ServidorMonitorPage";
+import RequireAipRole from "./components/ia-platform/RequireAipRole";
+import { ROLES_MONITOR } from "./lib/aip/rbac";
 
 
 import BaseConhecimento from "./pages/BaseConhecimento";
@@ -420,7 +422,15 @@ const App = () => (
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
                 <Route path="rotinas" element={<AipRotinasPage />} />
                 <Route path="motor" element={<AipMotorPage />} />
-                <Route path="monitor-servidor" element={<AipServidorMonitorPage />} />
+                <Route
+                  path="monitor-servidor"
+                  element={
+                    <RequireAipRole roles={ROLES_MONITOR}>
+                      <AipServidorMonitorPage />
+                    </RequireAipRole>
+                  }
+                />
+
 
 
               </Route>
