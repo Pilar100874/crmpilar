@@ -168,6 +168,10 @@ export default function SkillsPage() {
         vazioTexto="Nenhuma skill cadastrada."
         acoes={
           <div className="flex flex-wrap gap-2">
+            <Button onClick={() => navigate("/ia-platform/skills/assistente")}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Criar com assistente
+            </Button>
             <Button variant="outline" asChild disabled={importando}>
               <label className="cursor-pointer">
                 <FolderArchive className="mr-2 h-4 w-4" />
