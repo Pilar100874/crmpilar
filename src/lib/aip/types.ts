@@ -171,6 +171,8 @@ export interface AipApproval {
   status: "pendente" | "aprovado" | "rejeitado";
   comentario: string | null;
   decidido_em: string | null;
+  decidido_por?: string | null;
+  decidido_por_nome?: string | null;
   created_at: string;
 }
 
