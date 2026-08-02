@@ -420,7 +420,15 @@ const App = () => (
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
                 <Route path="rotinas" element={<AipRotinasPage />} />
                 <Route path="motor" element={<AipMotorPage />} />
-                <Route path="monitor-servidor" element={<AipServidorMonitorPage />} />
+                <Route
+                  path="monitor-servidor"
+                  element={
+                    <RequireAipRole roles={ROLES_MONITOR}>
+                      <AipServidorMonitorPage />
+                    </RequireAipRole>
+                  }
+                />
+
 
 
               </Route>
