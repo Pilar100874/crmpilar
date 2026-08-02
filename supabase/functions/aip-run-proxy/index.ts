@@ -34,6 +34,27 @@ Deno.serve(async (req) => {
     const action = String(body.action ?? "");
     if (!action) return json({ error: "Ação não informada" }, 400);
 
+    // RBAC: ações administrativas (monitor do servidor / redeploy / cancelar)
+    // só podem ser executadas por perfis admin ou gestor.
+    const ACOES_ADMIN = ["runs", "runs/limpar", "update", "cancel", "health", "mcp/probe"];
+    if (ACOES_ADMIN.includes(action)) {
+      const { data: usuario } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", userData.user.id)
+        .maybeSingle();
+
+      const { data: roles } = usuario
+        ? await supabase.from("user_roles").select("role").eq("user_id", usuario.id)
+        : { data: [] as { role: string }[] };
+
+      const autorizado = (roles ?? []).some((r) => ["admin", "gestor"].includes(r.role));
+      if (!autorizado) {
+        return json({ error: "Acesso restrito a administradores e gestores" }, 403);
+      }
+    }
+
+
     if (!RUNNER_URL) {
       // Sem servidor configurado: devolve resposta simulada para não travar a UI.
       if (action === "health") return json({ ok: false, motivo: "AIP_RUNNER_URL não configurada" });
