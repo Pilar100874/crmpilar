@@ -212,6 +212,16 @@ export default function WorkflowBuilderPage() {
                 if (nomeImportado) setNome(nomeImportado);
               }}
             />
+            <WorkflowVersionsDialog
+              workflowId={id && id !== "novo" ? id : undefined}
+              versaoAtual={versao}
+              onRestaurar={(n, e) => {
+                setNodes(n);
+                setEdges(e);
+                setSelecionado(null);
+              }}
+            />
+
             <Button size="sm" onClick={salvar} disabled={salvando}>
               <Save className="mr-1 h-4 w-4" /> Salvar
             </Button>
