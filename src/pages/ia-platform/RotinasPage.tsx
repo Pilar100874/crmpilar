@@ -63,6 +63,11 @@ interface Rotina {
   fuso: string;
   timeout_ms: number;
   retry_max: number;
+  max_concorrencia: number;
+  retry_backoff_ms: number;
+  retry_fator: number;
+  bloquear_duplicados: boolean;
+
   ativo: boolean;
   proxima_execucao: string | null;
   ultima_execucao: string | null;
