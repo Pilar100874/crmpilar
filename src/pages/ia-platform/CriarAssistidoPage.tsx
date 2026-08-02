@@ -18,6 +18,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   ArrowRight,
   BarChart3,
@@ -43,6 +50,7 @@ import {
   Wand2,
   Plus,
   Save,
+  Search,
   Trash2,
   Wrench,
 } from "lucide-react";
@@ -246,6 +254,13 @@ const TIPOS: TipoCriacao[] = [
 ];
 
 
+const ORDEM_CATEGORIAS = ["Automação", "Conteúdo & Marketing", "Operação & Dados"];
+
+const CATEGORIAS = ORDEM_CATEGORIAS.map((nome) => ({
+  nome,
+  itens: TIPOS.filter((t) => t.categoria === nome),
+})).filter((g) => g.itens.length > 0);
+
 const FREQUENCIAS = [
   { id: "diaria", rotulo: "Todo dia", cron: (h: string, m: string) => `${m} ${h} * * *` },
   { id: "uteis", rotulo: "Dias úteis (seg a sex)", cron: (h: string, m: string) => `${m} ${h} * * 1-5` },
@@ -312,6 +327,8 @@ export default function CriarAssistidoPage() {
   const { items: mcps } = useAipTable<AipMcp>("aip_mcps");
 
   const [tipoId, setTipoId] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
   const [indice, setIndice] = useState(0);
   const [salvando, setSalvando] = useState(false);
 
@@ -336,6 +353,17 @@ export default function CriarAssistidoPage() {
   const [receitaExcluir, setReceitaExcluir] = useState<AipReceita | null>(null);
   const { items: receitas, create: criarReceita, update: atualizarReceita, remove: removerReceita } =
     useAipTable<AipReceita>("aip_receitas", { orderBy: "updated_at" });
+
+  const categoriasFiltradas = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return CATEGORIAS;
+    return CATEGORIAS.map((g) => ({
+      ...g,
+      itens: g.itens.filter((t) =>
+        `${t.titulo} ${t.subtitulo} ${t.categoria}`.toLowerCase().includes(termo),
+      ),
+    })).filter((g) => g.itens.length > 0);
+  }, [busca]);
 
   const tipo = useMemo(() => TIPOS.find((t) => t.id === tipoId) ?? null, [tipoId]);
   const passos: PassoId[] = tipo?.passos ?? ["tipo"];
@@ -374,7 +402,14 @@ export default function CriarAssistidoPage() {
     if (!podeAvancar()) return toast.warning("Preencha os campos obrigatórios para continuar");
     setIndice((i) => Math.min(i + 1, passos.length - 1));
   };
-  const voltar = () => setIndice((i) => Math.max(i - 1, 0));
+  const voltar = () => {
+    if (indice <= 1) {
+      setTipoId(null);
+      setIndice(0);
+      return;
+    }
+    setIndice((i) => Math.max(i - 1, 0));
+  };
 
   const montarPrompt = () => {
     const partes = [objetivo.trim()];
@@ -1122,7 +1157,7 @@ export default function CriarAssistidoPage() {
           <Separator />
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Button variant="ghost" onClick={voltar} disabled={indice === 0 || salvando}>
+            <Button variant="ghost" onClick={voltar} disabled={salvando}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
             </Button>
             <div className="flex flex-wrap items-center gap-2">
