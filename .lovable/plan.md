@@ -1,122 +1,43 @@
+## Plataforma Visual de Agentes IA
 
-# Padrão único de Cadastro (Empresa / Pessoa) em todo o sistema
+Toda a administração no Lovable (novo módulo `/ia-platform`), execução delegada a um servidor Claude Agent SDK no Railway. O sistema atual já tem tabelas `agent_*`, `skills` e vários workflows — o novo módulo usa um namespace próprio (`aip_*`) para não conflitar com o CRM existente.
 
-## Objetivo
+### Fases de entrega
 
-Unificar todos os cadastros de empresa e pessoa em um único fluxo "CNPJ-first / CPF-first" com auto-preenchimento, cache, máscaras, validação Zod, foco automático no Número e experiência estilo Nubank/Mercado Livre.
+**Fase 1 — Fundação (banco + navegação + dashboard)**
+- Tabelas: `aip_agents`, `aip_agent_versions`, `aip_skills`, `aip_skill_versions`, `aip_skill_files`, `aip_tools`, `aip_mcps`, `aip_resources` (catálogo), `aip_workflows`, `aip_workflow_versions`, `aip_wizards`, `aip_executions`, `aip_execution_steps`, `aip_approvals`, `aip_assets`, `aip_asset_versions`, `aip_api_keys`, `aip_audit_log`, `aip_permissions`, `aip_usage_limits`.
+- Todas com `estabelecimento_id`, RLS por estabelecimento + papel, GRANTs, `created_at/updated_at`.
+- Menu lateral novo com as áreas: Dashboard, Agentes, Skills, Tools, MCPs, Recursos, Wizards, Workflows, Aprovações, Execuções, Assets, Playground, Histórico, Segurança.
+- Dashboard com os 9 cartões pedidos (agentes, execuções hoje, tokens, custos, recursos, workflows, execuções em andamento, aprovações pendentes, erros recentes).
 
-## 1. Camada de serviços (nova base compartilhada)
+**Fase 2 — Cadastros (CRUD completo)**
+- Agentes: criar/editar/duplicar/versionar/ativar/desativar, com modelo, prompt, skills, tools, MCPs, limites de custo e tempo, tags.
+- Skills: SKILL.md com editor markdown, arquivos auxiliares em Storage, versão, status, histórico, importar/exportar (.zip).
+- Tools: catálogo por categoria, tipo, endpoint, input/output schema (JSON Schema com editor), permissões, credenciais, timeout, retry.
+- MCPs: endpoint, tipo, ambiente, credenciais, listagem das ferramentas expostas, conectar/desconectar (teste de handshake).
+- Catálogo de Recursos: seed com todas as categorias e itens listados (comunicação, documentos, imagem, vídeo, áudio, banco, storage, redes sociais, helpers).
 
-Criar em `src/lib/cadastros/`:
+**Fase 3 — Workflow Builder + Wizards + Aprovação Humana**
+- Builder React Flow com os blocos: Entrada, Agente, Skill, Tool, MCP, Prompt, If, Else, Loop, Delay, Human Approval, Webhook, Output; painel de configuração por bloco; versionamento; import/export JSON.
+- Wizards: motor genérico de etapas configuráveis + wizard-exemplo "Criar vídeo" com as 6 etapas descritas (incluindo seleção de recursos e forma de entrega).
+- Aprovação humana: execução pausa em `aguardando_aprovacao`, tela de aprovações com preview (texto, galeria de imagens com seleção múltipla, player de vídeo), retomada com apenas os itens aprovados.
 
-- `cnpjService.ts` — `buscarCNPJ(cnpj)` com cache in-memory (Map por CNPJ), debounce, cancelamento via AbortController, retry 1x, fallback BrasilAPI → edge `consultar-cnpj`. Retorna objeto normalizado com todos os campos exigidos (situação, abertura, natureza jurídica, capital social, porte, MEI, Simples, CNAE principal + secundários, país="Brasil").
-- `cepService.ts` — `buscarCEP(cep)` com cache e cancelamento (ViaCEP).
-- `cpfService.ts` — só validação de dígitos (LGPD).
-- `enderecoAutofill.ts` — helper que, dado um CEP, resolve UF/cidade + carrega municípios IBGE e devolve código IBGE.
-- `schemas.ts` — schemas Zod: `empresaSchema`, `pessoaFisicaSchema`, `enderecoSchema`.
+**Fase 4 — Execução, Playground, Assets, Histórico**
+- Contrato HTTP com o servidor Claude Agent SDK: `POST /runs` (inicia), `GET /runs/:id/stream` (SSE), `POST /runs/:id/resume` (após aprovação), `POST /runs/:id/cancel`, webhook de callback para gravar tokens/custo/assets no Supabase.
+- Edge Function `aip-run-proxy` guarda a chave do servidor e faz o repasse autenticado (o front nunca fala direto com o Railway).
+- Execuções: lista + detalhe com etapa atual, tempo, status, modelo, tokens, custo, logs, arquivos, botão cancelar.
+- Playground com streaming da resposta e seleção de agente/skills/tools/MCP/modelo/arquivos.
+- Assets: preview por tipo, download, versões, histórico e workflow de origem.
 
-## 2. Componentes reutilizáveis (novos)
+**Fase 5 — Segurança e governança**
+- Perfis e permissões por recurso, API keys (hash + prefixo visível), secrets via Lovable Cloud, limites de uso (custo/dia, execuções/dia) com bloqueio, auditoria de todas as ações administrativas.
 
-Em `src/components/cadastros/`:
+### Detalhes técnicos
+- Frontend: React + React Flow (já usado no projeto), shadcn, tokens semânticos, textos em português.
+- Streaming: SSE consumido no cliente via Edge Function proxy; estado persistido em `aip_executions` para retomada.
+- O servidor Claude Agent SDK não é gerado dentro deste projeto Lovable (é um serviço Node separado no Railway); eu entrego neste repositório o contrato de API, os tipos TypeScript compartilhados e um esqueleto do servidor em `agent-sdk-server/` para você subir no Railway.
+- Nada do CRM existente é alterado; o módulo é isolado sob `/ia-platform`.
 
-- `CnpjField.tsx` — input com máscara, loading, validação de dígitos, consulta automática ao completar, ícone de status, mensagem de erro, exposição via `onLookup(data)`.
-- `CpfField.tsx` — máscara + validação.
-- `CepField.tsx` — máscara + ViaCEP automático, expõe `onLookup(data)`, dispara foco no `NumeroField` irmão.
-- `NumeroEnderecoField.tsx` — input controlado; recebe ref para autofoco após CEP/CNPJ.
-- `EmpresaFormCore.tsx` — formulário completo padronizado (CNPJ primeiro, todos os campos listados: razão, fantasia, situação, abertura, natureza, capital, porte, regime, MEI, Simples, CNAE principal, lista de CNAEs secundários, email, telefone, endereço com UF/cidade travados por CEP + IBGE readonly, país). Usa `react-hook-form` + Zod.
-- `PessoaFisicaFormCore.tsx` — formulário curto (CPF, nome, nascimento, celular, email, CEP, número, complemento).
-
-Ambos os cores expõem `defaultValues`, `onSubmit`, `mode` (create/edit) e são consumidos pelas telas existentes sem duplicar lógica.
-
-## 3. Telas a refatorar (todas passam a consumir os cores)
-
-Listas principais:
-- `src/pages/Empresas.tsx` — Empresas, Vendedores, Transportadoras.
-- `src/pages/ProspeccaoEmpresas.tsx` — cadastro manual de prospect.
-- `src/components/atendimento/EmpresaFormSheet.tsx` — CRM.
-- `src/components/atendimento/ContatoFormSheet.tsx` — CRM pessoa física.
-- `src/components/NovaEmpresaDialog.tsx` / `NovoContatoDialog.tsx` — passam a delegar aos cores.
-
-Bot / atendimento:
-- Cadastro rápido de empresa/contato disparado por blocos do bot que criam registros.
-
-Ponto:
-- `Empresas`, `Filiais`, `Funcionários` do módulo Ponto (Filiais e Empresas usam mesmo padrão CNPJ-first; Funcionários usam PessoaFisicaFormCore).
-
-Ecommerce:
-- Cadastro de comprador (empresa B2B) e cliente PF no checkout admin.
-
-Qualquer outra tela que hoje capture CNPJ/CPF isolado ganha `CnpjField`/`CpfField` (busca automática + máscara).
-
-## 4. Campos adicionados no schema `empresas`
-
-Migration adicionando colunas que hoje não existem (quando aplicável):
-- `situacao_cadastral text`
-- `data_abertura date`
-- `natureza_juridica text`
-- `capital_social numeric`
-- `porte text`
-- `regime_tributario text`
-- `optante_mei boolean`
-- `optante_simples boolean`
-- `cnae_principal text`
-- `cnaes_secundarios jsonb`
-- `pais text default 'Brasil'`
-
-Todas nullable, sem afetar dados existentes. GRANTs e RLS preservados.
-
-Tabela `pessoas` — se não existir separada (hoje é `customers`), adicionar `data_nascimento date` em `customers` (nullable).
-
-## 5. Fluxo UX garantido
-
-Empresa:
-```
-CNPJ (máscara) → validação dígitos → consulta automática (loading, cache, sem duplicar)
-   → preenche tudo → se Número vazio, foca Número → Salvar
-```
-
-CEP dentro da empresa:
-```
-CEP completo → ViaCEP → preenche logradouro/bairro/UF/cidade + IBGE → foca Número
-```
-
-Pessoa Física:
-```
-CPF → valida → Nome → Nascimento → Celular → Email → CEP → ViaCEP → Número → Salvar
-```
-
-- Se CNPJ/CEP não encontrado: permite cadastro manual (sem travar), mantendo UF/Cidade guiados por CEP quando houver.
-- Debounce 500ms nas consultas; AbortController cancela requisição anterior; toast de erro discreto.
-
-## 6. Máscaras e validações
-
-Reaproveita `src/lib/masks.ts` e `src/lib/validators.ts` existentes (CPF, CNPJ, CEP, telefone, data). Adiciona schemas Zod centrais em `schemas.ts` para uso em `react-hook-form`. Validação também server-side reutilizando `validateCpfCnpjField` já existente.
-
-## 7. Ordem de execução
-
-1. Migration de colunas novas em `empresas` (+ `data_nascimento` em `customers`).
-2. Criar `src/lib/cadastros/*` (serviços + schemas).
-3. Criar `src/components/cadastros/*` (fields + cores).
-4. Refatorar `Empresas.tsx` (Empresas/Vendedores/Transportadoras).
-5. Refatorar `EmpresaFormSheet.tsx` e `ContatoFormSheet.tsx` (CRM/atendimento).
-6. Refatorar `ProspeccaoEmpresas.tsx`.
-7. Refatorar telas de Ponto (Empresas, Filiais, Funcionários).
-8. Refatorar cadastro do Ecommerce (comprador B2B / PF).
-9. Ajustar blocos do Bot que criam registros para chamar os cores.
-10. Smoke-test em cada tela: build + navegação manual pelas rotas.
-
-## Detalhes técnicos
-
-- `react-hook-form` + `@hookform/resolvers/zod` já disponíveis no projeto (usados em outras telas).
-- Cache CNPJ/CEP: `Map<string, Promise<Result>>` — mesma chamada em voo é reaproveitada, evita duplicidade.
-- AbortController armazenado em ref; cancela ao digitar novo valor ou desmontar.
-- IBGE continua via `UfCidadeIbge` existente (não duplicar lógica); os cores injetam UF/Cidade já resolvidos pelo CEP.
-- Consulta CNPJ: BrasilAPI primeiro (público, sem custo). Fallback edge `consultar-cnpj` para email/telefone quando faltar.
-- Nenhuma consulta CPF a serviços de dados pessoais será feita (LGPD).
-- Tipagem: `EmpresaFormValues` e `PessoaFisicaFormValues` exportadas de `schemas.ts`.
-- Sem mudança em RLS ou grants existentes; migration só adiciona colunas nullable.
-
-## Risco / mitigação
-
-- Refatoração ampla → mantenho as telas atuais funcionando durante a migração, um arquivo por vez; cada refatoração compila antes de seguir.
-- Se algum consumidor específico tiver campo custom (ex.: transportadora tem `tipo_transporte`), o core aceita `extraFields` renderizados após o bloco padrão.
+### O que preciso de você
+- Confirmar se começo pela Fase 1 (banco + menu + dashboard) e sigo em sequência, ou se prefere priorizar outra fase.
+- URL do servidor Railway (se já existir) — senão deixo configurável em Segurança.
