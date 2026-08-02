@@ -1429,6 +1429,66 @@ export type Database = {
         }
         Relationships: []
       }
+      aip_conectores: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          disponivel: boolean
+          estabelecimento_id: string
+          ferramentas: Json
+          icone: string | null
+          id: string
+          metadados: Json
+          nome: string
+          origem: string
+          ref: string
+          status: string
+          tipo: string
+          ultima_sync: string
+          ultimo_erro: string | null
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          disponivel?: boolean
+          estabelecimento_id: string
+          ferramentas?: Json
+          icone?: string | null
+          id?: string
+          metadados?: Json
+          nome: string
+          origem?: string
+          ref: string
+          status?: string
+          tipo: string
+          ultima_sync?: string
+          ultimo_erro?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          disponivel?: boolean
+          estabelecimento_id?: string
+          ferramentas?: Json
+          icone?: string | null
+          id?: string
+          metadados?: Json
+          nome?: string
+          origem?: string
+          ref?: string
+          status?: string
+          tipo?: string
+          ultima_sync?: string
+          ultimo_erro?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       aip_execution_steps: {
         Row: {
           created_at: string
