@@ -26,6 +26,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Save, ArrowLeft, Trash2, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { FlowExportImportGeneric } from "@/components/flow/FlowExportImportGeneric";
+import { WorkflowRunPanel } from "@/components/ia-platform/WorkflowRunPanel";
 
 export default function WorkflowBuilderPage() {
   const { id } = useParams();
@@ -39,6 +40,7 @@ export default function WorkflowBuilderPage() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selecionado, setSelecionado] = useState<Node | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [executando, setExecutando] = useState(false);
 
   useEffect(() => {
     if (!id || id === "novo") return;
@@ -200,6 +202,15 @@ export default function WorkflowBuilderPage() {
             <Button size="sm" onClick={salvar} disabled={salvando}>
               <Save className="mr-1 h-4 w-4" /> Salvar
             </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!id || id === "novo"}
+              onClick={() => setExecutando(true)}
+              title={!id || id === "novo" ? "Salve o workflow antes de executar" : "Executar workflow"}
+            >
+              <PlayCircle className="mr-1 h-4 w-4" /> Executar
+            </Button>
           </div>
         </div>
         <ReactFlow
@@ -296,6 +307,13 @@ export default function WorkflowBuilderPage() {
           </div>
         </ScrollArea>
       </aside>
+
+      <WorkflowRunPanel
+        open={executando}
+        onOpenChange={setExecutando}
+        workflowId={id && id !== "novo" ? id : undefined}
+        nomeWorkflow={nome}
+      />
     </div>
   );
 }

@@ -7,13 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Copy, Pencil, Trash2, Workflow } from "lucide-react";
+import { Copy, Pencil, PlayCircle, Trash2, Workflow } from "lucide-react";
+import { WorkflowRunPanel } from "@/components/ia-platform/WorkflowRunPanel";
 
 export default function WorkflowsPage() {
   const navigate = useNavigate();
   const { items, loading, create, remove } = useAipTable<AipWorkflow>("aip_workflows");
   const [busca, setBusca] = useState("");
   const [excluir, setExcluir] = useState<AipWorkflow | null>(null);
+  const [executar, setExecutar] = useState<AipWorkflow | null>(null);
 
   const filtrados = useMemo(
     () =>
@@ -69,6 +71,9 @@ export default function WorkflowsPage() {
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
+                  <Button size="sm" variant="secondary" onClick={() => setExecutar(w)}>
+                    <PlayCircle className="mr-1 h-3.5 w-3.5" /> Executar
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => setExcluir(w)}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
@@ -78,6 +83,13 @@ export default function WorkflowsPage() {
           ))}
         </div>
       </AipToolbar>
+
+      <WorkflowRunPanel
+        open={!!executar}
+        onOpenChange={(o) => !o && setExecutar(null)}
+        workflowId={executar?.id}
+        nomeWorkflow={executar?.nome}
+      />
 
       <DeleteConfirmDialog
         open={!!excluir}

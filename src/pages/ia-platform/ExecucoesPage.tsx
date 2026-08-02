@@ -193,14 +193,27 @@ export default function ExecucoesPage() {
                   ) : (
                     <ul className="divide-y divide-border">
                       {steps.map((s) => (
-                        <li key={s.id} className="p-3">
+                        <li key={s.id} className="space-y-1 p-3">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-sm">
-                              {s.ordem}. {s.nome ?? s.node_id}
+                              {s.ordem}. {s.titulo ?? s.node_id}
                             </span>
-                            <Badge variant={s.status === "erro" ? "destructive" : "outline"}>{s.status}</Badge>
+                            <div className="flex items-center gap-1">
+                              {s.duracao_ms != null && (
+                                <Badge variant="outline" className="text-[10px]">{s.duracao_ms} ms</Badge>
+                              )}
+                              <Badge variant={s.status === "erro" ? "destructive" : "outline"}>
+                                {String(s.status).replace("_", " ")}
+                              </Badge>
+                            </div>
                           </div>
-                          {s.erro && <p className="text-xs text-destructive">{s.erro}</p>}
+                          {s.tipo && <p className="text-[11px] text-muted-foreground">{s.tipo}</p>}
+                          {s.logs && <p className="text-xs text-muted-foreground">{s.logs}</p>}
+                          {s.output && Object.keys(s.output).length > 0 && (
+                            <pre className="max-h-32 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-[11px]">
+                              {JSON.stringify(s.output, null, 2)}
+                            </pre>
+                          )}
                         </li>
                       ))}
                     </ul>
