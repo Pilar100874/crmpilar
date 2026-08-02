@@ -148,6 +148,22 @@ export default function McpsPage() {
         vazio={filtrados.length === 0}
         vazioTexto="Nenhum servidor MCP cadastrado."
       >
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            O teste usa o servidor de execução (Claude Agent SDK) para fazer o handshake real; sem runner
+            configurado, o navegador tenta direto.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={testandoTodos || !filtrados.length}
+            onClick={testarTodos}
+          >
+            <RefreshCw className={`mr-1 h-3.5 w-3.5 ${testandoTodos ? "animate-spin" : ""}`} />
+            Testar todos
+          </Button>
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtrados.map((m) => (
             <Card key={m.id} className="transition-all hover:shadow-md">
