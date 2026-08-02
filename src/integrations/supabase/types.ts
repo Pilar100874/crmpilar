@@ -1221,6 +1221,7 @@ export type Database = {
           created_at: string
           decidido_em: string | null
           decidido_por: string | null
+          decidido_por_nome: string | null
           estabelecimento_id: string
           execution_id: string
           id: string
@@ -1238,6 +1239,7 @@ export type Database = {
           created_at?: string
           decidido_em?: string | null
           decidido_por?: string | null
+          decidido_por_nome?: string | null
           estabelecimento_id: string
           execution_id: string
           id?: string
@@ -1255,6 +1257,7 @@ export type Database = {
           created_at?: string
           decidido_em?: string | null
           decidido_por?: string | null
+          decidido_por_nome?: string | null
           estabelecimento_id?: string
           execution_id?: string
           id?: string
@@ -1510,9 +1513,12 @@ export type Database = {
           input: Json
           modelo: string | null
           origem: string
+          pausado_em: string | null
           prompt: string | null
           remote_run_id: string | null
           resposta: string | null
+          retomado_em: string | null
+          retomado_por: string | null
           status: string
           tokens_input: number
           tokens_output: number
@@ -1536,9 +1542,12 @@ export type Database = {
           input?: Json
           modelo?: string | null
           origem?: string
+          pausado_em?: string | null
           prompt?: string | null
           remote_run_id?: string | null
           resposta?: string | null
+          retomado_em?: string | null
+          retomado_por?: string | null
           status?: string
           tokens_input?: number
           tokens_output?: number
@@ -1562,9 +1571,12 @@ export type Database = {
           input?: Json
           modelo?: string | null
           origem?: string
+          pausado_em?: string | null
           prompt?: string | null
           remote_run_id?: string | null
           resposta?: string | null
+          retomado_em?: string | null
+          retomado_por?: string | null
           status?: string
           tokens_input?: number
           tokens_output?: number

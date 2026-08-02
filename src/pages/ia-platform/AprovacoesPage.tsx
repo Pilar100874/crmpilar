@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAipTable, db } from "@/lib/aip/db";
 import { AipApproval } from "@/lib/aip/types";
 import { AipToolbar } from "@/components/ia-platform/AipToolbar";
@@ -8,9 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { executarWorkflow } from "@/lib/aip/execute";
+import { supabase } from "@/integrations/supabase/client";
+
+/** Identifica o usuário logado (id + nome) para registrar quem aprovou. */
+async function usuarioAtual(): Promise<{ id: string | null; nome: string | null }> {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  if (!user) return { id: null, nome: null };
+  const { data: u } = await supabase
+    .from("usuarios")
+    .select("nome")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  return { id: user.id, nome: (u as any)?.nome ?? user.email ?? null };
+}
 
 export default function AprovacoesPage() {
   const { items, loading, refetch } = useAipTable<AipApproval>("aip_approvals");
@@ -18,6 +32,8 @@ export default function AprovacoesPage() {
   const [status, setStatus] = useState<"pendente" | "todos">("pendente");
   const [comentarios, setComentarios] = useState<Record<string, string>>({});
   const [selecoes, setSelecoes] = useState<Record<string, string[]>>({});
+  const [retomando, setRetomando] = useState<string | null>(null);
+  const jaRetomadas = useRef<Set<string>>(new Set());
 
   const filtrados = useMemo(
     () =>
@@ -27,38 +43,97 @@ export default function AprovacoesPage() {
     [items, busca, status],
   );
 
+  /** Retoma a execução a partir do bloco de aprovação. */
+  const retomarExecucao = async (a: AipApproval, silencioso = false) => {
+    setRetomando(a.id);
+    try {
+      await executarWorkflow(
+        {
+          executionId: a.execution_id,
+          input: {
+            aprovacao: {
+              aprovado: true,
+              selecionados: a.selecionados ?? [],
+              comentario: a.comentario ?? "",
+              aprovado_por: a.decidido_por_nome ?? null,
+              aprovado_em: a.decidido_em ?? null,
+            },
+          },
+        },
+        (ev) => {
+          if (ev.evento === "fim") {
+            if (ev.status === "erro") toast.error(ev.erro ?? "Falha ao retomar a execução");
+            else if (ev.status === "aguardando_aprovacao") toast.info("Nova aprovação pendente");
+            else if (ev.status === "cancelada") toast.warning("Execução cancelada");
+            else toast.success("Execução retomada e concluída");
+          }
+        },
+      );
+    } catch (e: any) {
+      if (!silencioso) toast.warning(`Não foi possível retomar a execução: ${e.message}`);
+    } finally {
+      setRetomando(null);
+      refetch();
+    }
+  };
+
+  /**
+   * Retomada automática: aprovações já aprovadas cuja execução continua
+   * pausada (ex.: aba fechada durante a retomada) voltam a rodar sozinhas.
+   */
+  useEffect(() => {
+    const aprovadas = items.filter((a) => a.status === "aprovado");
+    if (aprovadas.length === 0) return;
+    (async () => {
+      const ids = [...new Set(aprovadas.map((a) => a.execution_id))];
+      const { data: execs } = await db
+        .from("aip_executions")
+        .select("id,status")
+        .in("id", ids)
+        .eq("status", "aguardando_aprovacao");
+      for (const ex of (execs ?? []) as any[]) {
+        if (jaRetomadas.current.has(ex.id)) continue;
+        jaRetomadas.current.add(ex.id);
+        const alvo = aprovadas.find((a) => a.execution_id === ex.id);
+        if (alvo) await retomarExecucao(alvo, true);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
+
   const decidir = async (a: AipApproval, aprovado: boolean) => {
+    const { id: usuarioId, nome } = await usuarioAtual();
+    const agora = new Date().toISOString();
     const { error } = await db
       .from("aip_approvals")
       .update({
         status: aprovado ? "aprovado" : "rejeitado",
         comentario: comentarios[a.id] ?? null,
         selecionados: selecoes[a.id] ?? [],
-        decidido_em: new Date().toISOString(),
+        decidido_em: agora,
+        decidido_por: usuarioId,
+        decidido_por_nome: nome,
       })
       .eq("id", a.id);
     if (error) return toast.error(`Erro: ${error.message}`);
     if (aprovado) {
       toast.info("Retomando a execução do workflow…");
-      try {
-        await executarWorkflow(
-          {
-            executionId: a.execution_id,
-            input: { aprovacao: { aprovado, selecionados: selecoes[a.id] ?? [], comentario: comentarios[a.id] ?? "" } },
-          },
-          (ev) => {
-            if (ev.evento === "fim") {
-              if (ev.status === "erro") toast.error(ev.erro ?? "Falha ao retomar a execução");
-              else if (ev.status === "aguardando_aprovacao") toast.info("Nova aprovação pendente");
-              else toast.success("Execução concluída");
-            }
-          },
-        );
-      } catch (e: any) {
-        toast.warning(`Decisão salva, mas não foi possível retomar a execução: ${e.message}`);
-      }
+      jaRetomadas.current.add(a.execution_id);
+      await retomarExecucao(
+        {
+          ...a,
+          comentario: comentarios[a.id] ?? "",
+          selecionados: selecoes[a.id] ?? [],
+          decidido_por_nome: nome,
+          decidido_em: agora,
+        },
+        false,
+      );
     } else {
-      await db.from("aip_executions").update({ status: "cancelada" }).eq("id", a.execution_id);
+      await db
+        .from("aip_executions")
+        .update({ status: "cancelada", finalizado_em: agora, erro: `Aprovação rejeitada por ${nome ?? "usuário"}` })
+        .eq("id", a.execution_id);
       toast.success("Rejeitado — execução cancelada");
     }
     refetch();
@@ -173,8 +248,27 @@ export default function AprovacoesPage() {
                     </div>
                   </>
                 )}
-                {a.status !== "pendente" && a.comentario && (
-                  <p className="text-xs text-muted-foreground">Comentário: {a.comentario}</p>
+                {a.status !== "pendente" && (
+                  <div className="space-y-1 rounded-lg bg-muted/60 p-2 text-xs text-muted-foreground">
+                    <p>
+                      {a.status === "aprovado" ? "Aprovado" : "Rejeitado"} por{" "}
+                      <span className="font-medium text-foreground">{a.decidido_por_nome ?? "usuário"}</span>
+                      {a.decidido_em && ` em ${new Date(a.decidido_em).toLocaleString("pt-BR")}`}
+                    </p>
+                    {a.comentario && <p>Comentário: {a.comentario}</p>}
+                    {a.status === "aprovado" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-1 h-7"
+                        disabled={retomando === a.id}
+                        onClick={() => retomarExecucao(a)}
+                      >
+                        <PlayCircle className="mr-1 h-3.5 w-3.5" />
+                        {retomando === a.id ? "Retomando…" : "Retomar execução"}
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {a.status === "pendente" && opcoes.length > 0 && (
                   <label className="flex items-center gap-2 text-xs text-muted-foreground">
