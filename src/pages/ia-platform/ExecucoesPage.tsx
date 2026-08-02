@@ -12,10 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Ban, Eye, Loader2, RefreshCw, RotateCcw } from "lucide-react";
+import { Ban, Eye, FileJson, FileText, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { agentRunner } from "@/lib/aip/runner";
 import { executarWorkflow, cancelarExecucao } from "@/lib/aip/execute";
+import { exportarRelatorioJSON, exportarRelatorioPDF } from "@/lib/aip/report";
 
 const CORES: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   concluida: "default",
@@ -33,6 +34,20 @@ export default function ExecucoesPage() {
   const [detalhe, setDetalhe] = useState<AipExecution | null>(null);
   const [steps, setSteps] = useState<any[]>([]);
   const [reexecutando, setReexecutando] = useState<string | null>(null);
+  const [exportando, setExportando] = useState<string | null>(null);
+
+  const exportar = async (id: string, formato: "pdf" | "json") => {
+    setExportando(`${id}-${formato}`);
+    try {
+      if (formato === "pdf") await exportarRelatorioPDF(id);
+      else await exportarRelatorioJSON(id);
+      toast.success(`Relatório ${formato.toUpperCase()} gerado`);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setExportando(null);
+    }
+  };
 
   useEffect(() => {
     const t = setInterval(refetch, 15000);
@@ -170,6 +185,33 @@ export default function ExecucoesPage() {
                       <Button size="sm" variant="outline" onClick={() => setDetalhe(e)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Exportar relatório em PDF"
+                        disabled={exportando === `${e.id}-pdf`}
+                        onClick={() => exportar(e.id, "pdf")}
+                      >
+                        {exportando === `${e.id}-pdf` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Exportar relatório em JSON"
+                        disabled={exportando === `${e.id}-json`}
+                        onClick={() => exportar(e.id, "json")}
+                      >
+                        {exportando === `${e.id}-json` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <FileJson className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+
                       {["erro", "cancelada"].includes(e.status) && (
                         <Button
                           size="sm"
@@ -206,6 +248,35 @@ export default function ExecucoesPage() {
           </DialogHeader>
           {detalhe && (
             <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={exportando === `${detalhe.id}-pdf`}
+                  onClick={() => exportar(detalhe.id, "pdf")}
+                >
+                  {exportando === `${detalhe.id}-pdf` ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <FileText className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Relatório PDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={exportando === `${detalhe.id}-json`}
+                  onClick={() => exportar(detalhe.id, "json")}
+                >
+                  {exportando === `${detalhe.id}-json` ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <FileJson className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Exportar JSON
+                </Button>
+              </div>
+
               <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                 <Card>
                   <CardContent className="p-3">
