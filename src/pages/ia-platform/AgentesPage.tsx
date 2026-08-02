@@ -211,21 +211,11 @@ export default function AgentesPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Modelo de IA</Label>
-                  <Select
+                  <ModeloSelect
                     value={form.modelo_ia}
-                    onValueChange={(v) => setForm({ ...form, modelo_ia: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODELOS_IA.map((m) => (
-                        <SelectItem key={m} value={m}>
-                          {m}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(v) => setForm({ ...form, modelo_ia: v })}
+                  />
+
                 </div>
                 <div className="space-y-2">
                   <Label>Tags (separadas por vírgula)</Label>
