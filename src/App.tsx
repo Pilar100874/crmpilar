@@ -45,6 +45,8 @@ import AipCredenciaisPage from "./pages/ia-platform/CredenciaisPage";
 import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
 import AipRotinasPage from "./pages/ia-platform/RotinasPage";
 import AipMotorPage from "./pages/ia-platform/MotorPage";
+import AipServidorMonitorPage from "./pages/ia-platform/ServidorMonitorPage";
+
 
 import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
