@@ -25,6 +25,8 @@ import {
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AipNotificacoesBell from "@/components/ia-platform/AipNotificacoesBell";
+import { useEffect, useState } from "react";
+import { AppRole, ROLES_MONITOR, carregarAcessoAip, temAlgumaRole } from "@/lib/aip/rbac";
 
 const AREAS = [
   { to: "", label: "Dashboard", icon: LayoutDashboard, end: true },
