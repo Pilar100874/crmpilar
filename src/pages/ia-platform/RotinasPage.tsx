@@ -44,6 +44,8 @@ import {
   proximaExecucao,
 } from "@/lib/aip/cron";
 import AgendamentoAmigavel from "@/components/ia-platform/AgendamentoAmigavel";
+import { ModeloSelect } from "@/components/ia-platform/ModeloSelect";
+
 import { useConectores } from "@/lib/aip/conectores";
 import { simularRotina, type ResultadoDryRun } from "@/lib/aip/dryRun";
 import { RotinaDryRunDialog } from "@/components/ia-platform/RotinaDryRunDialog";
@@ -544,11 +546,13 @@ export default function RotinasPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1">
                   <Label>Modelo (opcional)</Label>
-                  <Input
+                  <ModeloSelect
                     value={form.modelo ?? ""}
-                    onChange={(e) => setForm({ ...form, modelo: e.target.value })}
-                    placeholder="google/gemini-3.6-flash"
+                    onChange={(v) => setForm({ ...form, modelo: v })}
+                    permitirPadrao
+                    rotuloPadrao="Padrão do agente / sistema"
                   />
+
                 </div>
                 <div className="space-y-1">
                   <Label>Timeout por etapa (ms)</Label>
