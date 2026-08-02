@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAipTable } from "@/lib/aip/db";
 import { AipSkill } from "@/lib/aip/types";
 import { AipToolbar } from "@/components/ia-platform/AipToolbar";
@@ -20,7 +21,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { SkillArquivosMd, enviarArquivosSkill } from "@/components/ia-platform/SkillArquivosMd";
 import { SkillScriptsRunner } from "@/components/ia-platform/SkillScriptsRunner";
 import { importarSkillZip } from "@/lib/aip/skillZip";
-import { BookOpen, Copy, Download, FolderArchive, Pencil, Trash2, Upload } from "lucide-react";
+import { BookOpen, Copy, Download, FolderArchive, Pencil, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS = ["rascunho", "publicada", "arquivada"];
@@ -45,6 +46,7 @@ const slugify = (v: string) =>
     .replace(/^-|-$/g, "");
 
 export default function SkillsPage() {
+  const navigate = useNavigate();
   const { items, loading, estabelecimentoId, create, update, remove } = useAipTable<AipSkill>("aip_skills");
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
@@ -168,6 +170,10 @@ export default function SkillsPage() {
         vazioTexto="Nenhuma skill cadastrada."
         acoes={
           <div className="flex flex-wrap gap-2">
+            <Button onClick={() => navigate("/ia-platform/skills/assistente")}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Criar com assistente
+            </Button>
             <Button variant="outline" asChild disabled={importando}>
               <label className="cursor-pointer">
                 <FolderArchive className="mr-2 h-4 w-4" />

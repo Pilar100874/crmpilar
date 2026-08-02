@@ -29,6 +29,7 @@ import IAPlatformLayout from "./pages/ia-platform/IAPlatformLayout";
 import IAPlatformDashboard from "./pages/ia-platform/IAPlatformDashboard";
 import AgentesPage from "./pages/ia-platform/AgentesPage";
 import SkillsPage from "./pages/ia-platform/SkillsPage";
+import AipSkillAssistentePage from "./pages/ia-platform/SkillAssistentePage";
 import ToolsPage from "./pages/ia-platform/ToolsPage";
 import McpsPage from "./pages/ia-platform/McpsPage";
 import RecursosPage from "./pages/ia-platform/RecursosPage";
@@ -410,6 +411,7 @@ const App = () => (
                 <Route index element={<IAPlatformDashboard />} />
                 <Route path="agentes" element={<AgentesPage />} />
                 <Route path="skills" element={<SkillsPage />} />
+                <Route path="skills/assistente" element={<AipSkillAssistentePage />} />
                 <Route path="tools" element={<ToolsPage />} />
                 <Route path="mcps" element={<McpsPage />} />
                 <Route path="recursos" element={<RecursosPage />} />
