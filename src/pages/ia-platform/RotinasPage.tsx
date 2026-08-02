@@ -177,6 +177,11 @@ export default function RotinasPage() {
       fuso: form.fuso,
       timeout_ms: Number(form.timeout_ms ?? 120000),
       retry_max: Number(form.retry_max ?? 1),
+      max_concorrencia: Math.max(1, Number(form.max_concorrencia ?? 1)),
+      retry_backoff_ms: Math.max(0, Number(form.retry_backoff_ms ?? 30000)),
+      retry_fator: Math.max(1, Number(form.retry_fator ?? 2)),
+      bloquear_duplicados: form.bloquear_duplicados ?? true,
+
       ativo: form.ativo ?? true,
       proxima_execucao:
         (form.ativo ?? true)
