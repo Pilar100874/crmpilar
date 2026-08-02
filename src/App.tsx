@@ -410,6 +410,7 @@ const App = () => (
                 <Route index element={<IAPlatformDashboard />} />
                 <Route path="agentes" element={<AgentesPage />} />
                 <Route path="skills" element={<SkillsPage />} />
+                <Route path="skills/assistente" element={<AipSkillAssistentePage />} />
                 <Route path="tools" element={<ToolsPage />} />
                 <Route path="mcps" element={<McpsPage />} />
                 <Route path="recursos" element={<RecursosPage />} />
