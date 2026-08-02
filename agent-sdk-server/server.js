@@ -1,5 +1,9 @@
 import express from "express";
 import cors from "cors";
+import os from "node:os";
+import path from "node:path";
+import fs from "node:fs/promises";
+import { spawn, spawnSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
 /**
@@ -233,6 +237,17 @@ async function persistir(run) {
   }
 }
 
+/** Verifica (com cache) quais binários usados pelos scripts de skill existem. */
+let binariosCache = null;
+function binariosDisponiveis() {
+  if (binariosCache) return binariosCache;
+  const nomes = ["bash", "ffmpeg", "ffprobe", "jq", "curl", "python3", "higgsfield"];
+  binariosCache = Object.fromEntries(
+    nomes.map((n) => [n, spawnSync("which", [n]).status === 0]),
+  );
+  return binariosCache;
+}
+
 app.post("/health", (req, res) => {
   if (!autenticar(req, res)) return;
   res.json({
@@ -244,6 +259,7 @@ app.post("/health", (req, res) => {
     anthropic: Boolean(cfg.ANTHROPIC_API_KEY),
     supabase: Boolean(getSupabase()),
     atualizacao_disponivel: Boolean(deployHook()),
+    binarios: binariosDisponiveis(),
     execucoes_ativas: [...runs.values()].filter((r) => r.status === "executando").length,
   });
 
@@ -328,6 +344,107 @@ app.post("/status", (req, res) => {
  *
  * Body: { endpoint, tipo?, cabecalhos?, timeout_ms? }
  */
+
+/**
+ * Execução de scripts de skill (formato pasta Claude Code).
+ *
+ * O CRM envia os arquivos da skill (SKILL.md, references/, scripts/) e diz
+ * qual script rodar. Montamos um workspace isolado em disco, damos permissão
+ * de execução e rodamos com timeout, devolvendo stdout/stderr.
+ *
+ * Body: { skill_slug, arquivos: [{caminho, conteudo}], script, args?, env?, timeout_ms? }
+ */
+app.post("/skill/exec", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const {
+    skill_slug: slug = "skill",
+    arquivos = [],
+    script,
+    args = [],
+    env = {},
+    timeout_ms: timeoutMs,
+  } = req.body || {};
+
+  if (!script) return res.status(400).json({ ok: false, erro: "script obrigatório" });
+  if (/(^|\/)\.\.(\/|$)/.test(script)) {
+    return res.status(400).json({ ok: false, erro: "caminho de script inválido" });
+  }
+
+  const base = cfg.WORKSPACE_DIR || os.tmpdir();
+  const dir = path.join(base, `skill-${slug}-${Date.now()}`);
+  const iniciou = Date.now();
+
+  try {
+    await fs.mkdir(dir, { recursive: true });
+    await fs.mkdir(path.join(dir, "input"), { recursive: true });
+    await fs.mkdir(path.join(dir, "output"), { recursive: true });
+
+    for (const a of arquivos) {
+      const rel = String(a?.caminho ?? "");
+      if (!rel || /(^|\/)\.\.(\/|$)/.test(rel) || rel.startsWith("/")) continue;
+      const destino = path.join(dir, rel);
+      await fs.mkdir(path.dirname(destino), { recursive: true });
+      await fs.writeFile(destino, a.conteudo ?? "", "utf8");
+      if (rel.startsWith("scripts/")) await fs.chmod(destino, 0o755);
+    }
+
+    const alvo = path.join(dir, script);
+    const interpretador = /\.py$/i.test(script) ? "python3" : /\.(js|mjs|cjs)$/i.test(script) ? "node" : "bash";
+
+    const filho = spawn(interpretador, [alvo, ...args.map(String)], {
+      cwd: dir,
+      env: {
+        ...process.env,
+        HIGGSFIELD_API_KEY: cfg.HIGGSFIELD_API_KEY || "",
+        OPENAI_API_KEY: cfg.OPENAI_API_KEY || "",
+        ANTHROPIC_API_KEY: cfg.ANTHROPIC_API_KEY || "",
+        ...Object.fromEntries(Object.entries(env).map(([k, v]) => [k, String(v)])),
+      },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    let expirou = false;
+    const limite = setTimeout(() => {
+      expirou = true;
+      filho.kill("SIGKILL");
+    }, Number(timeoutMs) || 9 * 60 * 1000);
+
+    filho.stdout.on("data", (d) => (stdout += d.toString().slice(0, 200000)));
+    filho.stderr.on("data", (d) => (stderr += d.toString().slice(0, 200000)));
+
+    const codigo = await new Promise((resolve) => filho.on("close", resolve));
+    clearTimeout(limite);
+
+    // Lista o que foi produzido em output/ para o CRM poder buscar os artefatos.
+    const listar = async (raiz, prefixo = "") => {
+      const out = [];
+      for (const e of await fs.readdir(raiz, { withFileTypes: true })) {
+        const rel = prefixo ? `${prefixo}/${e.name}` : e.name;
+        if (e.isDirectory()) out.push(...(await listar(path.join(raiz, e.name), rel)));
+        else {
+          const st = await fs.stat(path.join(raiz, e.name));
+          out.push({ caminho: rel, tamanho_bytes: st.size });
+        }
+      }
+      return out;
+    };
+
+    res.json({
+      ok: codigo === 0 && !expirou,
+      codigo,
+      expirou,
+      workspace: dir,
+      stdout: stdout.slice(-100000),
+      stderr: stderr.slice(-100000),
+      artefatos: await listar(path.join(dir, "output")).catch(() => []),
+      duracao_ms: Date.now() - iniciou,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message, duracao_ms: Date.now() - iniciou });
+  }
+});
+
 app.post("/mcp/probe", async (req, res) => {
   if (!autenticar(req, res)) return;
   const { endpoint, cabecalhos, timeout_ms } = req.body || {};

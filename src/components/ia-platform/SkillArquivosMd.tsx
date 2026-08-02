@@ -123,7 +123,7 @@ export function SkillArquivosMd({ skillId }: Props) {
             <input
               type="file"
               multiple
-              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              accept=".md,.markdown,.txt,.sh,.bash,.py,.js,.ts,.json,.yaml,.yml"
               className="hidden"
               onChange={aoSelecionar}
             />

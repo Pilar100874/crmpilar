@@ -18,7 +18,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { SkillArquivosMd, enviarArquivosSkill } from "@/components/ia-platform/SkillArquivosMd";
-import { BookOpen, Copy, Download, Pencil, Trash2, Upload } from "lucide-react";
+import { SkillScriptsRunner } from "@/components/ia-platform/SkillScriptsRunner";
+import { importarSkillZip } from "@/lib/aip/skillZip";
+import { BookOpen, Copy, Download, FolderArchive, Pencil, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS = ["rascunho", "publicada", "arquivada"];
@@ -119,6 +121,35 @@ export default function SkillsPage() {
     }
   };
 
+  /** Importa uma skill no formato pasta Claude Code (.zip com SKILL.md + references/ + scripts/). */
+  const importarZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImportando(true);
+    try {
+      const skill = await importarSkillZip(file);
+      setEditando(null);
+      setPendentes(skill.anexos);
+      setForm({
+        ...vazio,
+        nome: skill.nome,
+        slug: skill.slug,
+        descricao: skill.descricao,
+        conteudo_md: skill.conteudoMd,
+        categoria: skill.totalScripts > 0 ? "pipeline" : "conhecimento",
+        tags: ["claude-code"],
+      });
+      setAberto(true);
+      toast.success(
+        `Skill lida: ${skill.totalReferencias} referência(s) e ${skill.totalScripts} script(s).`,
+      );
+    } catch (err: any) {
+      toast.error(err?.message ?? "Não foi possível ler o zip");
+    } finally {
+      setImportando(false);
+    }
+  };
 
   return (
     <>
@@ -136,19 +167,28 @@ export default function SkillsPage() {
         vazio={filtrados.length === 0}
         vazioTexto="Nenhuma skill cadastrada."
         acoes={
-          <Button variant="outline" asChild disabled={importando}>
-            <label className="cursor-pointer">
-              <Upload className="mr-2 h-4 w-4" />
-              Importar .md (vários)
-              <input
-                type="file"
-                multiple
-                accept=".md,.markdown,.txt,text/markdown,text/plain"
-                className="hidden"
-                onChange={importar}
-              />
-            </label>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild disabled={importando}>
+              <label className="cursor-pointer">
+                <FolderArchive className="mr-2 h-4 w-4" />
+                Importar pasta (.zip)
+                <input type="file" accept=".zip,application/zip" className="hidden" onChange={importarZip} />
+              </label>
+            </Button>
+            <Button variant="outline" asChild disabled={importando}>
+              <label className="cursor-pointer">
+                <Upload className="mr-2 h-4 w-4" />
+                Importar .md (vários)
+                <input
+                  type="file"
+                  multiple
+                  accept=".md,.markdown,.txt,text/markdown,text/plain"
+                  className="hidden"
+                  onChange={importar}
+                />
+              </label>
+            </Button>
+          </div>
         }
       >
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -286,7 +326,14 @@ export default function SkillsPage() {
             </div>
 
             {editando ? (
-              <SkillArquivosMd skillId={editando.id} />
+              <>
+                <SkillArquivosMd skillId={editando.id} />
+                <SkillScriptsRunner
+                  skillId={editando.id}
+                  skillSlug={editando.slug}
+                  conteudoMd={form.conteudo_md}
+                />
+              </>
             ) : pendentes.length ? (
               <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
                 {pendentes.length} arquivo(s) serão anexados como conhecimento ao salvar.
