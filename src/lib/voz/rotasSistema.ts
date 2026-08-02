@@ -13,6 +13,7 @@ export interface RotaSistema {
 }
 
 export const ROTAS_SISTEMA: RotaSistema[] = [
+  { path: "/ia-platform/credenciais", titulo: "Credenciais e Segredos da IA", aliases: ["credenciais da ia", "cofre de segredos", "segredos da plataforma de ia", "chaves do claude code"] },
   // ============ Menu Principal - Dashboards ============
   { path: "/dashboard", titulo: "Painel Principal", aliases: ["painel principal", "dashboard principal", "pagina inicial", "home"] },
   { path: "/dashboard-atendente", titulo: "Dashboard Atendente", aliases: ["dashboard do atendente", "painel do atendente"] },
