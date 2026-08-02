@@ -85,7 +85,7 @@ const TIPOS: TipoCriacao[] = [
     modelo: "claude-sonnet-4-5",
     exemploObjetivo:
       "Gerar vídeos de 10 segundos no formato 9:16 apresentando o produto, com movimento suave de câmera.",
-    dica: "Vídeos demoram mais: essa criação roda melhor no motor remoto.",
+    dica: "Vídeos demoram mais: acompanhe a execução pelo monitor do servidor.",
     criaRotina: false,
   },
   {

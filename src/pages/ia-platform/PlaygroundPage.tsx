@@ -3,8 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { useAipTable, db, useEstabelecimento } from "@/lib/aip/db";
 import { AipAgent, AipWorkflow, MODELOS_IA } from "@/lib/aip/types";
 import { agentRunner, streamRun } from "@/lib/aip/runner";
-import { executarWorkflow, cancelarExecucao } from "@/lib/aip/execute";
-import { getMotor, setMotor, MOTORES, MotorExecucao } from "@/lib/aip/motor";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,43 +23,11 @@ export default function PlaygroundPage() {
   const [agentId, setAgentId] = useState<string>("nenhum");
   const [workflowId, setWorkflowId] = useState<string>(params.get("workflow") ?? "nenhum");
   const [modelo, setModelo] = useState(MODELOS_IA[0]);
-  const [motor, setMotorEstado] = useState<MotorExecucao>(getMotor());
   const [prompt, setPrompt] = useState("");
   const [saida, setSaida] = useState("");
   const [rodando, setRodando] = useState(false);
   const [execucaoId, setExecucaoId] = useState<string | null>(null);
   const [controller, setController] = useState<AbortController | null>(null);
-
-  const trocarMotor = (v: MotorExecucao) => {
-    setMotorEstado(v);
-    setMotor(v);
-  };
-
-  /** Execução no motor local (Edge Function aip-execute-workflow). */
-  const executarLocal = async () => {
-    if (workflowId === "nenhum") {
-      toast.error("O motor local executa workflows. Selecione um workflow ou use o motor remoto.");
-      return;
-    }
-    const ac = new AbortController();
-    setController(ac);
-    await executarWorkflow(
-      {
-        workflowId,
-        modelo,
-        origem: "playground",
-        input: prompt ? { prompt } : {},
-        signal: ac.signal,
-      },
-      (e) => {
-        if (e.execution_id) setExecucaoId(e.execution_id);
-        if (e.evento === "etapa_inicio") setSaida((s) => `${s}\n▶ ${e.titulo ?? e.tipo}\n`);
-        if (e.texto) setSaida((s) => s + e.texto);
-        if (e.evento === "fim") setSaida((s) => `${s}\n\n✔ Execução finalizada (${e.status ?? "ok"})`);
-        if (e.erro) setSaida((s) => `${s}\n\n[erro] ${e.erro}`);
-      },
-    );
-  };
 
   /** Execução no servidor Claude Agent SDK (Railway). */
   const executarRemoto = async () => {
@@ -104,8 +70,7 @@ export default function PlaygroundPage() {
     setSaida("");
     setExecucaoId(null);
     try {
-      if (motor === "local") await executarLocal();
-      else await executarRemoto();
+      await executarRemoto();
     } catch (e: any) {
       setSaida((s) => `${s}\n\n[erro] ${e.message}`);
       toast.error(`Falha na execução: ${e.message}`);
@@ -119,11 +84,8 @@ export default function PlaygroundPage() {
     controller?.abort();
     if (execucaoId) {
       try {
-        if (motor === "local") await cancelarExecucao(execucaoId);
-        else {
-          await agentRunner.cancel(execucaoId);
-          await db.from("aip_executions").update({ status: "cancelada" }).eq("id", execucaoId);
-        }
+        await agentRunner.cancel(execucaoId);
+        await db.from("aip_executions").update({ status: "cancelada" }).eq("id", execucaoId);
       } catch {
         /* ignora */
       }
@@ -137,24 +99,6 @@ export default function PlaygroundPage() {
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
       <Card>
         <CardContent className="space-y-4 p-4">
-          <div className="space-y-2">
-            <Label>Motor de execução</Label>
-            <Select value={motor} onValueChange={(v) => trocarMotor(v as MotorExecucao)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MOTORES.map((m) => (
-                  <SelectItem key={m.valor} value={m.valor}>
-                    {m.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {MOTORES.find((m) => m.valor === motor)?.descricao}
-            </p>
-          </div>
           <div className="space-y-2">
             <Label>Agente</Label>
             <Select value={agentId} onValueChange={setAgentId}>

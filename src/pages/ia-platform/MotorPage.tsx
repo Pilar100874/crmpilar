@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import {
-  Cloud,
   Server,
   CheckCircle2,
   XCircle,
@@ -74,15 +73,15 @@ export default function MotorPage() {
       <div>
         <h2 className="text-xl font-semibold">Motor de execução</h2>
         <p className="text-sm text-muted-foreground">
-          Escolha onde os agentes e workflows são executados. O cadastro (agentes, skills, tools,
-          MCPs e rotinas) continua sempre aqui no Pilar.
+          Os agentes e workflows são executados no servidor Claude Agent SDK. O cadastro (agentes,
+          skills, tools, MCPs e rotinas) continua sempre aqui no Pilar.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {MOTORES.map((m) => {
           const ativo = motor === m.valor;
-          const Icone = m.valor === "local" ? Cloud : Server;
+          const Icone = Server;
           return (
             <Card
               key={m.valor}

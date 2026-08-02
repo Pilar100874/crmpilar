@@ -47,9 +47,9 @@ export default function WizardInicialPage() {
     setPassos([
       {
         id: "motor",
-        titulo: "1. Escolher o motor de execução",
+        titulo: "1. Conectar o motor de execução",
         descricao:
-          "Defina se as tarefas rodam no motor local (rápidas) ou no servidor remoto (tarefas longas, vídeo, navegação).",
+          "Confirme a conexão com o servidor Claude Agent SDK, que executa as tarefas (inclusive longas: vídeo, navegação).",
         rota: "/ia-platform/motor",
         acao: "Abrir motor",
         concluido: true,
