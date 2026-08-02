@@ -591,77 +591,152 @@ export default function CriarAssistidoPage() {
         </div>
       </Card>
 
+      {/* Galeria de assistentes (aparece quando nada foi escolhido) */}
+      {!tipo && (
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[220px] flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar assistente..."
+                className="pl-9"
+              />
+            </div>
+            <Button onClick={() => setCatalogoAberto(true)}>
+              <Wand2 className="mr-2 h-4 w-4" />
+              Criar com assistente
+            </Button>
+          </div>
+
+          {categoriasFiltradas.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+              Nenhum assistente encontrado.
+            </div>
+          ) : (
+            categoriasFiltradas.map((grupo) => (
+              <div key={grupo.nome} className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold">{grupo.nome}</h3>
+                  <Badge variant="secondary">{grupo.itens.length}</Badge>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {grupo.itens.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => escolherTipo(t)}
+                      className="group flex h-full flex-col rounded-xl border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+                    >
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <t.icone className="h-5 w-5" />
+                      </div>
+                      <p className="font-medium">{t.titulo}</p>
+                      <p className="mt-1 flex-1 text-sm text-muted-foreground">{t.subtitulo}</p>
+                      <span className="mt-3 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                        Começar <ArrowRight className="h-3 w-3" />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+
+          {receitas.length > 0 && (
+            <div className="space-y-2">
+              <Separator />
+              <p className="flex items-center gap-1.5 text-sm font-medium">
+                <Save className="h-4 w-4" /> Modelos salvos
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Continue de onde parou ou reaproveite uma montagem anterior.
+              </p>
+              <div className="space-y-1">
+                {receitas.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{r.nome}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {r.modelo ?? "—"} ·{" "}
+                        {r.modo_execucao === "etapas"
+                          ? `${(r.etapas ?? []).length} etapas`
+                          : "execução única"}{" "}
+                        · {(r.skill_ids ?? []).length} skills · {(r.tool_ids ?? []).length} tools ·{" "}
+                        {(r.mcp_ids ?? []).length} MCPs
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => carregarModelo(r)}>
+                      Abrir
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Excluir modelo"
+                      onClick={() => setReceitaExcluir(r)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Diálogo: escolher o tipo de assistente */}
+      <Dialog open={catalogoAberto} onOpenChange={setCatalogoAberto}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Criar com assistente</DialogTitle>
+            <DialogDescription>
+              Escolha o tipo de assistente. Depois é só ir preenchendo os campos.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-3">
+            <div className="space-y-5">
+              {CATEGORIAS.map((grupo) => (
+                <div key={grupo.nome} className="space-y-2">
+                  <p className="text-sm font-semibold">{grupo.nome}</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {grupo.itens.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setCatalogoAberto(false);
+                          escolherTipo(t);
+                        }}
+                        className="flex items-start gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:border-primary/50 hover:bg-muted"
+                      >
+                        <t.icone className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{t.titulo}</p>
+                          <p className="text-xs text-muted-foreground">{t.subtitulo}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {tipo && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{TITULOS[passoAtual].titulo}</CardTitle>
           <CardDescription>{TITULOS[passoAtual].ajuda}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {/* 1. Tipo */}
-          {passoAtual === "tipo" && (
-            <div className="space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {TIPOS.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => escolherTipo(t)}
-                    className={cn(
-                      "rounded-xl border-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
-                      tipoId === t.id ? "border-primary bg-primary/5" : "border-border",
-                    )}
-                  >
-                    <t.icone className="mb-2 h-6 w-6 text-primary" />
-                    <p className="font-medium">{t.titulo}</p>
-                    <p className="text-sm text-muted-foreground">{t.subtitulo}</p>
-                  </button>
-                ))}
-              </div>
 
-              {receitas.length > 0 && (
-                <div className="space-y-2">
-                  <Separator />
-                  <p className="flex items-center gap-1.5 text-sm font-medium">
-                    <Save className="h-4 w-4" /> Modelos salvos
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Continue de onde parou ou reaproveite uma montagem anterior.
-                  </p>
-                  <div className="space-y-1">
-                    {receitas.map((r) => (
-                      <div
-                        key={r.id}
-                        className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{r.nome}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {r.modelo ?? "—"} ·{" "}
-                            {r.modo_execucao === "etapas"
-                              ? `${(r.etapas ?? []).length} etapas`
-                              : "execução única"}{" "}
-                            · {(r.skill_ids ?? []).length} skills ·{" "}
-                            {(r.tool_ids ?? []).length} tools · {(r.mcp_ids ?? []).length} MCPs
-                          </p>
-                        </div>
-                        <Button size="sm" variant="outline" onClick={() => carregarModelo(r)}>
-                          Abrir
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          aria-label="Excluir modelo"
-                          onClick={() => setReceitaExcluir(r)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* 2. Básico */}
           {passoAtual === "basico" && tipo && (
