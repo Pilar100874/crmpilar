@@ -87,7 +87,7 @@ export default function IAPlatformLayout() {
         </div>
         <ScrollArea className="lg:h-[calc(100%-73px)]">
           <nav className="flex gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-visible">
-            {AREAS.map((area) => (
+            {areas.map((area) => (
               <NavLink
                 key={area.to || "dashboard"}
                 to={area.to}
