@@ -387,12 +387,13 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }
 
   return (
-    <div className={cn("flex flex-col", embedded ? "h-full" : "h-[calc(100vh-64px)]")}>
+    <div className={cn("flex flex-col overflow-hidden bg-muted/30", embedded ? "h-full" : "h-[calc(100dvh-64px)]")}>
       {/* Hidden audio element for alerts */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
       {/* Header */}
-      <div className={cn("border-b bg-background flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
+      <div className={cn("shrink-0 border-b bg-background/80 backdrop-blur-md flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             {!embedded && !new URLSearchParams(window.location.search).get('fromtela') && (
