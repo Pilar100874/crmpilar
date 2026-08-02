@@ -620,6 +620,14 @@ export default function RotinasPage() {
         </DialogContent>
       </Dialog>
 
+      <RotinaDryRunDialog
+        open={!!dryRun}
+        onOpenChange={(o) => !o && setDryRun(null)}
+        nome={dryRun?.nome ?? ""}
+        resultado={dryRun?.resultado ?? null}
+      />
+
+
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
