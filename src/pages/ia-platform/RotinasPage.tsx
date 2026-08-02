@@ -548,13 +548,50 @@ export default function RotinasPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Tentativas</Label>
+                  <Label>Tentativas extras (retry)</Label>
                   <Input
                     type="number"
+                    min={0}
                     value={form.retry_max ?? 1}
                     onChange={(e) => setForm({ ...form, retry_max: Number(e.target.value) })}
                   />
                 </div>
+                <div className="space-y-1">
+                  <Label>Execuções simultâneas (máx.)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.max_concorrencia ?? 1}
+                    onChange={(e) => setForm({ ...form, max_concorrencia: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Backoff inicial (ms)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.retry_backoff_ms ?? 30000}
+                    onChange={(e) => setForm({ ...form, retry_backoff_ms: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Fator do backoff</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    step="0.5"
+                    value={form.retry_fator ?? 2}
+                    onChange={(e) => setForm({ ...form, retry_fator: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.bloquear_duplicados ?? true}
+                  onCheckedChange={(v) => setForm({ ...form, bloquear_duplicados: v })}
+                />
+                <Label>Bloquear disparos duplicados no mesmo minuto</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -564,6 +601,7 @@ export default function RotinasPage() {
                 />
                 <Label>Rotina ativa</Label>
               </div>
+
             </div>
           )}
           <DialogFooter className="gap-2 sm:justify-between">
