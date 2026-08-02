@@ -578,6 +578,7 @@ export default function RotinasPage() {
               {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               Salvar
             </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
