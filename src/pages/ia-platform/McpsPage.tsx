@@ -40,6 +40,7 @@ export default function McpsPage() {
   const [form, setForm] = useState<Partial<AipMcp>>(vazio);
   const [excluir, setExcluir] = useState<AipMcp | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
+  const [testandoTodos, setTestandoTodos] = useState(false);
 
   const filtrados = useMemo(
     () => items.filter((m) => `${m.nome} ${m.endpoint}`.toLowerCase().includes(busca.toLowerCase())),
