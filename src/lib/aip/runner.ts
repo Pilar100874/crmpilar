@@ -27,6 +27,19 @@ async function callProxy(action: string, body: Record<string, unknown>) {
   return data;
 }
 
+export interface McpProbeResult {
+  ok: boolean;
+  status?: "conectado" | "erro";
+  http?: number;
+  erro?: string;
+  servidor?: { name?: string; version?: string } | null;
+  ferramentas?: Array<{ name: string; description?: string }>;
+  total_ferramentas?: number;
+  latencia_ms?: number;
+  /** true quando o runner remoto não está configurado (proxy respondeu simulado). */
+  simulado?: boolean;
+}
+
 export const agentRunner = {
   start: (payload: StartRunPayload) => callProxy("start", payload as any),
   resume: (executionId: string, approvalId: string, resultado: unknown) =>
@@ -34,7 +47,14 @@ export const agentRunner = {
   cancel: (executionId: string) => callProxy("cancel", { execution_id: executionId }),
   status: (executionId: string) => callProxy("status", { execution_id: executionId }),
   health: () => callProxy("health", {}),
+  /**
+   * Handshake real com um servidor MCP feito pelo runner (sem CORS no navegador).
+   * Retorna status da conexão, ferramentas expostas e latência.
+   */
+  mcpProbe: (endpoint: string, cabecalhos?: Record<string, string>) =>
+    callProxy("mcp/probe", { endpoint, cabecalhos }) as Promise<McpProbeResult>,
 };
+
 
 /** Stream SSE da execução (repassado pelo proxy). */
 export async function streamRun(
