@@ -387,12 +387,13 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }
 
   return (
-    <div className={cn("flex flex-col", embedded ? "h-full" : "h-[calc(100vh-64px)]")}>
+    <div className={cn("flex flex-col overflow-hidden bg-muted/30", embedded ? "h-full" : "h-[calc(100dvh-64px)]")}>
       {/* Hidden audio element for alerts */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
       {/* Header */}
-      <div className={cn("border-b bg-background flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
+      <div className={cn("shrink-0 border-b bg-background/80 backdrop-blur-md flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             {!embedded && !new URLSearchParams(window.location.search).get('fromtela') && (
@@ -475,39 +476,45 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Card className="p-2 sm:p-3">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm">
             <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary" />
               <Car className="h-4 w-4 text-primary" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Total</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold">{stats.total}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums">{stats.total}</p>
           </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-green-500">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-green-500/20">
             <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
               <Activity className="h-4 w-4 text-green-500" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Movendo</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Movendo</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-green-600">{stats.movendo}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums text-green-600">{stats.movendo}</p>
           </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-amber-500">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-amber-500/20">
             <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
               <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Parado</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Parado</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.parado}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums text-amber-600">{stats.parado}</p>
           </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-gray-400">
+          <Card className="p-2 sm:p-3 rounded-xl border-border/60 bg-card/70 backdrop-blur-md shadow-sm ring-1 ring-muted-foreground/20">
             <div className="flex items-center gap-2">
-              <WifiOff className="h-4 w-4 text-gray-400" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Offline</span>
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+              <WifiOff className="h-4 w-4 text-muted-foreground" />
+              <span className="text-[11px] sm:text-xs uppercase tracking-wide text-muted-foreground">Offline</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-gray-500">{stats.offline}</p>
+            <p className="text-xl sm:text-2xl font-bold tabular-nums text-muted-foreground">{stats.offline}</p>
           </Card>
         </div>
       </div>
 
+
       {/* Content - Mobile optimized */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden relative gap-2 p-2">
+
         {/* Mobile/Tablet floating buttons */}
         <div className="lg:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
           <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
@@ -656,13 +663,14 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
 
         {/* Desktop Vehicle List */}
-        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 border-r bg-background overflow-hidden flex-col">
-          <div className="p-2 sm:p-3 border-b flex items-center justify-between">
-            <h3 className="font-medium text-sm flex items-center gap-2">
-              <Car className="h-4 w-4" />
-              Veículos
+        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 rounded-xl border border-border/60 bg-card/70 backdrop-blur-md shadow-sm overflow-hidden flex-col">
+          <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
+            <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+              <Car className="h-3.5 w-3.5" />
+              Veículos ({veiculosFiltrados.length})
             </h3>
           </div>
+
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
               {veiculosFiltrados.map(v => {
@@ -675,20 +683,22 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                     onClick={() => zoomToVehicle(v.id)}
                     onDoubleClick={() => zoomToVehicle(v.id)}
                     className={cn(
-                      "p-2 rounded-lg cursor-pointer transition-all",
-                      isSelected 
-                        ? "bg-primary/10 border-2 border-primary" 
-                        : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
+                      "p-2 rounded-lg cursor-pointer transition-all border",
+                      isSelected
+                        ? "bg-primary/10 border-primary ring-1 ring-primary"
+                        : `bg-background/60 hover:bg-accent border-border/60 ${config.borderColor} border-l-4`
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
+                        <span className={cn("h-2 w-2 rounded-full", config.color, v.status === 'movendo' && 'animate-pulse')} />
                         {v.status !== 'offline' ? (
                           <Wifi className="h-3 w-3 text-green-500" />
                         ) : (
                           <WifiOff className="h-3 w-3 text-destructive" />
                         )}
                         <span className="font-medium text-sm">{v.placa}</span>
+
                       </div>
                       <div className="flex items-center gap-1">
                         <IgnicaoBadge ignicao={v.ultima_posicao?.ignicao} compact />
@@ -741,8 +751,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </ScrollArea>
         </div>
 
-        {/* Map - Full height on mobile */}
-        <div className="flex-1 relative h-full min-h-0">
+        {/* Map - altura fixa dentro da área visível */}
+        <div className="flex-1 relative min-h-0 overflow-hidden rounded-xl border border-border/60 shadow-sm bg-card">
+
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando...</div>
@@ -790,14 +801,15 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
 
         {/* Desktop Alerts Panel */}
-        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 border-l bg-background overflow-hidden flex-col">
+        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 rounded-xl border border-border/60 bg-card/70 backdrop-blur-md shadow-sm overflow-hidden flex-col">
           <div 
-            className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
+            className="px-3 py-2 border-b border-border/60 flex items-center justify-between cursor-pointer"
             onClick={() => setShowAlerts(!showAlerts)}
           >
-            <h3 className="font-medium text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
+            <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5" />
               Alertas
+
               {alerts.length > 0 && (
                 <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
               )}
