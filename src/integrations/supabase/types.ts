@@ -2052,6 +2052,7 @@ export type Database = {
       }
       aip_rotina_runs: {
         Row: {
+          chave_minuto: string | null
           created_at: string
           detalhes: Json
           duracao_ms: number | null
@@ -2061,12 +2062,15 @@ export type Database = {
           finalizado_em: string | null
           id: string
           iniciado_em: string
+          motivo_bloqueio: string | null
           origem: string
           rotina_id: string
           status: string
+          tentativa: number
           updated_at: string
         }
         Insert: {
+          chave_minuto?: string | null
           created_at?: string
           detalhes?: Json
           duracao_ms?: number | null
@@ -2076,12 +2080,15 @@ export type Database = {
           finalizado_em?: string | null
           id?: string
           iniciado_em?: string
+          motivo_bloqueio?: string | null
           origem?: string
           rotina_id: string
           status?: string
+          tentativa?: number
           updated_at?: string
         }
         Update: {
+          chave_minuto?: string | null
           created_at?: string
           detalhes?: Json
           duracao_ms?: number | null
@@ -2091,9 +2098,11 @@ export type Database = {
           finalizado_em?: string | null
           id?: string
           iniciado_em?: string
+          motivo_bloqueio?: string | null
           origem?: string
           rotina_id?: string
           status?: string
+          tentativa?: number
           updated_at?: string
         }
         Relationships: [
@@ -2110,6 +2119,7 @@ export type Database = {
         Row: {
           agent_id: string | null
           ativo: boolean
+          bloquear_duplicados: boolean
           conectores: Json
           created_at: string
           criado_por: string | null
@@ -2119,10 +2129,13 @@ export type Database = {
           fuso: string
           id: string
           input: Json
+          max_concorrencia: number
           modelo: string | null
           nome: string
           prompt: string | null
           proxima_execucao: string | null
+          retry_backoff_ms: number
+          retry_fator: number
           retry_max: number
           timeout_ms: number
           tipo_alvo: string
@@ -2136,6 +2149,7 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           ativo?: boolean
+          bloquear_duplicados?: boolean
           conectores?: Json
           created_at?: string
           criado_por?: string | null
@@ -2145,10 +2159,13 @@ export type Database = {
           fuso?: string
           id?: string
           input?: Json
+          max_concorrencia?: number
           modelo?: string | null
           nome: string
           prompt?: string | null
           proxima_execucao?: string | null
+          retry_backoff_ms?: number
+          retry_fator?: number
           retry_max?: number
           timeout_ms?: number
           tipo_alvo?: string
@@ -2162,6 +2179,7 @@ export type Database = {
         Update: {
           agent_id?: string | null
           ativo?: boolean
+          bloquear_duplicados?: boolean
           conectores?: Json
           created_at?: string
           criado_por?: string | null
@@ -2171,10 +2189,13 @@ export type Database = {
           fuso?: string
           id?: string
           input?: Json
+          max_concorrencia?: number
           modelo?: string | null
           nome?: string
           prompt?: string | null
           proxima_execucao?: string | null
+          retry_backoff_ms?: number
+          retry_fator?: number
           retry_max?: number
           timeout_ms?: number
           tipo_alvo?: string

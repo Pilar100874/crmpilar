@@ -174,18 +174,79 @@ async function rodarClaude(
   }
 }
 
+const chaveMinuto = (d = new Date()) => d.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Marca como erro runs travadas em "executando" além do timeout (evita bloquear a concorrência). */
+async function liberarRunsTravadas(db: any, rotina: any) {
+  const limite = new Date(Date.now() - Math.max(Number(rotina.timeout_ms ?? 0) || 600000, 60000) * 2).toISOString();
+  await db
+    .from("aip_rotina_runs")
+    .update({
+      status: "erro",
+      erro: "Execução expirada (sem finalização dentro do tempo limite)",
+      finalizado_em: new Date().toISOString(),
+    })
+    .eq("rotina_id", rotina.id)
+    .eq("status", "executando")
+    .lt("iniciado_em", limite);
+}
+
+/**
+ * Políticas de execução:
+ *  - proteção contra disparo duplicado no mesmo minuto (chave única por rotina+minuto);
+ *  - limite de execuções simultâneas por rotina (max_concorrencia);
+ *  - retries automáticos com backoff exponencial (retry_max, retry_backoff_ms, retry_fator).
+ */
 async function dispararRotina(db: any, rotina: any, origem: string) {
   const t0 = Date.now();
-  const { data: run } = await db
+  const bloquearDuplicados = rotina.bloquear_duplicados !== false;
+  const chave = bloquearDuplicados ? chaveMinuto() : null;
+
+  await liberarRunsTravadas(db, rotina);
+
+  // 1) Limite de concorrência
+  const maxConc = Math.max(1, Number(rotina.max_concorrencia ?? 1) || 1);
+  const { count: emAndamento } = await db
+    .from("aip_rotina_runs")
+    .select("id", { count: "exact", head: true })
+    .eq("rotina_id", rotina.id)
+    .eq("status", "executando");
+  if ((emAndamento ?? 0) >= maxConc) {
+    await db.from("aip_rotina_runs").insert({
+      estabelecimento_id: rotina.estabelecimento_id,
+      rotina_id: rotina.id,
+      origem,
+      status: "ignorada",
+      motivo_bloqueio: "concorrencia",
+      erro: `Limite de ${maxConc} execução(ões) simultânea(s) atingido`,
+      finalizado_em: new Date().toISOString(),
+      duracao_ms: 0,
+    });
+    return { rotina_id: rotina.id, status: "ignorada", motivo: "concorrencia" };
+  }
+
+  // 2) Proteção contra disparo duplicado no mesmo minuto (índice único rotina+minuto)
+  const { data: run, error: runErro } = await db
     .from("aip_rotina_runs")
     .insert({
       estabelecimento_id: rotina.estabelecimento_id,
       rotina_id: rotina.id,
       origem,
       status: "executando",
+      tentativa: 1,
+      chave_minuto: chave,
+      iniciado_em: new Date().toISOString(),
     })
     .select()
     .maybeSingle();
+
+  if (runErro) {
+    if ((runErro as any).code === "23505") {
+      return { rotina_id: rotina.id, status: "ignorada", motivo: "duplicada_no_minuto" };
+    }
+    throw new Error(runErro.message);
+  }
 
   const finalizar = async (patch: Record<string, unknown>) => {
     if (run?.id) {
@@ -203,43 +264,68 @@ async function dispararRotina(db: any, rotina: any, origem: string) {
     proxima = null;
   }
 
-  try {
-    const resultado =
-      rotina.tipo_alvo === "workflow" ? await rodarWorkflow(rotina) : await rodarClaude(db, rotina);
+  // 3) Retries automáticos com backoff exponencial
+  const maxTentativas = Math.max(1, Number(rotina.retry_max ?? 0) + 1);
+  const backoffBase = Math.max(0, Number(rotina.retry_backoff_ms ?? 30000) || 0);
+  const fator = Math.max(1, Number(rotina.retry_fator ?? 2) || 2);
 
-    await finalizar({
-      status: "concluida",
-      execution_id: resultado.execution_id,
-      detalhes: { resposta: resultado.resposta?.slice(0, 4000) ?? "" },
-    });
-    await db
-      .from("aip_rotinas")
-      .update({
-        ultima_execucao: new Date().toISOString(),
-        ultimo_status: "concluida",
-        ultimo_erro: null,
-        ultima_execution_id: resultado.execution_id,
-        proxima_execucao: proxima,
-      })
-      .eq("id", rotina.id);
-    return { rotina_id: rotina.id, status: "concluida", execution_id: resultado.execution_id };
-  } catch (e) {
-    const msg = (e as Error).message;
-    const execId = (e as any).execution_id ?? null;
-    await finalizar({ status: "erro", erro: msg, execution_id: execId });
-    await db
-      .from("aip_rotinas")
-      .update({
-        ultima_execucao: new Date().toISOString(),
-        ultimo_status: "erro",
-        ultimo_erro: msg,
-        ultima_execution_id: execId,
-        proxima_execucao: proxima,
-      })
-      .eq("id", rotina.id);
-    return { rotina_id: rotina.id, status: "erro", erro: msg };
+  let ultimoErro = "";
+  let ultimoExecId: string | null = null;
+
+  for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+    if (tentativa > 1) {
+      const espera = Math.min(backoffBase * Math.pow(fator, tentativa - 2), 120000);
+      if (espera > 0) await dormir(espera);
+      if (run?.id) await db.from("aip_rotina_runs").update({ tentativa }).eq("id", run.id);
+    }
+    try {
+      const resultado =
+        rotina.tipo_alvo === "workflow" ? await rodarWorkflow(rotina) : await rodarClaude(db, rotina);
+
+      await finalizar({
+        status: "concluida",
+        tentativa,
+        execution_id: resultado.execution_id,
+        detalhes: { resposta: resultado.resposta?.slice(0, 4000) ?? "", tentativas: tentativa },
+      });
+      await db
+        .from("aip_rotinas")
+        .update({
+          ultima_execucao: new Date().toISOString(),
+          ultimo_status: "concluida",
+          ultimo_erro: null,
+          ultima_execution_id: resultado.execution_id,
+          proxima_execucao: proxima,
+        })
+        .eq("id", rotina.id);
+      return { rotina_id: rotina.id, status: "concluida", execution_id: resultado.execution_id, tentativas: tentativa };
+    } catch (e) {
+      ultimoErro = (e as Error).message;
+      ultimoExecId = (e as any).execution_id ?? ultimoExecId;
+      console.warn(`Rotina ${rotina.id} tentativa ${tentativa}/${maxTentativas} falhou: ${ultimoErro}`);
+    }
   }
+
+  await finalizar({
+    status: "erro",
+    erro: ultimoErro,
+    tentativa: maxTentativas,
+    execution_id: ultimoExecId,
+    detalhes: { tentativas: maxTentativas },
+  });
+  await db
+    .from("aip_rotinas")
+    .update({
+      ultima_execucao: new Date().toISOString(),
+      ultimo_status: "erro",
+      ultimo_erro: ultimoErro,
+      ultima_execution_id: ultimoExecId,
+      proxima_execucao: proxima,
+    })
+    .eq("id", rotina.id);
+  return { rotina_id: rotina.id, status: "erro", erro: ultimoErro, tentativas: maxTentativas };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

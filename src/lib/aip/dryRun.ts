@@ -10,7 +10,7 @@ import type { ConectorRegistro } from "@/lib/aip/conectores";
 export type NivelCheck = "ok" | "alerta" | "erro";
 
 export interface CheckDryRun {
-  grupo: "Cadastro" | "Alvo" | "Conectores" | "Inputs" | "Agendamento";
+  grupo: "Cadastro" | "Alvo" | "Conectores" | "Inputs" | "Agendamento" | "Políticas de execução";
   titulo: string;
   nivel: NivelCheck;
   detalhe?: string;
@@ -31,7 +31,12 @@ export interface RotinaDryRunEntrada {
   fuso?: string | null;
   timeout_ms?: number | null;
   retry_max?: number | null;
+  max_concorrencia?: number | null;
+  retry_backoff_ms?: number | null;
+  retry_fator?: number | null;
+  bloquear_duplicados?: boolean | null;
   ativo?: boolean | null;
+
 }
 
 export interface ResultadoDryRun {
@@ -272,6 +277,61 @@ export function simularRotina(
       detalhe: String(rotina.retry_max),
     });
   }
+
+  // Políticas de execução --------------------------------------------
+  const concorrencia = Math.max(1, Number(rotina.max_concorrencia ?? 1) || 1);
+  const backoff = Number(rotina.retry_backoff_ms ?? 30000);
+  const fator = Number(rotina.retry_fator ?? 2);
+  const bloqueiaDuplicados = rotina.bloquear_duplicados !== false;
+
+  if (!Number.isFinite(backoff) || backoff < 0) {
+    checks.push({
+      grupo: "Políticas de execução",
+      titulo: "Backoff inválido",
+      nivel: "erro",
+      detalhe: "Informe um valor em milissegundos maior ou igual a zero.",
+    });
+  }
+  if (!Number.isFinite(fator) || fator < 1) {
+    checks.push({
+      grupo: "Políticas de execução",
+      titulo: "Fator de backoff deve ser ≥ 1",
+      nivel: "erro",
+      detalhe: String(rotina.retry_fator),
+    });
+  }
+  checks.push({
+    grupo: "Políticas de execução",
+    titulo: `Até ${concorrencia} execução(ões) simultânea(s)`,
+    nivel: "ok",
+    detalhe:
+      concorrencia > 1
+        ? "Disparos extras rodam em paralelo até esse limite."
+        : "Disparos extras são ignorados enquanto houver uma execução em andamento.",
+  });
+  checks.push({
+    grupo: "Políticas de execução",
+    titulo: `Retries: ${tentativas} com backoff ${Math.round(backoff / 1000)}s (fator ${fator}x)`,
+    nivel: tentativas > 0 ? "ok" : "alerta",
+    detalhe:
+      tentativas > 0
+        ? `Esperas aproximadas: ${Array.from({ length: tentativas }, (_, i) =>
+            `${Math.round(Math.min(backoff * Math.pow(fator, i), 120000) / 1000)}s`,
+          ).join(" → ")}`
+        : "Nenhuma nova tentativa automática em caso de falha.",
+  });
+  checks.push({
+    grupo: "Políticas de execução",
+    titulo: bloqueiaDuplicados
+      ? "Proteção contra disparo duplicado no mesmo minuto ativa"
+      : "Proteção contra disparo duplicado desativada",
+    nivel: bloqueiaDuplicados ? "ok" : "alerta",
+    detalhe: bloqueiaDuplicados
+      ? "Somente um disparo por rotina a cada minuto será registrado."
+      : "A mesma rotina pode ser disparada várias vezes no mesmo minuto.",
+  });
+
+
 
   // Payload ----------------------------------------------------------
   const agenteSel = contexto.agentes.find((a) => a.id === rotina.agent_id);
