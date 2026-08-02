@@ -51,12 +51,17 @@ import {
   Plus,
   Save,
   Search,
+  ShieldCheck,
+  Sparkles,
   Trash2,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import ValidacaoModeloPanel from "@/components/ia-platform/ValidacaoModeloPanel";
+import GerarModeloIADialog, { ModeloGerado } from "@/components/ia-platform/GerarModeloIADialog";
+import { ContextoValidacao, ResultadoValidacao, validarModelo } from "@/lib/aip/validarModelo";
 
 type PassoId =
   | "tipo"
@@ -329,6 +334,10 @@ export default function CriarAssistidoPage() {
   const [tipoId, setTipoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [catalogoAberto, setCatalogoAberto] = useState(false);
+  const [iaAberto, setIaAberto] = useState(false);
+  const [validacaoReceita, setValidacaoReceita] = useState<
+    { nome: string; resultado: ResultadoValidacao } | null
+  >(null);
   const [indice, setIndice] = useState(0);
   const [salvando, setSalvando] = useState(false);
 
@@ -374,6 +383,137 @@ export default function CriarAssistidoPage() {
     const f = FREQUENCIAS.find((x) => x.id === frequencia) ?? FREQUENCIAS[0];
     return f.cron(hora, minuto);
   }, [frequencia, hora, minuto]);
+
+  const construirCron = (agenda: { frequencia?: string; hora?: string; minuto?: string }) => {
+    const f = FREQUENCIAS.find((x) => x.id === (agenda.frequencia ?? "diaria")) ?? FREQUENCIAS[0];
+    return f.cron(agenda.hora ?? "08", agenda.minuto ?? "00");
+  };
+
+  const contextoValidacao: ContextoValidacao = useMemo(
+    () => ({
+      skills: skills.map((s) => ({
+        id: s.id,
+        nome: s.nome,
+        ativo: s.ativo,
+        status: s.status,
+        conteudo_md: s.conteudo_md,
+      })),
+      tools: tools.map((t) => ({
+        id: t.id,
+        nome: t.nome,
+        status: t.status,
+        endpoint: t.endpoint,
+        tipo: t.tipo,
+        credencial_ref: t.credencial_ref,
+      })),
+      mcps: mcps.map((m) => ({
+        id: m.id,
+        nome: m.nome,
+        status: m.status,
+        endpoint: m.endpoint,
+        ultimo_erro: m.ultimo_erro,
+      })),
+      modelosDisponiveis: [...MODELOS_IA],
+    }),
+    [skills, tools, mcps],
+  );
+
+  const tiposResumo = useMemo(
+    () =>
+      TIPOS.map((t) => ({
+        id: t.id,
+        titulo: t.titulo,
+        subtitulo: t.subtitulo,
+        criaRotina: t.criaRotina,
+        precisaReferencias: t.passos.includes("referencias"),
+      })),
+    [],
+  );
+
+  /** Validação do que está montado agora no assistente. */
+  const validacaoAtual = useMemo(
+    () =>
+      validarModelo(
+        {
+          nome,
+          tipo: tipo?.id,
+          objetivo,
+          detalhes,
+          modelo,
+          skill_ids: skillIds,
+          tool_ids: toolIds,
+          mcp_ids: mcpIds,
+          referencias,
+          md_conteudo: mdConteudo,
+          modo_execucao: modoExecucao,
+          etapas,
+          agenda: { frequencia, hora, minuto },
+          cron,
+          criaRotina: Boolean(tipo?.criaRotina),
+          precisaReferencias: Boolean(tipo?.passos.includes("referencias")),
+        },
+        contextoValidacao,
+      ),
+    [
+      nome, tipo, objetivo, detalhes, modelo, skillIds, toolIds, mcpIds, referencias,
+      mdConteudo, modoExecucao, etapas, frequencia, hora, minuto, cron, contextoValidacao,
+    ],
+  );
+
+  const validarReceita = (r: AipReceita) => {
+    const t = TIPOS.find((x) => x.id === r.tipo);
+    setValidacaoReceita({
+      nome: r.nome,
+      resultado: validarModelo(
+        {
+          nome: r.nome,
+          tipo: r.tipo,
+          objetivo: r.objetivo,
+          detalhes: r.detalhes,
+          modelo: r.modelo,
+          skill_ids: r.skill_ids,
+          tool_ids: r.tool_ids,
+          mcp_ids: r.mcp_ids,
+          referencias: r.referencias,
+          md_conteudo: r.md_conteudo,
+          modo_execucao: r.modo_execucao,
+          etapas: r.etapas,
+          agenda: r.agenda,
+          cron: t?.criaRotina ? construirCron(r.agenda ?? {}) : null,
+          criaRotina: Boolean(t?.criaRotina),
+          precisaReferencias: Boolean(t?.passos.includes("referencias")),
+        },
+        contextoValidacao,
+      ),
+    });
+  };
+
+  /** Carrega no assistente um modelo criado pela IA. */
+  const aplicarModeloIa = (m: ModeloGerado) => {
+    const t = TIPOS.find((x) => x.id === m.tipo) ?? TIPOS[0];
+    setReceitaId(null);
+    setTipoId(t.id);
+    setNome(m.nome ?? "");
+    setObjetivo(m.objetivo ?? "");
+    setDetalhes(m.detalhes ?? "");
+    setModelo(MODELOS_IA.includes(m.modelo_ia) ? m.modelo_ia : t.modelo);
+    setSkillIds(m.skill_ids ?? []);
+    setToolIds(m.tool_ids ?? []);
+    setMcpIds(m.mcp_ids ?? []);
+    setModoExecucao(m.modo_execucao === "etapas" ? "etapas" : "unica");
+    setEtapas(
+      (m.etapas ?? []).map((e) => ({
+        id: crypto.randomUUID(),
+        titulo: e.titulo ?? "",
+        instrucao: e.instrucao ?? "",
+      })),
+    );
+    setFrequencia(m.agenda?.frequencia ?? "diaria");
+    setHora(m.agenda?.hora ?? "08");
+    setMinuto(m.agenda?.minuto ?? "00");
+    setIndice(1);
+    toast.success("Modelo carregado no assistente");
+  };
 
   const alternar = (lista: string[], setter: (v: string[]) => void, id: string) =>
     setter(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
@@ -639,6 +779,10 @@ export default function CriarAssistidoPage() {
                 className="pl-9"
               />
             </div>
+            <Button variant="outline" onClick={() => setIaAberto(true)}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Criar modelo com IA
+            </Button>
             <Button onClick={() => setCatalogoAberto(true)}>
               <Wand2 className="mr-2 h-4 w-4" />
               Criar com assistente
@@ -705,6 +849,9 @@ export default function CriarAssistidoPage() {
                         {(r.mcp_ids ?? []).length} MCPs
                       </p>
                     </div>
+                    <Button size="sm" variant="ghost" onClick={() => validarReceita(r)}>
+                      <ShieldCheck className="mr-1.5 h-4 w-4" /> Validar
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => carregarModelo(r)}>
                       Abrir
                     </Button>
@@ -1145,6 +1292,13 @@ export default function CriarAssistidoPage() {
                   <span className="whitespace-pre-wrap">{valor}</span>
                 </div>
               ))}
+              <Separator />
+              <div>
+                <p className="mb-2 flex items-center gap-1.5 font-medium">
+                  <ShieldCheck className="h-4 w-4" /> Validação antes de executar
+                </p>
+                <ValidacaoModeloPanel resultado={validacaoAtual} />
+              </div>
               <Alert>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
@@ -1176,7 +1330,16 @@ export default function CriarAssistidoPage() {
                 </Button>
               )}
               {passoAtual === "revisao" ? (
-                <Button onClick={criar} disabled={salvando}>
+                <Button
+                  onClick={() => {
+                    if (!validacaoAtual.ok)
+                      return toast.error(
+                        "Resolva os bloqueios da validação antes de criar este modelo.",
+                      );
+                    criar();
+                  }}
+                  disabled={salvando}
+                >
                   {salvando ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -1194,6 +1357,29 @@ export default function CriarAssistidoPage() {
         </CardContent>
       </Card>
       )}
+
+      <GerarModeloIADialog
+        aberto={iaAberto}
+        onOpenChange={setIaAberto}
+        tipos={tiposResumo}
+        contexto={contextoValidacao}
+        construirCron={construirCron}
+        onAplicar={aplicarModeloIa}
+      />
+
+      <Dialog open={!!validacaoReceita} onOpenChange={(o) => !o && setValidacaoReceita(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Validação de "{validacaoReceita?.nome}"</DialogTitle>
+            <DialogDescription>
+              Conferimos se todos os recursos do modelo existem e estão prontos para rodar.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-3">
+            {validacaoReceita && <ValidacaoModeloPanel resultado={validacaoReceita.resultado} />}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <DeleteConfirmDialog
         open={!!receitaExcluir}
