@@ -248,6 +248,35 @@ export default function ExecucoesPage() {
           </DialogHeader>
           {detalhe && (
             <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={exportando === `${detalhe.id}-pdf`}
+                  onClick={() => exportar(detalhe.id, "pdf")}
+                >
+                  {exportando === `${detalhe.id}-pdf` ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <FileText className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Relatório PDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={exportando === `${detalhe.id}-json`}
+                  onClick={() => exportar(detalhe.id, "json")}
+                >
+                  {exportando === `${detalhe.id}-json` ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <FileJson className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Exportar JSON
+                </Button>
+              </div>
+
               <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                 <Card>
                   <CardContent className="p-3">
