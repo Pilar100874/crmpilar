@@ -91,6 +91,27 @@ async function chamarModelo(modelo: string, prompt: string, sistema?: string) {
   };
 }
 
+/** Erros de interrupção (distinguem timeout/cancelamento de erro comum). */
+class InterrupcaoErro extends Error {
+  motivo: "timeout" | "cancelada";
+  constructor(motivo: "timeout" | "cancelada", mensagem: string) {
+    super(mensagem);
+    this.motivo = motivo;
+  }
+}
+
+const TIMEOUT_PADRAO_MS = 120000;
+const TIMEOUT_MAX_MS = 600000;
+
+/** Resolve o tempo limite da etapa (0 = sem limite). */
+function resolverTimeout(cfgNo: Json, paramsNo: Json, body: Json): number {
+  const bruto = Number(
+    cfgNo.timeout_ms ?? paramsNo.timeout_ms ?? body.timeout_ms ?? TIMEOUT_PADRAO_MS,
+  );
+  if (!Number.isFinite(bruto) || bruto <= 0) return 0;
+  return Math.min(TIMEOUT_MAX_MS, Math.max(1000, bruto));
+}
+
 interface ResultadoNo {
   output: Json;
   texto?: string;
@@ -99,6 +120,7 @@ interface ResultadoNo {
   logs?: string;
   aprovacao?: { titulo: string; instrucoes?: string; tipo: string; payload: Json };
 }
+
 
 async function executarNo(node: any, ctx: Json, modeloExec: string): Promise<ResultadoNo> {
   const data = node.data ?? {};
@@ -274,6 +296,8 @@ Deno.serve(async (req) => {
               modelo: modeloExec,
               input: entrada,
               contexto: {},
+              cancelamento_solicitado: false,
+              motivo_interrupcao: null,
               iniciado_em: new Date().toISOString(),
             })
             .select()
@@ -287,12 +311,16 @@ Deno.serve(async (req) => {
               status: "executando",
               erro: null,
               finalizado_em: null,
+              cancelamento_solicitado: false,
+              motivo_interrupcao: null,
+              cancelado_em: null,
               retomado_em: new Date().toISOString(),
               retomado_por: userData.user.id,
               retentativas: Number(execAtual.retentativas ?? 0) + 1,
             })
             .eq("id", execAtual.id);
         }
+
         executionId = execAtual.id;
 
         sse(controller, "execucao", {
@@ -323,11 +351,104 @@ Deno.serve(async (req) => {
         let tokensOut = Number(execAtual.tokens_output ?? 0);
         let ultimoTexto: string = execAtual.resposta ?? "";
 
-        // 3. Loop de execução --------------------------------------------
+        // 3. Cancelamento e limites por etapa -----------------------------
+        let cancelado = false;
+        async function checarCancelamento(): Promise<boolean> {
+          if (cancelado) return true;
+          const { data } = await supabase
+            .from("aip_executions")
+            .select("cancelamento_solicitado, status")
+            .eq("id", executionId)
+            .maybeSingle();
+          if (data?.cancelamento_solicitado || data?.status === "cancelada") {
+            cancelado = true;
+          }
+          return cancelado;
+        }
+
+        /** Executa a etapa com tempo limite e vigilância de cancelamento. */
+        function comLimites<T>(fn: () => Promise<T>, timeoutMs: number, tituloEtapa: string): Promise<T> {
+          return new Promise<T>((resolve, reject) => {
+            let terminou = false;
+            const encerrar = () => {
+              terminou = true;
+              if (timer) clearTimeout(timer);
+              clearInterval(vigia);
+            };
+            const timer = timeoutMs
+              ? setTimeout(() => {
+                  if (terminou) return;
+                  encerrar();
+                  reject(
+                    new InterrupcaoErro(
+                      "timeout",
+                      `Tempo limite de ${Math.round(timeoutMs / 1000)}s excedido na etapa "${tituloEtapa}"`,
+                    ),
+                  );
+                }, timeoutMs)
+              : null;
+            const vigia = setInterval(async () => {
+              if (terminou) return;
+              if (await checarCancelamento()) {
+                if (terminou) return;
+                encerrar();
+                reject(new InterrupcaoErro("cancelada", "Execução cancelada pelo usuário"));
+              }
+            }, 2000);
+            fn().then(
+              (v) => {
+                if (terminou) return;
+                encerrar();
+                resolve(v);
+              },
+              (e) => {
+                if (terminou) return;
+                encerrar();
+                reject(e);
+              },
+            );
+          });
+        }
+
+        async function registrarCancelamento(node: any, tituloEtapa: string, indiceAtual: number) {
+          await supabase
+            .from("aip_executions")
+            .update({
+              status: "cancelada",
+              etapa_atual: tituloEtapa,
+              erro: "Execução cancelada pelo usuário",
+              motivo_interrupcao: "cancelada",
+              cancelado_em: new Date().toISOString(),
+              contexto: { ...ctx, indice: indiceAtual },
+              retomado_de_node_id: node?.id ?? null,
+              tokens_input: tokensIn,
+              tokens_output: tokensOut,
+              duracao_ms: Date.now() - t0,
+              finalizado_em: new Date().toISOString(),
+            })
+            .eq("id", executionId);
+          sse(controller, "fim", {
+            status: "cancelada",
+            motivo_interrupcao: "cancelada",
+            erro: "Execução cancelada pelo usuário",
+            execution_id: executionId,
+            node_id: node?.id ?? null,
+            ordem: indiceAtual + 1,
+          });
+        }
+
+        // 4. Loop de execução --------------------------------------------
         for (; indice < ordem.length; indice++) {
           const node = ordem[indice];
           const titulo = String(node.data?.label ?? node.data?.nome ?? node.id);
           const tipo = `${node.data?.categoria ?? "bloco"}/${node.data?.slug ?? "custom"}`;
+
+          if (await checarCancelamento()) {
+            await registrarCancelamento(node, titulo, indice);
+            return finalizar();
+          }
+
+
 
 
           // 3a. Retomada automática: consome a decisão já registrada -------
@@ -411,8 +532,11 @@ Deno.serve(async (req) => {
             ),
           );
 
+          const timeoutMs = resolverTimeout(cfgNo, paramsNo, body);
+
           let tentativa = 0;
           let concluiuEtapa = false;
+
 
           while (tentativa < tentativasMax && !concluiuEtapa) {
             tentativa++;
@@ -431,7 +555,9 @@ Deno.serve(async (req) => {
                 ordem: indice + 1,
                 tentativa,
                 tentativas_max: tentativasMax,
+                timeout_ms: timeoutMs || null,
               })
+
               .select()
               .single();
 
@@ -451,7 +577,8 @@ Deno.serve(async (req) => {
             });
 
             try {
-              const r = await executarNo(node, ctx, modeloExec);
+              const r = await comLimites(() => executarNo(node, ctx, modeloExec), timeoutMs, titulo);
+
 
               // Aprovação humana: pausa a execução e salva o ponto de retomada
               if (r.aprovacao) {
@@ -536,13 +663,17 @@ Deno.serve(async (req) => {
               concluiuEtapa = true;
             } catch (erroEtapa) {
               const msg = (erroEtapa as Error).message;
-              const podeRetentar = tentativa < tentativasMax;
+              const interrupcao = erroEtapa instanceof InterrupcaoErro ? erroEtapa.motivo : null;
+              // Timeout pode ser retentado; cancelamento nunca.
+              const podeRetentar = interrupcao !== "cancelada" && tentativa < tentativasMax;
 
               if (step)
                 await supabase
                   .from("aip_execution_steps")
                   .update({
-                    status: "erro",
+                    status: interrupcao === "cancelada" ? "cancelada" : "erro",
+                    motivo_interrupcao: interrupcao ?? "erro",
+                    timeout_ms: timeoutMs || null,
                     logs: podeRetentar ? `${msg} — nova tentativa automática (${tentativa}/${tentativasMax})` : msg,
                     duracao_ms: Date.now() - inicioTentativa,
                   })
@@ -551,11 +682,41 @@ Deno.serve(async (req) => {
               sse(controller, "etapa_fim", {
                 node_id: node.id,
                 ordem: indice + 1,
-                status: "erro",
+                status: interrupcao === "cancelada" ? "cancelada" : "erro",
+                motivo_interrupcao: interrupcao ?? "erro",
                 erro: msg,
                 tentativa,
                 tentativas_max: tentativasMax,
               });
+
+              if (interrupcao === "cancelada") {
+                await supabase
+                  .from("aip_executions")
+                  .update({
+                    status: "cancelada",
+                    etapa_atual: titulo,
+                    erro: msg,
+                    motivo_interrupcao: "cancelada",
+                    cancelado_em: new Date().toISOString(),
+                    contexto: { ...ctx, indice },
+                    retomado_de_node_id: node.id,
+                    tokens_input: tokensIn,
+                    tokens_output: tokensOut,
+                    duracao_ms: Date.now() - t0,
+                    finalizado_em: new Date().toISOString(),
+                  })
+                  .eq("id", executionId);
+                sse(controller, "fim", {
+                  status: "cancelada",
+                  motivo_interrupcao: "cancelada",
+                  erro: msg,
+                  execution_id: executionId,
+                  node_id: node.id,
+                  ordem: indice + 1,
+                });
+                return finalizar();
+              }
+
 
               if (podeRetentar) {
                 const espera = retryDelay * Math.pow(2, tentativa - 1);
@@ -578,8 +739,10 @@ Deno.serve(async (req) => {
                 .update({
                   status: "erro",
                   erro: `${titulo}: ${msg}`,
+                  motivo_interrupcao: interrupcao ?? "erro",
                   etapa_atual: titulo,
                   contexto: { ...ctx, indice },
+
                   retomado_de_node_id: node.id,
                   tokens_input: tokensIn,
                   tokens_output: tokensOut,
@@ -628,20 +791,28 @@ Deno.serve(async (req) => {
         finalizar();
       } catch (e) {
         const msg = (e as Error).message;
+        const motivo = e instanceof InterrupcaoErro ? e.motivo : "erro";
         if (executionId) {
           await supabase
             .from("aip_executions")
             .update({
-              status: "erro",
+              status: motivo === "cancelada" ? "cancelada" : "erro",
               erro: msg,
+              motivo_interrupcao: motivo,
               duracao_ms: Date.now() - t0,
               finalizado_em: new Date().toISOString(),
             })
             .eq("id", executionId);
         }
-        sse(controller, "fim", { status: "erro", erro: msg, execution_id: executionId });
+        sse(controller, "fim", {
+          status: motivo === "cancelada" ? "cancelada" : "erro",
+          motivo_interrupcao: motivo,
+          erro: msg,
+          execution_id: executionId,
+        });
         finalizar();
       }
+
     },
   });
 

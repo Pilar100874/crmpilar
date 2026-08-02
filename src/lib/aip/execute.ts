@@ -29,6 +29,8 @@ export interface EventoExecucao {
   tokens?: number;
   resposta?: string;
   erro?: string;
+  /** "timeout" | "cancelada" | "erro" — motivo da interrupção da etapa/execução. */
+  motivo_interrupcao?: string;
 }
 
 export interface ExecutarOpts {
@@ -42,7 +44,28 @@ export interface ExecutarOpts {
   /** Tentativas automáticas por bloco (1 = sem retry). */
   retryMax?: number;
   retryDelayMs?: number;
+  /** Tempo limite padrão por etapa em ms (0 desativa). */
+  timeoutMs?: number;
   signal?: AbortSignal;
+}
+
+/**
+ * Solicita o cancelamento de uma execução em andamento.
+ * O motor verifica a flag entre etapas (e a cada 2s durante a etapa),
+ * registra o motivo no histórico e encerra a execução.
+ */
+export async function cancelarExecucao(executionId: string): Promise<void> {
+  const { data: sessao } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("aip_executions")
+    .update({
+      cancelamento_solicitado: true,
+      cancelado_em: new Date().toISOString(),
+      cancelado_por: sessao?.user?.id ?? null,
+      motivo_interrupcao: "cancelada",
+    })
+    .eq("id", executionId);
+  if (error) throw new Error(`Não foi possível cancelar: ${error.message}`);
 }
 
 /**
@@ -73,8 +96,10 @@ export async function executarWorkflow(
       retry_node_id: opts.retryNodeId,
       retry_max: opts.retryMax,
       retry_delay_ms: opts.retryDelayMs,
+      timeout_ms: opts.timeoutMs,
     }),
   });
+
 
   if (!res.ok || !res.body) {
     let detalhe = `HTTP ${res.status}`;

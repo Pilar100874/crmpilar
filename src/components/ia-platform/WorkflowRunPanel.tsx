@@ -12,23 +12,24 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Play, Square, CheckCircle2, XCircle, Loader2, Clock, ExternalLink, RotateCcw } from "lucide-react";
+import { Play, Square, CheckCircle2, XCircle, Loader2, Clock, ExternalLink, RotateCcw, Ban, TimerOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { executarWorkflow, EventoExecucao } from "@/lib/aip/execute";
+import { executarWorkflow, cancelarExecucao, EventoExecucao } from "@/lib/aip/execute";
 
 interface EtapaUI {
   node_id: string;
   ordem: number;
   titulo: string;
   tipo?: string;
-  status: "executando" | "concluida" | "erro" | "aguardando_aprovacao";
+  status: "executando" | "concluida" | "erro" | "aguardando_aprovacao" | "cancelada";
   duracao_ms?: number;
   logs?: string | null;
   erro?: string;
   texto?: string;
   tentativa?: number;
   tentativas_max?: number;
+  motivo_interrupcao?: string;
 }
 
 interface Props {
@@ -45,6 +46,7 @@ const ICONE: Record<EtapaUI["status"], JSX.Element> = {
   concluida: <CheckCircle2 className="h-4 w-4 text-primary" />,
   erro: <XCircle className="h-4 w-4 text-destructive" />,
   aguardando_aprovacao: <Clock className="h-4 w-4 text-muted-foreground" />,
+  cancelada: <Ban className="h-4 w-4 text-muted-foreground" />,
 };
 
 export function WorkflowRunPanel({
@@ -104,6 +106,7 @@ export function WorkflowRunPanel({
                   duracao_ms: e.duracao_ms,
                   logs: e.logs,
                   erro: e.erro,
+                  motivo_interrupcao: e.motivo_interrupcao,
                 }
               : et,
           ),
@@ -126,7 +129,14 @@ export function WorkflowRunPanel({
         if (e.resposta) setSaida(e.resposta);
         if (e.status === "erro") {
           setNodeErro(e.node_id ?? null);
-          toast.error(e.erro ?? "Execução falhou");
+          toast.error(
+            e.motivo_interrupcao === "timeout"
+              ? e.erro ?? "Etapa excedeu o tempo limite"
+              : e.erro ?? "Execução falhou",
+          );
+        } else if (e.status === "cancelada") {
+          setNodeErro(e.node_id ?? null);
+          toast.warning("Execução cancelada — motivo registrado no histórico");
         }
         else if (e.status === "aguardando_aprovacao") toast.info("Execução pausada: aprovação humana pendente");
         else toast.success("Execução concluída");
@@ -164,10 +174,24 @@ export function WorkflowRunPanel({
     }
   };
 
-  const parar = () => {
-    abortRef.current?.abort();
-    setRodando(false);
-    toast.info("Acompanhamento interrompido (a execução continua registrada no histórico)");
+  const [cancelando, setCancelando] = useState(false);
+
+  /** Cancela de fato a execução no servidor (registra o motivo no histórico). */
+  const cancelar = async () => {
+    if (!execId) {
+      abortRef.current?.abort();
+      setRodando(false);
+      return toast.info("Acompanhamento interrompido");
+    }
+    setCancelando(true);
+    try {
+      await cancelarExecucao(execId);
+      toast.info("Cancelamento solicitado — a execução para na etapa atual");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setCancelando(false);
+    }
   };
 
   const concluidas = etapas.filter((e) => e.status !== "executando").length;
@@ -199,11 +223,16 @@ export function WorkflowRunPanel({
               <Play className="mr-2 h-4 w-4" /> {statusFinal ? "Executar novamente" : "Executar"}
             </Button>
           ) : (
-            <Button variant="outline" onClick={parar} className="flex-1">
-              <Square className="mr-2 h-4 w-4" /> Parar acompanhamento
+            <Button variant="destructive" onClick={cancelar} disabled={cancelando} className="flex-1">
+              {cancelando ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Square className="mr-2 h-4 w-4" />
+              )}
+              Cancelar execução
             </Button>
           )}
-          {!rodando && statusFinal === "erro" && execId && (
+          {!rodando && ["erro", "cancelada"].includes(statusFinal ?? "") && execId && (
             <Button
               variant="secondary"
               className="flex-1"
@@ -256,6 +285,12 @@ export function WorkflowRunPanel({
                   </div>
                   {e.tipo && <p className="pl-6 text-[11px] text-muted-foreground">{e.tipo}</p>}
                   {e.logs && <p className="pl-6 text-xs text-muted-foreground">{e.logs}</p>}
+                  {e.motivo_interrupcao && e.motivo_interrupcao !== "erro" && (
+                    <p className="flex items-center gap-1 pl-6 text-xs text-muted-foreground">
+                      <TimerOff className="h-3 w-3" />
+                      {e.motivo_interrupcao === "timeout" ? "Interrompida por tempo limite" : "Interrompida por cancelamento"}
+                    </p>
+                  )}
                   {e.erro && <p className="pl-6 text-xs text-destructive">{e.erro}</p>}
                   {e.texto && (
                     <pre className="ml-6 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs">

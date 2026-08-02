@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Ban, Eye, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { agentRunner } from "@/lib/aip/runner";
-import { executarWorkflow } from "@/lib/aip/execute";
+import { executarWorkflow, cancelarExecucao } from "@/lib/aip/execute";
 
 const CORES: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   concluida: "default",
@@ -91,8 +91,13 @@ export default function ExecucoesPage() {
     } catch {
       /* servidor pode estar offline */
     }
-    await db.from("aip_executions").update({ status: "cancelada" }).eq("id", e.id);
-    toast.success("Execução cancelada");
+    try {
+      // Sinaliza o motor: ele para na etapa atual e registra o motivo no histórico.
+      await cancelarExecucao(e.id);
+      toast.success("Cancelamento solicitado — a execução para na etapa atual");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
     refetch();
   };
 
@@ -106,7 +111,7 @@ export default function ExecucoesPage() {
         vazioTexto="Nenhuma execução registrada."
         acoes={
           <div className="flex flex-wrap gap-1">
-            {["todos", "executando", "aguardando_aprovacao", "concluida", "erro"].map((s) => (
+            {["todos", "executando", "aguardando_aprovacao", "concluida", "erro", "cancelada"].map((s) => (
               <Button
                 key={s}
                 size="sm"
@@ -223,6 +228,21 @@ export default function ExecucoesPage() {
                 </Card>
               </div>
 
+              {(detalhe as any).motivo_interrupcao &&
+                (detalhe as any).motivo_interrupcao !== "erro" && (
+                  <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                    Motivo da interrupção:{" "}
+                    <strong>
+                      {(detalhe as any).motivo_interrupcao === "timeout"
+                        ? "tempo limite da etapa excedido"
+                        : "cancelada pelo usuário"}
+                    </strong>
+                    {(detalhe as any).cancelado_em
+                      ? ` · ${new Date((detalhe as any).cancelado_em).toLocaleString("pt-BR")}`
+                      : ""}
+                  </div>
+                )}
+
               {detalhe.erro && (
                 <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                   {detalhe.erro}
@@ -251,14 +271,21 @@ export default function ExecucoesPage() {
                               {s.duracao_ms != null && (
                                 <Badge variant="outline" className="text-[10px]">{s.duracao_ms} ms</Badge>
                               )}
-                              <Badge variant={s.status === "erro" ? "destructive" : "outline"}>
+                              <Badge variant={s.status === "erro" ? "destructive" : "outline"} title={s.motivo_interrupcao ?? undefined}>
                                 {String(s.status).replace("_", " ")}
                               </Badge>
                             </div>
                           </div>
                           {s.tipo && <p className="text-[11px] text-muted-foreground">{s.tipo}</p>}
+                          {s.motivo_interrupcao && s.motivo_interrupcao !== "erro" && (
+                            <p className="text-[11px] font-medium text-muted-foreground">
+                              {s.motivo_interrupcao === "timeout"
+                                ? `Interrompida por tempo limite${s.timeout_ms ? ` (${Math.round(Number(s.timeout_ms) / 1000)}s)` : ""}`
+                                : "Interrompida por cancelamento"}
+                            </p>
+                          )}
                           {s.logs && <p className="text-xs text-muted-foreground">{s.logs}</p>}
-                          {s.status === "erro" && detalhe && ["erro", "cancelada"].includes(detalhe.status) && (
+                          {["erro", "cancelada"].includes(String(s.status)) && detalhe && ["erro", "cancelada"].includes(detalhe.status) && (
                             <Button
                               size="sm"
                               variant="outline"
