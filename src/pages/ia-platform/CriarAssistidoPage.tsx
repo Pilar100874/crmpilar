@@ -62,6 +62,7 @@ type PassoId =
 
 interface TipoCriacao {
   id: string;
+  categoria: string;
   titulo: string;
   subtitulo: string;
   icone: typeof Wand2;
@@ -75,6 +76,7 @@ interface TipoCriacao {
 const TIPOS: TipoCriacao[] = [
   {
     id: "rotina",
+    categoria: "Automação",
     titulo: "Rotina agendada",
     subtitulo: "Algo que roda sozinho todo dia, semana ou mês.",
     icone: CalendarClock,
@@ -87,6 +89,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "imagem",
+    categoria: "Conteúdo & Marketing",
     titulo: "Criação de imagens",
     subtitulo: "Posts, banners e fotos de produto.",
     icone: ImageIcon,
@@ -99,6 +102,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "video",
+    categoria: "Conteúdo & Marketing",
     titulo: "Criação de vídeos",
     subtitulo: "Clipes curtos para redes sociais e campanhas.",
     icone: Video,
@@ -111,6 +115,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "texto",
+    categoria: "Conteúdo & Marketing",
     titulo: "Textos e respostas",
     subtitulo: "Rascunhos de e-mail, respostas e resumos.",
     icone: MessageSquare,
@@ -123,6 +128,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "pesquisa",
+    categoria: "Automação",
     titulo: "Pesquisa e coleta de dados",
     subtitulo: "Buscar informações em sites, portais e no sistema.",
     icone: Sparkle,
@@ -135,6 +141,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "landpage",
+    categoria: "Conteúdo & Marketing",
     titulo: "Landing page",
     subtitulo: "Página de captura ou de vendas pronta para publicar.",
     icone: LayoutTemplate,
@@ -147,6 +154,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "video_longo",
+    categoria: "Conteúdo & Marketing",
     titulo: "Vídeos longos",
     subtitulo: "Vídeos de 1 a 10 minutos, com roteiro, narração e cenas.",
     icone: Clapperboard,
@@ -159,6 +167,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "campanha",
+    categoria: "Conteúdo & Marketing",
     titulo: "Campanha de e-mail/WhatsApp",
     subtitulo: "Conteúdo & Marketing · sequência completa de mensagens.",
     icone: Megaphone,
@@ -171,6 +180,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "reels",
+    categoria: "Conteúdo & Marketing",
     titulo: "Reels e vídeos curtos",
     subtitulo: "Conteúdo & Marketing · vídeos verticais para redes sociais.",
     icone: Clapperboard,
@@ -183,6 +193,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "proposta",
+    categoria: "Conteúdo & Marketing",
     titulo: "Proposta comercial",
     subtitulo: "Conteúdo & Marketing · proposta ou apresentação pronta.",
     icone: Presentation,
@@ -195,6 +206,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "analise_dados",
+    categoria: "Operação & Dados",
     titulo: "Analisar planilha ou relatório",
     subtitulo: "Operação & Dados · insights a partir dos seus números.",
     icone: BarChart3,
@@ -207,6 +219,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "automacao",
+    categoria: "Automação",
     titulo: "Criar automação de workflow",
     subtitulo: "Operação & Dados · transformar uma descrição em fluxo.",
     icone: Workflow,
@@ -219,6 +232,7 @@ const TIPOS: TipoCriacao[] = [
   },
   {
     id: "extracao",
+    categoria: "Operação & Dados",
     titulo: "Extrair dados de documentos",
     subtitulo: "Operação & Dados · ler PDFs e notas e virar tabela.",
     icone: FileSearch,
