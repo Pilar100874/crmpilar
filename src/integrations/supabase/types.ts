@@ -1999,6 +1999,93 @@ export type Database = {
         }
         Relationships: []
       }
+      aip_receitas: {
+        Row: {
+          agenda: Json
+          agent_id: string | null
+          created_at: string
+          criado_por: string | null
+          detalhes: string | null
+          estabelecimento_id: string
+          etapas: Json
+          id: string
+          mcp_ids: Json
+          md_conteudo: string | null
+          md_nome: string | null
+          modelo: string | null
+          modo_execucao: string
+          nome: string
+          objetivo: string | null
+          referencias: Json
+          rotina_id: string | null
+          skill_ids: Json
+          tipo: string
+          tool_ids: Json
+          updated_at: string
+        }
+        Insert: {
+          agenda?: Json
+          agent_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          detalhes?: string | null
+          estabelecimento_id: string
+          etapas?: Json
+          id?: string
+          mcp_ids?: Json
+          md_conteudo?: string | null
+          md_nome?: string | null
+          modelo?: string | null
+          modo_execucao?: string
+          nome: string
+          objetivo?: string | null
+          referencias?: Json
+          rotina_id?: string | null
+          skill_ids?: Json
+          tipo?: string
+          tool_ids?: Json
+          updated_at?: string
+        }
+        Update: {
+          agenda?: Json
+          agent_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          detalhes?: string | null
+          estabelecimento_id?: string
+          etapas?: Json
+          id?: string
+          mcp_ids?: Json
+          md_conteudo?: string | null
+          md_nome?: string | null
+          modelo?: string | null
+          modo_execucao?: string
+          nome?: string
+          objetivo?: string | null
+          referencias?: Json
+          rotina_id?: string | null
+          skill_ids?: Json
+          tipo?: string
+          tool_ids?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aip_receitas_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "aip_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aip_receitas_rotina_id_fkey"
+            columns: ["rotina_id"]
+            isOneToOne: false
+            referencedRelation: "aip_rotinas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aip_resources: {
         Row: {
           ativo: boolean
