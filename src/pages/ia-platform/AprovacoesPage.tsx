@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { agentRunner } from "@/lib/aip/runner";
+import { executarWorkflow } from "@/lib/aip/execute";
 
 export default function AprovacoesPage() {
   const { items, loading, refetch } = useAipTable<AipApproval>("aip_approvals");
@@ -38,16 +38,29 @@ export default function AprovacoesPage() {
       })
       .eq("id", a.id);
     if (error) return toast.error(`Erro: ${error.message}`);
-    try {
-      await agentRunner.resume(a.execution_id, a.id, {
-        aprovado,
-        selecionados: selecoes[a.id] ?? [],
-        comentario: comentarios[a.id] ?? "",
-      });
-    } catch (e: any) {
-      toast.warning(`Decisão salva, mas o servidor de execução não respondeu: ${e.message}`);
+    if (aprovado) {
+      toast.info("Retomando a execução do workflow…");
+      try {
+        await executarWorkflow(
+          {
+            executionId: a.execution_id,
+            input: { aprovacao: { aprovado, selecionados: selecoes[a.id] ?? [], comentario: comentarios[a.id] ?? "" } },
+          },
+          (ev) => {
+            if (ev.evento === "fim") {
+              if (ev.status === "erro") toast.error(ev.erro ?? "Falha ao retomar a execução");
+              else if (ev.status === "aguardando_aprovacao") toast.info("Nova aprovação pendente");
+              else toast.success("Execução concluída");
+            }
+          },
+        );
+      } catch (e: any) {
+        toast.warning(`Decisão salva, mas não foi possível retomar a execução: ${e.message}`);
+      }
+    } else {
+      await db.from("aip_executions").update({ status: "cancelada" }).eq("id", a.execution_id);
+      toast.success("Rejeitado — execução cancelada");
     }
-    toast.success(aprovado ? "Aprovado" : "Rejeitado");
     refetch();
   };
 
