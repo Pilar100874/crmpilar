@@ -198,130 +198,189 @@ const LogisticaDashboard: React.FC = () => {
     }
   };
 
-  return (
-    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row relative">
-      {/* Mobile Header with buttons */}
-      <div className="md:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
-        <Sheet open={mobileListOpen} onOpenChange={setMobileListOpen}>
-          <SheetTrigger asChild>
-            <Button variant="secondary" size="sm" className="shadow-lg">
-              <List className="h-4 w-4 mr-2" />
-              Veículos ({veiculosFiltrados.length})
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[85vw] sm:w-[350px] p-0">
-            <div className="flex flex-col h-full">
-              <div className="p-2 border-b">
-                <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full" />
-              </div>
-              <div className="flex-1 min-h-0">
-                <VeiculosList
-                  veiculos={veiculosFiltrados}
-                  selectedVeiculoId={selectedVeiculo?.id}
-                  onVeiculoSelect={handleVeiculoSelect}
-                  onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); setMobileListOpen(false); }}
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  statusFilter={statusFilter}
-                  onStatusFilterChange={setStatusFilter}
-                />
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+  const stats = React.useMemo(() => ({
+    total: veiculosPorGrupo.length,
+    movendo: veiculosPorGrupo.filter(v => v.status === 'movendo').length,
+    parado: veiculosPorGrupo.filter(v => v.status === 'parado').length,
+    offline: veiculosPorGrupo.filter(v => v.status === 'offline').length,
+  }), [veiculosPorGrupo]);
 
-        {selectedVeiculo && (
-          <Sheet open={mobileDetailsOpen} onOpenChange={setMobileDetailsOpen}>
+  return (
+    <div className="h-[calc(100dvh-64px)] flex flex-col overflow-hidden bg-muted/30">
+      {/* Header */}
+      <div className="shrink-0 border-b bg-background/80 backdrop-blur-md p-3 sm:p-4 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+              <Car className="h-4 w-4 sm:h-5 sm:w-5" />
+              Painel de Logística
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Frota em tempo real no mapa
+            </p>
+          </div>
+          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full sm:w-56" />
+        </div>
+
+        {/* Filtros rápidos */}
+        <div className="flex flex-wrap items-center gap-2">
+          {([
+            { key: 'todos', label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', ring: 'ring-primary', Icon: Car },
+            { key: 'movendo', label: 'Em rota', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', ring: 'ring-green-500', Icon: Activity },
+            { key: 'parado', label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', ring: 'ring-amber-500', Icon: Clock },
+            { key: 'offline', label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', ring: 'ring-muted-foreground', Icon: WifiOff },
+          ] as const).map(({ key, label, value, dot, text, ring, Icon }) => {
+            const active = statusFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setStatusFilter(active && key !== 'todos' ? 'todos' : key)}
+                title={`Filtrar: ${label}`}
+                className={cn(
+                  "flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 shadow-sm transition-all hover:bg-accent",
+                  active && cn("ring-2 ring-offset-1 ring-offset-background bg-card", ring)
+                )}
+              >
+                <span className={cn("h-2 w-2 rounded-full", dot, key === 'movendo' && 'animate-pulse')} />
+                <Icon className={cn("h-3.5 w-3.5", text)} />
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+                <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
+              </button>
+            );
+          })}
+          {statusFilter !== 'todos' && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setStatusFilter('todos')}>
+              Limpar filtro
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Conteúdo - mapa como foco principal */}
+      <div className="flex-1 min-h-0 relative overflow-hidden p-2">
+        <div className="absolute inset-2 overflow-hidden rounded-xl border border-border/60 shadow-sm bg-card">
+          {loading ? (
+            <div className="h-full flex items-center justify-center bg-muted/50">
+              <div className="text-muted-foreground">Carregando...</div>
+            </div>
+          ) : (
+            <LazyLogisticaMap
+              veiculos={veiculosFiltrados}
+              paradasMarcadas={paradasMarcadas}
+              onVeiculoClick={(v) => {
+                setSelectedVeiculo(v);
+                if (window.innerWidth < 1024) {
+                  setMobileDetailsOpen(true);
+                }
+              }}
+              focusVeiculoId={focusVehicle?.id}
+              focusTrigger={focusVehicle?.nonce}
+              className="h-full w-full"
+              fitBounds={!focusVehicle}
+              fitBoundsPadding={{ topLeft: [300, 40], bottomRight: [selectedVeiculo ? 300 : 40, 40] }}
+            />
+          )}
+        </div>
+
+        {/* Botões flutuantes (mobile/tablet) */}
+        <div className="lg:hidden absolute top-4 left-4 right-4 z-[500] flex justify-between">
+          <Sheet open={mobileListOpen} onOpenChange={setMobileListOpen}>
             <SheetTrigger asChild>
               <Button variant="secondary" size="sm" className="shadow-lg">
-                <Info className="h-4 w-4 mr-2" />
-                Detalhes
+                <List className="h-4 w-4 mr-2" />
+                Veículos ({veiculosFiltrados.length})
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] sm:w-[350px] p-0">
-              <VeiculoDetailsPanel
-                veiculo={selectedVeiculo}
-                onClose={() => {
-                  setMobileDetailsOpen(false);
-                  setSelectedVeiculo(null);
-                }}
-              />
+            <SheetContent side="left" className="w-[85vw] sm:w-[350px] p-0">
+              <div className="flex flex-col h-full">
+                <div className="p-2 border-b">
+                  <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full" />
+                </div>
+                <div className="flex-1 min-h-0">
+                  <VeiculosList
+                    veiculos={veiculosPorGrupo}
+                    selectedVeiculoId={selectedVeiculo?.id}
+                    onVeiculoSelect={handleVeiculoSelect}
+                    onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); setMobileListOpen(false); }}
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                  />
+                </div>
+              </div>
             </SheetContent>
           </Sheet>
-        )}
-      </div>
 
-      {/* Desktop Left Sidebar */}
-      <div className={cn(
-        "hidden md:flex flex-col flex-shrink-0 border-r transition-all duration-300",
-        sidebarCollapsed ? "w-0 overflow-hidden" : "w-72 lg:w-80"
-      )}>
-        <div className="p-2 border-b">
-          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full" />
+          {selectedVeiculo && (
+            <Sheet open={mobileDetailsOpen} onOpenChange={setMobileDetailsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="secondary" size="sm" className="shadow-lg">
+                  <Info className="h-4 w-4 mr-2" />
+                  Detalhes
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[85vw] sm:w-[350px] p-0">
+                <VeiculoDetailsPanel
+                  veiculo={selectedVeiculo}
+                  onClose={() => {
+                    setMobileDetailsOpen(false);
+                    setSelectedVeiculo(null);
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
-        <div className="flex-1 min-h-0">
-          <VeiculosList
-            veiculos={veiculosFiltrados}
-            selectedVeiculoId={selectedVeiculo?.id}
-            onVeiculoSelect={setSelectedVeiculo}
-            onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); }}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-          />
-        </div>
-      </div>
 
-      {/* Map Container */}
-      <div className="flex-1 relative min-h-[300px]">
-        {loading ? (
-          <div className="h-full flex items-center justify-center bg-muted/50">
-            <div className="text-muted-foreground">Carregando...</div>
+        {/* Painel flutuante de veículos (desktop) */}
+        {!sidebarCollapsed ? (
+          <div className="hidden lg:flex absolute top-4 left-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
+            <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
+              <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+                <Car className="h-3.5 w-3.5" />
+                Veículos ({veiculosFiltrados.length})
+              </h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSidebarCollapsed(true)} title="Recolher">
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0">
+              <VeiculosList
+                veiculos={veiculosPorGrupo}
+                selectedVeiculoId={selectedVeiculo?.id}
+                onVeiculoSelect={setSelectedVeiculo}
+                onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); }}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+              />
+            </div>
           </div>
         ) : (
-          <LazyLogisticaMap
-            veiculos={veiculosFiltrados}
-            paradasMarcadas={paradasMarcadas}
-            onVeiculoClick={(v) => {
-              setSelectedVeiculo(v);
-              // Open details on mobile when clicking marker
-              if (window.innerWidth < 768) {
-                setMobileDetailsOpen(true);
-              }
-            }}
-            focusVeiculoId={focusVehicle?.id}
-            focusTrigger={focusVehicle?.nonce}
-            className="h-full w-full"
-            fitBounds={!focusVehicle}
-          />
+          <Button
+            variant="secondary"
+            size="sm"
+            className="hidden lg:flex absolute top-4 left-4 z-[500] shadow-lg"
+            onClick={() => setSidebarCollapsed(false)}
+          >
+            <PanelLeft className="h-4 w-4 mr-2" />
+            Veículos ({veiculosFiltrados.length})
+          </Button>
         )}
-        
-        {/* Collapse/Expand sidebar button - positioned below map zoom controls */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="hidden md:flex absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? "Mostrar veículos" : "Ocultar veículos"}
-        >
-          {sidebarCollapsed ? (
-            <PanelLeft className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
 
-      {/* Desktop Right Sidebar - Details Panel */}
-      {selectedVeiculo && (
-        <div className="hidden md:block w-72 lg:w-80 flex-shrink-0 border-l">
-          <VeiculoDetailsPanel
-            veiculo={selectedVeiculo}
-            onClose={() => setSelectedVeiculo(null)}
-          />
-        </div>
-      )}
+        {/* Painel flutuante de detalhes (desktop) */}
+        {selectedVeiculo && (
+          <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
+            <VeiculoDetailsPanel
+              veiculo={selectedVeiculo}
+              onClose={() => setSelectedVeiculo(null)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
