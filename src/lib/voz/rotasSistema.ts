@@ -14,6 +14,9 @@ export interface RotaSistema {
 
 export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/ia-platform/credenciais", titulo: "Credenciais e Segredos da IA", aliases: ["credenciais da ia", "cofre de segredos", "segredos da plataforma de ia", "chaves do claude code"] },
+  { path: "/ia-platform/wizard-inicial", titulo: "Wizard Inicial dos Agentes IA", aliases: ["wizard inicial", "configuracao inicial da ia", "assistente de configuracao da ia"] },
+  { path: "/ia-platform/manual", titulo: "Manual de Uso dos Agentes IA", aliases: ["manual da ia", "manual de uso da ia", "exemplos de rotinas"] },
+  { path: "/ia-platform/config-servidor", titulo: "Configurações do Servidor de IA", aliases: ["configuracao do servidor de ia", "chaves do servidor", "config do servidor de agentes"] },
   // ============ Menu Principal - Dashboards ============
   { path: "/dashboard", titulo: "Painel Principal", aliases: ["painel principal", "dashboard principal", "pagina inicial", "home"] },
   { path: "/dashboard-atendente", titulo: "Dashboard Atendente", aliases: ["dashboard do atendente", "painel do atendente"] },

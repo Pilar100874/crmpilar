@@ -24,17 +24,52 @@ app.use(cors({ origin: "*", exposedHeaders: ["Content-Type"] }));
 app.use(express.json({ limit: "25mb" }));
 
 const RUNNER_KEY = process.env.RUNNER_KEY || "";
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
-const DEPLOY_HOOK = process.env.RAILWAY_DEPLOY_HOOK_URL || "";
-const VERSAO = process.env.APP_VERSION || "1.1.0";
 const INICIADO_EM = new Date().toISOString();
 
-const supabase =
-  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-        auth: { persistSession: false },
-      })
-    : null;
+/**
+ * Configuração efetiva do servidor.
+ * Começa nas variáveis de ambiente do Railway e pode ser sobrescrita em tempo
+ * de execução pelo CRM Pilar (POST /config, protegido pela X-Runner-Key).
+ * A RUNNER_KEY nunca é alterada remotamente, para não perder o acesso.
+ */
+const CHAVES_CONFIG = [
+  "ANTHROPIC_API_KEY",
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "RAILWAY_DEPLOY_HOOK_URL",
+  "WORKSPACE_DIR",
+  "APP_VERSION",
+  "HIGGSFIELD_API_KEY",
+  "REMOTION_LICENSE_KEY",
+  "OPENAI_API_KEY",
+  "PLAYWRIGHT_BROWSERS_PATH",
+];
+
+const cfg = Object.fromEntries(CHAVES_CONFIG.map((k) => [k, process.env[k] || ""]));
+const origemCfg = Object.fromEntries(
+  CHAVES_CONFIG.map((k) => [k, process.env[k] ? "ambiente" : "ausente"]),
+);
+let configAtualizadaEm = null;
+
+const VERSAO_BASE = process.env.APP_VERSION || "1.2.0";
+const versao = () => cfg.APP_VERSION || VERSAO_BASE;
+const deployHook = () => cfg.RAILWAY_DEPLOY_HOOK_URL || "";
+
+let supabaseCache = null;
+let supabaseChave = "";
+function getSupabase() {
+  const assinatura = `${cfg.SUPABASE_URL}|${cfg.SUPABASE_SERVICE_ROLE_KEY}`;
+  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_SERVICE_ROLE_KEY) return null;
+  if (supabaseCache && supabaseChave === assinatura) return supabaseCache;
+  supabaseChave = assinatura;
+  supabaseCache = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+  return supabaseCache;
+}
+
+const mascararValor = (v) =>
+  !v ? null : v.length <= 8 ? "••••" : `${v.slice(0, 3)}••••••${v.slice(-4)}`;
 
 /** Execuções em memória: id → { status, texto, listeners, abort, ... } */
 const runs = new Map();
@@ -124,8 +159,9 @@ async function executar(run, payload) {
     (payload.input ? `Entrada:\n${JSON.stringify(payload.input, null, 2)}` : "Execute a tarefa.");
 
   try {
-    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY não configurada no servidor");
+    if (!cfg.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY não configurada no servidor");
 
+    process.env.ANTHROPIC_API_KEY = cfg.ANTHROPIC_API_KEY;
     const { query } = await import("@anthropic-ai/claude-agent-sdk");
 
     const iterador = query({
@@ -136,7 +172,7 @@ async function executar(run, payload) {
         mcpServers: montarMcpServers(payload.mcps),
         permissionMode: "bypassPermissions",
         maxTurns: payload.max_turns ?? 30,
-        cwd: process.env.WORKSPACE_DIR || "/tmp",
+        cwd: cfg.WORKSPACE_DIR || process.env.WORKSPACE_DIR || "/tmp",
       },
     });
 
@@ -176,6 +212,7 @@ async function executar(run, payload) {
 
 /** Grava resposta, tokens e custo de volta no Supabase. */
 async function persistir(run) {
+  const supabase = getSupabase();
   if (!supabase) return;
   try {
     await supabase
@@ -200,13 +237,13 @@ app.post("/health", (req, res) => {
   if (!autenticar(req, res)) return;
   res.json({
     ok: true,
-    versao: VERSAO,
+    versao: versao(),
     commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
     uptime_s: Math.round(process.uptime()),
     iniciado_em: INICIADO_EM,
-    anthropic: Boolean(ANTHROPIC_API_KEY),
-    supabase: Boolean(supabase),
-    atualizacao_disponivel: Boolean(DEPLOY_HOOK),
+    anthropic: Boolean(cfg.ANTHROPIC_API_KEY),
+    supabase: Boolean(getSupabase()),
+    atualizacao_disponivel: Boolean(deployHook()),
     execucoes_ativas: [...runs.values()].filter((r) => r.status === "executando").length,
   });
 
@@ -404,7 +441,7 @@ app.post("/runs", (req, res) => {
   res.json({
     ok: true,
     servidor: {
-      versao: VERSAO,
+      versao: versao(),
       commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
       ambiente: process.env.RAILWAY_ENVIRONMENT_NAME ?? process.env.NODE_ENV ?? "producao",
       node: process.version,
@@ -412,9 +449,9 @@ app.post("/runs", (req, res) => {
       iniciado_em: INICIADO_EM,
       memoria_mb: Math.round(mem.rss / 1048576),
       heap_mb: Math.round(mem.heapUsed / 1048576),
-      anthropic: Boolean(ANTHROPIC_API_KEY),
-      supabase: Boolean(supabase),
-      atualizacao_disponivel: Boolean(DEPLOY_HOOK),
+      anthropic: Boolean(cfg.ANTHROPIC_API_KEY),
+      supabase: Boolean(getSupabase()),
+      atualizacao_disponivel: Boolean(deployHook()),
     },
     contagem,
     total: runs.size,
@@ -442,7 +479,8 @@ app.post("/runs/limpar", (req, res) => {
  */
 app.post("/update", async (req, res) => {
   if (!autenticar(req, res)) return;
-  if (!DEPLOY_HOOK) {
+  const hook = deployHook();
+  if (!hook) {
     return res.json({
       ok: false,
       erro: "RAILWAY_DEPLOY_HOOK_URL não configurada no servidor",
@@ -453,13 +491,13 @@ app.post("/update", async (req, res) => {
     return res.json({ ok: false, erro: `${ativas} execução(ões) em andamento`, ativas });
   }
   try {
-    const r = await fetch(DEPLOY_HOOK, { method: "POST" });
+    const r = await fetch(hook, { method: "POST" });
     const texto = await r.text();
     res.json({
       ok: r.ok,
       http: r.status,
       resposta: texto.slice(0, 500),
-      versao_atual: VERSAO,
+      versao_atual: versao(),
       disparado_em: now(),
       ...(r.ok ? {} : { erro: `HTTP ${r.status}` }),
     });
@@ -561,6 +599,44 @@ async function limpar(){await api('/runs/limpar');carregar();}
 async function atualizarServidor(){if(!confirm('Disparar redeploy do servidor?'))return;const d=await api('/update',{});alert(d.ok?'Redeploy disparado.':'Falhou: '+(d.erro||''));}
 carregar();setInterval(carregar,5000);
 </script></body></html>`;
+
+/**
+ * Configuração enviada pelo CRM Pilar.
+ *  - POST /config          → aplica { config: { CHAVE: valor } }
+ *  - POST /config/status   → devolve as chaves configuradas (valores mascarados)
+ */
+app.post("/config", (req, res) => {
+  if (!autenticar(req, res)) return;
+  const recebido = req.body?.config ?? {};
+  const aplicadas = [];
+  for (const chave of CHAVES_CONFIG) {
+    const valor = recebido[chave];
+    if (typeof valor !== "string" || !valor.trim()) continue;
+    cfg[chave] = valor.trim();
+    origemCfg[chave] = "crm";
+    aplicadas.push(chave);
+  }
+  if (aplicadas.includes("SUPABASE_URL") || aplicadas.includes("SUPABASE_SERVICE_ROLE_KEY")) {
+    supabaseCache = null;
+    supabaseChave = "";
+  }
+  configAtualizadaEm = now();
+  res.json({ ok: true, aplicadas, atualizado_em: configAtualizadaEm, versao: versao() });
+});
+
+app.post("/config/status", (req, res) => {
+  if (!autenticar(req, res)) return;
+  res.json({
+    ok: true,
+    atualizado_em: configAtualizadaEm,
+    chaves: CHAVES_CONFIG.map((chave) => ({
+      chave,
+      configurada: Boolean(cfg[chave]),
+      origem: origemCfg[chave],
+      mascara: mascararValor(cfg[chave]),
+    })),
+  });
+});
 
 app.get("/", (_req, res) => res.type("html").send(PAINEL_HTML));
 

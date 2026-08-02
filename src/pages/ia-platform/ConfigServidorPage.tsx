@@ -1,0 +1,247 @@
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ItemConfig {
+  chave: string;
+  mascara: string | null;
+  atualizado_em: string;
+  enviado_em: string | null;
+}
+
+const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }[] = [
+  {
+    chave: "ANTHROPIC_API_KEY",
+    rotulo: "Anthropic API Key",
+    ajuda: "Chave do Claude usada pelo Agent SDK (console.anthropic.com).",
+    segredo: true,
+  },
+  {
+    chave: "SUPABASE_URL",
+    rotulo: "URL do backend",
+    ajuda: "URL do backend que o servidor usa para gravar execuções e assets.",
+    segredo: false,
+  },
+  {
+    chave: "SUPABASE_SERVICE_ROLE_KEY",
+    rotulo: "Chave de serviço do backend",
+    ajuda: "Permite ao servidor gravar resultados. Guarde com muito cuidado.",
+    segredo: true,
+  },
+  {
+    chave: "RAILWAY_DEPLOY_HOOK_URL",
+    rotulo: "Deploy Hook (Railway)",
+    ajuda: "URL do Deploy Hook usada para redeploy remoto do servidor.",
+    segredo: true,
+  },
+  {
+    chave: "WORKSPACE_DIR",
+    rotulo: "Diretório de trabalho",
+    ajuda: "Pasta usada nas execuções (padrão /tmp).",
+    segredo: false,
+  },
+  { chave: "APP_VERSION", rotulo: "Versão exibida", ajuda: "Rótulo de versão do servidor.", segredo: false },
+  {
+    chave: "HIGGSFIELD_API_KEY",
+    rotulo: "Higgsfield API Key",
+    ajuda: "Geração de vídeos/imagens pelo Higgsfield.",
+    segredo: true,
+  },
+  {
+    chave: "REMOTION_LICENSE_KEY",
+    rotulo: "Remotion License Key",
+    ajuda: "Renderização de vídeos com Remotion.",
+    segredo: true,
+  },
+  { chave: "OPENAI_API_KEY", rotulo: "OpenAI API Key", ajuda: "Modelos e imagens da OpenAI.", segredo: true },
+  {
+    chave: "PLAYWRIGHT_BROWSERS_PATH",
+    rotulo: "Playwright browsers path",
+    ajuda: "Caminho dos navegadores do Playwright no servidor.",
+    segredo: false,
+  },
+];
+
+async function chamar(acao: string, extra: Record<string, unknown> = {}) {
+  const { data, error } = await supabase.functions.invoke("aip-server-config", {
+    body: { acao, ...extra },
+  });
+  if (error) throw new Error(error.message);
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
+export default function ConfigServidorPage() {
+  const [itens, setItens] = useState<ItemConfig[]>([]);
+  const [valores, setValores] = useState<Record<string, string>>({});
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+
+  const carregar = async () => {
+    setCarregando(true);
+    try {
+      const r = await chamar("listar");
+      setItens(r.itens ?? []);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    void carregar();
+  }, []);
+
+  const salvar = async () => {
+    const preenchidos = Object.entries(valores)
+      .filter(([, v]) => v.trim())
+      .map(([chave, valor]) => ({ chave, valor }));
+    if (!preenchidos.length) return toast.warning("Preencha ao menos um campo");
+    setSalvando(true);
+    try {
+      const r = await chamar("salvar", { itens: preenchidos });
+      toast.success(`${r.gravadas?.length ?? 0} configuração(ões) salva(s) com segurança`);
+      setValores({});
+      await carregar();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const enviar = async () => {
+    setEnviando(true);
+    try {
+      const r = await chamar("enviar");
+      r.ok
+        ? toast.success(`Enviado ao servidor: ${(r.aplicadas ?? []).length} chave(s) aplicada(s)`)
+        : toast.error(r.erro ?? "Falha ao enviar");
+      await carregar();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const remover = async (chave: string) => {
+    try {
+      await chamar("remover", { chave });
+      toast.success(`${chave} removida`);
+      await carregar();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const salvo = (chave: string) => itens.find((i) => i.chave === chave);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Configurações do servidor</h2>
+        <p className="text-sm text-muted-foreground">
+          Envie pelo CRM as chaves usadas pelo servidor de execução (Claude Agent SDK). Os valores
+          ficam criptografados no banco e só são decifrados no momento do envio.
+        </p>
+      </div>
+
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Área sensível</AlertTitle>
+        <AlertDescription>
+          Chaves enviadas por aqui dão ao servidor acesso a serviços pagos e ao banco de dados.
+          Somente perfis <strong>admin</strong> e <strong>gestor</strong> conseguem usar esta tela e
+          nenhum valor volta em claro para o navegador.
+        </AlertDescription>
+      </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="h-4 w-4 text-primary" /> Valores
+          </CardTitle>
+          <CardDescription>
+            Deixe em branco para manter o valor já salvo. Ao salvar, clique em “Enviar ao servidor”
+            para aplicar sem precisar mexer no Railway.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {carregando ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+            </div>
+          ) : (
+            CAMPOS.map((campo) => {
+              const atual = salvo(campo.chave);
+              return (
+                <div key={campo.chave} className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label htmlFor={campo.chave}>{campo.rotulo}</Label>
+                    <code className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                      {campo.chave}
+                    </code>
+                    {atual ? (
+                      <Badge variant="secondary">salvo: {atual.mascara}</Badge>
+                    ) : (
+                      <Badge variant="outline">não configurado</Badge>
+                    )}
+                    {atual?.enviado_em && <Badge className="bg-emerald-600">enviado</Badge>}
+                    {atual && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-destructive"
+                        onClick={() => remover(campo.chave)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    id={campo.chave}
+                    type={campo.segredo ? "password" : "text"}
+                    autoComplete="off"
+                    placeholder={atual ? "•••••• (manter atual)" : campo.ajuda}
+                    value={valores[campo.chave] ?? ""}
+                    onChange={(e) =>
+                      setValores((v) => ({ ...v, [campo.chave]: e.target.value }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">{campo.ajuda}</p>
+                </div>
+              );
+            })
+          )}
+
+          <Separator />
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={salvar} disabled={salvando}>
+              {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Salvar com segurança
+            </Button>
+            <Button variant="secondary" onClick={enviar} disabled={enviando}>
+              {enviando ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <SendHorizonal className="mr-2 h-4 w-4" />
+              )}
+              Enviar ao servidor
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

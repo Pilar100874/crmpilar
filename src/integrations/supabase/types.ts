@@ -2223,6 +2223,36 @@ export type Database = {
           },
         ]
       }
+      aip_server_config: {
+        Row: {
+          atualizado_em: string
+          atualizado_por: string | null
+          chave: string
+          enviado_em: string | null
+          id: string
+          mascara: string | null
+          valor_cifrado: string
+        }
+        Insert: {
+          atualizado_em?: string
+          atualizado_por?: string | null
+          chave: string
+          enviado_em?: string | null
+          id?: string
+          mascara?: string | null
+          valor_cifrado: string
+        }
+        Update: {
+          atualizado_em?: string
+          atualizado_por?: string | null
+          chave?: string
+          enviado_em?: string | null
+          id?: string
+          mascara?: string | null
+          valor_cifrado?: string
+        }
+        Relationships: []
+      }
       aip_skill_files: {
         Row: {
           created_at: string
