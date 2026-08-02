@@ -229,6 +229,11 @@ Deno.serve(async (req) => {
         const { data } = await db.from(tabela).select("estabelecimento_id").limit(2000);
         (data ?? []).forEach((r: any) => r.estabelecimento_id && alvos.add(r.estabelecimento_id));
       }
+      // Sem dados da plataforma ainda: registra ao menos o MCP do sistema por estabelecimento.
+      if (alvos.size === 0) {
+        const { data } = await db.from("estabelecimentos").select("id").limit(500);
+        (data ?? []).forEach((r: any) => r.id && alvos.add(r.id));
+      }
     }
 
     const resultados = [];
