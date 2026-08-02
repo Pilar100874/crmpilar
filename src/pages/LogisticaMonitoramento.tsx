@@ -168,6 +168,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
@@ -398,7 +399,23 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, [fetchVeiculos]);
 
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
-  const veiculosFiltrados = filterByGrupo(veiculos, grupoId);
+  const veiculosDoGrupo = filterByGrupo(veiculos, grupoId);
+
+  const alertVeiculoIds = React.useMemo(
+    () => new Set(alerts.map(a => a.veiculoId)),
+    [alerts]
+  );
+
+  const veiculosFiltrados = React.useMemo(() => {
+    switch (quickFilter) {
+      case 'movendo': return veiculosDoGrupo.filter(v => v.status === 'movendo');
+      case 'parado': return veiculosDoGrupo.filter(v => v.status === 'parado');
+      case 'offline': return veiculosDoGrupo.filter(v => v.status === 'offline');
+      case 'alertas': return veiculosDoGrupo.filter(v => alertVeiculoIds.has(v.id));
+      default: return veiculosDoGrupo;
+    }
+  }, [veiculosDoGrupo, quickFilter, alertVeiculoIds]);
+
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
@@ -409,10 +426,11 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, [pinnedVeiculoId, veiculos]);
 
   const stats = {
-    total: veiculosFiltrados.length,
-    movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
-    parado: veiculosFiltrados.filter(v => v.status === 'parado').length,
-    offline: veiculosFiltrados.filter(v => v.status === 'offline').length
+    total: veiculosDoGrupo.length,
+    movendo: veiculosDoGrupo.filter(v => v.status === 'movendo').length,
+    parado: veiculosDoGrupo.filter(v => v.status === 'parado').length,
+    offline: veiculosDoGrupo.filter(v => v.status === 'offline').length,
+    alertas: veiculosDoGrupo.filter(v => alertVeiculoIds.has(v.id)).length
   };
 
   const getAlertIcon = (type: string) => {
@@ -572,23 +590,39 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
         {/* Stats compactos */}
         <div className="flex flex-wrap items-center gap-2">
-          {[
-            { label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', Icon: Car },
-            { label: 'Movendo', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', Icon: Activity },
-            { label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', Icon: Clock },
-            { label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', Icon: WifiOff },
-          ].map(({ label, value, dot, text, Icon }) => (
-            <div
-              key={label}
-              className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 shadow-sm"
-            >
-              <span className={cn("h-2 w-2 rounded-full", dot, label === 'Movendo' && 'animate-pulse')} />
-              <Icon className={cn("h-3.5 w-3.5", text)} />
-              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
-              <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
-            </div>
-          ))}
+          {([
+            { key: 'todos', label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', ring: 'ring-primary', Icon: Car },
+            { key: 'movendo', label: 'Em rota', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', ring: 'ring-green-500', Icon: Activity },
+            { key: 'parado', label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', ring: 'ring-amber-500', Icon: Clock },
+            { key: 'alertas', label: 'Com alertas', value: stats.alertas, dot: 'bg-destructive', text: 'text-destructive', ring: 'ring-destructive', Icon: AlertTriangle },
+            { key: 'offline', label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', ring: 'ring-muted-foreground', Icon: WifiOff },
+          ] as const).map(({ key, label, value, dot, text, ring, Icon }) => {
+            const active = quickFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setQuickFilter(active && key !== 'todos' ? 'todos' : key)}
+                title={`Filtrar: ${label}`}
+                className={cn(
+                  "flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 shadow-sm transition-all hover:bg-accent",
+                  active && cn("ring-2 ring-offset-1 ring-offset-background bg-card", ring)
+                )}
+              >
+                <span className={cn("h-2 w-2 rounded-full", dot, key === 'movendo' && 'animate-pulse')} />
+                <Icon className={cn("h-3.5 w-3.5", text)} />
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+                <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
+              </button>
+            );
+          })}
+          {quickFilter !== 'todos' && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setQuickFilter('todos')}>
+              Limpar filtro
+            </Button>
+          )}
         </div>
+
 
       </div>
 
@@ -647,7 +681,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             <SheetTrigger asChild>
               <Button variant="secondary" size="sm" className="shadow-lg">
                 <List className="h-4 w-4 mr-2" />
-                Veículos ({stats.total})
+                Veículos ({veiculosFiltrados.length})
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
