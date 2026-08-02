@@ -34,7 +34,7 @@ import {
   descreverCron,
   proximaExecucao,
 } from "@/lib/aip/cron";
-import { CATALOGO_RECURSOS } from "@/lib/aip/catalog";
+import { useConectores } from "@/lib/aip/conectores";
 
 interface Rotina {
   id: string;
@@ -91,8 +91,12 @@ export default function RotinasPage() {
   });
   const { items: workflows } = useAipTable<any>("aip_workflows");
   const { items: agentes } = useAipTable<any>("aip_agents");
-  const { items: tools } = useAipTable<any>("aip_tools");
-  const { items: mcps } = useAipTable<any>("aip_mcps");
+  const {
+    conectores,
+    sincronizando,
+    sincronizar,
+    ultimaSync,
+  } = useConectores();
 
   const [busca, setBusca] = useState("");
   const [form, setForm] = useState<Partial<Rotina> | null>(null);
@@ -114,16 +118,17 @@ export default function RotinasPage() {
     [items, busca],
   );
 
-  const conectoresDisponiveis = useMemo(() => {
-    const catalogo = CATALOGO_RECURSOS.flatMap((c) =>
-      c.itens.map((x) => ({ tipo: "recurso", ref: `${c.slug}/${x.slug}`, nome: `${x.icone} ${x.nome}` })),
-    );
-    return [
-      ...tools.map((t: any) => ({ tipo: "tool", ref: t.id, nome: `🔧 ${t.nome}` })),
-      ...mcps.map((m: any) => ({ tipo: "mcp", ref: m.id, nome: `🔌 ${m.nome}` })),
-      ...catalogo,
-    ];
-  }, [tools, mcps]);
+  const conectoresDisponiveis = useMemo(
+    () =>
+      conectores
+        .filter((c) => c.disponivel)
+        .map((c) => ({
+          tipo: c.tipo,
+          ref: c.ref,
+          nome: `${c.icone ?? "•"} ${c.nome}`,
+        })),
+    [conectores],
+  );
 
   const salvar = async () => {
     if (!form) return;
