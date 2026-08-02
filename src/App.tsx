@@ -44,6 +44,7 @@ import SegurancaPage from "./pages/ia-platform/SegurancaPage";
 import AipCredenciaisPage from "./pages/ia-platform/CredenciaisPage";
 import AipNotificacoesPage from "./pages/ia-platform/NotificacoesPage";
 import AipRotinasPage from "./pages/ia-platform/RotinasPage";
+import AipMotorPage from "./pages/ia-platform/MotorPage";
 
 import BaseConhecimento from "./pages/BaseConhecimento";
 import Todos from "./pages/Todos";
@@ -416,6 +417,7 @@ const App = () => (
                 <Route path="credenciais" element={<AipCredenciaisPage />} />
                 <Route path="notificacoes" element={<AipNotificacoesPage />} />
                 <Route path="rotinas" element={<AipRotinasPage />} />
+                <Route path="motor" element={<AipMotorPage />} />
 
               </Route>
               <Route path="/base-conhecimento" element={<BaseConhecimento />} />
