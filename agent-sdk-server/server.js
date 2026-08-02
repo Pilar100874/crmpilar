@@ -468,7 +468,88 @@ app.post("/update", async (req, res) => {
   }
 });
 
-app.get("/", (_req, res) => res.send("AIP Agent SDK Server online"));
+/** Painel visual (HTML) do servidor. */
+const PAINEL_HTML = `<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AIP Agent SDK Server — Painel</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--card:#141a2e;--line:#232b45;--fg:#e6ebff;--mut:#93a0c4;--pri:#6d8bff;--ok:#34d399;--err:#f87171;--wrn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#151d3a,#0b1020)}
+h1{font-size:17px;margin:0}.mut{color:var(--mut)}
+main{padding:20px 24px;display:grid;gap:18px;max-width:1200px;margin:0 auto}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h3{margin:0 0 6px;font-size:12px;font-weight:500;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.card p{margin:0;font-size:20px;font-weight:600}
+input,button{font:inherit;border-radius:9px;border:1px solid var(--line);padding:8px 12px;background:#0f1530;color:var(--fg)}
+button{cursor:pointer;background:var(--pri);border-color:var(--pri);color:#08102a;font-weight:600}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:500}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:#1e2745}
+.b-executando{background:#233a6b;color:#a9c3ff}.b-concluida{background:#0f3a2c;color:var(--ok)}
+.b-erro{background:#3a1717;color:var(--err)}.b-cancelada{background:#3a2c12;color:var(--wrn)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+pre{background:#0f1530;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;max-height:260px;white-space:pre-wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style></head><body>
+<header>
+  <div class="row"><span class="dot" id="dot" style="background:var(--mut)"></span><h1>AIP Agent SDK Server</h1><span class="mut" id="sub">carregando…</span></div>
+  <div class="row">
+    <input id="key" type="password" placeholder="Runner Key" style="width:200px"/>
+    <button onclick="salvar()">Conectar</button>
+    <button class="ghost" onclick="carregar()">Atualizar</button>
+    <button class="ghost" onclick="limpar()">Limpar finalizadas</button>
+    <button class="ghost" onclick="atualizarServidor()">Atualizar servidor</button>
+  </div>
+</header>
+<main>
+  <div class="grid" id="metricas"></div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h3 style="margin:0">Execuções</h3><span class="mut" id="cont"></span></div>
+    <div style="overflow:auto"><table><thead><tr><th>ID</th><th>Status</th><th>Início</th><th>Duração</th><th>Tokens</th><th>Custo</th><th></th></tr></thead><tbody id="linhas"></tbody></table></div>
+  </div>
+  <div class="card" id="boxPrev" style="display:none"><h3>Prévia da saída</h3><pre id="prev"></pre></div>
+</main>
+<script>
+const el=id=>document.getElementById(id);
+el('key').value=localStorage.getItem('runnerKey')||'';
+function salvar(){localStorage.setItem('runnerKey',el('key').value);carregar();}
+async function api(rota,body={}){const r=await fetch(rota,{method:'POST',headers:{'Content-Type':'application/json','X-Runner-Key':el('key').value},body:JSON.stringify(body)});return r.json();}
+function fmtDur(ms){if(!ms||ms<0)return '—';const s=Math.round(ms/1000);return s<60?s+'s':Math.floor(s/60)+'m '+(s%60)+'s';}
+function fmtUp(s){if(s==null)return '—';const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return (d?d+'d ':'')+(h?h+'h ':'')+m+'m';}
+async function carregar(){
+  const d=await api('/runs',{limite:50});
+  if(!d.ok){el('sub').textContent=d.error||'Não autorizado — informe a Runner Key';el('dot').style.background='var(--err)';return;}
+  const s=d.servidor||{};
+  el('dot').style.background='var(--ok)';
+  el('sub').textContent='online · v'+(s.versao||'?')+(s.commit?' · '+s.commit:'')+' · '+(s.ambiente||'');
+  el('metricas').innerHTML=[
+    ['Uptime',fmtUp(s.uptime_s)],['Memória RSS',(s.memoria_mb??'—')+' MB'],['Heap',(s.heap_mb??'—')+' MB'],
+    ['Node',s.node||'—'],['Anthropic',s.anthropic?'configurado':'ausente'],['Supabase',s.supabase?'conectado':'ausente'],
+    ['Execuções',d.total??0],['Rodando',(d.contagem||{}).executando??0]
+  ].map(([t,v])=>'<div class="card"><h3>'+t+'</h3><p>'+v+'</p></div>').join('');
+  el('cont').textContent=Object.entries(d.contagem||{}).map(([k,v])=>k+': '+v).join(' · ');
+  el('linhas').innerHTML=(d.execucoes||[]).map(r=>'<tr><td class="mut">'+r.id.slice(0,8)+'</td>'+
+    '<td><span class="badge b-'+r.status+'">'+r.status+'</span></td>'+
+    '<td class="mut">'+new Date(r.criado_em).toLocaleString('pt-BR')+'</td>'+
+    '<td>'+fmtDur(r.duracao_ms)+'</td>'+
+    '<td>'+((r.tokens_input||0)+'/'+(r.tokens_output||0))+'</td>'+
+    '<td>'+(r.custo!=null?'US$ '+Number(r.custo).toFixed(4):'—')+'</td>'+
+    '<td class="row"><button class="ghost" onclick="ver('+JSON.stringify(JSON.stringify(r.previa||r.erro||'')).replace(/"/g,'&quot;')+')">Ver</button>'+
+    (r.status==='executando'?'<button class="ghost" onclick="cancelar(\\''+r.id+'\\')">Cancelar</button>':'')+'</td></tr>').join('')
+    ||'<tr><td colspan="7" class="mut">Nenhuma execução em memória.</td></tr>';
+}
+function ver(t){el('boxPrev').style.display='block';el('prev').textContent=JSON.parse(t)||'(sem saída)';}
+async function cancelar(id){await api('/cancel',{execution_id:id});carregar();}
+async function limpar(){await api('/runs/limpar');carregar();}
+async function atualizarServidor(){if(!confirm('Disparar redeploy do servidor?'))return;const d=await api('/update',{});alert(d.ok?'Redeploy disparado.':'Falhou: '+(d.erro||''));}
+carregar();setInterval(carregar,5000);
+</script></body></html>`;
+
+app.get("/", (_req, res) => res.type("html").send(PAINEL_HTML));
 
 const porta = process.env.PORT || 8080;
 app.listen(porta, () => console.log(`AIP Agent SDK Server ouvindo na porta ${porta}`));
