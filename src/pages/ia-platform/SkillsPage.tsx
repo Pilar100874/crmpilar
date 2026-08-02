@@ -18,7 +18,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { SkillArquivosMd, enviarArquivosSkill } from "@/components/ia-platform/SkillArquivosMd";
-import { BookOpen, Copy, Download, Pencil, Trash2, Upload } from "lucide-react";
+import { importarSkillZip } from "@/lib/aip/skillZip";
+import { BookOpen, Copy, Download, FolderArchive, Pencil, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS = ["rascunho", "publicada", "arquivada"];
