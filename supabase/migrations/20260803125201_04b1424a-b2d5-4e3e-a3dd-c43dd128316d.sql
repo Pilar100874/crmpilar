@@ -1,0 +1,1 @@
+DELETE FROM public.logistica_paradas_marcadas WHERE data_fim IS NOT NULL OR data_inicio < now() - interval '24 hours';
