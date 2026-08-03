@@ -55,33 +55,44 @@ export async function buscarEventosVelocidade(
 ): Promise<{ eventos: EventoVelocidade[]; inicio: Date; fim: Date }> {
   const fim = new Date();
   const inicio = new Date(fim.getTime() - PERIODO_DIAS[opts.periodo] * 86400000);
-  const limite = Number(opts.limiteKmh) || 80;
+  const limitePadrao = Number(opts.limiteKmh) || LIMITE_PADRAO_GLOBAL;
 
   let qVeic = supabase
     .from('veiculos')
-    .select('id, placa, descricao')
+    .select('id, placa, descricao, tipo_veiculo, limite_velocidade')
     .eq('estabelecimento_id', opts.estabelecimentoId);
   if (opts.veiculoIds?.length) qVeic = qVeic.in('id', opts.veiculoIds);
   const { data: veiculos } = await qVeic;
 
-  const lista = (veiculos ?? []) as Array<{ id: string; placa: string; descricao: string | null }>;
+  const lista = (veiculos ?? []) as Array<{
+    id: string;
+    placa: string;
+    descricao: string | null;
+    tipo_veiculo: string | null;
+    limite_velocidade: number | null;
+  }>;
   if (!lista.length) return { eventos: [], inicio, fim };
 
   const placaPorId = new Map(lista.map((v) => [v.id, v.placa || v.descricao || '—']));
+  // Limite efetivo por veículo (cadastro > tipo > padrão do bloco)
+  const limitePorId = new Map(lista.map((v) => [v.id, limiteDoVeiculo(v, limitePadrao)]));
+  const menorLimite = Math.min(...Array.from(limitePorId.values()));
   const ids = lista.map((v) => v.id);
 
   const { data: posicoes } = await supabase
     .from('veiculo_posicoes')
     .select('veiculo_id, velocidade, data_hora')
     .in('veiculo_id', ids)
-    .gt('velocidade', limite)
+    .gt('velocidade', menorLimite)
     .gte('data_hora', inicio.toISOString())
     .lte('data_hora', fim.toISOString())
     .order('data_hora', { ascending: true })
     .limit(5000);
 
-  const brutos = (posicoes ?? []) as Array<{ veiculo_id: string; velocidade: number; data_hora: string }>;
+  const brutos = ((posicoes ?? []) as Array<{ veiculo_id: string; velocidade: number; data_hora: string }>)
+    .filter((p) => Number(p.velocidade) > (limitePorId.get(p.veiculo_id) ?? limitePadrao));
   if (!brutos.length) return { eventos: [], inicio, fim };
+
 
   // Motoristas: resolve pelo movimento de veículo vigente no instante do evento
   const { data: cvvs } = await (supabase as any)
