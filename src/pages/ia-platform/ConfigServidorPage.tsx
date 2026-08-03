@@ -271,7 +271,16 @@ export default function ConfigServidorPage() {
               )}
               Enviar ao servidor
             </Button>
+            <Button variant="outline" onClick={() => preencherAuto(itens, true)}>
+              <Wand2 className="mr-2 h-4 w-4" /> Preencher automático
+            </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            O preenchimento automático usa os valores que o próprio CRM já conhece (URL do backend,
+            diretório de trabalho, caminho do Playwright e versão). Chaves secretas continuam sendo
+            digitadas manualmente.
+          </p>
+
         </CardContent>
       </Card>
     </div>
