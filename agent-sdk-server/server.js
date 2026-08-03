@@ -708,15 +708,13 @@ app.post("/playwright/run", async (req, res) => {
 });
 
 /**
- * Execução assíncrona (rotina): cria um job e devolve o job_id na hora.
- * Use /playwright/job/status para acompanhar o andamento.
+ * Cria um job de Playwright em segundo plano e devolve o registro do job.
+ * Retorna `{ erro }` quando o payload é inválido.
  */
-app.post("/playwright/job", async (req, res) => {
-  if (!autenticar(req, res)) return;
-  const payload = req.body || {};
+function criarJobPlaywright(payload = {}) {
   const passos = Array.isArray(payload.passos) ? payload.passos : [];
   if (!payload.url && passos.length === 0) {
-    return res.status(400).json({ ok: false, erro: "Informe uma url ou ao menos um passo." });
+    return { erro: "Informe uma url ou ao menos um passo." };
   }
 
   limparJobsAntigos();
@@ -759,8 +757,31 @@ app.post("/playwright/job", async (req, res) => {
     job.finalizado_em = new Date().toISOString();
   });
 
-  res.json({ ok: true, job_id: id, status: job.status, total_passos: passos.length });
+  return { job };
+}
+
+/** Cancela um job em andamento. */
+async function cancelarJobPlaywright(job) {
+  if (job.status !== "rodando" && job.status !== "fila") {
+    return { ok: true, job_id: job.id, status: job.status, ja_finalizado: true };
+  }
+  job.cancelar = true;
+  job.passo_descricao = "Cancelamento solicitado";
+  if (job.fecharNavegador) await job.fecharNavegador();
+  return { ok: true, job_id: job.id, status: "cancelado" };
+}
+
+/**
+ * Execução assíncrona (rotina): cria um job e devolve o job_id na hora.
+ * Use /playwright/job/status para acompanhar o andamento.
+ */
+app.post("/playwright/job", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const { job, erro } = criarJobPlaywright(req.body || {});
+  if (erro) return res.status(400).json({ ok: false, erro });
+  res.json({ ok: true, job_id: job.id, status: job.status, total_passos: job.total_passos });
 });
+
 
 /** Status de um job (ou de todos, quando job_id é omitido). */
 app.post("/playwright/job/status", (req, res) => {
@@ -782,14 +803,201 @@ app.post("/playwright/job/cancelar", async (req, res) => {
   if (!autenticar(req, res)) return;
   const job = playwrightJobs.get(String(req.body?.job_id ?? ""));
   if (!job) return res.status(404).json({ ok: false, erro: "Job não encontrado." });
-  if (job.status !== "rodando" && job.status !== "fila") {
-    return res.json({ ok: true, job_id: job.id, status: job.status, ja_finalizado: true });
-  }
-  job.cancelar = true;
-  job.passo_descricao = "Cancelamento solicitado";
-  if (job.fecharNavegador) await job.fecharNavegador();
-  res.json({ ok: true, job_id: job.id, status: "cancelado" });
+  res.json(await cancelarJobPlaywright(job));
 });
+
+/* -------------------------------------------------------------------------
+ * API pública versionada — /api/v1
+ * Endpoints REST para iniciar e acompanhar execuções do Playwright.
+ * Autenticação: header X-Runner-Key (mesma chave do runner).
+ *
+ *   GET    /api/v1                              → índice da API
+ *   GET    /api/v1/playwright/status            → Chromium disponível?
+ *   POST   /api/v1/playwright/runs              → inicia execução (assíncrona)
+ *   GET    /api/v1/playwright/runs              → lista execuções
+ *   GET    /api/v1/playwright/runs/:id          → status + logs + resultados
+ *   GET    /api/v1/playwright/runs/:id/logs     → apenas os logs
+ *   GET    /api/v1/playwright/runs/:id/resultado→ extraídos + artefatos
+ *   GET    /api/v1/playwright/runs/:id/eventos  → acompanhamento ao vivo (SSE)
+ *   DELETE /api/v1/playwright/runs/:id          → cancela a execução
+ * ---------------------------------------------------------------------- */
+const apiV1 = express.Router();
+
+apiV1.use((req, res, next) => {
+  if (!autenticar(req, res)) return;
+  next();
+});
+
+/** Busca o job pela rota e responde 404 padronizado quando não existe. */
+function jobDaRota(req, res) {
+  const job = playwrightJobs.get(String(req.params.id));
+  if (!job) {
+    res.status(404).json({ ok: false, erro: "Execução não encontrada ou já expirada." });
+    return null;
+  }
+  return job;
+}
+
+apiV1.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    api: "playwright",
+    versao: "v1",
+    servidor: versao(),
+    endpoints: [
+      { metodo: "GET", caminho: "/api/v1/playwright/status" },
+      { metodo: "POST", caminho: "/api/v1/playwright/runs" },
+      { metodo: "GET", caminho: "/api/v1/playwright/runs" },
+      { metodo: "GET", caminho: "/api/v1/playwright/runs/:id" },
+      { metodo: "GET", caminho: "/api/v1/playwright/runs/:id/logs" },
+      { metodo: "GET", caminho: "/api/v1/playwright/runs/:id/resultado" },
+      { metodo: "GET", caminho: "/api/v1/playwright/runs/:id/eventos" },
+      { metodo: "DELETE", caminho: "/api/v1/playwright/runs/:id" },
+    ],
+  });
+});
+
+apiV1.get("/playwright/status", async (_req, res) => {
+  const pw = await carregarPlaywright();
+  res.status(pw ? 200 : 503).json({
+    ok: Boolean(pw),
+    disponivel: Boolean(pw),
+    erro: pw ? null : "Pacote playwright não instalado no servidor. Faça o redeploy do runner.",
+    execucoes: playwrightJobs.size,
+  });
+});
+
+apiV1.post("/playwright/runs", async (req, res) => {
+  const payload = req.body || {};
+
+  // modo=sync executa e devolve o resultado completo na mesma resposta.
+  if (String(req.query.modo || payload.modo || "async") === "sync") {
+    const resultado = await executarRoteiroPlaywright(payload);
+    if (resultado.indisponivel) return res.status(503).json(resultado);
+    return res.status(resultado.ok ? 200 : 500).json(resultado);
+  }
+
+  const { job, erro } = criarJobPlaywright(payload);
+  if (erro) return res.status(400).json({ ok: false, erro });
+  res
+    .status(202)
+    .location(`/api/v1/playwright/runs/${job.id}`)
+    .json({
+      ok: true,
+      id: job.id,
+      job_id: job.id,
+      status: job.status,
+      total_passos: job.total_passos,
+      links: {
+        status: `/api/v1/playwright/runs/${job.id}`,
+        logs: `/api/v1/playwright/runs/${job.id}/logs`,
+        resultado: `/api/v1/playwright/runs/${job.id}/resultado`,
+        eventos: `/api/v1/playwright/runs/${job.id}/eventos`,
+      },
+    });
+});
+
+apiV1.get("/playwright/runs", (req, res) => {
+  const { status, limite } = req.query;
+  let lista = [...playwrightJobs.values()].sort(
+    (a, b) => new Date(b.criado_em) - new Date(a.criado_em),
+  );
+  if (status) lista = lista.filter((j) => j.status === String(status));
+  const max = Math.min(Number(limite) || 50, 200);
+  res.json({
+    ok: true,
+    total: lista.length,
+    execucoes: lista.slice(0, max).map((j) => resumoJob(j, { incluirArtefatos: false })),
+  });
+});
+
+apiV1.get("/playwright/runs/:id", (req, res) => {
+  const job = jobDaRota(req, res);
+  if (!job) return;
+  const incluirArtefatos = req.query.incluir_artefatos !== "false";
+  res.json(resumoJob(job, { incluirArtefatos }));
+});
+
+apiV1.get("/playwright/runs/:id/logs", (req, res) => {
+  const job = jobDaRota(req, res);
+  if (!job) return;
+  const desde = Number(req.query.desde) || 0;
+  res.json({
+    ok: true,
+    id: job.id,
+    status: job.status,
+    progresso: { passo: job.passo_atual, total: job.total_passos },
+    desde,
+    logs: job.logs.slice(desde),
+    total_logs: job.logs.length,
+  });
+});
+
+apiV1.get("/playwright/runs/:id/resultado", (req, res) => {
+  const job = jobDaRota(req, res);
+  if (!job) return;
+  const finalizado = ["concluido", "erro", "cancelado"].includes(job.status);
+  res.status(finalizado ? 200 : 202).json({
+    ok: job.status === "concluido",
+    id: job.id,
+    status: job.status,
+    finalizado,
+    url_final: job.url_final ?? null,
+    titulo: job.titulo ?? null,
+    duracao_ms: job.duracao_ms ?? null,
+    extraidos: job.extraidos,
+    artefatos:
+      req.query.incluir_artefatos === "false"
+        ? job.artefatos.map(({ base64, ...resto }) => resto)
+        : job.artefatos,
+    erro: job.erro ?? null,
+  });
+});
+
+/** Acompanhamento ao vivo por SSE: envia o status a cada segundo até finalizar. */
+apiV1.get("/playwright/runs/:id/eventos", (req, res) => {
+  const job = jobDaRota(req, res);
+  if (!job) return;
+
+  res.set({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+  res.flushHeaders?.();
+
+  let enviados = 0;
+  const tick = () => {
+    const novos = job.logs.slice(enviados);
+    enviados = job.logs.length;
+    res.write(
+      `data: ${JSON.stringify({
+        id: job.id,
+        status: job.status,
+        progresso: { passo: job.passo_atual, total: job.total_passos },
+        passo_descricao: job.passo_descricao,
+        logs: novos,
+      })}\n\n`,
+    );
+    if (["concluido", "erro", "cancelado"].includes(job.status)) {
+      res.write(`event: fim\ndata: ${JSON.stringify(resumoJob(job, { incluirArtefatos: false }))}\n\n`);
+      clearInterval(timer);
+      res.end();
+    }
+  };
+  const timer = setInterval(tick, 1000);
+  tick();
+  req.on("close", () => clearInterval(timer));
+});
+
+apiV1.delete("/playwright/runs/:id", async (req, res) => {
+  const job = jobDaRota(req, res);
+  if (!job) return;
+  res.json(await cancelarJobPlaywright(job));
+});
+
+app.use("/api/v1", apiV1);
+
 
 app.post("/mcp/probe", async (req, res) => {
   if (!autenticar(req, res)) return;
