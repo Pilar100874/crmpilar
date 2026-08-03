@@ -139,6 +139,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     descricao: '',
     motorista: '',
     tipo_veiculo: '',
+    limite_velocidade: '',
+
     logistica_grupo_id: '',
     traccar_device_id: '',
     dispositivo_id: '',
@@ -329,6 +331,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
+        limite_velocidade: (veiculo as any).limite_velocidade != null ? String((veiculo as any).limite_velocidade) : '',
+
         logistica_grupo_id: (veiculo as any).logistica_grupo_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
@@ -349,6 +353,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: '',
         motorista: '',
         tipo_veiculo: '',
+        limite_velocidade: '',
+
         logistica_grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
         dispositivo_id: '',
