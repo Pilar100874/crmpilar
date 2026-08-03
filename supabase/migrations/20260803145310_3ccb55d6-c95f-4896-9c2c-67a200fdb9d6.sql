@@ -1,0 +1,1 @@
+ALTER TABLE public.veiculo_posicoes ADD COLUMN IF NOT EXISTS nivel_combustivel numeric(5,2);

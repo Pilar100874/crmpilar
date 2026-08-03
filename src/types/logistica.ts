@@ -22,6 +22,7 @@ export interface VeiculoPosicao {
   direcao?: number;
   ignicao?: boolean | null;
   corte_combustivel?: boolean | null;
+  nivel_combustivel?: number | null;
   data_hora: string;
   created_at: string;
 }

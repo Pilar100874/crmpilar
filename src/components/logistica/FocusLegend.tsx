@@ -4,6 +4,7 @@ import { VeiculoComStatus } from '@/types/logistica';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FocusLegendProps {
   veiculo?: VeiculoComStatus;
@@ -43,10 +44,40 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 border-l pl-2 sm:pl-3 shrink-0">
-          <IgnicaoBadge ignicao={ign} compact />
-          <CorteCombustivelBadge corte={corte} compact />
-        </div>
+        <TooltipProvider delayDuration={300}>
+          <div className="flex items-center gap-1.5 border-l pl-2 sm:pl-3 shrink-0">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IgnicaoBadge ignicao={ign} compact />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">
+                  Ignição: {typeof ign === 'boolean' ? (ign ? 'Ligado' : 'Desligado') : 'Sem sinal'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <CorteCombustivelBadge corte={corte} compact />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <div className="text-xs space-y-0.5">
+                  <p>
+                    Combustível: {typeof corte === 'boolean' ? (corte ? 'Corte ativo' : 'Liberado') : 'Sem sinal'}
+                  </p>
+                  {veiculo.ultima_posicao?.nivel_combustivel != null && (
+                    <p>Nível: {veiculo.ultima_posicao.nivel_combustivel}%</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
 
         {wa && (
           <a
