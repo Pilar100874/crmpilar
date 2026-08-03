@@ -706,23 +706,13 @@ async function executarRoteiroPlaywright(payload, job) {
         }
         case "screenshot": {
           const buffer = await pagina.screenshot({ fullPage: Boolean(passo.pagina_inteira) });
-          artefatos.push({
-            nome: `${nome}.png`,
-            tipo: "image/png",
-            tamanho_bytes: buffer.length,
-            base64: buffer.toString("base64"),
-          });
+          await adicionarArtefato(`${nome}.png`, "image/png", buffer);
           registrar(`Capturou ${nome}.png`);
           break;
         }
         case "pdf": {
           const buffer = await pagina.pdf({ format: "A4", printBackground: true });
-          artefatos.push({
-            nome: `${nome}.pdf`,
-            tipo: "application/pdf",
-            tamanho_bytes: buffer.length,
-            base64: buffer.toString("base64"),
-          });
+          await adicionarArtefato(`${nome}.pdf`, "application/pdf", buffer);
           registrar(`Gerou ${nome}.pdf`);
           break;
         }
@@ -737,6 +727,17 @@ async function executarRoteiroPlaywright(payload, job) {
       }
     }
 
+    // Print automático do estado final (depuração/auditoria).
+    if (screenshotFinal !== false) {
+      try {
+        const buffer = await pagina.screenshot({ fullPage: false });
+        await adicionarArtefato("final.png", "image/png", buffer);
+        registrar("Capturou print final da execução.");
+      } catch {
+        /* print final é best-effort */
+      }
+    }
+
     const resultado = {
       ok: true,
       url_final: pagina.url(),
@@ -746,10 +747,37 @@ async function executarRoteiroPlaywright(payload, job) {
       artefatos,
       duracao_ms: Date.now() - iniciou,
     };
-    await navegador.close();
+    await finalizarNavegador({
+      navegador,
+      contexto,
+      pagina,
+      dirVideo,
+      adicionarArtefato,
+      registrar,
+      nomeVideo: "execucao.webm",
+    });
+    resultado.artefatos = artefatos;
     return resultado;
   } catch (e) {
-    if (navegador) await navegador.close().catch(() => {});
+    // Print do momento da falha, quando a página ainda responde.
+    if (pagina) {
+      try {
+        const buffer = await pagina.screenshot({ fullPage: false });
+        await adicionarArtefato("erro.png", "image/png", buffer);
+        registrar("Capturou print do momento do erro.");
+      } catch {
+        /* página pode já estar fechada */
+      }
+    }
+    await finalizarNavegador({
+      navegador,
+      contexto,
+      pagina,
+      dirVideo,
+      adicionarArtefato,
+      registrar,
+      nomeVideo: "execucao-erro.webm",
+    });
     return {
       ok: false,
       erro: e.message,
@@ -760,6 +788,41 @@ async function executarRoteiroPlaywright(payload, job) {
     };
   }
 }
+
+/**
+ * Fecha o contexto/navegador e, quando houve gravação, guarda o vídeo da sessão.
+ * Nunca lança: falhas aqui não devem mascarar o resultado da execução.
+ */
+async function finalizarNavegador({
+  navegador,
+  contexto,
+  pagina,
+  dirVideo,
+  adicionarArtefato,
+  registrar,
+  nomeVideo,
+}) {
+  try {
+    const video = dirVideo && pagina ? pagina.video() : null;
+    if (contexto) await contexto.close().catch(() => {});
+    if (video) {
+      const caminho = await video.path().catch(() => null);
+      if (caminho) {
+        const buffer = await fs.readFile(caminho).catch(() => null);
+        if (buffer?.length) {
+          await adicionarArtefato(nomeVideo, "video/webm", buffer);
+          registrar(`Gravou vídeo da execução (${Math.round(buffer.length / 1024)} KB).`);
+        }
+      }
+    }
+  } catch {
+    /* gravação é best-effort */
+  } finally {
+    if (navegador) await navegador.close().catch(() => {});
+    if (dirVideo) await fs.rm(dirVideo, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
 
 /** Execução síncrona: devolve o resultado completo na própria resposta. */
 app.post("/playwright/run", async (req, res) => {
