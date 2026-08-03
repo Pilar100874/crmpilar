@@ -182,6 +182,7 @@ export const LogisticaSimulator = ({
     // Check breakpoint
     if (breakpointNodes.has(node.id)) {
       addMessage('system', `⏸️ Pausa no bloco "${blockDef?.label}"`, node.id, <Pause className="w-4 h-4 text-orange-500" />);
+      isPausedRef.current = true;
       setIsPaused(true);
       return;
     }
