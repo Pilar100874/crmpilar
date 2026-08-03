@@ -132,6 +132,7 @@ export default function ConfigServidorPage() {
   const [enviando, setEnviando] = useState(false);
   const [testando, setTestando] = useState(false);
   const [saude, setSaude] = useState<Record<string, unknown> | null>(null);
+  const [saudeBanco, setSaudeBanco] = useState<SupabaseHealth | null>(null);
   const [aplicando, setAplicando] = useState(false);
   const [etapas, setEtapas] = useState<Etapa[]>([]);
 
@@ -140,13 +141,28 @@ export default function ConfigServidorPage() {
     try {
       const r = await agentRunner.health();
       setSaude(r ?? { ok: false, motivo: "Sem resposta do servidor" });
+
+      // Verificação adicional: o próprio servidor tenta falar com o backend
+      // usando a chave de serviço que já foi injetada automaticamente.
+      let banco: SupabaseHealth | null = null;
+      if (r?.ok) {
+        try {
+          banco = await agentRunner.healthSupabase();
+        } catch (e) {
+          banco = { ok: false, erro: (e as Error).message };
+        }
+      }
+      setSaudeBanco(banco);
+
       if (!silencioso) {
-        r?.ok
-          ? toast.success("Servidor online")
-          : toast.warning(r?.motivo ?? "Servidor não respondeu corretamente");
+        if (!r?.ok) toast.warning(r?.motivo ?? "Servidor não respondeu corretamente");
+        else if (banco && !banco.ok)
+          toast.warning(banco.erro ?? "Servidor online, mas sem acesso ao banco de dados");
+        else toast.success("Servidor online e com acesso ao banco de dados");
       }
     } catch (e) {
       setSaude({ ok: false, motivo: (e as Error).message });
+      setSaudeBanco(null);
       if (!silencioso) toast.error(`Falha na conexão: ${(e as Error).message}`);
     } finally {
       setTestando(false);
