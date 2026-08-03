@@ -23,6 +23,8 @@ import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
 import DispositivosRastreamento from './DispositivosRastreamento';
 import { GrupoFilterSelect } from './GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo, GRUPO_ALL } from '@/lib/logistica/grupoFilter';
+import { limitePadraoPorTipo } from '@/lib/logistica/limitesVelocidade';
+
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
@@ -139,6 +141,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     descricao: '',
     motorista: '',
     tipo_veiculo: '',
+    limite_velocidade: '',
+
     logistica_grupo_id: '',
     traccar_device_id: '',
     dispositivo_id: '',
@@ -329,6 +333,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
+        limite_velocidade: (veiculo as any).limite_velocidade != null ? String((veiculo as any).limite_velocidade) : '',
+
         logistica_grupo_id: (veiculo as any).logistica_grupo_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
@@ -349,6 +355,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: '',
         motorista: '',
         tipo_veiculo: '',
+        limite_velocidade: '',
+
         logistica_grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
         dispositivo_id: '',
@@ -401,6 +409,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            limite_velocidade: formData.limite_velocidade ? Number(formData.limite_velocidade) : null,
+
             logistica_grupo_id: formData.logistica_grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
@@ -417,6 +427,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            limite_velocidade: formData.limite_velocidade ? Number(formData.limite_velocidade) : null,
+
             logistica_grupo_id: formData.logistica_grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
@@ -1116,6 +1128,20 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   placeholder={isPessoa ? 'Ex: Vendedor externo' : 'Ex: Fiorino Branca'}
                 />
               </div>
+              <div>
+                <Label>Limite de velocidade (km/h)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={formData.limite_velocidade}
+                  onChange={(e) => setFormData(prev => ({ ...prev, limite_velocidade: e.target.value.replace(/\D/g, '') }))}
+                  placeholder={`Padrão do tipo: ${limitePadraoPorTipo(formData.tipo_veiculo)} km/h`}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Usado no relatório de velocidades excedidas. Em branco usa o padrão do tipo.
+                </p>
+              </div>
+
               <div>
                 <Label>Grupo</Label>
                 <Select
