@@ -125,8 +125,12 @@ export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia, le
           {tipo === "imagem" && (
             <img src={url} alt={nome} loading="lazy" className="max-h-80 w-full object-contain" />
           )}
-          {tipo === "video" && <MediaPlayerInline tipo="video" url={url} nome={nome} />}
-          {tipo === "audio" && <MediaPlayerInline tipo="audio" url={url} nome={nome} />}
+          {tipo === "video" && (
+            <MediaPlayerInline tipo="video" url={url} nome={nome} legendas={legendas} />
+          )}
+          {tipo === "audio" && (
+            <MediaPlayerInline tipo="audio" url={url} nome={nome} legendas={legendas} />
+          )}
           {tipo === "pdf" && <iframe src={url} title={nome} className="h-80 w-full" />}
           {tipo === "html" && (
             <div>
