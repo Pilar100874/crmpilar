@@ -330,20 +330,32 @@ export async function executarAutomacoesLogistica(
           }
         }
 
+        const LOC_TAG = '📍 Localização atual';
         const linkFor = (vid: string) => {
           const p = posMap[vid];
           return p ? `https://www.google.com/maps?q=${p.lat},${p.lng}` : null;
         };
         const appendLocOne = (msg: string, vid: string) => {
           if (!enviarLocalizacao) return msg;
+          if (msg.includes(LOC_TAG)) return msg; // já anexada, não repetir
           const l = linkFor(vid);
-          return l ? `${msg}\n\n📍 Localização atual: ${l}` : msg;
+          return l ? `${msg}\n\n${LOC_TAG}: ${l}` : msg;
         };
         const appendLocAll = (msg: string) => {
           if (!enviarLocalizacao) return msg;
-          const links = veiculosAcao.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
-          return links.length ? `${msg}\n\n📍 Localização atual:\n${links.join('\n')}` : msg;
+          if (msg.includes(LOC_TAG)) return msg; // já anexada, não repetir
+          const vistos = new Set<string>();
+          const links: string[] = [];
+          for (const v of veiculosAcao) {
+            const id = (v as any).id;
+            if (vistos.has(id)) continue;
+            vistos.add(id);
+            const l = linkFor(id);
+            if (l && !links.includes(l)) links.push(l);
+          }
+          return links.length ? `${msg}\n\n${LOC_TAG}:\n${links.join('\n')}` : msg;
         };
+
 
         // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
         const dispararBot = async (telefone: string | null, extras: Record<string, unknown>) => {
