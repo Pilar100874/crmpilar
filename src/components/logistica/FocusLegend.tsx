@@ -22,9 +22,11 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
   return (
     <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto">
       <div className="flex items-center gap-3 bg-background/25 backdrop-blur border border-border shadow-lg rounded-full pl-3 pr-2 py-1.5 text-xs sm:text-sm max-w-[92vw]">
-        <div className="flex items-center gap-1.5 font-semibold">
+        <div className="flex items-center gap-1.5 font-bold" title={`Veículo ${veiculo.placa}`}>
           <Car className="h-3.5 w-3.5 text-primary" />
-          <span className="truncate max-w-[120px]">{veiculo.placa}</span>
+          <span className="whitespace-nowrap text-sm sm:text-base tracking-wide font-mono px-1.5 py-0.5 bg-primary/10 rounded">
+            {veiculo.placa}
+          </span>
         </div>
         {motorista && (
           <div className="flex items-center gap-1.5 border-l pl-3">
