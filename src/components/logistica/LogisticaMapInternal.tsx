@@ -230,6 +230,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
   const initialBoundsFittedRef = useRef(false);
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
+  // Assinaturas para evitar recriar ícones/DOM a cada atualização (causa de "piscar")
+  const iconSigRef = useRef<Map<string, string>>(new Map());
+  const paradaSigRef = useRef<Map<string, string>>(new Map());
+  const ultimoEnquadramentoRef = useRef<string>('');
+
 
   // Auto-enquadramento: pausa quando o usuário interage (zoom, arrasto, seleção)
   const [autoPausado, setAutoPausado] = useState(false);
