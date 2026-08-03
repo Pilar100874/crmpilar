@@ -31,12 +31,50 @@ interface Props {
  * Player nativo (controls/seek) com barra de informações: tempo atual,
  * duração e velocidade de reprodução — sem precisar baixar o arquivo.
  */
-export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-full" }: Props) {
+export function MediaPlayerInline({
+  tipo,
+  url,
+  nome,
+  classeVideo = "max-h-80 w-full",
+  legendas = [],
+}: Props) {
   const ref = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [atual, setAtual] = useState(() => obterPosicaoMidia(url));
   const [velocidade, setVelocidade] = useState(1);
   const [erro, setErro] = useState(false);
+  const [faixa, setFaixa] = useState<string | null>(legendas[0]?.nome ?? null);
+  const [legendasAtivas, setLegendasAtivas] = useState(legendas.length > 0);
+  const [cues, setCues] = useState<CueLegenda[]>([]);
+  const [erroLegenda, setErroLegenda] = useState(false);
+
+  // Carrega e converte a faixa selecionada (WebVTT ou SRT).
+  useEffect(() => {
+    const sel = legendas.find((l) => l.nome === faixa);
+    if (!legendasAtivas || !sel) {
+      setCues([]);
+      return;
+    }
+    let cancelado = false;
+    setErroLegenda(false);
+    fetch(sel.url)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then((t) => !cancelado && setCues(parsearLegenda(t)))
+      .catch(() => !cancelado && (setErroLegenda(true), setCues([])));
+    return () => {
+      cancelado = true;
+    };
+  }, [faixa, legendasAtivas, legendas]);
+
+  const textoLegenda = useMemo(
+    () => (legendasAtivas && cues.length ? cueAtivo(cues, atual)?.texto ?? "" : ""),
+    [cues, atual, legendasAtivas],
+  );
+
+
 
   const aoCarregar = (e: React.SyntheticEvent<HTMLMediaElement>) => {
     const el = e.currentTarget;
