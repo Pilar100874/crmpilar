@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoComStatus } from '@/types/logistica';
+import { enquadrarNoMapa, boundsDePontos } from '@/lib/mapa/enquadrar';
+
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
