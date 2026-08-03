@@ -733,8 +733,25 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         }
         @keyframes tempoParadoBlink {
           0%, 49% { opacity: 1; }
-          50%, 100% { opacity: .15; }
+          50%, 100% { opacity: .35; }
         }
+
+        /* Movimento suave dos marcadores entre atualizações de posição */
+        .logistica-map-container .leaflet-marker-icon {
+          transition: transform .8s linear;
+          will-change: transform;
+        }
+        .logistica-map-container.leaflet-zoom-anim .leaflet-marker-icon,
+        .logistica-map-container .leaflet-zoom-anim .leaflet-marker-icon,
+        .logistica-map-container .leaflet-drag-target {
+          transition: none !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .logistica-map-container .leaflet-marker-icon { transition: none; }
+          .logistica-map-container .custom-vehicle-icon * { animation: none !important; }
+        }
+
+
 
         .logistica-map-container .leaflet-control-container .leaflet-top.leaflet-left {
           top: auto !important;
