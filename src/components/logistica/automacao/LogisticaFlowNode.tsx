@@ -104,7 +104,7 @@ interface LogisticaFlowNodeProps extends NodeProps {
 
 export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNodeProps) => {
   const blockDef = LOGISTICA_BLOCKS.find(b => b.type === data.type);
-  const IconComponent = blockDef ? iconMap[blockDef.icon] : Play;
+  const IconComponent = (blockDef ? iconMap[blockDef.icon] : Play) || Play;
   const color = blockDef?.color || '#6B7280';
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isStartBlock = data.type === 'iniciar_automacao';
