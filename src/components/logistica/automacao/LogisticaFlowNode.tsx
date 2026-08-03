@@ -431,7 +431,7 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                 {outputsConfig.outputs.map((out: any, i: number) => (
                   <span 
                     key={out.id}
-                    className={cn("px-1.5 py-0.5 rounded text-white text-[10px]", out.color.bg)}
+                    className={cn("px-1.5 py-0.5 rounded text-[10px]", out.color.bg, out.isNegative ? "text-foreground" : "text-white")}
                   >
                     {out.label}
                   </span>
