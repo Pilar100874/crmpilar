@@ -29,6 +29,12 @@ interface ItemConfig {
   enviado_em: string | null;
 }
 
+interface Etapa {
+  rotulo: string;
+  estado: "pendente" | "rodando" | "ok" | "erro";
+  detalhe?: string;
+}
+
 const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }[] = [
   {
     chave: "ANTHROPIC_API_KEY",
@@ -111,6 +117,8 @@ export default function ConfigServidorPage() {
   const [enviando, setEnviando] = useState(false);
   const [testando, setTestando] = useState(false);
   const [saude, setSaude] = useState<Record<string, unknown> | null>(null);
+  const [aplicando, setAplicando] = useState(false);
+  const [etapas, setEtapas] = useState<Etapa[]>([]);
 
   const testarConexao = async (silencioso = false) => {
     setTestando(true);
@@ -172,19 +180,89 @@ export default function ConfigServidorPage() {
     const preenchidos = Object.entries(valores)
       .filter(([, v]) => v.trim())
       .map(([chave, valor]) => ({ chave, valor }));
-    if (!preenchidos.length) return toast.warning("Preencha ao menos um campo");
+    if (!preenchidos.length) {
+      toast.warning("Preencha ao menos um campo");
+      return 0;
+    }
     setSalvando(true);
     try {
       const r = await chamar("salvar", { itens: preenchidos });
       toast.success(`${r.gravadas?.length ?? 0} configuração(ões) salva(s) com segurança`);
       setValores({});
       await carregar();
+      return r.gravadas?.length ?? preenchidos.length;
     } catch (e) {
       toast.error((e as Error).message);
+      throw e;
     } finally {
       setSalvando(false);
     }
   };
+
+  /** Salva → envia ao servidor → confirma que ficou online já com as chaves novas. */
+  const salvarEAplicar = async () => {
+    const pendentes = Object.values(valores).filter((v) => v.trim()).length;
+    setAplicando(true);
+    setEtapas([
+      { rotulo: "Salvar com segurança", estado: "rodando" },
+      { rotulo: "Enviar ao servidor", estado: "pendente" },
+      { rotulo: "Confirmar aplicação", estado: "pendente" },
+    ]);
+    const marcar = (i: number, estado: Etapa["estado"], detalhe?: string) =>
+      setEtapas((e) => e.map((x, idx) => (idx === i ? { ...x, estado, detalhe } : x)));
+
+    try {
+      if (pendentes) {
+        const n = await salvar();
+        marcar(0, "ok", `${n} valor(es) gravado(s)`);
+      } else {
+        marcar(0, "ok", "nenhum valor novo — usando os já salvos");
+      }
+
+      marcar(1, "rodando");
+      const envio = await chamar("enviar");
+      if (!envio?.ok) {
+        marcar(1, "erro", envio?.erro ?? "Falha ao enviar as chaves");
+        toast.error(envio?.erro ?? "Falha ao enviar as chaves");
+        return;
+      }
+      const aplicadas = (envio.aplicadas ?? []).length;
+      marcar(1, "ok", `${aplicadas} chave(s) aplicada(s)`);
+      await carregar();
+
+      marcar(2, "rodando");
+      // O servidor reinicia o processo ao aplicar as chaves: aguardar e reconferir.
+      let saudavel: Record<string, unknown> | null = null;
+      for (let tentativa = 0; tentativa < 6; tentativa++) {
+        await new Promise((r) => setTimeout(r, tentativa === 0 ? 1500 : 2500));
+        try {
+          const r = await agentRunner.health();
+          if (r?.ok) {
+            saudavel = r;
+            break;
+          }
+          saudavel = r ?? null;
+        } catch {
+          saudavel = null;
+        }
+      }
+      setSaude(saudavel ?? { ok: false, motivo: "Servidor não respondeu após aplicar as chaves" });
+      if (saudavel?.ok) {
+        marcar(2, "ok", "servidor online com as configurações novas");
+        toast.success("Configurações aplicadas e confirmadas no servidor");
+      } else {
+        marcar(2, "erro", "servidor não confirmou o retorno — tente testar a conexão de novo");
+        toast.warning("Chaves enviadas, mas o servidor ainda não respondeu");
+      }
+    } catch (e) {
+      setEtapas((et) => et.map((x) => (x.estado === "rodando" ? { ...x, estado: "erro", detalhe: (e as Error).message } : x)));
+      toast.error((e as Error).message);
+    } finally {
+      setAplicando(false);
+    }
+  };
+
+
 
   const enviar = async () => {
     setEnviando(true);
@@ -350,11 +428,19 @@ export default function ConfigServidorPage() {
 
           <Separator />
           <div className="flex flex-wrap gap-2">
-            <Button onClick={salvar} disabled={salvando}>
-              {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Salvar com segurança
+            <Button onClick={salvarEAplicar} disabled={aplicando || salvando || enviando}>
+              {aplicando ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlugZap className="mr-2 h-4 w-4" />
+              )}
+              Salvar e aplicar agora
             </Button>
-            <Button variant="secondary" onClick={enviar} disabled={enviando}>
+            <Button variant="secondary" onClick={salvar} disabled={salvando || aplicando}>
+              {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Somente salvar
+            </Button>
+            <Button variant="secondary" onClick={enviar} disabled={enviando || aplicando}>
               {enviando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -362,15 +448,44 @@ export default function ConfigServidorPage() {
               )}
               Enviar ao servidor
             </Button>
-            <Button variant="outline" onClick={() => preencherAuto(itens, true)}>
+            <Button variant="outline" onClick={() => preencherAuto(itens, true)} disabled={aplicando}>
               <Wand2 className="mr-2 h-4 w-4" /> Preencher automático
             </Button>
           </div>
+
+          {etapas.length > 0 && (
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Aplicando configurações</p>
+              {etapas.map((etapa) => (
+                <div key={etapa.rotulo} className="flex items-start gap-2 text-sm">
+                  {etapa.estado === "rodando" ? (
+                    <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-primary" />
+                  ) : etapa.estado === "ok" ? (
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                  ) : etapa.estado === "erro" ? (
+                    <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
+                  ) : (
+                    <div className="mt-1.5 h-2 w-2 rounded-full bg-muted-foreground/40" />
+                  )}
+                  <div className="min-w-0">
+                    <span className={etapa.estado === "pendente" ? "text-muted-foreground" : ""}>
+                      {etapa.rotulo}
+                    </span>
+                    {etapa.detalhe && (
+                      <p className="text-xs text-muted-foreground break-words">{etapa.detalhe}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground">
-            O preenchimento automático usa os valores que o próprio CRM já conhece (URL do backend,
-            diretório de trabalho, caminho do Playwright e versão). Chaves secretas continuam sendo
-            digitadas manualmente.
+            "Salvar e aplicar agora" grava as chaves, envia ao servidor e confirma que ele voltou
+            online já com as configurações novas. O preenchimento automático usa os valores que o
+            próprio CRM já conhece; chaves secretas continuam sendo digitadas manualmente.
           </p>
+
 
         </CardContent>
       </Card>
