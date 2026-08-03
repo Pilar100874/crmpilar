@@ -49,6 +49,51 @@ function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number)
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+/**
+ * Estado do bloco "Repetir Enquanto Parado" (por automação/nó/veículo).
+ * Guardado em localStorage para sobreviver a recarregamentos e coordenar mapas.
+ */
+const REPETIR_PREFIX = 'logistica:repetir-parado:';
+
+function repeticaoDevida(
+  chaveNode: string,
+  veiculo: VeiculoComStatus,
+  cfg: Record<string, unknown>
+): boolean {
+  const key = `${REPETIR_PREFIX}${chaveNode}:${veiculo.id}`;
+  const agora = Date.now();
+
+  // Veículo em movimento → reinicia a contagem
+  if (veiculo.status !== 'parado' || !veiculo.ultima_posicao) {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+    return false;
+  }
+
+  const inicioMin = Number(cfg.repetir_inicio_minutos) || 30;
+  const intervaloMin = Math.max(1, Number(cfg.repetir_intervalo_minutos) || 15);
+  const maxRep = Number(cfg.repetir_max) || 0;
+
+  const minutosParado = differenceInMinutes(
+    new Date(),
+    new Date(veiculo.ultima_posicao.data_hora)
+  );
+  if (minutosParado < inicioMin) return false;
+
+  let estado: { last: number; count: number } | null = null;
+  try {
+    const raw = localStorage.getItem(key);
+    estado = raw ? JSON.parse(raw) : null;
+  } catch { estado = null; }
+
+  if (estado && maxRep > 0 && estado.count >= maxRep) return false;
+  if (estado && agora - estado.last < intervaloMin * 60000) return false;
+
+  try {
+    localStorage.setItem(key, JSON.stringify({ last: agora, count: (estado?.count || 0) + 1 }));
+  } catch { /* noop */ }
+  return true;
+}
+
 
 // Evaluate automation rules against vehicle data and create markers
 export async function executarAutomacoesLogistica(
