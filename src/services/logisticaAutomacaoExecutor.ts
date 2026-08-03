@@ -61,6 +61,7 @@ interface RepetirEstado {
   lat: number;       // posição onde o veículo parou
   lng: number;
   desde: number;     // timestamp em que a parada foi detectada
+  encerrado?: boolean; // limite de disparos atingido nesta parada
 }
 
 // Deslocamento (m) acima do qual consideramos que o veículo voltou a se mover
@@ -73,6 +74,10 @@ function lerEstadoRepeticao(key: string): RepetirEstado | null {
   } catch {
     return null;
   }
+}
+
+function salvarRepeticao(key: string, estado: RepetirEstado) {
+  try { localStorage.setItem(key, JSON.stringify(estado)); } catch { /* noop */ }
 }
 
 function limparRepeticao(key: string) {
@@ -100,7 +105,8 @@ function repeticaoDevida(
 
   const inicioMin = Number(cfg.repetir_inicio_minutos) || 30;
   const intervaloMin = Math.max(1, Number(cfg.repetir_intervalo_minutos) || 15);
-  const maxRep = Number(cfg.repetir_max) || 0;
+  // 0 (ou vazio) = ilimitado
+  const maxRep = Math.max(0, Number(cfg.repetir_max) || 0);
 
   let estado = lerEstadoRepeticao(key);
 
@@ -113,8 +119,11 @@ function repeticaoDevida(
   // Primeira detecção da parada: inicia a contagem
   if (!estado) {
     estado = { last: 0, count: 0, lat: pos.lat, lng: pos.lng, desde: agora };
-    try { localStorage.setItem(key, JSON.stringify(estado)); } catch { /* noop */ }
+    salvarRepeticao(key, estado);
   }
+
+  // Já encerrado nesta parada (limite atingido): só volta a rodar após o veículo se mover
+  if (estado.encerrado) return false;
 
   // Tempo parado: usa o maior entre a última posição reportada e o início detectado
   const minutosParado = Math.max(
@@ -123,13 +132,23 @@ function repeticaoDevida(
   );
   if (minutosParado < inicioMin) return false;
 
-  if (maxRep > 0 && estado.count >= maxRep) return false;
+  if (maxRep > 0 && estado.count >= maxRep) {
+    salvarRepeticao(key, { ...estado, encerrado: true });
+    return false;
+  }
   if (estado.last && agora - estado.last < intervaloMin * 60000) return false;
 
-  const novo: RepetirEstado = { ...estado, last: agora, count: estado.count + 1 };
-  try { localStorage.setItem(key, JSON.stringify(novo)); } catch { /* noop */ }
+  const novoCount = estado.count + 1;
+  const atingiuLimite = maxRep > 0 && novoCount >= maxRep;
+  salvarRepeticao(key, { ...estado, last: agora, count: novoCount, encerrado: atingiuLimite });
+  if (atingiuLimite) {
+    console.info(
+      `[logistica] Repetição encerrada para o veículo ${veiculo.placa || veiculo.id}: limite de ${maxRep} disparo(s) atingido.`
+    );
+  }
   return true;
 }
+
 
 
 
