@@ -54,6 +54,8 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [sessoesWhats, setSessoesWhats] = useState<Array<{ id: string; session_name: string; phone_number: string | null; status: string }>>([]);
+  const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
+
 
   
   const nodeData = selectedNode?.data as any;
@@ -86,7 +88,16 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
       const { fetchWhatsappSessions } = await import('@/lib/whatsapp/sessionUsage');
       setSessoesWhats(await fetchWhatsappSessions());
     })();
+
+    (async () => {
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      let q = supabase.from('bot_flows').select('id, name').order('name');
+      if (estabelecimentoId) q = q.eq('estabelecimento_id', estabelecimentoId);
+      const { data } = await q;
+      if (data) setBots(data as Array<{ id: string; name: string }>);
+    })();
   }, []);
+
 
 
   
@@ -205,6 +216,44 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
           </div>
         );
+
+      case 'condicao_repetir_parado':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Disparar após parado por (min)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={config.repetir_inicio_minutos ?? 30}
+                onChange={(e) => updateConfig('repetir_inicio_minutos', parseInt(e.target.value) || 1)}
+              />
+            </div>
+            <div>
+              <Label>Repetir a cada (min)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={config.repetir_intervalo_minutos ?? 15}
+                onChange={(e) => updateConfig('repetir_intervalo_minutos', parseInt(e.target.value) || 1)}
+              />
+            </div>
+            <div>
+              <Label>Máximo de repetições (0 = ilimitado)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={config.repetir_max ?? 0}
+                onChange={(e) => updateConfig('repetir_max', parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enquanto o veículo continuar parado, as ações ligadas a este bloco (ex: enviar WhatsApp) são
+              disparadas repetidamente no intervalo definido. Ao voltar a se mover, a contagem é reiniciada.
+            </p>
+          </div>
+        );
+
 
       case 'acao_marcar_mapa':
         return (
@@ -569,6 +618,44 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
 
             <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="disparar_bot_wpp"
+                  checked={!!config.disparar_bot}
+                  onCheckedChange={(v) => updateConfig('disparar_bot', !!v)}
+                />
+                <div className="space-y-0.5">
+                  <Label htmlFor="disparar_bot_wpp" className="text-sm cursor-pointer">
+                    Disparar também um bot
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Além da mensagem, executa um bot do Bot Builder para o destinatário.
+                  </p>
+                </div>
+              </div>
+
+              {config.disparar_bot && (
+                <Select
+                  value={config.bot_flow_id || ''}
+                  onValueChange={(v) => {
+                    updateConfig('bot_flow_id', v);
+                    updateConfig('bot_flow_nome', bots.find((b) => b.id === v)?.name || null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar bot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bots.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
           </div>
         );
       }

@@ -1,6 +1,7 @@
 export type LogisticaBlockType = 
   | 'iniciar_automacao'
   | 'condicao_parado'
+  | 'condicao_repetir_parado'
   | 'condicao_velocidade'
   | 'condicao_chegada'
   | 'condicao_saida_area'
@@ -14,6 +15,7 @@ export type LogisticaBlockType =
   | 'disparar_push'
   | 'enviar_sms'
   | 'return_response';
+
 
 
 export interface CondicaoTempoParado {
@@ -58,6 +60,15 @@ export interface LogisticaBlockConfig {
   telefone?: string;
   mensagem?: string;
   usar_telefone_cliente?: boolean;
+  // Disparo de bot junto com o WhatsApp
+  disparar_bot?: boolean;
+  bot_flow_id?: string | null;
+  bot_flow_nome?: string | null;
+  // Para condicao_repetir_parado
+  repetir_inicio_minutos?: number;
+  repetir_intervalo_minutos?: number;
+  repetir_max?: number;
+
   // Para acao_notificacao
   titulo_notificacao?: string;
   corpo_notificacao?: string;
@@ -142,10 +153,22 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     outputLabels: ['Sim', 'Não'],
   },
   {
+    type: 'condicao_repetir_parado',
+    label: 'Repetir Enquanto Parado',
+    category: 'condicao',
+    color: '#0EA5E9',
+    icon: 'Repeat',
+    description: 'Após o veículo ficar parado por X min, dispara as ações a cada Y min enquanto permanecer parado',
+    defaultData: { repetir_inicio_minutos: 30, repetir_intervalo_minutos: 15, repetir_max: 0 },
+    outputs: 1,
+    outputLabels: ['Disparar'],
+  },
+  {
     type: 'condicao_velocidade',
     label: 'Velocidade Excedida',
     category: 'condicao',
     color: '#EF4444',
+
     icon: 'Gauge',
     description: 'Dispara quando a velocidade ultrapassar ou ficar abaixo do limite',
     defaultData: { velocidade_km: 80, operador_velocidade: 'maior' },

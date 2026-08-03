@@ -11,7 +11,7 @@ import {
   Fuel, Wrench, Coffee, ShoppingCart, Factory, Warehouse,
   ParkingCircle, TrafficCone, Construction, Timer, Ban,
   CircleCheck, CircleX, Flag, Star, Heart, Zap, LucideIcon,
-  TimerReset, ShieldOff,
+  TimerReset, ShieldOff, Repeat,
   Minimize2, Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -40,6 +40,8 @@ const iconMap: Record<string, any> = {
   MessageSquareText,
   TimerReset,
   ShieldOff,
+  Repeat,
+
 };
 
 

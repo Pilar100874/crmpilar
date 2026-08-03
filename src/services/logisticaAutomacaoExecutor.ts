@@ -49,6 +49,51 @@ function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number)
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+/**
+ * Estado do bloco "Repetir Enquanto Parado" (por automação/nó/veículo).
+ * Guardado em localStorage para sobreviver a recarregamentos e coordenar mapas.
+ */
+const REPETIR_PREFIX = 'logistica:repetir-parado:';
+
+function repeticaoDevida(
+  chaveNode: string,
+  veiculo: VeiculoComStatus,
+  cfg: Record<string, unknown>
+): boolean {
+  const key = `${REPETIR_PREFIX}${chaveNode}:${veiculo.id}`;
+  const agora = Date.now();
+
+  // Veículo em movimento → reinicia a contagem
+  if (veiculo.status !== 'parado' || !veiculo.ultima_posicao) {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+    return false;
+  }
+
+  const inicioMin = Number(cfg.repetir_inicio_minutos) || 30;
+  const intervaloMin = Math.max(1, Number(cfg.repetir_intervalo_minutos) || 15);
+  const maxRep = Number(cfg.repetir_max) || 0;
+
+  const minutosParado = differenceInMinutes(
+    new Date(),
+    new Date(veiculo.ultima_posicao.data_hora)
+  );
+  if (minutosParado < inicioMin) return false;
+
+  let estado: { last: number; count: number } | null = null;
+  try {
+    const raw = localStorage.getItem(key);
+    estado = raw ? JSON.parse(raw) : null;
+  } catch { estado = null; }
+
+  if (estado && maxRep > 0 && estado.count >= maxRep) return false;
+  if (estado && agora - estado.last < intervaloMin * 60000) return false;
+
+  try {
+    localStorage.setItem(key, JSON.stringify({ last: agora, count: (estado?.count || 0) + 1 }));
+  } catch { /* noop */ }
+  return true;
+}
+
 
 // Evaluate automation rules against vehicle data and create markers
 export async function executarAutomacoesLogistica(
@@ -99,10 +144,24 @@ export async function executarAutomacoesLogistica(
       const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
       const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
 
+      // Bloco "Repetir Enquanto Parado": limita as ações aos veículos com disparo devido
+      const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
+      let veiculosAcao = veiculos;
+      let pularAcoes = false;
+      if (repetirNode) {
+        const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
+        veiculosAcao = veiculos.filter(v =>
+          repeticaoDevida(`${automacao.id}:${repetirNode.id}`, v, rc)
+        );
+        pularAcoes = veiculosAcao.length === 0;
+      }
+
       // Find condition nodes
       for (const node of flowObj.nodes) {
         const nodeType = node.data?.type;
         const config = node.data?.config || {};
+
+
 
         // Handle "condicao_parado" - Vehicle stopped condition
         if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
@@ -164,9 +223,13 @@ export async function executarAutomacoesLogistica(
           }
         }
 
+        // Se há bloco "Repetir Enquanto Parado" e nenhum veículo está no momento
+        // do disparo, as ações não são executadas neste ciclo.
+        if (pularAcoes) continue;
+
         // Contexto comum para ações
         const wfCtx = {
-          variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+          variaveis: { veiculos: veiculosAcao, automacao: { id: automacao.id, nome: automacao.nome } },
           estabelecimento_id: estabelecimentoId,
           workflow_tipo: 'logistica' as const,
           origem: 'logistica_automacao',
@@ -175,8 +238,8 @@ export async function executarAutomacoesLogistica(
         // --- Helpers de localização (Google Maps) ---
         const enviarLocalizacao = !!(config as any).enviar_localizacao;
         const posMap: Record<string, { lat: number; lng: number } | null> = {};
-        if (enviarLocalizacao && veiculos.length) {
-          for (const v of veiculos) {
+        if (enviarLocalizacao && veiculosAcao.length) {
+          for (const v of veiculosAcao) {
             const { data: pos } = await supabase
               .from('veiculo_posicoes')
               .select('lat,lng')
@@ -187,6 +250,7 @@ export async function executarAutomacoesLogistica(
             posMap[(v as any).id] = pos ? { lat: (pos as any).lat, lng: (pos as any).lng } : null;
           }
         }
+
         const linkFor = (vid: string) => {
           const p = posMap[vid];
           return p ? `https://www.google.com/maps?q=${p.lat},${p.lng}` : null;
@@ -198,8 +262,26 @@ export async function executarAutomacoesLogistica(
         };
         const appendLocAll = (msg: string) => {
           if (!enviarLocalizacao) return msg;
-          const links = veiculos.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
+          const links = veiculosAcao.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
           return links.length ? `${msg}\n\n📍 Localização atual:\n${links.join('\n')}` : msg;
+        };
+
+        // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
+        const dispararBot = async (telefone: string | null, extras: Record<string, unknown>) => {
+          const cfgAny = config as any;
+          if (!cfgAny.disparar_bot || !cfgAny.bot_flow_id) return;
+          try {
+            await supabase.functions.invoke('executar-bot-flow', {
+              body: {
+                flowId: cfgAny.bot_flow_id,
+                estabelecimentoId,
+                origem: 'logistica_automacao',
+                variaveis: { telefone, automacao_nome: automacao.nome, ...extras },
+              },
+            });
+          } catch (e) {
+            console.error('[logistica] falha ao disparar bot', e);
+          }
         };
 
         // Handle "disparar_push"
@@ -233,9 +315,9 @@ export async function executarAutomacoesLogistica(
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
-              const ids = veiculos.map(v => v.id);
+              const ids = veiculosAcao.map(v => v.id);
               const map = await fetchMotoristasAtuais(ids);
-              for (const veic of veiculos) {
+              for (const veic of veiculosAcao) {
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
@@ -247,16 +329,20 @@ export async function executarAutomacoesLogistica(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
+                await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
               const mensagem = appendLocAll(mensagemTpl);
+              const tel = (config as any).telefone || '';
               await executarBlocoWhatsapp(
-                { telefone: (config as any).telefone || '', mensagem, ...commonWpp },
+                { telefone: tel, mensagem, ...commonWpp },
                 wfCtx
               );
+              await dispararBot(tel || null, {});
             }
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
+
 
 
         // Handle "acao_email"
