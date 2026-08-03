@@ -445,6 +445,200 @@ app.post("/skill/exec", async (req, res) => {
   }
 });
 
+/**
+ * Playwright — automação de navegador headless.
+ *
+ * POST /playwright/status → informa se o Chromium está instalado no container.
+ * POST /playwright/run    → executa um roteiro de passos e devolve o resultado.
+ *
+ * Body de /playwright/run:
+ * {
+ *   url, timeout_ms?, viewport?: {width,height},
+ *   passos: [
+ *     { acao: "ir", url }
+ *     { acao: "clicar", seletor }
+ *     { acao: "preencher", seletor, valor }
+ *     { acao: "esperar", seletor? , ms? }
+ *     { acao: "texto", seletor?, nome? }        → extrai texto
+ *     { acao: "screenshot", nome?, pagina_inteira? }
+ *     { acao: "pdf", nome? }
+ *     { acao: "avaliar", script }               → roda JS na página
+ *   ]
+ * }
+ */
+let playwrightCache;
+async function carregarPlaywright() {
+  if (playwrightCache !== undefined) return playwrightCache;
+  try {
+    const mod = await import("playwright");
+    playwrightCache = mod.chromium ? mod : null;
+  } catch {
+    playwrightCache = null;
+  }
+  return playwrightCache;
+}
+
+app.post("/playwright/status", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const pw = await carregarPlaywright();
+  if (!pw) {
+    return res.json({
+      ok: false,
+      instalado: false,
+      erro: "Pacote playwright não instalado no servidor. Faça o redeploy do runner.",
+    });
+  }
+  try {
+    const navegador = await pw.chromium.launch({ args: ["--no-sandbox"] });
+    const versaoNav = navegador.version();
+    await navegador.close();
+    res.json({ ok: true, instalado: true, navegador: "chromium", versao_navegador: versaoNav });
+  } catch (e) {
+    res.json({
+      ok: false,
+      instalado: true,
+      navegador_pronto: false,
+      erro: `Chromium não pôde ser iniciado: ${e.message}`,
+    });
+  }
+});
+
+app.post("/playwright/run", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const {
+    url,
+    passos = [],
+    timeout_ms: timeoutMs,
+    viewport,
+    user_agent: userAgent,
+  } = req.body || {};
+
+  const pw = await carregarPlaywright();
+  if (!pw) {
+    return res.status(503).json({
+      ok: false,
+      erro: "Playwright indisponível no servidor. Faça o redeploy para instalar o Chromium.",
+    });
+  }
+
+  const limite = Math.min(Number(timeoutMs) || 60000, 5 * 60 * 1000);
+  const iniciou = Date.now();
+  const logs = [];
+  const extraidos = {};
+  const artefatos = [];
+  let navegador;
+
+  try {
+    navegador = await pw.chromium.launch({ args: ["--no-sandbox", "--disable-dev-shm-usage"] });
+    const contexto = await navegador.newContext({
+      viewport: viewport?.width ? { width: Number(viewport.width), height: Number(viewport.height) || 800 } : { width: 1280, height: 800 },
+      ...(userAgent ? { userAgent: String(userAgent) } : {}),
+    });
+    contexto.setDefaultTimeout(limite);
+    const pagina = await contexto.newPage();
+    pagina.on("console", (m) => logs.push(`[console:${m.type()}] ${m.text()}`.slice(0, 2000)));
+
+    if (url) {
+      await pagina.goto(String(url), { waitUntil: "domcontentloaded", timeout: limite });
+      logs.push(`Abriu ${url}`);
+    }
+
+    let i = 0;
+    for (const passo of passos) {
+      i += 1;
+      const acao = String(passo?.acao ?? "");
+      const nome = String(passo?.nome || `${acao}-${i}`);
+      if (Date.now() - iniciou > limite) {
+        logs.push("Tempo limite atingido; passos restantes ignorados.");
+        break;
+      }
+      switch (acao) {
+        case "ir":
+          await pagina.goto(String(passo.url), { waitUntil: "domcontentloaded" });
+          logs.push(`Abriu ${passo.url}`);
+          break;
+        case "clicar":
+          await pagina.click(String(passo.seletor));
+          logs.push(`Clicou em ${passo.seletor}`);
+          break;
+        case "preencher":
+          await pagina.fill(String(passo.seletor), String(passo.valor ?? ""));
+          logs.push(`Preencheu ${passo.seletor}`);
+          break;
+        case "esperar":
+          if (passo.seletor) {
+            await pagina.waitForSelector(String(passo.seletor));
+            logs.push(`Esperou ${passo.seletor}`);
+          } else {
+            await pagina.waitForTimeout(Math.min(Number(passo.ms) || 1000, 30000));
+            logs.push(`Esperou ${passo.ms ?? 1000}ms`);
+          }
+          break;
+        case "texto": {
+          const valor = passo.seletor
+            ? await pagina.textContent(String(passo.seletor))
+            : await pagina.innerText("body");
+          extraidos[nome] = (valor ?? "").trim().slice(0, 20000);
+          logs.push(`Extraiu texto em ${nome}`);
+          break;
+        }
+        case "screenshot": {
+          const buffer = await pagina.screenshot({ fullPage: Boolean(passo.pagina_inteira) });
+          artefatos.push({
+            nome: `${nome}.png`,
+            tipo: "image/png",
+            tamanho_bytes: buffer.length,
+            base64: buffer.toString("base64"),
+          });
+          logs.push(`Capturou ${nome}.png`);
+          break;
+        }
+        case "pdf": {
+          const buffer = await pagina.pdf({ format: "A4", printBackground: true });
+          artefatos.push({
+            nome: `${nome}.pdf`,
+            tipo: "application/pdf",
+            tamanho_bytes: buffer.length,
+            base64: buffer.toString("base64"),
+          });
+          logs.push(`Gerou ${nome}.pdf`);
+          break;
+        }
+        case "avaliar": {
+          const valor = await pagina.evaluate(String(passo.script));
+          extraidos[nome] = typeof valor === "string" ? valor.slice(0, 20000) : valor;
+          logs.push(`Avaliou script em ${nome}`);
+          break;
+        }
+        default:
+          logs.push(`Ação desconhecida ignorada: ${acao}`);
+      }
+    }
+
+    const resultado = {
+      ok: true,
+      url_final: pagina.url(),
+      titulo: await pagina.title().catch(() => ""),
+      logs,
+      extraidos,
+      artefatos,
+      duracao_ms: Date.now() - iniciou,
+    };
+    await navegador.close();
+    res.json(resultado);
+  } catch (e) {
+    if (navegador) await navegador.close().catch(() => {});
+    res.status(500).json({
+      ok: false,
+      erro: e.message,
+      logs,
+      extraidos,
+      artefatos,
+      duracao_ms: Date.now() - iniciou,
+    });
+  }
+});
+
 app.post("/mcp/probe", async (req, res) => {
   if (!autenticar(req, res)) return;
   const { endpoint, cabecalhos, timeout_ms } = req.body || {};

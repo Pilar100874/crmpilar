@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { agentRunner, type RunResumo, type RunsResult } from "@/lib/aip/runner";
+import { PlaywrightPanel } from "@/components/ia-platform/PlaywrightPanel";
 
 const STATUS_ESTILO: Record<string, string> = {
   executando: "bg-primary/10 text-primary border-primary/30",
@@ -341,6 +342,8 @@ export default function ServidorMonitorPage() {
               </CardContent>
             </Card>
           )}
+
+          <PlaywrightPanel />
         </>
       )}
 
