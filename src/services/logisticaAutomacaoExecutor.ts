@@ -398,8 +398,11 @@ export async function executarAutomacoesLogistica(
             const whatsappSessionName = (config as any).whatsappSessionName || null;
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
+            const textoAntes = String((config as any).texto_antes || '').trim();
+            const mediaUrl = String((config as any).media_url || '').trim() || undefined;
+            const comPrefixo = (m: string) => (textoAntes ? `${textoAntes}\n\n${m}` : m);
 
-            const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId };
+            const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId, mediaUrl };
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
@@ -412,7 +415,7 @@ export async function executarAutomacoesLogistica(
                 let mensagem = mensagemTpl
                   .replace(/\{placa\}/g, (veic as any).placa || '')
                   .replace(/\{motorista\}/g, mot.nome || '');
-                mensagem = appendLocOne(mensagem, (veic as any).id);
+                mensagem = comPrefixo(appendLocOne(mensagem, (veic as any).id));
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
@@ -420,7 +423,7 @@ export async function executarAutomacoesLogistica(
                 await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
-              const mensagem = appendLocAll(mensagemTpl);
+              const mensagem = comPrefixo(appendLocAll(mensagemTpl));
               const listaRaw: string[] = Array.isArray((config as any).telefones) && (config as any).telefones.length
                 ? (config as any).telefones
                 : [(config as any).telefone || ''];
@@ -434,6 +437,7 @@ export async function executarAutomacoesLogistica(
                 await dispararBot(tel || null, {});
               }
             }
+
 
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
