@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Download, Loader2, ShieldCheck } from "lucide-react";
 import { detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
+import { MediaPlayerInline } from "@/components/ia-platform/MediaPlayerInline";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
 
 export interface ArtefatoLightboxItem {
