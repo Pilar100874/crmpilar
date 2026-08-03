@@ -283,7 +283,7 @@ export default function ConfigServidorPage() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Não foi possível conectar</AlertTitle>
               <AlertDescription className="break-words">
-                {saude.motivo ?? saude.erro ?? "Erro desconhecido ao contatar o servidor."}
+                {String(saude.motivo ?? saude.erro ?? "Erro desconhecido ao contatar o servidor.")}
               </AlertDescription>
             </Alert>
           )}
