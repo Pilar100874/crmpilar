@@ -134,7 +134,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
       if (validVeiculos.length === 1) {
         map.setView(bounds.getCenter(), 16, { animate: false });
       } else {
-        const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(24, 24));
+        const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(16, 16));
         map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
       }
     }
