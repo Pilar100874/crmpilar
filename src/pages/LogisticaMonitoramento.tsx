@@ -648,11 +648,13 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               <LazyLogisticaMap
                 veiculos={veiculosComPosicao}
                 paradasMarcadas={paradasMarcadas}
-                onVeiculoClick={(v) => zoomToVehicle(v.id)}
+                routes={rotaCoords ? [{ coordinates: rotaCoords, color: '#2563eb' }] : undefined}
+                currentMarker={mapaFoco ? { ...mapaFoco, color: '#2563eb' } : undefined}
+                onVeiculoClick={(v) => abrirDetalhes(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
-                fitBounds={!pinnedVeiculoId}
+                fitBounds={!pinnedVeiculoId && !rotaCoords}
                 fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}
                 compactIcons
               />
