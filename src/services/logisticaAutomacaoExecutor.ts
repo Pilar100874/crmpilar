@@ -424,13 +424,20 @@ export async function executarAutomacoesLogistica(
               }
             } else {
               const mensagem = appendLocAll(mensagemTpl);
-              const tel = (config as any).telefone || '';
-              await executarBlocoWhatsapp(
-                { telefone: tel, mensagem, ...commonWpp },
-                wfCtx
-              );
-              await dispararBot(tel || null, {});
+              const listaRaw: string[] = Array.isArray((config as any).telefones) && (config as any).telefones.length
+                ? (config as any).telefones
+                : [(config as any).telefone || ''];
+              const lista = Array.from(new Set(listaRaw.map((t) => String(t || '').trim()).filter(Boolean)));
+              if (!lista.length) lista.push('');
+              for (const tel of lista) {
+                await executarBlocoWhatsapp(
+                  { telefone: tel, mensagem, ...commonWpp },
+                  wfCtx
+                );
+                await dispararBot(tel || null, {});
+              }
             }
+
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
 
