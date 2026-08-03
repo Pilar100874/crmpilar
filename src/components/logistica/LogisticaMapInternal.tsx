@@ -230,6 +230,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
   const initialBoundsFittedRef = useRef(false);
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
+  // Assinaturas para evitar recriar ícones/DOM a cada atualização (causa de "piscar")
+  const iconSigRef = useRef<Map<string, string>>(new Map());
+  const paradaSigRef = useRef<Map<string, string>>(new Map());
+  const ultimoEnquadramentoRef = useRef<string>('');
+
 
   // Auto-enquadramento: pausa quando o usuário interage (zoom, arrasto, seleção)
   const [autoPausado, setAutoPausado] = useState(false);
@@ -251,10 +256,22 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   }, []);
 
   // Reenquadra o mapa no maior zoom possível, mantendo tudo centralizado na área visível
-  const enquadrarTudo = useCallback(() => {
+  const enquadrarTudo = useCallback((forcar = false) => {
     const map = mapRef.current;
     const bounds = ultimoBoundsRef.current;
     if (!map || !bounds || !fitBounds || autoPausadoRef.current) return;
+
+    // Evita reenquadrar (e "piscar") quando nada mudou de forma relevante
+    const sig = [
+      bounds.getSouth().toFixed(4),
+      bounds.getWest().toFixed(4),
+      bounds.getNorth().toFixed(4),
+      bounds.getEast().toFixed(4),
+      Math.round(map.getSize().x),
+      Math.round(map.getSize().y),
+    ].join('|');
+    if (!forcar && sig === ultimoEnquadramentoRef.current) return;
+    ultimoEnquadramentoRef.current = sig;
 
     movimentoProgramaticoRef.current = true;
     enquadrarNoMapa(map, bounds, {
@@ -268,12 +285,13 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     }, 500);
   }, [fitBounds, fitBoundsPadding]);
 
+
   const retomarAuto = useCallback(() => {
     autoPausadoRef.current = false;
     setAutoPausado(false);
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ animate: false });
-      enquadrarTudo();
+      enquadrarTudo(true);
     });
   }, [enquadrarTudo]);
 
@@ -365,6 +383,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       if (!currentIds.has(id)) {
         marker.remove();
         currentMarkers.delete(id);
+        iconSigRef.current.delete(id);
       }
     });
 
@@ -372,25 +391,44 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     veiculosComPosicao.forEach(veiculo => {
       const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
+      const tempo = veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null;
 
-      const icone = createVeiculoIcon(
+      // Assinatura do visual: só recria o ícone quando algo realmente muda
+      const sig = [
+        veiculo.status,
+        compactIcons ? 'c' : 'n',
+        veiculo.cor || '',
+        veiculo.tipo_veiculo || '',
+        String(veiculo.ultima_posicao?.ignicao),
+        veiculo.placa || '',
+        tempo ? `${tempo.texto}|${tempo.cor}` : '',
+      ].join('~');
+
+      const criarIcone = () => createVeiculoIcon(
         veiculo.status,
         compactIcons,
         veiculo.cor,
         veiculo.tipo_veiculo,
         veiculo.ultima_posicao?.ignicao,
         veiculo.placa,
-        veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null,
+        tempo,
       );
 
-
       if (existingMarker) {
-        existingMarker.setLatLng(pos);
-        existingMarker.setIcon(icone);
+        const atual = existingMarker.getLatLng();
+        if (Math.abs(atual.lat - veiculo.ultima_posicao!.lat) > 1e-7 || Math.abs(atual.lng - veiculo.ultima_posicao!.lng) > 1e-7) {
+          existingMarker.setLatLng(pos);
+        }
+        if (iconSigRef.current.get(veiculo.id) !== sig) {
+          existingMarker.setIcon(criarIcone());
+          iconSigRef.current.set(veiculo.id, sig);
+        }
       } else {
-        const marker = L.marker(pos, { icon: icone, riseOnHover: true })
+        iconSigRef.current.set(veiculo.id, sig);
+        const marker = L.marker(pos, { icon: criarIcone(), riseOnHover: true })
           .addTo(map)
           .bindPopup(`
+
             <div class="text-sm">
               <p class="font-bold">${veiculo.placa}</p>
               <p>${veiculo.descricao || 'Sem descrição'}</p>
@@ -515,6 +553,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       if (!currentIds.has(id)) {
         marker.remove();
         currentParadasMarkers.delete(id);
+        paradaSigRef.current.delete(id);
       }
     });
 
@@ -526,11 +565,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const cor = parada.cor_icone_parada || '#EAB308';
       const icone = parada.icone_parada || 'Pause';
       const legenda = parada.legenda_parada || 'Veículo Parado';
+      const sig = `${cor}~${icone}~${compactIcons ? 'c' : 'n'}`;
 
       if (existingMarker) {
-        // Update position and icon
-        existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createParadaIcon(cor, icone, compactIcons));
+        const atual = existingMarker.getLatLng();
+        if (Math.abs(atual.lat - parada.lat) > 1e-7 || Math.abs(atual.lng - parada.lng) > 1e-7) {
+          existingMarker.setLatLng(pos);
+        }
+        if (paradaSigRef.current.get(parada.id) !== sig) {
+          existingMarker.setIcon(createParadaIcon(cor, icone, compactIcons));
+          paradaSigRef.current.set(parada.id, sig);
+        }
         // Update popup content
         existingMarker.setPopupContent(`
           <div class="text-sm p-1">
@@ -542,6 +587,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           </div>
         `);
       } else {
+        paradaSigRef.current.set(parada.id, sig);
+
         const marker = L.marker(pos, { 
           icon: createParadaIcon(cor, icone, compactIcons),
           zIndexOffset: 1000 // Paradas ficam acima dos veículos
@@ -686,8 +733,25 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         }
         @keyframes tempoParadoBlink {
           0%, 49% { opacity: 1; }
-          50%, 100% { opacity: .15; }
+          50%, 100% { opacity: .35; }
         }
+
+        /* Movimento suave dos marcadores entre atualizações de posição */
+        .logistica-map-container .leaflet-marker-icon {
+          transition: transform .8s linear;
+          will-change: transform;
+        }
+        .logistica-map-container.leaflet-zoom-anim .leaflet-marker-icon,
+        .logistica-map-container .leaflet-zoom-anim .leaflet-marker-icon,
+        .logistica-map-container .leaflet-drag-target {
+          transition: none !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .logistica-map-container .leaflet-marker-icon { transition: none; }
+          .logistica-map-container .custom-vehicle-icon * { animation: none !important; }
+        }
+
+
 
         .logistica-map-container .leaflet-control-container .leaflet-top.leaflet-left {
           top: auto !important;

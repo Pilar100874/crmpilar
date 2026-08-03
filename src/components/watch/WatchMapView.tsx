@@ -75,6 +75,8 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const iconSigRef = useRef<Map<string, string>>(new Map());
+  const ultimoEnquadramentoRef = useRef<string>('');
 
   const [autoPausado, setAutoPausado] = useState(false);
   const autoPausadoRef = useRef(false);
@@ -86,10 +88,20 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     setAutoPausado(true);
   }, []);
 
-  const enquadrarTudo = useCallback(() => {
+  const enquadrarTudo = useCallback((forcar = false) => {
     const map = mapRef.current;
     const bounds = ultimoBoundsRef.current;
     if (!map || !bounds || autoPausadoRef.current) return;
+    const sig = [
+      bounds.getSouth().toFixed(4),
+      bounds.getWest().toFixed(4),
+      bounds.getNorth().toFixed(4),
+      bounds.getEast().toFixed(4),
+      Math.round(map.getSize().x),
+      Math.round(map.getSize().y),
+    ].join('|');
+    if (!forcar && sig === ultimoEnquadramentoRef.current) return;
+    ultimoEnquadramentoRef.current = sig;
     movimentoProgramaticoRef.current = true;
     enquadrarNoMapa(map, bounds, {
       paddingTopLeft: [8, 8],
@@ -100,12 +112,13 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     window.setTimeout(() => { movimentoProgramaticoRef.current = false; }, 500);
   }, []);
 
+
   const retomarAuto = useCallback(() => {
     autoPausadoRef.current = false;
     setAutoPausado(false);
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ animate: false });
-      enquadrarTudo();
+      enquadrarTudo(true);
     });
   }, [enquadrarTudo]);
 
@@ -164,6 +177,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
       if (!currentIds.has(id)) {
         marker.remove();
         currentMarkers.delete(id);
+        iconSigRef.current.delete(id);
       }
     });
 
@@ -171,16 +185,23 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     validVeiculos.forEach(veiculo => {
       const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
-
-      const icone = createVehicleIcon(veiculo.status, compact, veiculo.placa);
+      const sig = `${veiculo.status}~${compact ? 'c' : 'n'}~${veiculo.placa || ''}`;
 
       if (existingMarker) {
-        existingMarker.setLatLng(pos);
-        existingMarker.setIcon(icone);
+        const atual = existingMarker.getLatLng();
+        if (Math.abs(atual.lat - veiculo.ultima_posicao!.lat) > 1e-7 || Math.abs(atual.lng - veiculo.ultima_posicao!.lng) > 1e-7) {
+          existingMarker.setLatLng(pos);
+        }
+        if (iconSigRef.current.get(veiculo.id) !== sig) {
+          existingMarker.setIcon(createVehicleIcon(veiculo.status, compact, veiculo.placa));
+          iconSigRef.current.set(veiculo.id, sig);
+        }
       } else {
-        const marker = L.marker(pos, { icon: icone, riseOnHover: true })
+        iconSigRef.current.set(veiculo.id, sig);
+        const marker = L.marker(pos, { icon: createVehicleIcon(veiculo.status, compact, veiculo.placa), riseOnHover: true })
           .addTo(map)
           .bindPopup(`
+
             <div style="font-size: 10px; line-height: 1.2; min-width: 80px;">
               <strong>${veiculo.placa}</strong>
               ${veiculo.motorista ? `<br/>${veiculo.motorista}` : ''}
@@ -267,6 +288,14 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
         .leaflet-container {
           background: #1a1a2e;
         }
+        .leaflet-container .leaflet-marker-icon {
+          transition: transform .8s linear;
+          will-change: transform;
+        }
+        .leaflet-zoom-anim .leaflet-marker-icon {
+          transition: none !important;
+        }
+
         .leaflet-popup-content-wrapper {
           border-radius: 8px;
           padding: 2px;
