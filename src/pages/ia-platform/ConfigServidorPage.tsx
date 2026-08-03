@@ -9,15 +9,17 @@ import { Separator } from "@/components/ui/separator";
 import {
   AlertTriangle,
   CheckCircle2,
+  ExternalLink,
   Loader2,
+  Lock,
   PlugZap,
   Save,
   SendHorizonal,
   ShieldCheck,
   Trash2,
-  Wand2,
   XCircle,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { agentRunner } from "@/lib/aip/runner";
