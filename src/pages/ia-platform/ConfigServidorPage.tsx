@@ -6,9 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2, Wand2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  PlugZap,
+  Save,
+  SendHorizonal,
+  ShieldCheck,
+  Trash2,
+  Wand2,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { agentRunner } from "@/lib/aip/runner";
 
 interface ItemConfig {
   chave: string;
@@ -97,6 +109,28 @@ export default function ConfigServidorPage() {
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [testando, setTestando] = useState(false);
+  const [saude, setSaude] = useState<Record<string, unknown> | null>(null);
+
+  const testarConexao = async (silencioso = false) => {
+    setTestando(true);
+    try {
+      const r = await agentRunner.health();
+      setSaude(r ?? { ok: false, motivo: "Sem resposta do servidor" });
+      if (!silencioso) {
+        r?.ok
+          ? toast.success("Servidor online")
+          : toast.warning(r?.motivo ?? "Servidor não respondeu corretamente");
+      }
+    } catch (e) {
+      setSaude({ ok: false, motivo: (e as Error).message });
+      if (!silencioso) toast.error(`Falha na conexão: ${(e as Error).message}`);
+    } finally {
+      setTestando(false);
+    }
+  };
+
+
 
   const preencherAuto = (salvos: ItemConfig[], avisar = false) => {
     const sug = sugestoesAutomaticas();
@@ -198,6 +232,63 @@ export default function ConfigServidorPage() {
           nenhum valor volta em claro para o navegador.
         </AlertDescription>
       </Alert>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <PlugZap className="h-4 w-4 text-primary" /> Conexão com o backend
+          </CardTitle>
+          <CardDescription>
+            Verifique se o servidor de execução está online e se as chaves essenciais foram
+            reconhecidas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => testarConexao()} disabled={testando}>
+              {testando ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlugZap className="mr-2 h-4 w-4" />
+              )}
+              Testar conexão
+            </Button>
+            {saude === null ? (
+              <Badge variant="outline">não testado</Badge>
+            ) : saude.ok ? (
+              <Badge className="gap-1 bg-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Online
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="gap-1">
+                <XCircle className="h-3.5 w-3.5" /> Offline
+              </Badge>
+            )}
+            {saude?.ok && saude.versao ? (
+              <Badge variant="secondary">versão {String(saude.versao)}</Badge>
+            ) : null}
+            {saude?.ok && typeof saude.anthropic === "boolean" && (
+              <Badge variant={saude.anthropic ? "secondary" : "outline"}>
+                Anthropic {saude.anthropic ? "ok" : "sem chave"}
+              </Badge>
+            )}
+            {saude?.ok && typeof saude.supabase === "boolean" && (
+              <Badge variant={saude.supabase ? "secondary" : "outline"}>
+                Backend {saude.supabase ? "ok" : "sem chave"}
+              </Badge>
+            )}
+          </div>
+          {saude && !saude.ok && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Não foi possível conectar</AlertTitle>
+              <AlertDescription className="break-words">
+                {String(saude.motivo ?? saude.erro ?? "Erro desconhecido ao contatar o servidor.")}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
