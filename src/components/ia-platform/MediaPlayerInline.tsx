@@ -1,6 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Music, Video } from "lucide-react";
+import { obterPosicaoMidia, salvarPosicaoMidia } from "@/lib/aip/posicaoMidia";
+
 
 /** Formata segundos em mm:ss (ou h:mm:ss). */
 export function formatarTempo(segundos?: number | null): string {
@@ -27,14 +29,32 @@ interface Props {
 export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-full" }: Props) {
   const ref = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
-  const [atual, setAtual] = useState(0);
+  const [atual, setAtual] = useState(() => obterPosicaoMidia(url));
   const [velocidade, setVelocidade] = useState(1);
   const [erro, setErro] = useState(false);
 
   const aoCarregar = (e: React.SyntheticEvent<HTMLMediaElement>) => {
-    setDuracao(e.currentTarget.duration);
+    const el = e.currentTarget;
+    setDuracao(el.duration);
     setErro(false);
+    // Retoma de onde parou (inline <-> tela cheia).
+    const salvo = obterPosicaoMidia(url);
+    if (salvo > 0.5 && (!isFinite(el.duration) || salvo < el.duration - 0.5)) {
+      try {
+        el.currentTime = salvo;
+      } catch {
+        /* alguns formatos não permitem seek imediato */
+      }
+    }
   };
+
+  // Guarda a última posição ao desmontar (troca de visualização).
+  useEffect(() => {
+    return () => {
+      const el = ref.current;
+      if (el) salvarPosicaoMidia(url, el.currentTime);
+    };
+  }, [url]);
 
   const mudarVelocidade = () => {
     const opcoes = [1, 1.25, 1.5, 2, 0.5];
@@ -49,10 +69,16 @@ export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-f
     preload: "metadata" as const,
     playsInline: true,
     onLoadedMetadata: aoCarregar,
-    onTimeUpdate: (e: React.SyntheticEvent<HTMLMediaElement>) =>
-      setAtual(e.currentTarget.currentTime),
+    onTimeUpdate: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      setAtual(e.currentTarget.currentTime);
+      salvarPosicaoMidia(url, e.currentTarget.currentTime);
+    },
+    onPause: (e: React.SyntheticEvent<HTMLMediaElement>) =>
+      salvarPosicaoMidia(url, e.currentTarget.currentTime),
     onError: () => setErro(true),
   };
+
+
 
   return (
     <div className="w-full">
