@@ -237,7 +237,13 @@ export async function executarAutomacoesLogistica(
 
         // Handle "condicao_parado" - Vehicle stopped condition
         if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
-          const tempoMinutos = config.tempo_minutos || 30;
+          const condicoesTempo: CondicaoTempoParado[] = Array.isArray(config.condicoes_tempo) && config.condicoes_tempo.length
+            ? (config.condicoes_tempo as CondicaoTempoParado[])
+            : config.tempo_minutos
+              ? [{ tempo_minutos: Number(config.tempo_minutos) }]
+              : [{ tempo_minutos: 30 }];
+          const tempoMinutos = Math.min(...condicoesTempo.map(c => Number(c.tempo_minutos) || 30));
+          
           
           for (const veiculo of veiculos) {
             if (veiculo.status === 'parado' && veiculo.ultima_posicao) {
