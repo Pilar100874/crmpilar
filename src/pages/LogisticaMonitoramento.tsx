@@ -21,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { executarAutomacoesLogistica, limparParadasAntigas } from '@/services/logisticaAutomacaoExecutor';
+import { rodarAutomacoesLogistica } from '@/lib/logistica/automacaoRunner';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { fetchMotoristasAtuais, formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
@@ -313,19 +313,10 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
 
       // Execute automations after fetching vehicles
       if (estabelecimentoId) {
-        const resultados = await executarAutomacoesLogistica(veiculosComStatus, estabelecimentoId);
-        
-        // Get list of vehicles that triggered automations
-        const veiculosComMarcacao = resultados.map(r => r.veiculo_id);
-        
-        // Clean up markers for vehicles that no longer meet conditions
-        await limparParadasAntigas(veiculosComMarcacao, estabelecimentoId);
-        
-        // Refresh paradas marcadas
+        const executadas = await rodarAutomacoesLogistica(veiculosComStatus, estabelecimentoId);
         await fetchParadasMarcadas();
-        
-        if (resultados.length > 0) {
-          console.log(`✅ ${resultados.length} marcações de automação executadas`);
+        if (executadas > 0) {
+          console.log(`✅ ${executadas} marcações de automação executadas`);
         }
       }
     } catch (error) {

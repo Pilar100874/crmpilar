@@ -9,6 +9,7 @@ import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
+import { rodarAutomacoesLogistica } from '@/lib/logistica/automacaoRunner';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { List, X, Info, PanelLeftClose, PanelLeft, Car, Activity, Clock, WifiOff } from 'lucide-react';
@@ -160,6 +161,10 @@ const LogisticaDashboard: React.FC = () => {
       }
 
       setVeiculos(veiculosComPosicao);
+
+      // Automações de logística também rodam neste mapa
+      const executadas = await rodarAutomacoesLogistica(veiculosComPosicao, estabelecimentoId);
+      if (executadas > 0) await fetchParadasMarcadas();
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Erro ao carregar veículos');

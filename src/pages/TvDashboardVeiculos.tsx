@@ -19,6 +19,7 @@ import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { rodarAutomacoesLogistica } from '@/lib/logistica/automacaoRunner';
 import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
@@ -276,6 +277,8 @@ export default function TvDashboardVeiculos() {
 
       setVeiculos(veiculosComMotorista);
       setLastUpdate(new Date());
+      // Automações de logística rodam em qualquer mapa (throttle global evita duplicidade)
+      await rodarAutomacoesLogistica(veiculosComMotorista, estabelecimentoId);
       await Promise.all([
         fetchParadasMarcadas(),
         fetchKmRodadosHoje(),
