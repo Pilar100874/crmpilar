@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Chrome, Play, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Chrome, Play, Loader2, CheckCircle2, XCircle, Clock, Ban } from "lucide-react";
 import { toast } from "sonner";
 import {
   agentRunner,
+  type PlaywrightJob,
   type PlaywrightPasso,
   type PlaywrightRunResult,
   type PlaywrightStatus,
@@ -24,6 +26,15 @@ const EXEMPLO = JSON.stringify(
   null,
   2,
 );
+
+const ROTULO_STATUS: Record<string, string> = {
+  fila: "Na fila",
+  rodando: "Executando",
+  concluido: "Concluído",
+  erro: "Falhou",
+  cancelado: "Cancelado",
+};
+
 
 /**
  * Painel de automação de navegador (Playwright) executada no servidor remoto.
