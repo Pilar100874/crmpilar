@@ -1,4 +1,4 @@
-import { MapPin, Gauge, Clock, Navigation, MessageSquare, Bell, Mail, Map } from "lucide-react";
+import { MapPin, Gauge, Clock, Navigation, MessageSquare, Bell, Mail, Map, Timer, ShieldOff } from "lucide-react";
 import { WorkflowPreviewZoom } from "@/components/workflow/WorkflowPreviewZoom";
 
 export const LOGISTICA_PREVIEW_SUPPORTED = new Set<string>([
@@ -7,11 +7,14 @@ export const LOGISTICA_PREVIEW_SUPPORTED = new Set<string>([
   "condicao_chegada",
   "condicao_saida_area",
   "condicao_horario",
+  "condicao_zona_isenta",
   "acao_marcar_mapa",
+  "acao_tempo_parado_mapa",
   "acao_whatsapp",
   "acao_notificacao",
   "acao_email",
 ]);
+
 
 const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
 const DIAS_LBL = ["D", "S", "T", "Q", "Q", "S", "S"];
@@ -120,7 +123,47 @@ export function LogisticaLivePreview({ type, config }: { type: string; config: a
     return <WorkflowPreviewZoom title="Horário" thumb={thumb} />;
   }
 
+  if (type === "condicao_zona_isenta") {
+    const thumb = (
+      <div className="rounded-lg border bg-card p-2.5">
+        <div className="flex items-center gap-1.5 mb-1">
+          <ShieldOff className="w-3 h-3 text-teal-600" />
+          <span className="text-[11px] font-semibold">{cfg.zona_nome || "Zona isenta"}</span>
+        </div>
+        <div className="text-[10px] text-muted-foreground truncate">📍 {cfg.zona_endereco || "(endereço)"}</div>
+        <div className="text-[10px] text-muted-foreground">Raio: {cfg.zona_raio_metros ?? 200}m — sem marcação de parada</div>
+      </div>
+    );
+    return <WorkflowPreviewZoom title="Zona Isenta" thumb={thumb} />;
+  }
+
+  if (type === "acao_tempo_parado_mapa") {
+    const cor = cfg.cor_tempo || "#F43F5E";
+    const thumb = (
+      <div className="rounded-lg border bg-card p-2.5">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Timer className="w-3 h-3" style={{ color: cor }} />
+          <span className="text-[11px] font-semibold">Tempo parado no mapa</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-amber-500 border-2 border-white shadow" />
+          <div className="flex flex-col gap-1 items-start">
+            <span className="text-[9px] font-bold text-white bg-slate-800 px-1.5 rounded">ABC1D23</span>
+            <span
+              className={`text-[9px] font-bold text-white px-1.5 rounded ${cfg.piscar_tempo !== false ? "animate-pulse" : ""}`}
+              style={{ backgroundColor: cor }}
+            >
+              ⏱ {cfg.formato_tempo === "minutos" ? "90 min" : "1:30hr"}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+    return <WorkflowPreviewZoom title="Tempo Parado" thumb={thumb} />;
+  }
+
   if (type === "acao_marcar_mapa") {
+
     const thumb = (
       <div className="rounded-lg border bg-card p-2.5">
         <div className="flex items-center gap-1.5 mb-1.5">

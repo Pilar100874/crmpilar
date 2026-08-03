@@ -236,6 +236,101 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           </div>
         );
 
+      case 'acao_tempo_parado_mapa':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Cor do tempo exibido</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="color"
+                  className="h-9 w-16 p-1"
+                  value={config.cor_tempo || '#F43F5E'}
+                  onChange={(e) => updateConfig('cor_tempo', e.target.value)}
+                />
+                <Input
+                  value={config.cor_tempo || '#F43F5E'}
+                  onChange={(e) => updateConfig('cor_tempo', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Formato</Label>
+              <Select
+                value={config.formato_tempo || 'hhmm'}
+                onValueChange={(v) => updateConfig('formato_tempo', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hhmm">Horas e minutos (ex: 1:30hr)</SelectItem>
+                  <SelectItem value="minutos">Somente minutos (ex: 90 min)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <Checkbox
+                id="piscar_tempo"
+                checked={config.piscar_tempo !== false}
+                onCheckedChange={(v) => updateConfig('piscar_tempo', !!v)}
+              />
+              <div className="space-y-0.5">
+                <Label htmlFor="piscar_tempo" className="text-sm cursor-pointer">Piscar para chamar atenção</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  O tempo fica piscando abaixo do nome/placa do veículo no mapa.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground border-t pt-3">
+              Ligue este bloco após a condição "Veículo Parado". A marcação é removida automaticamente assim que o veículo voltar a se mover.
+            </p>
+          </div>
+        );
+
+      case 'condicao_zona_isenta':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Nome da zona</Label>
+              <Input
+                value={config.zona_nome || ''}
+                onChange={(e) => updateConfig('zona_nome', e.target.value)}
+                placeholder="Ex: Pátio da empresa"
+              />
+            </div>
+            <div>
+              <Label>Endereço central</Label>
+              <AddressAutocomplete
+                value={config.zona_endereco || ''}
+                onChange={(value) => updateConfig('zona_endereco', value)}
+                onSelect={(address, lat, lng) => {
+                  onUpdateNode(selectedNode.id, {
+                    config: { ...config, zona_endereco: address, zona_lat: lat, zona_lng: lng },
+                  });
+                }}
+                placeholder="Digite o endereço..."
+              />
+            </div>
+            <div>
+              <Label>Raio (metros)</Label>
+              <Input
+                type="number"
+                value={config.zona_raio_metros ?? 200}
+                onChange={(e) => updateConfig('zona_raio_metros', parseInt(e.target.value) || 200)}
+                min={10}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Veículos parados dentro deste raio não geram marcações no mapa nem alertas de parada.
+              </p>
+            </div>
+          </div>
+        );
+
+
       case 'condicao_velocidade':
         return (
           <div className="space-y-4">

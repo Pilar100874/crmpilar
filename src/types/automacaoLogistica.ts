@@ -5,13 +5,16 @@ export type LogisticaBlockType =
   | 'condicao_chegada'
   | 'condicao_saida_area'
   | 'condicao_horario'
+  | 'condicao_zona_isenta'
   | 'acao_marcar_mapa'
+  | 'acao_tempo_parado_mapa'
   | 'acao_whatsapp'
   | 'acao_notificacao'
   | 'acao_email'
   | 'disparar_push'
   | 'enviar_sms'
   | 'return_response';
+
 
 export interface CondicaoTempoParado {
   tempo_minutos: number;
@@ -25,6 +28,17 @@ export interface LogisticaBlockConfig {
   icone_parada?: string;
   cor_icone_parada?: string;
   legenda_parada?: string;
+  // Para acao_tempo_parado_mapa
+  cor_tempo?: string;
+  piscar_tempo?: boolean;
+  formato_tempo?: 'hhmm' | 'minutos';
+  // Para condicao_zona_isenta
+  zona_nome?: string;
+  zona_endereco?: string;
+  zona_lat?: number;
+  zona_lng?: number;
+  zona_raio_metros?: number;
+
   // Para condicao_velocidade
   velocidade_km?: number;
   operador_velocidade?: 'maior' | 'menor';
@@ -93,6 +107,8 @@ export interface ParadaMarcada {
   data_inicio: string;
   data_fim: string | null;
   ativa: boolean;
+  mostrar_tempo?: boolean;
+
   automacao_id: string | null;
   created_at: string;
   // Dados do veículo para exibição
@@ -168,8 +184,30 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     outputs: 2,
     outputLabels: ['Dentro', 'Fora'],
   },
+  {
+    type: 'condicao_zona_isenta',
+    label: 'Zona Isenta (Raio)',
+    category: 'condicao',
+    color: '#14B8A6',
+    icon: 'ShieldOff',
+    description: 'Dentro do raio deste endereço nenhuma marcação de parada é criada (ex: pátio da empresa)',
+    defaultData: { zona_nome: 'Empresa', zona_raio_metros: 200 },
+    outputs: 2,
+    outputLabels: ['Fora da zona', 'Dentro da zona'],
+  },
   // Ações
   {
+    type: 'acao_tempo_parado_mapa',
+    label: 'Tempo Parado no Mapa',
+    category: 'acao',
+    color: '#F43F5E',
+    icon: 'TimerReset',
+    description: 'Mostra no mapa, abaixo do nome do veículo, há quanto tempo ele está parado (piscando). Some quando o veículo volta a se mover.',
+    defaultData: { cor_tempo: '#F43F5E', piscar_tempo: true, formato_tempo: 'hhmm' },
+    outputs: 1,
+  },
+  {
+
     type: 'acao_marcar_mapa',
     label: 'Marcar no Mapa',
     category: 'acao',

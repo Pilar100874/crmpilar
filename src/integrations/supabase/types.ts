@@ -10865,6 +10865,7 @@ export type Database = {
           lat: number
           legenda_parada: string | null
           lng: number
+          mostrar_tempo: boolean
           tempo_parado_minutos: number
           veiculo_id: string
         }
@@ -10882,6 +10883,7 @@ export type Database = {
           lat: number
           legenda_parada?: string | null
           lng: number
+          mostrar_tempo?: boolean
           tempo_parado_minutos: number
           veiculo_id: string
         }
@@ -10899,6 +10901,7 @@ export type Database = {
           lat?: number
           legenda_parada?: string | null
           lng?: number
+          mostrar_tempo?: boolean
           tempo_parado_minutos?: number
           veiculo_id?: string
         }

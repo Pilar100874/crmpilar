@@ -54,6 +54,24 @@ serve(async (req) => {
         const nodes = ((automacao.flow_data as any)?.nodes || []) as any[];
         if (!nodes.length) continue;
 
+        // Zonas isentas: dentro do raio nenhuma marcação/alerta de parada é gerada
+        const zonas = nodes
+          .filter((n: any) => n.data?.type === "condicao_zona_isenta")
+          .map((n: any) => n.data?.config || {})
+          .filter((c: any) => Number.isFinite(Number(c.zona_lat)) && Number.isFinite(Number(c.zona_lng)))
+          .map((c: any) => ({
+            lat: Number(c.zona_lat),
+            lng: Number(c.zona_lng),
+            raio: Number(c.zona_raio_metros) || 200,
+            nome: c.zona_nome || c.zona_endereco || "Zona isenta",
+          }));
+        const dentroZonaIsenta = (lat: number, lng: number) =>
+          zonas.some((z) => distanciaMetros(lat, lng, z.lat, z.lng) <= z.raio);
+
+        // Bloco de tempo parado no mapa (rótulo piscante abaixo do nome do veículo)
+        const tempoNode = nodes.find((n: any) => n.data?.type === "acao_tempo_parado_mapa");
+        const tempoCfg = tempoNode?.data?.config || null;
+
         for (const node of nodes) {
           const t = node.data?.type;
           const cfg = node.data?.config || {};
@@ -64,11 +82,12 @@ serve(async (req) => {
               if (!v.pos) continue;
               const parado = (v.pos.velocidade || 0) === 0;
               const minParado = Math.floor((Date.now() - new Date(v.pos.data_hora).getTime()) / 60000);
-              if (parado && minParado >= tempoMin) {
+              const isento = dentroZonaIsenta(v.pos.lat, v.pos.lng);
+              if (parado && minParado >= tempoMin && !isento) {
                 const chave = `parado:${automacao.id}:${v.id}`;
                 const jaAtivo = await estadoAtivo(admin, chave);
-                if (cfg.marcar_no_mapa) {
-                  markers += await upsertMarker(admin, estId, automacao, v, minParado, cfg);
+                if (cfg.marcar_no_mapa || tempoCfg) {
+                  markers += await upsertMarker(admin, estId, automacao, v, minParado, cfg, tempoCfg);
                 }
                 if (!jaAtivo) {
                   await marcarAtivo(admin, chave, automacao.id, v.id, "parado");
@@ -76,11 +95,13 @@ serve(async (req) => {
                   disparos++;
                 }
               } else {
-                // condição não mais atendida → limpa estado para permitir novo disparo futuro
+                // condição não mais atendida (ou zona isenta) → remove marcação e libera novo disparo
                 await limparEstado(admin, `parado:${automacao.id}:${v.id}`);
+                await removerMarcador(admin, estId, v.id);
               }
             }
           }
+
 
           if (t === "condicao_velocidade") {
             const limite = Number(cfg.velocidade_maxima) || 80;
@@ -149,7 +170,26 @@ async function limparEstado(admin: Admin, chave: string) {
   await admin.from("logistica_workflow_state").delete().eq("chave", chave);
 }
 
-async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any, minutos: number, cfg: any) {
+function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+async function removerMarcador(admin: Admin, estId: string, veiculoId: string) {
+  await admin
+    .from("logistica_paradas_marcadas")
+    .delete()
+    .eq("estabelecimento_id", estId)
+    .eq("veiculo_id", veiculoId);
+}
+
+async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any, minutos: number, cfg: any, tempoCfg?: any) {
   const categoriaTempo =
     minutos >= 30 ? "mais_30" : minutos >= 15 ? "15_30" : minutos >= 5 ? "5_15" : "menos_5";
   const { data: existing } = await admin
@@ -167,8 +207,9 @@ async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any,
     tempo_parado_minutos: minutos,
     categoria_tempo: categoriaTempo,
     icone_parada: cfg.icone_parada || "MapPin",
-    cor_icone_parada: cfg.cor_icone_parada || "#EAB308",
+    cor_icone_parada: tempoCfg?.cor_tempo || cfg.cor_icone_parada || "#EAB308",
     legenda_parada: legenda,
+    mostrar_tempo: !!tempoCfg,
   };
   if (existing) {
     await admin.from("logistica_paradas_marcadas").update(payload).eq("id", existing.id);
@@ -177,6 +218,7 @@ async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any,
   }
   return 1;
 }
+
 
 async function notificarTransicao(admin: Admin, estId: string, nomeAutomacao: string, mensagem: string) {
   // Envia para todos os admins do estabelecimento

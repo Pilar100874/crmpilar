@@ -34,7 +34,21 @@ interface ParadaMarcadaResult {
   legenda_parada: string;
   automacao_id: string;
   automacao_nome: string;
+  mostrar_tempo?: boolean;
 }
+
+// Distância em metros entre dois pontos (Haversine)
+function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 
 // Evaluate automation rules against vehicle data and create markers
 export async function executarAutomacoesLogistica(
@@ -68,17 +82,35 @@ export async function executarAutomacoesLogistica(
       const flowObj = flowData as { nodes?: AutomacaoFlowNode[] };
       if (!Array.isArray(flowObj.nodes)) continue;
 
+      // Zonas isentas (raio de endereço onde não se marca parada)
+      const zonas = flowObj.nodes
+        .filter(n => n.data?.type === 'condicao_zona_isenta')
+        .map(n => (n.data?.config || {}) as Record<string, unknown>)
+        .filter(c => Number.isFinite(Number(c.zona_lat)) && Number.isFinite(Number(c.zona_lng)))
+        .map(c => ({
+          lat: Number(c.zona_lat),
+          lng: Number(c.zona_lng),
+          raio: Number(c.zona_raio_metros) || 200,
+        }));
+      const dentroZonaIsenta = (lat: number, lng: number) =>
+        zonas.some(z => distanciaMetros(lat, lng, z.lat, z.lng) <= z.raio);
+
+      // Bloco "Tempo Parado no Mapa"
+      const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
+      const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
+
       // Find condition nodes
       for (const node of flowObj.nodes) {
         const nodeType = node.data?.type;
         const config = node.data?.config || {};
 
         // Handle "condicao_parado" - Vehicle stopped condition
-        if (nodeType === 'condicao_parado' && config.marcar_no_mapa) {
+        if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
           const tempoMinutos = config.tempo_minutos || 30;
           
           for (const veiculo of veiculos) {
             if (veiculo.status === 'parado' && veiculo.ultima_posicao) {
+              if (dentroZonaIsenta(veiculo.ultima_posicao.lat, veiculo.ultima_posicao.lng)) continue;
               const minutosParado = differenceInMinutes(
                 new Date(),
                 new Date(veiculo.ultima_posicao.data_hora)
@@ -98,14 +130,16 @@ export async function executarAutomacoesLogistica(
                   tempo_parado_minutos: minutosParado,
                   categoria_tempo: categoriaTempo,
                   icone_parada: config.icone_parada || 'MapPin',
-                  cor_icone_parada: config.cor_icone_parada || '#EAB308',
+                  cor_icone_parada: (tempoCfg?.cor_tempo as string) || config.cor_icone_parada || '#EAB308',
                   legenda_parada: config.legenda_parada || `Parado há ${minutosParado} min`,
                   automacao_id: automacao.id,
-                  automacao_nome: automacao.nome
+                  automacao_nome: automacao.nome,
+                  mostrar_tempo: !!tempoCfg,
                 });
               }
             }
           }
+
         }
 
         // Handle "condicao_velocidade" - Speed exceeded condition
@@ -275,10 +309,24 @@ export async function executarAutomacoesLogistica(
       }
     }
 
+    // Remove marcações de veículos que voltaram a se mover
+    const idsMarcados = new Set(resultados.map(r => r.veiculo_id));
+    const idsEmMovimento = veiculos
+      .filter(v => v.status === 'movendo' && !idsMarcados.has(v.id))
+      .map(v => v.id);
+    if (idsEmMovimento.length > 0) {
+      await supabase
+        .from('logistica_paradas_marcadas')
+        .delete()
+        .eq('estabelecimento_id', estabelecimentoId)
+        .in('veiculo_id', idsEmMovimento);
+    }
+
     // Save markers to database (upsert to avoid duplicates)
     if (resultados.length > 0) {
       await salvarParadasMarcadas(resultados, estabelecimentoId);
     }
+
 
     return resultados;
   } catch (error) {
@@ -315,7 +363,9 @@ async function salvarParadasMarcadas(
             categoria_tempo: parada.categoria_tempo,
             icone_parada: parada.icone_parada,
             cor_icone_parada: parada.cor_icone_parada,
-            legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`
+            legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
+            mostrar_tempo: !!parada.mostrar_tempo
+
           })
           .eq('id', existing.id);
       } else {
@@ -333,8 +383,10 @@ async function salvarParadasMarcadas(
             cor_icone_parada: parada.cor_icone_parada,
             legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
             data_inicio: now,
-            automacao_id: parada.automacao_id
+            automacao_id: parada.automacao_id,
+            mostrar_tempo: !!parada.mostrar_tempo
           });
+
       }
     }
   } catch (error) {
