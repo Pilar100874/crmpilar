@@ -508,7 +508,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         currentParadasMarkers.set(parada.id, marker);
       }
     });
-  }, [paradasMarcadas, onParadaClick]);
+  }, [paradasMarcadas, onParadaClick, compactIcons]);
 
   // Update routes
   useEffect(() => {
