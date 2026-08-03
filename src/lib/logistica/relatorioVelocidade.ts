@@ -233,7 +233,7 @@ export async function gerarRelatorioVelocidadePDF(
   doc.text(titulo, largura / 2, y + 4, { align: 'center' });
   doc.setFont('helvetica', 'normal').setFontSize(9);
   doc.text(
-    `${PERIODO_LABEL[opts.periodo]}  ·  ${fmtData(inicio)} a ${fmtData(fim)}  ·  limite ${opts.limiteKmh} km/h`,
+    `${PERIODO_LABEL[opts.periodo]}  ·  ${fmtData(inicio)} a ${fmtData(fim)}  ·  limite por veículo (padrão ${opts.limiteKmh} km/h)`,
     largura / 2,
     y + 10,
     { align: 'center' }
@@ -243,14 +243,16 @@ export async function gerarRelatorioVelocidadePDF(
 
   autoTable(doc, {
     startY: y,
-    head: [['Data', 'Placa', 'Motorista', 'Hora', 'Velocidade excedida']],
+    head: [['Data', 'Placa', 'Motorista', 'Hora', 'Limite', 'Velocidade excedida']],
     body: eventos.map((e) => [
       e.data,
       e.placa,
       e.motorista,
       e.hora,
-      `${e.velocidade} km/h (+${Math.max(0, e.velocidade - Number(opts.limiteKmh || 0))})`,
+      `${e.limite} km/h`,
+      `${e.velocidade} km/h (+${Math.max(0, e.velocidade - Number(e.limite || 0))})`,
     ]),
+
     styles: { fontSize: 8, cellPadding: 1.8, overflow: 'linebreak' },
     headStyles: { fillColor: [220, 38, 38], textColor: 255 },
     alternateRowStyles: { fillColor: [246, 247, 250] },
