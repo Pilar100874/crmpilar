@@ -68,8 +68,11 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
 
     mapRef.current = L.map(mapContainerRef.current, {
       zoomControl: false,
-      attributionControl: false
+      attributionControl: false,
+      zoomSnap: 0,
+      zoomDelta: 0.5
     }).setView(defaultCenter, 13);
+
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
 
