@@ -358,8 +358,8 @@ export default function TvDashboardVeiculos() {
       const bottom = listaAberta ? Math.round(window.innerHeight * 0.55) + 24 : 90;
       return { topLeft: [60, 20] as [number, number], bottomRight: [20, bottom] as [number, number] };
     }
-    // Desktop/tablet: painel direito 256px + margens; topo com relógio/botões
-    return { topLeft: [80, 20] as [number, number], bottomRight: [20, 288] as [number, number] };
+    // Desktop/tablet: painel direito 384px (lg:w-96) + margens; topo com relógio/botões
+    return { topLeft: [80, 20] as [number, number], bottomRight: [20, 400] as [number, number] };
   }, [isMobile, listaAberta]);
 
   // Follow mode: recentraliza no veículo fixado toda vez que houver nova posição
@@ -433,7 +433,7 @@ export default function TvDashboardVeiculos() {
       {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
         className={`fixed bg-black/80 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
-          md:top-3 md:right-3 md:bottom-3 md:w-64 md:translate-x-0
+          md:top-3 md:right-3 md:bottom-3 md:w-80 lg:w-96 md:translate-x-0
           ${isMobile 
             ? `left-2 right-2 bottom-2 max-h-[55vh] ${listaAberta ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'}`
             : ''}
@@ -489,14 +489,14 @@ export default function TvDashboardVeiculos() {
                       focusVeiculoId === veiculo.id ? 'bg-white/10 ring-1 ring-primary' : ''
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <div
                           className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
                           style={{ backgroundColor: veiculo.cor }}
                         />
                         <span
-                          className="font-semibold text-xs truncate"
+                          className="font-semibold text-xs whitespace-nowrap shrink-0"
                           style={{ color: config.hex }}
                           title={config.label}
                         >
@@ -504,7 +504,7 @@ export default function TvDashboardVeiculos() {
                         </span>
 
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-white/60 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 text-[10px] text-white/60 flex-wrap justify-end shrink-0">
                         {veiculo.ultima_posicao && (
                           <>
                             <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
