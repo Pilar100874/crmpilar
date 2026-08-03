@@ -238,19 +238,36 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 onChange={(e) => updateConfig('repetir_intervalo_minutos', parseInt(e.target.value) || 1)}
               />
             </div>
-            <div>
-              <Label>Máximo de repetições (0 = ilimitado)</Label>
-              <Input
-                type="number"
-                min={0}
-                value={config.repetir_max ?? 0}
-                onChange={(e) => updateConfig('repetir_max', parseInt(e.target.value) || 0)}
-              />
+            <div className="space-y-2">
+              <Label>Limite de disparos</Label>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="repetir-ilimitado"
+                  checked={(config.repetir_max ?? 0) === 0}
+                  onCheckedChange={(v) => updateConfig('repetir_max', v ? 0 : 5)}
+                />
+                <Label htmlFor="repetir-ilimitado" className="text-sm font-normal cursor-pointer">
+                  Ilimitado (repete enquanto estiver parado)
+                </Label>
+              </div>
+              {(config.repetir_max ?? 0) > 0 && (
+                <Input
+                  type="number"
+                  min={1}
+                  value={config.repetir_max ?? 1}
+                  onChange={(e) => updateConfig('repetir_max', Math.max(1, parseInt(e.target.value) || 1))}
+                  placeholder="Número máximo de disparos"
+                />
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               Enquanto o veículo continuar parado, as ações ligadas a este bloco (ex: enviar WhatsApp) são
               disparadas repetidamente no intervalo definido. Ao voltar a se mover, a contagem é reiniciada.
+              {(config.repetir_max ?? 0) > 0
+                ? ` Após ${config.repetir_max} disparo(s), a repetição é encerrada até o veículo se mover novamente.`
+                : ''}
             </p>
+
           </div>
         );
 
