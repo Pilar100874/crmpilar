@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -30,11 +30,14 @@ function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }
   return null;
 }
 
-function Recenter({ lat, lng }: { lat: number; lng: number }) {
+function Recenter({ lat, lng, trigger }: { lat: number; lng: number; trigger: number }) {
   const map = useMap();
   useEffect(() => {
     map.setView([lat, lng], map.getZoom() < 14 ? 16 : map.getZoom());
-  }, [lat, lng, map]);
+    // Recentraliza apenas em mudanças externas (busca, geolocalização, abertura),
+    // nunca durante o arraste do marcador.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger]);
   return null;
 }
 
@@ -53,6 +56,8 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
   const [open, setOpen] = useState(false);
   const [temp, setTemp] = useState<{ lat: number; lng: number } | null>(null);
   const [busca, setBusca] = useState('');
+  const [recenterKey, setRecenterKey] = useState(0);
+  const markerRef = useRef<L.Marker | null>(null);
   const [buscando, setBuscando] = useState(false);
 
   const inicial = useMemo<[number, number]>(() => {
@@ -63,6 +68,7 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
   useEffect(() => {
     if (open) {
       setTemp(typeof lat === 'number' && typeof lng === 'number' ? { lat, lng } : null);
+      setRecenterKey((k) => k + 1);
     }
   }, [open, lat, lng]);
 
@@ -70,6 +76,7 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((pos) => {
       setTemp({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      setRecenterKey((k) => k + 1);
     });
   };
 
@@ -83,6 +90,7 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
       const data = await res.json();
       if (data?.[0]) {
         setTemp({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        setRecenterKey((k) => k + 1);
       }
     } catch {
       /* silencioso */
@@ -108,7 +116,7 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
         <DialogHeader>
           <DialogTitle>Selecionar coordenada no mapa</DialogTitle>
           <DialogDescription>
-            Clique no ponto desejado do mapa para preencher automaticamente latitude e longitude.
+            Clique no ponto desejado do mapa ou arraste o marcador para ajustar a latitude, a longitude e o raio da zona.
           </DialogDescription>
         </DialogHeader>
 
@@ -141,8 +149,24 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
             <ClickHandler onPick={(la, ln) => setTemp({ lat: la, lng: ln })} />
             {temp && (
               <>
-                <Recenter lat={temp.lat} lng={temp.lng} />
-                <Marker position={[temp.lat, temp.lng]} icon={pinIcon} />
+                <Recenter lat={temp.lat} lng={temp.lng} trigger={recenterKey} />
+                <Marker
+                  position={[temp.lat, temp.lng]}
+                  icon={pinIcon}
+                  draggable
+                  autoPan
+                  ref={markerRef}
+                  eventHandlers={{
+                    drag: () => {
+                      const p = markerRef.current?.getLatLng();
+                      if (p) setTemp({ lat: p.lat, lng: p.lng });
+                    },
+                    dragend: () => {
+                      const p = markerRef.current?.getLatLng();
+                      if (p) setTemp({ lat: p.lat, lng: p.lng });
+                    },
+                  }}
+                />
                 <Circle
                   center={[temp.lat, temp.lng]}
                   radius={raioMetros || 200}
@@ -156,7 +180,8 @@ export function CoordenadaMapPicker({ lat, lng, raioMetros = 200, onChange, labe
         <div className="text-sm text-muted-foreground">
           {temp ? (
             <span>
-              Ponto selecionado: <strong>{temp.lat.toFixed(6)}, {temp.lng.toFixed(6)}</strong>
+              Ponto selecionado: <strong>{temp.lat.toFixed(6)}, {temp.lng.toFixed(6)}</strong> · raio{' '}
+              <strong>{raioMetros || 200} m</strong> — arraste o marcador para ajustar
             </span>
           ) : (
             <span>Nenhum ponto selecionado ainda.</span>
