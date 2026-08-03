@@ -563,10 +563,10 @@ const VALIDADE_LINK_S = 7 * 24 * 60 * 60;
  * Envia um artefato (print, vídeo ou PDF) para o Storage e devolve caminho e
  * link assinado. Falhas de upload nunca interrompem a execução.
  */
-async function armazenarArtefato(pasta, artefato, buffer) {
+async function armazenarArtefato(pasta, artefato, buffer, prefixo = "execucoes") {
   const supabase = getSupabase();
   if (!supabase) return artefato;
-  const caminho = `execucoes/${pasta}/${artefato.nome}`;
+  const caminho = `${prefixo}/${pasta}/${artefato.nome}`;
   try {
     const { error } = await supabase.storage
       .from(BUCKET_PLAYWRIGHT)
