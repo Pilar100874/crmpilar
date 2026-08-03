@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, EyeOff, Maximize2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, Maximize2, ShieldCheck } from "lucide-react";
+import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
 
 export type TipoPreview = "imagem" | "video" | "audio" | "html" | "json" | "texto" | "pdf" | "outro";
 
@@ -123,12 +124,24 @@ export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia }: 
           {tipo === "audio" && <audio src={url} controls className="w-full p-2" />}
           {tipo === "pdf" && <iframe src={url} title={nome} className="h-80 w-full" />}
           {tipo === "html" && (
-            <iframe
-              title={nome}
-              sandbox=""
-              srcDoc={formatado ?? ""}
-              className="h-80 w-full bg-white"
-            />
+            <div>
+              <div className="flex items-center gap-1 border-b px-2 py-1 text-[11px] text-muted-foreground">
+                <ShieldCheck className="h-3 w-3 text-primary" />
+                HTML sanitizado e isolado (sem scripts)
+                {!!seguro?.removidos && (
+                  <Badge variant="outline" className="ml-1 h-4 px-1 text-[10px]">
+                    {seguro.removidos} item(ns) bloqueado(s)
+                  </Badge>
+                )}
+              </div>
+              <iframe
+                title={nome}
+                sandbox={SANDBOX_PREVIEW}
+                referrerPolicy="no-referrer"
+                srcDoc={seguro?.html ?? ""}
+                className="h-80 w-full bg-white"
+              />
+            </div>
           )}
           {(tipo === "json" || tipo === "texto") && (
             <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words p-2 text-[11px] leading-relaxed">
