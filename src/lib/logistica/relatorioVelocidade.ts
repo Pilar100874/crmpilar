@@ -58,6 +58,8 @@ export async function buscarEventosVelocidade(
   const fim = new Date();
   const inicio = new Date(fim.getTime() - PERIODO_DIAS[opts.periodo] * 86400000);
   const limitePadrao = Number(opts.limiteKmh) || LIMITE_PADRAO_GLOBAL;
+  await carregarLimitesVelocidade(opts.estabelecimentoId);
+
 
   let qVeic = supabase
     .from('veiculos')
