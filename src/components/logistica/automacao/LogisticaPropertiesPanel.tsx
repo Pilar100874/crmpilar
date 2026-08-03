@@ -10,6 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogisticaBlockType, LOGISTICA_BLOCKS, CondicaoTempoParado } from '@/types/automacaoLogistica';
 import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete';
 import { IconePicker } from './IconePicker';
+import { CoordenadaMapPicker } from './CoordenadaMapPicker';
+
 import { Plus, Trash2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
