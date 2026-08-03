@@ -148,7 +148,9 @@ export async function buscarEventosVelocidade(
   return { eventos, inicio, fim };
 }
 
-async function carregarLogo(estabelecimentoId: string): Promise<string | null> {
+type LogoCarregado = { dataUrl: string; largura: number; altura: number };
+
+async function carregarLogo(estabelecimentoId: string): Promise<LogoCarregado | null> {
   try {
     const { data } = await supabase
       .from('ecommerce_config')
@@ -160,12 +162,24 @@ async function carregarLogo(estabelecimentoId: string): Promise<string | null> {
     const res = await fetch(url);
     if (!res.ok) return null;
     const blob = await res.blob();
-    return await new Promise<string | null>((resolve) => {
+    const dataUrl = await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
+    if (!dataUrl) return null;
+
+    // Mede as dimensões reais para preservar a proporção no PDF.
+    const dims = await new Promise<{ w: number; h: number } | null>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+    if (!dims) return null;
+
+    return { dataUrl, largura: dims.w, altura: dims.h };
   } catch {
     return null;
   }
@@ -185,9 +199,17 @@ export async function gerarRelatorioVelocidadePDF(
 
   if (logo) {
     try {
-      doc.addImage(logo, 'PNG', margem, y - 4, 28, 16, undefined, 'FAST');
+      // Caixa máxima do logo: 32 x 18 mm, mantendo a proporção original.
+      const maxW = 32;
+      const maxH = 18;
+      const escala = Math.min(maxW / logo.largura, maxH / logo.altura);
+      const w = logo.largura * escala;
+      const h = logo.altura * escala;
+      const formato = logo.dataUrl.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+      doc.addImage(logo.dataUrl, formato, margem, y - 4 + (maxH - h) / 2, w, h, undefined, 'FAST');
     } catch { /* logo inválido */ }
   }
+
 
   const titulo = opts.titulo?.trim() || 'Relatório de Velocidades Excedidas no Período';
   doc.setFont('helvetica', 'bold').setFontSize(15);
