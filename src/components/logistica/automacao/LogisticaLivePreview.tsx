@@ -1,4 +1,4 @@
-import { MapPin, Gauge, Clock, Navigation, MessageSquare, Bell, Mail, Map } from "lucide-react";
+import { MapPin, Gauge, Clock, Navigation, MessageSquare, Bell, Mail, Map, Timer, ShieldOff } from "lucide-react";
 import { WorkflowPreviewZoom } from "@/components/workflow/WorkflowPreviewZoom";
 
 export const LOGISTICA_PREVIEW_SUPPORTED = new Set<string>([
@@ -7,11 +7,14 @@ export const LOGISTICA_PREVIEW_SUPPORTED = new Set<string>([
   "condicao_chegada",
   "condicao_saida_area",
   "condicao_horario",
+  "condicao_zona_isenta",
   "acao_marcar_mapa",
+  "acao_tempo_parado_mapa",
   "acao_whatsapp",
   "acao_notificacao",
   "acao_email",
 ]);
+
 
 const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
 const DIAS_LBL = ["D", "S", "T", "Q", "Q", "S", "S"];
