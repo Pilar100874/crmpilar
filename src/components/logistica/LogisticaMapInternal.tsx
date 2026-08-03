@@ -200,16 +200,18 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       return;
     }
 
-    const paddingTopLeft = fitBoundsPadding?.topLeft ?? [24, 24];
-    const paddingBottomRight = fitBoundsPadding?.bottomRight ?? [24, 24];
+    const paddingTopLeft = fitBoundsPadding?.topLeft ?? [16, 16];
+    const paddingBottomRight = fitBoundsPadding?.bottomRight ?? [16, 16];
 
+    // Padding simétrico (o centro do conjunto fica no centro da tela)
     const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(
       Math.max(paddingTopLeft[0], paddingBottomRight[0]) * 2,
       Math.max(paddingTopLeft[1], paddingBottomRight[1]) * 2,
     ));
 
-    // Centraliza exatamente o centro do conjunto de veículos na tela
+    // Zoom fracionado (zoomSnap: 0) => maior zoom possível para a tela
     map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
+
   }, [fitBounds, fitBoundsPadding]);
 
   // Reset initial bounds flag when fullRouteBounds changes (new data loaded)
