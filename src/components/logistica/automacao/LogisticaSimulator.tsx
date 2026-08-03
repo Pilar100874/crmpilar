@@ -63,6 +63,11 @@ export const LogisticaSimulator = ({
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const isRunningRef = useRef(false);
+  const isPausedRef = useRef(false);
+  const contextRef = useRef(context);
+
+  useEffect(() => { contextRef.current = context; }, [context]);
 
   useEffect(() => {
     if (scrollRef.current) {
