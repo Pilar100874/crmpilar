@@ -456,6 +456,17 @@ export default function TvDashboardVeiculos() {
             </Button>
           )}
         </div>
+
+        {/* Legenda de cores por status */}
+        <div className="px-3 py-1.5 border-b border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1">
+          {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((k) => (
+            <span key={k} className="flex items-center gap-1 text-[10px] text-white/70">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: statusConfig[k].hex }} />
+              {statusConfig[k].label} ({stats[k as 'movendo' | 'parado' | 'offline']})
+            </span>
+          ))}
+        </div>
+
         
         <div className="flex-1 overflow-y-auto">
           {veiculosFiltrados.length === 0 ? (
