@@ -302,19 +302,52 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 placeholder="Ex: Pátio da empresa"
               />
             </div>
-            <div>
-              <Label>Endereço central</Label>
-              <AddressAutocomplete
-                value={config.zona_endereco || ''}
-                onChange={(value) => updateConfig('zona_endereco', value)}
-                onSelect={(address, lat, lng) => {
-                  onUpdateNode(selectedNode.id, {
-                    config: { ...config, zona_endereco: address, zona_lat: lat, zona_lng: lng },
-                  });
-                }}
-                placeholder="Digite o endereço..."
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Latitude</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={config.zona_lat ?? ''}
+                  onChange={(e) => {
+                    const n = parseFloat(e.target.value);
+                    updateConfig('zona_lat', isNaN(n) ? undefined : n);
+                  }}
+                  placeholder="-23.550520"
+                />
+              </div>
+              <div>
+                <Label>Longitude</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={config.zona_lng ?? ''}
+                  onChange={(e) => {
+                    const n = parseFloat(e.target.value);
+                    updateConfig('zona_lng', isNaN(n) ? undefined : n);
+                  }}
+                  placeholder="-46.633308"
+                />
+              </div>
             </div>
+            <div>
+              <Label>Colar coordenada (lat, lng)</Label>
+              <Input
+                placeholder="-23.550520, -46.633308"
+                onChange={(e) => {
+                  const m = e.target.value.split(/[,;\s]+/).map((v) => parseFloat(v)).filter((v) => !isNaN(v));
+                  if (m.length >= 2) {
+                    onUpdateNode(selectedNode.id, {
+                      config: { ...config, zona_lat: m[0], zona_lng: m[1] },
+                    });
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Cole a coordenada copiada do Google Maps para preencher latitude e longitude.
+              </p>
+            </div>
+
             <div>
               <Label>Raio (metros)</Label>
               <Input
