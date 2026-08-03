@@ -547,7 +547,7 @@ async function salvarParadasMarcadas(
             icone_parada: parada.icone_parada,
             cor_icone_parada: parada.cor_icone_parada,
             legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
-            data_inicio: now,
+            data_inicio: parada.data_inicio || now,
             automacao_id: parada.automacao_id,
             mostrar_tempo: !!parada.mostrar_tempo
           });
