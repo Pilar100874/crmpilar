@@ -111,6 +111,8 @@ export default function ConfigServidorPage() {
   const [enviando, setEnviando] = useState(false);
   const [testando, setTestando] = useState(false);
   const [saude, setSaude] = useState<Record<string, unknown> | null>(null);
+  const [aplicando, setAplicando] = useState(false);
+  const [etapas, setEtapas] = useState<Etapa[]>([]);
 
   const testarConexao = async (silencioso = false) => {
     setTestando(true);
