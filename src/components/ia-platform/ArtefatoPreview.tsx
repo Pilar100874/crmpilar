@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, EyeOff, Maximize2, ShieldCheck } from "lucide-react";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
+import { MediaPlayerInline } from "./MediaPlayerInline";
 
 export type TipoPreview = "imagem" | "video" | "audio" | "html" | "json" | "texto" | "pdf" | "outro";
 
