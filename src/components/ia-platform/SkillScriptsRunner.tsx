@@ -6,7 +6,7 @@ import { BUCKET_SKILLS } from "@/components/ia-platform/SkillArquivosMd";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Terminal, Loader2, Play } from "lucide-react";
+import { Terminal, Loader2, Play, FileDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface Arquivo {
