@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoComStatus } from '@/types/logistica';
@@ -181,6 +181,36 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const currentMarkerRef = useRef<L.Marker | null>(null);
 
   const initialBoundsFittedRef = useRef(false);
+  const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
+
+  // Reenquadra o mapa mantendo todos os pontos visíveis e centralizados
+  const enquadrarTudo = useCallback(() => {
+    const map = mapRef.current;
+    const bounds = ultimoBoundsRef.current;
+    if (!map || !bounds || !fitBounds) return;
+
+    map.invalidateSize();
+
+    const isSinglePoint =
+      Math.abs(bounds.getNorth() - bounds.getSouth()) < 0.0005 &&
+      Math.abs(bounds.getEast() - bounds.getWest()) < 0.0005;
+
+    if (isSinglePoint) {
+      map.setView(bounds.getCenter(), 17, { animate: false });
+      return;
+    }
+
+    const paddingTopLeft = fitBoundsPadding?.topLeft ?? [24, 24];
+    const paddingBottomRight = fitBoundsPadding?.bottomRight ?? [24, 24];
+
+    const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(
+      Math.max(paddingTopLeft[0], paddingBottomRight[0]) * 2,
+      Math.max(paddingTopLeft[1], paddingBottomRight[1]) * 2,
+    ));
+
+    // Centraliza exatamente o centro do conjunto de veículos na tela
+    map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
+  }, [fitBounds, fitBoundsPadding]);
 
   // Reset initial bounds flag when fullRouteBounds changes (new data loaded)
   useEffect(() => {
@@ -297,30 +327,24 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
     // Fit bounds if enabled — centraliza todos os pontos com o maior zoom possível
     if (fitBounds && allPoints.length > 0) {
-      map.invalidateSize();
-      const bounds = L.latLngBounds(allPoints);
-
-      // Um único ponto (ou todos praticamente no mesmo lugar): zoom máximo direto
-      const isSinglePoint =
-        allPoints.length === 1 ||
-        (Math.abs(bounds.getNorth() - bounds.getSouth()) < 0.0005 &&
-          Math.abs(bounds.getEast() - bounds.getWest()) < 0.0005);
-
-      if (isSinglePoint) {
-        map.setView(bounds.getCenter(), 17, { animate: false });
-      } else if (fitBoundsPadding && (fitBoundsPadding.topLeft || fitBoundsPadding.bottomRight)) {
-        map.fitBounds(bounds, {
-          paddingTopLeft: fitBoundsPadding.topLeft ?? [24, 24],
-          paddingBottomRight: fitBoundsPadding.bottomRight ?? [24, 24],
-          maxZoom: 18,
-          animate: false,
-        });
-      } else {
-        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 18, animate: false });
-      }
+      ultimoBoundsRef.current = L.latLngBounds(allPoints);
+      enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo]);
+
+  // Reenquadra quando o container muda de tamanho (sidebar, painéis, rotação, resize)
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    const observer = new ResizeObserver(() => enquadrarTudo());
+    observer.observe(mapContainerRef.current);
+    window.addEventListener('resize', enquadrarTudo);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', enquadrarTudo);
+    };
+  }, [enquadrarTudo]);
+
 
   // Focus/zoom on a specific vehicle when requested (e.g., double click on list)
   useEffect(() => {
