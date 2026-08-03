@@ -169,9 +169,33 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
+  const [detalhesVeiculoId, setDetalhesVeiculoId] = useState<string | null>(null);
+  const [rotaCoords, setRotaCoords] = useState<Array<{ lat: number; lng: number }> | null>(null);
+  const [mapaFoco, setMapaFoco] = useState<{ lat: number; lng: number } | null>(null);
+  const [isCompact, setIsCompact] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsCompact(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
+  }, []);
+  const abrirDetalhes = useCallback((id: string) => {
+    setSelectedVeiculoId(id);
+    setFocusVehicle({ id, nonce: Date.now() });
+    setMapaFoco(null);
+    setDetalhesVeiculoId(id);
+  }, []);
+  const fecharDetalhes = useCallback(() => {
+    setDetalhesVeiculoId(null);
+    setRotaCoords(null);
+    setMapaFoco(null);
   }, []);
   const togglePin = useCallback((id: string) => {
     setPinnedVeiculoId(prev => {
