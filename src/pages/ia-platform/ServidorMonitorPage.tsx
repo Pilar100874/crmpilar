@@ -341,6 +341,8 @@ export default function ServidorMonitorPage() {
               </CardContent>
             </Card>
           )}
+
+          <PlaywrightPanel />
         </>
       )}
 
