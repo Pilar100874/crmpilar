@@ -124,16 +124,18 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
       }
     });
 
-    // Fit bounds to show all vehicles with max zoom possible
+    // Mantém todos os veículos centralizados no mapa
     if (validVeiculos.length > 0) {
       map.invalidateSize();
       const bounds = L.latLngBounds(validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng]));
       if (validVeiculos.length === 1) {
         map.setView(bounds.getCenter(), 16, { animate: false });
       } else {
-        map.fitBounds(bounds, { padding: [12, 12], maxZoom: 18, animate: false });
+        const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(24, 24));
+        map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
       }
     }
+
 
   }, [veiculos, onVeiculoClick, compact]);
 
