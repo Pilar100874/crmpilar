@@ -212,52 +212,43 @@ const LogisticaDashboard: React.FC = () => {
   return (
     <div className="h-[calc(100dvh-64px)] flex flex-col overflow-hidden bg-muted/30">
       {/* Header */}
-      <div className="shrink-0 border-b bg-background/80 backdrop-blur-md p-3 sm:p-4 flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-              <Car className="h-4 w-4 sm:h-5 sm:w-5" />
-              Painel de Logística
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Frota em tempo real no mapa
-            </p>
+      <div className="shrink-0 border-b bg-background/80 backdrop-blur-md p-2 sm:p-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          {/* Filtros rápidos */}
+          <div className="flex flex-1 flex-wrap items-center gap-2">
+            {([
+              { key: 'todos', label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', ring: 'ring-primary', Icon: Car },
+              { key: 'movendo', label: 'Em rota', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', ring: 'ring-green-500', Icon: Activity },
+              { key: 'parado', label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', ring: 'ring-amber-500', Icon: Clock },
+              { key: 'offline', label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', ring: 'ring-muted-foreground', Icon: WifiOff },
+            ] as const).map(({ key, label, value, dot, text, ring, Icon }) => {
+              const active = statusFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStatusFilter(active && key !== 'todos' ? 'todos' : key)}
+                  title={`Filtrar: ${label}`}
+                  className={cn(
+                    "flex flex-1 min-w-[6.5rem] max-w-[10rem] items-center justify-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-2.5 py-1.5 shadow-sm transition-all hover:bg-accent",
+                    active && cn("ring-2 ring-offset-1 ring-offset-background bg-card", ring)
+                  )}
+                >
+                  <span className={cn("h-2 w-2 rounded-full", dot, key === 'movendo' && 'animate-pulse')} />
+                  <Icon className={cn("h-3.5 w-3.5", text)} />
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground hidden sm:inline">{label}</span>
+                  <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
+                </button>
+              );
+            })}
+            {statusFilter !== 'todos' && (
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setStatusFilter('todos')}>
+                Limpar filtro
+              </Button>
+            )}
           </div>
-          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full sm:w-56" />
-        </div>
 
-        {/* Filtros rápidos */}
-        <div className="flex flex-wrap items-center gap-2">
-          {([
-            { key: 'todos', label: 'Total', value: stats.total, dot: 'bg-primary', text: 'text-foreground', ring: 'ring-primary', Icon: Car },
-            { key: 'movendo', label: 'Em rota', value: stats.movendo, dot: 'bg-green-500', text: 'text-green-600', ring: 'ring-green-500', Icon: Activity },
-            { key: 'parado', label: 'Parado', value: stats.parado, dot: 'bg-amber-500', text: 'text-amber-600', ring: 'ring-amber-500', Icon: Clock },
-            { key: 'offline', label: 'Offline', value: stats.offline, dot: 'bg-muted-foreground/50', text: 'text-muted-foreground', ring: 'ring-muted-foreground', Icon: WifiOff },
-          ] as const).map(({ key, label, value, dot, text, ring, Icon }) => {
-            const active = statusFilter === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setStatusFilter(active && key !== 'todos' ? 'todos' : key)}
-                title={`Filtrar: ${label}`}
-                className={cn(
-                  "flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 shadow-sm transition-all hover:bg-accent",
-                  active && cn("ring-2 ring-offset-1 ring-offset-background bg-card", ring)
-                )}
-              >
-                <span className={cn("h-2 w-2 rounded-full", dot, key === 'movendo' && 'animate-pulse')} />
-                <Icon className={cn("h-3.5 w-3.5", text)} />
-                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
-                <span className={cn("text-sm font-bold tabular-nums", text)}>{value}</span>
-              </button>
-            );
-          })}
-          {statusFilter !== 'todos' && (
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setStatusFilter('todos')}>
-              Limpar filtro
-            </Button>
-          )}
+          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full sm:w-56 shrink-0" />
         </div>
       </div>
 
