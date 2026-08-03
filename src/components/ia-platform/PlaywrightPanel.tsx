@@ -203,10 +203,47 @@ export function PlaywrightPanel() {
           />
         </div>
 
-        <Button onClick={executar} disabled={rodando}>
-          {rodando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-          Executar automação
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={executar} disabled={rodando || emAndamento}>
+            {rodando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+            Executar agora
+          </Button>
+          <Button variant="secondary" onClick={executarRotina} disabled={rodando || emAndamento}>
+            <Clock className="mr-2 h-4 w-4" />
+            Executar como rotina (segundo plano)
+          </Button>
+          {emAndamento && (
+            <Button variant="outline" onClick={cancelarRotina}>
+              <Ban className="mr-2 h-4 w-4" />
+              Cancelar
+            </Button>
+          )}
+        </div>
+
+        {job && (
+          <div className="space-y-2 rounded-lg border p-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Badge variant="outline">{ROTULO_STATUS[job.status ?? ""] ?? job.status}</Badge>
+              <span className="font-mono text-muted-foreground">{job.job_id}</span>
+              {job.passo_descricao && (
+                <span className="text-muted-foreground">{job.passo_descricao}</span>
+              )}
+            </div>
+            <Progress
+              value={
+                job.progresso?.total
+                  ? Math.min(100, (job.progresso.passo / job.progresso.total) * 100)
+                  : job.status === "concluido"
+                    ? 100
+                    : 0
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              Passo {job.progresso?.passo ?? 0} de {job.progresso?.total ?? 0}
+            </p>
+          </div>
+        )}
+
 
         {resultado && (
           <div className="space-y-3 rounded-lg border p-3">
