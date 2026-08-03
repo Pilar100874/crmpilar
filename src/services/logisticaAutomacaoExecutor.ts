@@ -35,6 +35,7 @@ interface ParadaMarcadaResult {
   automacao_id: string;
   automacao_nome: string;
   mostrar_tempo?: boolean;
+  data_inicio?: string;
 }
 
 // Distância em metros entre dois pontos (Haversine)
