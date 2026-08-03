@@ -243,7 +243,10 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
             </CardContent>
           </Card>
 
+          <LimitesVelocidadeConfig estabelecimentoId={estabId} />
+
           <LogisticaGruposCRUD estabelecimentoId={estabId} />
+
 
           <TestePostFakeCard />
           {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}
