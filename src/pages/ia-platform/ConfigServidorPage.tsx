@@ -98,11 +98,30 @@ export default function ConfigServidorPage() {
   const [salvando, setSalvando] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
+  const preencherAuto = (salvos: ItemConfig[], avisar = false) => {
+    const sug = sugestoesAutomaticas();
+    const faltantes = Object.entries(sug).filter(([chave]) => !salvos.some((i) => i.chave === chave));
+    if (!faltantes.length) {
+      if (avisar) toast.info("Todos os valores automáticos já estão salvos");
+      return;
+    }
+    setValores((v) => {
+      const novo = { ...v };
+      faltantes.forEach(([chave, valor]) => {
+        if (!novo[chave]?.trim()) novo[chave] = valor;
+      });
+      return novo;
+    });
+    if (avisar) toast.success(`${faltantes.length} campo(s) preenchido(s) automaticamente`);
+  };
+
   const carregar = async () => {
     setCarregando(true);
     try {
       const r = await chamar("listar");
-      setItens(r.itens ?? []);
+      const lista: ItemConfig[] = r.itens ?? [];
+      setItens(lista);
+      preencherAuto(lista);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -113,6 +132,7 @@ export default function ConfigServidorPage() {
   useEffect(() => {
     void carregar();
   }, []);
+
 
   const salvar = async () => {
     const preenchidos = Object.entries(valores)
