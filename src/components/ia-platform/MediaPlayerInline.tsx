@@ -125,14 +125,29 @@ export function MediaPlayerInline({
 
   return (
     <div className="w-full">
-      {tipo === "video" ? (
-        <video
-          {...comum}
-          ref={ref as React.RefObject<HTMLVideoElement>}
-          className={`${classeVideo} bg-black`}
-        />
-      ) : (
-        <audio {...comum} ref={ref as React.RefObject<HTMLAudioElement>} className="w-full p-2" />
+      <div className="relative">
+        {tipo === "video" ? (
+          <video
+            {...comum}
+            ref={ref as React.RefObject<HTMLVideoElement>}
+            className={`${classeVideo} bg-black`}
+          />
+        ) : (
+          <audio {...comum} ref={ref as React.RefObject<HTMLAudioElement>} className="w-full p-2" />
+        )}
+        {tipo === "video" && !!textoLegenda && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center px-4">
+            <span className="max-w-[90%] whitespace-pre-line rounded bg-black/70 px-2 py-1 text-center text-sm leading-snug text-white">
+              {textoLegenda}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {tipo === "audio" && legendasAtivas && (
+        <div className="min-h-[1.5rem] whitespace-pre-line px-2 pb-1 text-center text-xs text-foreground">
+          {textoLegenda}
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2 border-t px-2 py-1 text-[11px] text-muted-foreground">
@@ -147,6 +162,46 @@ export function MediaPlayerInline({
         >
           {velocidade}x
         </button>
+
+        {legendas.length > 0 && (
+          <>
+            <button
+              type="button"
+              onClick={() => setLegendasAtivas((v) => !v)}
+              title={legendasAtivas ? "Desativar legendas" : "Ativar legendas"}
+              className={`flex items-center gap-1 rounded border px-1.5 py-0.5 hover:bg-muted ${
+                legendasAtivas ? "border-primary text-primary" : ""
+              }`}
+            >
+              {legendasAtivas ? (
+                <Captions className="h-3 w-3" />
+              ) : (
+                <CaptionsOff className="h-3 w-3" />
+              )}
+              CC
+            </button>
+            {legendasAtivas && legendas.length > 1 && (
+              <select
+                value={faixa ?? ""}
+                onChange={(e) => setFaixa(e.target.value)}
+                className="rounded border bg-background px-1 py-0.5 text-[11px]"
+                aria-label="Idioma das legendas"
+              >
+                {legendas.map((l) => (
+                  <option key={l.nome} value={l.nome}>
+                    {l.rotulo}
+                  </option>
+                ))}
+              </select>
+            )}
+            {erroLegenda && (
+              <Badge variant="outline" className="h-4 px-1 text-[10px]">
+                Legenda indisponível
+              </Badge>
+            )}
+          </>
+        )}
+
         {erro && (
           <Badge variant="destructive" className="h-4 px-1 text-[10px]">
             Não foi possível reproduzir — link pode ter expirado
@@ -154,6 +209,7 @@ export function MediaPlayerInline({
         )}
         <span className="min-w-0 flex-1 truncate text-right font-mono opacity-70">{nome}</span>
       </div>
+
     </div>
   );
 }
