@@ -217,6 +217,44 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           </div>
         );
 
+      case 'condicao_repetir_parado':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Disparar após parado por (min)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={config.repetir_inicio_minutos ?? 30}
+                onChange={(e) => updateConfig('repetir_inicio_minutos', parseInt(e.target.value) || 1)}
+              />
+            </div>
+            <div>
+              <Label>Repetir a cada (min)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={config.repetir_intervalo_minutos ?? 15}
+                onChange={(e) => updateConfig('repetir_intervalo_minutos', parseInt(e.target.value) || 1)}
+              />
+            </div>
+            <div>
+              <Label>Máximo de repetições (0 = ilimitado)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={config.repetir_max ?? 0}
+                onChange={(e) => updateConfig('repetir_max', parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enquanto o veículo continuar parado, as ações ligadas a este bloco (ex: enviar WhatsApp) são
+              disparadas repetidamente no intervalo definido. Ao voltar a se mover, a contagem é reiniciada.
+            </p>
+          </div>
+        );
+
+
       case 'acao_marcar_mapa':
         return (
           <div className="space-y-4">
