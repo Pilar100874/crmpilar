@@ -23,7 +23,7 @@ import {
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { agentRunner } from "@/lib/aip/runner";
+import { agentRunner, type SupabaseHealth } from "@/lib/aip/runner";
 
 interface ItemConfig {
   chave: string;
