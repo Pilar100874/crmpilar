@@ -618,6 +618,44 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
 
             <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="disparar_bot_wpp"
+                  checked={!!config.disparar_bot}
+                  onCheckedChange={(v) => updateConfig('disparar_bot', !!v)}
+                />
+                <div className="space-y-0.5">
+                  <Label htmlFor="disparar_bot_wpp" className="text-sm cursor-pointer">
+                    Disparar também um bot
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Além da mensagem, executa um bot do Bot Builder para o destinatário.
+                  </p>
+                </div>
+              </div>
+
+              {config.disparar_bot && (
+                <Select
+                  value={config.bot_flow_id || ''}
+                  onValueChange={(v) => {
+                    updateConfig('bot_flow_id', v);
+                    updateConfig('bot_flow_nome', bots.find((b) => b.id === v)?.name || null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar bot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bots.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
           </div>
         );
       }
