@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { LogisticaGruposCRUD } from '@/components/logistica/LogisticaGruposCRUD';
+import { LimitesVelocidadeConfig } from '@/components/logistica/LimitesVelocidadeConfig';
+
 
 
 
@@ -243,7 +245,10 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
             </CardContent>
           </Card>
 
+          <LimitesVelocidadeConfig estabelecimentoId={estabId} />
+
           <LogisticaGruposCRUD estabelecimentoId={estabId} />
+
 
           <TestePostFakeCard />
           {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}

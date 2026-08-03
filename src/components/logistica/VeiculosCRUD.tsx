@@ -23,7 +23,7 @@ import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
 import DispositivosRastreamento from './DispositivosRastreamento';
 import { GrupoFilterSelect } from './GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo, GRUPO_ALL } from '@/lib/logistica/grupoFilter';
-import { limitePadraoPorTipo } from '@/lib/logistica/limitesVelocidade';
+import { limitePadraoPorTipo, carregarLimitesVelocidade } from '@/lib/logistica/limitesVelocidade';
 
 
 interface VeiculosCRUDProps {
@@ -81,6 +81,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [configurandoTracker, setConfigurandoTracker] = useState(false);
   const [verificandoEntrega, setVerificandoEntrega] = useState(false);
   const [deliveryStatuses, setDeliveryStatuses] = useState<Record<string, { entregue_at: string | null; status: string; erro_mensagem: string | null }>>({});
+
+  // Carrega limites de velocidade configurados por tipo
+  useEffect(() => {
+    carregarLimitesVelocidade(estabelecimentoId);
+  }, [estabelecimentoId]);
 
   // Reseta status de entrega quando trocar de veículo e busca automaticamente ao abrir
   useEffect(() => {

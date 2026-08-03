@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { limiteDoVeiculo, LIMITE_PADRAO_GLOBAL } from '@/lib/logistica/limitesVelocidade';
+import { limiteDoVeiculo, LIMITE_PADRAO_GLOBAL, carregarLimitesVelocidade } from '@/lib/logistica/limitesVelocidade';
 
 
 export type PeriodoRelatorio = 'semanal' | 'mensal' | 'semestral';
@@ -58,6 +58,8 @@ export async function buscarEventosVelocidade(
   const fim = new Date();
   const inicio = new Date(fim.getTime() - PERIODO_DIAS[opts.periodo] * 86400000);
   const limitePadrao = Number(opts.limiteKmh) || LIMITE_PADRAO_GLOBAL;
+  await carregarLimitesVelocidade(opts.estabelecimentoId);
+
 
   let qVeic = supabase
     .from('veiculos')
