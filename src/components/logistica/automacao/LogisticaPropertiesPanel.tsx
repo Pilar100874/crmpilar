@@ -478,7 +478,140 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           </div>
         );
 
+      case 'gatilho_agendamento': {
+        const modo = config.agenda_modo || 'diario';
+        const horarios: string[] = config.agenda_horarios?.length ? config.agenda_horarios : ['08:00'];
+        const diasSemana: string[] = config.agenda_dias_semana || ['seg', 'ter', 'qua', 'qui', 'sex'];
+        const diasMes: number[] = config.agenda_dias_mes?.length ? config.agenda_dias_mes : [1];
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Tipo de agendamento</Label>
+              <Select value={modo} onValueChange={(v) => updateConfig('agenda_modo', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="intervalo">A cada X minutos</SelectItem>
+                  <SelectItem value="diario">Diário (horários fixos)</SelectItem>
+                  <SelectItem value="semanal">Semanal (dias + horários)</SelectItem>
+                  <SelectItem value="mensal">Mensal (dias do mês + horários)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {modo === 'intervalo' ? (
+              <div>
+                <Label>Intervalo (minutos)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={config.agenda_intervalo_minutos || 60}
+                  onChange={(e) => updateConfig('agenda_intervalo_minutos', parseInt(e.target.value) || 60)}
+                />
+              </div>
+            ) : (
+              <>
+                {modo === 'semanal' && (
+                  <div>
+                    <Label>Dias da semana</Label>
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'].map(dia => (
+                        <div key={dia} className="flex items-center gap-1">
+                          <Checkbox
+                            id={`ag-dia-${dia}`}
+                            checked={diasSemana.includes(dia)}
+                            onCheckedChange={(checked) =>
+                              updateConfig(
+                                'agenda_dias_semana',
+                                checked ? [...diasSemana, dia] : diasSemana.filter((d: string) => d !== dia)
+                              )
+                            }
+                          />
+                          <Label htmlFor={`ag-dia-${dia}`} className="text-xs capitalize">{dia}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {modo === 'mensal' && (
+                  <div>
+                    <Label>Dias do mês (separados por vírgula)</Label>
+                    <Input
+                      value={diasMes.join(', ')}
+                      onChange={(e) =>
+                        updateConfig(
+                          'agenda_dias_mes',
+                          e.target.value
+                            .split(',')
+                            .map(d => parseInt(d.trim()))
+                            .filter(d => Number.isFinite(d) && d >= 1 && d <= 31)
+                        )
+                      }
+                      placeholder="1, 15"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label>Horários</Label>
+                  <div className="space-y-2 mt-2">
+                    {horarios.map((h, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          type="time"
+                          value={h}
+                          onChange={(e) => {
+                            const novos = [...horarios];
+                            novos[i] = e.target.value;
+                            updateConfig('agenda_horarios', novos);
+                          }}
+                        />
+                        {horarios.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => updateConfig('agenda_horarios', horarios.filter((_, idx) => idx !== i))}
+                          >
+                            ×
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateConfig('agenda_horarios', [...horarios, '12:00'])}
+                    >
+                      Adicionar horário
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div>
+              <Label>Tolerância de disparo (minutos)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={config.agenda_tolerancia_minutos || 5}
+                onChange={(e) => updateConfig('agenda_tolerancia_minutos', parseInt(e.target.value) || 5)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Janela após o horário em que o disparo ainda é válido (caso nenhum mapa esteja aberto no minuto exato).
+              </p>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Com este bloco no fluxo, as ações são disparadas pelo horário agendado (e não pelo estado do veículo).
+              As condições do fluxo continuam filtrando quais veículos entram no disparo.
+            </p>
+          </div>
+        );
+      }
+
       case 'condicao_horario':
+
         return (
           <div className="space-y-4">
             <div>

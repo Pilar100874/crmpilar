@@ -1,6 +1,8 @@
 export type LogisticaBlockType = 
   | 'iniciar_automacao'
+  | 'gatilho_agendamento'
   | 'condicao_parado'
+
   | 'condicao_repetir_parado'
   | 'condicao_velocidade'
   | 'condicao_chegada'
@@ -25,8 +27,16 @@ export interface CondicaoTempoParado {
 }
 
 export interface LogisticaBlockConfig {
+  // Para gatilho_agendamento
+  agenda_modo?: 'intervalo' | 'diario' | 'semanal' | 'mensal';
+  agenda_intervalo_minutos?: number;
+  agenda_horarios?: string[];
+  agenda_dias_semana?: string[];
+  agenda_dias_mes?: number[];
+  agenda_tolerancia_minutos?: number;
   // Para condicao_parado - múltiplas condições de tempo
   condicoes_tempo?: CondicaoTempoParado[];
+
   // Para acao_marcar_mapa
   icone_parada?: string;
   cor_icone_parada?: string;
@@ -147,6 +157,24 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     description: 'Ponto de início da automação',
     outputs: 1,
   },
+  {
+    type: 'gatilho_agendamento',
+    label: 'Agendamento',
+    category: 'gatilho',
+    color: '#7C3AED',
+    icon: 'CalendarClock',
+    description: 'Dispara as ações do fluxo em horários agendados (diário, semanal, mensal ou a cada X minutos)',
+    defaultData: {
+      agenda_modo: 'diario',
+      agenda_horarios: ['08:00'],
+      agenda_dias_semana: ['seg', 'ter', 'qua', 'qui', 'sex'],
+      agenda_dias_mes: [1],
+      agenda_intervalo_minutos: 60,
+      agenda_tolerancia_minutos: 5,
+    },
+    outputs: 1,
+  },
+
   // Condições
   {
     type: 'condicao_parado',

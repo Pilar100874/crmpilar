@@ -1,10 +1,12 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { LogisticaLivePreview, LOGISTICA_PREVIEW_SUPPORTED } from "./LogisticaLivePreview";
+import { descreverAgendamento } from '@/lib/logistica/agendamento';
 import { memo, useState, useEffect } from 'react';
+
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { 
-  Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
+  Play, Pause, Gauge, MapPin, MapPinOff, Clock, CalendarClock, 
   MessageCircle, Bell, BellRing, Mail, MessageSquareText, Copy, Trash2, StickyNote,
   MoreVertical, SkipForward, X, ArrowRight,
   AlertTriangle, CircleAlert, Truck, Package, Home, Building2,
@@ -27,7 +29,9 @@ import { Card } from '@/components/ui/card';
 
 
 const iconMap: Record<string, any> = {
+  CalendarClock,
   Play,
+
   Pause,
   Gauge,
   MapPin,
@@ -450,6 +454,10 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           {data.type === 'iniciar_automacao' && (
             <span>Início do fluxo</span>
           )}
+          {data.type === 'gatilho_agendamento' && (
+            <span>{descreverAgendamento((data.config || {}) as any)}</span>
+          )}
+
           {data.type === 'condicao_horario' && (
             <span>{data.config?.horario_inicio || '08:00'} - {data.config?.horario_fim || '18:00'}</span>
           )}

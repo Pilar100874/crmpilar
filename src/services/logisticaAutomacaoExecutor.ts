@@ -285,9 +285,19 @@ export async function executarAutomacoesLogistica(
       // Bloco "Repetir a cada X min": repete o disparo enquanto o veículo continuar parado.
       // Sem esse bloco, as ações disparam UMA única vez por parada.
       const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
+      const agendaNode = flowObj.nodes.find(n => n.data?.type === 'gatilho_agendamento');
       let veiculosAcao = veiculosElegiveis;
       let pularAcoes = false;
-      if (repetirNode) {
+      if (agendaNode) {
+        // Gatilho por agendamento: as ações só disparam no horário programado,
+        // valendo para todos os veículos elegíveis do fluxo.
+        const { agendamentoDevido } = await import('@/lib/logistica/agendamento');
+        const devido = agendamentoDevido(
+          `${automacao.id}:${agendaNode.id}`,
+          (agendaNode.data?.config || {}) as Record<string, unknown>
+        );
+        veiculosAcao = devido ? veiculosElegiveis : [];
+      } else if (repetirNode) {
         const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
         const chaveNode = `${automacao.id}:${repetirNode.id}`;
 
@@ -308,6 +318,7 @@ export async function executarAutomacoesLogistica(
         veiculosAcao = veiculosElegiveis.filter(v => disparoUnicoDevido(String(automacao.id), v));
       }
       pularAcoes = veiculosAcao.length === 0;
+
 
 
       // Find condition nodes
