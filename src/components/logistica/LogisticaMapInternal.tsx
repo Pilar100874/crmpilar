@@ -3,6 +3,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
+import { enquadrarNoMapa } from '@/lib/mapa/enquadrar';
+
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
