@@ -609,8 +609,9 @@ export async function executarAutomacoesLogistica(
               if (!lista.length) lista.push('');
               for (const tel of lista) {
                 if (!podeEnviar(`${node.id}:${tel || 'padrao'}`)) continue;
-
+                await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
+
                   wfCtx
                 );
                 await enviarPdf(tel);
