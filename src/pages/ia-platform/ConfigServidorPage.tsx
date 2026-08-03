@@ -70,6 +70,18 @@ const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }
   },
 ];
 
+/** Valores que o próprio CRM já conhece e podem ser preenchidos sozinhos. */
+function sugestoesAutomaticas(): Record<string, string> {
+  const s: Record<string, string> = {
+    WORKSPACE_DIR: "/tmp",
+    PLAYWRIGHT_BROWSERS_PATH: "/ms-playwright",
+    APP_VERSION: `crm-pilar-${new Date().toISOString().slice(0, 10)}`,
+  };
+  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  if (url) s.SUPABASE_URL = url;
+  return s;
+}
+
 async function chamar(acao: string, extra: Record<string, unknown> = {}) {
   const { data, error } = await supabase.functions.invoke("aip-server-config", {
     body: { acao, ...extra },
