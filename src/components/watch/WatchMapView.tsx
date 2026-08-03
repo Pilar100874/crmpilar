@@ -58,6 +58,20 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
+
+  const enquadrarTudo = useCallback(() => {
+    const map = mapRef.current;
+    const bounds = ultimoBoundsRef.current;
+    if (!map || !bounds) return;
+    enquadrarNoMapa(map, bounds, {
+      paddingTopLeft: [8, 8],
+      paddingBottomRight: [8, 8],
+      maxZoom: 18,
+      zoomPontoUnico: 16,
+    });
+  }, []);
+
 
   const validVeiculos = veiculos.filter(v => v.ultima_posicao);
   const defaultCenter: [number, number] = validVeiculos.length > 0 
