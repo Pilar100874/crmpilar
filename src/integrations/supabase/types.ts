@@ -9173,6 +9173,7 @@ export type Database = {
           created_at: string
           default_value: Json | null
           description: string | null
+          estabelecimento_id: string | null
           id: string
           is_constant: boolean | null
           name: string
@@ -9183,6 +9184,7 @@ export type Database = {
           created_at?: string
           default_value?: Json | null
           description?: string | null
+          estabelecimento_id?: string | null
           id?: string
           is_constant?: boolean | null
           name: string
@@ -9193,6 +9195,7 @@ export type Database = {
           created_at?: string
           default_value?: Json | null
           description?: string | null
+          estabelecimento_id?: string | null
           id?: string
           is_constant?: boolean | null
           name?: string
