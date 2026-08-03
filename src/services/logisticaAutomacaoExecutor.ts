@@ -344,17 +344,14 @@ export async function executarAutomacoesLogistica(
         const appendLocAll = (msg: string) => {
           if (!enviarLocalizacao) return msg;
           if (msg.includes(LOC_TAG)) return msg; // já anexada, não repetir
-          const vistos = new Set<string>();
-          const links: string[] = [];
+          // Envia SOMENTE uma URL (do primeiro veículo com posição conhecida)
           for (const v of veiculosAcao) {
-            const id = (v as any).id;
-            if (vistos.has(id)) continue;
-            vistos.add(id);
-            const l = linkFor(id);
-            if (l && !links.includes(l)) links.push(l);
+            const l = linkFor((v as any).id);
+            if (l) return `${msg}\n\n${LOC_TAG}: ${l}`;
           }
-          return links.length ? `${msg}\n\n${LOC_TAG}:\n${links.join('\n')}` : msg;
+          return msg;
         };
+
 
 
         // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
@@ -401,8 +398,11 @@ export async function executarAutomacoesLogistica(
             const whatsappSessionName = (config as any).whatsappSessionName || null;
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
+            const textoAntes = String((config as any).texto_antes || '').trim();
+            const mediaUrl = String((config as any).media_url || '').trim() || undefined;
+            const comPrefixo = (m: string) => (textoAntes ? `${textoAntes}\n\n${m}` : m);
 
-            const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId };
+            const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId, mediaUrl };
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
@@ -415,7 +415,7 @@ export async function executarAutomacoesLogistica(
                 let mensagem = mensagemTpl
                   .replace(/\{placa\}/g, (veic as any).placa || '')
                   .replace(/\{motorista\}/g, mot.nome || '');
-                mensagem = appendLocOne(mensagem, (veic as any).id);
+                mensagem = comPrefixo(appendLocOne(mensagem, (veic as any).id));
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
@@ -423,7 +423,7 @@ export async function executarAutomacoesLogistica(
                 await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
-              const mensagem = appendLocAll(mensagemTpl);
+              const mensagem = comPrefixo(appendLocAll(mensagemTpl));
               const listaRaw: string[] = Array.isArray((config as any).telefones) && (config as any).telefones.length
                 ? (config as any).telefones
                 : [(config as any).telefone || ''];
@@ -437,6 +437,7 @@ export async function executarAutomacoesLogistica(
                 await dispararBot(tel || null, {});
               }
             }
+
 
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
