@@ -434,6 +434,30 @@ export async function executarAutomacoesLogistica(
           return msg;
         };
 
+        // --- Substituição de variáveis nas mensagens ---
+        const valorVeic = (v: any, campos: string[]) => {
+          for (const c of campos) {
+            const val = v?.[c];
+            if (val !== undefined && val !== null && String(val) !== '') return String(val);
+          }
+          return '';
+        };
+        const aplicarVars = (msg: string, veic?: any, motorista?: string) => {
+          if (!msg) return msg;
+          const alvo = veic || veiculosAcao[0];
+          const placa = veic
+            ? valorVeic(veic, ['placa', 'nome'])
+            : Array.from(new Set(veiculosAcao.map((v: any) => valorVeic(v, ['placa', 'nome'])).filter(Boolean))).join(', ');
+          return msg
+            .replace(/\{placa\}/gi, placa)
+            .replace(/\{motorista\}/gi, motorista || valorVeic(alvo, ['motorista', 'motorista_nome']) || '')
+            .replace(/\{endereco\}/gi, valorVeic(alvo, ['endereco', 'endereco_atual', 'ultimo_endereco', 'localizacao']))
+            .replace(/\{velocidade\}/gi, valorVeic(alvo, ['velocidade', 'velocidade_atual', 'speed']))
+            .replace(/\{data\}/gi, new Date().toLocaleDateString('pt-BR'))
+            .replace(/\{hora\}/gi, new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+        };
+
+
 
 
         // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
@@ -503,9 +527,7 @@ export async function executarAutomacoesLogistica(
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
-                let mensagem = mensagemTpl
-                  .replace(/\{placa\}/g, (veic as any).placa || '')
-                  .replace(/\{motorista\}/g, mot.nome || '');
+                let mensagem = aplicarVars(mensagemTpl, veic, mot.nome || '');
                 mensagem = comPrefixo(appendLocOne(mensagem, (veic as any).id));
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
@@ -514,7 +536,18 @@ export async function executarAutomacoesLogistica(
                 await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
-              const mensagem = comPrefixo(appendLocAll(mensagemTpl));
+              // Resolve o motorista atual quando a mensagem usa {motorista}
+              let motoristaNome = '';
+              if (/\{motorista\}/i.test(mensagemTpl) && veiculosAcao.length) {
+                try {
+                  const { fetchMotoristasAtuais } = await import('@/lib/logistica/cvDriverLookup');
+                  const map = await fetchMotoristasAtuais(veiculosAcao.map(v => v.id));
+                  motoristaNome = Array.from(new Set(
+                    veiculosAcao.map(v => map[(v as any).id]?.nome).filter(Boolean) as string[]
+                  )).join(', ');
+                } catch { /* noop */ }
+              }
+              const mensagem = comPrefixo(appendLocAll(aplicarVars(mensagemTpl, undefined, motoristaNome)));
               const listaRaw: string[] = Array.isArray((config as any).telefones) && (config as any).telefones.length
                 ? (config as any).telefones
                 : [(config as any).telefone || ''];
