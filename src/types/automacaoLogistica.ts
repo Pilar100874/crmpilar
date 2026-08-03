@@ -153,10 +153,22 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     outputLabels: ['Sim', 'Não'],
   },
   {
+    type: 'condicao_repetir_parado',
+    label: 'Repetir Enquanto Parado',
+    category: 'condicao',
+    color: '#0EA5E9',
+    icon: 'Repeat',
+    description: 'Após o veículo ficar parado por X min, dispara as ações a cada Y min enquanto permanecer parado',
+    defaultData: { repetir_inicio_minutos: 30, repetir_intervalo_minutos: 15, repetir_max: 0 },
+    outputs: 1,
+    outputLabels: ['Disparar'],
+  },
+  {
     type: 'condicao_velocidade',
     label: 'Velocidade Excedida',
     category: 'condicao',
     color: '#EF4444',
+
     icon: 'Gauge',
     description: 'Dispara quando a velocidade ultrapassar ou ficar abaixo do limite',
     defaultData: { velocidade_km: 80, operador_velocidade: 'maior' },
