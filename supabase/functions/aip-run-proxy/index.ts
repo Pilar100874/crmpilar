@@ -46,6 +46,9 @@ Deno.serve(async (req) => {
       "skill/exec",
       "playwright/run",
       "playwright/status",
+      "playwright/job",
+      "playwright/job/status",
+      "playwright/job/cancelar",
     ];
     if (ACOES_ADMIN.includes(action)) {
       const { data: usuario } = await supabase

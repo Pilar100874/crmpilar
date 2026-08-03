@@ -117,7 +117,50 @@ export const agentRunner = {
   /** Executa um roteiro de automação de navegador (Playwright) no runner. */
   playwrightRun: (payload: PlaywrightRunPayload) =>
     callProxy("playwright/run", payload as any) as Promise<PlaywrightRunResult>,
+  /** Cria uma rotina de automação em segundo plano e devolve o id do job. */
+  playwrightJob: (payload: PlaywrightRunPayload & { nome?: string }) =>
+    callProxy("playwright/job", payload as any) as Promise<{
+      ok: boolean;
+      job_id?: string;
+      status?: PlaywrightJobStatus;
+      total_passos?: number;
+      erro?: string;
+    }>,
+  /** Consulta o andamento de um job (ou lista os jobs quando sem id). */
+  playwrightJobStatus: (jobId?: string, incluirArtefatos = true) =>
+    callProxy("playwright/job/status", {
+      job_id: jobId,
+      incluir_artefatos: incluirArtefatos,
+    }) as Promise<PlaywrightJob & { jobs?: PlaywrightJob[] }>,
+  /** Cancela um job de automação em andamento. */
+  playwrightJobCancelar: (jobId: string) =>
+    callProxy("playwright/job/cancelar", { job_id: jobId }) as Promise<{
+      ok: boolean;
+      status?: PlaywrightJobStatus;
+      erro?: string;
+    }>,
 };
+
+export type PlaywrightJobStatus = "fila" | "rodando" | "concluido" | "erro" | "cancelado";
+
+export interface PlaywrightJob {
+  ok: boolean;
+  job_id?: string;
+  status?: PlaywrightJobStatus;
+  nome?: string;
+  progresso?: { passo: number; total: number };
+  passo_descricao?: string;
+  criado_em?: string;
+  iniciado_em?: string | null;
+  finalizado_em?: string | null;
+  duracao_ms?: number | null;
+  url_final?: string | null;
+  titulo?: string | null;
+  logs?: string[];
+  extraidos?: Record<string, unknown>;
+  artefatos?: Array<{ nome: string; tipo: string; tamanho_bytes: number; base64?: string }>;
+  erro?: string | null;
+}
 
 export type PlaywrightPasso =
   | { acao: "ir"; url: string }
