@@ -27,7 +27,8 @@ const createVehicleIcon = (status: 'movendo' | 'parado' | 'offline', compact = f
   const color = colors[status];
   const size = compact ? MARKER_SIZE_COMPACT : MARKER_SIZE;
   const iconSize = Math.round(size * 0.55);
-  const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${status === 'movendo' ? 'animation: veiculoPulse 1.8s infinite;' : ''}"></div>`;
+  const devePulsar = status === 'movendo' || status === 'parado';
+  const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${devePulsar ? `animation: veiculoPulse ${status === 'movendo' ? '1.8' : '2.2'}s infinite;` : ''}"></div>`;
   const label = rotulo
     ? `<div style="position:absolute; top:50%; left:${size + 5}px; transform:translateY(-50%); white-space:nowrap; font-size:${compact ? 8 : 10}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:0 4px; border-radius:6px; pointer-events:none;">${rotulo}</div>`
     : '';
