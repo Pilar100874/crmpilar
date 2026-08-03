@@ -1117,6 +1117,20 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 />
               </div>
               <div>
+                <Label>Limite de velocidade (km/h)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={formData.limite_velocidade}
+                  onChange={(e) => setFormData(prev => ({ ...prev, limite_velocidade: e.target.value.replace(/\D/g, '') }))}
+                  placeholder={`Padrão do tipo: ${limitePadraoPorTipo(formData.tipo_veiculo)} km/h`}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Usado no relatório de velocidades excedidas. Em branco usa o padrão do tipo.
+                </p>
+              </div>
+
+              <div>
                 <Label>Grupo</Label>
                 <Select
                   value={formData.logistica_grupo_id || '__none__'}
