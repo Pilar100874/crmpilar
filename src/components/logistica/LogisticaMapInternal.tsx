@@ -553,6 +553,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       if (!currentIds.has(id)) {
         marker.remove();
         currentParadasMarkers.delete(id);
+        paradaSigRef.current.delete(id);
       }
     });
 
@@ -564,11 +565,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const cor = parada.cor_icone_parada || '#EAB308';
       const icone = parada.icone_parada || 'Pause';
       const legenda = parada.legenda_parada || 'Veículo Parado';
+      const sig = `${cor}~${icone}~${compactIcons ? 'c' : 'n'}`;
 
       if (existingMarker) {
-        // Update position and icon
-        existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createParadaIcon(cor, icone, compactIcons));
+        const atual = existingMarker.getLatLng();
+        if (Math.abs(atual.lat - parada.lat) > 1e-7 || Math.abs(atual.lng - parada.lng) > 1e-7) {
+          existingMarker.setLatLng(pos);
+        }
+        if (paradaSigRef.current.get(parada.id) !== sig) {
+          existingMarker.setIcon(createParadaIcon(cor, icone, compactIcons));
+          paradaSigRef.current.set(parada.id, sig);
+        }
         // Update popup content
         existingMarker.setPopupContent(`
           <div class="text-sm p-1">
@@ -580,6 +587,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           </div>
         `);
       } else {
+        paradaSigRef.current.set(parada.id, sig);
+
         const marker = L.marker(pos, { 
           icon: createParadaIcon(cor, icone, compactIcons),
           zIndexOffset: 1000 // Paradas ficam acima dos veículos
