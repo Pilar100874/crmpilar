@@ -358,8 +358,8 @@ export default function TvDashboardVeiculos() {
       const bottom = listaAberta ? Math.round(window.innerHeight * 0.55) + 24 : 90;
       return { topLeft: [60, 20] as [number, number], bottomRight: [20, bottom] as [number, number] };
     }
-    // Desktop/tablet: painel direito 384px (lg:w-96) + margens; topo com relógio/botões
-    return { topLeft: [80, 20] as [number, number], bottomRight: [20, 400] as [number, number] };
+    // Desktop/tablet: painel direito estreito (md:w-56 lg:w-64) + margens; topo com relógio/botões
+    return { topLeft: [80, 20] as [number, number], bottomRight: [20, 280] as [number, number] };
   }, [isMobile, listaAberta]);
 
   // Follow mode: recentraliza no veículo fixado toda vez que houver nova posição
