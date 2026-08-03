@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { format, startOfDay, endOfDay, differenceInMinutes, subDays, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
@@ -51,6 +51,12 @@ interface LogisticaHistoricoProps {
 const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = false }) => {
   const { veiculoId: paramVeiculoId } = useParams<{ veiculoId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const voltarPara = (location.state as { voltarPara?: string } | null)?.voltarPara;
+  const voltar = () => {
+    if (voltarPara) navigate(voltarPara);
+    else navigate('/logistica/monitoramento');
+  };
   
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
@@ -327,7 +333,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
             {!embedded && (
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-8 w-8 sm:h-9 sm:w-9">
+              <Button variant="ghost" size="icon" onClick={voltar} className="h-8 w-8 sm:h-9 sm:w-9">
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             )}
