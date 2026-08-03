@@ -223,9 +223,13 @@ export async function executarAutomacoesLogistica(
           }
         }
 
+        // Se há bloco "Repetir Enquanto Parado" e nenhum veículo está no momento
+        // do disparo, as ações não são executadas neste ciclo.
+        if (pularAcoes) continue;
+
         // Contexto comum para ações
         const wfCtx = {
-          variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+          variaveis: { veiculos: veiculosAcao, automacao: { id: automacao.id, nome: automacao.nome } },
           estabelecimento_id: estabelecimentoId,
           workflow_tipo: 'logistica' as const,
           origem: 'logistica_automacao',
@@ -234,8 +238,8 @@ export async function executarAutomacoesLogistica(
         // --- Helpers de localização (Google Maps) ---
         const enviarLocalizacao = !!(config as any).enviar_localizacao;
         const posMap: Record<string, { lat: number; lng: number } | null> = {};
-        if (enviarLocalizacao && veiculos.length) {
-          for (const v of veiculos) {
+        if (enviarLocalizacao && veiculosAcao.length) {
+          for (const v of veiculosAcao) {
             const { data: pos } = await supabase
               .from('veiculo_posicoes')
               .select('lat,lng')
@@ -246,6 +250,7 @@ export async function executarAutomacoesLogistica(
             posMap[(v as any).id] = pos ? { lat: (pos as any).lat, lng: (pos as any).lng } : null;
           }
         }
+
         const linkFor = (vid: string) => {
           const p = posMap[vid];
           return p ? `https://www.google.com/maps?q=${p.lat},${p.lng}` : null;
