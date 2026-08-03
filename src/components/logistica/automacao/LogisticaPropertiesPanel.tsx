@@ -714,8 +714,9 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                   Anexar relatório PDF gerado
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Usa o PDF do bloco "Gerar Relatório PDF" deste workflow como anexo da mensagem.
+                  Usa o PDF do bloco "Gerar Relatório PDF" deste workflow. O PDF é sempre enviado por último, depois do texto antes da mensagem e da mensagem.
                 </p>
+
               </div>
             </div>
 
