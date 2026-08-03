@@ -23,6 +23,8 @@ import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
 import DispositivosRastreamento from './DispositivosRastreamento';
 import { GrupoFilterSelect } from './GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo, GRUPO_ALL } from '@/lib/logistica/grupoFilter';
+import { limitePadraoPorTipo } from '@/lib/logistica/limitesVelocidade';
+
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
