@@ -234,9 +234,35 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
 
 
   return (
-    <>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+      {autoPausado && (
+        <button
+          type="button"
+          onClick={retomarAuto}
+          style={{
+            position: 'absolute',
+            bottom: '18%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 500,
+            fontSize: 10,
+            fontWeight: 600,
+            color: '#fff',
+            background: 'rgba(0,0,0,.75)',
+            border: '1px solid rgba(255,255,255,.25)',
+            borderRadius: 12,
+            padding: '3px 10px',
+          }}
+        >
+          Retomar auto-zoom
+        </button>
+      )}
       <style>{`
+        @keyframes veiculoPulse {
+          0% { transform: scale(0.75); opacity: .9; }
+          100% { transform: scale(1.35); opacity: 0; }
+        }
         .leaflet-container {
           background: #1a1a2e;
         }
@@ -248,7 +274,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
           margin: 6px 8px;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 
