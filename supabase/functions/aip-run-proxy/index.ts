@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       "update",
       "cancel",
       "health",
+      "health/supabase",
       "mcp/probe",
       "skill/exec",
       "playwright/run",
