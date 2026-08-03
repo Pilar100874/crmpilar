@@ -232,14 +232,34 @@ export interface SkillExecPayload {
   timeout_ms?: number;
 }
 
+export interface SkillArtefato {
+  nome: string;
+  /** Caminho relativo dentro de output/ (ausente no log da execução). */
+  origem?: string;
+  tipo?: string;
+  tamanho_bytes?: number;
+  /** true quando o arquivo foi enviado ao Storage. */
+  armazenado?: boolean;
+  bucket?: string;
+  caminho?: string;
+  /** Link assinado (validade de 7 dias). */
+  url?: string | null;
+  url_expira_em?: string;
+  erro_armazenamento?: string;
+}
+
 export interface SkillExecResult {
   ok: boolean;
   codigo?: number;
   expirou?: boolean;
   workspace?: string;
+  execucao_id?: string;
   stdout?: string;
   stderr?: string;
-  artefatos?: Array<{ caminho: string; tamanho_bytes: number }>;
+  /** Arquivos encontrados em output/ (lista bruta). */
+  arquivos?: Array<{ caminho: string; tamanho_bytes: number }>;
+  /** Artefatos guardados no Storage, com link assinado. */
+  artefatos?: SkillArtefato[];
   duracao_ms?: number;
   erro?: string;
   simulado?: boolean;
