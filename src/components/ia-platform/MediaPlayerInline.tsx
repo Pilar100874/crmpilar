@@ -180,6 +180,16 @@ export function MediaPlayerInline({
         >
           {velocidade}x
         </button>
+        <button
+          type="button"
+          onClick={() => setMostrarTimeline((v) => !v)}
+          title={mostrarTimeline ? "Ocultar linha do tempo" : "Mostrar linha do tempo"}
+          className={`flex items-center gap-1 rounded border px-1.5 py-0.5 hover:bg-muted ${
+            mostrarTimeline ? "border-primary text-primary" : ""
+          }`}
+        >
+          <AudioWaveform className="h-3 w-3" />
+        </button>
 
         {legendas.length > 0 && (
           <>
