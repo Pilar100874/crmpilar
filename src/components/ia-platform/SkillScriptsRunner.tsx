@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Terminal, Loader2, Play, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { ArtefatoPreview, detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
+import { ArtefatoLightbox } from "@/components/ia-platform/ArtefatoLightbox";
 
 interface Arquivo {
   nome_arquivo: string;
@@ -30,6 +31,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
   const [rodando, setRodando] = useState<string | null>(null);
   const [resultado, setResultado] = useState<SkillExecResult | null>(null);
+  const [telaCheia, setTelaCheia] = useState<number | null>(null);
 
   const carregar = useCallback(async () => {
     const { data } = await db
@@ -132,7 +134,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
             <div className="space-y-1">
               <Label className="text-xs">Arquivos guardados</Label>
               <div className="rounded-md border divide-y bg-background">
-                {resultado.artefatos!.map((a) => {
+                {resultado.artefatos!.map((a, i) => {
                   const nome = a.origem ?? a.nome;
                   const tipo = detectarTipoPreview(nome, a.tipo);
                   return (
@@ -160,6 +162,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
                         url={a.url}
                         mime={a.tipo}
                         padraoAberto={tipo === "imagem"}
+                        onTelaCheia={a.url ? () => setTelaCheia(i) : undefined}
                       />
                     </div>
                   );
@@ -168,6 +171,15 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
               <p className="text-[11px] text-muted-foreground">
                 Os links dos arquivos valem 7 dias.
               </p>
+              <ArtefatoLightbox
+                itens={(resultado.artefatos ?? []).map((a) => ({
+                  nome: a.origem ?? a.nome,
+                  url: a.url,
+                  mime: a.tipo,
+                }))}
+                indice={telaCheia}
+                onIndiceChange={setTelaCheia}
+              />
             </div>
           )}
         </div>
