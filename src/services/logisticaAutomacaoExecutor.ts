@@ -314,10 +314,18 @@ export async function executarAutomacoesLogistica(
         } catch { /* noop */ }
 
         veiculosAcao = veiculosElegiveis.filter(v => repeticaoDevida(chaveNode, v, rc));
+      } else if (!paradoNode) {
+        // Sem gatilho de agendamento e sem nenhuma condição de veículo o fluxo não
+        // tem quando disparar — evita envio contínuo para todos os veículos.
+        console.warn(
+          `[logistica] automação "${automacao.nome}" sem gatilho (Agendamento) ou condição: ações não serão disparadas.`
+        );
+        veiculosAcao = [];
       } else {
         veiculosAcao = veiculosElegiveis.filter(v => disparoUnicoDevido(String(automacao.id), v));
       }
       pularAcoes = veiculosAcao.length === 0;
+
 
 
 
