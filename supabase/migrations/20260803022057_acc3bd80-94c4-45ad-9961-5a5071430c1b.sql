@@ -1,0 +1,1 @@
+DELETE FROM public.aip_server_config WHERE chave = 'RAILWAY_DEPLOY_HOOK_URL';
