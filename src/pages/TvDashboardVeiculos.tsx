@@ -433,15 +433,15 @@ export default function TvDashboardVeiculos() {
       {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
         className={`fixed bg-black/80 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
-          md:top-3 md:right-3 md:bottom-3 md:w-80 lg:w-96 md:translate-x-0
+          md:top-3 md:right-3 md:bottom-3 md:w-56 lg:w-64 md:translate-x-0
           ${isMobile 
             ? `left-2 right-2 bottom-2 max-h-[55vh] ${listaAberta ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'}`
             : ''}
         `}
         style={{ zIndex: 999999 }}
       >
-        <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
-          <h3 className="font-medium text-xs text-white/90 flex items-center gap-1.5">
+        <div className="px-2 py-1.5 border-b border-white/10 flex items-center justify-between">
+          <h3 className="font-medium text-[10px] text-white/90 flex items-center gap-1">
             <Car className="h-3 w-3" />
             Veículos ({veiculosFiltrados.length})
           </h3>
@@ -458,10 +458,10 @@ export default function TvDashboardVeiculos() {
         </div>
 
         {/* Legenda de cores por status */}
-        <div className="px-3 py-1.5 border-b border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="px-2 py-1 border-b border-white/10 flex flex-wrap items-center gap-x-2 gap-y-0.5">
           {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((k) => (
-            <span key={k} className="flex items-center gap-1 text-[10px] text-white/70">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: statusConfig[k].hex }} />
+            <span key={k} className="flex items-center gap-1 text-[9px] text-white/70 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusConfig[k].hex }} />
               {statusConfig[k].label} ({stats[k as 'movendo' | 'parado' | 'offline']})
             </span>
           ))}
