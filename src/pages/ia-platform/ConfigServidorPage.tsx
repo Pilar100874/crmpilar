@@ -351,6 +351,50 @@ export default function ConfigServidorPage() {
               </Badge>
             )}
           </div>
+          {saudeBanco && (
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+              <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                <Database className="h-4 w-4 text-primary" />
+                Verificação do backend (banco de dados)
+                {saudeBanco.ok ? (
+                  <Badge className="gap-1 bg-emerald-600">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Acesso confirmado
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="gap-1">
+                    <XCircle className="h-3.5 w-3.5" /> Sem acesso
+                  </Badge>
+                )}
+                {typeof saudeBanco.latencia_ms === "number" && (
+                  <Badge variant="outline">{saudeBanco.latencia_ms} ms</Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={saudeBanco.url_configurada ? "secondary" : "outline"}>
+                  URL {saudeBanco.url_configurada ? "definida" : "ausente"}
+                </Badge>
+                <Badge variant={saudeBanco.chave_configurada ? "secondary" : "outline"}>
+                  Chave de serviço {saudeBanco.chave_configurada ? "recebida" : "ausente"}
+                </Badge>
+                <Badge variant={saudeBanco.autorizado ? "secondary" : "outline"}>
+                  Autorização {saudeBanco.autorizado ? "ok" : "negada"}
+                </Badge>
+                <Badge variant={saudeBanco.leitura_banco ? "secondary" : "outline"}>
+                  Leitura do banco {saudeBanco.leitura_banco ? "ok" : "falhou"}
+                </Badge>
+                <Badge variant={saudeBanco.storage ? "secondary" : "outline"}>
+                  Arquivos {saudeBanco.storage ? "ok" : "indisponível"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Teste feito pelo próprio servidor com a chave que o backend injeta automaticamente —
+                você não precisa informar a service role.
+              </p>
+              {saudeBanco.erro && (
+                <p className="text-xs text-destructive break-words">{saudeBanco.erro}</p>
+              )}
+            </div>
+          )}
           {saude && !saude.ok && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
