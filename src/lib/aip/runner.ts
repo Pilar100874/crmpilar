@@ -78,6 +78,21 @@ export interface RunsResult {
   verificado_em?: string;
 }
 
+export interface SupabaseHealth {
+  ok: boolean;
+  simulado?: boolean;
+  url_configurada?: boolean;
+  url?: string | null;
+  chave_configurada?: boolean;
+  origem_chave?: string | null;
+  alcancavel?: boolean;
+  autorizado?: boolean;
+  leitura_banco?: boolean;
+  storage?: boolean;
+  latencia_ms?: number | null;
+  erro?: string | null;
+}
+
 export const agentRunner = {
   start: (payload: StartRunPayload) => callProxy("start", payload as any),
   resume: (executionId: string, approvalId: string, resultado: unknown) =>
@@ -85,6 +100,8 @@ export const agentRunner = {
   cancel: (executionId: string) => callProxy("cancel", { execution_id: executionId }),
   status: (executionId: string) => callProxy("status", { execution_id: executionId }),
   health: () => callProxy("health", {}),
+  /** Diagnóstico do backend feito pelo próprio servidor (URL, chave de serviço, leitura e storage). */
+  healthSupabase: () => callProxy("health/supabase", {}) as Promise<SupabaseHealth>,
   /** Painel de monitoramento: estado do processo + execuções em memória. */
   runs: (limite = 50) => callProxy("runs", { limite }) as Promise<RunsResult>,
   /** Remove execuções finalizadas da memória do servidor. */

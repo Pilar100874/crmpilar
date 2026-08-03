@@ -1518,6 +1518,74 @@ app.post("/config/status", (req, res) => {
   });
 });
 
+/**
+ * Diagnóstico do backend (Supabase) feito pelo próprio servidor.
+ * Confirma que a URL e a chave de serviço injetadas pelo CRM funcionam,
+ * sem que o usuário precise digitar a service role em lugar nenhum.
+ */
+app.post("/health/supabase", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const inicio = Date.now();
+  const resultado = {
+    ok: false,
+    url_configurada: Boolean(cfg.SUPABASE_URL),
+    url: cfg.SUPABASE_URL ? cfg.SUPABASE_URL.replace(/^https?:\/\//, "") : null,
+    chave_configurada: Boolean(cfg.SUPABASE_SERVICE_ROLE_KEY),
+    origem_chave: origemCfg.SUPABASE_SERVICE_ROLE_KEY ?? null,
+    alcancavel: false,
+    autorizado: false,
+    leitura_banco: false,
+    storage: false,
+    latencia_ms: null,
+    erro: null,
+  };
+
+  const sb = getSupabase();
+  if (!sb) {
+    resultado.erro = !cfg.SUPABASE_URL
+      ? "URL do backend não configurada no servidor"
+      : "Chave de serviço não recebida — use 'Salvar e aplicar agora' no CRM";
+    return res.json(resultado);
+  }
+
+  try {
+    // 1) alcance + autorização: o endpoint REST responde à chave de serviço?
+    const rest = await fetch(`${cfg.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/`, {
+      headers: {
+        apikey: cfg.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${cfg.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    });
+    resultado.alcancavel = true;
+    resultado.autorizado = rest.status < 400;
+    if (!resultado.autorizado) {
+      resultado.erro = `Backend recusou a chave de serviço (HTTP ${rest.status})`;
+    }
+
+    // 2) leitura real de uma tabela do sistema
+    if (resultado.autorizado) {
+      const { error } = await sb
+        .from("aip_executions")
+        .select("id", { count: "exact", head: true })
+        .limit(1);
+      if (error) resultado.erro = `Leitura no banco falhou: ${error.message}`;
+      else resultado.leitura_banco = true;
+    }
+
+    // 3) storage (usado para artefatos de execuções)
+    if (resultado.autorizado) {
+      const { error } = await sb.storage.listBuckets();
+      resultado.storage = !error;
+    }
+  } catch (e) {
+    resultado.erro = `Não foi possível falar com o backend: ${e?.message ?? e}`;
+  }
+
+  resultado.latencia_ms = Date.now() - inicio;
+  resultado.ok = resultado.autorizado && resultado.leitura_banco;
+  res.json(resultado);
+});
+
 app.get("/", (_req, res) => res.type("html").send(PAINEL_HTML));
 
 const porta = process.env.PORT || 8080;
