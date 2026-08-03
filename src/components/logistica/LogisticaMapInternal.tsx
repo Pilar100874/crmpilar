@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { enquadrarNoMapa } from '@/lib/mapa/enquadrar';
+import { Crosshair } from 'lucide-react';
 
 
 // Fix leaflet default icon issue
@@ -33,23 +34,33 @@ const getTipoIconSvg = (tipo?: string) => {
   return TIPO_ICON_SVG[tipo.toLowerCase()] ?? '';
 };
 
-const createVeiculoIcon = (status: string, compact = false, customColor?: string, tipoVeiculo?: string, ignicao?: boolean | null) => {
+// Tamanho único para TODOS os símbolos de marcação do mapa
+const MARKER_SIZE = 34;
+const MARKER_SIZE_COMPACT = 24;
+const tamanhoMarcador = (compact = false) => (compact ? MARKER_SIZE_COMPACT : MARKER_SIZE);
+
+const createVeiculoIcon = (status: string, compact = false, customColor?: string, tipoVeiculo?: string, ignicao?: boolean | null, rotulo?: string) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
-  const size = compact ? 18 : 30;
+  const size = tamanhoMarcador(compact);
   const borderWidth = compact ? 2 : 3;
-  const iconSize = compact ? 10 : 16;
+  const iconSize = Math.round(size * 0.55);
   const svgPath = getTipoIconSvg(tipoVeiculo);
   const inner = svgPath
     ? `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>`
     : '';
-  const badgeSize = compact ? 8 : 12;
+  const badgeSize = compact ? 9 : 12;
   const ignBadge = typeof ignicao === 'boolean'
-    ? `<div title="${ignicao ? 'Ignição ligada' : 'Ignição desligada'}" style="position:absolute; top:-2px; right:-2px; width:${badgeSize}px; height:${badgeSize}px; border-radius:50%; border:1.5px solid white; background:${ignicao ? '#059669' : '#9ca3af'}; display:flex; align-items:center; justify-content:center; font-size:${badgeSize - 4}px; line-height:1; color:white;">${ignicao ? '&#9679;' : ''}</div>`
+    ? `<div title="${ignicao ? 'Ignição ligada' : 'Ignição desligada'}" style="position:absolute; top:-2px; right:-2px; width:${badgeSize}px; height:${badgeSize}px; border-radius:50%; border:1.5px solid white; background:${ignicao ? '#059669' : '#9ca3af'}; display:flex; align-items:center; justify-content:center; font-size:${badgeSize - 4}px; line-height:1; color:white; z-index:3;">${ignicao ? '&#9679;' : ''}</div>`
+    : '';
+  // Halo pulsante para realçar o veículo no mapa
+  const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${status === 'movendo' ? `animation: veiculoPulse 1.8s infinite;` : ''}"></div>`;
+  const label = rotulo
+    ? `<div style="position:absolute; top:${size + 3}px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6);">${rotulo}</div>`
     : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
-    html: `<div style="position:relative; width: ${size}px; height: ${size}px;"><div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">${inner}</div>${ignBadge}</div>`,
+    html: `<div style="position:relative; width: ${size}px; height: ${size}px;">${halo}<div style="position:relative; background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 0 0 2px ${color}66, 0 3px 10px rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:2;">${inner}</div>${ignBadge}${label}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -80,17 +91,18 @@ const createParadaIcon = (cor: string, iconeName?: string) => {
     return icons[name || 'Pause'] || icons['Pause'];
   };
 
+  const size = MARKER_SIZE;
   return L.divIcon({
     className: 'custom-parada-icon',
     html: `
-      <div style="position: relative;">
+      <div style="position: relative; width:${size}px; height:${size}px;">
         <div style="
           position: absolute;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 32px;
-          height: 32px;
+          width: ${Math.round(size * 1.9)}px;
+          height: ${Math.round(size * 1.9)}px;
           background-color: ${cor}40;
           border-radius: 50%;
           animation: paradaPulse 2s infinite;
@@ -98,29 +110,29 @@ const createParadaIcon = (cor: string, iconeName?: string) => {
         <div style="
           position: relative;
           background-color: ${cor};
-          width: 24px;
-          height: 24px;
+          width: ${size}px;
+          height: ${size}px;
           border-radius: 50%;
           border: 3px solid white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+          box-shadow: 0 0 0 2px ${cor}66, 0 3px 10px rgba(0,0,0,0.45);
           display: flex;
           align-items: center;
           justify-content: center;
         ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(size * 0.55)}" height="${Math.round(size * 0.55)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             ${getIconSvg(iconeName)}
           </svg>
         </div>
       </div>
       <style>
         @keyframes paradaPulse {
-          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
-          100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+          0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
         }
       </style>
     `,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   });
 };
 
@@ -185,19 +197,43 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const initialBoundsFittedRef = useRef(false);
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
 
+  // Auto-enquadramento: pausa quando o usuário interage (zoom, arrasto, seleção)
+  const [autoPausado, setAutoPausado] = useState(false);
+  const autoPausadoRef = useRef(false);
+  const movimentoProgramaticoRef = useRef(false);
+
+  const pausarAuto = useCallback(() => {
+    if (autoPausadoRef.current) return;
+    autoPausadoRef.current = true;
+    setAutoPausado(true);
+  }, []);
+
   // Reenquadra o mapa no maior zoom possível, mantendo tudo centralizado na área visível
   const enquadrarTudo = useCallback(() => {
     const map = mapRef.current;
     const bounds = ultimoBoundsRef.current;
-    if (!map || !bounds || !fitBounds) return;
+    if (!map || !bounds || !fitBounds || autoPausadoRef.current) return;
 
+    movimentoProgramaticoRef.current = true;
     enquadrarNoMapa(map, bounds, {
       paddingTopLeft: fitBoundsPadding?.topLeft ?? [16, 16],
       paddingBottomRight: fitBoundsPadding?.bottomRight ?? [16, 16],
       maxZoom: 18,
       zoomPontoUnico: 17,
     });
+    window.setTimeout(() => {
+      movimentoProgramaticoRef.current = false;
+    }, 500);
   }, [fitBounds, fitBoundsPadding]);
+
+  const retomarAuto = useCallback(() => {
+    autoPausadoRef.current = false;
+    setAutoPausado(false);
+    requestAnimationFrame(() => {
+      mapRef.current?.invalidateSize({ animate: false });
+      enquadrarTudo();
+    });
+  }, [enquadrarTudo]);
 
 
   // Reset initial bounds flag when fullRouteBounds changes (new data loaded)
@@ -229,13 +265,28 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(mapRef.current);
 
+    // Pausa o auto-enquadramento assim que o usuário interage com o mapa
+    const map = mapRef.current;
+    const aoInteragir = () => {
+      if (movimentoProgramaticoRef.current) return;
+      pausarAuto();
+    };
+    map.on('dragstart', aoInteragir);
+    map.on('zoomstart', aoInteragir);
+    map.on('mousedown', aoInteragir);
+    const el = mapContainerRef.current;
+    el.addEventListener('wheel', aoInteragir, { passive: true });
+    el.addEventListener('touchstart', aoInteragir, { passive: true });
+
     return () => {
+      el.removeEventListener('wheel', aoInteragir);
+      el.removeEventListener('touchstart', aoInteragir);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
-  }, []);
+  }, [pausarAuto]);
 
   // Fit to full route bounds on initial load (for timeline preview)
   useEffect(() => {
@@ -269,11 +320,20 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
 
+      const icone = createVeiculoIcon(
+        veiculo.status,
+        compactIcons,
+        veiculo.cor,
+        veiculo.tipo_veiculo,
+        veiculo.ultima_posicao?.ignicao,
+        veiculo.placa,
+      );
+
       if (existingMarker) {
         existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo, veiculo.ultima_posicao?.ignicao));
+        existingMarker.setIcon(icone);
       } else {
-        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo, veiculo.ultima_posicao?.ignicao) })
+        const marker = L.marker(pos, { icon: icone, riseOnHover: true })
           .addTo(map)
           .bindPopup(`
             <div class="text-sm">
@@ -291,9 +351,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           `);
 
         marker.on('click', () => {
+          pausarAuto();
           onVeiculoClick?.(veiculo);
         });
         marker.on('dblclick', () => {
+          pausarAuto();
           map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
           marker.openPopup();
         });
@@ -365,6 +427,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
     if (!veiculo) return;
     const map = mapRef.current;
+    // Selecionar um veículo pausa o auto-enquadramento
+    pausarAuto();
     const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
     // Defer to next frame so container resize (details panel opening) settles first
     const raf = requestAnimationFrame(() => {
@@ -379,7 +443,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       }, 350);
     });
     return () => cancelAnimationFrame(raf);
-  }, [focusVeiculoId, focusTrigger, veiculos]);
+  }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto]);
 
   // Update paradas marcadas markers
   useEffect(() => {
@@ -470,10 +534,12 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       positions.forEach(p => allRoutePoints.push(p));
     });
 
-    // Fit bounds to show all routes
-    if (fitBounds && allRoutePoints.length > 0) {
+    // Fit bounds to show all routes (respeita a pausa do auto-enquadramento)
+    if (fitBounds && allRoutePoints.length > 0 && !autoPausadoRef.current) {
       const bounds = L.latLngBounds(allRoutePoints);
+      movimentoProgramaticoRef.current = true;
       map.fitBounds(bounds, { padding: [50, 50] });
+      window.setTimeout(() => { movimentoProgramaticoRef.current = false; }, 500);
     }
   }, [routes, fitBounds]);
 
@@ -494,14 +560,14 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const icon = L.divIcon({
         className: 'current-position-marker',
         html: `
-          <div style="position: relative;">
+          <div style="position: relative; width:${MARKER_SIZE}px; height:${MARKER_SIZE}px;">
             <div style="
               position: absolute;
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 40px;
-              height: 40px;
+              width: ${Math.round(MARKER_SIZE * 1.9)}px;
+              height: ${Math.round(MARKER_SIZE * 1.9)}px;
               background-color: ${currentMarker.color}40;
               border-radius: 50%;
               animation: currentPulse 1.5s infinite;
@@ -509,22 +575,22 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
             <div style="
               position: relative;
               background-color: ${currentMarker.color};
-              width: 20px;
-              height: 20px;
+              width: ${MARKER_SIZE}px;
+              height: ${MARKER_SIZE}px;
               border-radius: 50%;
               border: 3px solid white;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+              box-shadow: 0 0 0 2px ${currentMarker.color}66, 0 3px 10px rgba(0,0,0,0.45);
             "></div>
           </div>
           <style>
             @keyframes currentPulse {
-              0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
-              100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+              0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+              100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
             }
           </style>
         `,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        iconSize: [MARKER_SIZE, MARKER_SIZE],
+        iconAnchor: [MARKER_SIZE / 2, MARKER_SIZE / 2],
       });
 
       currentMarkerRef.current = L.marker([currentMarker.lat, currentMarker.lng], { 
@@ -541,9 +607,25 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   }, [currentMarker]);
 
   return (
-    <>
+    <div className="relative w-full h-full">
       <div ref={mapContainerRef} className={`logistica-map-container ${className}`} />
+
+      {fitBounds && autoPausado && (
+        <button
+          type="button"
+          onClick={retomarAuto}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5 text-xs font-semibold text-foreground shadow-lg backdrop-blur hover:bg-accent"
+        >
+          <Crosshair className="h-3.5 w-3.5" />
+          Auto-zoom pausado · Retomar
+        </button>
+      )}
+
       <style>{`
+        @keyframes veiculoPulse {
+          0% { transform: scale(0.75); opacity: .9; }
+          100% { transform: scale(1.35); opacity: 0; }
+        }
         .logistica-map-container .leaflet-control-container .leaflet-top.leaflet-left {
           top: auto !important;
           bottom: 16px !important;
@@ -565,7 +647,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           }
         }
       `}</style>
-    </>
+    </div>
   );
 };
 
