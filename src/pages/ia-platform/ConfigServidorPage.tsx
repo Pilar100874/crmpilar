@@ -6,9 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2, Wand2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  PlugZap,
+  Save,
+  SendHorizonal,
+  ShieldCheck,
+  Trash2,
+  Wand2,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { agentRunner } from "@/lib/aip/runner";
 
 interface ItemConfig {
   chave: string;
