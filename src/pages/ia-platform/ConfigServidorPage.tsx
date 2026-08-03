@@ -172,19 +172,89 @@ export default function ConfigServidorPage() {
     const preenchidos = Object.entries(valores)
       .filter(([, v]) => v.trim())
       .map(([chave, valor]) => ({ chave, valor }));
-    if (!preenchidos.length) return toast.warning("Preencha ao menos um campo");
+    if (!preenchidos.length) {
+      toast.warning("Preencha ao menos um campo");
+      return 0;
+    }
     setSalvando(true);
     try {
       const r = await chamar("salvar", { itens: preenchidos });
       toast.success(`${r.gravadas?.length ?? 0} configuração(ões) salva(s) com segurança`);
       setValores({});
       await carregar();
+      return r.gravadas?.length ?? preenchidos.length;
     } catch (e) {
       toast.error((e as Error).message);
+      throw e;
     } finally {
       setSalvando(false);
     }
   };
+
+  /** Salva → envia ao servidor → confirma que ficou online já com as chaves novas. */
+  const salvarEAplicar = async () => {
+    const pendentes = Object.values(valores).filter((v) => v.trim()).length;
+    setAplicando(true);
+    setEtapas([
+      { rotulo: "Salvar com segurança", estado: "rodando" },
+      { rotulo: "Enviar ao servidor", estado: "pendente" },
+      { rotulo: "Confirmar aplicação", estado: "pendente" },
+    ]);
+    const marcar = (i: number, estado: Etapa["estado"], detalhe?: string) =>
+      setEtapas((e) => e.map((x, idx) => (idx === i ? { ...x, estado, detalhe } : x)));
+
+    try {
+      if (pendentes) {
+        const n = await salvar();
+        marcar(0, "ok", `${n} valor(es) gravado(s)`);
+      } else {
+        marcar(0, "ok", "nenhum valor novo — usando os já salvos");
+      }
+
+      marcar(1, "rodando");
+      const envio = await chamar("enviar");
+      if (!envio?.ok) {
+        marcar(1, "erro", envio?.erro ?? "Falha ao enviar as chaves");
+        toast.error(envio?.erro ?? "Falha ao enviar as chaves");
+        return;
+      }
+      const aplicadas = (envio.aplicadas ?? []).length;
+      marcar(1, "ok", `${aplicadas} chave(s) aplicada(s)`);
+      await carregar();
+
+      marcar(2, "rodando");
+      // O servidor reinicia o processo ao aplicar as chaves: aguardar e reconferir.
+      let saudavel: Record<string, unknown> | null = null;
+      for (let tentativa = 0; tentativa < 6; tentativa++) {
+        await new Promise((r) => setTimeout(r, tentativa === 0 ? 1500 : 2500));
+        try {
+          const r = await agentRunner.health();
+          if (r?.ok) {
+            saudavel = r;
+            break;
+          }
+          saudavel = r ?? null;
+        } catch {
+          saudavel = null;
+        }
+      }
+      setSaude(saudavel ?? { ok: false, motivo: "Servidor não respondeu após aplicar as chaves" });
+      if (saudavel?.ok) {
+        marcar(2, "ok", "servidor online com as configurações novas");
+        toast.success("Configurações aplicadas e confirmadas no servidor");
+      } else {
+        marcar(2, "erro", "servidor não confirmou o retorno — tente testar a conexão de novo");
+        toast.warning("Chaves enviadas, mas o servidor ainda não respondeu");
+      }
+    } catch (e) {
+      setEtapas((et) => et.map((x) => (x.estado === "rodando" ? { ...x, estado: "erro", detalhe: (e as Error).message } : x)));
+      toast.error((e as Error).message);
+    } finally {
+      setAplicando(false);
+    }
+  };
+
+
 
   const enviar = async () => {
     setEnviando(true);
