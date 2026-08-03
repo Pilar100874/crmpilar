@@ -413,11 +413,40 @@ export default function ConfigServidorPage() {
                       setValores((v) => ({ ...v, [campo.chave]: e.target.value }))
                     }
                   />
-                  <p className="text-xs text-muted-foreground">{campo.ajuda}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {campo.ajuda}{" "}
+                    {campo.link && (
+                      <a
+                        href={campo.link.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-primary underline underline-offset-2"
+                      >
+                        {campo.link.rotulo} <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </p>
                 </div>
               );
             })
           )}
+
+          <Separator />
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Valores padrão (fixos, enviados automaticamente)
+            </p>
+            {CAMPOS_FIXOS.map((c) => (
+              <div key={c.chave} className="flex flex-wrap items-center gap-2 text-sm">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{c.rotulo}</span>
+                <code className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  {c.valor}
+                </code>
+                <span className="text-xs text-muted-foreground">{c.ajuda}</span>
+              </div>
+            ))}
+          </div>
 
           <Separator />
           <div className="flex flex-wrap gap-2">
@@ -441,10 +470,8 @@ export default function ConfigServidorPage() {
               )}
               Enviar ao servidor
             </Button>
-            <Button variant="outline" onClick={() => preencherAuto(itens, true)} disabled={aplicando}>
-              <Wand2 className="mr-2 h-4 w-4" /> Preencher automático
-            </Button>
           </div>
+
 
           {etapas.length > 0 && (
             <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
