@@ -92,15 +92,35 @@ Deno.serve(async (req) => {
     }
 
     const rota = action === "stream" ? "stream" : action;
-    const upstream = await fetch(`${RUNNER_URL.replace(/\/$/, "")}/${rota}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: action === "stream" ? "text/event-stream" : "application/json",
-        ...(RUNNER_KEY ? { "X-Runner-Key": RUNNER_KEY } : {}),
-      },
-      body: JSON.stringify({ ...body, usuario_id: userData.user.id }),
-    });
+    const base = RUNNER_URL.replace(/\/$/, "");
+    const chamar = (caminho: string) =>
+      fetch(`${base}/${caminho}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: action === "stream" ? "text/event-stream" : "application/json",
+          ...(RUNNER_KEY ? { "X-Runner-Key": RUNNER_KEY } : {}),
+        },
+        body: JSON.stringify({ ...body, usuario_id: userData.user.id }),
+      });
+
+    let upstream = await chamar(rota);
+    // Servidor antigo pode não ter a rota nova: tenta o prefixo versionado.
+    if (upstream.status === 404 && action !== "stream") {
+      const alternativa = await chamar(`api/v1/${rota}`);
+      if (alternativa.status !== 404) {
+        upstream = alternativa;
+      } else {
+        return json(
+          {
+            ok: false,
+            desatualizado: true,
+            error: `Rota /${rota} não existe no servidor. Atualize o servidor (Railway) para a versão mais recente.`,
+          },
+          200,
+        );
+      }
+    }
 
     if (action === "stream") {
       return new Response(upstream.body, {
@@ -108,6 +128,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
+
 
     const texto = await upstream.text();
     return new Response(texto, {
