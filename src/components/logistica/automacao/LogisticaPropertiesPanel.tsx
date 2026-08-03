@@ -700,6 +700,21 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
 
             <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
 
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <Checkbox
+                id="anexar_relatorio_wpp"
+                checked={!!config.anexar_relatorio}
+                onCheckedChange={(v) => updateConfig('anexar_relatorio', !!v)}
+              />
+              <div className="space-y-0.5">
+                <Label htmlFor="anexar_relatorio_wpp" className="text-sm cursor-pointer">
+                  Anexar relatório PDF gerado
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Usa o PDF do bloco "Gerar Relatório PDF" deste workflow como anexo da mensagem.
+                </p>
+              </div>
+            </div>
 
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-start gap-2">
@@ -742,6 +757,71 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
         );
       }
 
+
+      case 'acao_relatorio_pdf':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Período do relatório</Label>
+              <Select
+                value={config.relatorio_periodo || 'semanal'}
+                onValueChange={(v) => updateConfig('relatorio_periodo', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semanal">Semanal (últimos 7 dias)</SelectItem>
+                  <SelectItem value="mensal">Mensal (últimos 30 dias)</SelectItem>
+                  <SelectItem value="semestral">Semestral (últimos 180 dias)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Velocidade limite (km/h)</Label>
+              <Input
+                type="number"
+                min={10}
+                value={config.relatorio_limite_kmh ?? 80}
+                onChange={(e) => updateConfig('relatorio_limite_kmh', Number(e.target.value))}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Registros acima deste valor entram no relatório.
+              </p>
+            </div>
+
+            <div>
+              <Label>Título do relatório</Label>
+              <Input
+                value={config.relatorio_titulo ?? 'Relatório de Velocidades Excedidas no Período'}
+                onChange={(e) => updateConfig('relatorio_titulo', e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <Checkbox
+                id="relatorio_grafico"
+                checked={config.relatorio_grafico !== false}
+                onCheckedChange={(v) => updateConfig('relatorio_grafico', !!v)}
+              />
+              <div className="space-y-0.5">
+                <Label htmlFor="relatorio_grafico" className="text-sm cursor-pointer">
+                  Incluir gráfico de quem mais excede
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Ranking dos 10 motoristas com mais ocorrências no período.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              O PDF é gerado com o logo da empresa e as colunas Data, Placa, Motorista, Hora e Velocidade excedida,
+              ordenado por motorista. Ligue este bloco antes do bloco "Enviar WhatsApp" e marque
+              "Anexar relatório PDF gerado" nele.
+            </p>
+          </div>
+        );
 
       case 'acao_notificacao':
         return (

@@ -240,6 +240,31 @@ export async function executarAutomacoesLogistica(
       const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
       const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
 
+      // Bloco "Gerar Relatório PDF" (velocidades excedidas no período)
+      const relatorioNode = flowObj.nodes.find(n => n.data?.type === 'acao_relatorio_pdf');
+      let relatorioPdfUrl: string | null = null;
+      let relatorioGerado = false;
+      const obterRelatorioPdf = async (): Promise<string | null> => {
+        if (relatorioGerado) return relatorioPdfUrl;
+        relatorioGerado = true;
+        if (!relatorioNode) return null;
+        try {
+          const rc = (relatorioNode.data?.config || {}) as Record<string, unknown>;
+          const { gerarRelatorioVelocidadePDF } = await import('@/lib/logistica/relatorioVelocidade');
+          const res = await gerarRelatorioVelocidadePDF({
+            estabelecimentoId,
+            periodo: (rc.relatorio_periodo as 'semanal' | 'mensal' | 'semestral') || 'semanal',
+            limiteKmh: Number(rc.relatorio_limite_kmh) || 80,
+            titulo: (rc.relatorio_titulo as string) || undefined,
+            incluirGrafico: rc.relatorio_grafico !== false,
+          });
+          relatorioPdfUrl = res.url;
+        } catch (e) {
+          console.error('[logistica] falha ao gerar relatório PDF', e);
+        }
+        return relatorioPdfUrl;
+      };
+
       // Veículos que realmente satisfazem a condição "Veículo Parado" (se existir no fluxo)
       const paradoNode = flowObj.nodes.find(n => n.data?.type === 'condicao_parado');
       let veiculosElegiveis = veiculos;
@@ -429,6 +454,11 @@ export async function executarAutomacoesLogistica(
           }
         };
 
+        // Handle "acao_relatorio_pdf" - gera o PDF (fica disponível para o bloco de WhatsApp)
+        if ((nodeType as string) === 'acao_relatorio_pdf') {
+          await obterRelatorioPdf();
+        }
+
         // Handle "disparar_push"
         if ((nodeType as string) === 'disparar_push') {
           try {
@@ -456,7 +486,11 @@ export async function executarAutomacoesLogistica(
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
             const textoAntes = String((config as any).texto_antes || '').trim();
-            const mediaUrl = String((config as any).media_url || '').trim() || undefined;
+            let mediaUrl = String((config as any).media_url || '').trim() || undefined;
+            if ((config as any).anexar_relatorio) {
+              const pdfUrl = await obterRelatorioPdf();
+              if (pdfUrl) mediaUrl = pdfUrl;
+            }
             const comPrefixo = (m: string) => (textoAntes ? `${textoAntes}\n\n${m}` : m);
 
             const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId, mediaUrl };
