@@ -44,6 +44,7 @@ export function MediaPlayerInline({
   const [atual, setAtual] = useState(() => obterPosicaoMidia(url));
   const [velocidade, setVelocidade] = useState(1);
   const [erro, setErro] = useState(false);
+  const [mostrarTimeline, setMostrarTimeline] = useState(true);
   const [faixa, setFaixa] = useState<string | null>(legendas[0]?.nome ?? null);
   const [legendasAtivas, setLegendasAtivas] = useState(legendas.length > 0);
   const [cues, setCues] = useState<CueLegenda[]>([]);
