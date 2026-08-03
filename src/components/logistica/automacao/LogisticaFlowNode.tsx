@@ -40,6 +40,8 @@ const iconMap: Record<string, any> = {
   MessageSquareText,
   TimerReset,
   ShieldOff,
+  Repeat,
+
 };
 
 
