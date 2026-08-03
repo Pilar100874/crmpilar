@@ -39,7 +39,21 @@ const MARKER_SIZE = 34;
 const MARKER_SIZE_COMPACT = 24;
 const tamanhoMarcador = (compact = false) => (compact ? MARKER_SIZE_COMPACT : MARKER_SIZE);
 
-const createVeiculoIcon = (status: string, compact = false, customColor?: string, tipoVeiculo?: string, ignicao?: boolean | null, rotulo?: string) => {
+interface TempoParadoInfo {
+  texto: string;
+  cor: string;
+  piscar: boolean;
+}
+
+const createVeiculoIcon = (
+  status: string,
+  compact = false,
+  customColor?: string,
+  tipoVeiculo?: string,
+  ignicao?: boolean | null,
+  rotulo?: string,
+  tempoParado?: TempoParadoInfo | null,
+) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
   const size = tamanhoMarcador(compact);
@@ -56,8 +70,16 @@ const createVeiculoIcon = (status: string, compact = false, customColor?: string
   // Halo pulsante para realçar o veículo no mapa (movendo e parado com mesmo tamanho visual)
   const devePulsar = status === 'movendo' || status === 'parado';
   const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${devePulsar ? `animation: veiculoPulse ${status === 'movendo' ? '1.8' : '2.2'}s infinite;` : ''}"></div>`;
-  const label = rotulo
-    ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none;">${rotulo}</div>`
+
+  const linhas: string[] = [];
+  if (rotulo) {
+    linhas.push(`<div style="white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6);">${rotulo}</div>`);
+  }
+  if (tempoParado) {
+    linhas.push(`<div style="white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:800; color:#fff; background:${tempoParado.cor}; border:1px solid rgba(255,255,255,.7); padding:1px 5px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.45); ${tempoParado.piscar ? 'animation: tempoParadoBlink 1s steps(1, end) infinite;' : ''}">⏱ ${tempoParado.texto}</div>`);
+  }
+  const label = linhas.length
+    ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); display:flex; flex-direction:column; align-items:flex-start; gap:2px; pointer-events:none;">${linhas.join('')}</div>`
     : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
@@ -66,6 +88,16 @@ const createVeiculoIcon = (status: string, compact = false, customColor?: string
     iconAnchor: [size / 2, size / 2],
   });
 };
+
+// Formata a duração de parada (ex: 1:30hr / 45 min)
+const formatarTempoParado = (inicioIso: string) => {
+  const min = Math.max(0, Math.floor((Date.now() - new Date(inicioIso).getTime()) / 60000));
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}:${String(m).padStart(2, '0')}hr`;
+};
+
 
 // Ícones para paradas marcadas - usa cor e ícone personalizados
 const createParadaIcon = (cor: string, iconeName?: string, compact = false) => {
@@ -202,6 +234,14 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   // Auto-enquadramento: pausa quando o usuário interage (zoom, arrasto, seleção)
   const [autoPausado, setAutoPausado] = useState(false);
   const autoPausadoRef = useRef(false);
+
+  // Atualiza os rótulos de tempo parado (piscando) a cada 30s
+  const [tempoTick, setTempoTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTempoTick(t => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+
   const movimentoProgramaticoRef = useRef(false);
 
   const pausarAuto = useCallback(() => {
@@ -308,6 +348,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const currentMarkers = markersRef.current;
     const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
 
+    // Paradas com "Tempo Parado no Mapa" ativo → rótulo piscante abaixo do nome
+    const tempoPorVeiculo = new Map<string, TempoParadoInfo>();
+    paradasMarcadas.forEach(p => {
+      if (!p.mostrar_tempo || p.data_fim || p.ativa === false) return;
+      tempoPorVeiculo.set(p.veiculo_id, {
+        texto: formatarTempoParado(p.data_inicio),
+        cor: p.cor_icone_parada || '#F43F5E',
+        piscar: true,
+      });
+    });
+
     // Remove markers that no longer exist
     const currentIds = new Set(veiculosComPosicao.map(v => v.id));
     currentMarkers.forEach((marker, id) => {
@@ -329,7 +380,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         veiculo.tipo_veiculo,
         veiculo.ultima_posicao?.ignicao,
         veiculo.placa,
+        veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null,
       );
+
 
       if (existingMarker) {
         existingMarker.setLatLng(pos);
@@ -387,7 +440,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick]);
 
   // Reenquadra quando o container muda de tamanho (sidebar, painéis, rotação, resize)
   useEffect(() => {
@@ -453,9 +506,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
     const map = mapRef.current;
     const currentParadasMarkers = paradasMarkersRef.current;
+    // Paradas com rótulo de tempo no veículo não geram marcador separado
+    const paradasVisiveis = paradasMarcadas.filter(p => !p.mostrar_tempo);
 
     // Remove markers that no longer exist
-    const currentIds = new Set(paradasMarcadas.map(p => p.id));
+    const currentIds = new Set(paradasVisiveis.map(p => p.id));
     currentParadasMarkers.forEach((marker, id) => {
       if (!currentIds.has(id)) {
         marker.remove();
@@ -464,7 +519,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     });
 
     // Add or update paradas markers
-    paradasMarcadas.forEach(parada => {
+    paradasVisiveis.forEach(parada => {
+
       const pos: L.LatLngExpression = [parada.lat, parada.lng];
       const existingMarker = currentParadasMarkers.get(parada.id);
       const cor = parada.cor_icone_parada || '#EAB308';
@@ -628,6 +684,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           0% { transform: scale(0.75); opacity: .9; }
           100% { transform: scale(1.35); opacity: 0; }
         }
+        @keyframes tempoParadoBlink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: .15; }
+        }
+
         .logistica-map-container .leaflet-control-container .leaflet-top.leaflet-left {
           top: auto !important;
           bottom: 16px !important;
