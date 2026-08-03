@@ -9,6 +9,7 @@ export type LogisticaBlockType =
   | 'condicao_zona_isenta'
   | 'acao_marcar_mapa'
   | 'acao_tempo_parado_mapa'
+  | 'acao_relatorio_pdf'
   | 'acao_whatsapp'
   | 'acao_notificacao'
   | 'acao_email'
@@ -56,7 +57,13 @@ export interface LogisticaBlockConfig {
   horario_inicio?: string;
   horario_fim?: string;
   dias_semana?: string[];
+  // Para acao_relatorio_pdf
+  relatorio_periodo?: 'semanal' | 'mensal' | 'semestral';
+  relatorio_limite_kmh?: number;
+  relatorio_titulo?: string;
+  relatorio_grafico?: boolean;
   // Para acao_whatsapp
+  anexar_relatorio?: boolean;
   telefone?: string;
   mensagem?: string;
   usar_telefone_cliente?: boolean;
@@ -238,6 +245,21 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     icon: 'MapPin',
     description: 'Adiciona um marcador no mapa de monitoramento',
     defaultData: { icone_parada: 'MapPin', cor_icone_parada: '#EAB308', legenda_parada: '' },
+    outputs: 1,
+  },
+  {
+    type: 'acao_relatorio_pdf',
+    label: 'Gerar Relatório PDF',
+    category: 'acao',
+    color: '#DC2626',
+    icon: 'FileText',
+    description: 'Gera o relatório de velocidades excedidas no período (PDF com logo, tabela e gráfico) para anexar no WhatsApp',
+    defaultData: {
+      relatorio_periodo: 'semanal',
+      relatorio_limite_kmh: 80,
+      relatorio_titulo: 'Relatório de Velocidades Excedidas no Período',
+      relatorio_grafico: true,
+    },
     outputs: 1,
   },
   {
