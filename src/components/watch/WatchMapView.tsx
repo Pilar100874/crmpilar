@@ -68,8 +68,11 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
 
     mapRef.current = L.map(mapContainerRef.current, {
       zoomControl: false,
-      attributionControl: false
+      attributionControl: false,
+      zoomSnap: 0,
+      zoomDelta: 0.5
     }).setView(defaultCenter, 13);
+
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
 
@@ -131,7 +134,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
       if (validVeiculos.length === 1) {
         map.setView(bounds.getCenter(), 16, { animate: false });
       } else {
-        const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(24, 24));
+        const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(16, 16));
         map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
       }
     }
