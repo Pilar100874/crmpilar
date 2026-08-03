@@ -58,6 +58,7 @@ export const CATALOGO_RECURSOS: CatalogCategory[] = [
       i("higgsfield-image", "Higgsfield Image", "✨", "Imagens cinematográficas com Higgsfield"),
       i("upscaler", "Upscaler", "🔍", "Aumento de resolução"),
       i("remove-background", "Remove Background", "✂️", "Remoção de fundo"),
+      i("imagemagick", "ImageMagick", "🪄", "Redimensiona, corta e converte formatos de imagem (PNG, JPG, WEBP)"),
     ],
   },
   {
