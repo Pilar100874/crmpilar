@@ -783,7 +783,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
 
             <div>
-              <Label>Velocidade limite (km/h)</Label>
+              <Label>Velocidade limite padrão (km/h)</Label>
               <Input
                 type="number"
                 min={10}
@@ -791,8 +791,10 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 onChange={(e) => updateConfig('relatorio_limite_kmh', Number(e.target.value))}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Registros acima deste valor entram no relatório.
+                Cada veículo usa o limite do próprio cadastro; se não tiver, usa o padrão do tipo
+                (Carro 110, Van 90, Caminhão pesado 80…) e por último este valor.
               </p>
+
             </div>
 
             <div>
