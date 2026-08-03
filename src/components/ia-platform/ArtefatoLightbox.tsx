@@ -6,12 +6,14 @@ import { ChevronLeft, ChevronRight, Download, Loader2, ShieldCheck } from "lucid
 import { detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
 import { MediaPlayerInline } from "@/components/ia-platform/MediaPlayerInline";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
+import { montarFaixasLegenda } from "@/lib/aip/legendas";
 
 export interface ArtefatoLightboxItem {
   nome: string;
   url?: string | null;
   mime?: string | null;
 }
+
 
 interface Props {
   itens: ArtefatoLightboxItem[];
