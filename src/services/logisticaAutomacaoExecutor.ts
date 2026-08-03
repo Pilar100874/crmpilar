@@ -294,7 +294,9 @@ export async function executarAutomacoesLogistica(
         agendaNode ? ((agendaNode.data?.config || {}) as Record<string, unknown>) : null
       );
       const podeEnviar = (destinatario: string) =>
-        registrarEnvioUnico(String(automacao.id), periodoAtual, destinatario);
+        // Com bloco "Repetir a cada X min" a repetição é intencional: não trava.
+        !!repetirNode || registrarEnvioUnico(String(automacao.id), periodoAtual, destinatario);
+
       let veiculosAcao = veiculosElegiveis;
       let pularAcoes = false;
       if (agendaNode) {
