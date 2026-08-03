@@ -82,6 +82,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [verificandoEntrega, setVerificandoEntrega] = useState(false);
   const [deliveryStatuses, setDeliveryStatuses] = useState<Record<string, { entregue_at: string | null; status: string; erro_mensagem: string | null }>>({});
 
+  // Carrega limites de velocidade configurados por tipo
+  useEffect(() => {
+    carregarLimitesVelocidade(estabelecimentoId);
+  }, [estabelecimentoId]);
+
   // Reseta status de entrega quando trocar de veículo e busca automaticamente ao abrir
   useEffect(() => {
     setDeliveryStatuses({});
