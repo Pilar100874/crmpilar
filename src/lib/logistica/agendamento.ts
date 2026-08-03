@@ -82,7 +82,37 @@ export function agendamentoDevido(chave: string, cfg: AgendaConfig, agora = new 
   return false;
 }
 
+/**
+ * Identificador do período atual do agendamento.
+ * Usado como janela da trava anti-duplicidade: dentro do mesmo período,
+ * cada destinatário só recebe uma vez.
+ */
+export function periodoAgendamento(cfg: AgendaConfig | null | undefined, agora = new Date()): string {
+  const modo: AgendaModo = cfg?.agenda_modo || (cfg ? 'diario' : 'diario');
+  if (!cfg) {
+    // Sem gatilho de agendamento: janela diária como padrão seguro.
+    return `dia:${agora.toISOString().slice(0, 10)}`;
+  }
+  if (modo === 'intervalo') {
+    const intervalo = Math.max(1, Number(cfg.agenda_intervalo_minutos) || 60) * 60000;
+    return `int:${Math.floor(agora.getTime() / intervalo)}`;
+  }
+  const dia = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+  const horarios = cfg.agenda_horarios?.length ? cfg.agenda_horarios : ['08:00'];
+  // Slot mais recente já atingido no dia
+  let slotAtual = horarios[0];
+  for (const h of horarios) {
+    const [hh, mm] = String(h).split(':').map(Number);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) continue;
+    const slot = new Date(agora);
+    slot.setHours(hh, mm, 0, 0);
+    if (agora.getTime() >= slot.getTime()) slotAtual = h;
+  }
+  return `${modo}:${dia}:${slotAtual}`;
+}
+
 /** Texto curto do agendamento, para exibir no bloco. */
+
 export function descreverAgendamento(cfg: AgendaConfig): string {
   const modo: AgendaModo = cfg.agenda_modo || 'diario';
   const horarios = cfg.agenda_horarios?.length ? cfg.agenda_horarios.join(', ') : '08:00';
