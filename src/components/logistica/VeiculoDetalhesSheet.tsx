@@ -338,7 +338,11 @@ export const VeiculoDetalhesSheet: React.FC<VeiculoDetalhesSheetProps> = ({
             variant="outline"
             size="sm"
             className="w-full justify-start text-xs"
-            onClick={() => navigate(`/logistica/historico/${veiculo.id}`)}
+            onClick={() =>
+              navigate(`/logistica/historico/${veiculo.id}`, {
+                state: { voltarPara: window.location.pathname + window.location.search },
+              })
+            }
           >
             <History className="h-3.5 w-3.5 mr-2" />
             Ver histórico completo
