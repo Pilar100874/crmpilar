@@ -189,10 +189,17 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, []);
   const abrirDetalhes = useCallback((id: string) => {
     setSelectedVeiculoId(id);
-    setFocusVehicle({ id, nonce: Date.now() });
-    setMapaFoco(null);
     setDetalhesVeiculoId(id);
-  }, []);
+    setRotaCoords(null);
+    const alvo = veiculos.find(v => v.id === id);
+    // Marca o ponto do evento e força centralização/zoom no mapa
+    setMapaFoco(
+      alvo?.ultima_posicao
+        ? { lat: alvo.ultima_posicao.lat, lng: alvo.ultima_posicao.lng }
+        : null
+    );
+    setFocusVehicle({ id, nonce: Date.now() });
+  }, [veiculos]);
   const fecharDetalhes = useCallback(() => {
     setDetalhesVeiculoId(null);
     setRotaCoords(null);
@@ -441,10 +448,15 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
     }
   }, [veiculosDoGrupo, quickFilter, alertVeiculoIds]);
 
-  const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
   const detalhesVeiculo = detalhesVeiculoId
     ? veiculosDoGrupo.find(v => v.id === detalhesVeiculoId) ?? null
     : null;
+  // Mantém o veículo em foco no mapa mesmo se o filtro rápido o excluir
+  const veiculosComPosicao = (
+    detalhesVeiculo?.ultima_posicao && !veiculosFiltrados.some(v => v.id === detalhesVeiculo.id)
+      ? [...veiculosFiltrados, detalhesVeiculo]
+      : veiculosFiltrados
+  ).filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
   // Follow mode: recentraliza no veículo fixado sempre que houver nova posição
@@ -496,7 +508,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="absolute inset-0"
-                fitBounds={!pinnedVeiculoId}
+                fitBounds={!pinnedVeiculoId && !detalhesVeiculoId}
               />
               <FocusLegend
                 veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
@@ -682,7 +694,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
-                fitBounds={!pinnedVeiculoId && !rotaCoords}
+                fitBounds={!pinnedVeiculoId && !rotaCoords && !detalhesVeiculoId}
                 fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}
                 compactIcons
               />
