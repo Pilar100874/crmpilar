@@ -170,7 +170,26 @@ async function limparEstado(admin: Admin, chave: string) {
   await admin.from("logistica_workflow_state").delete().eq("chave", chave);
 }
 
-async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any, minutos: number, cfg: any) {
+function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+async function removerMarcador(admin: Admin, estId: string, veiculoId: string) {
+  await admin
+    .from("logistica_paradas_marcadas")
+    .delete()
+    .eq("estabelecimento_id", estId)
+    .eq("veiculo_id", veiculoId);
+}
+
+async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any, minutos: number, cfg: any, tempoCfg?: any) {
   const categoriaTempo =
     minutos >= 30 ? "mais_30" : minutos >= 15 ? "15_30" : minutos >= 5 ? "5_15" : "menos_5";
   const { data: existing } = await admin
@@ -188,8 +207,9 @@ async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any,
     tempo_parado_minutos: minutos,
     categoria_tempo: categoriaTempo,
     icone_parada: cfg.icone_parada || "MapPin",
-    cor_icone_parada: cfg.cor_icone_parada || "#EAB308",
+    cor_icone_parada: tempoCfg?.cor_tempo || cfg.cor_icone_parada || "#EAB308",
     legenda_parada: legenda,
+    mostrar_tempo: !!tempoCfg,
   };
   if (existing) {
     await admin.from("logistica_paradas_marcadas").update(payload).eq("id", existing.id);
@@ -198,6 +218,7 @@ async function upsertMarker(admin: Admin, estId: string, automacao: any, v: any,
   }
   return 1;
 }
+
 
 async function notificarTransicao(admin: Admin, estId: string, nomeAutomacao: string, mensagem: string) {
   // Envia para todos os admins do estabelecimento
