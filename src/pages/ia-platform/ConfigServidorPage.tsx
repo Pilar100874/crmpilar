@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
