@@ -150,8 +150,15 @@ export default function ConfigServidorPage() {
         try {
           banco = await agentRunner.healthSupabase();
         } catch (e) {
-          banco = { ok: false, erro: (e as Error).message };
+          const msg = (e as Error).message ?? "";
+          banco = {
+            ok: false,
+            erro: /404|Cannot POST/i.test(msg)
+              ? "Servidor sem o endpoint /health/supabase. Faça um novo deploy do servidor (botão Atualizar servidor) para habilitar esta verificação."
+              : msg,
+          };
         }
+
       }
       setSaudeBanco(banco);
 
