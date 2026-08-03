@@ -241,7 +241,19 @@ async function persistir(run) {
 let binariosCache = null;
 function binariosDisponiveis() {
   if (binariosCache) return binariosCache;
-  const nomes = ["bash", "ffmpeg", "ffprobe", "jq", "curl", "python3", "higgsfield"];
+  const nomes = [
+    "bash",
+    "ffmpeg",
+    "ffprobe",
+    "jq",
+    "curl",
+    "python3",
+    "higgsfield",
+    // Download de mídia externa e processamento de imagem
+    "yt-dlp",
+    "convert",
+    "magick",
+  ];
   binariosCache = Object.fromEntries(
     nomes.map((n) => [n, spawnSync("which", [n]).status === 0]),
   );
