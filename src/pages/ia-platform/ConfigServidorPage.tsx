@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   AlertTriangle,
   CheckCircle2,
+  Database,
   ExternalLink,
   Loader2,
   Lock,
