@@ -450,6 +450,10 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           {data.type === 'iniciar_automacao' && (
             <span>Início do fluxo</span>
           )}
+          {data.type === 'gatilho_agendamento' && (
+            <span>{descreverAgendamento((data.config || {}) as any)}</span>
+          )}
+
           {data.type === 'condicao_horario' && (
             <span>{data.config?.horario_inicio || '08:00'} - {data.config?.horario_fim || '18:00'}</span>
           )}
