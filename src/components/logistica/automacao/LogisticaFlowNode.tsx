@@ -38,7 +38,10 @@ const iconMap: Record<string, any> = {
   BellRing,
   Mail,
   MessageSquareText,
+  TimerReset,
+  ShieldOff,
 };
+
 
 // Map for marker icons
 const markerIconMap: Record<string, LucideIcon> = {
