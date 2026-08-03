@@ -123,14 +123,24 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
       
       return {
         type: 'dynamic_time',
-        outputs: sortedCondicoes.map((c, i) => ({
-          id: `tempo_${c.tempo_minutos}`,
-          label: c.label || `${c.tempo_minutos} min`,
-          tempo: c.tempo_minutos,
-          color: TIME_OUTPUT_COLORS[i % TIME_OUTPUT_COLORS.length]
-        }))
+        outputs: [
+          ...sortedCondicoes.map((c, i) => ({
+            id: `tempo_${c.tempo_minutos}`,
+            label: c.label || `${c.tempo_minutos} min`,
+            tempo: c.tempo_minutos,
+            color: TIME_OUTPUT_COLORS[i % TIME_OUTPUT_COLORS.length]
+          })),
+          {
+            id: 'nao',
+            label: 'Não parado',
+            tempo: null,
+            isNegative: true,
+            color: { bg: 'bg-muted', hover: 'hover:bg-muted/80', border: 'border-border', text: 'text-foreground' }
+          }
+        ]
       };
     }
+
     
     // Default outputs
     const outputs = blockDef?.outputs || 1;
