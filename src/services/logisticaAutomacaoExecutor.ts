@@ -344,17 +344,14 @@ export async function executarAutomacoesLogistica(
         const appendLocAll = (msg: string) => {
           if (!enviarLocalizacao) return msg;
           if (msg.includes(LOC_TAG)) return msg; // já anexada, não repetir
-          const vistos = new Set<string>();
-          const links: string[] = [];
+          // Envia SOMENTE uma URL (do primeiro veículo com posição conhecida)
           for (const v of veiculosAcao) {
-            const id = (v as any).id;
-            if (vistos.has(id)) continue;
-            vistos.add(id);
-            const l = linkFor(id);
-            if (l && !links.includes(l)) links.push(l);
+            const l = linkFor((v as any).id);
+            if (l) return `${msg}\n\n${LOC_TAG}: ${l}`;
           }
-          return links.length ? `${msg}\n\n${LOC_TAG}:\n${links.join('\n')}` : msg;
+          return msg;
         };
+
 
 
         // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
