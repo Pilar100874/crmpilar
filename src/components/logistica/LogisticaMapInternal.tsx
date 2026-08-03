@@ -56,7 +56,7 @@ const createVeiculoIcon = (status: string, compact = false, customColor?: string
   // Halo pulsante para realçar o veículo no mapa
   const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${status === 'movendo' ? `animation: veiculoPulse 1.8s infinite;` : ''}"></div>`;
   const label = rotulo
-    ? `<div style="position:absolute; top:${size + 3}px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6);">${rotulo}</div>`
+    ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none;">${rotulo}</div>`
     : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
