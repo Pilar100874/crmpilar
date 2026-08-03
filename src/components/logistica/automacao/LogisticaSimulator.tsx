@@ -276,7 +276,10 @@ export const LogisticaSimulator = ({
 
   const finishSimulation = () => {
     addMessage('success', '🏁 Simulação finalizada!', undefined, <CheckCircle className="w-4 h-4 text-green-500" />);
+    isRunningRef.current = false;
+    isPausedRef.current = false;
     setIsRunning(false);
+    setIsPaused(false);
     setCurrentNodeId(null);
     onHighlightNode?.(null);
   };
@@ -292,7 +295,12 @@ export const LogisticaSimulator = ({
       return;
     }
 
+    timeoutsRef.current.forEach(t => clearTimeout(t));
+    timeoutsRef.current = [];
+
     setMessages([]);
+    isRunningRef.current = true;
+    isPausedRef.current = false;
     setIsRunning(true);
     setIsPaused(false);
     
@@ -304,17 +312,17 @@ export const LogisticaSimulator = ({
   };
 
   const handleContinue = () => {
+    isPausedRef.current = false;
     setIsPaused(false);
     if (currentNodeId) {
-      const currentNode = nodes.find(n => n.id === currentNodeId);
-      if (currentNode) {
-        const next = getNextNode(currentNodeId);
-        if (next) {
-          safeSetTimeout(() => executeNode(next), 300);
-        } else {
-          finishSimulation();
-        }
+      const next = getNextNode(currentNodeId);
+      if (next) {
+        safeSetTimeout(() => executeNode(next), 300);
+      } else {
+        finishSimulation();
       }
+    } else {
+      finishSimulation();
     }
   };
 
@@ -322,11 +330,14 @@ export const LogisticaSimulator = ({
     timeoutsRef.current.forEach(t => clearTimeout(t));
     timeoutsRef.current = [];
     setMessages([]);
+    isRunningRef.current = false;
+    isPausedRef.current = false;
     setIsRunning(false);
     setIsPaused(false);
     setCurrentNodeId(null);
     onHighlightNode?.(null);
   };
+
 
   const getMessageStyle = (type: SimulatorMessage['type']) => {
     switch (type) {
