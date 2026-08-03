@@ -510,25 +510,46 @@ async function salvarParadasMarcadas(
       // Check if marker already exists for this vehicle (to avoid duplicates)
       const { data: existing } = await supabase
         .from('logistica_paradas_marcadas')
-        .select('id')
+        .select('id, lat, lng, data_inicio')
         .eq('veiculo_id', parada.veiculo_id)
         .eq('estabelecimento_id', estabelecimentoId)
-        .single();
+        .maybeSingle();
 
       const now = new Date().toISOString();
+      const inicioReal = parada.data_inicio || now;
 
       if (existing) {
+        // O contador só reinicia se o veículo realmente mudou de ponto de parada.
+        // Caso contrário, mantém o data_inicio salvo no banco → ao recarregar a
+        // página o tempo parado continua exatamente de onde estava.
+        const mudouDeLocal =
+          distanciaMetros(Number(existing.lat), Number(existing.lng), parada.lat, parada.lng) >
+          REPETIR_RAIO_MOVIMENTO_M;
+
+        const dataInicioPersistida =
+          !mudouDeLocal && existing.data_inicio
+            ? new Date(existing.data_inicio) <= new Date(inicioReal)
+              ? existing.data_inicio
+              : inicioReal
+            : inicioReal;
+
+        const minutosPersistidos = Math.max(
+          0,
+          Math.floor((Date.now() - new Date(dataInicioPersistida).getTime()) / 60000)
+        );
+
         // Update existing marker
         await supabase
           .from('logistica_paradas_marcadas')
           .update({
             lat: parada.lat,
             lng: parada.lng,
-            tempo_parado_minutos: parada.tempo_parado_minutos,
+            tempo_parado_minutos: minutosPersistidos,
             categoria_tempo: parada.categoria_tempo,
             icone_parada: parada.icone_parada,
             cor_icone_parada: parada.cor_icone_parada,
             legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
+            data_inicio: dataInicioPersistida,
             mostrar_tempo: !!parada.mostrar_tempo
 
           })
