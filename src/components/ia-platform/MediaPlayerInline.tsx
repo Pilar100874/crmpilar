@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Captions, CaptionsOff, Music, Video } from "lucide-react";
+import { AudioWaveform, Captions, CaptionsOff, Music, Video } from "lucide-react";
+import { WaveformTimeline } from "./WaveformTimeline";
 import { obterPosicaoMidia, salvarPosicaoMidia } from "@/lib/aip/posicaoMidia";
 import { CueLegenda, LegendaFaixa, cueAtivo, parsearLegenda } from "@/lib/aip/legendas";
 
