@@ -10,6 +10,7 @@ import { Terminal, Loader2, Play, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { ArtefatoPreview, detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
 import { ArtefatoLightbox } from "@/components/ia-platform/ArtefatoLightbox";
+import { montarFaixasLegenda } from "@/lib/aip/legendas";
 
 interface Arquivo {
   nome_arquivo: string;
