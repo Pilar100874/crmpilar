@@ -78,6 +78,21 @@ export interface RunsResult {
   verificado_em?: string;
 }
 
+export interface SupabaseHealth {
+  ok: boolean;
+  simulado?: boolean;
+  url_configurada?: boolean;
+  url?: string | null;
+  chave_configurada?: boolean;
+  origem_chave?: string | null;
+  alcancavel?: boolean;
+  autorizado?: boolean;
+  leitura_banco?: boolean;
+  storage?: boolean;
+  latencia_ms?: number | null;
+  erro?: string | null;
+}
+
 export const agentRunner = {
   start: (payload: StartRunPayload) => callProxy("start", payload as any),
   resume: (executionId: string, approvalId: string, resultado: unknown) =>
