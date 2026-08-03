@@ -4,6 +4,7 @@ import { VeiculoComStatus } from '@/types/logistica';
 import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FocusLegendProps {
   veiculo?: VeiculoComStatus;
