@@ -126,6 +126,37 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
               resultado.erro ||
               "Sem saída."}
           </pre>
+
+          {(resultado.artefatos ?? []).length > 0 && (
+            <div className="space-y-1">
+              <Label className="text-xs">Arquivos guardados</Label>
+              <div className="rounded-md border divide-y bg-background">
+                {resultado.artefatos!.map((a) => (
+                  <div key={a.nome} className="flex items-center gap-2 p-2 text-xs">
+                    <FileDown className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1 truncate font-mono">{a.origem ?? a.nome}</span>
+                    {a.tamanho_bytes != null && (
+                      <span className="text-muted-foreground">
+                        {Math.max(1, Math.round(a.tamanho_bytes / 1024))} KB
+                      </span>
+                    )}
+                    {a.url ? (
+                      <Button asChild size="sm" variant="ghost" className="h-7">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer">
+                          Abrir
+                        </a>
+                      </Button>
+                    ) : (
+                      <Badge variant="outline">não guardado</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Os links dos arquivos valem 7 dias.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
