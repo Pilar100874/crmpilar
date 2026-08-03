@@ -587,6 +587,9 @@ async function executarRoteiroPlaywright(payload, job) {
     timeout_ms: timeoutMs,
     viewport,
     user_agent: userAgent,
+    gravar_video: gravarVideo = true,
+    screenshot_final: screenshotFinal = true,
+    armazenar = true,
   } = payload || {};
 
   const pw = await carregarPlaywright();
@@ -609,20 +612,46 @@ async function executarRoteiroPlaywright(payload, job) {
     logs.push(texto);
     if (job) job.passo_descricao = texto;
   };
+
+  // Identificador da pasta usada no Storage para auditoria dos artefatos.
+  const execId = job?.id || `pw_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  const guardar = armazenar !== false && Boolean(getSupabase());
+  const tamanhoMax = 6 * 1024 * 1024; // acima disso o base64 não volta na resposta
+
+  /** Registra o artefato na lista, subindo para o Storage quando possível. */
+  async function adicionarArtefato(nome, tipo, buffer) {
+    const artefato = {
+      nome,
+      tipo,
+      tamanho_bytes: buffer.length,
+      base64: buffer.length <= tamanhoMax ? buffer.toString("base64") : null,
+      armazenado: false,
+    };
+    artefatos.push(artefato);
+    if (guardar) await armazenarArtefato(execId, artefato, buffer);
+    return artefato;
+  }
+
+  const dirVideo = gravarVideo ? path.join(os.tmpdir(), `pw-video-${execId}`) : null;
   let navegador;
+  let contexto;
+  let pagina;
 
   try {
     navegador = await pw.chromium.launch({ args: ["--no-sandbox", "--disable-dev-shm-usage"] });
     if (job) job.fecharNavegador = () => navegador.close().catch(() => {});
-    const contexto = await navegador.newContext({
-      viewport: viewport?.width
-        ? { width: Number(viewport.width), height: Number(viewport.height) || 800 }
-        : { width: 1280, height: 800 },
+    const tamanho = viewport?.width
+      ? { width: Number(viewport.width), height: Number(viewport.height) || 800 }
+      : { width: 1280, height: 800 };
+    contexto = await navegador.newContext({
+      viewport: tamanho,
       ...(userAgent ? { userAgent: String(userAgent) } : {}),
+      ...(dirVideo ? { recordVideo: { dir: dirVideo, size: tamanho } } : {}),
     });
     contexto.setDefaultTimeout(limite);
-    const pagina = await contexto.newPage();
+    pagina = await contexto.newPage();
     pagina.on("console", (m) => logs.push(`[console:${m.type()}] ${m.text()}`.slice(0, 2000)));
+
 
     if (url) {
       await pagina.goto(String(url), { waitUntil: "domcontentloaded", timeout: limite });
