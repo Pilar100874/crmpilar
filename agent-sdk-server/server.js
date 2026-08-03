@@ -543,11 +543,44 @@ function resumoJob(job, { incluirArtefatos = true } = {}) {
   };
 }
 
+const BUCKET_PLAYWRIGHT = "playwright-execucoes";
+/** Validade dos links assinados dos artefatos (7 dias). */
+const VALIDADE_LINK_S = 7 * 24 * 60 * 60;
+
+/**
+ * Envia um artefato (print, vídeo ou PDF) para o Storage e devolve caminho e
+ * link assinado. Falhas de upload nunca interrompem a execução.
+ */
+async function armazenarArtefato(pasta, artefato, buffer) {
+  const supabase = getSupabase();
+  if (!supabase) return artefato;
+  const caminho = `execucoes/${pasta}/${artefato.nome}`;
+  try {
+    const { error } = await supabase.storage
+      .from(BUCKET_PLAYWRIGHT)
+      .upload(caminho, buffer, { contentType: artefato.tipo, upsert: true });
+    if (error) throw error;
+    const { data } = await supabase.storage
+      .from(BUCKET_PLAYWRIGHT)
+      .createSignedUrl(caminho, VALIDADE_LINK_S);
+    artefato.armazenado = true;
+    artefato.bucket = BUCKET_PLAYWRIGHT;
+    artefato.caminho = caminho;
+    artefato.url = data?.signedUrl ?? null;
+    artefato.url_expira_em = new Date(Date.now() + VALIDADE_LINK_S * 1000).toISOString();
+  } catch (e) {
+    artefato.armazenado = false;
+    artefato.erro_armazenamento = e.message;
+  }
+  return artefato;
+}
+
 /**
  * Executa um roteiro de passos no Chromium. Quando `job` é informado, o estado
  * é atualizado a cada passo para permitir consulta de status durante a execução.
  */
 async function executarRoteiroPlaywright(payload, job) {
+
   const {
     url,
     passos = [],
