@@ -585,8 +585,11 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 ? (config as any).telefones
                 : [config.telefone || ''];
               const setTels = (next: string[]) => {
-                updateConfig('telefones', next);
-                updateConfig('telefone', next[0] || '');
+                // Atualiza os dois campos em UMA só chamada (duas chamadas seguidas
+                // usariam o mesmo `config` desatualizado e uma sobrescreveria a outra)
+                onUpdateNode(selectedNode.id, {
+                  config: { ...config, telefones: next, telefone: next[0] || '' },
+                });
               };
               return (
                 <div className="space-y-2">
