@@ -327,15 +327,36 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
   // Reenquadra quando o container muda de tamanho (sidebar, painéis, rotação, resize)
   useEffect(() => {
-    if (!mapContainerRef.current) return;
-    const observer = new ResizeObserver(() => enquadrarTudo());
-    observer.observe(mapContainerRef.current);
-    window.addEventListener('resize', enquadrarTudo);
+    const el = mapContainerRef.current;
+    if (!el) return;
+
+    let frame: number | null = null;
+    const reenquadrar = () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      // aguarda o layout estabilizar antes de recalcular tamanho/zoom
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        mapRef.current?.invalidateSize({ animate: false });
+        enquadrarTudo();
+      });
+    };
+
+    const observer = new ResizeObserver(reenquadrar);
+    observer.observe(el);
+    window.addEventListener('resize', reenquadrar);
+    window.addEventListener('orientationchange', reenquadrar);
+
+    // primeiro enquadramento após montagem/layout inicial
+    reenquadrar();
+
     return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener('resize', enquadrarTudo);
+      window.removeEventListener('resize', reenquadrar);
+      window.removeEventListener('orientationchange', reenquadrar);
     };
   }, [enquadrarTudo]);
+
 
 
   // Focus/zoom on a specific vehicle when requested (e.g., double click on list)
