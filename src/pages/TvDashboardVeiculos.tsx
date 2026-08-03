@@ -495,8 +495,14 @@ export default function TvDashboardVeiculos() {
                           className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
                           style={{ backgroundColor: veiculo.cor }}
                         />
-                        <span className="font-medium text-xs text-white/90 truncate">{veiculo.placa}</span>
-                        <span className={`text-[10px] ${config.textColor} flex-shrink-0`}>({config.label})</span>
+                        <span
+                          className="font-semibold text-xs truncate"
+                          style={{ color: config.hex }}
+                          title={config.label}
+                        >
+                          {veiculo.placa}
+                        </span>
+
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-white/60 flex-shrink-0">
                         {veiculo.ultima_posicao && (
