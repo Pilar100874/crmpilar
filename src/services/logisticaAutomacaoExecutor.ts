@@ -578,6 +578,8 @@ export async function executarAutomacoesLogistica(
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
+                if (!podeEnviar(`${node.id}:${tel}`)) continue;
+
                 let mensagem = aplicarVars(mensagemTpl, veic, mot.nome || '');
                 mensagem = comPrefixo(appendLocOne(mensagem, (veic as any).id));
                 await executarBlocoWhatsapp(
