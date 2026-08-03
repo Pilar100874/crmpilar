@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Terminal, Loader2, Play, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { ArtefatoPreview, detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
+import { ArtefatoLightbox } from "@/components/ia-platform/ArtefatoLightbox";
 
 interface Arquivo {
   nome_arquivo: string;
@@ -30,6 +31,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
   const [arquivos, setArquivos] = useState<Arquivo[]>([]);
   const [rodando, setRodando] = useState<string | null>(null);
   const [resultado, setResultado] = useState<SkillExecResult | null>(null);
+  const [telaCheia, setTelaCheia] = useState<number | null>(null);
 
   const carregar = useCallback(async () => {
     const { data } = await db
