@@ -109,6 +109,28 @@ export default function ConfigServidorPage() {
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [testando, setTestando] = useState(false);
+  const [saude, setSaude] = useState<Record<string, unknown> | null>(null);
+
+  const testarConexao = async (silencioso = false) => {
+    setTestando(true);
+    try {
+      const r = await agentRunner.health();
+      setSaude(r ?? { ok: false, motivo: "Sem resposta do servidor" });
+      if (!silencioso) {
+        r?.ok
+          ? toast.success("Servidor online")
+          : toast.warning(r?.motivo ?? "Servidor não respondeu corretamente");
+      }
+    } catch (e) {
+      setSaude({ ok: false, motivo: (e as Error).message });
+      if (!silencioso) toast.error(`Falha na conexão: ${(e as Error).message}`);
+    } finally {
+      setTestando(false);
+    }
+  };
+
+
 
   const preencherAuto = (salvos: ItemConfig[], avisar = false) => {
     const sug = sugestoesAutomaticas();
