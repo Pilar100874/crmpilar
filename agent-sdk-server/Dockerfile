@@ -2,10 +2,16 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Dependências úteis para Playwright / Remotion
+# Dependências úteis para Playwright / Remotion / mídia
+# - imagemagick: redimensionar, cortar e converter imagens
+# - yt-dlp: baixar vídeo/áudio de fontes externas para usar como referência
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates fonts-liberation ffmpeg jq curl python3 bash git \
-  && rm -rf /var/lib/apt/lists/*
+    ca-certificates fonts-liberation ffmpeg jq curl python3 python3-pip bash git \
+    imagemagick \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -sSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+       -o /usr/local/bin/yt-dlp \
+  && chmod a+rx /usr/local/bin/yt-dlp
 
 # Navegadores do Playwright ficam numa pasta fixa (fora do HOME) para o
 # container conseguir achá-los mesmo rodando com outro usuário.
