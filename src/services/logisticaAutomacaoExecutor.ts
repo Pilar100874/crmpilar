@@ -105,10 +105,10 @@ function repeticaoDevida(
     return false;
   }
 
-  const inicioMin = Number(cfg.repetir_inicio_minutos) || 30;
+  const inicioMin = 0;
   const intervaloMin = Math.max(1, Number(cfg.repetir_intervalo_minutos) || 15);
-  // 0 (ou vazio) = ilimitado
-  const maxRep = Math.max(0, Number(cfg.repetir_max) || 0);
+  // sempre ilimitado (repete enquanto estiver parado)
+  const maxRep = 0;
 
   let estado = lerEstadoRepeticao(key);
 
