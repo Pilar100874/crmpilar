@@ -137,6 +137,11 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
                 {resultado.artefatos!.map((a, i) => {
                   const nome = a.origem ?? a.nome;
                   const tipo = detectarTipoPreview(nome, a.tipo);
+                  const legendas = montarFaixasLegenda(
+                    nome,
+                    (resultado.artefatos ?? []).map((x) => ({ nome: x.origem ?? x.nome, url: x.url })),
+                  );
+
                   return (
                     <div key={a.nome} className="space-y-1 p-2 text-xs">
                       <div className="flex items-center gap-2">

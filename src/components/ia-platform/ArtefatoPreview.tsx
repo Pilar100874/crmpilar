@@ -22,7 +22,7 @@ export function detectarTipoPreview(nome: string, mime?: string | null): TipoPre
   if (["mp3", "wav", "ogg", "m4a"].includes(ext)) return "audio";
   if (["html", "htm"].includes(ext)) return "html";
   if (ext === "json") return "json";
-  if (["txt", "log", "md", "csv", "yaml", "yml", "xml", "js", "ts", "py", "sh", "css"].includes(ext))
+  if (["txt", "log", "md", "csv", "yaml", "yml", "xml", "js", "ts", "py", "sh", "css", "vtt", "srt"].includes(ext))
     return "texto";
   if (ext === "pdf") return "pdf";
   return "outro";
