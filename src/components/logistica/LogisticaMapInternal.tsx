@@ -383,6 +383,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       if (!currentIds.has(id)) {
         marker.remove();
         currentMarkers.delete(id);
+        iconSigRef.current.delete(id);
       }
     });
 
