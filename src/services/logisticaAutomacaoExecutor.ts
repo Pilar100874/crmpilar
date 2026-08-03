@@ -510,14 +510,31 @@ export async function executarAutomacoesLogistica(
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
             const textoAntes = String((config as any).texto_antes || '').trim();
-            let mediaUrl = String((config as any).media_url || '').trim() || undefined;
+            const mediaUrl = String((config as any).media_url || '').trim() || undefined;
+            // O PDF do relatório é sempre enviado por último, depois dos textos.
+            let pdfUrl: string | undefined;
             if ((config as any).anexar_relatorio) {
-              const pdfUrl = await obterRelatorioPdf();
-              if (pdfUrl) mediaUrl = pdfUrl;
+              const url = await obterRelatorioPdf();
+              if (url) pdfUrl = url;
             }
             const comPrefixo = (m: string) => (textoAntes ? `${textoAntes}\n\n${m}` : m);
 
             const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId, mediaUrl };
+
+            const enviarPdf = async (tel: string) => {
+              if (!pdfUrl) return;
+              await executarBlocoWhatsapp(
+                {
+                  telefone: tel,
+                  mensagem: '',
+                  whatsappSessionId,
+                  whatsappSessionName,
+                  whatsappNumeroId,
+                  mediaUrl: pdfUrl,
+                },
+                wfCtx
+              );
+            };
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
@@ -533,6 +550,7 @@ export async function executarAutomacoesLogistica(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
+                await enviarPdf(tel);
                 await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
@@ -558,9 +576,11 @@ export async function executarAutomacoesLogistica(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
+                await enviarPdf(tel);
                 await dispararBot(tel || null, {});
               }
             }
+
 
 
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
