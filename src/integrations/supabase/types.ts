@@ -24267,6 +24267,7 @@ export type Database = {
           estabelecimento_id: string | null
           grupo_id: string | null
           id: string
+          limite_velocidade: number | null
           logistica_grupo_id: string | null
           motorista: string | null
           placa: string
@@ -24291,6 +24292,7 @@ export type Database = {
           estabelecimento_id?: string | null
           grupo_id?: string | null
           id?: string
+          limite_velocidade?: number | null
           logistica_grupo_id?: string | null
           motorista?: string | null
           placa: string
@@ -24315,6 +24317,7 @@ export type Database = {
           estabelecimento_id?: string | null
           grupo_id?: string | null
           id?: string
+          limite_velocidade?: number | null
           logistica_grupo_id?: string | null
           motorista?: string | null
           placa?: string
