@@ -286,6 +286,15 @@ export async function executarAutomacoesLogistica(
       // Sem esse bloco, as ações disparam UMA única vez por parada.
       const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
       const agendaNode = flowObj.nodes.find(n => n.data?.type === 'gatilho_agendamento');
+      const { periodoAgendamento } = await import('@/lib/logistica/agendamento');
+      const { registrarEnvioUnico, limparTravasAntigas } = await import('@/lib/logistica/antiDuplicidade');
+      limparTravasAntigas();
+      // Janela da trava anti-duplicidade (por workflow + destinatário + período)
+      const periodoAtual = periodoAgendamento(
+        agendaNode ? ((agendaNode.data?.config || {}) as Record<string, unknown>) : null
+      );
+      const podeEnviar = (destinatario: string) =>
+        registrarEnvioUnico(String(automacao.id), periodoAtual, destinatario);
       let veiculosAcao = veiculosElegiveis;
       let pularAcoes = false;
       if (agendaNode) {
@@ -296,6 +305,7 @@ export async function executarAutomacoesLogistica(
           `${automacao.id}:${agendaNode.id}`,
           (agendaNode.data?.config || {}) as Record<string, unknown>
         );
+
         // Sem condição de veículo, o agendamento dispara UMA vez (relatório geral),
         // e não uma mensagem por veículo.
         veiculosAcao = devido ? (paradoNode ? veiculosElegiveis : veiculosElegiveis.slice(0, 1)) : [];
