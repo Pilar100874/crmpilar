@@ -82,17 +82,35 @@ export async function executarAutomacoesLogistica(
       const flowObj = flowData as { nodes?: AutomacaoFlowNode[] };
       if (!Array.isArray(flowObj.nodes)) continue;
 
+      // Zonas isentas (raio de endereço onde não se marca parada)
+      const zonas = flowObj.nodes
+        .filter(n => n.data?.type === 'condicao_zona_isenta')
+        .map(n => (n.data?.config || {}) as Record<string, unknown>)
+        .filter(c => Number.isFinite(Number(c.zona_lat)) && Number.isFinite(Number(c.zona_lng)))
+        .map(c => ({
+          lat: Number(c.zona_lat),
+          lng: Number(c.zona_lng),
+          raio: Number(c.zona_raio_metros) || 200,
+        }));
+      const dentroZonaIsenta = (lat: number, lng: number) =>
+        zonas.some(z => distanciaMetros(lat, lng, z.lat, z.lng) <= z.raio);
+
+      // Bloco "Tempo Parado no Mapa"
+      const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
+      const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
+
       // Find condition nodes
       for (const node of flowObj.nodes) {
         const nodeType = node.data?.type;
         const config = node.data?.config || {};
 
         // Handle "condicao_parado" - Vehicle stopped condition
-        if (nodeType === 'condicao_parado' && config.marcar_no_mapa) {
+        if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
           const tempoMinutos = config.tempo_minutos || 30;
           
           for (const veiculo of veiculos) {
             if (veiculo.status === 'parado' && veiculo.ultima_posicao) {
+              if (dentroZonaIsenta(veiculo.ultima_posicao.lat, veiculo.ultima_posicao.lng)) continue;
               const minutosParado = differenceInMinutes(
                 new Date(),
                 new Date(veiculo.ultima_posicao.data_hora)
@@ -112,14 +130,16 @@ export async function executarAutomacoesLogistica(
                   tempo_parado_minutos: minutosParado,
                   categoria_tempo: categoriaTempo,
                   icone_parada: config.icone_parada || 'MapPin',
-                  cor_icone_parada: config.cor_icone_parada || '#EAB308',
+                  cor_icone_parada: (tempoCfg?.cor_tempo as string) || config.cor_icone_parada || '#EAB308',
                   legenda_parada: config.legenda_parada || `Parado há ${minutosParado} min`,
                   automacao_id: automacao.id,
-                  automacao_nome: automacao.nome
+                  automacao_nome: automacao.nome,
+                  mostrar_tempo: !!tempoCfg,
                 });
               }
             }
           }
+
         }
 
         // Handle "condicao_velocidade" - Speed exceeded condition
