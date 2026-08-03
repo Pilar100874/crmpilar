@@ -428,11 +428,19 @@ export default function ConfigServidorPage() {
 
           <Separator />
           <div className="flex flex-wrap gap-2">
-            <Button onClick={salvar} disabled={salvando}>
-              {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Salvar com segurança
+            <Button onClick={salvarEAplicar} disabled={aplicando || salvando || enviando}>
+              {aplicando ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlugZap className="mr-2 h-4 w-4" />
+              )}
+              Salvar e aplicar agora
             </Button>
-            <Button variant="secondary" onClick={enviar} disabled={enviando}>
+            <Button variant="secondary" onClick={salvar} disabled={salvando || aplicando}>
+              {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Somente salvar
+            </Button>
+            <Button variant="secondary" onClick={enviar} disabled={enviando || aplicando}>
               {enviando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -440,15 +448,44 @@ export default function ConfigServidorPage() {
               )}
               Enviar ao servidor
             </Button>
-            <Button variant="outline" onClick={() => preencherAuto(itens, true)}>
+            <Button variant="outline" onClick={() => preencherAuto(itens, true)} disabled={aplicando}>
               <Wand2 className="mr-2 h-4 w-4" /> Preencher automático
             </Button>
           </div>
+
+          {etapas.length > 0 && (
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Aplicando configurações</p>
+              {etapas.map((etapa) => (
+                <div key={etapa.rotulo} className="flex items-start gap-2 text-sm">
+                  {etapa.estado === "rodando" ? (
+                    <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-primary" />
+                  ) : etapa.estado === "ok" ? (
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                  ) : etapa.estado === "erro" ? (
+                    <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
+                  ) : (
+                    <div className="mt-1.5 h-2 w-2 rounded-full bg-muted-foreground/40" />
+                  )}
+                  <div className="min-w-0">
+                    <span className={etapa.estado === "pendente" ? "text-muted-foreground" : ""}>
+                      {etapa.rotulo}
+                    </span>
+                    {etapa.detalhe && (
+                      <p className="text-xs text-muted-foreground break-words">{etapa.detalhe}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground">
-            O preenchimento automático usa os valores que o próprio CRM já conhece (URL do backend,
-            diretório de trabalho, caminho do Playwright e versão). Chaves secretas continuam sendo
-            digitadas manualmente.
+            "Salvar e aplicar agora" grava as chaves, envia ao servidor e confirma que ele voltou
+            online já com as configurações novas. O preenchimento automático usa os valores que o
+            próprio CRM já conhece; chaves secretas continuam sendo digitadas manualmente.
           </p>
+
 
         </CardContent>
       </Card>
