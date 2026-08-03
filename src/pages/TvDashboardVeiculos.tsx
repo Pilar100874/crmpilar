@@ -489,14 +489,14 @@ export default function TvDashboardVeiculos() {
                       focusVeiculoId === veiculo.id ? 'bg-white/10 ring-1 ring-primary' : ''
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <div
                           className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
                           style={{ backgroundColor: veiculo.cor }}
                         />
                         <span
-                          className="font-semibold text-xs truncate"
+                          className="font-semibold text-xs whitespace-nowrap shrink-0"
                           style={{ color: config.hex }}
                           title={config.label}
                         >
@@ -504,7 +504,7 @@ export default function TvDashboardVeiculos() {
                         </span>
 
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-white/60 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 text-[10px] text-white/60 flex-wrap justify-end shrink-0">
                         {veiculo.ultima_posicao && (
                           <>
                             <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
