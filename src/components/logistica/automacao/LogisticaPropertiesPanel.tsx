@@ -10,6 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogisticaBlockType, LOGISTICA_BLOCKS, CondicaoTempoParado } from '@/types/automacaoLogistica';
 import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete';
 import { IconePicker } from './IconePicker';
+import { CoordenadaMapPicker } from './CoordenadaMapPicker';
+
 import { Plus, Trash2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
@@ -330,6 +332,16 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 />
               </div>
             </div>
+            <CoordenadaMapPicker
+              lat={typeof config.zona_lat === 'number' ? config.zona_lat : undefined}
+              lng={typeof config.zona_lng === 'number' ? config.zona_lng : undefined}
+              raioMetros={config.zona_raio_metros ?? 200}
+              label="Selecionar ponto no mapa"
+              onChange={(la, ln) =>
+                onUpdateNode(selectedNode.id, { config: { ...config, zona_lat: la, zona_lng: ln } })
+              }
+            />
+
             <div>
               <Label>Colar coordenada (lat, lng)</Label>
               <Input
@@ -347,6 +359,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 Cole a coordenada copiada do Google Maps para preencher latitude e longitude.
               </p>
             </div>
+
 
             <div>
               <Label>Raio (metros)</Label>
