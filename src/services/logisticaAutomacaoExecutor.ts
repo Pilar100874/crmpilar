@@ -296,7 +296,10 @@ export async function executarAutomacoesLogistica(
           `${automacao.id}:${agendaNode.id}`,
           (agendaNode.data?.config || {}) as Record<string, unknown>
         );
-        veiculosAcao = devido ? veiculosElegiveis : [];
+        // Sem condição de veículo, o agendamento dispara UMA vez (relatório geral),
+        // e não uma mensagem por veículo.
+        veiculosAcao = devido ? (paradoNode ? veiculosElegiveis : veiculosElegiveis.slice(0, 1)) : [];
+
       } else if (repetirNode) {
         const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
         const chaveNode = `${automacao.id}:${repetirNode.id}`;
@@ -314,10 +317,18 @@ export async function executarAutomacoesLogistica(
         } catch { /* noop */ }
 
         veiculosAcao = veiculosElegiveis.filter(v => repeticaoDevida(chaveNode, v, rc));
+      } else if (!paradoNode) {
+        // Sem gatilho de agendamento e sem nenhuma condição de veículo o fluxo não
+        // tem quando disparar — evita envio contínuo para todos os veículos.
+        console.warn(
+          `[logistica] automação "${automacao.nome}" sem gatilho (Agendamento) ou condição: ações não serão disparadas.`
+        );
+        veiculosAcao = [];
       } else {
         veiculosAcao = veiculosElegiveis.filter(v => disparoUnicoDevido(String(automacao.id), v));
       }
       pularAcoes = veiculosAcao.length === 0;
+
 
 
 
