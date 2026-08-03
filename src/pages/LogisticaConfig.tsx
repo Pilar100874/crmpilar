@@ -249,6 +249,9 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
 
           <LogisticaGruposCRUD estabelecimentoId={estabId} />
 
+          <LimpezaHistoricoConfig />
+
+
 
           <TestePostFakeCard />
           {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}
