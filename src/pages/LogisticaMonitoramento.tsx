@@ -787,7 +787,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         )}
 
         {/* Painel flutuante de alertas (desktop) */}
-        {showAlerts ? (
+        {showAlerts && !detalhesVeiculo ? (
           <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
             <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
               <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
@@ -811,14 +811,14 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                       key={`${alert.veiculoId}-${alert.type}-${index}`}
                       alert={alert}
                       icon={getAlertIcon(alert.type)}
-                      onClick={() => zoomToVehicle(alert.veiculoId)}
+                      onClick={() => abrirDetalhes(alert.veiculoId)}
                     />
                   ))
                 )}
               </div>
             </ScrollArea>
           </div>
-        ) : (
+        ) : !detalhesVeiculo ? (
           <Button
             variant={alerts.length > 0 ? 'destructive' : 'secondary'}
             size="sm"
@@ -828,7 +828,37 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             <AlertTriangle className="h-4 w-4 mr-2" />
             Alertas {alerts.length > 0 ? `(${alerts.length})` : ''}
           </Button>
+        ) : null}
+
+        {/* Painel de detalhes (desktop) */}
+        {detalhesVeiculo && (
+          <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-80 z-[600] flex-col rounded-xl border border-border/60 shadow-xl overflow-hidden">
+            <VeiculoDetalhesSheet
+              veiculo={detalhesVeiculo}
+              onClose={fecharDetalhes}
+              onRouteChange={setRotaCoords}
+              onFocusPosition={setMapaFoco}
+            />
+          </div>
         )}
+
+        {/* Painel de detalhes (mobile/tablet) */}
+        <Sheet
+          open={!!detalhesVeiculo && isCompact}
+          onOpenChange={(open) => { if (!open) fecharDetalhes(); }}
+        >
+          <SheetContent side="right" className="w-[92vw] sm:w-[380px] p-0 lg:hidden">
+            {detalhesVeiculo && (
+              <VeiculoDetalhesSheet
+                veiculo={detalhesVeiculo}
+                onClose={fecharDetalhes}
+                onRouteChange={setRotaCoords}
+                onFocusPosition={setMapaFoco}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
+
 
       </div>
     </div>
