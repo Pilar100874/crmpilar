@@ -272,6 +272,7 @@ export async function executarAutomacoesLogistica(
                   automacao_id: automacao.id,
                   automacao_nome: automacao.nome,
                   mostrar_tempo: !!tempoCfg,
+                  data_inicio: veiculo.ultima_posicao.data_hora,
                 });
               }
             }
