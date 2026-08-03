@@ -343,6 +343,30 @@ async function executarAutomacoesLogistica(
       const nodes = flowData.nodes;
       const edges = flowData.edges || [];
 
+      // Zonas isentas: dentro do raio nenhuma marcação é criada
+      const zonas = nodes
+        .filter((n: any) => n.data?.type === 'condicao_zona_isenta')
+        .map((n: any) => (n.data?.config || {}) as Record<string, unknown>)
+        .filter((c: any) => Number.isFinite(Number(c.zona_lat)) && Number.isFinite(Number(c.zona_lng)))
+        .map((c: any) => ({
+          lat: Number(c.zona_lat),
+          lng: Number(c.zona_lng),
+          raio: Number(c.zona_raio_metros) || 200,
+        }));
+      const dentroZonaIsenta = zonas.some(
+        (z) => distanciaMetrosZona(lat, lng, z.lat, z.lng) <= z.raio
+      );
+      if (dentroZonaIsenta) {
+        console.log('🛡️ Veículo dentro de zona isenta — removendo marcações e ignorando automação');
+        await supabase
+          .from('logistica_paradas_marcadas')
+          .delete()
+          .eq('veiculo_id', veiculoId)
+          .eq('estabelecimento_id', estabelecimentoId);
+        markerToCreate = null;
+        continue;
+      }
+
       for (const node of nodes) {
         const nodeType = node.data?.type;
         const config = node.data?.config || {};
