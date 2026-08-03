@@ -120,10 +120,16 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
               url={atual.url}
               nome={atual.nome}
               classeVideo="mx-auto max-h-[75vh] w-auto"
+              legendas={legendas}
             />
           )}
           {atual?.url && tipo === "audio" && (
-            <MediaPlayerInline tipo="audio" url={atual.url} nome={atual.nome} />
+            <MediaPlayerInline
+              tipo="audio"
+              url={atual.url}
+              nome={atual.nome}
+              legendas={legendas}
+            />
           )}
           {atual?.url && tipo === "pdf" && (
             <iframe src={atual.url} title={atual.nome} className="h-full w-full" />
