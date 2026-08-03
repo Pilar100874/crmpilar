@@ -86,6 +86,8 @@ export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia }: 
     }
   })();
 
+  const seguro = tipo === "html" && texto ? sanitizarHtmlArtefato(texto) : null;
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1">
