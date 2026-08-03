@@ -200,6 +200,61 @@ export default function ConfigServidorPage() {
       </Alert>
 
       <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <PlugZap className="h-4 w-4 text-primary" /> Conexão com o backend
+          </CardTitle>
+          <CardDescription>
+            Verifique se o servidor de execução está online e se as chaves essenciais foram
+            reconhecidas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => testarConexao()} disabled={testando}>
+              {testando ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlugZap className="mr-2 h-4 w-4" />
+              )}
+              Testar conexão
+            </Button>
+            {saude === null ? (
+              <Badge variant="outline">não testado</Badge>
+            ) : saude.ok ? (
+              <Badge className="gap-1 bg-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Online
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="gap-1">
+                <XCircle className="h-3.5 w-3.5" /> Offline
+              </Badge>
+            )}
+            {saude?.ok && saude.versao && <Badge variant="secondary">versão {saude.versao}</Badge>}
+            {saude?.ok && typeof saude.anthropic === "boolean" && (
+              <Badge variant={saude.anthropic ? "secondary" : "outline"}>
+                Anthropic {saude.anthropic ? "ok" : "sem chave"}
+              </Badge>
+            )}
+            {saude?.ok && typeof saude.supabase === "boolean" && (
+              <Badge variant={saude.supabase ? "secondary" : "outline"}>
+                Backend {saude.supabase ? "ok" : "sem chave"}
+              </Badge>
+            )}
+          </div>
+          {saude && !saude.ok && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Não foi possível conectar</AlertTitle>
+              <AlertDescription className="break-words">
+                {saude.motivo ?? saude.erro ?? "Erro desconhecido ao contatar o servidor."}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ShieldCheck className="h-4 w-4 text-primary" /> Valores
