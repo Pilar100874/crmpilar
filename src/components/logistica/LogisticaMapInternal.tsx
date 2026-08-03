@@ -256,10 +256,22 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   }, []);
 
   // Reenquadra o mapa no maior zoom possível, mantendo tudo centralizado na área visível
-  const enquadrarTudo = useCallback(() => {
+  const enquadrarTudo = useCallback((forcar = false) => {
     const map = mapRef.current;
     const bounds = ultimoBoundsRef.current;
     if (!map || !bounds || !fitBounds || autoPausadoRef.current) return;
+
+    // Evita reenquadrar (e "piscar") quando nada mudou de forma relevante
+    const sig = [
+      bounds.getSouth().toFixed(4),
+      bounds.getWest().toFixed(4),
+      bounds.getNorth().toFixed(4),
+      bounds.getEast().toFixed(4),
+      Math.round(map.getSize().x),
+      Math.round(map.getSize().y),
+    ].join('|');
+    if (!forcar && sig === ultimoEnquadramentoRef.current) return;
+    ultimoEnquadramentoRef.current = sig;
 
     movimentoProgramaticoRef.current = true;
     enquadrarNoMapa(map, bounds, {
@@ -272,6 +284,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       movimentoProgramaticoRef.current = false;
     }, 500);
   }, [fitBounds, fitBoundsPadding]);
+
 
   const retomarAuto = useCallback(() => {
     autoPausadoRef.current = false;
