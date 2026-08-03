@@ -11,6 +11,7 @@ import {
   Fuel, Wrench, Coffee, ShoppingCart, Factory, Warehouse,
   ParkingCircle, TrafficCone, Construction, Timer, Ban,
   CircleCheck, CircleX, Flag, Star, Heart, Zap, LucideIcon,
+  TimerReset, ShieldOff,
   Minimize2, Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -37,7 +38,10 @@ const iconMap: Record<string, any> = {
   BellRing,
   Mail,
   MessageSquareText,
+  TimerReset,
+  ShieldOff,
 };
+
 
 // Map for marker icons
 const markerIconMap: Record<string, LucideIcon> = {
@@ -100,7 +104,7 @@ interface LogisticaFlowNodeProps extends NodeProps {
 
 export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNodeProps) => {
   const blockDef = LOGISTICA_BLOCKS.find(b => b.type === data.type);
-  const IconComponent = blockDef ? iconMap[blockDef.icon] : Play;
+  const IconComponent = (blockDef ? iconMap[blockDef.icon] : Play) || Play;
   const color = blockDef?.color || '#6B7280';
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isStartBlock = data.type === 'iniciar_automacao';
