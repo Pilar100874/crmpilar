@@ -150,6 +150,22 @@ export function MediaPlayerInline({
         </div>
       )}
 
+      {mostrarTimeline && (
+        <WaveformTimeline
+          url={url}
+          tipo={tipo}
+          duracao={duracao}
+          atual={atual}
+          onSeek={(s) => {
+            if (ref.current) {
+              ref.current.currentTime = s;
+              setAtual(s);
+            }
+          }}
+        />
+      )}
+
+
       <div className="flex flex-wrap items-center gap-2 border-t px-2 py-1 text-[11px] text-muted-foreground">
         {tipo === "video" ? <Video className="h-3 w-3" /> : <Music className="h-3 w-3" />}
         <span className="font-mono">
