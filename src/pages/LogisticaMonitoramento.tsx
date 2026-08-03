@@ -694,7 +694,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
-                fitBounds={!pinnedVeiculoId && !rotaCoords}
+                fitBounds={!pinnedVeiculoId && !rotaCoords && !detalhesVeiculoId}
                 fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}
                 compactIcons
               />
