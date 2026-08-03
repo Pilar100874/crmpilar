@@ -264,7 +264,9 @@ export default function ConfigServidorPage() {
                 <XCircle className="h-3.5 w-3.5" /> Offline
               </Badge>
             )}
-            {saude?.ok && saude.versao && <Badge variant="secondary">versão {saude.versao}</Badge>}
+            {saude?.ok && saude.versao ? (
+              <Badge variant="secondary">versão {String(saude.versao)}</Badge>
+            ) : null}
             {saude?.ok && typeof saude.anthropic === "boolean" && (
               <Badge variant={saude.anthropic ? "secondary" : "outline"}>
                 Anthropic {saude.anthropic ? "ok" : "sem chave"}
