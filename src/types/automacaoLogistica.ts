@@ -60,6 +60,15 @@ export interface LogisticaBlockConfig {
   telefone?: string;
   mensagem?: string;
   usar_telefone_cliente?: boolean;
+  // Disparo de bot junto com o WhatsApp
+  disparar_bot?: boolean;
+  bot_flow_id?: string | null;
+  bot_flow_nome?: string | null;
+  // Para condicao_repetir_parado
+  repetir_inicio_minutos?: number;
+  repetir_intervalo_minutos?: number;
+  repetir_max?: number;
+
   // Para acao_notificacao
   titulo_notificacao?: string;
   corpo_notificacao?: string;
