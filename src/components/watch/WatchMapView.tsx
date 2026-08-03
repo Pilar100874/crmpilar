@@ -288,6 +288,14 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
         .leaflet-container {
           background: #1a1a2e;
         }
+        .leaflet-container .leaflet-marker-icon {
+          transition: transform .8s linear;
+          will-change: transform;
+        }
+        .leaflet-zoom-anim .leaflet-marker-icon {
+          transition: none !important;
+        }
+
         .leaflet-popup-content-wrapper {
           border-radius: 8px;
           padding: 2px;
