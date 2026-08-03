@@ -92,7 +92,8 @@ const createParadaIcon = (cor: string, iconeName?: string, compact = false) => {
     return icons[name || 'Pause'] || icons['Pause'];
   };
 
-  const size = MARKER_SIZE;
+  const size = tamanhoMarcador(compact);
+  const borderWidth = compact ? 2 : 3;
   return L.divIcon({
     className: 'custom-parada-icon',
     html: `
@@ -114,7 +115,7 @@ const createParadaIcon = (cor: string, iconeName?: string, compact = false) => {
           width: ${size}px;
           height: ${size}px;
           border-radius: 50%;
-          border: 3px solid white;
+          border: ${borderWidth}px solid white;
           box-shadow: 0 0 0 2px ${cor}66, 0 3px 10px rgba(0,0,0,0.45);
           display: flex;
           align-items: center;
@@ -473,7 +474,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       if (existingMarker) {
         // Update position and icon
         existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createParadaIcon(cor, icone));
+        existingMarker.setIcon(createParadaIcon(cor, icone, compactIcons));
         // Update popup content
         existingMarker.setPopupContent(`
           <div class="text-sm p-1">
@@ -486,7 +487,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         `);
       } else {
         const marker = L.marker(pos, { 
-          icon: createParadaIcon(cor, icone),
+          icon: createParadaIcon(cor, icone, compactIcons),
           zIndexOffset: 1000 // Paradas ficam acima dos veículos
         })
           .addTo(map)
