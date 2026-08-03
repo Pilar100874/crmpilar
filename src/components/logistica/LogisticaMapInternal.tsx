@@ -53,8 +53,9 @@ const createVeiculoIcon = (status: string, compact = false, customColor?: string
   const ignBadge = typeof ignicao === 'boolean'
     ? `<div title="${ignicao ? 'Ignição ligada' : 'Ignição desligada'}" style="position:absolute; top:-2px; right:-2px; width:${badgeSize}px; height:${badgeSize}px; border-radius:50%; border:1.5px solid white; background:${ignicao ? '#059669' : '#9ca3af'}; display:flex; align-items:center; justify-content:center; font-size:${badgeSize - 4}px; line-height:1; color:white; z-index:3;">${ignicao ? '&#9679;' : ''}</div>`
     : '';
-  // Halo pulsante para realçar o veículo no mapa
-  const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${status === 'movendo' ? `animation: veiculoPulse 1.8s infinite;` : ''}"></div>`;
+  // Halo pulsante para realçar o veículo no mapa (movendo e parado com mesmo tamanho visual)
+  const devePulsar = status === 'movendo' || status === 'parado';
+  const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${devePulsar ? `animation: veiculoPulse ${status === 'movendo' ? '1.8' : '2.2'}s infinite;` : ''}"></div>`;
   const label = rotulo
     ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none;">${rotulo}</div>`
     : '';
