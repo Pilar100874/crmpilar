@@ -54,6 +54,8 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [sessoesWhats, setSessoesWhats] = useState<Array<{ id: string; session_name: string; phone_number: string | null; status: string }>>([]);
+  const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
+
 
   
   const nodeData = selectedNode?.data as any;
