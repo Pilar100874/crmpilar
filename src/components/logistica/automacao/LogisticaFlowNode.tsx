@@ -1,7 +1,9 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { LogisticaLivePreview, LOGISTICA_PREVIEW_SUPPORTED } from "./LogisticaLivePreview";
+import { descreverAgendamento } from '@/lib/logistica/agendamento';
 import { memo, useState, useEffect } from 'react';
+
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { 
   Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
