@@ -58,13 +58,6 @@ const CAMPOS: Campo[] = [
     link: { url: "https://console.anthropic.com/settings/keys", rotulo: "Obter no console da Anthropic" },
   },
   {
-    chave: "RAILWAY_DEPLOY_HOOK_URL",
-    rotulo: "Deploy Hook (Railway)",
-    ajuda: "URL do Deploy Hook usada para redeploy remoto do servidor.",
-    segredo: true,
-    link: { url: "https://railway.app/dashboard", rotulo: "Criar em Settings → Deploys no Railway" },
-  },
-  {
     chave: "HIGGSFIELD_API_KEY",
     rotulo: "Higgsfield API Key",
     ajuda: "Geração de vídeos/imagens pelo Higgsfield.",
