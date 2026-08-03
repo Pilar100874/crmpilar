@@ -576,16 +576,49 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
               )}
             </div>
 
-            {destino === 'numero' && (
-              <div>
-                <Label>Telefone de destino</Label>
-                <Input
-                  value={config.telefone || ''}
-                  onChange={(e) => updateConfig('telefone', e.target.value)}
-                  placeholder="5511999999999"
-                />
-              </div>
-            )}
+            {destino === 'numero' && (() => {
+              const tels: string[] = Array.isArray((config as any).telefones) && (config as any).telefones.length
+                ? (config as any).telefones
+                : [config.telefone || ''];
+              const setTels = (next: string[]) => {
+                updateConfig('telefones', next);
+                updateConfig('telefone', next[0] || '');
+              };
+              return (
+                <div className="space-y-2">
+                  <Label>Telefones de destino</Label>
+                  {tels.map((t, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input
+                        value={t}
+                        onChange={(e) => {
+                          const next = [...tels];
+                          next[idx] = e.target.value;
+                          setTels(next);
+                        }}
+                        placeholder="5511999999999"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const next = tels.filter((_, i) => i !== idx);
+                          setTels(next.length ? next : ['']);
+                        }}
+                        disabled={tels.length === 1 && !tels[0]}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => setTels([...tels, ''])}>
+                    <Plus className="h-4 w-4 mr-1" /> Adicionar telefone
+                  </Button>
+                </div>
+              );
+            })()}
+
             <div>
               <Label>Mensagem</Label>
               <Textarea
