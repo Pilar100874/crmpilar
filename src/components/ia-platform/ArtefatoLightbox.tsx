@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Download, Loader2, ShieldCheck } from "lucide-react";
 import { detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
+import { MediaPlayerInline } from "@/components/ia-platform/MediaPlayerInline";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
 
 export interface ArtefatoLightboxItem {
@@ -110,9 +111,16 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
             <img src={atual.url} alt={atual.nome} className="mx-auto h-full w-auto object-contain" />
           )}
           {atual?.url && tipo === "video" && (
-            <video src={atual.url} controls className="mx-auto h-full w-auto" />
+            <MediaPlayerInline
+              tipo="video"
+              url={atual.url}
+              nome={atual.nome}
+              classeVideo="mx-auto max-h-[75vh] w-auto"
+            />
           )}
-          {atual?.url && tipo === "audio" && <audio src={atual.url} controls className="w-full p-4" />}
+          {atual?.url && tipo === "audio" && (
+            <MediaPlayerInline tipo="audio" url={atual.url} nome={atual.nome} />
+          )}
           {atual?.url && tipo === "pdf" && (
             <iframe src={atual.url} title={atual.nome} className="h-full w-full" />
           )}

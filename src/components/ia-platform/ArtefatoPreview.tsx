@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, EyeOff, Maximize2, ShieldCheck } from "lucide-react";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
+import { MediaPlayerInline } from "./MediaPlayerInline";
 
 export type TipoPreview = "imagem" | "video" | "audio" | "html" | "json" | "texto" | "pdf" | "outro";
 
@@ -120,8 +121,8 @@ export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia }: 
           {tipo === "imagem" && (
             <img src={url} alt={nome} loading="lazy" className="max-h-80 w-full object-contain" />
           )}
-          {tipo === "video" && <video src={url} controls className="max-h-80 w-full" />}
-          {tipo === "audio" && <audio src={url} controls className="w-full p-2" />}
+          {tipo === "video" && <MediaPlayerInline tipo="video" url={url} nome={nome} />}
+          {tipo === "audio" && <MediaPlayerInline tipo="audio" url={url} nome={nome} />}
           {tipo === "pdf" && <iframe src={url} title={nome} className="h-80 w-full" />}
           {tipo === "html" && (
             <div>

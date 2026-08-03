@@ -161,7 +161,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
                         nome={nome}
                         url={a.url}
                         mime={a.tipo}
-                        padraoAberto={tipo === "imagem"}
+                        padraoAberto={tipo === "imagem" || tipo === "video" || tipo === "audio"}
                         onTelaCheia={a.url ? () => setTelaCheia(i) : undefined}
                       />
                     </div>
