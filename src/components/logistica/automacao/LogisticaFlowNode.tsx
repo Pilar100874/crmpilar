@@ -123,14 +123,24 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
       
       return {
         type: 'dynamic_time',
-        outputs: sortedCondicoes.map((c, i) => ({
-          id: `tempo_${c.tempo_minutos}`,
-          label: c.label || `${c.tempo_minutos} min`,
-          tempo: c.tempo_minutos,
-          color: TIME_OUTPUT_COLORS[i % TIME_OUTPUT_COLORS.length]
-        }))
+        outputs: [
+          ...sortedCondicoes.map((c, i) => ({
+            id: `tempo_${c.tempo_minutos}`,
+            label: c.label || `${c.tempo_minutos} min`,
+            tempo: c.tempo_minutos,
+            color: TIME_OUTPUT_COLORS[i % TIME_OUTPUT_COLORS.length]
+          })),
+          {
+            id: 'nao',
+            label: 'Não parado',
+            tempo: null,
+            isNegative: true,
+            color: { bg: 'bg-muted', hover: 'hover:bg-muted/80', border: 'border-border', text: 'text-foreground' }
+          }
+        ]
       };
     }
+
     
     // Default outputs
     const outputs = blockDef?.outputs || 1;
@@ -421,7 +431,7 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                 {outputsConfig.outputs.map((out: any, i: number) => (
                   <span 
                     key={out.id}
-                    className={cn("px-1.5 py-0.5 rounded text-white text-[10px]", out.color.bg)}
+                    className={cn("px-1.5 py-0.5 rounded text-[10px]", out.color.bg, out.isNegative ? "text-foreground" : "text-white")}
                   >
                     {out.label}
                   </span>
@@ -569,7 +579,10 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                 out.color.hover
               )}
             >
-              <span className="text-xs font-medium text-white">≥ {out.label}</span>
+              <span className={cn("text-xs font-medium", out.isNegative ? "text-foreground" : "text-white")}>
+                {out.isNegative ? out.label : `≥ ${out.label}`}
+              </span>
+
               <div className="relative">
                 <Handle
                   type="source"
