@@ -117,7 +117,24 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
             <iframe src={atual.url} title={atual.nome} className="h-full w-full" />
           )}
           {atual?.url && tipo === "html" && (
-            <iframe title={atual.nome} sandbox="" srcDoc={formatado ?? ""} className="h-full w-full bg-white" />
+            <div className="flex h-full flex-col">
+              <div className="flex items-center gap-1 border-b bg-background px-3 py-1 text-[11px] text-muted-foreground">
+                <ShieldCheck className="h-3 w-3 text-primary" />
+                HTML sanitizado e isolado (sem scripts)
+                {!!seguro?.removidos && (
+                  <Badge variant="outline" className="ml-1 h-4 px-1 text-[10px]">
+                    {seguro.removidos} item(ns) bloqueado(s)
+                  </Badge>
+                )}
+              </div>
+              <iframe
+                title={atual.nome}
+                sandbox={SANDBOX_PREVIEW}
+                referrerPolicy="no-referrer"
+                srcDoc={seguro?.html ?? ""}
+                className="min-h-0 flex-1 w-full bg-white"
+              />
+            </div>
           )}
           {atual?.url && (tipo === "json" || tipo === "texto") && (
             <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-relaxed">
