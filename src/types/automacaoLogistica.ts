@@ -1,6 +1,8 @@
 export type LogisticaBlockType = 
   | 'iniciar_automacao'
+  | 'gatilho_agendamento'
   | 'condicao_parado'
+
   | 'condicao_repetir_parado'
   | 'condicao_velocidade'
   | 'condicao_chegada'
