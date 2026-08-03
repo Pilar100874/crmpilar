@@ -286,6 +286,17 @@ export async function executarAutomacoesLogistica(
       // Sem esse bloco, as ações disparam UMA única vez por parada.
       const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
       const agendaNode = flowObj.nodes.find(n => n.data?.type === 'gatilho_agendamento');
+      const { periodoAgendamento } = await import('@/lib/logistica/agendamento');
+      const { registrarEnvioUnico, limparTravasAntigas } = await import('@/lib/logistica/antiDuplicidade');
+      limparTravasAntigas();
+      // Janela da trava anti-duplicidade (por workflow + destinatário + período)
+      const periodoAtual = periodoAgendamento(
+        agendaNode ? ((agendaNode.data?.config || {}) as Record<string, unknown>) : null
+      );
+      const podeEnviar = (destinatario: string) =>
+        // Com bloco "Repetir a cada X min" a repetição é intencional: não trava.
+        !!repetirNode || registrarEnvioUnico(String(automacao.id), periodoAtual, destinatario);
+
       let veiculosAcao = veiculosElegiveis;
       let pularAcoes = false;
       if (agendaNode) {
@@ -296,6 +307,7 @@ export async function executarAutomacoesLogistica(
           `${automacao.id}:${agendaNode.id}`,
           (agendaNode.data?.config || {}) as Record<string, unknown>
         );
+
         // Sem condição de veículo, o agendamento dispara UMA vez (relatório geral),
         // e não uma mensagem por veículo.
         veiculosAcao = devido ? (paradoNode ? veiculosElegiveis : veiculosElegiveis.slice(0, 1)) : [];
@@ -566,6 +578,8 @@ export async function executarAutomacoesLogistica(
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
+                if (!podeEnviar(`${node.id}:${tel}`)) continue;
+
                 let mensagem = aplicarVars(mensagemTpl, veic, mot.nome || '');
                 mensagem = comPrefixo(appendLocOne(mensagem, (veic as any).id));
                 await executarBlocoWhatsapp(
@@ -594,8 +608,10 @@ export async function executarAutomacoesLogistica(
               const lista = Array.from(new Set(listaRaw.map((t) => String(t || '').trim()).filter(Boolean)));
               if (!lista.length) lista.push('');
               for (const tel of lista) {
+                if (!podeEnviar(`${node.id}:${tel || 'padrao'}`)) continue;
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
+
                   wfCtx
                 );
                 await enviarPdf(tel);
