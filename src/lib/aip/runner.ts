@@ -85,6 +85,8 @@ export const agentRunner = {
   cancel: (executionId: string) => callProxy("cancel", { execution_id: executionId }),
   status: (executionId: string) => callProxy("status", { execution_id: executionId }),
   health: () => callProxy("health", {}),
+  /** Diagnóstico do backend feito pelo próprio servidor (URL, chave de serviço, leitura e storage). */
+  healthSupabase: () => callProxy("health/supabase", {}) as Promise<SupabaseHealth>,
   /** Painel de monitoramento: estado do processo + execuções em memória. */
   runs: (limite = 50) => callProxy("runs", { limite }) as Promise<RunsResult>,
   /** Remove execuções finalizadas da memória do servidor. */
