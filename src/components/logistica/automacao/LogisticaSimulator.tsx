@@ -125,29 +125,30 @@ export const LogisticaSimulator = ({
   const evaluateCondition = (node: Node): 'yes' | 'no' => {
     const data = node.data as any;
     const config = data.config || {};
+    const ctx = contextRef.current;
 
     switch (data.type) {
       case 'condicao_parado':
         const tempoMin = config.tempo_minutos || 30;
-        return context.tempoParado >= tempoMin ? 'yes' : 'no';
+        return ctx.tempoParado >= tempoMin ? 'yes' : 'no';
       
       case 'condicao_velocidade':
         const velLimite = config.velocidade_km || 80;
         const operador = config.operador_velocidade || 'maior';
         if (operador === 'maior') {
-          return context.velocidade > velLimite ? 'yes' : 'no';
+          return ctx.velocidade > velLimite ? 'yes' : 'no';
         }
-        return context.velocidade < velLimite ? 'yes' : 'no';
+        return ctx.velocidade < velLimite ? 'yes' : 'no';
       
       case 'condicao_chegada':
         // Simula chegada baseado em distância (simplificado)
         return Math.random() > 0.5 ? 'yes' : 'no';
       
       case 'condicao_saida_area':
-        return context.dentroArea ? 'no' : 'yes';
+        return ctx.dentroArea ? 'no' : 'yes';
       
       case 'condicao_horario':
-        const [horaAtual] = context.horaAtual.split(':').map(Number);
+        const [horaAtual] = ctx.horaAtual.split(':').map(Number);
         const [horaInicio] = (config.horario_inicio || '08:00').split(':').map(Number);
         const [horaFim] = (config.horario_fim || '18:00').split(':').map(Number);
         const dentroHorario = horaAtual >= horaInicio && horaAtual <= horaFim;
@@ -159,12 +160,13 @@ export const LogisticaSimulator = ({
   };
 
   const executeNode = (node: Node) => {
-    if (!isRunning || isPaused) return;
+    if (!isRunningRef.current || isPausedRef.current) return;
 
     const data = node.data as any;
     const blockDef = LOGISTICA_BLOCKS.find(b => b.type === data.type);
 
     setCurrentNodeId(node.id);
+
 
     // Check skip
     if (skipNodes.has(node.id)) {
