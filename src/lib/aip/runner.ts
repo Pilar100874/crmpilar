@@ -111,7 +111,52 @@ export const agentRunner = {
    */
   execSkillScript: (payload: SkillExecPayload) =>
     callProxy("skill/exec", payload as any) as Promise<SkillExecResult>,
+  /** Verifica se o Chromium do Playwright está pronto no servidor remoto. */
+  playwrightStatus: () =>
+    callProxy("playwright/status", {}) as Promise<PlaywrightStatus>,
+  /** Executa um roteiro de automação de navegador (Playwright) no runner. */
+  playwrightRun: (payload: PlaywrightRunPayload) =>
+    callProxy("playwright/run", payload as any) as Promise<PlaywrightRunResult>,
 };
+
+export type PlaywrightPasso =
+  | { acao: "ir"; url: string }
+  | { acao: "clicar"; seletor: string }
+  | { acao: "preencher"; seletor: string; valor: string }
+  | { acao: "esperar"; seletor?: string; ms?: number }
+  | { acao: "texto"; seletor?: string; nome?: string }
+  | { acao: "screenshot"; nome?: string; pagina_inteira?: boolean }
+  | { acao: "pdf"; nome?: string }
+  | { acao: "avaliar"; script: string; nome?: string };
+
+export interface PlaywrightRunPayload {
+  url?: string;
+  passos: PlaywrightPasso[];
+  timeout_ms?: number;
+  viewport?: { width: number; height: number };
+  user_agent?: string;
+}
+
+export interface PlaywrightRunResult {
+  ok: boolean;
+  erro?: string;
+  url_final?: string;
+  titulo?: string;
+  logs?: string[];
+  extraidos?: Record<string, unknown>;
+  artefatos?: Array<{ nome: string; tipo: string; tamanho_bytes: number; base64: string }>;
+  duracao_ms?: number;
+  simulado?: boolean;
+}
+
+export interface PlaywrightStatus {
+  ok: boolean;
+  instalado?: boolean;
+  navegador?: string;
+  versao_navegador?: string;
+  erro?: string;
+  simulado?: boolean;
+}
 
 export interface SkillExecPayload {
   skill_slug: string;
