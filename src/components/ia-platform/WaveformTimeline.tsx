@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { formatarTempo } from "./MediaPlayerInline";
+
+/** Formata segundos em mm:ss (ou h:mm:ss). */
+function formatarTempo(segundos?: number | null): string {
+  if (segundos == null || !isFinite(segundos) || segundos < 0) return "--:--";
+  const s = Math.floor(segundos % 60);
+  const m = Math.floor((segundos / 60) % 60);
+  const h = Math.floor(segundos / 3600);
+  const dois = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${dois(m)}:${dois(s)}` : `${dois(m)}:${dois(s)}`;
+}
 
 interface Props {
   url: string;
