@@ -6,12 +6,14 @@ import { ChevronLeft, ChevronRight, Download, Loader2, ShieldCheck } from "lucid
 import { detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
 import { MediaPlayerInline } from "@/components/ia-platform/MediaPlayerInline";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
+import { montarFaixasLegenda } from "@/lib/aip/legendas";
 
 export interface ArtefatoLightboxItem {
   nome: string;
   url?: string | null;
   mime?: string | null;
 }
+
 
 interface Props {
   itens: ArtefatoLightboxItem[];
@@ -29,6 +31,8 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
 
   const tipo = atual ? detectarTipoPreview(atual.nome, atual.mime) : "outro";
   const precisaBaixar = tipo === "html" || tipo === "json" || tipo === "texto";
+  const legendas = atual ? montarFaixasLegenda(atual.nome, itens) : [];
+
 
   const irPara = (delta: number) => {
     if (indice === null || itens.length === 0) return;
@@ -116,10 +120,16 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
               url={atual.url}
               nome={atual.nome}
               classeVideo="mx-auto max-h-[75vh] w-auto"
+              legendas={legendas}
             />
           )}
           {atual?.url && tipo === "audio" && (
-            <MediaPlayerInline tipo="audio" url={atual.url} nome={atual.nome} />
+            <MediaPlayerInline
+              tipo="audio"
+              url={atual.url}
+              nome={atual.nome}
+              legendas={legendas}
+            />
           )}
           {atual?.url && tipo === "pdf" && (
             <iframe src={atual.url} title={atual.nome} className="h-full w-full" />

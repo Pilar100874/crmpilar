@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Music, Video } from "lucide-react";
+import { Captions, CaptionsOff, Music, Video } from "lucide-react";
 import { obterPosicaoMidia, salvarPosicaoMidia } from "@/lib/aip/posicaoMidia";
+import { CueLegenda, LegendaFaixa, cueAtivo, parsearLegenda } from "@/lib/aip/legendas";
+
 
 
 /** Formata segundos em mm:ss (ou h:mm:ss). */
@@ -20,18 +22,59 @@ interface Props {
   nome: string;
   /** Altura do player de vídeo (classe Tailwind). */
   classeVideo?: string;
+  /** Faixas de legenda (WebVTT/SRT) disponíveis para esta mídia. */
+  legendas?: LegendaFaixa[];
 }
+
 
 /**
  * Player nativo (controls/seek) com barra de informações: tempo atual,
  * duração e velocidade de reprodução — sem precisar baixar o arquivo.
  */
-export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-full" }: Props) {
+export function MediaPlayerInline({
+  tipo,
+  url,
+  nome,
+  classeVideo = "max-h-80 w-full",
+  legendas = [],
+}: Props) {
   const ref = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [atual, setAtual] = useState(() => obterPosicaoMidia(url));
   const [velocidade, setVelocidade] = useState(1);
   const [erro, setErro] = useState(false);
+  const [faixa, setFaixa] = useState<string | null>(legendas[0]?.nome ?? null);
+  const [legendasAtivas, setLegendasAtivas] = useState(legendas.length > 0);
+  const [cues, setCues] = useState<CueLegenda[]>([]);
+  const [erroLegenda, setErroLegenda] = useState(false);
+
+  // Carrega e converte a faixa selecionada (WebVTT ou SRT).
+  useEffect(() => {
+    const sel = legendas.find((l) => l.nome === faixa);
+    if (!legendasAtivas || !sel) {
+      setCues([]);
+      return;
+    }
+    let cancelado = false;
+    setErroLegenda(false);
+    fetch(sel.url)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then((t) => !cancelado && setCues(parsearLegenda(t)))
+      .catch(() => !cancelado && (setErroLegenda(true), setCues([])));
+    return () => {
+      cancelado = true;
+    };
+  }, [faixa, legendasAtivas, legendas]);
+
+  const textoLegenda = useMemo(
+    () => (legendasAtivas && cues.length ? cueAtivo(cues, atual)?.texto ?? "" : ""),
+    [cues, atual, legendasAtivas],
+  );
+
+
 
   const aoCarregar = (e: React.SyntheticEvent<HTMLMediaElement>) => {
     const el = e.currentTarget;
@@ -82,14 +125,29 @@ export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-f
 
   return (
     <div className="w-full">
-      {tipo === "video" ? (
-        <video
-          {...comum}
-          ref={ref as React.RefObject<HTMLVideoElement>}
-          className={`${classeVideo} bg-black`}
-        />
-      ) : (
-        <audio {...comum} ref={ref as React.RefObject<HTMLAudioElement>} className="w-full p-2" />
+      <div className="relative">
+        {tipo === "video" ? (
+          <video
+            {...comum}
+            ref={ref as React.RefObject<HTMLVideoElement>}
+            className={`${classeVideo} bg-black`}
+          />
+        ) : (
+          <audio {...comum} ref={ref as React.RefObject<HTMLAudioElement>} className="w-full p-2" />
+        )}
+        {tipo === "video" && !!textoLegenda && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center px-4">
+            <span className="max-w-[90%] whitespace-pre-line rounded bg-black/70 px-2 py-1 text-center text-sm leading-snug text-white">
+              {textoLegenda}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {tipo === "audio" && legendasAtivas && (
+        <div className="min-h-[1.5rem] whitespace-pre-line px-2 pb-1 text-center text-xs text-foreground">
+          {textoLegenda}
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2 border-t px-2 py-1 text-[11px] text-muted-foreground">
@@ -104,6 +162,46 @@ export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-f
         >
           {velocidade}x
         </button>
+
+        {legendas.length > 0 && (
+          <>
+            <button
+              type="button"
+              onClick={() => setLegendasAtivas((v) => !v)}
+              title={legendasAtivas ? "Desativar legendas" : "Ativar legendas"}
+              className={`flex items-center gap-1 rounded border px-1.5 py-0.5 hover:bg-muted ${
+                legendasAtivas ? "border-primary text-primary" : ""
+              }`}
+            >
+              {legendasAtivas ? (
+                <Captions className="h-3 w-3" />
+              ) : (
+                <CaptionsOff className="h-3 w-3" />
+              )}
+              CC
+            </button>
+            {legendasAtivas && legendas.length > 1 && (
+              <select
+                value={faixa ?? ""}
+                onChange={(e) => setFaixa(e.target.value)}
+                className="rounded border bg-background px-1 py-0.5 text-[11px]"
+                aria-label="Idioma das legendas"
+              >
+                {legendas.map((l) => (
+                  <option key={l.nome} value={l.nome}>
+                    {l.rotulo}
+                  </option>
+                ))}
+              </select>
+            )}
+            {erroLegenda && (
+              <Badge variant="outline" className="h-4 px-1 text-[10px]">
+                Legenda indisponível
+              </Badge>
+            )}
+          </>
+        )}
+
         {erro && (
           <Badge variant="destructive" className="h-4 px-1 text-[10px]">
             Não foi possível reproduzir — link pode ter expirado
@@ -111,6 +209,7 @@ export function MediaPlayerInline({ tipo, url, nome, classeVideo = "max-h-80 w-f
         )}
         <span className="min-w-0 flex-1 truncate text-right font-mono opacity-70">{nome}</span>
       </div>
+
     </div>
   );
 }

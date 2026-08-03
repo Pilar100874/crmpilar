@@ -10,6 +10,7 @@ import { Terminal, Loader2, Play, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { ArtefatoPreview, detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
 import { ArtefatoLightbox } from "@/components/ia-platform/ArtefatoLightbox";
+import { montarFaixasLegenda } from "@/lib/aip/legendas";
 
 interface Arquivo {
   nome_arquivo: string;
@@ -137,6 +138,11 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
                 {resultado.artefatos!.map((a, i) => {
                   const nome = a.origem ?? a.nome;
                   const tipo = detectarTipoPreview(nome, a.tipo);
+                  const legendas = montarFaixasLegenda(
+                    nome,
+                    (resultado.artefatos ?? []).map((x) => ({ nome: x.origem ?? x.nome, url: x.url })),
+                  );
+
                   return (
                     <div key={a.nome} className="space-y-1 p-2 text-xs">
                       <div className="flex items-center gap-2">
@@ -163,6 +169,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
                         mime={a.tipo}
                         padraoAberto={tipo === "imagem" || tipo === "video" || tipo === "audio"}
                         onTelaCheia={a.url ? () => setTelaCheia(i) : undefined}
+                        legendas={legendas}
                       />
                     </div>
                   );
