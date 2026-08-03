@@ -157,6 +157,24 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     description: 'Ponto de início da automação',
     outputs: 1,
   },
+  {
+    type: 'gatilho_agendamento',
+    label: 'Agendamento',
+    category: 'gatilho',
+    color: '#7C3AED',
+    icon: 'CalendarClock',
+    description: 'Dispara as ações do fluxo em horários agendados (diário, semanal, mensal ou a cada X minutos)',
+    defaultData: {
+      agenda_modo: 'diario',
+      agenda_horarios: ['08:00'],
+      agenda_dias_semana: ['seg', 'ter', 'qua', 'qui', 'sex'],
+      agenda_dias_mes: [1],
+      agenda_intervalo_minutos: 60,
+      agenda_tolerancia_minutos: 5,
+    },
+    outputs: 1,
+  },
+
   // Condições
   {
     type: 'condicao_parado',
