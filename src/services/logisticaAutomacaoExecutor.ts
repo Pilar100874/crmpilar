@@ -151,6 +151,43 @@ function repeticaoDevida(
   return true;
 }
 
+/**
+ * Disparo único por parada (quando NÃO existe bloco "Repetir a cada X min").
+ * Garante que as ações (WhatsApp, e-mail, push...) sejam executadas uma única vez
+ * enquanto o veículo continuar parado no mesmo local, e voltem a valer quando ele
+ * se mover e parar novamente.
+ */
+const UNICO_PREFIX = 'logistica:disparo-unico:';
+
+function disparoUnicoDevido(chaveAutomacao: string, veiculo: VeiculoComStatus): boolean {
+  const key = `${UNICO_PREFIX}${chaveAutomacao}:${veiculo.id}`;
+  const pos = veiculo.ultima_posicao;
+  const emMovimento = veiculo.status !== 'parado' || !pos || (Number(pos.velocidade) || 0) > 5;
+  if (emMovimento) {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+    return false;
+  }
+
+  let estado: { lat: number; lng: number; ts: number } | null = null;
+  try {
+    const raw = localStorage.getItem(key);
+    estado = raw ? JSON.parse(raw) : null;
+  } catch { estado = null; }
+
+  // Saiu do ponto onde havia parado → nova parada
+  if (estado && distanciaMetros(estado.lat, estado.lng, pos.lat, pos.lng) > REPETIR_RAIO_MOVIMENTO_M) {
+    estado = null;
+  }
+  if (estado) return false; // já disparou nesta parada
+
+  try {
+    localStorage.setItem(key, JSON.stringify({ lat: pos.lat, lng: pos.lng, ts: Date.now() }));
+  } catch { /* noop */ }
+  return true;
+}
+
+
+
 
 
 
@@ -203,9 +240,27 @@ export async function executarAutomacoesLogistica(
       const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
       const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
 
-      // Bloco "Repetir Enquanto Parado": limita as ações aos veículos com disparo devido
+      // Veículos que realmente satisfazem a condição "Veículo Parado" (se existir no fluxo)
+      const paradoNode = flowObj.nodes.find(n => n.data?.type === 'condicao_parado');
+      let veiculosElegiveis = veiculos;
+      if (paradoNode) {
+        const pc = (paradoNode.data?.config || {}) as Record<string, unknown>;
+        const cond = Array.isArray(pc.condicoes_tempo) && (pc.condicoes_tempo as CondicaoTempoParado[]).length
+          ? (pc.condicoes_tempo as CondicaoTempoParado[])
+          : [{ tempo_minutos: Number(pc.tempo_minutos) || 30 }];
+        const limiteMin = Math.min(...cond.map(c => Number(c.tempo_minutos) || 30));
+        veiculosElegiveis = veiculos.filter(v => {
+          const pos = v.ultima_posicao;
+          if (v.status !== 'parado' || !pos) return false;
+          if (dentroZonaIsenta(pos.lat, pos.lng)) return false;
+          return differenceInMinutes(new Date(), new Date(pos.data_hora)) >= limiteMin;
+        });
+      }
+
+      // Bloco "Repetir a cada X min": repete o disparo enquanto o veículo continuar parado.
+      // Sem esse bloco, as ações disparam UMA única vez por parada.
       const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
-      let veiculosAcao = veiculos;
+      let veiculosAcao = veiculosElegiveis;
       let pularAcoes = false;
       if (repetirNode) {
         const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
@@ -223,9 +278,11 @@ export async function executarAutomacoesLogistica(
           }
         } catch { /* noop */ }
 
-        veiculosAcao = veiculos.filter(v => repeticaoDevida(chaveNode, v, rc));
-        pularAcoes = veiculosAcao.length === 0;
+        veiculosAcao = veiculosElegiveis.filter(v => repeticaoDevida(chaveNode, v, rc));
+      } else {
+        veiculosAcao = veiculosElegiveis.filter(v => disparoUnicoDevido(String(automacao.id), v));
       }
+      pularAcoes = veiculosAcao.length === 0;
 
 
       // Find condition nodes
