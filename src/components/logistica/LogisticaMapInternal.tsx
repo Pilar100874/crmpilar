@@ -390,25 +390,44 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     veiculosComPosicao.forEach(veiculo => {
       const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
+      const tempo = veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null;
 
-      const icone = createVeiculoIcon(
+      // Assinatura do visual: só recria o ícone quando algo realmente muda
+      const sig = [
+        veiculo.status,
+        compactIcons ? 'c' : 'n',
+        veiculo.cor || '',
+        veiculo.tipo_veiculo || '',
+        String(veiculo.ultima_posicao?.ignicao),
+        veiculo.placa || '',
+        tempo ? `${tempo.texto}|${tempo.cor}` : '',
+      ].join('~');
+
+      const criarIcone = () => createVeiculoIcon(
         veiculo.status,
         compactIcons,
         veiculo.cor,
         veiculo.tipo_veiculo,
         veiculo.ultima_posicao?.ignicao,
         veiculo.placa,
-        veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null,
+        tempo,
       );
 
-
       if (existingMarker) {
-        existingMarker.setLatLng(pos);
-        existingMarker.setIcon(icone);
+        const atual = existingMarker.getLatLng();
+        if (Math.abs(atual.lat - veiculo.ultima_posicao!.lat) > 1e-7 || Math.abs(atual.lng - veiculo.ultima_posicao!.lng) > 1e-7) {
+          existingMarker.setLatLng(pos);
+        }
+        if (iconSigRef.current.get(veiculo.id) !== sig) {
+          existingMarker.setIcon(criarIcone());
+          iconSigRef.current.set(veiculo.id, sig);
+        }
       } else {
-        const marker = L.marker(pos, { icon: icone, riseOnHover: true })
+        iconSigRef.current.set(veiculo.id, sig);
+        const marker = L.marker(pos, { icon: criarIcone(), riseOnHover: true })
           .addTo(map)
           .bindPopup(`
+
             <div class="text-sm">
               <p class="font-bold">${veiculo.placa}</p>
               <p>${veiculo.descricao || 'Sem descrição'}</p>
