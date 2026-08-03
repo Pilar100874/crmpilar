@@ -88,7 +88,16 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
       const { fetchWhatsappSessions } = await import('@/lib/whatsapp/sessionUsage');
       setSessoesWhats(await fetchWhatsappSessions());
     })();
+
+    (async () => {
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      let q = supabase.from('bot_flows').select('id, name').order('name');
+      if (estabelecimentoId) q = q.eq('estabelecimento_id', estabelecimentoId);
+      const { data } = await q;
+      if (data) setBots(data as Array<{ id: string; name: string }>);
+    })();
   }, []);
+
 
 
   
