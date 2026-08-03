@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Maximize2 } from "lucide-react";
 
 export type TipoPreview = "imagem" | "video" | "audio" | "html" | "json" | "texto" | "pdf" | "outro";
 
@@ -33,13 +33,15 @@ interface Props {
   mime?: string | null;
   /** Abre o preview já expandido (usado para imagens/thumbnails). */
   padraoAberto?: boolean;
+  /** Abre o artefato em tela cheia (modal com navegação). */
+  onTelaCheia?: () => void;
 }
 
 /**
  * Mostra o conteúdo do artefato direto no painel: miniatura de imagem,
  * player de vídeo/áudio, HTML em sandbox e texto/JSON formatado.
  */
-export function ArtefatoPreview({ nome, url, mime, padraoAberto }: Props) {
+export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia }: Props) {
   const tipo = detectarTipoPreview(nome, mime);
   const previsivel = tipo !== "outro";
   const [aberto, setAberto] = useState(!!padraoAberto && previsivel);
@@ -67,7 +69,13 @@ export function ArtefatoPreview({ nome, url, mime, padraoAberto }: Props) {
   }, [aberto, url, precisaBaixar, texto, carregando]);
 
   if (!url) return null;
-  if (!previsivel) return null;
+  if (!previsivel) {
+    return onTelaCheia ? (
+      <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={onTelaCheia}>
+        <Maximize2 className="h-3.5 w-3.5" /> Tela cheia
+      </Button>
+    ) : null;
+  }
 
   const formatado = (() => {
     if (tipo !== "json" || !texto) return texto;
@@ -80,16 +88,29 @@ export function ArtefatoPreview({ nome, url, mime, padraoAberto }: Props) {
 
   return (
     <div className="space-y-2">
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        className="h-7 gap-1 px-2 text-xs"
-        onClick={() => setAberto((v) => !v)}
-      >
-        {aberto ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-        {aberto ? "Ocultar" : "Ver aqui"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-1">
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-7 gap-1 px-2 text-xs"
+          onClick={() => setAberto((v) => !v)}
+        >
+          {aberto ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          {aberto ? "Ocultar" : "Ver aqui"}
+        </Button>
+        {onTelaCheia && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 px-2 text-xs"
+            onClick={onTelaCheia}
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> Tela cheia
+          </Button>
+        )}
+      </div>
 
       {aberto && (
         <div className="overflow-hidden rounded-md border bg-background">
