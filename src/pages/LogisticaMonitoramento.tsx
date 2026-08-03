@@ -441,10 +441,15 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
     }
   }, [veiculosDoGrupo, quickFilter, alertVeiculoIds]);
 
-  const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
   const detalhesVeiculo = detalhesVeiculoId
     ? veiculosDoGrupo.find(v => v.id === detalhesVeiculoId) ?? null
     : null;
+  // Mantém o veículo em foco no mapa mesmo se o filtro rápido o excluir
+  const veiculosComPosicao = (
+    detalhesVeiculo?.ultima_posicao && !veiculosFiltrados.some(v => v.id === detalhesVeiculo.id)
+      ? [...veiculosFiltrados, detalhesVeiculo]
+      : veiculosFiltrados
+  ).filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
   // Follow mode: recentraliza no veículo fixado sempre que houver nova posição
