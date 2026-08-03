@@ -68,7 +68,7 @@ const createVeiculoIcon = (status: string, compact = false, customColor?: string
 };
 
 // Ícones para paradas marcadas - usa cor e ícone personalizados
-const createParadaIcon = (cor: string, iconeName?: string) => {
+const createParadaIcon = (cor: string, iconeName?: string, compact = false) => {
   // Gera SVG baseado no nome do ícone
   const getIconSvg = (name?: string) => {
     const icons: Record<string, string> = {
