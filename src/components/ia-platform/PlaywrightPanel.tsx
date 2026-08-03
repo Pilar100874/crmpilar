@@ -114,7 +114,7 @@ export function PlaywrightPanel() {
             titulo: atual.titulo ?? undefined,
             logs: atual.logs,
             extraidos: atual.extraidos,
-            artefatos: (atual.artefatos ?? []).filter((a) => a.base64) as PlaywrightRunResult["artefatos"],
+            artefatos: (atual.artefatos ?? []).filter((a) => a.base64 || a.url),
             duracao_ms: atual.duracao_ms ?? undefined,
           });
           toast[atual.status === "concluido" ? "success" : "error"](
