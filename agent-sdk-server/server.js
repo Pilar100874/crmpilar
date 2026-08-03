@@ -442,20 +442,92 @@ app.post("/skill/exec", async (req, res) => {
       return out;
     };
 
+    const arquivosSaida = await listar(path.join(dir, "output")).catch(() => []);
+
+    // Guarda os arquivos de output/ e o log completo no Storage, para auditoria
+    // (o container do Railway é efêmero e some no próximo deploy).
+    const execId = `${slug}-${iniciou}`;
+    const artefatos = [];
+    for (const arq of arquivosSaida) {
+      const artefato = {
+        nome: arq.caminho.replace(/\//g, "_"),
+        origem: arq.caminho,
+        tipo: tipoPorExtensao(arq.caminho),
+        tamanho_bytes: arq.tamanho_bytes,
+      };
+      try {
+        if (arq.tamanho_bytes <= LIMITE_ARTEFATO_SKILL_BYTES) {
+          const buffer = await fs.readFile(path.join(dir, "output", arq.caminho));
+          await armazenarArtefato(execId, artefato, buffer, "skills");
+        } else {
+          artefato.armazenado = false;
+          artefato.erro_armazenamento = "arquivo maior que o limite de upload";
+        }
+      } catch (e) {
+        artefato.armazenado = false;
+        artefato.erro_armazenamento = e.message;
+      }
+      artefatos.push(artefato);
+    }
+
+    const log = [
+      `# skill: ${slug}`,
+      `# script: ${script}`,
+      `# codigo: ${codigo} | expirou: ${expirou} | duracao_ms: ${Date.now() - iniciou}`,
+      "",
+      "## stdout",
+      stdout,
+      "",
+      "## stderr",
+      stderr,
+    ].join("\n");
+    const artefatoLog = { nome: "execucao.log", tipo: "text/plain", tamanho_bytes: Buffer.byteLength(log) };
+    await armazenarArtefato(execId, artefatoLog, Buffer.from(log, "utf8"), "skills");
+    artefatos.push(artefatoLog);
+
     res.json({
       ok: codigo === 0 && !expirou,
       codigo,
       expirou,
       workspace: dir,
+      execucao_id: execId,
       stdout: stdout.slice(-100000),
       stderr: stderr.slice(-100000),
-      artefatos: await listar(path.join(dir, "output")).catch(() => []),
+      arquivos: arquivosSaida,
+      artefatos,
       duracao_ms: Date.now() - iniciou,
     });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message, duracao_ms: Date.now() - iniciou });
   }
 });
+
+/** Limite de tamanho por arquivo enviado ao Storage nas execuções de skill. */
+const LIMITE_ARTEFATO_SKILL_BYTES = 25 * 1024 * 1024;
+
+/** Content-type simples a partir da extensão do arquivo. */
+function tipoPorExtensao(nome) {
+  const ext = String(nome).split(".").pop()?.toLowerCase();
+  const mapa = {
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    gif: "image/gif",
+    svg: "image/svg+xml",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    pdf: "application/pdf",
+    json: "application/json",
+    csv: "text/csv",
+    txt: "text/plain",
+    md: "text/markdown",
+    zip: "application/zip",
+  };
+  return mapa[ext] ?? "application/octet-stream";
+}
 
 /**
  * Playwright — automação de navegador headless.
@@ -563,10 +635,10 @@ const VALIDADE_LINK_S = 7 * 24 * 60 * 60;
  * Envia um artefato (print, vídeo ou PDF) para o Storage e devolve caminho e
  * link assinado. Falhas de upload nunca interrompem a execução.
  */
-async function armazenarArtefato(pasta, artefato, buffer) {
+async function armazenarArtefato(pasta, artefato, buffer, prefixo = "execucoes") {
   const supabase = getSupabase();
   if (!supabase) return artefato;
-  const caminho = `execucoes/${pasta}/${artefato.nome}`;
+  const caminho = `${prefixo}/${pasta}/${artefato.nome}`;
   try {
     const { error } = await supabase.storage
       .from(BUCKET_PLAYWRIGHT)
