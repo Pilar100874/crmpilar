@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Music, Video } from "lucide-react";
+import { Captions, CaptionsOff, Music, Video } from "lucide-react";
 import { obterPosicaoMidia, salvarPosicaoMidia } from "@/lib/aip/posicaoMidia";
+import { CueLegenda, LegendaFaixa, cueAtivo, parsearLegenda } from "@/lib/aip/legendas";
+
 
 
 /** Formata segundos em mm:ss (ou h:mm:ss). */
@@ -20,7 +22,10 @@ interface Props {
   nome: string;
   /** Altura do player de vídeo (classe Tailwind). */
   classeVideo?: string;
+  /** Faixas de legenda (WebVTT/SRT) disponíveis para esta mídia. */
+  legendas?: LegendaFaixa[];
 }
+
 
 /**
  * Player nativo (controls/seek) com barra de informações: tempo atual,
