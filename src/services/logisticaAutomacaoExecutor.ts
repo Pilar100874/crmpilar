@@ -262,8 +262,26 @@ export async function executarAutomacoesLogistica(
         };
         const appendLocAll = (msg: string) => {
           if (!enviarLocalizacao) return msg;
-          const links = veiculos.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
+          const links = veiculosAcao.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
           return links.length ? `${msg}\n\n📍 Localização atual:\n${links.join('\n')}` : msg;
+        };
+
+        // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
+        const dispararBot = async (telefone: string | null, extras: Record<string, unknown>) => {
+          const cfgAny = config as any;
+          if (!cfgAny.disparar_bot || !cfgAny.bot_flow_id) return;
+          try {
+            await supabase.functions.invoke('executar-bot-flow', {
+              body: {
+                flowId: cfgAny.bot_flow_id,
+                estabelecimentoId,
+                origem: 'logistica_automacao',
+                variaveis: { telefone, automacao_nome: automacao.nome, ...extras },
+              },
+            });
+          } catch (e) {
+            console.error('[logistica] falha ao disparar bot', e);
+          }
         };
 
         // Handle "disparar_push"
@@ -297,9 +315,9 @@ export async function executarAutomacoesLogistica(
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
-              const ids = veiculos.map(v => v.id);
+              const ids = veiculosAcao.map(v => v.id);
               const map = await fetchMotoristasAtuais(ids);
-              for (const veic of veiculos) {
+              for (const veic of veiculosAcao) {
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
@@ -311,16 +329,20 @@ export async function executarAutomacoesLogistica(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
+                await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
               const mensagem = appendLocAll(mensagemTpl);
+              const tel = (config as any).telefone || '';
               await executarBlocoWhatsapp(
-                { telefone: (config as any).telefone || '', mensagem, ...commonWpp },
+                { telefone: tel, mensagem, ...commonWpp },
                 wfCtx
               );
+              await dispararBot(tel || null, {});
             }
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
+
 
 
         // Handle "acao_email"
