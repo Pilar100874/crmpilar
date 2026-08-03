@@ -407,6 +407,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            limite_velocidade: formData.limite_velocidade ? Number(formData.limite_velocidade) : null,
+
             logistica_grupo_id: formData.logistica_grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
@@ -423,6 +425,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            limite_velocidade: formData.limite_velocidade ? Number(formData.limite_velocidade) : null,
+
             logistica_grupo_id: formData.logistica_grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
