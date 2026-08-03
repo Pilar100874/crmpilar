@@ -118,7 +118,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     setAutoPausado(false);
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ animate: false });
-      enquadrarTudo();
+      enquadrarTudo(true);
     });
   }, [enquadrarTudo]);
 
