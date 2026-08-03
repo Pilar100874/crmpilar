@@ -527,9 +527,7 @@ export async function executarAutomacoesLogistica(
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
-                let mensagem = mensagemTpl
-                  .replace(/\{placa\}/g, (veic as any).placa || '')
-                  .replace(/\{motorista\}/g, mot.nome || '');
+                let mensagem = aplicarVars(mensagemTpl, veic, mot.nome || '');
                 mensagem = comPrefixo(appendLocOne(mensagem, (veic as any).id));
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
@@ -538,7 +536,18 @@ export async function executarAutomacoesLogistica(
                 await dispararBot(tel, { placa: (veic as any).placa || '', motorista: mot.nome || '' });
               }
             } else {
-              const mensagem = comPrefixo(appendLocAll(mensagemTpl));
+              // Resolve o motorista atual quando a mensagem usa {motorista}
+              let motoristaNome = '';
+              if (/\{motorista\}/i.test(mensagemTpl) && veiculosAcao.length) {
+                try {
+                  const { fetchMotoristasAtuais } = await import('@/lib/logistica/cvDriverLookup');
+                  const map = await fetchMotoristasAtuais(veiculosAcao.map(v => v.id));
+                  motoristaNome = Array.from(new Set(
+                    veiculosAcao.map(v => map[(v as any).id]?.nome).filter(Boolean) as string[]
+                  )).join(', ');
+                } catch { /* noop */ }
+              }
+              const mensagem = comPrefixo(appendLocAll(aplicarVars(mensagemTpl, undefined, motoristaNome)));
               const listaRaw: string[] = Array.isArray((config as any).telefones) && (config as any).telefones.length
                 ? (config as any).telefones
                 : [(config as any).telefone || ''];
