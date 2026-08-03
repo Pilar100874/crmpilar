@@ -291,7 +291,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     setAutoPausado(false);
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ animate: false });
-      enquadrarTudo();
+      enquadrarTudo(true);
     });
   }, [enquadrarTudo]);
 
