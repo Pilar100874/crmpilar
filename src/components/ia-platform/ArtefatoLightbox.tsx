@@ -75,6 +75,8 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
     }
   })();
 
+  const seguro = tipo === "html" && texto ? sanitizarHtmlArtefato(texto) : null;
+
   return (
     <Dialog open={aberto} onOpenChange={(o) => !o && onIndiceChange(null)}>
       <DialogContent className="max-w-[95vw] h-[92vh] p-0 gap-0 flex flex-col">
