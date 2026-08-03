@@ -485,64 +485,68 @@ export default function TvDashboardVeiculos() {
                     key={veiculo.id}
                     onClick={() => handleFocus(veiculo.id)}
                     onDoubleClick={() => handleFocus(veiculo.id)}
-                    className={`px-3 py-1.5 hover:bg-white/5 transition-colors cursor-pointer ${
+                    className={`px-2 py-1 hover:bg-white/5 transition-colors cursor-pointer ${
                       focusVeiculoId === veiculo.id ? 'bg-white/10 ring-1 ring-primary' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-1.5">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <div
-                          className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
+                          className="w-2.5 h-2.5 rounded-full border border-white/50 flex-shrink-0"
                           style={{ backgroundColor: veiculo.cor }}
                         />
                         <span
-                          className="font-semibold text-xs whitespace-nowrap shrink-0"
+                          className="font-semibold text-[11px] whitespace-nowrap shrink-0"
                           style={{ color: config.hex }}
                           title={config.label}
                         >
                           {veiculo.placa}
                         </span>
-
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-white/60 flex-wrap justify-end shrink-0">
-                        {veiculo.ultima_posicao && (
-                          <>
-                            <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
-                            <span>{km}km</span>
-                            <span
-                              title={
-                                typeof veiculo.ultima_posicao.ignicao === 'boolean'
-                                  ? veiculo.ultima_posicao.ignicao ? 'Ignição ligada' : 'Ignição desligada'
-                                  : 'Sem informação de ignição'
-                              }
-                              className={`inline-flex items-center gap-0.5 px-1 rounded ${
-                                veiculo.ultima_posicao.ignicao
-                                  ? 'bg-emerald-500/20 text-emerald-300'
-                                  : 'bg-white/10 text-white/50'
-                              }`}
-                            >
-                              {veiculo.ultima_posicao.ignicao ? <KeyRound className="h-3 w-3" /> : <Power className="h-3 w-3" />}
-                            </span>
-                            <CorteCombustivelBadge
-                              corte={veiculo.ultima_posicao.corte_combustivel}
-                              compact
-                              className="bg-white/10 text-white/80"
-                            />
-
-                          </>
-                        )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); togglePin(veiculo.id); }}
-                          title={isPinned ? 'Desafixar' : 'Fixar no mapa'}
-                          className={`p-1 rounded hover:bg-white/10 ${isPinned ? 'text-primary' : 'text-white/50'}`}
-                        >
-                          <Pin className={`h-3 w-3 ${isPinned ? 'fill-current' : ''}`} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); togglePin(veiculo.id); }}
+                        title={isPinned ? 'Desafixar' : 'Fixar no mapa'}
+                        className={`p-0.5 rounded hover:bg-white/10 shrink-0 ${isPinned ? 'text-primary' : 'text-white/50'}`}
+                      >
+                        <Pin className={`h-2.5 w-2.5 ${isPinned ? 'fill-current' : ''}`} />
+                      </button>
                     </div>
+
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {veiculo.ultima_posicao && (
+                        <>
+                          <span className="text-[9px] text-white/60 whitespace-nowrap">
+                            {Math.round(veiculo.ultima_posicao.velocidade)}km/h
+                          </span>
+                          <span className="text-[9px] text-white/60 whitespace-nowrap">
+                            {km}km
+                          </span>
+                          <span
+                            title={
+                              typeof veiculo.ultima_posicao.ignicao === 'boolean'
+                                ? veiculo.ultima_posicao.ignicao ? 'Ignição ligada' : 'Ignição desligada'
+                                : 'Sem informação de ignição'
+                            }
+                            className={`inline-flex items-center gap-0.5 px-1 rounded ${
+                              veiculo.ultima_posicao.ignicao
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : 'bg-white/10 text-white/50'
+                            }`}
+                          >
+                            {veiculo.ultima_posicao.ignicao ? <KeyRound className="h-2.5 w-2.5" /> : <Power className="h-2.5 w-2.5" />}
+                          </span>
+                          <CorteCombustivelBadge
+                            corte={veiculo.ultima_posicao.corte_combustivel}
+                            compact
+                            className="bg-white/10 text-white/80 text-[9px] px-1"
+                          />
+                        </>
+                      )}
+                    </div>
+
                     {veiculo.motorista_atual?.nome && (
-                      <div className="mt-0.5 pl-4 text-[10px] text-white/70 truncate">
-                        👤 {veiculo.motorista_atual.nome}
+                      <div className="mt-0.5 text-[9px] text-white/70 truncate" title={veiculo.motorista_atual.nome}>
+                        {veiculo.motorista_atual.nome}
                       </div>
                     )}
                   </div>
