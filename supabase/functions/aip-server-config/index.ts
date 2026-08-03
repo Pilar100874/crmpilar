@@ -153,6 +153,11 @@ Deno.serve(async (req) => {
           // ignora item corrompido
         }
       }
+      // A chave de serviço e a URL do backend não precisam ser digitadas: a própria
+      // função já as possui no ambiente e as injeta no envio quando não foram salvas.
+      if (!config.SUPABASE_SERVICE_ROLE_KEY && SERVICE_KEY) config.SUPABASE_SERVICE_ROLE_KEY = SERVICE_KEY;
+      if (!config.SUPABASE_URL && SUPABASE_URL) config.SUPABASE_URL = SUPABASE_URL;
+
       if (!Object.keys(config).length) return json({ ok: false, erro: "Nenhuma configuração salva" });
 
       const r = await fetch(`${RUNNER_URL.replace(/\/$/, "")}/config`, {
