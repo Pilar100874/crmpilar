@@ -151,6 +151,43 @@ function repeticaoDevida(
   return true;
 }
 
+/**
+ * Disparo único por parada (quando NÃO existe bloco "Repetir a cada X min").
+ * Garante que as ações (WhatsApp, e-mail, push...) sejam executadas uma única vez
+ * enquanto o veículo continuar parado no mesmo local, e voltem a valer quando ele
+ * se mover e parar novamente.
+ */
+const UNICO_PREFIX = 'logistica:disparo-unico:';
+
+function disparoUnicoDevido(chaveAutomacao: string, veiculo: VeiculoComStatus): boolean {
+  const key = `${UNICO_PREFIX}${chaveAutomacao}:${veiculo.id}`;
+  const pos = veiculo.ultima_posicao;
+  const emMovimento = veiculo.status !== 'parado' || !pos || (Number(pos.velocidade) || 0) > 5;
+  if (emMovimento) {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+    return false;
+  }
+
+  let estado: { lat: number; lng: number; ts: number } | null = null;
+  try {
+    const raw = localStorage.getItem(key);
+    estado = raw ? JSON.parse(raw) : null;
+  } catch { estado = null; }
+
+  // Saiu do ponto onde havia parado → nova parada
+  if (estado && distanciaMetros(estado.lat, estado.lng, pos.lat, pos.lng) > REPETIR_RAIO_MOVIMENTO_M) {
+    estado = null;
+  }
+  if (estado) return false; // já disparou nesta parada
+
+  try {
+    localStorage.setItem(key, JSON.stringify({ lat: pos.lat, lng: pos.lng, ts: Date.now() }));
+  } catch { /* noop */ }
+  return true;
+}
+
+
+
 
 
 
