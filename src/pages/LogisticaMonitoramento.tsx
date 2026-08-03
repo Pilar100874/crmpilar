@@ -30,6 +30,7 @@ import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { VehicleLegend } from '@/components/logistica/VehicleLegend';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
+import { VeiculoDetalhesSheet } from '@/components/logistica/VeiculoDetalhesSheet';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -169,9 +170,33 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
+  const [detalhesVeiculoId, setDetalhesVeiculoId] = useState<string | null>(null);
+  const [rotaCoords, setRotaCoords] = useState<Array<{ lat: number; lng: number }> | null>(null);
+  const [mapaFoco, setMapaFoco] = useState<{ lat: number; lng: number } | null>(null);
+  const [isCompact, setIsCompact] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsCompact(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
+  }, []);
+  const abrirDetalhes = useCallback((id: string) => {
+    setSelectedVeiculoId(id);
+    setFocusVehicle({ id, nonce: Date.now() });
+    setMapaFoco(null);
+    setDetalhesVeiculoId(id);
+  }, []);
+  const fecharDetalhes = useCallback(() => {
+    setDetalhesVeiculoId(null);
+    setRotaCoords(null);
+    setMapaFoco(null);
   }, []);
   const togglePin = useCallback((id: string) => {
     setPinnedVeiculoId(prev => {
@@ -417,6 +442,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, [veiculosDoGrupo, quickFilter, alertVeiculoIds]);
 
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
+  const detalhesVeiculo = detalhesVeiculoId
+    ? veiculosDoGrupo.find(v => v.id === detalhesVeiculoId) ?? null
+    : null;
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
   // Follow mode: recentraliza no veículo fixado sempre que houver nova posição
@@ -648,11 +676,13 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               <LazyLogisticaMap
                 veiculos={veiculosComPosicao}
                 paradasMarcadas={paradasMarcadas}
-                onVeiculoClick={(v) => zoomToVehicle(v.id)}
+                routes={rotaCoords ? [{ coordinates: rotaCoords, color: '#2563eb' }] : undefined}
+                currentMarker={mapaFoco ? { ...mapaFoco, color: '#2563eb' } : undefined}
+                onVeiculoClick={(v) => abrirDetalhes(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
-                fitBounds={!pinnedVeiculoId}
+                fitBounds={!pinnedVeiculoId && !rotaCoords}
                 fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}
                 compactIcons
               />
@@ -700,7 +730,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         v={v}
                         selected={selectedVeiculoId === v.id}
                         pinned={pinnedVeiculoId === v.id}
-                        onSelect={() => { zoomToVehicle(v.id); setMobileVehicleListOpen(false); }}
+                        onSelect={() => { abrirDetalhes(v.id); setMobileVehicleListOpen(false); }}
                         onPin={() => togglePin(v.id)}
                       />
                     ))}
@@ -733,7 +763,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                           key={`${alert.veiculoId}-${alert.type}-${index}`}
                           alert={alert}
                           icon={getAlertIcon(alert.type)}
-                          onClick={() => { zoomToVehicle(alert.veiculoId); setMobileAlertsOpen(false); }}
+                          onClick={() => { abrirDetalhes(alert.veiculoId); setMobileAlertsOpen(false); }}
                         />
                       ))}
                     </div>
@@ -764,7 +794,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                     v={v}
                     selected={selectedVeiculoId === v.id}
                     pinned={pinnedVeiculoId === v.id}
-                    onSelect={() => zoomToVehicle(v.id)}
+                    onSelect={() => abrirDetalhes(v.id)}
                     onPin={() => togglePin(v.id)}
                   />
                 ))}
@@ -787,7 +817,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         )}
 
         {/* Painel flutuante de alertas (desktop) */}
-        {showAlerts ? (
+        {showAlerts && !detalhesVeiculo ? (
           <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
             <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
               <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
@@ -811,14 +841,14 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                       key={`${alert.veiculoId}-${alert.type}-${index}`}
                       alert={alert}
                       icon={getAlertIcon(alert.type)}
-                      onClick={() => zoomToVehicle(alert.veiculoId)}
+                      onClick={() => abrirDetalhes(alert.veiculoId)}
                     />
                   ))
                 )}
               </div>
             </ScrollArea>
           </div>
-        ) : (
+        ) : !detalhesVeiculo ? (
           <Button
             variant={alerts.length > 0 ? 'destructive' : 'secondary'}
             size="sm"
@@ -828,7 +858,37 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             <AlertTriangle className="h-4 w-4 mr-2" />
             Alertas {alerts.length > 0 ? `(${alerts.length})` : ''}
           </Button>
+        ) : null}
+
+        {/* Painel de detalhes (desktop) */}
+        {detalhesVeiculo && (
+          <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-80 z-[600] flex-col rounded-xl border border-border/60 shadow-xl overflow-hidden">
+            <VeiculoDetalhesSheet
+              veiculo={detalhesVeiculo}
+              onClose={fecharDetalhes}
+              onRouteChange={setRotaCoords}
+              onFocusPosition={setMapaFoco}
+            />
+          </div>
         )}
+
+        {/* Painel de detalhes (mobile/tablet) */}
+        <Sheet
+          open={!!detalhesVeiculo && isCompact}
+          onOpenChange={(open) => { if (!open) fecharDetalhes(); }}
+        >
+          <SheetContent side="right" className="w-[92vw] sm:w-[380px] p-0 lg:hidden">
+            {detalhesVeiculo && (
+              <VeiculoDetalhesSheet
+                veiculo={detalhesVeiculo}
+                onClose={fecharDetalhes}
+                onRouteChange={setRotaCoords}
+                onFocusPosition={setMapaFoco}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
+
 
       </div>
     </div>
