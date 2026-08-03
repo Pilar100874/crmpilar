@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { LogisticaGruposCRUD } from '@/components/logistica/LogisticaGruposCRUD';
 import { LimitesVelocidadeConfig } from '@/components/logistica/LimitesVelocidadeConfig';
+import { LimpezaHistoricoConfig } from '@/components/logistica/LimpezaHistoricoConfig';
+
 
 
 
