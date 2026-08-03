@@ -309,10 +309,24 @@ export async function executarAutomacoesLogistica(
       }
     }
 
+    // Remove marcações de veículos que voltaram a se mover
+    const idsMarcados = new Set(resultados.map(r => r.veiculo_id));
+    const idsEmMovimento = veiculos
+      .filter(v => v.status === 'movendo' && !idsMarcados.has(v.id))
+      .map(v => v.id);
+    if (idsEmMovimento.length > 0) {
+      await supabase
+        .from('logistica_paradas_marcadas')
+        .delete()
+        .eq('estabelecimento_id', estabelecimentoId)
+        .in('veiculo_id', idsEmMovimento);
+    }
+
     // Save markers to database (upsert to avoid duplicates)
     if (resultados.length > 0) {
       await salvarParadasMarcadas(resultados, estabelecimentoId);
     }
+
 
     return resultados;
   } catch (error) {
