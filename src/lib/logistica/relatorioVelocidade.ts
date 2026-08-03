@@ -149,7 +149,9 @@ export async function buscarEventosVelocidade(
       placa: placaPorId.get(p.veiculo_id) || '—',
       motorista: motoristaEm(p.veiculo_id, d.getTime()),
       velocidade: Math.round(Number(p.velocidade) || 0),
+      limite: limitePorId.get(p.veiculo_id) ?? limitePadrao,
       ts: d.getTime(),
+
     });
   }
 
