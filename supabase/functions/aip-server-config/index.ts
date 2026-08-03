@@ -157,31 +157,46 @@ Deno.serve(async (req) => {
       // função já as possui no ambiente e as injeta no envio quando não foram salvas.
       if (!config.SUPABASE_SERVICE_ROLE_KEY && SERVICE_KEY) config.SUPABASE_SERVICE_ROLE_KEY = SERVICE_KEY;
       if (!config.SUPABASE_URL && SUPABASE_URL) config.SUPABASE_URL = SUPABASE_URL;
+      // Valores padrão fixos do servidor de execução (não precisam ser digitados).
+      if (!config.WORKSPACE_DIR) config.WORKSPACE_DIR = "/tmp";
+      if (!config.PLAYWRIGHT_BROWSERS_PATH) config.PLAYWRIGHT_BROWSERS_PATH = "/ms-playwright";
 
       if (!Object.keys(config).length) return json({ ok: false, erro: "Nenhuma configuração salva" });
 
-      const r = await fetch(`${RUNNER_URL.replace(/\/$/, "")}/config`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(RUNNER_KEY ? { "X-Runner-Key": RUNNER_KEY } : {}),
-        },
-        body: JSON.stringify({ config }),
-      });
-      const resposta = await r.text();
-      if (r.ok) {
+      const base = RUNNER_URL.replace(/\/$/, "");
+      const caminhos = ["/config", "/api/v1/config"];
+      let r: Response | null = null;
+      let resposta = "";
+      for (const caminho of caminhos) {
+        r = await fetch(`${base}${caminho}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(RUNNER_KEY ? { "X-Runner-Key": RUNNER_KEY } : {}),
+          },
+          body: JSON.stringify({ config }),
+        });
+        resposta = await r.text();
+        if (r.status !== 404) break;
+      }
+      if (r!.ok) {
         await admin
           .from("aip_server_config")
           .update({ enviado_em: new Date().toISOString() })
           .in("chave", Object.keys(config));
       }
+      const erro404 =
+        `O servidor em ${base} respondeu 404 para /config. ` +
+        "Normalmente isso significa que a versão publicada no Railway está desatualizada " +
+        "(faça um novo deploy) ou que a URL configurada em AIP_RUNNER_URL aponta para outro serviço.";
       return json({
-        ok: r.ok,
-        http: r.status,
+        ok: r!.ok,
+        http: r!.status,
         aplicadas: Object.keys(config),
         resposta: resposta.slice(0, 500),
-        ...(r.ok ? {} : { erro: `HTTP ${r.status}` }),
+        ...(r!.ok ? {} : { erro: r!.status === 404 ? erro404 : `HTTP ${r!.status} — ${resposta.slice(0, 200)}` }),
       });
+
     }
 
     return json({ error: "Ação desconhecida" }, 400);
