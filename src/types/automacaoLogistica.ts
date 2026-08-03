@@ -27,8 +27,16 @@ export interface CondicaoTempoParado {
 }
 
 export interface LogisticaBlockConfig {
+  // Para gatilho_agendamento
+  agenda_modo?: 'intervalo' | 'diario' | 'semanal' | 'mensal';
+  agenda_intervalo_minutos?: number;
+  agenda_horarios?: string[];
+  agenda_dias_semana?: string[];
+  agenda_dias_mes?: number[];
+  agenda_tolerancia_minutos?: number;
   // Para condicao_parado - múltiplas condições de tempo
   condicoes_tempo?: CondicaoTempoParado[];
+
   // Para acao_marcar_mapa
   icone_parada?: string;
   cor_icone_parada?: string;
