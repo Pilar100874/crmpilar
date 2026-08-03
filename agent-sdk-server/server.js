@@ -708,15 +708,13 @@ app.post("/playwright/run", async (req, res) => {
 });
 
 /**
- * Execução assíncrona (rotina): cria um job e devolve o job_id na hora.
- * Use /playwright/job/status para acompanhar o andamento.
+ * Cria um job de Playwright em segundo plano e devolve o registro do job.
+ * Retorna `{ erro }` quando o payload é inválido.
  */
-app.post("/playwright/job", async (req, res) => {
-  if (!autenticar(req, res)) return;
-  const payload = req.body || {};
+function criarJobPlaywright(payload = {}) {
   const passos = Array.isArray(payload.passos) ? payload.passos : [];
   if (!payload.url && passos.length === 0) {
-    return res.status(400).json({ ok: false, erro: "Informe uma url ou ao menos um passo." });
+    return { erro: "Informe uma url ou ao menos um passo." };
   }
 
   limparJobsAntigos();
@@ -759,8 +757,31 @@ app.post("/playwright/job", async (req, res) => {
     job.finalizado_em = new Date().toISOString();
   });
 
-  res.json({ ok: true, job_id: id, status: job.status, total_passos: passos.length });
+  return { job };
+}
+
+/** Cancela um job em andamento. */
+async function cancelarJobPlaywright(job) {
+  if (job.status !== "rodando" && job.status !== "fila") {
+    return { ok: true, job_id: job.id, status: job.status, ja_finalizado: true };
+  }
+  job.cancelar = true;
+  job.passo_descricao = "Cancelamento solicitado";
+  if (job.fecharNavegador) await job.fecharNavegador();
+  return { ok: true, job_id: job.id, status: "cancelado" };
+}
+
+/**
+ * Execução assíncrona (rotina): cria um job e devolve o job_id na hora.
+ * Use /playwright/job/status para acompanhar o andamento.
+ */
+app.post("/playwright/job", async (req, res) => {
+  if (!autenticar(req, res)) return;
+  const { job, erro } = criarJobPlaywright(req.body || {});
+  if (erro) return res.status(400).json({ ok: false, erro });
+  res.json({ ok: true, job_id: job.id, status: job.status, total_passos: job.total_passos });
 });
+
 
 /** Status de um job (ou de todos, quando job_id é omitido). */
 app.post("/playwright/job/status", (req, res) => {
