@@ -31,6 +31,8 @@ export function ArtefatoLightbox({ itens, indice, onIndiceChange }: Props) {
 
   const tipo = atual ? detectarTipoPreview(atual.nome, atual.mime) : "outro";
   const precisaBaixar = tipo === "html" || tipo === "json" || tipo === "texto";
+  const legendas = atual ? montarFaixasLegenda(atual.nome, itens) : [];
+
 
   const irPara = (delta: number) => {
     if (indice === null || itens.length === 0) return;
