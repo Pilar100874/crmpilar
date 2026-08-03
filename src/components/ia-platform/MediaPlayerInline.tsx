@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Captions, CaptionsOff, Music, Video } from "lucide-react";
+import { AudioWaveform, Captions, CaptionsOff, Music, Video } from "lucide-react";
+import { WaveformTimeline } from "./WaveformTimeline";
 import { obterPosicaoMidia, salvarPosicaoMidia } from "@/lib/aip/posicaoMidia";
 import { CueLegenda, LegendaFaixa, cueAtivo, parsearLegenda } from "@/lib/aip/legendas";
 
@@ -43,6 +44,7 @@ export function MediaPlayerInline({
   const [atual, setAtual] = useState(() => obterPosicaoMidia(url));
   const [velocidade, setVelocidade] = useState(1);
   const [erro, setErro] = useState(false);
+  const [mostrarTimeline, setMostrarTimeline] = useState(true);
   const [faixa, setFaixa] = useState<string | null>(legendas[0]?.nome ?? null);
   const [legendasAtivas, setLegendasAtivas] = useState(legendas.length > 0);
   const [cues, setCues] = useState<CueLegenda[]>([]);
@@ -150,6 +152,22 @@ export function MediaPlayerInline({
         </div>
       )}
 
+      {mostrarTimeline && (
+        <WaveformTimeline
+          url={url}
+          tipo={tipo}
+          duracao={duracao}
+          atual={atual}
+          onSeek={(s) => {
+            if (ref.current) {
+              ref.current.currentTime = s;
+              setAtual(s);
+            }
+          }}
+        />
+      )}
+
+
       <div className="flex flex-wrap items-center gap-2 border-t px-2 py-1 text-[11px] text-muted-foreground">
         {tipo === "video" ? <Video className="h-3 w-3" /> : <Music className="h-3 w-3" />}
         <span className="font-mono">
@@ -161,6 +179,16 @@ export function MediaPlayerInline({
           className="rounded border px-1.5 py-0.5 hover:bg-muted"
         >
           {velocidade}x
+        </button>
+        <button
+          type="button"
+          onClick={() => setMostrarTimeline((v) => !v)}
+          title={mostrarTimeline ? "Ocultar linha do tempo" : "Mostrar linha do tempo"}
+          className={`flex items-center gap-1 rounded border px-1.5 py-0.5 hover:bg-muted ${
+            mostrarTimeline ? "border-primary text-primary" : ""
+          }`}
+        >
+          <AudioWaveform className="h-3 w-3" />
         </button>
 
         {legendas.length > 0 && (
