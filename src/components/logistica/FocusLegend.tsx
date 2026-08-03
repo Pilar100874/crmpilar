@@ -28,33 +28,38 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
             {veiculo.placa}
           </span>
         </div>
+
         {motorista && (
-          <div className="flex items-center gap-1.5 border-l pl-2 sm:pl-3 shrink-0">
+          <div className="flex items-center gap-1.5 border-l pl-2 sm:pl-3 shrink-0" title={`Motorista: ${motorista}`}>
             <User className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="truncate max-w-[120px] sm:max-w-[160px]">{motorista}</span>
+            <span className="truncate max-w-[100px] sm:max-w-[160px]">{motorista}</span>
           </div>
         )}
+
+        {vel !== null && (
+          <div className="flex items-center gap-1 text-muted-foreground border-l pl-2 sm:pl-3 shrink-0">
+            <Gauge className="h-3.5 w-3.5" />
+            {vel} km/h
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5 border-l pl-2 sm:pl-3 shrink-0">
+          <IgnicaoBadge ignicao={ign} compact />
+          <CorteCombustivelBadge corte={corte} compact />
+        </div>
+
         {wa && (
           <a
             href={`https://web.whatsapp.com/send?phone=${wa}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-emerald-600 hover:underline border-l pl-3"
+            className="flex items-center gap-1 text-emerald-600 hover:underline border-l pl-2 sm:pl-3 shrink-0"
+            title={`WhatsApp: ${telefone}`}
           >
             <MessageCircle className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{telefone}</span>
           </a>
         )}
-        {vel !== null && (
-          <div className="flex items-center gap-1 text-muted-foreground border-l pl-3">
-            <Gauge className="h-3.5 w-3.5" />
-            {vel} km/h
-          </div>
-        )}
-        <div className="flex items-center gap-2 border-l pl-3">
-          <IgnicaoBadge ignicao={ign} />
-          <CorteCombustivelBadge corte={corte} />
-        </div>
 
         <button
           onClick={onClose}
