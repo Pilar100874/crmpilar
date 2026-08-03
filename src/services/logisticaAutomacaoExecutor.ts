@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { VeiculoComStatus } from '@/types/logistica';
+import { CondicaoTempoParado } from '@/types/automacaoLogistica';
 import { differenceInMinutes } from 'date-fns';
 import { executarBlocoPush, PushBlockConfig } from '@/lib/pushExecutor';
 import { executarBlocoSms } from '@/lib/smsExecutor';
@@ -35,6 +36,7 @@ interface ParadaMarcadaResult {
   automacao_id: string;
   automacao_nome: string;
   mostrar_tempo?: boolean;
+  data_inicio?: string;
 }
 
 // Distância em metros entre dois pontos (Haversine)
@@ -235,7 +237,13 @@ export async function executarAutomacoesLogistica(
 
         // Handle "condicao_parado" - Vehicle stopped condition
         if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
-          const tempoMinutos = config.tempo_minutos || 30;
+          const condicoesTempo: CondicaoTempoParado[] = Array.isArray(config.condicoes_tempo) && config.condicoes_tempo.length
+            ? (config.condicoes_tempo as CondicaoTempoParado[])
+            : config.tempo_minutos
+              ? [{ tempo_minutos: Number(config.tempo_minutos) }]
+              : [{ tempo_minutos: 30 }];
+          const tempoMinutos = Math.min(...condicoesTempo.map(c => Number(c.tempo_minutos) || 30));
+          
           
           for (const veiculo of veiculos) {
             if (veiculo.status === 'parado' && veiculo.ultima_posicao) {
@@ -264,6 +272,7 @@ export async function executarAutomacoesLogistica(
                   automacao_id: automacao.id,
                   automacao_nome: automacao.nome,
                   mostrar_tempo: !!tempoCfg,
+                  data_inicio: veiculo.ultima_posicao.data_hora,
                 });
               }
             }
@@ -538,7 +547,7 @@ async function salvarParadasMarcadas(
             icone_parada: parada.icone_parada,
             cor_icone_parada: parada.cor_icone_parada,
             legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
-            data_inicio: now,
+            data_inicio: parada.data_inicio || now,
             automacao_id: parada.automacao_id,
             mostrar_tempo: !!parada.mostrar_tempo
           });
