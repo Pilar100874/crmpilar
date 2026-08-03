@@ -129,17 +129,21 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
       }
     });
 
-    // Mantém todos os veículos centralizados no mapa
+    // Mantém todos os veículos centralizados com o maior zoom possível
     if (validVeiculos.length > 0) {
-      map.invalidateSize();
-      const bounds = L.latLngBounds(validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng]));
-      if (validVeiculos.length === 1) {
-        map.setView(bounds.getCenter(), 16, { animate: false });
-      } else {
-        const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(16, 16));
-        map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
+      const bounds = boundsDePontos(
+        validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng] as [number, number])
+      );
+      if (bounds) {
+        enquadrarNoMapa(map, bounds, {
+          paddingTopLeft: [8, 8],
+          paddingBottomRight: [8, 8],
+          maxZoom: 18,
+          zoomPontoUnico: 16,
+        });
       }
     }
+
 
 
   }, [veiculos, onVeiculoClick, compact]);
