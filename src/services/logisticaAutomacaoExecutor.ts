@@ -188,11 +188,24 @@ export async function executarAutomacoesLogistica(
       let pularAcoes = false;
       if (repetirNode) {
         const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
-        veiculosAcao = veiculos.filter(v =>
-          repeticaoDevida(`${automacao.id}:${repetirNode.id}`, v, rc)
-        );
+        const chaveNode = `${automacao.id}:${repetirNode.id}`;
+
+        // Limpa estados de veículos que saíram do filtro/lista (evita repetição órfã)
+        try {
+          const prefixoNode = `${REPETIR_PREFIX}${chaveNode}:`;
+          const idsAtuais = new Set(veiculos.map(v => v.id));
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(prefixoNode) && !idsAtuais.has(k.slice(prefixoNode.length))) {
+              localStorage.removeItem(k);
+            }
+          }
+        } catch { /* noop */ }
+
+        veiculosAcao = veiculos.filter(v => repeticaoDevida(chaveNode, v, rc));
         pularAcoes = veiculosAcao.length === 0;
       }
+
 
       // Find condition nodes
       for (const node of flowObj.nodes) {
