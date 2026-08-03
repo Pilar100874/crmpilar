@@ -134,7 +134,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
             <div className="space-y-1">
               <Label className="text-xs">Arquivos guardados</Label>
               <div className="rounded-md border divide-y bg-background">
-                {resultado.artefatos!.map((a) => {
+                {resultado.artefatos!.map((a, i) => {
                   const nome = a.origem ?? a.nome;
                   const tipo = detectarTipoPreview(nome, a.tipo);
                   return (
@@ -162,6 +162,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
                         url={a.url}
                         mime={a.tipo}
                         padraoAberto={tipo === "imagem"}
+                        onTelaCheia={a.url ? () => setTelaCheia(i) : undefined}
                       />
                     </div>
                   );
@@ -170,6 +171,15 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
               <p className="text-[11px] text-muted-foreground">
                 Os links dos arquivos valem 7 dias.
               </p>
+              <ArtefatoLightbox
+                itens={(resultado.artefatos ?? []).map((a) => ({
+                  nome: a.origem ?? a.nome,
+                  url: a.url,
+                  mime: a.tipo,
+                }))}
+                indice={telaCheia}
+                onIndiceChange={setTelaCheia}
+              />
             </div>
           )}
         </div>
