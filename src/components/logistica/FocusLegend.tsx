@@ -20,18 +20,18 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
   const corte = veiculo.ultima_posicao?.corte_combustivel;
 
   return (
-    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto">
-      <div className="flex items-center gap-3 bg-background/25 backdrop-blur border border-border shadow-lg rounded-full pl-3 pr-2 py-1.5 text-xs sm:text-sm max-w-[92vw]">
-        <div className="flex items-center gap-1.5 font-bold" title={`Veículo ${veiculo.placa}`}>
+    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto w-full px-2">
+      <div className="mx-auto flex items-center justify-center gap-2 sm:gap-3 bg-background/25 backdrop-blur border border-border shadow-lg rounded-full pl-3 pr-2 py-1.5 text-xs sm:text-sm w-fit max-w-[98vw]">
+        <div className="flex items-center gap-1.5 font-bold shrink-0" title={`Veículo ${veiculo.placa}`}>
           <Car className="h-3.5 w-3.5 text-primary" />
-          <span className="whitespace-nowrap text-sm sm:text-base tracking-wide font-mono px-1.5 py-0.5 bg-primary/10 rounded">
+          <span className="whitespace-nowrap text-sm sm:text-base tracking-wide font-mono px-2 py-0.5 bg-primary/10 rounded shrink-0 min-w-fit">
             {veiculo.placa}
           </span>
         </div>
         {motorista && (
-          <div className="flex items-center gap-1.5 border-l pl-3">
+          <div className="flex items-center gap-1.5 border-l pl-2 sm:pl-3 shrink-0">
             <User className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="truncate max-w-[160px]">{motorista}</span>
+            <span className="truncate max-w-[120px] sm:max-w-[160px]">{motorista}</span>
           </div>
         )}
         {wa && (
