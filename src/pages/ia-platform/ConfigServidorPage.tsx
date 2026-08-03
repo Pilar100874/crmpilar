@@ -29,6 +29,12 @@ interface ItemConfig {
   enviado_em: string | null;
 }
 
+interface Etapa {
+  rotulo: string;
+  estado: "pendente" | "rodando" | "ok" | "erro";
+  detalhe?: string;
+}
+
 const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }[] = [
   {
     chave: "ANTHROPIC_API_KEY",
