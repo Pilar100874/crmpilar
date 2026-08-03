@@ -9,15 +9,17 @@ import { Separator } from "@/components/ui/separator";
 import {
   AlertTriangle,
   CheckCircle2,
+  ExternalLink,
   Loader2,
+  Lock,
   PlugZap,
   Save,
   SendHorizonal,
   ShieldCheck,
   Trash2,
-  Wand2,
   XCircle,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { agentRunner } from "@/lib/aip/runner";
@@ -35,71 +37,83 @@ interface Etapa {
   detalhe?: string;
 }
 
-const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }[] = [
+interface Campo {
+  chave: string;
+  rotulo: string;
+  ajuda: string;
+  segredo: boolean;
+  /** Valor padrão fixo aplicado pelo backend — não precisa (nem deve) ser digitado. */
+  fixo?: string;
+  /** Página onde o usuário consegue obter o valor. */
+  link?: { url: string; rotulo: string };
+}
+
+const CAMPOS: Campo[] = [
   {
     chave: "ANTHROPIC_API_KEY",
     rotulo: "Anthropic API Key",
-    ajuda: "Chave do Claude usada pelo Agent SDK (console.anthropic.com).",
+    ajuda: "Chave do Claude usada pelo Agent SDK.",
     segredo: true,
-  },
-  {
-    chave: "SUPABASE_URL",
-    rotulo: "URL do backend",
-    ajuda: "URL do backend que o servidor usa para gravar execuções e assets.",
-    segredo: false,
-  },
-  {
-    chave: "SUPABASE_SERVICE_ROLE_KEY",
-    rotulo: "Chave de serviço do backend",
-    ajuda:
-      "Não precisa preencher: ao clicar em aplicar, o próprio backend envia essa chave ao servidor automaticamente.",
-    segredo: true,
+    link: { url: "https://console.anthropic.com/settings/keys", rotulo: "Obter no console da Anthropic" },
   },
   {
     chave: "RAILWAY_DEPLOY_HOOK_URL",
     rotulo: "Deploy Hook (Railway)",
     ajuda: "URL do Deploy Hook usada para redeploy remoto do servidor.",
     segredo: true,
+    link: { url: "https://railway.app/dashboard", rotulo: "Criar em Settings → Deploys no Railway" },
   },
-  {
-    chave: "WORKSPACE_DIR",
-    rotulo: "Diretório de trabalho",
-    ajuda: "Pasta usada nas execuções (padrão /tmp).",
-    segredo: false,
-  },
-  { chave: "APP_VERSION", rotulo: "Versão exibida", ajuda: "Rótulo de versão do servidor.", segredo: false },
   {
     chave: "HIGGSFIELD_API_KEY",
     rotulo: "Higgsfield API Key",
     ajuda: "Geração de vídeos/imagens pelo Higgsfield.",
     segredo: true,
+    link: { url: "https://higgsfield.ai/", rotulo: "Obter no painel do Higgsfield" },
   },
   {
     chave: "REMOTION_LICENSE_KEY",
     rotulo: "Remotion License Key",
     ajuda: "Renderização de vídeos com Remotion.",
     segredo: true,
+    link: { url: "https://www.remotion.pro/dashboard", rotulo: "Obter no Remotion Pro" },
   },
-  { chave: "OPENAI_API_KEY", rotulo: "OpenAI API Key", ajuda: "Modelos e imagens da OpenAI.", segredo: true },
   {
-    chave: "PLAYWRIGHT_BROWSERS_PATH",
-    rotulo: "Playwright browsers path",
-    ajuda: "Caminho dos navegadores do Playwright no servidor.",
-    segredo: false,
+    chave: "OPENAI_API_KEY",
+    rotulo: "OpenAI API Key",
+    ajuda: "Modelos e imagens da OpenAI.",
+    segredo: true,
+    link: { url: "https://platform.openai.com/api-keys", rotulo: "Obter na plataforma da OpenAI" },
   },
 ];
 
-/** Valores que o próprio CRM já conhece e podem ser preenchidos sozinhos. */
-function sugestoesAutomaticas(): Record<string, string> {
-  const s: Record<string, string> = {
-    WORKSPACE_DIR: "/tmp",
-    PLAYWRIGHT_BROWSERS_PATH: "/ms-playwright",
-    APP_VERSION: `crm-pilar-${new Date().toISOString().slice(0, 10)}`,
-  };
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  if (url) s.SUPABASE_URL = url;
-  return s;
-}
+/** Valores padrão fixos — aplicados automaticamente pelo backend no envio. */
+const CAMPOS_FIXOS: { chave: string; rotulo: string; valor: string; ajuda: string }[] = [
+  {
+    chave: "SUPABASE_URL",
+    rotulo: "URL do backend",
+    valor: (import.meta.env.VITE_SUPABASE_URL as string) ?? "definida pelo backend",
+    ajuda: "Enviada automaticamente pelo backend.",
+  },
+  {
+    chave: "SUPABASE_SERVICE_ROLE_KEY",
+    rotulo: "Chave de serviço do backend",
+    valor: "•••••• injetada pelo backend",
+    ajuda: "Nunca fica visível: o backend injeta no momento do envio.",
+  },
+  {
+    chave: "WORKSPACE_DIR",
+    rotulo: "Diretório de trabalho",
+    valor: "/tmp",
+    ajuda: "Padrão do servidor de execução.",
+  },
+  {
+    chave: "PLAYWRIGHT_BROWSERS_PATH",
+    rotulo: "Playwright browsers path",
+    valor: "/ms-playwright",
+    ajuda: "Padrão do container do Railway.",
+  },
+];
+
 
 async function chamar(acao: string, extra: Record<string, unknown> = {}) {
   const { data, error } = await supabase.functions.invoke("aip-server-config", {
@@ -139,38 +153,18 @@ export default function ConfigServidorPage() {
     }
   };
 
-
-
-  const preencherAuto = (salvos: ItemConfig[], avisar = false) => {
-    const sug = sugestoesAutomaticas();
-    const faltantes = Object.entries(sug).filter(([chave]) => !salvos.some((i) => i.chave === chave));
-    if (!faltantes.length) {
-      if (avisar) toast.info("Todos os valores automáticos já estão salvos");
-      return;
-    }
-    setValores((v) => {
-      const novo = { ...v };
-      faltantes.forEach(([chave, valor]) => {
-        if (!novo[chave]?.trim()) novo[chave] = valor;
-      });
-      return novo;
-    });
-    if (avisar) toast.success(`${faltantes.length} campo(s) preenchido(s) automaticamente`);
-  };
-
   const carregar = async () => {
     setCarregando(true);
     try {
       const r = await chamar("listar");
-      const lista: ItemConfig[] = r.itens ?? [];
-      setItens(lista);
-      preencherAuto(lista);
+      setItens((r.itens ?? []) as ItemConfig[]);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setCarregando(false);
     }
   };
+
 
   useEffect(() => {
     void carregar();
@@ -421,11 +415,40 @@ export default function ConfigServidorPage() {
                       setValores((v) => ({ ...v, [campo.chave]: e.target.value }))
                     }
                   />
-                  <p className="text-xs text-muted-foreground">{campo.ajuda}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {campo.ajuda}{" "}
+                    {campo.link && (
+                      <a
+                        href={campo.link.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-primary underline underline-offset-2"
+                      >
+                        {campo.link.rotulo} <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </p>
                 </div>
               );
             })
           )}
+
+          <Separator />
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Valores padrão (fixos, enviados automaticamente)
+            </p>
+            {CAMPOS_FIXOS.map((c) => (
+              <div key={c.chave} className="flex flex-wrap items-center gap-2 text-sm">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{c.rotulo}</span>
+                <code className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  {c.valor}
+                </code>
+                <span className="text-xs text-muted-foreground">{c.ajuda}</span>
+              </div>
+            ))}
+          </div>
 
           <Separator />
           <div className="flex flex-wrap gap-2">
@@ -449,10 +472,8 @@ export default function ConfigServidorPage() {
               )}
               Enviar ao servidor
             </Button>
-            <Button variant="outline" onClick={() => preencherAuto(itens, true)} disabled={aplicando}>
-              <Wand2 className="mr-2 h-4 w-4" /> Preencher automático
-            </Button>
           </div>
+
 
           {etapas.length > 0 && (
             <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
