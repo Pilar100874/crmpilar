@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, Loader2, Save, SendHorizonal, ShieldCheck, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -70,6 +70,18 @@ const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }
   },
 ];
 
+/** Valores que o próprio CRM já conhece e podem ser preenchidos sozinhos. */
+function sugestoesAutomaticas(): Record<string, string> {
+  const s: Record<string, string> = {
+    WORKSPACE_DIR: "/tmp",
+    PLAYWRIGHT_BROWSERS_PATH: "/ms-playwright",
+    APP_VERSION: `crm-pilar-${new Date().toISOString().slice(0, 10)}`,
+  };
+  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  if (url) s.SUPABASE_URL = url;
+  return s;
+}
+
 async function chamar(acao: string, extra: Record<string, unknown> = {}) {
   const { data, error } = await supabase.functions.invoke("aip-server-config", {
     body: { acao, ...extra },
@@ -86,11 +98,30 @@ export default function ConfigServidorPage() {
   const [salvando, setSalvando] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
+  const preencherAuto = (salvos: ItemConfig[], avisar = false) => {
+    const sug = sugestoesAutomaticas();
+    const faltantes = Object.entries(sug).filter(([chave]) => !salvos.some((i) => i.chave === chave));
+    if (!faltantes.length) {
+      if (avisar) toast.info("Todos os valores automáticos já estão salvos");
+      return;
+    }
+    setValores((v) => {
+      const novo = { ...v };
+      faltantes.forEach(([chave, valor]) => {
+        if (!novo[chave]?.trim()) novo[chave] = valor;
+      });
+      return novo;
+    });
+    if (avisar) toast.success(`${faltantes.length} campo(s) preenchido(s) automaticamente`);
+  };
+
   const carregar = async () => {
     setCarregando(true);
     try {
       const r = await chamar("listar");
-      setItens(r.itens ?? []);
+      const lista: ItemConfig[] = r.itens ?? [];
+      setItens(lista);
+      preencherAuto(lista);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -101,6 +132,7 @@ export default function ConfigServidorPage() {
   useEffect(() => {
     void carregar();
   }, []);
+
 
   const salvar = async () => {
     const preenchidos = Object.entries(valores)
@@ -239,7 +271,16 @@ export default function ConfigServidorPage() {
               )}
               Enviar ao servidor
             </Button>
+            <Button variant="outline" onClick={() => preencherAuto(itens, true)}>
+              <Wand2 className="mr-2 h-4 w-4" /> Preencher automático
+            </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            O preenchimento automático usa os valores que o próprio CRM já conhece (URL do backend,
+            diretório de trabalho, caminho do Playwright e versão). Chaves secretas continuam sendo
+            digitadas manualmente.
+          </p>
+
         </CardContent>
       </Card>
     </div>
