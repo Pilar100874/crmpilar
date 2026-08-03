@@ -186,9 +186,9 @@ Deno.serve(async (req) => {
           .in("chave", Object.keys(config));
       }
       const erro404 =
-        `O servidor em ${base} respondeu 404 para /config. ` +
-        "Normalmente isso significa que a versão publicada no Railway está desatualizada " +
-        "(faça um novo deploy) ou que a URL configurada em AIP_RUNNER_URL aponta para outro serviço.";
+        `O servidor em ${base} respondeu 404 para /config — a versão publicada está desatualizada. ` +
+        'Clique em "Atualizar servidor" nesta tela (dispara um novo deploy no Railway), aguarde ~2 minutos ' +
+        "e envie a configuração novamente. Se o erro persistir, confira se AIP_RUNNER_URL aponta para o servidor certo.";
       return json({
         ok: r!.ok,
         http: r!.status,
