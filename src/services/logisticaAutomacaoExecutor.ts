@@ -434,6 +434,30 @@ export async function executarAutomacoesLogistica(
           return msg;
         };
 
+        // --- Substituição de variáveis nas mensagens ---
+        const valorVeic = (v: any, campos: string[]) => {
+          for (const c of campos) {
+            const val = v?.[c];
+            if (val !== undefined && val !== null && String(val) !== '') return String(val);
+          }
+          return '';
+        };
+        const aplicarVars = (msg: string, veic?: any, motorista?: string) => {
+          if (!msg) return msg;
+          const alvo = veic || veiculosAcao[0];
+          const placa = veic
+            ? valorVeic(veic, ['placa', 'nome'])
+            : Array.from(new Set(veiculosAcao.map((v: any) => valorVeic(v, ['placa', 'nome'])).filter(Boolean))).join(', ');
+          return msg
+            .replace(/\{placa\}/gi, placa)
+            .replace(/\{motorista\}/gi, motorista || valorVeic(alvo, ['motorista', 'motorista_nome']) || '')
+            .replace(/\{endereco\}/gi, valorVeic(alvo, ['endereco', 'endereco_atual', 'ultimo_endereco', 'localizacao']))
+            .replace(/\{velocidade\}/gi, valorVeic(alvo, ['velocidade', 'velocidade_atual', 'speed']))
+            .replace(/\{data\}/gi, new Date().toLocaleDateString('pt-BR'))
+            .replace(/\{hora\}/gi, new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+        };
+
+
 
 
         // Dispara um bot do Bot Builder (opcional no bloco de WhatsApp)
