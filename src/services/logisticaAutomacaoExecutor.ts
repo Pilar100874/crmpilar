@@ -349,7 +349,9 @@ async function salvarParadasMarcadas(
             categoria_tempo: parada.categoria_tempo,
             icone_parada: parada.icone_parada,
             cor_icone_parada: parada.cor_icone_parada,
-            legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`
+            legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
+            mostrar_tempo: !!parada.mostrar_tempo
+
           })
           .eq('id', existing.id);
       } else {
