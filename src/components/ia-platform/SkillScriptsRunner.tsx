@@ -83,7 +83,7 @@ export function SkillScriptsRunner({ skillId, skillSlug, conteudoMd }: Props) {
       <div>
         <Label>Scripts da skill</Label>
         <p className="text-xs text-muted-foreground">
-          Rodam no motor remoto (bash, ffmpeg, jq, python). Use para testar o preflight antes de gastar crédito.
+          Rodam no motor remoto (bash, ffmpeg, jq, python, yt-dlp, ImageMagick). Use para testar o preflight antes de gastar crédito.
         </p>
       </div>
 
