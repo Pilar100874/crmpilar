@@ -620,6 +620,68 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             })()}
 
             <div>
+              <Label>Texto antes da mensagem (opcional)</Label>
+              <Textarea
+                value={config.texto_antes || ''}
+                onChange={(e) => updateConfig('texto_antes', e.target.value)}
+                placeholder="Ex.: 🚨 Alerta da frota Pilar"
+                rows={2}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Este texto é enviado no início da mensagem, antes do conteúdo principal.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Imagem / mídia (opcional)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={config.media_url || ''}
+                  onChange={(e) => updateConfig('media_url', e.target.value)}
+                  placeholder="Cole a URL da imagem ou envie um arquivo"
+                />
+                <Button type="button" variant="outline" size="sm" disabled={uploadingMedia} asChild>
+                  <label className="cursor-pointer">
+                    {uploadingMedia ? 'Enviando...' : 'Anexar'}
+                    <input
+                      type="file"
+                      accept="image/*,video/*,application/pdf"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingMedia(true);
+                        try {
+                          const path = `logistica-workflow/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+                          const { error } = await supabase.storage
+                            .from('marketing-images')
+                            .upload(path, file, { contentType: file.type, upsert: true });
+                          if (error) throw error;
+                          const { data } = supabase.storage.from('marketing-images').getPublicUrl(path);
+                          updateConfig('media_url', data.publicUrl);
+                          toast.success('Mídia anexada');
+                        } catch (err: any) {
+                          toast.error(err?.message || 'Falha ao enviar arquivo');
+                        } finally {
+                          setUploadingMedia(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                  </label>
+                </Button>
+              </div>
+              {config.media_url && (
+                <div className="flex items-center gap-2">
+                  <img src={config.media_url} alt="Pré-visualização da mídia do WhatsApp" className="h-16 w-16 rounded object-cover border" />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => updateConfig('media_url', '')}>
+                    Remover
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div>
               <Label>Mensagem</Label>
               <Textarea
                 value={config.mensagem || ''}
@@ -633,6 +695,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
 
             <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+
 
             <div className="space-y-2 rounded-md border p-3">
               <div className="flex items-start gap-2">
