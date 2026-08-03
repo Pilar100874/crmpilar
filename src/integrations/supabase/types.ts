@@ -25913,6 +25913,10 @@ export type Database = {
         Returns: boolean
       }
       is_system_admin: { Args: never; Returns: boolean }
+      limpar_historico_logistica: {
+        Args: { p_data_fim: string; p_data_inicio: string; p_tipo: string }
+        Returns: Json
+      }
       lookup_pedido_by_token: {
         Args: { p_token: string }
         Returns: {
