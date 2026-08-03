@@ -151,38 +151,18 @@ export default function ConfigServidorPage() {
     }
   };
 
-
-
-  const preencherAuto = (salvos: ItemConfig[], avisar = false) => {
-    const sug = sugestoesAutomaticas();
-    const faltantes = Object.entries(sug).filter(([chave]) => !salvos.some((i) => i.chave === chave));
-    if (!faltantes.length) {
-      if (avisar) toast.info("Todos os valores automáticos já estão salvos");
-      return;
-    }
-    setValores((v) => {
-      const novo = { ...v };
-      faltantes.forEach(([chave, valor]) => {
-        if (!novo[chave]?.trim()) novo[chave] = valor;
-      });
-      return novo;
-    });
-    if (avisar) toast.success(`${faltantes.length} campo(s) preenchido(s) automaticamente`);
-  };
-
   const carregar = async () => {
     setCarregando(true);
     try {
       const r = await chamar("listar");
-      const lista: ItemConfig[] = r.itens ?? [];
-      setItens(lista);
-      preencherAuto(lista);
+      setItens((r.itens ?? []) as ItemConfig[]);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setCarregando(false);
     }
   };
+
 
   useEffect(() => {
     void carregar();
