@@ -99,10 +99,24 @@ export async function executarAutomacoesLogistica(
       const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
       const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
 
+      // Bloco "Repetir Enquanto Parado": limita as ações aos veículos com disparo devido
+      const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
+      let veiculosAcao = veiculos;
+      let pularAcoes = false;
+      if (repetirNode) {
+        const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
+        veiculosAcao = veiculos.filter(v =>
+          repeticaoDevida(`${automacao.id}:${repetirNode.id}`, v, rc)
+        );
+        pularAcoes = veiculosAcao.length === 0;
+      }
+
       // Find condition nodes
       for (const node of flowObj.nodes) {
         const nodeType = node.data?.type;
         const config = node.data?.config || {};
+
+
 
         // Handle "condicao_parado" - Vehicle stopped condition
         if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
