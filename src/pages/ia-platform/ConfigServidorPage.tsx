@@ -51,7 +51,8 @@ const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }
   {
     chave: "SUPABASE_SERVICE_ROLE_KEY",
     rotulo: "Chave de serviço do backend",
-    ajuda: "Permite ao servidor gravar resultados. Guarde com muito cuidado.",
+    ajuda:
+      "Não precisa preencher: ao clicar em aplicar, o próprio backend envia essa chave ao servidor automaticamente.",
     segredo: true,
   },
   {
