@@ -24217,6 +24217,7 @@ export type Database = {
           ignicao: boolean | null
           lat: number
           lng: number
+          nivel_combustivel: number | null
           veiculo_id: string
           velocidade: number | null
         }
@@ -24229,6 +24230,7 @@ export type Database = {
           ignicao?: boolean | null
           lat: number
           lng: number
+          nivel_combustivel?: number | null
           veiculo_id: string
           velocidade?: number | null
         }
@@ -24241,6 +24243,7 @@ export type Database = {
           ignicao?: boolean | null
           lat?: number
           lng?: number
+          nivel_combustivel?: number | null
           veiculo_id?: string
           velocidade?: number | null
         }
