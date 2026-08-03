@@ -579,7 +579,10 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                 out.color.hover
               )}
             >
-              <span className="text-xs font-medium text-white">≥ {out.label}</span>
+              <span className={cn("text-xs font-medium", out.isNegative ? "text-foreground" : "text-white")}>
+                {out.isNegative ? out.label : `≥ ${out.label}`}
+              </span>
+
               <div className="relative">
                 <Handle
                   type="source"
