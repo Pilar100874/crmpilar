@@ -225,7 +225,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
     const mapOptions: L.MapOptions = {
       zoomControl: !disableInteraction,
+      zoomSnap: 0,
+      zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 90,
       scrollWheelZoom: !disableInteraction,
+
       doubleClickZoom: !disableInteraction,
       touchZoom: !disableInteraction,
       dragging: !disableInteraction,
