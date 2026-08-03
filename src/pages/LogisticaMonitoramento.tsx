@@ -733,7 +733,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                           key={`${alert.veiculoId}-${alert.type}-${index}`}
                           alert={alert}
                           icon={getAlertIcon(alert.type)}
-                          onClick={() => { zoomToVehicle(alert.veiculoId); setMobileAlertsOpen(false); }}
+                          onClick={() => { abrirDetalhes(alert.veiculoId); setMobileAlertsOpen(false); }}
                         />
                       ))}
                     </div>
