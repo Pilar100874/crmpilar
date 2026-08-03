@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, EyeOff, Maximize2, ShieldCheck } from "lucide-react";
 import { sanitizarHtmlArtefato, SANDBOX_PREVIEW } from "@/lib/aip/sanitizarHtml";
+import { LegendaFaixa } from "@/lib/aip/legendas";
 import { MediaPlayerInline } from "./MediaPlayerInline";
 
 export type TipoPreview = "imagem" | "video" | "audio" | "html" | "json" | "texto" | "pdf" | "outro";
@@ -37,16 +38,19 @@ interface Props {
   padraoAberto?: boolean;
   /** Abre o artefato em tela cheia (modal com navegação). */
   onTelaCheia?: () => void;
+  /** Legendas (WebVTT/SRT) disponíveis para vídeo/áudio. */
+  legendas?: LegendaFaixa[];
 }
 
 /**
  * Mostra o conteúdo do artefato direto no painel: miniatura de imagem,
  * player de vídeo/áudio, HTML em sandbox e texto/JSON formatado.
  */
-export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia }: Props) {
+export function ArtefatoPreview({ nome, url, mime, padraoAberto, onTelaCheia, legendas }: Props) {
   const tipo = detectarTipoPreview(nome, mime);
   const previsivel = tipo !== "outro";
   const [aberto, setAberto] = useState(!!padraoAberto && previsivel);
+
   const [texto, setTexto] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
