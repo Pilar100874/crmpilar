@@ -58,6 +58,7 @@ export const CATALOGO_RECURSOS: CatalogCategory[] = [
       i("higgsfield-image", "Higgsfield Image", "✨", "Imagens cinematográficas com Higgsfield"),
       i("upscaler", "Upscaler", "🔍", "Aumento de resolução"),
       i("remove-background", "Remove Background", "✂️", "Remoção de fundo"),
+      i("imagemagick", "ImageMagick", "🪄", "Redimensiona, corta e converte formatos de imagem (PNG, JPG, WEBP)"),
     ],
   },
   {
@@ -71,6 +72,7 @@ export const CATALOGO_RECURSOS: CatalogCategory[] = [
       i("higgsfield", "Higgsfield", "🌌", "Vídeos com movimentos de câmera Higgsfield"),
       i("remotion", "Remotion", "⚛️", "Vídeo programático em React (Remotion)"),
       i("ffmpeg", "FFmpeg", "🛠️", "Edição e conversão de vídeo"),
+      i("yt-dlp", "yt-dlp", "⬇️", "Baixa vídeo ou áudio de links externos para usar como referência/asset"),
     ],
   },
   {
