@@ -1,6 +1,7 @@
 export type LogisticaBlockType = 
   | 'iniciar_automacao'
   | 'condicao_parado'
+  | 'condicao_repetir_parado'
   | 'condicao_velocidade'
   | 'condicao_chegada'
   | 'condicao_saida_area'
@@ -14,6 +15,7 @@ export type LogisticaBlockType =
   | 'disparar_push'
   | 'enviar_sms'
   | 'return_response';
+
 
 
 export interface CondicaoTempoParado {
