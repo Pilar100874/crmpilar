@@ -22,8 +22,10 @@ export interface EventoVelocidade {
   placa: string;
   motorista: string;
   velocidade: number;
+  limite: number;    // limite aplicado ao veículo
   ts: number;
 }
+
 
 export interface RelatorioVelocidadeOpcoes {
   estabelecimentoId: string;
