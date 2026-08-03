@@ -47,6 +47,23 @@ export function PlaywrightPanel() {
   const [verificando, setVerificando] = useState(false);
   const [status, setStatus] = useState<PlaywrightStatus | null>(null);
   const [resultado, setResultado] = useState<PlaywrightRunResult | null>(null);
+  const [job, setJob] = useState<PlaywrightJob | null>(null);
+  const pollRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (pollRef.current) window.clearInterval(pollRef.current);
+  }, []);
+
+  const lerPassos = (): PlaywrightPasso[] | null => {
+    try {
+      const lista = JSON.parse(passos);
+      if (!Array.isArray(lista)) throw new Error("Os passos devem ser uma lista.");
+      return lista;
+    } catch (e) {
+      toast.error(`Passos inválidos: ${(e as Error).message}`);
+      return null;
+    }
+  };
 
   const verificar = async () => {
     setVerificando(true);
@@ -64,16 +81,11 @@ export function PlaywrightPanel() {
   };
 
   const executar = async () => {
-    let lista: PlaywrightPasso[];
-    try {
-      lista = JSON.parse(passos);
-      if (!Array.isArray(lista)) throw new Error("Os passos devem ser uma lista.");
-    } catch (e) {
-      toast.error(`Passos inválidos: ${(e as Error).message}`);
-      return;
-    }
+    const lista = lerPassos();
+    if (!lista) return;
     setRodando(true);
     setResultado(null);
+    setJob(null);
     try {
       const r = await agentRunner.playwrightRun({ url: url.trim() || undefined, passos: lista });
       setResultado(r);
@@ -84,6 +96,69 @@ export function PlaywrightPanel() {
       setRodando(false);
     }
   };
+
+  /** Acompanha o job no servidor até ele terminar. */
+  const acompanhar = (jobId: string) => {
+    if (pollRef.current) window.clearInterval(pollRef.current);
+    pollRef.current = window.setInterval(async () => {
+      try {
+        const atual = await agentRunner.playwrightJobStatus(jobId);
+        setJob(atual);
+        if (atual.status && atual.status !== "rodando" && atual.status !== "fila") {
+          if (pollRef.current) window.clearInterval(pollRef.current);
+          pollRef.current = null;
+          setResultado({
+            ok: atual.status === "concluido",
+            erro: atual.erro ?? undefined,
+            url_final: atual.url_final ?? undefined,
+            titulo: atual.titulo ?? undefined,
+            logs: atual.logs,
+            extraidos: atual.extraidos,
+            artefatos: (atual.artefatos ?? []).filter((a) => a.base64) as PlaywrightRunResult["artefatos"],
+            duracao_ms: atual.duracao_ms ?? undefined,
+          });
+          toast[atual.status === "concluido" ? "success" : "error"](
+            `Rotina ${ROTULO_STATUS[atual.status] ?? atual.status}`,
+          );
+        }
+      } catch {
+        if (pollRef.current) window.clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    }, 2000);
+  };
+
+  const executarRotina = async () => {
+    const lista = lerPassos();
+    if (!lista) return;
+    setResultado(null);
+    try {
+      const r = await agentRunner.playwrightJob({
+        nome: `Automação ${url || "sem endereço"}`.slice(0, 80),
+        url: url.trim() || undefined,
+        passos: lista,
+      });
+      if (!r.ok || !r.job_id) throw new Error(r.erro ?? "Não foi possível criar a rotina.");
+      setJob({ ok: true, job_id: r.job_id, status: r.status ?? "fila", progresso: { passo: 0, total: r.total_passos ?? lista.length } });
+      toast.success("Rotina iniciada em segundo plano");
+      acompanhar(r.job_id);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const cancelarRotina = async () => {
+    if (!job?.job_id) return;
+    try {
+      await agentRunner.playwrightJobCancelar(job.job_id);
+      toast.success("Cancelamento solicitado");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const emAndamento = job?.status === "rodando" || job?.status === "fila";
+
 
   return (
     <Card>
