@@ -25,10 +25,11 @@ import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 
 const statusConfig = {
-  movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
-  parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', icon: Clock },
-  offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500', icon: WifiOff }
+  movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-400', hex: '#22C55E', icon: Activity },
+  parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-400', hex: '#F59E0B', icon: Clock },
+  offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-300', hex: '#9CA3AF', icon: WifiOff }
 };
+
 
 // Configuração de consumo por tipo de veículo (L/100km)
 const consumoPorTipo: Record<string, number> = {
@@ -455,6 +456,17 @@ export default function TvDashboardVeiculos() {
             </Button>
           )}
         </div>
+
+        {/* Legenda de cores por status */}
+        <div className="px-3 py-1.5 border-b border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1">
+          {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((k) => (
+            <span key={k} className="flex items-center gap-1 text-[10px] text-white/70">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: statusConfig[k].hex }} />
+              {statusConfig[k].label} ({stats[k as 'movendo' | 'parado' | 'offline']})
+            </span>
+          ))}
+        </div>
+
         
         <div className="flex-1 overflow-y-auto">
           {veiculosFiltrados.length === 0 ? (
@@ -483,8 +495,14 @@ export default function TvDashboardVeiculos() {
                           className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
                           style={{ backgroundColor: veiculo.cor }}
                         />
-                        <span className="font-medium text-xs text-white/90 truncate">{veiculo.placa}</span>
-                        <span className={`text-[10px] ${config.textColor} flex-shrink-0`}>({config.label})</span>
+                        <span
+                          className="font-semibold text-xs truncate"
+                          style={{ color: config.hex }}
+                          title={config.label}
+                        >
+                          {veiculo.placa}
+                        </span>
+
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-white/60 flex-shrink-0">
                         {veiculo.ultima_posicao && (
