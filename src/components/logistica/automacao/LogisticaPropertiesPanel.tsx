@@ -14,6 +14,8 @@ import { CoordenadaMapPicker } from './CoordenadaMapPicker';
 
 import { Plus, Trash2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
 import { SmsBlockConfig } from '@/components/shared/SmsBlockConfig';
 
