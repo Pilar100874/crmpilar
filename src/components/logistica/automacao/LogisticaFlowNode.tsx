@@ -6,7 +6,7 @@ import { memo, useState, useEffect } from 'react';
 
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { 
-  Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
+  Play, Pause, Gauge, MapPin, MapPinOff, Clock, CalendarClock, 
   MessageCircle, Bell, BellRing, Mail, MessageSquareText, Copy, Trash2, StickyNote,
   MoreVertical, SkipForward, X, ArrowRight,
   AlertTriangle, CircleAlert, Truck, Package, Home, Building2,
