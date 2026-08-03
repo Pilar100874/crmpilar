@@ -764,7 +764,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                     v={v}
                     selected={selectedVeiculoId === v.id}
                     pinned={pinnedVeiculoId === v.id}
-                    onSelect={() => zoomToVehicle(v.id)}
+                    onSelect={() => abrirDetalhes(v.id)}
                     onPin={() => togglePin(v.id)}
                   />
                 ))}
