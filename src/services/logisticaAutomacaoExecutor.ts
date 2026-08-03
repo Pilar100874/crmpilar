@@ -240,9 +240,27 @@ export async function executarAutomacoesLogistica(
       const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
       const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
 
-      // Bloco "Repetir Enquanto Parado": limita as ações aos veículos com disparo devido
+      // Veículos que realmente satisfazem a condição "Veículo Parado" (se existir no fluxo)
+      const paradoNode = flowObj.nodes.find(n => n.data?.type === 'condicao_parado');
+      let veiculosElegiveis = veiculos;
+      if (paradoNode) {
+        const pc = (paradoNode.data?.config || {}) as Record<string, unknown>;
+        const cond = Array.isArray(pc.condicoes_tempo) && (pc.condicoes_tempo as CondicaoTempoParado[]).length
+          ? (pc.condicoes_tempo as CondicaoTempoParado[])
+          : [{ tempo_minutos: Number(pc.tempo_minutos) || 30 }];
+        const limiteMin = Math.min(...cond.map(c => Number(c.tempo_minutos) || 30));
+        veiculosElegiveis = veiculos.filter(v => {
+          const pos = v.ultima_posicao;
+          if (v.status !== 'parado' || !pos) return false;
+          if (dentroZonaIsenta(pos.lat, pos.lng)) return false;
+          return differenceInMinutes(new Date(), new Date(pos.data_hora)) >= limiteMin;
+        });
+      }
+
+      // Bloco "Repetir a cada X min": repete o disparo enquanto o veículo continuar parado.
+      // Sem esse bloco, as ações disparam UMA única vez por parada.
       const repetirNode = flowObj.nodes.find(n => n.data?.type === 'condicao_repetir_parado');
-      let veiculosAcao = veiculos;
+      let veiculosAcao = veiculosElegiveis;
       let pularAcoes = false;
       if (repetirNode) {
         const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
@@ -260,9 +278,11 @@ export async function executarAutomacoesLogistica(
           }
         } catch { /* noop */ }
 
-        veiculosAcao = veiculos.filter(v => repeticaoDevida(chaveNode, v, rc));
-        pularAcoes = veiculosAcao.length === 0;
+        veiculosAcao = veiculosElegiveis.filter(v => repeticaoDevida(chaveNode, v, rc));
+      } else {
+        veiculosAcao = veiculosElegiveis.filter(v => disparoUnicoDevido(String(automacao.id), v));
       }
+      pularAcoes = veiculosAcao.length === 0;
 
 
       // Find condition nodes
