@@ -114,7 +114,7 @@ export function PlaywrightPanel() {
             titulo: atual.titulo ?? undefined,
             logs: atual.logs,
             extraidos: atual.extraidos,
-            artefatos: (atual.artefatos ?? []).filter((a) => a.base64) as PlaywrightRunResult["artefatos"],
+            artefatos: (atual.artefatos ?? []).filter((a) => a.base64 || a.url),
             duracao_ms: atual.duracao_ms ?? undefined,
           });
           toast[atual.status === "concluido" ? "success" : "error"](
@@ -274,29 +274,43 @@ export function PlaywrightPanel() {
 
             {!!resultado.artefatos?.length && (
               <div className="grid gap-3 sm:grid-cols-2">
-                {resultado.artefatos.map((a) => (
-                  <div key={a.nome} className="space-y-1">
-                    <p className="text-xs font-medium">{a.nome}</p>
-                    {a.tipo === "image/png" ? (
-                      <img
-                        src={`data:image/png;base64,${a.base64}`}
-                        alt={`Captura de tela ${a.nome}`}
-                        className="w-full rounded border"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <a
-                        className="text-xs text-primary underline"
-                        href={`data:${a.tipo};base64,${a.base64}`}
-                        download={a.nome}
-                      >
-                        Baixar arquivo
-                      </a>
-                    )}
-                  </div>
-                ))}
+                {resultado.artefatos.map((a) => {
+                  const fonte = a.base64 ? `data:${a.tipo};base64,${a.base64}` : (a.url ?? "");
+                  return (
+                    <div key={a.nome} className="space-y-1">
+                      <p className="text-xs font-medium">{a.nome}</p>
+                      {a.tipo === "image/png" && fonte ? (
+                        <img
+                          src={fonte}
+                          alt={`Captura de tela ${a.nome}`}
+                          className="w-full rounded border"
+                          loading="lazy"
+                        />
+                      ) : a.tipo.startsWith("video/") && fonte ? (
+                        <video src={fonte} controls className="w-full rounded border" />
+                      ) : fonte ? (
+                        <a
+                          className="text-xs text-primary underline"
+                          href={fonte}
+                          download={a.nome}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Baixar arquivo
+                        </a>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Arquivo indisponível</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground">
+                        {a.armazenado ? "Guardado para auditoria" : "Somente nesta execução"} ·{" "}
+                        {Math.max(1, Math.round(a.tamanho_bytes / 1024))} KB
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             )}
+
           </div>
         )}
       </CardContent>

@@ -158,8 +158,22 @@ export interface PlaywrightJob {
   titulo?: string | null;
   logs?: string[];
   extraidos?: Record<string, unknown>;
-  artefatos?: Array<{ nome: string; tipo: string; tamanho_bytes: number; base64?: string }>;
+  artefatos?: PlaywrightArtefato[];
   erro?: string | null;
+}
+
+/** Artefato gerado na execução (print, vídeo ou PDF), guardado no Storage. */
+export interface PlaywrightArtefato {
+  nome: string;
+  tipo: string;
+  tamanho_bytes: number;
+  base64?: string | null;
+  armazenado?: boolean;
+  bucket?: string;
+  caminho?: string;
+  url?: string | null;
+  url_expira_em?: string;
+  erro_armazenamento?: string;
 }
 
 export type PlaywrightPasso =
@@ -178,6 +192,12 @@ export interface PlaywrightRunPayload {
   timeout_ms?: number;
   viewport?: { width: number; height: number };
   user_agent?: string;
+  /** Grava vídeo da sessão (padrão: true). */
+  gravar_video?: boolean;
+  /** Captura print do estado final (padrão: true). */
+  screenshot_final?: boolean;
+  /** Guarda os arquivos no Storage para auditoria (padrão: true). */
+  armazenar?: boolean;
 }
 
 export interface PlaywrightRunResult {
@@ -187,7 +207,7 @@ export interface PlaywrightRunResult {
   titulo?: string;
   logs?: string[];
   extraidos?: Record<string, unknown>;
-  artefatos?: Array<{ nome: string; tipo: string; tamanho_bytes: number; base64: string }>;
+  artefatos?: PlaywrightArtefato[];
   duracao_ms?: number;
   simulado?: boolean;
 }
