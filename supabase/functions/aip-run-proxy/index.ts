@@ -44,6 +44,8 @@ Deno.serve(async (req) => {
       "health",
       "mcp/probe",
       "skill/exec",
+      "playwright/run",
+      "playwright/status",
     ];
     if (ACOES_ADMIN.includes(action)) {
       const { data: usuario } = await supabase
