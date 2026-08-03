@@ -29,7 +29,9 @@ import { Card } from '@/components/ui/card';
 
 
 const iconMap: Record<string, any> = {
+  CalendarClock,
   Play,
+
   Pause,
   Gauge,
   MapPin,
