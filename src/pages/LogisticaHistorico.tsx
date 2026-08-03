@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { format, startOfDay, endOfDay, differenceInMinutes, subDays, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
