@@ -130,23 +130,41 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     });
 
     // Mantém todos os veículos centralizados com o maior zoom possível
-    if (validVeiculos.length > 0) {
-      const bounds = boundsDePontos(
-        validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng] as [number, number])
-      );
-      if (bounds) {
-        enquadrarNoMapa(map, bounds, {
-          paddingTopLeft: [8, 8],
-          paddingBottomRight: [8, 8],
-          maxZoom: 18,
-          zoomPontoUnico: 16,
-        });
-      }
-    }
+    ultimoBoundsRef.current = boundsDePontos(
+      validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng] as [number, number])
+    );
+    enquadrarTudo();
 
+  }, [veiculos, onVeiculoClick, compact, enquadrarTudo]);
 
+  // Reenquadra automaticamente após qualquer mudança de tamanho do container
+  useEffect(() => {
+    const el = mapContainerRef.current;
+    if (!el) return;
 
-  }, [veiculos, onVeiculoClick, compact]);
+    let frame: number | null = null;
+    const reenquadrar = () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        enquadrarTudo();
+      });
+    };
+
+    const observer = new ResizeObserver(reenquadrar);
+    observer.observe(el);
+    window.addEventListener('resize', reenquadrar);
+    window.addEventListener('orientationchange', reenquadrar);
+    reenquadrar();
+
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('resize', reenquadrar);
+      window.removeEventListener('orientationchange', reenquadrar);
+    };
+  }, [enquadrarTudo]);
+
 
   return (
     <>
