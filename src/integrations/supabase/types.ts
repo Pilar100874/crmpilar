@@ -10788,6 +10788,8 @@ export type Database = {
           estabelecimento_id: string
           heigit_api_key: string | null
           id: string
+          limite_velocidade_global: number
+          limites_velocidade_tipo: Json
           token_rastreamento: string
           updated_at: string
         }
@@ -10796,6 +10798,8 @@ export type Database = {
           estabelecimento_id: string
           heigit_api_key?: string | null
           id?: string
+          limite_velocidade_global?: number
+          limites_velocidade_tipo?: Json
           token_rastreamento?: string
           updated_at?: string
         }
@@ -10804,6 +10808,8 @@ export type Database = {
           estabelecimento_id?: string
           heigit_api_key?: string | null
           id?: string
+          limite_velocidade_global?: number
+          limites_velocidade_tipo?: Json
           token_rastreamento?: string
           updated_at?: string
         }
