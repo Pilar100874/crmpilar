@@ -189,10 +189,17 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   }, []);
   const abrirDetalhes = useCallback((id: string) => {
     setSelectedVeiculoId(id);
-    setFocusVehicle({ id, nonce: Date.now() });
-    setMapaFoco(null);
     setDetalhesVeiculoId(id);
-  }, []);
+    setRotaCoords(null);
+    const alvo = veiculos.find(v => v.id === id);
+    // Marca o ponto do evento e força centralização/zoom no mapa
+    setMapaFoco(
+      alvo?.ultima_posicao
+        ? { lat: alvo.ultima_posicao.lat, lng: alvo.ultima_posicao.lng }
+        : null
+    );
+    setFocusVehicle({ id, nonce: Date.now() });
+  }, [veiculos]);
   const fecharDetalhes = useCallback(() => {
     setDetalhesVeiculoId(null);
     setRotaCoords(null);
