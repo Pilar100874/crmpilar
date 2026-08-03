@@ -20,7 +20,7 @@ export const FocusLegend: React.FC<FocusLegendProps> = ({ veiculo, onClose }) =>
   const corte = veiculo.ultima_posicao?.corte_combustivel;
 
   return (
-    <div className="absolute top-2 left-1/2 -translate-x-1/2/app z-[500] pointer-events-auto w-full px-2">
+    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[500] pointer-events-auto w-full px-2">
       <div className="mx-auto flex items-center justify-center gap-2 sm:gap-3 bg-background/25 backdrop-blur border border-border shadow-lg rounded-full pl-3 pr-2 py-1.5 text-xs sm:text-sm w-fit max-w-[98vw]">
         <div className="flex items-center gap-1.5 font-bold shrink-0" title={`Veículo ${veiculo.placa}`}>
           <Car className="h-3.5 w-3.5 text-primary" />
