@@ -608,7 +608,8 @@ export async function executarAutomacoesLogistica(
               const lista = Array.from(new Set(listaRaw.map((t) => String(t || '').trim()).filter(Boolean)));
               if (!lista.length) lista.push('');
               for (const tel of lista) {
-                await executarBlocoWhatsapp(
+                if (!podeEnviar(`${node.id}:${tel || 'padrao'}`)) continue;
+
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
