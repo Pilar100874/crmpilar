@@ -35,71 +35,83 @@ interface Etapa {
   detalhe?: string;
 }
 
-const CAMPOS: { chave: string; rotulo: string; ajuda: string; segredo: boolean }[] = [
+interface Campo {
+  chave: string;
+  rotulo: string;
+  ajuda: string;
+  segredo: boolean;
+  /** Valor padrão fixo aplicado pelo backend — não precisa (nem deve) ser digitado. */
+  fixo?: string;
+  /** Página onde o usuário consegue obter o valor. */
+  link?: { url: string; rotulo: string };
+}
+
+const CAMPOS: Campo[] = [
   {
     chave: "ANTHROPIC_API_KEY",
     rotulo: "Anthropic API Key",
-    ajuda: "Chave do Claude usada pelo Agent SDK (console.anthropic.com).",
+    ajuda: "Chave do Claude usada pelo Agent SDK.",
     segredo: true,
-  },
-  {
-    chave: "SUPABASE_URL",
-    rotulo: "URL do backend",
-    ajuda: "URL do backend que o servidor usa para gravar execuções e assets.",
-    segredo: false,
-  },
-  {
-    chave: "SUPABASE_SERVICE_ROLE_KEY",
-    rotulo: "Chave de serviço do backend",
-    ajuda:
-      "Não precisa preencher: ao clicar em aplicar, o próprio backend envia essa chave ao servidor automaticamente.",
-    segredo: true,
+    link: { url: "https://console.anthropic.com/settings/keys", rotulo: "Obter no console da Anthropic" },
   },
   {
     chave: "RAILWAY_DEPLOY_HOOK_URL",
     rotulo: "Deploy Hook (Railway)",
     ajuda: "URL do Deploy Hook usada para redeploy remoto do servidor.",
     segredo: true,
+    link: { url: "https://railway.app/dashboard", rotulo: "Criar em Settings → Deploys no Railway" },
   },
-  {
-    chave: "WORKSPACE_DIR",
-    rotulo: "Diretório de trabalho",
-    ajuda: "Pasta usada nas execuções (padrão /tmp).",
-    segredo: false,
-  },
-  { chave: "APP_VERSION", rotulo: "Versão exibida", ajuda: "Rótulo de versão do servidor.", segredo: false },
   {
     chave: "HIGGSFIELD_API_KEY",
     rotulo: "Higgsfield API Key",
     ajuda: "Geração de vídeos/imagens pelo Higgsfield.",
     segredo: true,
+    link: { url: "https://higgsfield.ai/", rotulo: "Obter no painel do Higgsfield" },
   },
   {
     chave: "REMOTION_LICENSE_KEY",
     rotulo: "Remotion License Key",
     ajuda: "Renderização de vídeos com Remotion.",
     segredo: true,
+    link: { url: "https://www.remotion.pro/dashboard", rotulo: "Obter no Remotion Pro" },
   },
-  { chave: "OPENAI_API_KEY", rotulo: "OpenAI API Key", ajuda: "Modelos e imagens da OpenAI.", segredo: true },
   {
-    chave: "PLAYWRIGHT_BROWSERS_PATH",
-    rotulo: "Playwright browsers path",
-    ajuda: "Caminho dos navegadores do Playwright no servidor.",
-    segredo: false,
+    chave: "OPENAI_API_KEY",
+    rotulo: "OpenAI API Key",
+    ajuda: "Modelos e imagens da OpenAI.",
+    segredo: true,
+    link: { url: "https://platform.openai.com/api-keys", rotulo: "Obter na plataforma da OpenAI" },
   },
 ];
 
-/** Valores que o próprio CRM já conhece e podem ser preenchidos sozinhos. */
-function sugestoesAutomaticas(): Record<string, string> {
-  const s: Record<string, string> = {
-    WORKSPACE_DIR: "/tmp",
-    PLAYWRIGHT_BROWSERS_PATH: "/ms-playwright",
-    APP_VERSION: `crm-pilar-${new Date().toISOString().slice(0, 10)}`,
-  };
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  if (url) s.SUPABASE_URL = url;
-  return s;
-}
+/** Valores padrão fixos — aplicados automaticamente pelo backend no envio. */
+const CAMPOS_FIXOS: { chave: string; rotulo: string; valor: string; ajuda: string }[] = [
+  {
+    chave: "SUPABASE_URL",
+    rotulo: "URL do backend",
+    valor: (import.meta.env.VITE_SUPABASE_URL as string) ?? "definida pelo backend",
+    ajuda: "Enviada automaticamente pelo backend.",
+  },
+  {
+    chave: "SUPABASE_SERVICE_ROLE_KEY",
+    rotulo: "Chave de serviço do backend",
+    valor: "•••••• injetada pelo backend",
+    ajuda: "Nunca fica visível: o backend injeta no momento do envio.",
+  },
+  {
+    chave: "WORKSPACE_DIR",
+    rotulo: "Diretório de trabalho",
+    valor: "/tmp",
+    ajuda: "Padrão do servidor de execução.",
+  },
+  {
+    chave: "PLAYWRIGHT_BROWSERS_PATH",
+    rotulo: "Playwright browsers path",
+    valor: "/ms-playwright",
+    ajuda: "Padrão do container do Railway.",
+  },
+];
+
 
 async function chamar(acao: string, extra: Record<string, unknown> = {}) {
   const { data, error } = await supabase.functions.invoke("aip-server-config", {
