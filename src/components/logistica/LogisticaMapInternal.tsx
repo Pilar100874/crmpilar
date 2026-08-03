@@ -183,36 +183,20 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const initialBoundsFittedRef = useRef(false);
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
 
-  // Reenquadra o mapa mantendo todos os pontos visíveis e centralizados
+  // Reenquadra o mapa no maior zoom possível, mantendo tudo centralizado na área visível
   const enquadrarTudo = useCallback(() => {
     const map = mapRef.current;
     const bounds = ultimoBoundsRef.current;
     if (!map || !bounds || !fitBounds) return;
 
-    map.invalidateSize();
-
-    const isSinglePoint =
-      Math.abs(bounds.getNorth() - bounds.getSouth()) < 0.0005 &&
-      Math.abs(bounds.getEast() - bounds.getWest()) < 0.0005;
-
-    if (isSinglePoint) {
-      map.setView(bounds.getCenter(), 17, { animate: false });
-      return;
-    }
-
-    const paddingTopLeft = fitBoundsPadding?.topLeft ?? [16, 16];
-    const paddingBottomRight = fitBoundsPadding?.bottomRight ?? [16, 16];
-
-    // Padding simétrico (o centro do conjunto fica no centro da tela)
-    const zoomAlvo = map.getBoundsZoom(bounds, false, L.point(
-      Math.max(paddingTopLeft[0], paddingBottomRight[0]) * 2,
-      Math.max(paddingTopLeft[1], paddingBottomRight[1]) * 2,
-    ));
-
-    // Zoom fracionado (zoomSnap: 0) => maior zoom possível para a tela
-    map.setView(bounds.getCenter(), Math.min(zoomAlvo, 18), { animate: false });
-
+    enquadrarNoMapa(map, bounds, {
+      paddingTopLeft: fitBoundsPadding?.topLeft ?? [16, 16],
+      paddingBottomRight: fitBoundsPadding?.bottomRight ?? [16, 16],
+      maxZoom: 18,
+      zoomPontoUnico: 17,
+    });
   }, [fitBounds, fitBoundsPadding]);
+
 
   // Reset initial bounds flag when fullRouteBounds changes (new data loaded)
   useEffect(() => {
