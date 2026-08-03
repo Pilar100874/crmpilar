@@ -75,6 +75,8 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const iconSigRef = useRef<Map<string, string>>(new Map());
+  const ultimoEnquadramentoRef = useRef<string>('');
 
   const [autoPausado, setAutoPausado] = useState(false);
   const autoPausadoRef = useRef(false);
@@ -86,10 +88,20 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     setAutoPausado(true);
   }, []);
 
-  const enquadrarTudo = useCallback(() => {
+  const enquadrarTudo = useCallback((forcar = false) => {
     const map = mapRef.current;
     const bounds = ultimoBoundsRef.current;
     if (!map || !bounds || autoPausadoRef.current) return;
+    const sig = [
+      bounds.getSouth().toFixed(4),
+      bounds.getWest().toFixed(4),
+      bounds.getNorth().toFixed(4),
+      bounds.getEast().toFixed(4),
+      Math.round(map.getSize().x),
+      Math.round(map.getSize().y),
+    ].join('|');
+    if (!forcar && sig === ultimoEnquadramentoRef.current) return;
+    ultimoEnquadramentoRef.current = sig;
     movimentoProgramaticoRef.current = true;
     enquadrarNoMapa(map, bounds, {
       paddingTopLeft: [8, 8],
@@ -99,6 +111,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick, compact = false }: WatchMapVie
     });
     window.setTimeout(() => { movimentoProgramaticoRef.current = false; }, 500);
   }, []);
+
 
   const retomarAuto = useCallback(() => {
     autoPausadoRef.current = false;
