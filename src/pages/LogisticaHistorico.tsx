@@ -51,6 +51,12 @@ interface LogisticaHistoricoProps {
 const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = false }) => {
   const { veiculoId: paramVeiculoId } = useParams<{ veiculoId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const voltarPara = (location.state as { voltarPara?: string } | null)?.voltarPara;
+  const voltar = () => {
+    if (voltarPara) navigate(voltarPara);
+    else navigate('/logistica/monitoramento');
+  };
   
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
