@@ -25,10 +25,11 @@ import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 
 const statusConfig = {
-  movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
-  parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', icon: Clock },
-  offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500', icon: WifiOff }
+  movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-400', hex: '#22C55E', icon: Activity },
+  parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-400', hex: '#F59E0B', icon: Clock },
+  offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-300', hex: '#9CA3AF', icon: WifiOff }
 };
+
 
 // Configuração de consumo por tipo de veículo (L/100km)
 const consumoPorTipo: Record<string, number> = {
