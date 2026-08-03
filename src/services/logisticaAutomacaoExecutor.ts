@@ -296,7 +296,10 @@ export async function executarAutomacoesLogistica(
           `${automacao.id}:${agendaNode.id}`,
           (agendaNode.data?.config || {}) as Record<string, unknown>
         );
-        veiculosAcao = devido ? veiculosElegiveis : [];
+        // Sem condição de veículo, o agendamento dispara UMA vez (relatório geral),
+        // e não uma mensagem por veículo.
+        veiculosAcao = devido ? (paradoNode ? veiculosElegiveis : veiculosElegiveis.slice(0, 1)) : [];
+
       } else if (repetirNode) {
         const rc = (repetirNode.data?.config || {}) as Record<string, unknown>;
         const chaveNode = `${automacao.id}:${repetirNode.id}`;
