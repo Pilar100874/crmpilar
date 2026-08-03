@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Terminal, Loader2, Play, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { ArtefatoPreview, detectarTipoPreview } from "@/components/ia-platform/ArtefatoPreview";
 
 interface Arquivo {
   nome_arquivo: string;
