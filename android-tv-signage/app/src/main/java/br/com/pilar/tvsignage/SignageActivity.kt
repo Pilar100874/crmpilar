@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -87,7 +90,16 @@ class SignageActivity : AppCompatActivity() {
         w.mediaPlaybackRequiresUserGesture = false
         w.cacheMode = WebSettings.LOAD_DEFAULT
         w.userAgentString = w.userAgentString + " PilarTvSignage/1.0"
-        b.webview.webViewClient = WebViewClient()
+        b.webview.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?,
+                error: android.webkit.WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+                if (request?.isForMainFrame == true) scheduleRetry()
+            }
+        }
 
         // Hotspot invisível (canto superior esquerdo): long-press para pedir senha e sair
         b.exitHotspot.setOnLongClickListener {
@@ -95,10 +107,66 @@ class SignageActivity : AppCompatActivity() {
             true
         }
 
+        registerNetworkCallback()
         loadConfig()
         startHeartbeat()
         startCommandsPolling()
     }
+
+    // ===================== Reconexão automática =====================
+
+    private var netCallback: ConnectivityManager.NetworkCallback? = null
+    private var retryPending = false
+
+    private val retryRunnable = Runnable {
+        retryPending = false
+        if (isOnline()) {
+            loadConfig()
+            b.webview.reload()
+        } else {
+            scheduleRetry()
+        }
+    }
+
+    private fun scheduleRetry(delayMs: Long = 15_000L) {
+        if (retryPending) return
+        retryPending = true
+        showStandby("Sem conexão — tentando reconectar...")
+        ui.postDelayed(retryRunnable, delayMs)
+    }
+
+    private fun isOnline(): Boolean = try {
+        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val net = cm.activeNetwork
+        val caps = net?.let { cm.getNetworkCapabilities(it) }
+        caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    } catch (_: Exception) { false }
+
+    private fun registerNetworkCallback() {
+        try {
+            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val cb = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: android.net.Network) {
+                    ui.post {
+                        ui.removeCallbacks(retryRunnable)
+                        retryPending = false
+                        loadConfig()
+                        b.webview.reload()
+                    }
+                }
+
+                override fun onLost(network: android.net.Network) {
+                    ui.post { scheduleRetry(5_000L) }
+                }
+            }
+            netCallback = cb
+            val req = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+            cm.registerNetworkCallback(req, cb)
+        } catch (_: Exception) {}
+    }
+
 
     private fun applyImmersive() {
         window.decorView.systemUiVisibility = (
@@ -385,6 +453,13 @@ class SignageActivity : AppCompatActivity() {
         super.onDestroy()
         heartbeatJob?.cancel(); commandsJob?.cancel(); configJob?.cancel()
         ui.removeCallbacks(playlistRunnable)
+        ui.removeCallbacks(retryRunnable)
+        try {
+            netCallback?.let {
+                (getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
+                    .unregisterNetworkCallback(it)
+            }
+        } catch (_: Exception) {}
         try { wakeLock?.release() } catch (_: Exception) {}
     }
 }
