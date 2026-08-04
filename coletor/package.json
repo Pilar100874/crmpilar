@@ -51,6 +51,16 @@
       "node_modules/@shinyoshiaki/binary-data/src/node_modules/**/*",
       "node_modules/**/src/node_modules/**"
     ],
+    "linux": {
+      "category": "Utility",
+      "artifactName": "ColetorPilar-Linux.AppImage",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
+    },
     "win": {
       "icon": "build/icon.ico",
       "target": [

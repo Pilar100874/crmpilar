@@ -76,7 +76,7 @@ cat > "$DEST/update.sh" <<'EOS'
 #!/bin/bash
 # Baixa a última versão publicada do Coletor e reinicia o kiosk.
 set -euo pipefail
-URL="${COLETOR_URL:-https://crmpilar.lovable.app/coletor/ColetorPilar-Linux.AppImage}"
+URL="${COLETOR_URL:-https://crmpilar.lovable.app/__l5e/assets-v1/13bc261c-f998-4cd2-9d73-3de090606255/ColetorPilar-Linux.AppImage}"
 TMP=$(mktemp)
 echo "baixando $URL"
 curl -fL --retry 3 -o "$TMP" "$URL"

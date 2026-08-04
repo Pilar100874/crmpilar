@@ -7,7 +7,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="${OUT:-$HERE/out}"
 WORK="${WORK:-$HERE/.work}"
 DEBIAN_ISO_URL="${DEBIAN_ISO_URL:-https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso}"
-COLETOR_URL="${COLETOR_URL:-https://crmpilar.lovable.app/coletor/ColetorPilar-Linux.AppImage}"
+COLETOR_URL="${COLETOR_URL:-https://crmpilar.lovable.app/__l5e/assets-v1/13bc261c-f998-4cd2-9d73-3de090606255/ColetorPilar-Linux.AppImage}"
 
 need() { command -v "$1" >/dev/null || { echo "faltando: $1 (apt install $2)"; exit 1; }; }
 need xorriso xorriso
