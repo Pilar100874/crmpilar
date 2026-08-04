@@ -2,9 +2,9 @@
 // e devolve a URL pública do arquivo no storage.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsPDF } from "npm:jspdf@2.5.2";
-import * as autoTableMod from "npm:jspdf-autotable@3.8.4";
-// interop: em Deno o módulo pode vir como namespace
-const autoTable: any = (autoTableMod as any).default ?? (autoTableMod as any).autoTable ?? autoTableMod;
+import { applyPlugin } from "npm:jspdf-autotable@3.8.4";
+
+applyPlugin(jsPDF);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
     doc.text(`${eventos.length} ocorrência(s)`, largura / 2, y + 15, { align: "center" });
     y += 24;
 
-    autoTable(doc, {
+    (doc as any).autoTable({
       startY: y,
       head: [["Data", "Placa", "Motorista", "Hora", "Limite", "Velocidade excedida"]],
       body: eventos.map((e) => [
