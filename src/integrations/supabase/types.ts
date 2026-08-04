@@ -10741,6 +10741,36 @@ export type Database = {
         }
         Relationships: []
       }
+      logistica_automacao_estado: {
+        Row: {
+          chave: string
+          created_at: string
+          estabelecimento_id: string
+          expira_em: string | null
+          id: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          estabelecimento_id: string
+          expira_em?: string | null
+          id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          estabelecimento_id?: string
+          expira_em?: string | null
+          id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
       logistica_automacoes: {
         Row: {
           ativo: boolean | null
