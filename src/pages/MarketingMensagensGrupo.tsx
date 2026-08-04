@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, Plus, Pencil, Trash2, Loader2, MessageSquareText, Copy, AlertCircle } from "lucide-react";
+import { Sparkles, Plus, Pencil, Trash2, Loader2, MessageSquareText, Copy, AlertCircle, CheckSquare, Square } from "lucide-react";
 
 interface Grupo {
   id: string;
