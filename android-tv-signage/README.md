@@ -68,3 +68,31 @@ base64 -w 0 minha-chave.jks
 - Android TV 7.0+ (API 24+)
 - Conexão de internet permanente
 - Recomendado: modo kiosk / Device Owner via `adb shell dpm set-device-owner` para bloquear saída do app
+
+## TV Box HK1 K8S (Android 13 / Rockchip RK3528), Android TV e tablets
+
+Suporte nativo implementado (v1.3.0):
+
+- `MainActivity` como entrada única com `LAUNCHER` + `LEANBACK_LAUNCHER` (sem depender de touchscreen; navegação por controle remoto).
+- `BootReceiver` nativo (`directBootAware`, `enabled`, `exported`) escutando `BOOT_COMPLETED`, `LOCKED_BOOT_COMPLETED`, `QUICKBOOT_POWERON` (e variante HTC) — aguarda ~8s e abre a `MainActivity` com `FLAG_ACTIVITY_NEW_TASK | CLEAR_TOP | SINGLE_TOP`. Nenhum serviço de mídia é iniciado no boot.
+- Permissão `android.permission.RECEIVE_BOOT_COMPLETED`.
+- Tela sempre ligada (`FLAG_KEEP_SCREEN_ON`) e modo imersivo (esconde status/navigation bar quando o firmware permite).
+- Reconexão automática: `ConnectivityManager.NetworkCallback` + retry a cada 15s recarrega config e WebView quando a internet volta.
+- Tablets/celulares: activities com `resizeableActivity`, `sensorLandscape` e `configChanges` amplos.
+
+### Variantes de build (flavors)
+
+| Flavor | Comando | APK | Home/Launcher padrão |
+|---|---|---|---|
+| normal | `./gradlew assembleNormalRelease` | `app-release.apk` | não |
+| kiosk  | `./gradlew assembleKioskRelease`  | `app-kiosk-release.apk` | sim (`MAIN` + `HOME` + `DEFAULT`) |
+
+Na versão kiosk, após instalar: Configurações → Apps → Apps padrão → App de início → **Pilar Remotas**.
+
+### Dados do APK release assinado
+
+- **package name:** `br.com.pilar.tvsignage`
+- **MainActivity:** `br.com.pilar.tvsignage.MainActivity`
+- **versionCode:** `15`
+- **versionName:** `1.3.0` (kiosk: `1.3.0-kiosk`)
+- **assinatura:** keystore `pilar-release.keystore` (alias `pilar`, V1/V2/V3)
