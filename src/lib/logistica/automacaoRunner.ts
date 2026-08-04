@@ -82,40 +82,30 @@ function renovarLock(estabelecimentoId: string) {
   }
 }
 
+/**
+ * A execução das automações passou a ser 100% server-side
+ * (edge function `logistica-automacao-cron`, agendada a cada 2 min).
+ * Os mapas agora apenas exibem as marcações persistidas — manter a execução
+ * no navegador causaria disparos duplicados.
+ */
 export async function rodarAutomacoesLogistica(
-  veiculos: VeiculoComStatus[],
-  estabelecimentoId: string | null | undefined,
-  opts: { force?: boolean } = {}
+  _veiculos: VeiculoComStatus[],
+  _estabelecimentoId: string | null | undefined,
+  _opts: { force?: boolean } = {}
 ): Promise<number> {
-  if (!estabelecimentoId || veiculos.length === 0) return 0;
-
-  const agora = Date.now();
-  if (execucaoEmAndamento) return execucaoEmAndamento;
-  if (!opts.force && agora - ultimaExecucao < INTERVALO_MINIMO_MS) return 0;
-
-  // Coordenação entre abas/mapas: só um runner executa o ciclo.
-  if (!adquirirCiclo(estabelecimentoId, agora, !!opts.force)) {
-    ultimaExecucao = agora;
-    return 0;
-  }
-
-  ultimaExecucao = agora;
-
-  execucaoEmAndamento = (async () => {
-    try {
-      const resultados = await executarAutomacoesLogistica(veiculos, estabelecimentoId);
-      renovarLock(estabelecimentoId);
-      const veiculosComMarcacao = resultados.map(r => r.veiculo_id);
-      await limparParadasAntigas(veiculosComMarcacao, estabelecimentoId);
-      return resultados.length;
-    } catch (e) {
-      console.warn('Falha ao executar automações de logística', e);
-      return 0;
-    } finally {
-      renovarLock(estabelecimentoId);
-      execucaoEmAndamento = null;
-    }
-  })();
-
-  return execucaoEmAndamento;
+  return 0;
 }
+
+/** Força um ciclo imediato no servidor (botão "Executar agora"). */
+export async function dispararCicloServidor(estabelecimentoId: string): Promise<boolean> {
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { error } = await supabase.functions.invoke('logistica-automacao-cron', {
+      body: { estabelecimento_id: estabelecimentoId },
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
