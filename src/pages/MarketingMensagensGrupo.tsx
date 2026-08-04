@@ -207,6 +207,35 @@ export default function MarketingMensagensGrupo() {
     toast.success("Copiado");
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(frases.map(f => f.id)));
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const excluirSelecionadas = async () => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from("mensagens_grupo_produto")
+      .delete()
+      .in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} ${ids.length === 1 ? "frase excluída" : "frases excluídas"}`);
+    setSelectedIds(new Set());
+    setDeleteSelectedOpen(false);
+    loadFrases();
+  };
+
   return (
     <div className="space-y-6">
       <Card>
