@@ -60,11 +60,14 @@ jobs:
       - name: Tornar gradlew executável
         run: chmod +x ./gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
+      - name: Build Release APKs (normal + kiosk)
+        run: ./gradlew assembleNormalRelease assembleKioskRelease --stacktrace
 
-      - name: Verificar APK gerado
+      - name: Normalizar nomes dos APKs
         run: |
+          mkdir -p app/build/outputs/apk/release
+          cp app/build/outputs/apk/normal/release/app-normal-release*.apk app/build/outputs/apk/release/app-release.apk
+          cp app/build/outputs/apk/kiosk/release/app-kiosk-release*.apk app/build/outputs/apk/release/app-kiosk-release.apk
           ls -la app/build/outputs/apk/release/
 
       - name: Re-assinar APK (keystore dos secrets)
@@ -76,8 +79,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           echo "$SIGNING_KEY" | base64 -d > signing-key.jks
-          IN_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
-          [ -f "$IN_APK" ] || IN_APK="app/build/outputs/apk/release/app-release.apk"
+          IN_APK="app/build/outputs/apk/release/app-release.apk"
           apksigner sign \
             --ks signing-key.jks \
             --ks-key-alias "$KEY_ALIAS" \
@@ -105,7 +107,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: android-tv-signage/app/build/outputs/apk/release/app-release.apk
+          path: |
+            android-tv-signage/app/build/outputs/apk/release/app-release.apk
+            android-tv-signage/app/build/outputs/apk/release/app-kiosk-release.apk
           if-no-files-found: error
 
       - name: Publicar Release rolling (latest)
@@ -113,12 +117,15 @@ jobs:
         with:
           tag_name: android-tv-signage-latest
           name: Android TV Signage (latest)
-          files: android-tv-signage/app/build/outputs/apk/release/app-release.apk
+          files: |
+            android-tv-signage/app/build/outputs/apk/release/app-release.apk
+            android-tv-signage/app/build/outputs/apk/release/app-kiosk-release.apk
           prerelease: false
           make_latest: "true"
           body: |
             Build automático mais recente do app Android TV Signage.
-            Baixe sempre o `app-release.apk` deste release para ter a versão mais nova.
+            - `app-release.apk` — versão normal (Launcher + Leanback)
+            - `app-kiosk-release.apk` — versão kiosk (pode ser definida como Home/Launcher padrão)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -128,7 +135,9 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
           name: Android TV Signage ${{ github.event.inputs.release_tag }}
-          files: android-tv-signage/app/build/outputs/apk/release/app-release.apk
+          files: |
+            android-tv-signage/app/build/outputs/apk/release/app-release.apk
+            android-tv-signage/app/build/outputs/apk/release/app-kiosk-release.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
