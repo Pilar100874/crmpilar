@@ -243,6 +243,83 @@ export default function AdminApps() {
           </ol>
         </div>
       </Card>
+
+      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 sm:h-14 sm:w-14 sm:rounded-2xl">
+              <Monitor className="h-8 w-8" />
+            </div>
+            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
+              Linux · AppImage / ISO
+            </span>
+          </div>
+
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Linux) & Appliance</h2>
+          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
+            Mesma função do Coletor Windows, em <b>AppImage x64</b> (Debian, Ubuntu, Mint etc.).
+            Também disponível a <b>ISO do Appliance</b>: instala o Linux + Coletor em modo kiosk automaticamente
+            num mini-PC, com SSH e Cockpit para acesso remoto.
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
+                AppImage Linux x64
+              </span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Linux.AppImage</span>
+            </div>
+            <Button
+              onClick={() => baixar("ColetorPilar-Linux.AppImage", coletorLinuxAsset.url)}
+              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-amber-500 hover:bg-amber-400 text-white"
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar AppImage
+            </Button>
+          </div>
+
+          <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-dashed p-3 sm:flex-row sm:items-center sm:justify-between sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                ISO do Appliance (instala o sistema todo)
+              </span>
+              <span className="truncate font-mono text-xs text-foreground sm:text-sm">coletor-pilar-appliance-amd64.iso</span>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => baixar("coletor-pilar-appliance-amd64.iso", applianceIsoAsset.url)}
+              className="w-full flex-shrink-0 rounded-xl sm:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar ISO
+            </Button>
+          </div>
+        </CardContent>
+
+        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Como usar no Linux
+          </h3>
+          <ol className="space-y-4">
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Baixe o AppImage e dê permissão: <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">chmod +x ColetorPilar-Linux.AppImage</code>
+              </p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Execute <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">./ColetorPilar-Linux.AppImage</code> e faça login com sua conta do CRM.
+              </p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                No appliance (ISO), atualize a qualquer momento com <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">sudo /opt/coletor/update.sh</code>.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </Card>
     </div>
   );
 }
