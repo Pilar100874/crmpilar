@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, Plus, Pencil, Trash2, Loader2, MessageSquareText, Copy, AlertCircle } from "lucide-react";
+import { Sparkles, Plus, Pencil, Trash2, Loader2, MessageSquareText, Copy, AlertCircle, CheckSquare, Square } from "lucide-react";
 
 interface Grupo {
   id: string;
@@ -55,6 +56,8 @@ export default function MarketingMensagensGrupo() {
   const [showNew, setShowNew] = useState(false);
   const [newText, setNewText] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Frase | null>(null);
+  const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showGerar, setShowGerar] = useState(false);
   const [complemento, setComplemento] = useState("");
 
@@ -78,6 +81,7 @@ export default function MarketingMensagensGrupo() {
 
   useEffect(() => {
     if (!estabelecimentoId) return;
+    setSelectedIds(new Set());
     if (escopoPronto && activeTema) loadFrases();
     else setFrases([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,6 +209,35 @@ export default function MarketingMensagensGrupo() {
     toast.success("Copiado");
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(frases.map(f => f.id)));
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const excluirSelecionadas = async () => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from("mensagens_grupo_produto")
+      .delete()
+      .in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} ${ids.length === 1 ? "frase excluída" : "frases excluídas"}`);
+    setSelectedIds(new Set());
+    setDeleteSelectedOpen(false);
+    loadFrases();
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -288,19 +321,49 @@ export default function MarketingMensagensGrupo() {
 
       {escopoPronto && activeTema && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base flex items-center gap-2">
               Frases
               <Badge variant={frases.length >= 48 ? "destructive" : "secondary"}>{frases.length}/48</Badge>
             </CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowNew(true)}
-              disabled={frases.length >= 48}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Nova frase
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedIds.size > 0 && (
+                <>
+                  <span className="text-xs text-muted-foreground">{selectedIds.size} selecionada(s)</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={clearSelection}
+                  >
+                    Limpar seleção
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeleteSelectedOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" /> Excluir selecionadas
+                  </Button>
+                </>
+              )}
+              {frases.length > 0 && selectedIds.size === 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={selectAll}
+                >
+                  <CheckSquare className="h-4 w-4 mr-1" /> Selecionar todas
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowNew(true)}
+                disabled={frases.length >= 48}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Nova frase
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -332,29 +395,47 @@ export default function MarketingMensagensGrupo() {
                   </Alert>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {frases.map((f, i) => (
-                    <div
-                      key={f.id}
-                      className="group flex items-start gap-2 p-3 rounded-lg border bg-card hover:bg-accent/40 transition-colors"
-                    >
-                      <span className="text-xs font-mono text-muted-foreground w-6 pt-0.5">{i + 1}</span>
-                      <p className="flex-1 text-sm">{f.frase}</p>
-                      <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button size="icon" variant="ghost" className="h-7 w-7"
-                          onClick={() => copiar(f.frase)}>
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7"
-                          onClick={() => { setEditing(f); setEditText(f.frase); }}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"
-                          onClick={() => setDeleteTarget(f)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                  {frases.map((f, i) => {
+                    const isSelected = selectedIds.has(f.id);
+                    return (
+                      <div
+                        key={f.id}
+                        className={cn(
+                          "group flex items-start gap-2 p-3 rounded-lg border bg-card hover:bg-accent/40 transition-colors cursor-pointer",
+                          isSelected && "border-primary/50 bg-primary/5"
+                        )}
+                        onClick={() => toggleSelect(f.id)}
+                      >
+                        <button
+                          type="button"
+                          className="pt-0.5 text-muted-foreground hover:text-primary"
+                          onClick={(e) => { e.stopPropagation(); toggleSelect(f.id); }}
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-4 w-4 text-primary" />
+                          ) : (
+                            <Square className="h-4 w-4" />
+                          )}
+                        </button>
+                        <span className="text-xs font-mono text-muted-foreground w-6 pt-0.5">{i + 1}</span>
+                        <p className="flex-1 text-sm select-none">{f.frase}</p>
+                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-7 w-7"
+                            onClick={(e) => { e.stopPropagation(); copiar(f.frase); }}>
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7"
+                            onClick={(e) => { e.stopPropagation(); setEditing(f); setEditText(f.frase); }}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(f); }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -426,6 +507,14 @@ export default function MarketingMensagensGrupo() {
         onConfirm={excluir}
         title="Excluir frase?"
         description="Esta ação não pode ser desfeita."
+      />
+
+      <DeleteConfirmDialog
+        open={deleteSelectedOpen}
+        onOpenChange={setDeleteSelectedOpen}
+        onConfirm={excluirSelecionadas}
+        title="Excluir frases selecionadas?"
+        description={`Você selecionou ${selectedIds.size} ${selectedIds.size === 1 ? "frase" : "frases"}. Esta ação não pode ser desfeita.`}
       />
     </div>
   );
