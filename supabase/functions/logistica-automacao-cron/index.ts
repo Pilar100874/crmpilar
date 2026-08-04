@@ -491,12 +491,30 @@ async function processarEstabelecimento(estabelecimentoId: string) {
         return l ? `${msg}\n\n${TAG}: ${l}` : msg;
       };
 
+      if (tipo === "acao_relatorio_pdf") {
+        await obterRelatorioPdf();
+      }
+
       if (tipo === "acao_whatsapp") {
         const destino = config.destino_tipo || (config.usar_telefone_cliente ? "cliente" : "numero");
         const tpl = String(config.mensagem || "");
         const textoAntes = String(config.texto_antes || "").trim();
         const mediaUrl = String(config.media_url || "").trim() || undefined;
         const prefixo = (m: string) => (textoAntes ? `${textoAntes}\n\n${m}` : m);
+
+        // Anexar relatório PDF gerado (enviado por último, após o texto)
+        let pdfUrl: string | null = null;
+        if (config.anexar_relatorio) pdfUrl = await obterRelatorioPdf();
+        const enviarPdf = async (tel: string) => {
+          if (!pdfUrl) return;
+          await enviarWhatsapp({
+            estabelecimentoId,
+            telefone: tel,
+            mensagem: String(config.relatorio_legenda || "Relatório em anexo"),
+            mediaUrl: pdfUrl,
+            cfg: config,
+          });
+        };
 
         if (destino === "motorista_atual") {
           const map = await motoristasAtuais(veiculosAcao.map((v) => v.id));
@@ -508,6 +526,7 @@ async function processarEstabelecimento(estabelecimentoId: string) {
             if (!(await podeEnviar(`${node.id}:${tel}`))) continue;
             const mensagem = prefixo(comLoc(aplicarVars(tpl, v, mot?.nome || ""), v));
             await enviarWhatsapp({ estabelecimentoId, telefone: tel, mensagem, mediaUrl, cfg: config });
+            await enviarPdf(tel);
             disparos++;
           }
         } else {
@@ -526,6 +545,7 @@ async function processarEstabelecimento(estabelecimentoId: string) {
           for (const tel of lista) {
             if (!(await podeEnviar(`${node.id}:${tel}`))) continue;
             await enviarWhatsapp({ estabelecimentoId, telefone: tel, mensagem, mediaUrl, cfg: config });
+            await enviarPdf(tel);
             disparos++;
           }
           if (config.disparar_bot && config.bot_flow_id) {
@@ -538,6 +558,7 @@ async function processarEstabelecimento(estabelecimentoId: string) {
           }
         }
       }
+
 
       if (tipo === "acao_email") {
         const to = String(config.email_destino || "").trim();
