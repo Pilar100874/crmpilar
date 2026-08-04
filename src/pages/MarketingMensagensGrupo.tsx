@@ -322,12 +322,12 @@ export default function MarketingMensagensGrupo() {
                     </AlertDescription>
                   </Alert>
                 )}
-                {frases.length >= 8 && frases.length < 10 && (
+                {frases.length >= 40 && frases.length < 48 && (
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Limite próximo</AlertTitle>
                     <AlertDescription>
-                      Este tema permite até 48 frases. Restam {10 - frases.length} vagas.
+                      Este tema permite até 48 frases. Restam {48 - frases.length} vagas.
                     </AlertDescription>
                   </Alert>
                 )}
