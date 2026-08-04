@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -450,6 +453,13 @@ class SignageActivity : AppCompatActivity() {
         super.onDestroy()
         heartbeatJob?.cancel(); commandsJob?.cancel(); configJob?.cancel()
         ui.removeCallbacks(playlistRunnable)
+        ui.removeCallbacks(retryRunnable)
+        try {
+            netCallback?.let {
+                (getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
+                    .unregisterNetworkCallback(it)
+            }
+        } catch (_: Exception) {}
         try { wakeLock?.release() } catch (_: Exception) {}
     }
 }
