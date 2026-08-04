@@ -89,6 +89,47 @@ Suporte nativo implementado (v1.3.0):
 
 Na versão kiosk, após instalar: Configurações → Apps → Apps padrão → App de início → **Pilar Remotas**.
 
+### Validação do BootReceiver (LOCKED_BOOT_COMPLETED / QUICKBOOT_POWERON)
+
+Comportamento implementado:
+
+- Aceita `BOOT_COMPLETED`, `LOCKED_BOOT_COMPLETED`, `QUICKBOOT_POWERON` (+ variante HTC) e `REBOOT`.
+- Loga action, uptime, `UserManager.isUserUnlocked`, `KeyguardManager.isKeyguardLocked`, SDK e modelo.
+- Agenda a abertura da `MainActivity` em **8s** (janela alvo 5–10s).
+- Em direct boot (`LOCKED_BOOT_COMPLETED`), se o `startActivity` for bloqueado antes do desbloqueio, há **retry com backoff** (4s, 8s, 12s — até 4 tentativas).
+- **Anti-duplicidade**: quando chegam `LOCKED_BOOT_COMPLETED` e depois `BOOT_COMPLETED`, só o primeiro agenda a abertura (janela de 60s).
+- A `MainActivity` loga origem do boot, action, número da tentativa e se o device já está pareado.
+
+Fluxo de teste via ADB:
+
+```bash
+adb connect <ip-da-tv>:5555
+adb logcat -c
+adb logcat -s PilarBootReceiver PilarMainActivity &
+
+# 1) Direct boot (antes do desbloqueio)
+adb shell am broadcast -a android.intent.action.LOCKED_BOOT_COMPLETED -n br.com.pilar.tvsignage/.BootReceiver
+
+# 2) Boot rápido de TV Box
+adb shell am broadcast -a android.intent.action.QUICKBOOT_POWERON -n br.com.pilar.tvsignage/.BootReceiver
+
+# 3) Boot normal
+adb shell am broadcast -a android.intent.action.BOOT_COMPLETED -n br.com.pilar.tvsignage/.BootReceiver
+
+# 4) Reboot real do aparelho
+adb reboot
+```
+
+Critério de aceite: dentro de 5–10s após o broadcast deve aparecer no logcat
+`MainActivity aberta na tentativa N` seguido de `onCreate fromBoot=true`, e a activity em foco deve ser a do app:
+
+```bash
+adb shell dumpsys activity activities | grep -m1 ResumedActivity
+# esperado: br.com.pilar.tvsignage/.MainActivity (ou SignageActivity/PairingActivity logo em seguida)
+```
+
+Se o teste 1 (direct boot) registrar `startActivity falhou`, o retry deve abrir automaticamente após o desbloqueio — verifique a linha `MainActivity aberta na tentativa 2/3/4`.
+
 ### Dados do APK release assinado
 
 - **package name:** `br.com.pilar.tvsignage`
@@ -96,3 +137,4 @@ Na versão kiosk, após instalar: Configurações → Apps → Apps padrão → 
 - **versionCode:** `15`
 - **versionName:** `1.3.0` (kiosk: `1.3.0-kiosk`)
 - **assinatura:** keystore `pilar-release.keystore` (alias `pilar`, V1/V2/V3)
+
