@@ -454,6 +454,31 @@ async function processarEstabelecimento(estabelecimentoId: string) {
         .replace(/\{hora\}/gi, agoraLocal().toISOString().slice(11, 16));
     };
 
+    // Bloco "Gerar Relatório PDF" — gerado no máximo uma vez por ciclo
+    const relatorioNode = nodes.find((n: any) => n.data?.type === "acao_relatorio_pdf");
+    let relatorioUrl: string | null = null;
+    let relatorioGerado = false;
+    const obterRelatorioPdf = async (): Promise<string | null> => {
+      if (relatorioGerado) return relatorioUrl;
+      relatorioGerado = true;
+      if (!relatorioNode) return null;
+      try {
+        const rc = relatorioNode.data?.config || {};
+        const { data } = await invocar("logistica-relatorio-pdf", {
+          estabelecimento_id: estabelecimentoId,
+          periodo: rc.relatorio_periodo || "semanal",
+          limite_kmh: Number(rc.relatorio_limite_kmh) || 80,
+          titulo: rc.relatorio_titulo || undefined,
+          incluir_grafico: rc.relatorio_grafico !== false,
+        });
+        const json = JSON.parse(data || "{}");
+        relatorioUrl = json?.url || null;
+      } catch (e) {
+        console.error("[cron] falha ao gerar relatório PDF", e);
+      }
+      return relatorioUrl;
+    };
+
     for (const node of nodes) {
       const tipo = node.data?.type as string;
       const config = node.data?.config || {};
