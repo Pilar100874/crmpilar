@@ -11,13 +11,27 @@ android {
         applicationId = "br.com.pilar.tvsignage"
         minSdk = 24
         targetSdk = 34
-        versionCode = 14
-        versionName = "1.2.2"
+        versionCode = 15
+        versionName = "1.3.0"
 
 
         buildConfigField("String", "SUPABASE_URL", "\"https://ioxugupvxlcdweldocmq.supabase.co\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc\"")
         buildConfigField("String", "APP_BASE_URL", "\"https://crmpilar.lovable.app\"")
+    }
+
+    flavorDimensions += "modo"
+    productFlavors {
+        create("normal") {
+            dimension = "modo"
+            // APK padrão: LAUNCHER + LEANBACK_LAUNCHER (não vira Home)
+        }
+        create("kiosk") {
+            dimension = "modo"
+            // APK kiosk: pode ser definido como Launcher/Home padrão do Android
+            versionNameSuffix = "-kiosk"
+            resValue("string", "app_name_kiosk", "Pilar Remotas Kiosk")
+        }
     }
 
     signingConfigs {
