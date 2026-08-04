@@ -2,7 +2,9 @@
 // e devolve a URL pública do arquivo no storage.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsPDF } from "npm:jspdf@2.5.2";
-import autoTable from "npm:jspdf-autotable@3.8.4";
+import * as autoTableMod from "npm:jspdf-autotable@3.8.4";
+// interop: em Deno o módulo pode vir como namespace
+const autoTable: any = (autoTableMod as any).default ?? (autoTableMod as any).autoTable ?? autoTableMod;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
