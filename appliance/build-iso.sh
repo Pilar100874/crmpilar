@@ -4,8 +4,8 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-OUT="$HERE/out"
-WORK="$HERE/.work"
+OUT="${OUT:-$HERE/out}"
+WORK="${WORK:-$HERE/.work}"
 DEBIAN_ISO_URL="${DEBIAN_ISO_URL:-https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso}"
 COLETOR_URL="${COLETOR_URL:-https://crmpilar.lovable.app/coletor/ColetorPilar-Linux.AppImage}"
 
