@@ -105,8 +105,8 @@ export default function MarketingMensagensGrupo() {
       toast.error(escopo === "grupo" ? "Selecione um grupo e um tema" : "Selecione um tema");
       return;
     }
-    if (frases.length >= 10) {
-      toast.error("Limite de 10 frases por tema atingido. Exclua algumas para gerar novas.");
+    if (frases.length >= 48) {
+      toast.error("Limite de 48 frases por tema atingido. Exclua algumas para gerar novas.");
       return;
     }
     setComplemento("");
@@ -125,7 +125,7 @@ export default function MarketingMensagensGrupo() {
           grupo: escopo === "grupo" ? grupoAtual?.nome : undefined,
           descritivo: escopo === "grupo" ? (grupoAtual?.descritivo_catalogo || "") : "",
           tema: activeTema,
-          count: Math.max(1, 10 - frases.length),
+          count: Math.max(1, 48 - frases.length),
           complemento: complemento.trim() || undefined,
           existentes: frases.map(f => f.frase),
         },
@@ -157,8 +157,8 @@ export default function MarketingMensagensGrupo() {
   const salvarNova = async () => {
     if (!newText.trim() || !activeTema) return;
     if (escopo === "grupo" && !grupoId) return;
-    if (frases.length >= 10) {
-      toast.error("Limite de 10 frases por tema atingido. Exclua algumas para adicionar novas.");
+    if (frases.length >= 48) {
+      toast.error("Limite de 48 frases por tema atingido. Exclua algumas para adicionar novas.");
       return;
     }
     const { error } = await supabase.from("mensagens_grupo_produto").insert({
@@ -274,11 +274,11 @@ export default function MarketingMensagensGrupo() {
             <div className="flex items-end gap-2">
               <Button
                 onClick={abrirGerar}
-                disabled={!escopoPronto || !activeTema || generating || frases.length >= 10}
+                disabled={!escopoPronto || !activeTema || generating || frases.length >= 48}
                 className="w-full"
               >
                 {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                Gerar {Math.max(1, 10 - frases.length)} {Math.max(1, 10 - frases.length) === 1 ? "frase" : "frases"} com IA
+                Gerar {Math.max(1, 48 - frases.length)} {Math.max(1, 48 - frases.length) === 1 ? "frase" : "frases"} com IA
 
               </Button>
             </div>
@@ -291,13 +291,13 @@ export default function MarketingMensagensGrupo() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               Frases
-              <Badge variant={frases.length >= 10 ? "destructive" : "secondary"}>{frases.length}/10</Badge>
+              <Badge variant={frases.length >= 48 ? "destructive" : "secondary"}>{frases.length}/48</Badge>
             </CardTitle>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setShowNew(true)}
-              disabled={frases.length >= 10}
+              disabled={frases.length >= 48}
             >
               <Plus className="h-4 w-4 mr-1" /> Nova frase
             </Button>
@@ -309,25 +309,25 @@ export default function MarketingMensagensGrupo() {
               </div>
             ) : frases.length === 0 ? (
               <div className="text-center py-12 text-sm text-muted-foreground">
-                Nenhuma frase cadastrada. Gere 10 automaticamente com IA ou adicione manualmente.
+                Nenhuma frase cadastrada. Gere 48 automaticamente com IA ou adicione manualmente.
               </div>
             ) : (
               <div className="space-y-3">
-                {frases.length >= 10 && (
+                {frases.length >= 48 && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Limite atingido</AlertTitle>
                     <AlertDescription>
-                      Este tema já possui 10 frases. Exclua algumas para gerar ou adicionar novas.
+                      Este tema já possui 48 frases. Exclua algumas para gerar ou adicionar novas.
                     </AlertDescription>
                   </Alert>
                 )}
-                {frases.length >= 8 && frases.length < 10 && (
+                {frases.length >= 40 && frases.length < 48 && (
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Limite próximo</AlertTitle>
                     <AlertDescription>
-                      Este tema permite até 10 frases. Restam {10 - frases.length} vagas.
+                      Este tema permite até 48 frases. Restam {48 - frases.length} vagas.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -391,7 +391,7 @@ export default function MarketingMensagensGrupo() {
       <Dialog open={showGerar} onOpenChange={setShowGerar}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gerar {Math.max(1, 10 - frases.length)} {Math.max(1, 10 - frases.length) === 1 ? "frase" : "frases"} com IA</DialogTitle>
+            <DialogTitle>Gerar {Math.max(1, 48 - frases.length)} {Math.max(1, 48 - frases.length) === 1 ? "frase" : "frases"} com IA</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
@@ -414,7 +414,7 @@ export default function MarketingMensagensGrupo() {
             <Button variant="outline" onClick={() => setShowGerar(false)}>Cancelar</Button>
             <Button onClick={gerarComIA} disabled={generating}>
               {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              Gerar {Math.max(1, 10 - frases.length)} {Math.max(1, 10 - frases.length) === 1 ? "frase" : "frases"}
+              Gerar {Math.max(1, 48 - frases.length)} {Math.max(1, 48 - frases.length) === 1 ? "frase" : "frases"}
             </Button>
           </DialogFooter>
         </DialogContent>
