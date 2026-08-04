@@ -75,21 +75,29 @@ menuentry "Modo resgate (instalador manual)" {
 EOS
 fi
 
-echo "==> gerando ISO"
+echo "==> gerando ISO (BIOS + UEFI)"
 ISO="$OUT/coletor-pilar-appliance-amd64.iso"
 rm -f "$ISO"
-xorriso -as mkisofs \
-  -r -V "COLETOR_PILAR" \
-  -o "$ISO" \
-  -J -joliet-long \
-  -isohybrid-mbr "$WORK/iso/isolinux/isohdpfx.bin" \
-  -c isolinux/boot.cat -b isolinux/isolinux.bin \
-  -no-emul-boot -boot-load-size 4 -boot-info-table \
-  -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat \
-  "$WORK/iso" 2>/dev/null || \
+
+MBR=""
+for c in "$WORK/iso/isolinux/isohdpfx.bin" /usr/lib/ISOLINUX/isohdpfx.bin /usr/lib/syslinux/mbr/isohdpfx.bin; do
+  [ -f "$c" ] && MBR="$c" && break
+done
+
+ARGS=(-as mkisofs -r -V "COLETOR_PILAR" -o "$ISO" -J -joliet-long)
+[ -n "$MBR" ] && ARGS+=(-isohybrid-mbr "$MBR")
+ARGS+=(-c isolinux/boot.cat -b isolinux/isolinux.bin
+       -no-emul-boot -boot-load-size 4 -boot-info-table)
+if [ -f "$WORK/iso/boot/grub/efi.img" ]; then
+  ARGS+=(-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot)
+  [ -n "$MBR" ] && ARGS+=(-isohybrid-gpt-basdat)
+fi
+
+xorriso "${ARGS[@]}" "$WORK/iso" || \
 xorriso -as mkisofs -r -V "COLETOR_PILAR" -o "$ISO" -J -joliet-long \
   -c isolinux/boot.cat -b isolinux/isolinux.bin \
   -no-emul-boot -boot-load-size 4 -boot-info-table "$WORK/iso"
+
 
 echo
 echo "ISO pronta: $ISO"
