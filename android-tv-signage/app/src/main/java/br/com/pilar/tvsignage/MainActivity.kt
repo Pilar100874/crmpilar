@@ -29,10 +29,19 @@ class MainActivity : AppCompatActivity() {
         applyImmersive()
         setContentView(R.layout.activity_boot)
 
+        val fromBoot = intent?.getBooleanExtra(EXTRA_FROM_BOOT, false) == true
+        android.util.Log.i(
+            "PilarMainActivity",
+            "onCreate fromBoot=$fromBoot | bootAction=${intent?.getStringExtra(BootReceiver.EXTRA_BOOT_ACTION)} " +
+                "| tentativa=${intent?.getIntExtra(BootReceiver.EXTRA_BOOT_ATTEMPT, 0)} " +
+                "| uptime=${android.os.SystemClock.elapsedRealtime()}ms | pareado=${DeviceStore.isPaired(this)}"
+        )
+
         // Pequeno atraso: em TV Box (RK3528) o Wi-Fi ainda pode estar subindo logo após o boot.
-        val delay = if (intent?.getBooleanExtra(EXTRA_FROM_BOOT, false) == true) 3000L else 0L
+        val delay = if (fromBoot) 3000L else 0L
         ui.postDelayed({ route() }, delay)
     }
+
 
     private fun route() {
         val next = if (DeviceStore.isPaired(this)) SignageActivity::class.java else PairingActivity::class.java
