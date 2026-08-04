@@ -319,19 +319,49 @@ export default function MarketingMensagensGrupo() {
 
       {escopoPronto && activeTema && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base flex items-center gap-2">
               Frases
               <Badge variant={frases.length >= 48 ? "destructive" : "secondary"}>{frases.length}/48</Badge>
             </CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowNew(true)}
-              disabled={frases.length >= 48}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Nova frase
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedIds.size > 0 && (
+                <>
+                  <span className="text-xs text-muted-foreground">{selectedIds.size} selecionada(s)</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={clearSelection}
+                  >
+                    Limpar seleção
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeleteSelectedOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" /> Excluir selecionadas
+                  </Button>
+                </>
+              )}
+              {frases.length > 0 && selectedIds.size === 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={selectAll}
+                >
+                  <CheckSquare className="h-4 w-4 mr-1" /> Selecionar todas
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowNew(true)}
+                disabled={frases.length >= 48}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Nova frase
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
