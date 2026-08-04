@@ -55,6 +55,8 @@ export default function MarketingMensagensGrupo() {
   const [showNew, setShowNew] = useState(false);
   const [newText, setNewText] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Frase | null>(null);
+  const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showGerar, setShowGerar] = useState(false);
   const [complemento, setComplemento] = useState("");
 
