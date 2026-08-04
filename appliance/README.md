@@ -20,23 +20,35 @@ o **Coletor Pilar** num PC comum, com:
 └──────────────────────────────────┘
 ```
 
-## 1. Gerar a ISO
+## 0. ISO pronta para download
 
-Precisa de um Linux (Debian/Ubuntu) com `live-build`. Numa VM ou WSL2 serve.
+Já existe uma imagem gerada (Debian 12.11 + preseed + kiosk), 829 MB:
+
+**https://crmpilar.lovable.app/coletor/coletor-pilar-appliance-amd64.iso**
+
+Nessa build o binário do Coletor **não** vem embutido (o AppImage Linux ainda não
+está publicado no CRM). Após instalar, rode uma vez:
 
 ```bash
-sudo apt update
-sudo apt install -y live-build git curl xorriso
-
-cd appliance
-sudo ./build-iso.sh
+sudo COLETOR_URL="<url-do-AppImage>" /opt/coletor/update.sh
 ```
 
-Saída: `appliance/out/coletor-pilar-appliance-amd64.iso` (~1,2 GB).
+## 1. Gerar a ISO você mesmo (opcional)
 
-O script baixa o instalador `.deb`/AppImage do Coletor a partir do CRM
-(`COLETOR_URL`, editável no topo do `build-iso.sh`) e o embute na ISO,
-então a instalação **não precisa de internet** para o app — só para atualizações.
+Precisa de um Linux com `xorriso`, `curl` e `cpio`.
+
+```bash
+sudo apt update && sudo apt install -y xorriso curl cpio
+
+cd appliance
+sudo ./build-iso.sh          # WORK=/tmp/x OUT=/tmp/y para mudar os diretórios
+```
+
+Saída: `appliance/out/coletor-pilar-appliance-amd64.iso`.
+
+Quando `COLETOR_URL` apontar para um AppImage válido, o script o embute na ISO e a
+instalação **não precisa de internet** para o app — só para atualizações.
+
 
 ## 2. Gravar no pen drive
 
