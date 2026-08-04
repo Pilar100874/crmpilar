@@ -81,6 +81,7 @@ export default function MarketingMensagensGrupo() {
 
   useEffect(() => {
     if (!estabelecimentoId) return;
+    setSelectedIds(new Set());
     if (escopoPronto && activeTema) loadFrases();
     else setFrases([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
