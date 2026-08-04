@@ -507,6 +507,14 @@ export default function MarketingMensagensGrupo() {
         title="Excluir frase?"
         description="Esta ação não pode ser desfeita."
       />
+
+      <DeleteConfirmDialog
+        open={deleteSelectedOpen}
+        onOpenChange={setDeleteSelectedOpen}
+        onConfirm={excluirSelecionadas}
+        title="Excluir frases selecionadas?"
+        description={`Você selecionou ${selectedIds.size} ${selectedIds.size === 1 ? "frase" : "frases"}. Esta ação não pode ser desfeita.`}
+      />
     </div>
   );
 }
