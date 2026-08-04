@@ -21,11 +21,11 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
     const existentesArr: string[] = Array.isArray(existentes) ? existentes.slice(0, 100) : [];
-    const maxPermitido = 10;
+    const maxPermitido = 48;
     const vagas = Math.max(0, maxPermitido - existentesArr.length);
     const n = Math.max(0, Math.min(vagas, Math.min(50, Number(count) || 10)));
     if (n === 0) {
-      return new Response(JSON.stringify({ error: "Limite de 10 frases por tema atingido. Exclua algumas para gerar novas." }), {
+      return new Response(JSON.stringify({ error: "Limite de 48 frases por tema atingido. Exclua algumas para gerar novas." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
