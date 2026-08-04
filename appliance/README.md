@@ -20,18 +20,22 @@ o **Coletor Pilar** num PC comum, com:
 └──────────────────────────────────┘
 ```
 
-## 0. ISO pronta para download
+## 0. Downloads prontos
 
-Já existe uma imagem gerada (Debian 12.11 + preseed + kiosk), 829 MB:
+- **ISO do appliance** (Debian 12.11 + preseed + kiosk, 829 MB):
+  https://crmpilar.lovable.app/coletor/coletor-pilar-appliance-amd64.iso
+- **AppImage Linux do Coletor** (x64, 138 MB):
+  https://crmpilar.lovable.app/__l5e/assets-v1/13bc261c-f998-4cd2-9d73-3de090606255/ColetorPilar-Linux.AppImage
 
-**https://crmpilar.lovable.app/coletor/coletor-pilar-appliance-amd64.iso**
-
-Nessa build o binário do Coletor **não** vem embutido (o AppImage Linux ainda não
-está publicado no CRM). Após instalar, rode uma vez:
+A ISO atual foi gerada antes da publicação do AppImage, então após instalar rode uma vez:
 
 ```bash
-sudo COLETOR_URL="<url-do-AppImage>" /opt/coletor/update.sh
+sudo /opt/coletor/update.sh
 ```
+
+(o script já aponta para o AppImage publicado). Ao regerar a ISO com `build-iso.sh`,
+o AppImage passa a vir embutido e a instalação fica 100% offline.
+
 
 ## 1. Gerar a ISO você mesmo (opcional)
 
