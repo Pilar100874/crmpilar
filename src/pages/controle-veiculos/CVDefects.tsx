@@ -97,6 +97,9 @@ export default function CVDefects() {
     if (!editing) return;
     if (!formData.solution.trim()) return toast.error("Descreva a solução");
     if (!formData.resolvedBy.trim()) return toast.error("Informe o mecânico responsável");
+    if (!formData.dataBaixa) return toast.error("Informe a data da execução");
+    const kmBaixa = Number(formData.kmBaixa);
+    if (!kmBaixa || kmBaixa <= 0) return toast.error("Informe o KM do veículo na execução");
     if (formData.cost <= 0) return toast.error("Informe custo maior que zero");
     if (checklist.length > 0 && checklist.some((i) => i.feito === null || i.feito === undefined)) {
       return toast.error("Marque cada item do checklist como Feito ou Não feito");
@@ -117,16 +120,24 @@ export default function CVDefects() {
     }
 
     const resolvido = pendentes === 0;
-    const resolvedAt = new Date().toISOString();
+    const dataIso = new Date(`${formData.dataBaixa}T12:00:00`).toISOString();
     const { error } = await supabase.from("cv_defect_reports").update({
       solution: formData.solution,
       cost: formData.cost,
-      resolved_by: formData.resolvedBy,
+      resolved_by: formData.resolvedBy.toUpperCase(),
       validated_by: formData.validatedBy || null,
-      resolved_at: resolvido ? resolvedAt : null,
+      resolved_at: resolvido ? dataIso : null,
+      data_baixa: dataIso,
+      km_baixa: kmBaixa,
       status: resolvido ? "resolved" : "in_progress",
     }).eq("id", editing.id);
     if (error) return toast.error(error.message);
+
+    const veic = getVehicle(editing.vehicle_id);
+    if (veic && kmBaixa > (veic.current_km ?? 0)) {
+      await supabase.from("cv_vehicles").update({ current_km: kmBaixa }).eq("id", editing.vehicle_id);
+    }
+
     toast[resolvido ? "success" : "warning"](
       resolvido ? "Defeito resolvido!" : `${pendentes} item(ns) não feito(s) — ordem continua pendente`,
     );
@@ -135,6 +146,7 @@ export default function CVDefects() {
     setChecklist([]);
     loadAll();
   };
+
 
 
   const handleCreate = async () => {
