@@ -98,7 +98,7 @@ export default function CVVehicles() {
       veiculo_id: lv.id,
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
-      vehicle_type: TIPO_MAP[(lv.tipo_veiculo ?? "").toLowerCase()] ?? f.vehicle_type,
+      vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
     }));
   };
 
