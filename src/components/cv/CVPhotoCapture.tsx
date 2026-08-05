@@ -25,7 +25,12 @@ export interface CapturedPhoto {
   angle_key: string;
   angle_label: string;
   photo_url: string;
+  /** Texto livre escrito pelo usuário sobre a foto. */
+  caption?: string;
+  /** Foto extra adicionada manualmente (fora dos ângulos configurados). */
+  is_extra?: boolean;
 }
+
 
 interface AiFinding {
   has_changes: boolean;
