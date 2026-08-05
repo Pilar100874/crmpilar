@@ -343,9 +343,15 @@ export default function CVParadas() {
                           {i.pecas && <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {i.pecas}</p>}
                         </div>
                         <div className="flex shrink-0 gap-1">
+                          {i.atraso && (
+                            <Badge variant="outline" className="text-[10px] border-destructive/50 bg-destructive/10 text-destructive">
+                              <Clock className="h-3 w-3 mr-1" /> {i.atraso}
+                            </Badge>
+                          )}
                           <Badge variant="outline" className={`text-[10px] ${TIPO_TONE[i.tipo]}`}>{TIPO_LABEL[i.tipo]}</Badge>
                           <Badge variant="outline" className={`text-[10px] ${tonePrioridade[i.prioridade]}`}>{PRIORIDADE_LABEL[i.prioridade]}</Badge>
                         </div>
+
                       </div>
                     ))}
                   </div>
