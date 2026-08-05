@@ -83,6 +83,17 @@ export default function CVVehicles() {
   const [savingPlan, setSavingPlan] = useState(false);
   const [aplicarEm, setAplicarEm] = useState<string[]>([]);
 
+  // roteiro padrão: edição inline e inclusão de itens avulsos da biblioteca
+  const [rotEdit, setRotEdit] = useState<Record<string, { km: string; dias: string }>>({});
+  const [rotSalvando, setRotSalvando] = useState<string | null>(null);
+  const [catalogo, setCatalogo] = useState<CatalogItem[]>([]);
+  const [addItensOpen, setAddItensOpen] = useState(false);
+  const [addItensSel, setAddItensSel] = useState<string[]>([]);
+  const [addItensSalvando, setAddItensSalvando] = useState(false);
+  const [addItensTipo, setAddItensTipo] = useState<string>("__todos__");
+
+
+
   // histórico de manutenções executadas
   const [histVehicle, setHistVehicle] = useState<Vehicle | null>(null);
   const [histRows, setHistRows] = useState<any[]>([]);
