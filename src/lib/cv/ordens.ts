@@ -18,10 +18,24 @@ export const PRIORIDADE_LABEL: Record<Prioridade, string> = {
 
 export const PESO: Record<Prioridade, number> = { quebra: 0, preventiva: 1, aguardar: 2 };
 
+/** Natureza do serviço: manutenção programada (plano) ou defeito/avaria reportado. */
+export type TipoServico = "manutencao" | "defeito";
+
+export const TIPO_LABEL: Record<TipoServico, string> = {
+  manutencao: "MANUTENÇÃO",
+  defeito: "DEFEITO",
+};
+
+export const TIPO_TONE: Record<TipoServico, string> = {
+  manutencao: "border-primary/50 bg-primary/10 text-primary",
+  defeito: "border-destructive/50 bg-destructive/10 text-destructive",
+};
+
 export interface ItemParada {
   /** id do item de checklist (quando a ordem tem checklist) ou da própria ordem */
   id: string;
   origem: "checklist" | "ordem";
+  tipo: TipoServico;
   ordemId: string;
   planId: string | null;
   descricao: string;
@@ -37,10 +51,13 @@ export interface ParadaVeiculo {
   /** preventivas vencidas/próximas que ainda não viraram ordem */
   alertasSemOrdem: AlertaManutencao[];
   pecas: string[];
+  totalManutencao: number;
+  totalDefeito: number;
 }
 
 const norm = (p: any): Prioridade =>
   p === "quebra" || p === "aguardar" ? p : "preventiva";
+
 
 /** Carrega, por veículo, tudo que está pendente de manutenção — já ordenado por prioridade. */
 export async function carregarParadas(): Promise<ParadaVeiculo[]> {
