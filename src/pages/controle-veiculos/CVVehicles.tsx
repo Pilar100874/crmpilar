@@ -723,7 +723,7 @@ export default function CVVehicles() {
             ))}
 
             <div className="rounded-lg border-2 border-dashed p-3 space-y-3">
-              <p className="text-sm font-semibold">{planEditing ? "Editar item adicional" : "Novo item adicional de manutenção fora da lista padrão"}</p>
+              <p className="text-sm font-semibold">{planEditing ? "Editar item de manutenção" : "Incluir item de manutenção (ex.: TROCA DE ÓLEO)"}</p>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div><Label>Serviço</Label><Input placeholder="Ex.: TROCA DE ÓLEO" value={planForm.name} onChange={e => setPlanForm({ ...planForm, name: e.target.value.toUpperCase() })} /></div>
