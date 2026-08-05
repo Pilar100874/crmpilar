@@ -240,7 +240,15 @@ export default function CVVehicleExit() {
                     const al = alertas[v.id] ?? [];
                     const venc = al.some((a) => a.vencido);
                     return (
-                      <button key={v.id} type="button" onClick={() => { setForm({ ...form, vehicle_id: v.id }); if (al.length) setPopupVeiculo(v.id); }}
+                      <button key={v.id} type="button" onClick={() => {
+                          setForm({ ...form, vehicle_id: v.id });
+                          if (al.length && !geradosRef.current.has(v.id)) {
+                            geradosRef.current.add(v.id);
+                            gerarOrdemAgrupada({ vehicleId: v.id, alertas: al, vehicleKm: v.current_km })
+                              .then((r) => { if (r.criado) toast.success(`Ordem de manutenção gerada automaticamente (${r.itens} item(ns))`); })
+                              .catch(() => {});
+                          }
+                        }}
                         className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                           active ? "border-primary bg-primary/5 shadow-md"
                             : venc ? "border-destructive bg-destructive/5"
