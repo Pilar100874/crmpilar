@@ -17,6 +17,7 @@ export interface CatalogItem {
   criticidade: string;
   fabricante: string | null;
   observacoes: string | null;
+  pecas: string | null;
   no_roteiro: boolean;
   ativo: boolean;
 }
@@ -73,6 +74,7 @@ export async function adicionarItensRoteiro(
     last_done_at: new Date().toISOString(),
     alert_km_antecedencia: i.tol_principal ?? 0,
     alert_days_antecedencia: i.tol_days ?? 0,
+    pecas: i.pecas ?? null,
     active: true,
   }));
   const { error } = await supabase.from("cv_maintenance_plans").insert(registros as any);
@@ -134,6 +136,7 @@ export async function sincronizarRoteiro(vehicle: {
       last_done_at: new Date().toISOString(),
       alert_km_antecedencia: i.tol_principal ?? 0,
       alert_days_antecedencia: i.tol_days ?? 0,
+      pecas: i.pecas ?? null,
       active: true,
     }));
     const { error } = await supabase.from("cv_maintenance_plans").insert(registros as any);
