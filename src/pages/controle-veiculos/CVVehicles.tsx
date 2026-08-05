@@ -24,10 +24,19 @@ const TYPES: { value: VehicleType; label: string }[] = [
   { value: "outro", label: "Outro" },
 ];
 
-const TIPO_MAP: Record<string, VehicleType> = {
-  carro: "carro", vuc: "vuc", truck: "truck", caminhao: "truck",
-  "caminhão": "truck", carreta: "carreta", moto: "outro", pessoa: "outro",
-};
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/** Converte o tipo do cadastro de Logística para o tipo usado no Controle de Veículos. */
+function mapTipo(tipo?: string | null): VehicleType | null {
+  const t = norm(tipo ?? "");
+  if (!t) return null;
+  if (t.includes("carreta") || t.includes("bitrem") || t.includes("cavalo")) return "carreta";
+  if (t.includes("vuc")) return "vuc";
+  if (t.includes("truck") || t.includes("caminhao") || t.includes("pesado") || t.includes("toco")) return "truck";
+  if (t.includes("carro") || t.includes("passeio") || t.includes("utilitario")) return "carro";
+  return "outro";
+}
 
 const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
