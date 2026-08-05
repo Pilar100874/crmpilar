@@ -68,6 +68,58 @@ export function avaliarPlano(plan: MaintenancePlan, currentKm: number): Omit<Ale
   return { plan, vencido, proximo: proximo && !vencido, detalhe: partes.join(" · ") };
 }
 
+export interface AtrasoPlano {
+  /** true quando já passou do vencimento */
+  atrasado: boolean;
+  /** km rodados além do alvo (apenas planos por km) */
+  kmAtraso: number | null;
+  /** dias além do alvo (apenas planos por dias) */
+  diasAtraso: number | null;
+  /** texto pronto: "Atrasado 1.200 km" / "Atrasado 15 dia(s)" / "" */
+  label: string;
+}
+
+/** Calcula o atraso de um plano: em KM quando controlado por KM, em dias quando por dias. */
+export function calcularAtraso(plan: MaintenancePlan, currentKm: number): AtrasoPlano {
+  let kmAtraso: number | null = null;
+  let diasAtraso: number | null = null;
+
+  if ((plan.tipo === "km" || plan.tipo === "ambos") && plan.interval_km) {
+    const excedente = (currentKm ?? 0) - (plan.last_done_km + plan.interval_km);
+    if (excedente > 0) kmAtraso = excedente;
+  }
+  if ((plan.tipo === "dias" || plan.tipo === "ambos") && plan.interval_days) {
+    const alvo = new Date(plan.last_done_at);
+    alvo.setDate(alvo.getDate() + plan.interval_days);
+    const excedente = dias(new Date(), alvo);
+    if (excedente > 0) diasAtraso = excedente;
+  }
+
+  const partes: string[] = [];
+  if (kmAtraso != null) partes.push(`${kmAtraso.toLocaleString("pt-BR")} km`);
+  if (diasAtraso != null) partes.push(`${diasAtraso} dia(s)`);
+
+  return {
+    atrasado: partes.length > 0,
+    kmAtraso,
+    diasAtraso,
+    label: partes.length ? `Atrasado ${partes.join(" · ")}` : "",
+  };
+}
+
+/** Carrega os planos ativos dos veículos informados, indexados por id do plano. */
+export async function carregarPlanosPorId(vehicleIds: string[]): Promise<Record<string, MaintenancePlan>> {
+  if (!vehicleIds.length) return {};
+  const { data } = await supabase
+    .from("cv_maintenance_plans")
+    .select("*")
+    .in("vehicle_id", vehicleIds);
+  const out: Record<string, MaintenancePlan> = {};
+  ((data ?? []) as any as MaintenancePlan[]).forEach((p) => { out[p.id] = p; });
+  return out;
+}
+
+
 /** Carrega planos + defeitos abertos e retorna somente os alertas (vencidos/próximos) por veículo. */
 export async function carregarAlertasManutencao(
   vehicles: { id: string; current_km: number }[],
