@@ -8,8 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search,
+  Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
 } from "lucide-react";
+import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import {
   carregarParadas, consolidarParada, darBaixaParada, imprimirFicha,
@@ -33,6 +34,34 @@ export default function CVParadas() {
   const [marcados, setMarcados] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({ km: "", data: "", responsavel: "", custo: "" });
   const [salvando, setSalvando] = useState(false);
+
+  const hoje = new Date();
+  const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const [expOpen, setExpOpen] = useState(false);
+  const [expGerando, setExpGerando] = useState(false);
+  const [exp, setExp] = useState({
+    inicio: primeiroDia.toISOString().slice(0, 10),
+    fim: hoje.toISOString().slice(0, 10),
+    veiculo: "todos",
+    incluirPendentes: true,
+  });
+
+  const exportarPdf = async () => {
+    if (!exp.inicio || !exp.fim) return toast.error("Informe o período");
+    if (exp.inicio > exp.fim) return toast.error("Data inicial maior que a final");
+    setExpGerando(true);
+    try {
+      const r = await gerarRelatorioParadasPdf({
+        inicio: exp.inicio,
+        fim: exp.fim,
+        vehicleIds: exp.veiculo === "todos" ? [] : [exp.veiculo],
+        incluirPendentes: exp.incluirPendentes,
+      });
+      toast.success(`PDF gerado: ${r.ordens} ordem(ns) em ${r.veiculos} veículo(s)`);
+      setExpOpen(false);
+    } catch (e: any) { toast.error(e?.message ?? "Erro ao gerar PDF"); }
+    setExpGerando(false);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -108,6 +137,11 @@ export default function CVParadas() {
         icon={Wrench}
         title="Paradas de Manutenção"
         subtitle={`${paradas.length} veículo(s) com pendências • ${totalItens} serviço(s)`}
+        actions={
+          <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
+            <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
+          </Button>
+        }
       />
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
@@ -154,6 +188,9 @@ export default function CVParadas() {
                       Agrupar {p.alertasSemOrdem.length} preventiva(s)
                     </Button>
                   )}
+                  <Button size="sm" variant="ghost" onClick={() => { setExp(v => ({ ...v, veiculo: p.vehicle.id })); setExpOpen(true); }}>
+                    <FileDown className="h-4 w-4 mr-1" /> PDF
+                  </Button>
                   <Button size="sm" variant="outline" disabled={!p.itens.length} onClick={() => imprimirFicha(p)}>
                     <Printer className="h-4 w-4 mr-1" /> Imprimir ficha
                   </Button>
@@ -226,6 +263,58 @@ export default function CVParadas() {
             <Button variant="outline" onClick={() => setBaixa(null)}>Cancelar</Button>
             <Button onClick={confirmarBaixa} disabled={salvando}>
               {salvando && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Confirmar baixa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={expOpen} onOpenChange={setExpOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FileDown className="h-4 w-4" /> Exportar relatório de paradas</DialogTitle>
+            <DialogDescription>
+              Gera um PDF com as ordens, o checklist executado/pendente e as peças/insumos, por veículo e período.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Veículo</Label>
+              <select
+                className="mt-1 w-full h-10 rounded-md border bg-background px-3 text-sm"
+                value={exp.veiculo}
+                onChange={e => setExp(v => ({ ...v, veiculo: e.target.value }))}
+              >
+                <option value="todos">Todos os veículos</option>
+                {paradas.map(p => (
+                  <option key={p.vehicle.id} value={p.vehicle.id}>
+                    {p.vehicle.name} — {p.vehicle.plate}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data inicial</Label>
+                <Input type="date" value={exp.inicio} onChange={e => setExp(v => ({ ...v, inicio: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Data final</Label>
+                <Input type="date" value={exp.fim} onChange={e => setExp(v => ({ ...v, fim: e.target.value }))} />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={exp.incluirPendentes}
+                onCheckedChange={c => setExp(v => ({ ...v, incluirPendentes: c === true }))}
+              />
+              Incluir ordens ainda pendentes (mesmo fora do período)
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExpOpen(false)}>Cancelar</Button>
+            <Button onClick={exportarPdf} disabled={expGerando}>
+              {expGerando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileDown className="h-4 w-4 mr-1" />}
+              Gerar PDF
             </Button>
           </DialogFooter>
         </DialogContent>
