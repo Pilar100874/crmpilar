@@ -258,23 +258,12 @@ export default function CVVehicles() {
                     <span className="text-muted-foreground flex items-center gap-1"><Gauge className="h-4 w-4" />KM Atual</span>
                     <span className="font-semibold text-primary">{v.current_km.toLocaleString()} km</span>
                   </div>
-                  <div className="space-y-1.5 pt-2 border-t">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1"><Droplets className="h-4 w-4" />Troca de Óleo</span>
-                      {overdue ? (
-                        <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Vencida</Badge>
-                      ) : near ? (
-                        <Badge variant="outline" className="gap-1 border-amber-500 text-amber-500"><AlertTriangle className="h-3 w-3" />Próxima</Badge>
-                      ) : (
-                        <Badge variant="outline" className="gap-1 border-emerald-500 text-emerald-500"><CheckCircle className="h-3 w-3" />Em dia</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {overdue
-                        ? <span className="text-destructive">Atrasada em {Math.abs(km).toLocaleString()} km</span>
-                        : <>Próxima em {km.toLocaleString()} km ({v.next_oil_change_km.toLocaleString()} km)</>}
-                    </p>
+                  <div className="pt-2 border-t">
+                    <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={() => abrirHistorico(v)}>
+                      <History className="h-3.5 w-3.5 mr-1" /> Últimas manutenções
+                    </Button>
                   </div>
+
                   <CVMaintenanceAlert alertas={alertas[v.id] ?? []} onGerado={load} />
                   {!v.active && <Badge variant="secondary" className="w-full justify-center">Inativo</Badge>}
                 </CardContent>
