@@ -177,10 +177,14 @@ export default function CVParadas() {
           <Card key={p.vehicle.id} className={`border-l-4 ${p.prioridade === "quebra" ? "border-l-destructive" : p.prioridade === "preventiva" ? "border-l-primary" : "border-l-muted-foreground/40"}`}>
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base flex items-center gap-2 min-w-0">
+                <CardTitle
+                  className="text-base flex items-center gap-2 min-w-0 cursor-pointer hover:underline"
+                  onClick={() => setDetalhe(p)}
+                >
                   <span className="truncate">{p.vehicle.name} — {p.vehicle.plate}</span>
                   <Badge variant="outline" className={tonePrioridade[p.prioridade]}>{PRIORIDADE_LABEL[p.prioridade]}</Badge>
                 </CardTitle>
+
                 <div className="flex flex-wrap gap-2">
                   {!!p.alertasSemOrdem.length && (
                     <Button size="sm" variant="secondary" disabled={busy === p.vehicle.id} onClick={() => agrupar(p)}>
