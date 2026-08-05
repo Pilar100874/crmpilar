@@ -283,17 +283,14 @@ export default function CVVehicles() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">O nome e a placa são preenchidos a partir do cadastro de Logística.</p>
+              <p className="text-xs text-muted-foreground mt-1">Nome, placa e tipo vêm direto do cadastro de Logística.</p>
             </div>
-            <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })} /></div>
+            <div><Label>Nome</Label><Input value={form.name} readOnly className="bg-muted" /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Placa</Label><Input value={form.plate} readOnly className="bg-muted font-mono" /></div>
               <div>
                 <Label>Tipo</Label>
-                <Select value={form.vehicle_type} onValueChange={v => setForm({ ...form, vehicle_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                </Select>
+                <Input value={TYPES.find(t => t.value === form.vehicle_type)?.label ?? ""} readOnly className="bg-muted" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
