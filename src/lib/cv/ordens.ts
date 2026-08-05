@@ -86,18 +86,20 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
     const itens: ItemParada[] = [];
     for (const o of minhas) {
       const prioridade = norm(o.prioridade);
+      const tipoOrdem: TipoServico = o.maintenance_plan_id ? "manutencao" : "defeito";
       const chk = (checklists[o.id] ?? []) as ChecklistItem[];
       if (chk.length) {
         chk.forEach(c =>
           itens.push({
-            id: c.id, origem: "checklist", ordemId: o.id, planId: c.plan_id,
+            id: c.id, origem: "checklist", tipo: c.plan_id ? "manutencao" : tipoOrdem,
+            ordemId: o.id, planId: c.plan_id,
             descricao: c.descricao, pecas: (c as any).pecas ?? null,
             prioridade, feito: c.feito ?? null,
           }),
         );
       } else {
         itens.push({
-          id: o.id, origem: "ordem", ordemId: o.id, planId: o.maintenance_plan_id ?? null,
+          id: o.id, origem: "ordem", tipo: tipoOrdem, ordemId: o.id, planId: o.maintenance_plan_id ?? null,
           descricao: o.defect_description, pecas: o.pecas ?? null,
           prioridade, feito: null,
         });
@@ -120,7 +122,12 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
       ),
     );
 
-    return { vehicle: v, prioridade, itens, alertasSemOrdem, pecas };
+    return {
+      vehicle: v, prioridade, itens, alertasSemOrdem, pecas,
+      totalManutencao: itens.filter(i => i.tipo === "manutencao").length,
+      totalDefeito: itens.filter(i => i.tipo === "defeito").length,
+    };
+
   }).filter(p => p.itens.length > 0 || p.alertasSemOrdem.length > 0);
 
   paradas.sort((a, b) => PESO[a.prioridade] - PESO[b.prioridade] || b.itens.length - a.itens.length);
