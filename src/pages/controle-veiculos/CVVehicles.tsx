@@ -132,7 +132,7 @@ export default function CVVehicles() {
 
   // ---- planos de manutenção ----
   const abrirPlanos = async (v: Vehicle) => {
-    setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null);
+    setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null); setAplicarEm([]);
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", v.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
   };
@@ -147,9 +147,7 @@ export default function CVVehicles() {
     if ((planForm.tipo === "km" || planForm.tipo === "ambos") && !Number(planForm.interval_km)) return toast.error("Informe o intervalo em KM");
     if ((planForm.tipo === "dias" || planForm.tipo === "ambos") && !Number(planForm.interval_days)) return toast.error("Informe o intervalo em dias");
     setSavingPlan(true);
-    const payload: any = {
-      vehicle_id: planVehicle.id,
-      estabelecimento_id: planVehicle.estabelecimento_id,
+    const base: any = {
       name: String(planForm.name).toUpperCase(),
       tipo: planForm.tipo,
       interval_km: planForm.tipo === "dias" ? null : Number(planForm.interval_km),
@@ -160,13 +158,29 @@ export default function CVVehicles() {
       alert_days_antecedencia: Number(planForm.alert_days_antecedencia) || 0,
       active: planForm.active,
     };
-    const { error } = planEditing
-      ? await supabase.from("cv_maintenance_plans").update(payload).eq("id", planEditing)
-      : await supabase.from("cv_maintenance_plans").insert(payload);
+
+    let error: any = null;
+    if (planEditing) {
+      ({ error } = await supabase.from("cv_maintenance_plans").update({
+        ...base, vehicle_id: planVehicle.id, estabelecimento_id: planVehicle.estabelecimento_id,
+      }).eq("id", planEditing));
+    } else {
+      const alvos = [planVehicle, ...rows.filter(r => aplicarEm.includes(r.id))];
+      const registros = alvos.map(v => ({
+        ...base,
+        vehicle_id: v.id,
+        estabelecimento_id: v.estabelecimento_id,
+        // ao replicar, usa o KM atual de cada veículo como referência inicial
+        last_done_km: v.id === planVehicle.id ? base.last_done_km : v.current_km,
+      }));
+      ({ error } = await supabase.from("cv_maintenance_plans").insert(registros));
+    }
     setSavingPlan(false);
     if (error) return toast.error(error.message);
-    toast.success("Plano salvo");
-    setPlanForm({ ...planoVazio, last_done_km: planVehicle.current_km }); setPlanEditing(null);
+    toast.success(
+      planEditing ? "Plano salvo" : `Plano criado em ${1 + aplicarEm.length} veículo(s)`,
+    );
+    setPlanForm({ ...planoVazio, last_done_km: planVehicle.current_km }); setPlanEditing(null); setAplicarEm([]);
     recarregarPlanos(); load();
   };
   const excluirPlano = async (id: string) => {
