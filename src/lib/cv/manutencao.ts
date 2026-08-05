@@ -191,6 +191,9 @@ export async function gerarOrdemAgrupada(params: {
       defect_description: `MANUTENÇÃO PREVENTIVA (${pendentes.length} item(ns) do roteiro)`,
       reported_by: params.reportedBy ?? "Sistema (roteiro de manutenção)",
       status: "pending",
+      prioridade: "preventiva",
+      agrupavel: true,
+      pecas: Array.from(new Set(pendentes.map(a => a.plan.pecas).filter(Boolean))).join("; ") || null,
     } as any)
     .select("id")
     .single();
@@ -201,6 +204,7 @@ export async function gerarOrdemAgrupada(params: {
     defect_report_id: data.id,
     plan_id: a.plan.id,
     descricao: `${a.plan.name} (${a.detalhe})`,
+    pecas: a.plan.pecas ?? null,
     ordem: idx,
   }));
   const { error: e2 } = await supabase.from("cv_maintenance_checklist").insert(itens as any);
