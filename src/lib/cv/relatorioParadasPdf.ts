@@ -128,6 +128,12 @@ export async function gerarRelatorioParadasPdf(filtro: FiltroRelatorioParadas) {
 
     const linhas: any[] = [];
     const pecasVeiculo = new Set<string>();
+    const atrasoDe = (planId?: string | null) => {
+      const plan = planId ? planos[planId] : null;
+      if (!plan) return "—";
+      const a = calcularAtraso(plan, v.current_km ?? 0);
+      return a.atrasado ? a.label.replace("Atrasado ", "") : "Em dia";
+    };
 
     for (const o of minhas) {
       totalOrdens++;
@@ -140,6 +146,7 @@ export async function gerarRelatorioParadasPdf(filtro: FiltroRelatorioParadas) {
       linhas.push([
         dt(o.reported_at),
         o.defect_description ?? "—",
+        o.status === "resolved" ? "—" : atrasoDe(o.maintenance_plan_id),
         PRIORIDADE_LABEL[prio(o.prioridade)],
         situacao,
         `${dt(o.data_baixa || o.resolved_at)}\n${km(o.km_baixa ?? o.vehicle_km)} km`,
@@ -155,6 +162,7 @@ export async function gerarRelatorioParadasPdf(filtro: FiltroRelatorioParadas) {
         linhas.push([
           "",
           `    ${feito ? "[X]" : "[  ]"} ${c.descricao}${p ? `  (${p})` : ""}${c.observacao ? `\n        Obs.: ${c.observacao}` : ""}`,
+          feito ? "—" : atrasoDe((c as any).plan_id),
           "",
           feito ? "FEITO" : "PENDENTE",
           dt(c.done_at),
@@ -166,26 +174,32 @@ export async function gerarRelatorioParadasPdf(filtro: FiltroRelatorioParadas) {
     autoTable(doc, {
       startY: y + 2,
       margin: { left: margem, right: margem },
-      head: [["Aberta em", "Serviço / Checklist", "Prioridade", "Situação", "Baixa (data/KM)", "Responsável"]],
+      head: [["Aberta em", "Serviço / Checklist", "Atraso", "Prioridade", "Situação", "Baixa (data/KM)", "Responsável"]],
       body: linhas,
       styles: { fontSize: 7.5, cellPadding: 1.5, valign: "middle" },
       headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 7.5 },
       columnStyles: {
-        0: { cellWidth: 18 },
-        1: { cellWidth: 78 },
+        0: { cellWidth: 16 },
+        1: { cellWidth: 62 },
         2: { cellWidth: 22 },
         3: { cellWidth: 20 },
-        4: { cellWidth: 24 },
+        4: { cellWidth: 18 },
         5: { cellWidth: 24 },
+        6: { cellWidth: 24 },
       },
       didParseCell: (d) => {
         const txt = String(d.cell.raw ?? "");
-        if (d.section === "body" && d.column.index === 3) {
+        if (d.section === "body" && d.column.index === 4) {
           if (txt === "PENDENTE") d.cell.styles.textColor = [180, 83, 9];
           if (txt === "FEITO" || txt === "CONCLUÍDA") d.cell.styles.textColor = [21, 128, 61];
         }
+        if (d.section === "body" && d.column.index === 2) {
+          if (txt.includes("km") || txt.includes("dia")) d.cell.styles.textColor = [190, 18, 60];
+          if (txt === "Em dia") d.cell.styles.textColor = [21, 128, 61];
+        }
       },
     });
+
     y = (doc as any).lastAutoTable.finalY + 4;
 
     if (pecasVeiculo.size) {
