@@ -15,6 +15,8 @@ export interface MaintenancePlan {
   alert_km_antecedencia: number;
   alert_days_antecedencia: number;
   active: boolean;
+  /** Peças/insumos necessários (ex.: filtro de óleo, óleo 15W40) */
+  pecas?: string | null;
 }
 
 export interface AlertaManutencao {
