@@ -310,6 +310,7 @@ export default function CVVehicleEntry() {
                   min={(selected.exit_km ?? 0) + 1}
                   value={form.entry_km}
                   onChange={(e) => setForm({ ...form, entry_km: +e.target.value })}
+                  onBlur={(e) => recalcSelected(+e.target.value)}
                   className={form.entry_km <= (selected.exit_km ?? 0) ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
