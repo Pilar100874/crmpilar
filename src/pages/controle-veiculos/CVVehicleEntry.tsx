@@ -83,7 +83,20 @@ export default function CVVehicleEntry() {
     });
     setPhotos([]);
     setStep(1);
-    if ((alertas[move.vehicle_id]?.length ?? 0) > 0) setPopupMove(move);
+
+    const al = alertas[move.vehicle_id] ?? [];
+    if (al.length && !geradosRef.current.has(move.id)) {
+      geradosRef.current.add(move.id);
+      gerarOrdemAgrupada({
+        vehicleId: move.vehicle_id,
+        alertas: al,
+        driverId: move.driver_id ?? null,
+        movementId: move.id ?? null,
+        vehicleKm: move.vehicle?.current_km ?? null,
+      })
+        .then((r) => { if (r.criado) toast.success(`Ordem de manutenção gerada automaticamente (${r.itens} item(ns))`); })
+        .catch(() => {});
+    }
   };
 
 
