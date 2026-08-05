@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge,
-  ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2,
+  ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2, X, Filter,
 } from "lucide-react";
 
 import { CVPageHeader } from "./CVPageHeader";
@@ -75,15 +75,33 @@ export default function CVVehicles() {
   const [histVehicle, setHistVehicle] = useState<Vehicle | null>(null);
   const [histRows, setHistRows] = useState<any[]>([]);
   const [histLoading, setHistLoading] = useState(false);
+  const [histFiltroTexto, setHistFiltroTexto] = useState("");
+  const [histFiltroTipo, setHistFiltroTipo] = useState<"todos" | PlanoTipo>("todos");
+  const [histFiltroDataInicio, setHistFiltroDataInicio] = useState("");
+  const [histFiltroDataFim, setHistFiltroDataFim] = useState("");
+  const [histFiltroKmMin, setHistFiltroKmMin] = useState("");
+  const [histFiltroKmMax, setHistFiltroKmMax] = useState("");
+
+  const limparFiltrosHistorico = () => {
+    setHistFiltroTexto("");
+    setHistFiltroTipo("todos");
+    setHistFiltroDataInicio("");
+    setHistFiltroDataFim("");
+    setHistFiltroKmMin("");
+    setHistFiltroKmMax("");
+  };
 
   const abrirHistorico = async (v: Vehicle) => {
-    setHistVehicle(v); setHistRows([]); setHistLoading(true);
+    setHistVehicle(v);
+    limparFiltrosHistorico();
+    setHistRows([]);
+    setHistLoading(true);
     const { data } = await supabase
       .from("cv_defect_reports")
-      .select("id, defect_description, solution, cost, reported_at, resolved_at, resolved_by, status, maintenance_plan_id")
+      .select("id, defect_description, solution, cost, reported_at, resolved_at, resolved_by, status, maintenance_plan_id, vehicle_km, maintenance_plan:cv_maintenance_plans!maintenance_plan_id(name, tipo)")
       .eq("vehicle_id", v.id)
       .order("resolved_at", { ascending: false, nullsFirst: false })
-      .limit(100);
+      .limit(200);
     setHistRows(data ?? []);
     setHistLoading(false);
   };
@@ -226,6 +244,21 @@ export default function CVVehicles() {
   const jaVinculados = new Set(rows.filter(r => r.id !== editing).map(r => (r as any).veiculo_id).filter(Boolean));
   const opcoesLogistica = logVeiculos.filter(lv => !jaVinculados.has(lv.id));
 
+  const histRowsFiltrados = histRows.filter(h => {
+    const plan: any = h.maintenance_plan;
+    const texto = (h.defect_description + " " + (h.solution ?? "") + " " + (plan?.name ?? "")).toLowerCase();
+    const matchTexto = !histFiltroTexto || texto.includes(histFiltroTexto.toLowerCase());
+    const matchTipo = histFiltroTipo === "todos" || plan?.tipo === histFiltroTipo;
+    const dataRef = h.resolved_at || h.reported_at;
+    const matchData = (!histFiltroDataInicio || (dataRef && new Date(dataRef) >= new Date(histFiltroDataInicio + "T00:00:00"))) &&
+                      (!histFiltroDataFim || (dataRef && new Date(dataRef) <= new Date(histFiltroDataFim + "T23:59:59")));
+    const km = h.vehicle_km != null ? Number(h.vehicle_km) : null;
+    const min = histFiltroKmMin ? Number(histFiltroKmMin) : null;
+    const max = histFiltroKmMax ? Number(histFiltroKmMax) : null;
+    const matchKm = (min == null || (km != null && km >= min)) && (max == null || (km != null && km <= max));
+    return matchTexto && matchTipo && matchData && matchKm;
+  });
+
   return (
     <div className="space-y-4">
       <CVPageHeader
@@ -292,7 +325,7 @@ export default function CVVehicles() {
                     </Button>
                   </div>
 
-                  <CVMaintenanceAlert alertas={alertas[v.id] ?? []} onGerado={load} />
+                  <CVMaintenanceAlert alertas={alertas[v.id] ?? []} vehicleKm={v.current_km} onGerado={load} />
                   {!v.active && <Badge variant="secondary" className="w-full justify-center">Inativo</Badge>}
                 </CardContent>
               </Card>
@@ -475,35 +508,118 @@ export default function CVVehicles() {
 
       {/* Histórico de manutenções do veículo */}
       <Dialog open={!!histVehicle} onOpenChange={o => { if (!o) setHistVehicle(null); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <History className="h-4 w-4" /> Manutenções — {histVehicle?.name} ({histVehicle?.plate})
             </DialogTitle>
           </DialogHeader>
+
           {histLoading ? (
             <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Carregando...</p>
           ) : histRows.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhuma manutenção registrada para este veículo.</p>
           ) : (
-            <div className="space-y-2">
-              {histRows.map(h => (
-                <div key={h.id} className="rounded-lg border p-3 space-y-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium">{h.defect_description}</p>
-                    <Badge variant={h.status === "resolved" ? "outline" : "secondary"} className="shrink-0">
-                      {h.status === "resolved" ? "Concluída" : h.status === "in_progress" ? "Em andamento" : "Pendente"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Aberta em {new Date(h.reported_at).toLocaleDateString("pt-BR")}
-                    {h.resolved_at && ` · Concluída em ${new Date(h.resolved_at).toLocaleDateString("pt-BR")}`}
-                    {h.resolved_by && ` · por ${h.resolved_by}`}
-                    {h.cost != null && ` · R$ ${Number(h.cost).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-                  </p>
-                  {h.solution && <p className="text-xs">Solução: {h.solution}</p>}
+            <div className="space-y-4">
+              {/* Filtros */}
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Filter className="h-4 w-4" /> Filtros
+                  </h4>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={limparFiltrosHistorico}>
+                    <X className="h-3 w-3 mr-1" /> Limpar
+                  </Button>
                 </div>
-              ))}
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Buscar</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Descrição, solução ou serviço..."
+                        value={histFiltroTexto}
+                        onChange={e => setHistFiltroTexto(e.target.value)}
+                        className="pl-8 h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs">Tipo de manutenção</Label>
+                    <Select value={histFiltroTipo} onValueChange={v => setHistFiltroTipo(v as any)}>
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos</SelectItem>
+                        <SelectItem value="km">Por quilometragem</SelectItem>
+                        <SelectItem value="dias">Por dias</SelectItem>
+                        <SelectItem value="ambos">Ambos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-2 lg:col-span-1">
+                    <Label className="text-xs">Intervalo de datas</Label>
+                    <div className="flex items-center gap-2">
+                      <Input type="date" value={histFiltroDataInicio} onChange={e => setHistFiltroDataInicio(e.target.value)} className="h-8 text-xs" />
+                      <span className="text-muted-foreground">-</span>
+                      <Input type="date" value={histFiltroDataFim} onChange={e => setHistFiltroDataFim(e.target.value)} className="h-8 text-xs" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+                    <Label className="text-xs">Intervalo de KM</Label>
+                    <div className="flex items-center gap-2">
+                      <Input type="number" placeholder="KM mínimo" value={histFiltroKmMin} onChange={e => setHistFiltroKmMin(e.target.value)} className="h-8 text-sm" />
+                      <span className="text-muted-foreground">-</span>
+                      <Input type="number" placeholder="KM máximo" value={histFiltroKmMax} onChange={e => setHistFiltroKmMax(e.target.value)} className="h-8 text-sm" />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {histRowsFiltrados.length} de {histRows.length} registro(s)
+                </p>
+              </div>
+
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                {histRowsFiltrados.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">Nenhum resultado com os filtros selecionados.</p>
+                ) : (
+                  histRowsFiltrados.map(h => {
+                    const plan: any = h.maintenance_plan;
+                    return (
+                      <div key={h.id} className="rounded-lg border p-3 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{h.defect_description}</p>
+                            {plan?.name && (
+                              <p className="text-[11px] text-muted-foreground truncate">
+                                Plano: {plan.name}
+                                {plan.tipo && ` · ${plan.tipo === "km" ? "KM" : plan.tipo === "dias" ? "Dias" : "KM + Dias"}`}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant={h.status === "resolved" ? "outline" : "secondary"} className="shrink-0">
+                            {h.status === "resolved" ? "Concluída" : h.status === "in_progress" ? "Em andamento" : "Pendente"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Aberta em {new Date(h.reported_at).toLocaleDateString("pt-BR")}
+                          {h.resolved_at && ` · Concluída em ${new Date(h.resolved_at).toLocaleDateString("pt-BR")}`}
+                          {h.resolved_by && ` · por ${h.resolved_by}`}
+                          {h.vehicle_km != null && ` · ${Number(h.vehicle_km).toLocaleString("pt-BR")} km`}
+                          {h.cost != null && ` · R$ ${Number(h.cost).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                        </p>
+                        {h.solution && <p className="text-xs">Solução: {h.solution}</p>}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

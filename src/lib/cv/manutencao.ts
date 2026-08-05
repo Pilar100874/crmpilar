@@ -105,6 +105,7 @@ export async function gerarOrdemManutencao(params: {
   driverId?: string | null;
   movementId?: string | null;
   reportedBy?: string | null;
+  vehicleKm?: number | null;
 }) {
   const { plan, detalhe } = params;
   const { data: existente } = await supabase
@@ -123,6 +124,7 @@ export async function gerarOrdemManutencao(params: {
       maintenance_plan_id: plan.id,
       driver_id: params.driverId ?? null,
       movement_id: params.movementId ?? null,
+      vehicle_km: params.vehicleKm ?? null,
       defect_description: `MANUTENÇÃO PREVENTIVA: ${plan.name} (${detalhe})`,
       reported_by: params.reportedBy ?? "Sistema (plano de manutenção)",
       status: "pending",

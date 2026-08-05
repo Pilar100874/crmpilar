@@ -6147,6 +6147,7 @@ export type Database = {
           updated_at: string
           validated_by: string | null
           vehicle_id: string
+          vehicle_km: number | null
         }
         Insert: {
           cost?: number | null
@@ -6169,6 +6170,7 @@ export type Database = {
           updated_at?: string
           validated_by?: string | null
           vehicle_id: string
+          vehicle_km?: number | null
         }
         Update: {
           cost?: number | null
@@ -6191,6 +6193,7 @@ export type Database = {
           updated_at?: string
           validated_by?: string | null
           vehicle_id?: string
+          vehicle_km?: number | null
         }
         Relationships: [
           {
