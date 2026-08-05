@@ -370,19 +370,35 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                       </Button>
                     </div>
                   ) : (
-                    <div className="h-32 border-2 border-dashed rounded flex flex-col items-center justify-center bg-muted/30 text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => captureFor(a)}
+                      disabled={uploading === a.key}
+                      title="Clique para tirar a foto com a câmera do celular"
+                      className="w-full h-32 border-2 border-dashed rounded flex flex-col items-center justify-center bg-muted/30 text-muted-foreground hover:bg-muted/60 transition"
+                    >
                       {uploading === a.key ? (
                         <Loader2 className="h-6 w-6 animate-spin" />
                       ) : (
                         <>
-                          <Upload className="h-6 w-6 mb-1" />
-                          <span className="text-[11px]">Sem foto</span>
+                          <Smartphone className="h-6 w-6 mb-1" />
+                          <span className="text-[11px]">Clique para tirar foto</span>
                         </>
                       )}
-                    </div>
+                    </button>
                   )}
                 </div>
               </div>
+
+              {captured && (
+                <Textarea
+                  value={captured.caption ?? ""}
+                  onChange={(e) => setCaption(a.key, e.target.value)}
+                  placeholder="Observação sobre esta foto (opcional)"
+                  className="text-xs min-h-[52px]"
+                />
+              )}
+
 
               {/* Resultado IA */}
               {(loadingAi || ai) && (
