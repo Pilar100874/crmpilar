@@ -12,6 +12,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { carregarChecklist, salvarChecklist, type ChecklistItem } from "@/lib/cv/checklist";
+import { PRIORIDADES, PRIORIDADE_LABEL, type Prioridade } from "@/lib/cv/ordens";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { cn } from "@/lib/utils";
 import {
@@ -48,6 +50,7 @@ export default function CVDefects() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newDefect, setNewDefect] = useState({
     vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "",
+    prioridade: "quebra" as Prioridade, agrupavel: false, pecas: "",
   });
 
   const loadAll = async () => {
@@ -143,6 +146,8 @@ export default function CVDefects() {
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const { error } = await supabase.from("cv_defect_reports").insert({
       ...newDefect,
+      pecas: newDefect.pecas || null,
+      agrupavel: newDefect.prioridade === "quebra" ? false : newDefect.agrupavel,
       vehicle_km: newDefect.vehicle_km ? Number(newDefect.vehicle_km) : null,
       reported_at: new Date().toISOString(),
       reported_by: user?.id ?? null,
@@ -152,7 +157,7 @@ export default function CVDefects() {
     if (error) return toast.error(error.message);
     toast.success("Defeito reportado!");
     setCreateOpen(false);
-    setNewDefect({ vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "" });
+    setNewDefect({ vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "", prioridade: "quebra", agrupavel: false, pecas: "" });
     loadAll();
   };
 
@@ -231,6 +236,29 @@ export default function CVDefects() {
                   <Textarea rows={3} value={newDefect.defect_description}
                     onChange={(e) => setNewDefect({ ...newDefect, defect_description: e.target.value })}
                     placeholder="Descreva o defeito..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>Prioridade *</Label>
+                  <Select value={newDefect.prioridade} onValueChange={(v) => setNewDefect({ ...newDefect, prioridade: v as Prioridade, agrupavel: v !== "quebra" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PRIORIDADES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {PRIORIDADES.find((p) => p.value === newDefect.prioridade)?.descricao}
+                  </p>
+                </div>
+                {newDefect.prioridade !== "quebra" && (
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={newDefect.agrupavel} onCheckedChange={(c) => setNewDefect({ ...newDefect, agrupavel: !!c })} />
+                    Agrupar na próxima parada de manutenção do veículo
+                  </label>
+                )}
+                <div className="space-y-2">
+                  <Label>Peças / insumos necessários</Label>
+                  <Input placeholder="Ex.: FILTRO DE ÓLEO; ÓLEO 15W40" value={newDefect.pecas}
+                    onChange={(e) => setNewDefect({ ...newDefect, pecas: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>Quilometragem do veículo (KM)</Label>
@@ -335,7 +363,15 @@ export default function CVDefects() {
                     <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
                     <span className="truncate">{v?.name} — {v?.plate}</span>
                   </CardTitle>
-                  {getStatusBadge(defect.status)}
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      defect.prioridade === "quebra" ? "border-destructive text-destructive"
+                        : defect.prioridade === "aguardar" ? "border-muted-foreground/40 text-muted-foreground"
+                        : "border-primary/50 text-primary")}>
+                      {PRIORIDADE_LABEL[(defect.prioridade ?? "preventiva") as Prioridade]}
+                    </Badge>
+                    {getStatusBadge(defect.status)}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

@@ -174,6 +174,7 @@ import CVDefects from "./pages/controle-veiculos/CVDefects";
 import CVDefectTypes from "./pages/controle-veiculos/CVDefectTypes";
 import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVMaintenanceCatalog from "./pages/controle-veiculos/CVMaintenanceCatalog";
+import CVParadas from "./pages/controle-veiculos/CVParadas";
 
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
@@ -653,6 +654,7 @@ const App = () => (
                 <Route path="defeitos" element={<CVDefects />} />
                 <Route path="tipos-defeito" element={<CVDefectTypes />} />
                 <Route path="manutencao" element={<CVMaintenance />} />
+                <Route path="paradas" element={<CVParadas />} />
                 <Route path="biblioteca-manutencao" element={<CVMaintenanceCatalog />} />
 
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />

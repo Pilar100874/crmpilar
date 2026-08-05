@@ -15,6 +15,8 @@ export interface MaintenancePlan {
   alert_km_antecedencia: number;
   alert_days_antecedencia: number;
   active: boolean;
+  /** Peças/insumos necessários (ex.: filtro de óleo, óleo 15W40) */
+  pecas?: string | null;
 }
 
 export interface AlertaManutencao {
@@ -141,6 +143,9 @@ export async function gerarOrdemManutencao(params: {
       defect_description: `MANUTENÇÃO PREVENTIVA: ${plan.name} (${detalhe})`,
       reported_by: params.reportedBy ?? "Sistema (plano de manutenção)",
       status: "pending",
+      prioridade: "preventiva",
+      agrupavel: true,
+      pecas: plan.pecas ?? null,
     } as any)
     .select("id")
     .single();
@@ -151,6 +156,7 @@ export async function gerarOrdemManutencao(params: {
     defect_report_id: data.id,
     plan_id: plan.id,
     descricao: `${plan.name} (${detalhe})`,
+    pecas: plan.pecas ?? null,
     ordem: 0,
   } as any);
 
@@ -185,6 +191,9 @@ export async function gerarOrdemAgrupada(params: {
       defect_description: `MANUTENÇÃO PREVENTIVA (${pendentes.length} item(ns) do roteiro)`,
       reported_by: params.reportedBy ?? "Sistema (roteiro de manutenção)",
       status: "pending",
+      prioridade: "preventiva",
+      agrupavel: true,
+      pecas: Array.from(new Set(pendentes.map(a => a.plan.pecas).filter(Boolean))).join("; ") || null,
     } as any)
     .select("id")
     .single();
@@ -195,6 +204,7 @@ export async function gerarOrdemAgrupada(params: {
     defect_report_id: data.id,
     plan_id: a.plan.id,
     descricao: `${a.plan.name} (${a.detalhe})`,
+    pecas: a.plan.pecas ?? null,
     ordem: idx,
   }));
   const { error: e2 } = await supabase.from("cv_maintenance_checklist").insert(itens as any);

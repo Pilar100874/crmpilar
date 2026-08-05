@@ -6127,17 +6127,22 @@ export type Database = {
       }
       cv_defect_reports: {
         Row: {
+          agrupavel: boolean
           cost: number | null
           created_at: string
           damage_points: Json | null
+          data_baixa: string | null
           defect_description: string
           defect_type_id: string | null
           driver_id: string | null
           estabelecimento_id: string | null
           id: string
           is_damage_report: boolean
+          km_baixa: number | null
           maintenance_plan_id: string | null
           movement_id: string | null
+          pecas: string | null
+          prioridade: string
           reported_at: string
           reported_by: string | null
           resolved_at: string | null
@@ -6150,17 +6155,22 @@ export type Database = {
           vehicle_km: number | null
         }
         Insert: {
+          agrupavel?: boolean
           cost?: number | null
           created_at?: string
           damage_points?: Json | null
+          data_baixa?: string | null
           defect_description: string
           defect_type_id?: string | null
           driver_id?: string | null
           estabelecimento_id?: string | null
           id?: string
           is_damage_report?: boolean
+          km_baixa?: number | null
           maintenance_plan_id?: string | null
           movement_id?: string | null
+          pecas?: string | null
+          prioridade?: string
           reported_at?: string
           reported_by?: string | null
           resolved_at?: string | null
@@ -6173,17 +6183,22 @@ export type Database = {
           vehicle_km?: number | null
         }
         Update: {
+          agrupavel?: boolean
           cost?: number | null
           created_at?: string
           damage_points?: Json | null
+          data_baixa?: string | null
           defect_description?: string
           defect_type_id?: string | null
           driver_id?: string | null
           estabelecimento_id?: string | null
           id?: string
           is_damage_report?: boolean
+          km_baixa?: number | null
           maintenance_plan_id?: string | null
           movement_id?: string | null
+          pecas?: string | null
+          prioridade?: string
           reported_at?: string
           reported_by?: string | null
           resolved_at?: string | null
@@ -6414,6 +6429,7 @@ export type Database = {
           interval_principal: number | null
           no_roteiro: boolean
           observacoes: string | null
+          pecas: string | null
           regra: string
           sistema: string
           tipo_veiculo: string
@@ -6435,6 +6451,7 @@ export type Database = {
           interval_principal?: number | null
           no_roteiro?: boolean
           observacoes?: string | null
+          pecas?: string | null
           regra?: string
           sistema: string
           tipo_veiculo: string
@@ -6456,6 +6473,7 @@ export type Database = {
           interval_principal?: number | null
           no_roteiro?: boolean
           observacoes?: string | null
+          pecas?: string | null
           regra?: string
           sistema?: string
           tipo_veiculo?: string
@@ -6487,6 +6505,7 @@ export type Database = {
           id: string
           observacao: string | null
           ordem: number
+          pecas: string | null
           plan_id: string | null
           updated_at: string
         }
@@ -6503,6 +6522,7 @@ export type Database = {
           id?: string
           observacao?: string | null
           ordem?: number
+          pecas?: string | null
           plan_id?: string | null
           updated_at?: string
         }
@@ -6519,6 +6539,7 @@ export type Database = {
           id?: string
           observacao?: string | null
           ordem?: number
+          pecas?: string | null
           plan_id?: string | null
           updated_at?: string
         }
@@ -6568,6 +6589,7 @@ export type Database = {
           last_done_km: number
           name: string
           origem: string
+          pecas: string | null
           tipo: string
           updated_at: string
           vehicle_id: string
@@ -6586,6 +6608,7 @@ export type Database = {
           last_done_km?: number
           name: string
           origem?: string
+          pecas?: string | null
           tipo?: string
           updated_at?: string
           vehicle_id: string
@@ -6604,6 +6627,7 @@ export type Database = {
           last_done_km?: number
           name?: string
           origem?: string
+          pecas?: string | null
           tipo?: string
           updated_at?: string
           vehicle_id?: string
