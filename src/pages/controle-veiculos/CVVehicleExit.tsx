@@ -237,7 +237,7 @@ export default function CVVehicleExit() {
                     const al = alertas[v.id] ?? [];
                     const venc = al.some((a) => a.vencido);
                     return (
-                      <button key={v.id} type="button" onClick={() => setForm({ ...form, vehicle_id: v.id })}
+                      <button key={v.id} type="button" onClick={() => { setForm({ ...form, vehicle_id: v.id }); if (al.length) setPopupVeiculo(v.id); }}
                         className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                           active ? "border-primary bg-primary/5 shadow-md"
                             : venc ? "border-destructive bg-destructive/5"
@@ -256,19 +256,8 @@ export default function CVVehicleExit() {
                     );
                   })}
                 </div>
-                {selectedVehicle && (alertas[selectedVehicle.id]?.length ?? 0) > 0 && (
-                  <div className="mt-4">
-                    <CVMaintenanceAlert
-                      alertas={alertas[selectedVehicle.id]}
-                      vehicleId={selectedVehicle.id}
-                      vehicleKm={selectedVehicle.current_km}
-                      driverId={form.driver_id || null}
-                      onGerado={load}
-                    />
-
-                  </div>
-                )}
               </div>
+
 
             )}
 
