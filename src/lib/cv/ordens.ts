@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
-import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "./manutencao";
+import {
+  carregarAlertasManutencao, carregarPlanosPorId, calcularAtraso, gerarOrdemAgrupada,
+  type AlertaManutencao,
+} from "./manutencao";
+
 import { carregarChecklistPorOrdens, type ChecklistItem } from "./checklist";
 
 export type Prioridade = "quebra" | "preventiva" | "aguardar";
