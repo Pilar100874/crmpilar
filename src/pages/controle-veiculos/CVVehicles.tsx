@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge, Droplets,
@@ -24,10 +25,19 @@ const TYPES: { value: VehicleType; label: string }[] = [
   { value: "outro", label: "Outro" },
 ];
 
-const TIPO_MAP: Record<string, VehicleType> = {
-  carro: "carro", vuc: "vuc", truck: "truck", caminhao: "truck",
-  "caminhão": "truck", carreta: "carreta", moto: "outro", pessoa: "outro",
-};
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/** Converte o tipo do cadastro de Logística para o tipo usado no Controle de Veículos. */
+function mapTipo(tipo?: string | null): VehicleType | null {
+  const t = norm(tipo ?? "");
+  if (!t) return null;
+  if (t.includes("carreta") || t.includes("bitrem") || t.includes("cavalo")) return "carreta";
+  if (t.includes("vuc")) return "vuc";
+  if (t.includes("truck") || t.includes("caminhao") || t.includes("pesado") || t.includes("toco")) return "truck";
+  if (t.includes("carro") || t.includes("passeio") || t.includes("utilitario")) return "carro";
+  return "outro";
+}
 
 const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
@@ -58,6 +68,7 @@ export default function CVVehicles() {
   const [planForm, setPlanForm] = useState<any>(planoVazio);
   const [planEditing, setPlanEditing] = useState<string | null>(null);
   const [savingPlan, setSavingPlan] = useState(false);
+  const [aplicarEm, setAplicarEm] = useState<string[]>([]);
 
   const load = async () => {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
@@ -89,7 +100,7 @@ export default function CVVehicles() {
       veiculo_id: lv.id,
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
-      vehicle_type: TIPO_MAP[(lv.tipo_veiculo ?? "").toLowerCase()] ?? f.vehicle_type,
+      vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
     }));
   };
 
@@ -123,7 +134,7 @@ export default function CVVehicles() {
 
   // ---- planos de manutenção ----
   const abrirPlanos = async (v: Vehicle) => {
-    setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null);
+    setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null); setAplicarEm([]);
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", v.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
   };
@@ -138,9 +149,7 @@ export default function CVVehicles() {
     if ((planForm.tipo === "km" || planForm.tipo === "ambos") && !Number(planForm.interval_km)) return toast.error("Informe o intervalo em KM");
     if ((planForm.tipo === "dias" || planForm.tipo === "ambos") && !Number(planForm.interval_days)) return toast.error("Informe o intervalo em dias");
     setSavingPlan(true);
-    const payload: any = {
-      vehicle_id: planVehicle.id,
-      estabelecimento_id: planVehicle.estabelecimento_id,
+    const base: any = {
       name: String(planForm.name).toUpperCase(),
       tipo: planForm.tipo,
       interval_km: planForm.tipo === "dias" ? null : Number(planForm.interval_km),
@@ -151,13 +160,29 @@ export default function CVVehicles() {
       alert_days_antecedencia: Number(planForm.alert_days_antecedencia) || 0,
       active: planForm.active,
     };
-    const { error } = planEditing
-      ? await supabase.from("cv_maintenance_plans").update(payload).eq("id", planEditing)
-      : await supabase.from("cv_maintenance_plans").insert(payload);
+
+    let error: any = null;
+    if (planEditing) {
+      ({ error } = await supabase.from("cv_maintenance_plans").update({
+        ...base, vehicle_id: planVehicle.id, estabelecimento_id: planVehicle.estabelecimento_id,
+      }).eq("id", planEditing));
+    } else {
+      const alvos = [planVehicle, ...rows.filter(r => aplicarEm.includes(r.id))];
+      const registros = alvos.map(v => ({
+        ...base,
+        vehicle_id: v.id,
+        estabelecimento_id: v.estabelecimento_id,
+        // ao replicar, usa o KM atual de cada veículo como referência inicial
+        last_done_km: v.id === planVehicle.id ? base.last_done_km : v.current_km,
+      }));
+      ({ error } = await supabase.from("cv_maintenance_plans").insert(registros));
+    }
     setSavingPlan(false);
     if (error) return toast.error(error.message);
-    toast.success("Plano salvo");
-    setPlanForm({ ...planoVazio, last_done_km: planVehicle.current_km }); setPlanEditing(null);
+    toast.success(
+      planEditing ? "Plano salvo" : `Plano criado em ${1 + aplicarEm.length} veículo(s)`,
+    );
+    setPlanForm({ ...planoVazio, last_done_km: planVehicle.current_km }); setPlanEditing(null); setAplicarEm([]);
     recarregarPlanos(); load();
   };
   const excluirPlano = async (id: string) => {
@@ -178,7 +203,7 @@ export default function CVVehicles() {
       <CVPageHeader
         icon={Truck}
         title="Veículos"
-        subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos`}
+        subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos • use o ícone 🔧 no card para os planos de manutenção`}
         actions={
           <Button onClick={openNew} className="bg-white text-primary hover:bg-white/90">
             <Plus className="h-4 w-4 mr-1" />Novo Veículo
@@ -274,17 +299,14 @@ export default function CVVehicles() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">O nome e a placa são preenchidos a partir do cadastro de Logística.</p>
+              <p className="text-xs text-muted-foreground mt-1">Nome, placa e tipo vêm direto do cadastro de Logística.</p>
             </div>
-            <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })} /></div>
+            <div><Label>Nome</Label><Input value={form.name} readOnly className="bg-muted" /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Placa</Label><Input value={form.plate} readOnly className="bg-muted font-mono" /></div>
               <div>
                 <Label>Tipo</Label>
-                <Select value={form.vehicle_type} onValueChange={v => setForm({ ...form, vehicle_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                </Select>
+                <Input value={TYPES.find(t => t.value === form.vehicle_type)?.label ?? ""} readOnly className="bg-muted" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -381,6 +403,40 @@ export default function CVVehicles() {
                 <Switch checked={planForm.active} onCheckedChange={c => setPlanForm({ ...planForm, active: c })} />
                 <Label>Ativo</Label>
               </div>
+
+              {!planEditing && (
+                <div className="rounded-md border p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Aplicar este plano também em outros veículos</Label>
+                    <Button
+                      type="button" size="sm" variant="ghost" className="h-7 text-xs"
+                      onClick={() => {
+                        const outros = rows.filter(r => r.id !== planVehicle?.id).map(r => r.id);
+                        setAplicarEm(aplicarEm.length === outros.length ? [] : outros);
+                      }}
+                    >
+                      {aplicarEm.length === rows.length - 1 && rows.length > 1 ? "Limpar" : "Selecionar todos"}
+                    </Button>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto grid gap-1 sm:grid-cols-2">
+                    {rows.filter(r => r.id !== planVehicle?.id).map(r => (
+                      <label key={r.id} className="flex items-center gap-2 text-sm rounded px-2 py-1 hover:bg-muted cursor-pointer">
+                        <Checkbox
+                          checked={aplicarEm.includes(r.id)}
+                          onCheckedChange={c => setAplicarEm(c ? [...aplicarEm, r.id] : aplicarEm.filter(i => i !== r.id))}
+                        />
+                        <span className="truncate">{r.plate} — {r.name}</span>
+                      </label>
+                    ))}
+                    {rows.length <= 1 && <p className="text-xs text-muted-foreground">Nenhum outro veículo cadastrado.</p>}
+                  </div>
+                  {aplicarEm.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      O plano será criado em {aplicarEm.length + 1} veículos, usando o KM atual de cada um como referência inicial.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 justify-end">
                 {planEditing && <Button variant="ghost" onClick={() => { setPlanEditing(null); setPlanForm({ ...planoVazio, last_done_km: planVehicle?.current_km ?? 0 }); }}>Cancelar edição</Button>}
                 <Button onClick={salvarPlano} disabled={savingPlan}>
