@@ -406,16 +406,6 @@ export default function CVVehicleExit() {
           </div>
         </Card>
 
-        <CVMaintenanceVencidasDialog
-          open={!!popupVeiculo}
-          onOpenChange={(o) => { if (!o) setPopupVeiculo(null); }}
-          alertas={popupVeiculo ? (alertas[popupVeiculo] ?? []) : []}
-          vehicleLabel={vehicles.find((v) => v.id === popupVeiculo)?.plate}
-          vehicleId={popupVeiculo}
-          vehicleKm={vehicles.find((v) => v.id === popupVeiculo)?.current_km ?? null}
-          driverId={form.driver_id || null}
-          onGerado={load}
-        />
       </div>
 
     </>
