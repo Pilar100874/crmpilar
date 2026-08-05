@@ -20,7 +20,8 @@ import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { carregarAlertasManutencao, type AlertaManutencao, type MaintenancePlan, type PlanoTipo } from "@/lib/cv/manutencao";
-import { listarTiposFrota, sincronizarRoteiro } from "@/lib/cv/catalogo";
+import { listarTiposFrota, sincronizarRoteiro, listarCatalogo, adicionarItensRoteiro, ORIGENS_ROTEIRO, nomeItem, type CatalogItem } from "@/lib/cv/catalogo";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 
 const TYPES: { value: VehicleType; label: string }[] = [
