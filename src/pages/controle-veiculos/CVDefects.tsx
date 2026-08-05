@@ -485,23 +485,36 @@ export default function CVDefects() {
                             </div>
                           )}
 
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label>Data da execução *</Label>
+                              <Input type="date" value={formData.dataBaixa}
+                                onChange={(e) => setFormData({ ...formData, dataBaixa: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>KM do veículo *</Label>
+                              <Input type="number" placeholder="Ex.: 45230" value={formData.kmBaixa}
+                                onChange={(e) => setFormData({ ...formData, kmBaixa: e.target.value })} />
+                            </div>
+                          </div>
                           <div className="space-y-2">
-                            <Label>Solução Apresentada</Label>
+                            <Label>Serviço executado / solução *</Label>
                             <Textarea rows={3} value={formData.solution}
                               onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
                               placeholder="Descreva a solução..." />
                           </div>
                           <div className="space-y-2">
-                            <Label>Custo (R$)</Label>
+                            <Label>Custo total (R$)</Label>
                             <Input type="number" min="0" step="0.01" value={formData.cost}
                               onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })} />
                           </div>
                           <div className="space-y-2">
-                            <Label>Mecânico Responsável</Label>
+                            <Label>Responsável / mecânico *</Label>
                             <Input value={formData.resolvedBy}
                               onChange={(e) => setFormData({ ...formData, resolvedBy: e.target.value })}
                               placeholder="Nome do mecânico" />
                           </div>
+
                           <div className="space-y-2">
                             <Label>Motorista que Validou</Label>
                             <Select value={formData.validatedBy} onValueChange={(v) => setFormData({ ...formData, validatedBy: v })}>
