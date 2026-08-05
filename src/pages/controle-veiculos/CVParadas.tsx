@@ -67,12 +67,23 @@ export default function CVParadas() {
     setExpGerando(false);
   };
 
-  const load = async () => {
+  const load = async (autoGerar = true) => {
     setLoading(true);
-    try { setParadas(await carregarParadas()); }
+    try {
+      let lista = await carregarParadas();
+      // Ordens de serviço são geradas automaticamente para as preventivas pendentes
+      if (autoGerar && lista.some(p => p.alertasSemOrdem.length)) {
+        for (const p of lista.filter(x => x.alertasSemOrdem.length)) {
+          try { await consolidarParada(p); } catch { /* ignora */ }
+        }
+        lista = await carregarParadas();
+      }
+      setParadas(lista);
+    }
     catch (e: any) { toast.error(e?.message ?? "Erro ao carregar paradas"); }
     setLoading(false);
   };
+
   useEffect(() => { load(); }, []);
 
   const filtradas = useMemo(() => paradas.filter(p => {
