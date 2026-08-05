@@ -296,8 +296,7 @@ export default function CVVehicles() {
     setPlans((data ?? []) as any as MaintenancePlan[]);
   };
 
-  const planosRoteiro = plans.filter(p => ORIGENS_ROTEIRO.includes((p as any).origem));
-  const planosAdicionais = plans.filter(p => !ORIGENS_ROTEIRO.includes((p as any).origem));
+  const planosRoteiro = plans;
 
   const salvarIntervaloRoteiro = async (p: MaintenancePlan) => {
     const e = rotEdit[p.id];
