@@ -1,12 +1,13 @@
 #!/bin/bash
-# Monta a ISO bootável do Coletor Pilar Appliance (Debian 12 amd64).
+# Monta a ISO bootável do Coletor Pilar Appliance (Debian 12 amd64, com firmware Wi-Fi).
 # Uso: sudo ./build-iso.sh
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="${OUT:-$HERE/out}"
 WORK="${WORK:-$HERE/.work}"
-DEBIAN_ISO_URL="${DEBIAN_ISO_URL:-https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso}"
+# ISO "firmware" = inclui drivers non-free (Wi-Fi Intel/Realtek/Broadcom)
+DEBIAN_ISO_URL="${DEBIAN_ISO_URL:-https://cdimage.debian.org/images/unofficial/non-free/images-including-firmware/current/amd64/iso-cd/firmware-12.11.0-amd64-netinst.iso}"
 COLETOR_URL="${COLETOR_URL:-https://crmpilar.lovable.app/__l5e/assets-v1/13bc261c-f998-4cd2-9d73-3de090606255/ColetorPilar-Linux.AppImage}"
 
 need() { command -v "$1" >/dev/null || { echo "faltando: $1 (apt install $2)"; exit 1; }; }
@@ -16,7 +17,7 @@ need cpio cpio
 
 rm -rf "$WORK"; mkdir -p "$WORK/iso" "$WORK/payload" "$OUT"
 
-echo "==> baixando Debian netinst"
+echo "==> baixando Debian netinst (com firmware)"
 BASE="$WORK/debian.iso"
 [ -f "$BASE" ] || curl -fL --retry 3 -o "$BASE" "$DEBIAN_ISO_URL"
 
@@ -46,26 +47,48 @@ IRD="$WORK/initrd"; mkdir -p "$IRD"
 cp "$HERE/preseed.cfg" "$IRD/preseed.cfg"
 ( cd "$IRD" && find . | cpio -o -H newc --quiet | gzip -9 > "$WORK/iso/install.amd/initrd.gz" )
 
-echo "==> menu de boot"
+# Parâmetros de kernel: instalação silenciosa, uma única barra de progresso
+KOPTS="auto=true priority=critical file=/preseed.cfg \
+DEBIAN_FRONTEND=text debian-installer/quiet=true debconf/priority=critical \
+theme=dark quiet loglevel=0 rd.systemd.show_status=false vt.global_cursor_default=0 splash"
+
+echo "==> menu de boot (tela única do instalador)"
 mkdir -p "$WORK/iso/isolinux"
-cat > "$WORK/iso/isolinux/txt.cfg" <<'EOS'
+cat > "$WORK/iso/isolinux/txt.cfg" <<EOS
 default coletor
 label coletor
   menu label ^Instalar Coletor Pilar (apaga o disco)
   kernel /install.amd/vmlinuz
-  append auto=true priority=critical file=/preseed.cfg vga=788 initrd=/install.amd/initrd.gz --- quiet
+  append $KOPTS vga=788 initrd=/install.amd/initrd.gz ---
 label rescue
   menu label Modo ^resgate (instalador manual)
   kernel /install.amd/vmlinuz
   append vga=788 initrd=/install.amd/initrd.gz --- quiet
 EOS
 
+# Tela de abertura do instalador (sem lista de menus, boot direto em 3s)
+cat > "$WORK/iso/isolinux/isolinux.cfg" <<'EOS'
+include menu.cfg
+default coletor
+prompt 0
+timeout 30
+EOS
+
+cat > "$WORK/iso/isolinux/menu.cfg" <<'EOS'
+menu hshift 0
+menu width 82
+menu title Coletor Pilar - Instalador Automatico
+menu tabmsg Instalando o Coletor Pilar... aguarde.
+include txt.cfg
+EOS
+
 if [ -f "$WORK/iso/boot/grub/grub.cfg" ]; then
-  cat > "$WORK/iso/boot/grub/grub.cfg" <<'EOS'
+  cat > "$WORK/iso/boot/grub/grub.cfg" <<EOS
 set default=0
-set timeout=5
+set timeout=3
+set timeout_style=hidden
 menuentry "Instalar Coletor Pilar (apaga o disco)" {
-  linux /install.amd/vmlinuz auto=true priority=critical file=/preseed.cfg --- quiet
+  linux /install.amd/vmlinuz $KOPTS ---
   initrd /install.amd/initrd.gz
 }
 menuentry "Modo resgate (instalador manual)" {
