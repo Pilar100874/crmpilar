@@ -176,6 +176,23 @@ export default function CVVehicles() {
     const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
     setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
+
+    // última manutenção por veículo para ordenação
+    if (list.length > 0) {
+      const { data: lastMaint } = await supabase
+        .from("cv_defect_reports")
+        .select("vehicle_id, resolved_at")
+        .in("vehicle_id", list.map(v => v.id))
+        .not("resolved_at", "is", null)
+        .order("resolved_at", { ascending: false });
+      const map: Record<string, string> = {};
+      (lastMaint ?? []).forEach((r: any) => {
+        if (!map[r.vehicle_id]) map[r.vehicle_id] = r.resolved_at;
+      });
+      setLastMaintByVehicle(map);
+    } else {
+      setLastMaintByVehicle({});
+    }
   };
   useEffect(() => { load(); }, []);
 
