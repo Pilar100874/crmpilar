@@ -264,6 +264,58 @@ export default function CVParadas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={expOpen} onOpenChange={setExpOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FileDown className="h-4 w-4" /> Exportar relatório de paradas</DialogTitle>
+            <DialogDescription>
+              Gera um PDF com as ordens, o checklist executado/pendente e as peças/insumos, por veículo e período.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Veículo</Label>
+              <select
+                className="mt-1 w-full h-10 rounded-md border bg-background px-3 text-sm"
+                value={exp.veiculo}
+                onChange={e => setExp(v => ({ ...v, veiculo: e.target.value }))}
+              >
+                <option value="todos">Todos os veículos</option>
+                {paradas.map(p => (
+                  <option key={p.vehicle.id} value={p.vehicle.id}>
+                    {p.vehicle.name} — {p.vehicle.plate}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data inicial</Label>
+                <Input type="date" value={exp.inicio} onChange={e => setExp(v => ({ ...v, inicio: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Data final</Label>
+                <Input type="date" value={exp.fim} onChange={e => setExp(v => ({ ...v, fim: e.target.value }))} />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={exp.incluirPendentes}
+                onCheckedChange={c => setExp(v => ({ ...v, incluirPendentes: c === true }))}
+              />
+              Incluir ordens ainda pendentes (mesmo fora do período)
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExpOpen(false)}>Cancelar</Button>
+            <Button onClick={exportarPdf} disabled={expGerando}>
+              {expGerando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileDown className="h-4 w-4 mr-1" />}
+              Gerar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
