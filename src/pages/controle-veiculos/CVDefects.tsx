@@ -50,8 +50,10 @@ export default function CVDefects() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newDefect, setNewDefect] = useState({
     vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "",
+    data: new Date().toISOString().slice(0, 10),
     prioridade: "quebra" as Prioridade, agrupavel: false, pecas: "",
   });
+
 
   const loadAll = async () => {
     setLoading(true);
