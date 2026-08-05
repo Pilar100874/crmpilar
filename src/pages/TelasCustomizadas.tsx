@@ -133,7 +133,7 @@ export const ROTAS_SUGERIDAS: { label: string; value: string; grupo: string }[] 
   { label: "Movimentações", value: "/controle-veiculos/movimentacoes", grupo: "Controle de Veículos" },
   { label: "Cadastro de Veículos", value: "/controle-veiculos/veiculos", grupo: "Controle de Veículos" },
   { label: "Câmeras dos Veículos", value: "/controle-veiculos/cameras", grupo: "Controle de Veículos" },
-  { label: "Defeitos & Avarias", value: "/controle-veiculos/defeitos", grupo: "Controle de Veículos" },
+  { label: "Manutenções & Defeitos", value: "/controle-veiculos/paradas", grupo: "Controle de Veículos" },
   { label: "Histórico de Imagens", value: "/controle-veiculos/historico-imagens", grupo: "Controle de Veículos" },
   { label: "Análise de Manutenção", value: "/controle-veiculos/manutencao", grupo: "Controle de Veículos" },
 

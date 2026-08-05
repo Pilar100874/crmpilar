@@ -9,16 +9,18 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from "sonner";
 import {
   Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
-  ListTree, ChevronRight,
+  ListTree, ChevronRight, Plus,
 } from "lucide-react";
 import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import CVBaixaDialog from "@/components/cv/CVBaixaDialog";
+import CVNovoLancamentoDialog from "@/components/cv/CVNovoLancamentoDialog";
 import {
   carregarParadas, consolidarParada, darBaixaParada, imprimirFicha,
   PRIORIDADE_LABEL, TIPO_LABEL, TIPO_TONE,
   type ParadaVeiculo, type Prioridade, type TipoServico,
 } from "@/lib/cv/ordens";
+
 
 const tonePrioridade: Record<Prioridade, string> = {
   quebra: "border-destructive bg-destructive/10 text-destructive",
@@ -38,6 +40,9 @@ export default function CVParadas() {
   const [preSelecionados, setPreSelecionados] = useState<string[] | undefined>();
   const [detalhe, setDetalhe] = useState<ParadaVeiculo | null>(null);
   const [selecao, setSelecao] = useState<Record<string, boolean>>({});
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [novoVeiculo, setNovoVeiculo] = useState<string | undefined>();
+
 
   const hoje = new Date();
   const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -185,10 +190,16 @@ export default function CVParadas() {
         title="Manutenções & Defeitos"
         subtitle={`${paradas.length} veículo(s) com pendências • ${totalManutencao} manutenção(ões) • ${totalDefeito} defeito(s)`}
         actions={
-          <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
-            <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
+              <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
+            </Button>
+            <Button size="sm" className="bg-white text-primary hover:bg-white/90" onClick={() => { setNovoVeiculo(undefined); setNovoOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Novo lançamento
+            </Button>
+          </div>
         }
+
       />
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
@@ -250,9 +261,13 @@ export default function CVParadas() {
                         Agrupar {p.alertasSemOrdem.length} preventiva(s)
                       </Button>
                     )}
+                    <Button size="sm" variant="ghost" onClick={() => { setNovoVeiculo(p.vehicle.id); setNovoOpen(true); }}>
+                      <Plus className="h-4 w-4 mr-1" /> Lançar
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => { setExp(v => ({ ...v, veiculo: p.vehicle.id })); setExpOpen(true); }}>
                       <FileDown className="h-4 w-4 mr-1" /> PDF
                     </Button>
+
                     <Button size="sm" variant="outline" disabled={!p.itens.length} onClick={() => imprimirFicha(p)}>
                       <Printer className="h-4 w-4 mr-1" /> Ficha
                     </Button>
@@ -349,7 +364,15 @@ export default function CVParadas() {
         </DialogContent>
       </Dialog>
 
+      <CVNovoLancamentoDialog
+        open={novoOpen}
+        onOpenChange={setNovoOpen}
+        vehicleId={novoVeiculo}
+        onCreated={() => load(false)}
+      />
+
       <CVBaixaDialog
+
         open={!!baixa}
         onOpenChange={o => { if (!o) setBaixa(null); }}
         titulo={`${baixa?.vehicle.name ?? ""} (${baixa?.vehicle.plate ?? ""})`}

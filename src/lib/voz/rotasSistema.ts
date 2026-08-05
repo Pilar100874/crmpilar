@@ -188,7 +188,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/controle-veiculos/saida", titulo: "Saída", aliases: ["saida de veiculo", "registrar saida de veiculo", "controle de veiculos - saida"] },
   { path: "/controle-veiculos/entrada", titulo: "Entrada", aliases: ["entrada de veiculo", "registrar entrada de veiculo", "controle de veiculos - entrada"] },
   { path: "/controle-veiculos/movimentacoes", titulo: "Movimentações", aliases: ["movimentacoes de veiculos", "controle de veiculos - movimentacoes"] },
-  { path: "/controle-veiculos/defeitos", titulo: "Defeitos", aliases: ["defeitos de veiculos", "controle de veiculos - defeitos"] },
+  { path: "/controle-veiculos/paradas", titulo: "Manutenções & Defeitos", aliases: ["defeitos de veiculos", "manutencoes e defeitos", "paradas de manutencao"] },
   { path: "/controle-veiculos/tipos-defeito", titulo: "Tipos de Defeito", aliases: ["tipos de defeito de veiculo"] },
   { path: "/controle-veiculos/manutencao", titulo: "Manutenção", aliases: ["manutencao de veiculos", "controle de veiculos - manutencao"] },
   { path: "/controle-veiculos/vistoria-config", titulo: "Configuração de Vistoria", aliases: ["config vistoria", "configuracao de vistoria"] },
