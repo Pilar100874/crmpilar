@@ -18,10 +18,24 @@ export const PRIORIDADE_LABEL: Record<Prioridade, string> = {
 
 export const PESO: Record<Prioridade, number> = { quebra: 0, preventiva: 1, aguardar: 2 };
 
+/** Natureza do serviço: manutenção programada (plano) ou defeito/avaria reportado. */
+export type TipoServico = "manutencao" | "defeito";
+
+export const TIPO_LABEL: Record<TipoServico, string> = {
+  manutencao: "MANUTENÇÃO",
+  defeito: "DEFEITO",
+};
+
+export const TIPO_TONE: Record<TipoServico, string> = {
+  manutencao: "border-primary/50 bg-primary/10 text-primary",
+  defeito: "border-destructive/50 bg-destructive/10 text-destructive",
+};
+
 export interface ItemParada {
   /** id do item de checklist (quando a ordem tem checklist) ou da própria ordem */
   id: string;
   origem: "checklist" | "ordem";
+  tipo: TipoServico;
   ordemId: string;
   planId: string | null;
   descricao: string;
@@ -37,10 +51,13 @@ export interface ParadaVeiculo {
   /** preventivas vencidas/próximas que ainda não viraram ordem */
   alertasSemOrdem: AlertaManutencao[];
   pecas: string[];
+  totalManutencao: number;
+  totalDefeito: number;
 }
 
 const norm = (p: any): Prioridade =>
   p === "quebra" || p === "aguardar" ? p : "preventiva";
+
 
 /** Carrega, por veículo, tudo que está pendente de manutenção — já ordenado por prioridade. */
 export async function carregarParadas(): Promise<ParadaVeiculo[]> {
@@ -69,18 +86,20 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
     const itens: ItemParada[] = [];
     for (const o of minhas) {
       const prioridade = norm(o.prioridade);
+      const tipoOrdem: TipoServico = o.maintenance_plan_id ? "manutencao" : "defeito";
       const chk = (checklists[o.id] ?? []) as ChecklistItem[];
       if (chk.length) {
         chk.forEach(c =>
           itens.push({
-            id: c.id, origem: "checklist", ordemId: o.id, planId: c.plan_id,
+            id: c.id, origem: "checklist", tipo: c.plan_id ? "manutencao" : tipoOrdem,
+            ordemId: o.id, planId: c.plan_id,
             descricao: c.descricao, pecas: (c as any).pecas ?? null,
             prioridade, feito: c.feito ?? null,
           }),
         );
       } else {
         itens.push({
-          id: o.id, origem: "ordem", ordemId: o.id, planId: o.maintenance_plan_id ?? null,
+          id: o.id, origem: "ordem", tipo: tipoOrdem, ordemId: o.id, planId: o.maintenance_plan_id ?? null,
           descricao: o.defect_description, pecas: o.pecas ?? null,
           prioridade, feito: null,
         });
@@ -103,7 +122,12 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
       ),
     );
 
-    return { vehicle: v, prioridade, itens, alertasSemOrdem, pecas };
+    return {
+      vehicle: v, prioridade, itens, alertasSemOrdem, pecas,
+      totalManutencao: itens.filter(i => i.tipo === "manutencao").length,
+      totalDefeito: itens.filter(i => i.tipo === "defeito").length,
+    };
+
   }).filter(p => p.itens.length > 0 || p.alertasSemOrdem.length > 0);
 
   paradas.sort((a, b) => PESO[a.prioridade] - PESO[b.prioridade] || b.itens.length - a.itens.length);
@@ -135,6 +159,7 @@ export async function darBaixaParada(params: {
   data: string; // ISO
   responsavel: string;
   custo?: number | null;
+  observacao?: string;
 }) {
   const { parada, marcados, km, data, responsavel } = params;
   let feitos = 0;
@@ -165,6 +190,7 @@ export async function darBaixaParada(params: {
     const todos = itensDaOrdem.every(i => marcados[i.id]);
     const algum = itensDaOrdem.some(i => marcados[i.id]);
     if (!algum) continue;
+    const padrao = todos ? "Executado na parada programada" : "Parcialmente executado na parada programada";
     await supabase.from("cv_defect_reports").update({
       status: todos ? "resolved" : "in_progress",
       resolved_at: todos ? data : null,
@@ -172,8 +198,9 @@ export async function darBaixaParada(params: {
       data_baixa: data,
       km_baixa: km,
       ...(params.custo ? { cost: params.custo } : {}),
-      solution: todos ? "Executado na parada programada de manutenção" : "Parcialmente executado na parada programada",
+      solution: params.observacao ? `${padrao} — ${params.observacao}` : padrao,
     }).eq("id", ordemId);
+
   }
 
   if (km && km > (parada.vehicle.current_km ?? 0)) {

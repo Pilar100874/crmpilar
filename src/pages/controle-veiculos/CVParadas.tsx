@@ -10,13 +10,14 @@ import { toast } from "sonner";
 import {
   Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
   ListTree, ChevronRight,
-
 } from "lucide-react";
 import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
+import CVBaixaDialog from "@/components/cv/CVBaixaDialog";
 import {
   carregarParadas, consolidarParada, darBaixaParada, imprimirFicha,
-  PRIORIDADE_LABEL, type ParadaVeiculo, type Prioridade,
+  PRIORIDADE_LABEL, TIPO_LABEL, TIPO_TONE,
+  type ParadaVeiculo, type Prioridade, type TipoServico,
 } from "@/lib/cv/ordens";
 
 const tonePrioridade: Record<Prioridade, string> = {
@@ -31,13 +32,12 @@ export default function CVParadas() {
   const [busy, setBusy] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<"todas" | Prioridade>("todas");
+  const [filtroTipo, setFiltroTipo] = useState<"todos" | TipoServico>("todos");
 
   const [baixa, setBaixa] = useState<ParadaVeiculo | null>(null);
+  const [preSelecionados, setPreSelecionados] = useState<string[] | undefined>();
   const [detalhe, setDetalhe] = useState<ParadaVeiculo | null>(null);
-
-  const [marcados, setMarcados] = useState<Record<string, boolean>>({});
-  const [form, setForm] = useState({ km: "", data: "", responsavel: "", custo: "" });
-  const [salvando, setSalvando] = useState(false);
+  const [selecao, setSelecao] = useState<Record<string, boolean>>({});
 
   const hoje = new Date();
   const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -86,14 +86,19 @@ export default function CVParadas() {
 
   useEffect(() => { load(); }, []);
 
-  const filtradas = useMemo(() => paradas.filter(p => {
-    const texto = `${p.vehicle.name ?? ""} ${p.vehicle.plate ?? ""}`.toLowerCase();
-    return (!q || texto.includes(q.toLowerCase())) && (filtro === "todas" || p.prioridade === filtro);
-  }), [paradas, q, filtro]);
+  const filtradas = useMemo(() => paradas
+    .map(p => filtroTipo === "todos" ? p : { ...p, itens: p.itens.filter(i => i.tipo === filtroTipo) })
+    .filter(p => {
+      const texto = `${p.vehicle.name ?? ""} ${p.vehicle.plate ?? ""}`.toLowerCase();
+      const okTexto = !q || texto.includes(q.toLowerCase());
+      const okPrio = filtro === "todas" || p.prioridade === filtro;
+      const okTipo = filtroTipo === "todos" || p.itens.length > 0;
+      return okTexto && okPrio && okTipo;
+    }), [paradas, q, filtro, filtroTipo]);
 
+  const totalManutencao = paradas.reduce((s, p) => s + p.totalManutencao, 0);
+  const totalDefeito = paradas.reduce((s, p) => s + p.totalDefeito, 0);
   const quebras = paradas.filter(p => p.prioridade === "quebra").length;
-  const preventivas = paradas.filter(p => p.prioridade === "preventiva").length;
-  const aguardando = paradas.filter(p => p.prioridade === "aguardar").length;
   const totalItens = paradas.reduce((s, p) => s + p.itens.length, 0);
 
   const agrupar = async (p: ParadaVeiculo) => {
@@ -108,50 +113,77 @@ export default function CVParadas() {
     setBusy(null);
   };
 
-  const abrirBaixa = (p: ParadaVeiculo) => {
+  const abrirBaixa = (p: ParadaVeiculo, apenasSelecionados = false) => {
+    const sel = p.itens.filter(i => selecao[i.id]).map(i => i.id);
+    setPreSelecionados(apenasSelecionados && sel.length ? sel : undefined);
     setBaixa(p);
-    setMarcados(Object.fromEntries(p.itens.map(i => [i.id, i.feito === true])));
-    setForm({
-      km: String(p.vehicle.current_km ?? ""),
-      data: new Date().toISOString().slice(0, 10),
-      responsavel: "",
-      custo: "",
-    });
   };
 
-  const confirmarBaixa = async () => {
+  const confirmarBaixa = async (payload: {
+    marcados: Record<string, boolean>; km: number; data: string;
+    responsavel: string; custo: number | null; observacao: string;
+  }) => {
     if (!baixa) return;
-    if (!form.responsavel.trim()) return toast.error("Informe o mecânico responsável");
-    const km = Number(form.km);
-    if (!km || km <= 0) return toast.error("Informe o KM do veículo na execução");
-    if (!form.data) return toast.error("Informe a data de execução");
-    setSalvando(true);
-    try {
-      const r = await darBaixaParada({
-        parada: baixa,
-        marcados,
-        km,
-        data: new Date(`${form.data}T12:00:00`).toISOString(),
-        responsavel: form.responsavel.trim().toUpperCase(),
-        custo: form.custo ? Number(form.custo) : null,
-      });
-      toast[r.pendentes ? "warning" : "success"](
-        r.pendentes
-          ? `${r.feitos} item(ns) baixado(s) — ${r.pendentes} continua(m) pendente(s)`
-          : `Parada concluída: ${r.feitos} item(ns) executado(s)`,
-      );
-      setBaixa(null);
-      await load();
-    } catch (e: any) { toast.error(e?.message ?? "Erro ao dar baixa"); }
-    setSalvando(false);
+    const r = await darBaixaParada({ parada: baixa, ...payload });
+    toast[r.pendentes ? "warning" : "success"](
+      r.pendentes
+        ? `${r.feitos} item(ns) baixado(s) — ${r.pendentes} continua(m) pendente(s)`
+        : `Parada concluída: ${r.feitos} item(ns) executado(s)`,
+    );
+    setBaixa(null);
+    setSelecao({});
+    await load();
+  };
+
+  const renderItens = (p: ParadaVeiculo, tipo: TipoServico) => {
+    const lista = p.itens.filter(i => i.tipo === tipo);
+    if (!lista.length) return null;
+    const Icon = tipo === "manutencao" ? Wrench : AlertOctagon;
+    return (
+      <div className="rounded-lg border">
+        <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-3 py-1.5">
+          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
+            <Icon className="h-3.5 w-3.5" /> {TIPO_LABEL[tipo]}
+            <Badge variant="outline" className={`text-[10px] ${TIPO_TONE[tipo]}`}>{lista.length}</Badge>
+          </span>
+          <Button
+            size="sm" variant="ghost" className="h-6 text-[11px]"
+            onClick={() => {
+              const todos = lista.every(i => selecao[i.id]);
+              setSelecao(s => ({ ...s, ...Object.fromEntries(lista.map(i => [i.id, !todos])) }));
+            }}
+          >
+            {lista.every(i => selecao[i.id]) ? "Desmarcar" : "Selecionar"}
+          </Button>
+        </div>
+        <div className="divide-y">
+          {lista.map(i => (
+            <label key={i.id} className="flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-muted/30">
+              <Checkbox checked={!!selecao[i.id]} onCheckedChange={c => setSelecao(s => ({ ...s, [i.id]: !!c }))} />
+              <span className="min-w-0 flex-1">
+                <span className="text-sm font-medium block">{i.descricao}</span>
+                {i.pecas && (
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <Package className="h-3 w-3" /> {i.pecas}
+                  </span>
+                )}
+              </span>
+              <Badge variant="outline" className={`shrink-0 text-[10px] ${tonePrioridade[i.prioridade]}`}>
+                {PRIORIDADE_LABEL[i.prioridade]}
+              </Badge>
+            </label>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="space-y-4">
       <CVPageHeader
         icon={Wrench}
-        title="Paradas de Manutenção"
-        subtitle={`${paradas.length} veículo(s) com pendências • ${totalItens} serviço(s)`}
+        title="Manutenções & Defeitos"
+        subtitle={`${paradas.length} veículo(s) com pendências • ${totalManutencao} manutenção(ões) • ${totalDefeito} defeito(s)`}
         actions={
           <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
             <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
@@ -160,22 +192,31 @@ export default function CVParadas() {
       />
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <CVKpiCard label="Quebras (parado)" value={quebras} icon={AlertOctagon} tone="warning" />
-        <CVKpiCard label="Preventivas" value={preventivas} icon={Wrench} tone="info" />
-        <CVKpiCard label="Podem aguardar" value={aguardando} icon={Clock} tone="primary" />
-        <CVKpiCard label="Serviços pendentes" value={totalItens} icon={ClipboardCheck} tone="success" />
+        <CVKpiCard label="Manutenções pendentes" value={totalManutencao} icon={Wrench} tone="info" />
+        <CVKpiCard label="Defeitos pendentes" value={totalDefeito} icon={AlertOctagon} tone="warning" />
+        <CVKpiCard label="Veículos parados (quebra)" value={quebras} icon={Clock} tone="primary" />
+        <CVKpiCard label="Total de serviços" value={totalItens} icon={ClipboardCheck} tone="success" />
       </div>
 
       <Card>
-        <CardContent className="p-3 flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-10" placeholder="Buscar veículo ou placa..." value={q} onChange={e => setQ(e.target.value)} />
+        <CardContent className="p-3 flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input className="pl-10" placeholder="Buscar veículo ou placa..." value={q} onChange={e => setQ(e.target.value)} />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {(["todos", "manutencao", "defeito"] as const).map(t => (
+                <Button key={t} size="sm" variant={filtroTipo === t ? "default" : "outline"} onClick={() => setFiltroTipo(t)}>
+                  {t === "todos" ? "Tudo" : TIPO_LABEL[t]}
+                </Button>
+              ))}
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             {(["todas", "quebra", "preventiva", "aguardar"] as const).map(f => (
-              <Button key={f} size="sm" variant={filtro === f ? "default" : "outline"} onClick={() => setFiltro(f)}>
-                {f === "todas" ? "Todas" : PRIORIDADE_LABEL[f]}
+              <Button key={f} size="sm" variant={filtro === f ? "secondary" : "ghost"} onClick={() => setFiltro(f)}>
+                {f === "todas" ? "Todas as prioridades" : PRIORIDADE_LABEL[f]}
               </Button>
             ))}
           </div>
@@ -184,66 +225,73 @@ export default function CVParadas() {
 
       {loading && <Card><CardContent className="p-8 text-center text-muted-foreground">Carregando...</CardContent></Card>}
       {!loading && !filtradas.length && (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Nenhuma parada pendente 🎉</CardContent></Card>
+        <Card><CardContent className="p-8 text-center text-muted-foreground">Nenhuma pendência 🎉</CardContent></Card>
       )}
 
       <div className="space-y-4">
-        {filtradas.map(p => (
-          <Card key={p.vehicle.id} className={`border-l-4 ${p.prioridade === "quebra" ? "border-l-destructive" : p.prioridade === "preventiva" ? "border-l-primary" : "border-l-muted-foreground/40"}`}>
-            <CardHeader className="pb-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle
-                  className="text-base flex items-center gap-2 min-w-0 cursor-pointer hover:underline"
-                  onClick={() => setDetalhe(p)}
-                >
-                  <span className="truncate">{p.vehicle.name} — {p.vehicle.plate}</span>
-                  <Badge variant="outline" className={tonePrioridade[p.prioridade]}>{PRIORIDADE_LABEL[p.prioridade]}</Badge>
-                </CardTitle>
+        {filtradas.map(p => {
+          const selecionados = p.itens.filter(i => selecao[i.id]).length;
+          return (
+            <Card key={p.vehicle.id} className={`border-l-4 ${p.prioridade === "quebra" ? "border-l-destructive" : p.prioridade === "preventiva" ? "border-l-primary" : "border-l-muted-foreground/40"}`}>
+              <CardHeader className="pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle
+                    className="text-base flex items-center gap-2 min-w-0 cursor-pointer hover:underline"
+                    onClick={() => setDetalhe(p)}
+                  >
+                    <span className="truncate">{p.vehicle.name} — {p.vehicle.plate}</span>
+                    <Badge variant="outline" className={tonePrioridade[p.prioridade]}>{PRIORIDADE_LABEL[p.prioridade]}</Badge>
+                  </CardTitle>
 
-                <div className="flex flex-wrap gap-2">
-                  {!!p.alertasSemOrdem.length && (
-                    <Button size="sm" variant="secondary" disabled={busy === p.vehicle.id} onClick={() => agrupar(p)}>
-                      {busy === p.vehicle.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Layers className="h-4 w-4 mr-1" />}
-                      Agrupar {p.alertasSemOrdem.length} preventiva(s)
+                  <div className="flex flex-wrap gap-2">
+                    {!!p.alertasSemOrdem.length && (
+                      <Button size="sm" variant="secondary" disabled={busy === p.vehicle.id} onClick={() => agrupar(p)}>
+                        {busy === p.vehicle.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Layers className="h-4 w-4 mr-1" />}
+                        Agrupar {p.alertasSemOrdem.length} preventiva(s)
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" onClick={() => { setExp(v => ({ ...v, veiculo: p.vehicle.id })); setExpOpen(true); }}>
+                      <FileDown className="h-4 w-4 mr-1" /> PDF
                     </Button>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={() => { setExp(v => ({ ...v, veiculo: p.vehicle.id })); setExpOpen(true); }}>
-                    <FileDown className="h-4 w-4 mr-1" /> PDF
-                  </Button>
-                  <Button size="sm" variant="outline" disabled={!p.itens.length} onClick={() => imprimirFicha(p)}>
-                    <Printer className="h-4 w-4 mr-1" /> Imprimir ficha
-                  </Button>
-                  <Button size="sm" disabled={!p.itens.length} onClick={() => abrirBaixa(p)}>
-                    <ClipboardCheck className="h-4 w-4 mr-1" /> Dar baixa
-                  </Button>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                KM atual: {(p.vehicle.current_km ?? 0).toLocaleString("pt-BR")} • {p.itens.length} serviço(s) na parada
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-between" onClick={() => setDetalhe(p)}>
-                <span className="flex items-center gap-2"><ListTree className="h-4 w-4" /> Ver ordens e serviços ({p.itens.length})</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              {!!p.alertasSemOrdem.length && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  {p.alertasSemOrdem.length} preventiva(s) vencida(s)/próxima(s) ainda sem ordem — agrupe para incluir nesta parada.
-                </p>
-              )}
-              {!!p.pecas.length && (
-                <div className="rounded-md border border-dashed p-2">
-                  <p className="text-xs font-semibold flex items-center gap-1 mb-1"><Package className="h-3.5 w-3.5" /> Peças e insumos da parada</p>
-                  <div className="flex flex-wrap gap-1">
-                    {p.pecas.map(x => <Badge key={x} variant="secondary" className="text-[10px]">{x}</Badge>)}
+                    <Button size="sm" variant="outline" disabled={!p.itens.length} onClick={() => imprimirFicha(p)}>
+                      <Printer className="h-4 w-4 mr-1" /> Ficha
+                    </Button>
+                    <Button size="sm" disabled={!p.itens.length} onClick={() => abrirBaixa(p, selecionados > 0)}>
+                      <ClipboardCheck className="h-4 w-4 mr-1" />
+                      {selecionados > 0 ? `Dar baixa (${selecionados})` : "Dar baixa"}
+                    </Button>
                   </div>
                 </div>
-              )}
-            </CardContent>
+                <p className="text-xs text-muted-foreground">
+                  KM atual: {(p.vehicle.current_km ?? 0).toLocaleString("pt-BR")} • {p.totalManutencao} manutenção(ões) • {p.totalDefeito} defeito(s)
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {renderItens(p, "manutencao")}
+                {renderItens(p, "defeito")}
 
-          </Card>
-        ))}
+                <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setDetalhe(p)}>
+                  <span className="flex items-center gap-2"><ListTree className="h-4 w-4" /> Ver ordens de serviço ({p.itens.length})</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                {!!p.alertasSemOrdem.length && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    {p.alertasSemOrdem.length} preventiva(s) vencida(s)/próxima(s) ainda sem ordem — agrupe para incluir nesta parada.
+                  </p>
+                )}
+                {!!p.pecas.length && (
+                  <div className="rounded-md border border-dashed p-2">
+                    <p className="text-xs font-semibold flex items-center gap-1 mb-1"><Package className="h-3.5 w-3.5" /> Peças e insumos da parada</p>
+                    <div className="flex flex-wrap gap-1">
+                      {p.pecas.map(x => <Badge key={x} variant="secondary" className="text-[10px]">{x}</Badge>)}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Dialog open={!!detalhe} onOpenChange={o => { if (!o) setDetalhe(null); }}>
@@ -253,7 +301,7 @@ export default function CVParadas() {
               <ListTree className="h-4 w-4" /> {detalhe?.vehicle.name} — {detalhe?.vehicle.plate}
             </DialogTitle>
             <DialogDescription>
-              Ordens de serviço abertas e seus itens (sub-itens do checklist).
+              Ordens de serviço abertas — manutenções programadas e defeitos/avarias na mesma parada.
             </DialogDescription>
           </DialogHeader>
 
@@ -264,7 +312,7 @@ export default function CVParadas() {
                 <div key={ordemId} className="rounded-md border">
                   <div className="flex items-center justify-between gap-2 border-b bg-muted/50 px-3 py-2">
                     <p className="text-sm font-semibold">Ordem #{idx + 1}</p>
-                    <Badge variant="outline" className="text-[10px]">{itens.length} item(ns)</Badge>
+                    <Badge variant="outline" className={`text-[10px] ${TIPO_TONE[itens[0].tipo]}`}>{TIPO_LABEL[itens[0].tipo]}</Badge>
                   </div>
                   <div className="p-2 space-y-1.5">
                     {itens.map(i => (
@@ -273,7 +321,10 @@ export default function CVParadas() {
                           <p className="text-sm font-medium text-foreground">{i.descricao}</p>
                           {i.pecas && <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {i.pecas}</p>}
                         </div>
-                        <Badge variant="outline" className={`shrink-0 text-[10px] ${tonePrioridade[i.prioridade]}`}>{PRIORIDADE_LABEL[i.prioridade]}</Badge>
+                        <div className="flex shrink-0 gap-1">
+                          <Badge variant="outline" className={`text-[10px] ${TIPO_TONE[i.tipo]}`}>{TIPO_LABEL[i.tipo]}</Badge>
+                          <Badge variant="outline" className={`text-[10px] ${tonePrioridade[i.prioridade]}`}>{PRIORIDADE_LABEL[i.prioridade]}</Badge>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -298,44 +349,15 @@ export default function CVParadas() {
         </DialogContent>
       </Dialog>
 
-
-
-      <Dialog open={!!baixa} onOpenChange={o => { if (!o) setBaixa(null); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Baixa da parada — {baixa?.vehicle.name} ({baixa?.vehicle.plate})</DialogTitle>
-            <DialogDescription>
-              Marque o que foi executado. O que não for marcado continua pendente para a próxima parada.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            {baixa?.itens.map(i => (
-              <label key={i.id} className="flex items-start gap-2 rounded-md border p-2 cursor-pointer">
-                <Checkbox checked={!!marcados[i.id]} onCheckedChange={c => setMarcados(m => ({ ...m, [i.id]: !!c }))} />
-                <span className="min-w-0">
-                  <span className="text-sm font-medium block">{i.descricao}</span>
-                  {i.pecas && <span className="text-[11px] text-muted-foreground">{i.pecas}</span>}
-                </span>
-              </label>
-            ))}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div><Label>Data de execução *</Label><Input type="date" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} /></div>
-            <div><Label>KM do veículo *</Label><Input type="number" value={form.km} onChange={e => setForm({ ...form, km: e.target.value })} /></div>
-            <div><Label>Mecânico responsável *</Label><Input value={form.responsavel} onChange={e => setForm({ ...form, responsavel: e.target.value })} /></div>
-            <div><Label>Custo total (R$)</Label><Input type="number" value={form.custo} onChange={e => setForm({ ...form, custo: e.target.value })} /></div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBaixa(null)}>Cancelar</Button>
-            <Button onClick={confirmarBaixa} disabled={salvando}>
-              {salvando && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Confirmar baixa
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CVBaixaDialog
+        open={!!baixa}
+        onOpenChange={o => { if (!o) setBaixa(null); }}
+        titulo={`${baixa?.vehicle.name ?? ""} (${baixa?.vehicle.plate ?? ""})`}
+        itens={(baixa?.itens ?? []).map(i => ({ id: i.id, descricao: i.descricao, pecas: i.pecas, tipo: i.tipo }))}
+        preSelecionados={preSelecionados}
+        kmAtual={baixa?.vehicle.current_km ?? null}
+        onConfirm={confirmarBaixa}
+      />
 
       <Dialog open={expOpen} onOpenChange={setExpOpen}>
         <DialogContent className="max-w-lg">

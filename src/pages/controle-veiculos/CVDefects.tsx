@@ -43,15 +43,17 @@ export default function CVDefects() {
 
   const [editing, setEditing] = useState<any | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ solution: "", cost: 0, resolvedBy: "", validatedBy: "" });
+  const [formData, setFormData] = useState({ solution: "", cost: 0, resolvedBy: "", validatedBy: "", dataBaixa: "", kmBaixa: "" });
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
 
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newDefect, setNewDefect] = useState({
     vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "",
+    data: new Date().toISOString().slice(0, 10),
     prioridade: "quebra" as Prioridade, agrupavel: false, pecas: "",
   });
+
 
   const loadAll = async () => {
     setLoading(true);
@@ -97,6 +99,9 @@ export default function CVDefects() {
     if (!editing) return;
     if (!formData.solution.trim()) return toast.error("Descreva a solução");
     if (!formData.resolvedBy.trim()) return toast.error("Informe o mecânico responsável");
+    if (!formData.dataBaixa) return toast.error("Informe a data da execução");
+    const kmBaixa = Number(formData.kmBaixa);
+    if (!kmBaixa || kmBaixa <= 0) return toast.error("Informe o KM do veículo na execução");
     if (formData.cost <= 0) return toast.error("Informe custo maior que zero");
     if (checklist.length > 0 && checklist.some((i) => i.feito === null || i.feito === undefined)) {
       return toast.error("Marque cada item do checklist como Feito ou Não feito");
@@ -117,16 +122,24 @@ export default function CVDefects() {
     }
 
     const resolvido = pendentes === 0;
-    const resolvedAt = new Date().toISOString();
+    const dataIso = new Date(`${formData.dataBaixa}T12:00:00`).toISOString();
     const { error } = await supabase.from("cv_defect_reports").update({
       solution: formData.solution,
       cost: formData.cost,
-      resolved_by: formData.resolvedBy,
+      resolved_by: formData.resolvedBy.toUpperCase(),
       validated_by: formData.validatedBy || null,
-      resolved_at: resolvido ? resolvedAt : null,
+      resolved_at: resolvido ? dataIso : null,
+      data_baixa: dataIso,
+      km_baixa: kmBaixa,
       status: resolvido ? "resolved" : "in_progress",
     }).eq("id", editing.id);
     if (error) return toast.error(error.message);
+
+    const veic = getVehicle(editing.vehicle_id);
+    if (veic && kmBaixa > (veic.current_km ?? 0)) {
+      await supabase.from("cv_vehicles").update({ current_km: kmBaixa }).eq("id", editing.vehicle_id);
+    }
+
     toast[resolvido ? "success" : "warning"](
       resolvido ? "Defeito resolvido!" : `${pendentes} item(ns) não feito(s) — ordem continua pendente`,
     );
@@ -137,29 +150,44 @@ export default function CVDefects() {
   };
 
 
+
   const handleCreate = async () => {
     if (!newDefect.vehicle_id || !newDefect.driver_id || !newDefect.defect_type_id || !newDefect.defect_description.trim()) {
       return toast.error("Preencha todos os campos obrigatórios");
     }
+    if (!newDefect.data) return toast.error("Informe a data do lançamento");
+    const km = Number(newDefect.vehicle_km);
+    if (!km || km <= 0) return toast.error("Informe o KM do veículo no lançamento");
     const { data: { user } } = await supabase.auth.getUser();
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
+    const { data: dataField, ...rest } = newDefect;
     const { error } = await supabase.from("cv_defect_reports").insert({
-      ...newDefect,
+      ...rest,
       pecas: newDefect.pecas || null,
       agrupavel: newDefect.prioridade === "quebra" ? false : newDefect.agrupavel,
-      vehicle_km: newDefect.vehicle_km ? Number(newDefect.vehicle_km) : null,
-      reported_at: new Date().toISOString(),
+      vehicle_km: km,
+      reported_at: new Date(`${newDefect.data}T12:00:00`).toISOString(),
       reported_by: user?.id ?? null,
       status: "pending",
       estabelecimento_id: estId,
     });
     if (error) return toast.error(error.message);
+
+    const veic = getVehicle(newDefect.vehicle_id);
+    if (veic && km > (veic.current_km ?? 0)) {
+      await supabase.from("cv_vehicles").update({ current_km: km }).eq("id", newDefect.vehicle_id);
+    }
+
     toast.success("Defeito reportado!");
     setCreateOpen(false);
-    setNewDefect({ vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "", prioridade: "quebra", agrupavel: false, pecas: "" });
+    setNewDefect({
+      vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "",
+      data: new Date().toISOString().slice(0, 10), prioridade: "quebra", agrupavel: false, pecas: "",
+    });
     loadAll();
   };
+
 
   const handleWhatsApp = (defect: any) => {
     const v = getVehicle(defect.vehicle_id);
@@ -201,7 +229,7 @@ export default function CVDefects() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Veículo *</Label>
-                    <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v })}>
+                    <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v, vehicle_km: String(vehicles.find((x) => x.id === v)?.current_km ?? "") })}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
                         {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
@@ -260,15 +288,26 @@ export default function CVDefects() {
                   <Input placeholder="Ex.: FILTRO DE ÓLEO; ÓLEO 15W40" value={newDefect.pecas}
                     onChange={(e) => setNewDefect({ ...newDefect, pecas: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Quilometragem do veículo (KM)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Ex: 45.230"
-                    value={newDefect.vehicle_km}
-                    onChange={(e) => setNewDefect({ ...newDefect, vehicle_km: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Data do lançamento *</Label>
+                    <Input
+                      type="date"
+                      value={newDefect.data}
+                      onChange={(e) => setNewDefect({ ...newDefect, data: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>KM do veículo *</Label>
+                    <Input
+                      type="number"
+                      placeholder="Ex: 45230"
+                      value={newDefect.vehicle_km}
+                      onChange={(e) => setNewDefect({ ...newDefect, vehicle_km: e.target.value })}
+                    />
+                  </div>
                 </div>
+
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
                   <Button onClick={handleCreate}>Reportar Defeito</Button>
@@ -447,7 +486,10 @@ export default function CVDefects() {
                             cost: defect.cost || 0,
                             resolvedBy: defect.resolved_by || "",
                             validatedBy: defect.validated_by || "",
+                            dataBaixa: (defect.data_baixa ?? new Date().toISOString()).slice(0, 10),
+                            kmBaixa: String(defect.km_baixa ?? getVehicle(defect.vehicle_id)?.current_km ?? ""),
                           });
+
                           setDialogOpen(true);
                           abrirSolucao(defect);
                         }} className="bg-primary hover:opacity-90">
@@ -485,23 +527,36 @@ export default function CVDefects() {
                             </div>
                           )}
 
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label>Data da execução *</Label>
+                              <Input type="date" value={formData.dataBaixa}
+                                onChange={(e) => setFormData({ ...formData, dataBaixa: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>KM do veículo *</Label>
+                              <Input type="number" placeholder="Ex.: 45230" value={formData.kmBaixa}
+                                onChange={(e) => setFormData({ ...formData, kmBaixa: e.target.value })} />
+                            </div>
+                          </div>
                           <div className="space-y-2">
-                            <Label>Solução Apresentada</Label>
+                            <Label>Serviço executado / solução *</Label>
                             <Textarea rows={3} value={formData.solution}
                               onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
                               placeholder="Descreva a solução..." />
                           </div>
                           <div className="space-y-2">
-                            <Label>Custo (R$)</Label>
+                            <Label>Custo total (R$)</Label>
                             <Input type="number" min="0" step="0.01" value={formData.cost}
                               onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })} />
                           </div>
                           <div className="space-y-2">
-                            <Label>Mecânico Responsável</Label>
+                            <Label>Responsável / mecânico *</Label>
                             <Input value={formData.resolvedBy}
                               onChange={(e) => setFormData({ ...formData, resolvedBy: e.target.value })}
                               placeholder="Nome do mecânico" />
                           </div>
+
                           <div className="space-y-2">
                             <Label>Motorista que Validou</Label>
                             <Select value={formData.validatedBy} onValueChange={(v) => setFormData({ ...formData, validatedBy: v })}>
