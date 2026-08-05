@@ -67,6 +67,7 @@ export default function CVVehicles() {
   const [planForm, setPlanForm] = useState<any>(planoVazio);
   const [planEditing, setPlanEditing] = useState<string | null>(null);
   const [savingPlan, setSavingPlan] = useState(false);
+  const [aplicarEm, setAplicarEm] = useState<string[]>([]);
 
   const load = async () => {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
