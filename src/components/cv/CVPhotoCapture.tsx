@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn, Video, Smartphone, ImagePlus, Plus } from "lucide-react";
+import { Camera, CheckCircle, X, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn, Video, Smartphone, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ImageZoomDialog } from "@/components/ui/image-zoom-dialog";
 import { CVWebcamDialog } from "@/components/cv/CVWebcamDialog";
@@ -443,7 +443,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                 accept="image/*"
                 capture="environment"
                 className="hidden"
-                onChange={(e) => handleFile(a, e.target.files?.[0])}
+                onChange={(e) => { handleFile(a, e.target.files?.[0]); e.currentTarget.value = ""; }}
               />
               <div className="flex gap-2 flex-wrap">
                 {(() => {
