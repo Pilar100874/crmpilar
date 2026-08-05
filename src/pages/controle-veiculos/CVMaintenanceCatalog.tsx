@@ -18,7 +18,7 @@ const itemVazio = {
   codigo: "", tipo_veiculo: "", sistema: "", componente: "", acao: "",
   interval_principal: 10000, interval_days: 180, regra: "km ou dias",
   tol_principal: 500, tol_days: 15, criticidade: "Média",
-  fabricante: "Genérico", observacoes: "", no_roteiro: true, ativo: true,
+  fabricante: "Genérico", observacoes: "", pecas: "", no_roteiro: true, ativo: true,
 };
 
 const corCriticidade = (c: string) =>
@@ -88,7 +88,7 @@ export default function CVMaintenanceCatalog() {
       codigo: i.codigo ?? "", tipo_veiculo: i.tipo_veiculo, sistema: i.sistema, componente: i.componente,
       acao: i.acao, interval_principal: i.interval_principal ?? 0, interval_days: i.interval_days ?? 0,
       regra: i.regra, tol_principal: i.tol_principal, tol_days: i.tol_days, criticidade: i.criticidade,
-      fabricante: i.fabricante ?? "", observacoes: i.observacoes ?? "", no_roteiro: i.no_roteiro, ativo: i.ativo,
+      fabricante: i.fabricante ?? "", observacoes: i.observacoes ?? "", pecas: (i as any).pecas ?? "", no_roteiro: i.no_roteiro, ativo: i.ativo,
     });
     setEditing(i.id); setOpen(true);
   };
@@ -106,6 +106,7 @@ export default function CVMaintenanceCatalog() {
       tol_principal: Number(form.tol_principal) || 0,
       tol_days: Number(form.tol_days) || 0,
       codigo: form.codigo || null,
+      pecas: form.pecas || null,
     };
     const { error } = editing
       ? await supabase.from("cv_maintenance_catalog").update(payload).eq("id", editing)
@@ -253,6 +254,7 @@ export default function CVMaintenanceCatalog() {
             </div>
             <div><Label>Código</Label><Input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} /></div>
             <div><Label>Fabricante/modelo</Label><Input value={form.fabricante} onChange={e => setForm({ ...form, fabricante: e.target.value })} /></div>
+            <div className="sm:col-span-2"><Label>Peças / insumos necessários</Label><Input value={form.pecas} onChange={e => setForm({ ...form, pecas: e.target.value })} placeholder="Ex.: FILTRO DE ÓLEO; ÓLEO 15W40 12L; JUNTA" /></div>
             <div className="sm:col-span-2"><Label>Observações</Label><Input value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} /></div>
             <div className="flex items-center gap-2"><Switch checked={form.no_roteiro} onCheckedChange={c => setForm({ ...form, no_roteiro: c })} /><Label>Faz parte do roteiro padrão</Label></div>
             <div className="flex items-center gap-2"><Switch checked={form.ativo} onCheckedChange={c => setForm({ ...form, ativo: c })} /><Label>Ativo</Label></div>

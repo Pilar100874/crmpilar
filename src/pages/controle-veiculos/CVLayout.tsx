@@ -16,6 +16,7 @@ import {
   Camera,
   History,
   BookOpen,
+  ClipboardCheck,
 
   LucideIcon,
 } from "lucide-react";
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
   { to: "/controle-veiculos/movimentacoes", label: "Movimentações", icon: ListChecks, group: "principal" },
   { to: "/controle-veiculos/historico-imagens", label: "Histórico de Imagens", icon: History, group: "principal" },
   { to: "/controle-veiculos/defeitos", label: "Defeitos & Avarias", icon: AlertTriangle, group: "principal" },
+  { to: "/controle-veiculos/paradas", label: "Paradas de Manutenção", icon: ClipboardCheck, group: "principal" },
   { to: "/controle-veiculos/manutencao", label: "Análise de Manutenção", icon: Wrench, group: "principal" },
   { to: "/controle-veiculos/biblioteca-manutencao", label: "Biblioteca de Manutenção", icon: BookOpen, group: "config" },
   { to: "/controle-veiculos/veiculos", label: "Veículos", icon: Truck, group: "config" },
