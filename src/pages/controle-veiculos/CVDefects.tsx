@@ -229,7 +229,7 @@ export default function CVDefects() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Veículo *</Label>
-                    <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v })}>
+                    <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v, vehicle_km: String(vehicles.find((x) => x.id === v)?.current_km ?? "") })}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
                         {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
