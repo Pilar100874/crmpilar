@@ -71,6 +71,24 @@ export default function CVVehicles() {
   const [savingPlan, setSavingPlan] = useState(false);
   const [aplicarEm, setAplicarEm] = useState<string[]>([]);
 
+  // histórico de manutenções executadas
+  const [histVehicle, setHistVehicle] = useState<Vehicle | null>(null);
+  const [histRows, setHistRows] = useState<any[]>([]);
+  const [histLoading, setHistLoading] = useState(false);
+
+  const abrirHistorico = async (v: Vehicle) => {
+    setHistVehicle(v); setHistRows([]); setHistLoading(true);
+    const { data } = await supabase
+      .from("cv_defect_reports")
+      .select("id, defect_description, solution, cost, reported_at, resolved_at, resolved_by, status, maintenance_plan_id")
+      .eq("vehicle_id", v.id)
+      .order("resolved_at", { ascending: false, nullsFirst: false })
+      .limit(100);
+    setHistRows(data ?? []);
+    setHistLoading(false);
+  };
+
+
   const load = async () => {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
     if (error) return toast.error(error.message);
