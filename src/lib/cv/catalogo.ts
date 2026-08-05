@@ -51,6 +51,35 @@ export async function listarTiposFrota(): Promise<string[]> {
   return Array.from(new Set((data ?? []).map((r: any) => r.tipo_veiculo as string))).sort();
 }
 
+/** Itens do roteiro (vindos da biblioteca), incluindo os adicionados avulsos. */
+export const ORIGENS_ROTEIRO = ["catalogo", "catalogo_avulso"];
+
+/** Adiciona itens avulsos da biblioteca ao veículo (não são removidos pela sincronização). */
+export async function adicionarItensRoteiro(
+  vehicle: { id: string; estabelecimento_id: string | null; current_km: number },
+  itens: CatalogItem[],
+): Promise<number> {
+  if (!itens.length) return 0;
+  const registros = itens.map(i => ({
+    vehicle_id: vehicle.id,
+    estabelecimento_id: vehicle.estabelecimento_id,
+    catalog_item_id: i.id,
+    origem: "catalogo_avulso",
+    name: nomeItem(i),
+    tipo: tipoDoItem(i),
+    interval_km: i.interval_principal,
+    interval_days: i.interval_days,
+    last_done_km: vehicle.current_km ?? 0,
+    last_done_at: new Date().toISOString(),
+    alert_km_antecedencia: i.tol_principal ?? 0,
+    alert_days_antecedencia: i.tol_days ?? 0,
+    active: true,
+  }));
+  const { error } = await supabase.from("cv_maintenance_plans").insert(registros as any);
+  if (error) throw error;
+  return registros.length;
+}
+
 /**
  * Cria/atualiza os planos do veículo a partir dos itens da biblioteca marcados
  * como parte do roteiro padrão do tipo de frota do veículo.
@@ -72,6 +101,14 @@ export async function sincronizarRoteiro(vehicle: {
 
   const lista = (itens ?? []) as any as CatalogItem[];
 
+  // itens avulsos já vinculados não devem ser duplicados nem removidos
+  const { data: avulsos } = await supabase
+    .from("cv_maintenance_plans")
+    .select("catalog_item_id")
+    .eq("vehicle_id", vehicle.id)
+    .eq("origem", "catalogo_avulso");
+  const idsAvulsos = new Set((avulsos ?? []).map((p: any) => p.catalog_item_id).filter(Boolean));
+
   const { data: existentes } = await supabase
     .from("cv_maintenance_plans")
     .select("id, catalog_item_id")
@@ -81,7 +118,8 @@ export async function sincronizarRoteiro(vehicle: {
   const atuais = (existentes ?? []) as any[];
   const mapAtuais = new Map(atuais.filter(p => p.catalog_item_id).map(p => [p.catalog_item_id as string, p.id as string]));
 
-  const novos = lista.filter(i => !mapAtuais.has(i.id));
+  const novos = lista.filter(i => !mapAtuais.has(i.id) && !idsAvulsos.has(i.id));
+
   if (novos.length) {
     const registros = novos.map(i => ({
       vehicle_id: vehicle.id,

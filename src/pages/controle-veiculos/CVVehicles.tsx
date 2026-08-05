@@ -20,7 +20,8 @@ import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { carregarAlertasManutencao, type AlertaManutencao, type MaintenancePlan, type PlanoTipo } from "@/lib/cv/manutencao";
-import { listarTiposFrota, sincronizarRoteiro } from "@/lib/cv/catalogo";
+import { listarTiposFrota, sincronizarRoteiro, listarCatalogo, adicionarItensRoteiro, ORIGENS_ROTEIRO, nomeItem, type CatalogItem } from "@/lib/cv/catalogo";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 
 const TYPES: { value: VehicleType; label: string }[] = [
@@ -81,6 +82,17 @@ export default function CVVehicles() {
   const [planEditing, setPlanEditing] = useState<string | null>(null);
   const [savingPlan, setSavingPlan] = useState(false);
   const [aplicarEm, setAplicarEm] = useState<string[]>([]);
+
+  // roteiro padrão: edição inline e inclusão de itens avulsos da biblioteca
+  const [rotEdit, setRotEdit] = useState<Record<string, { km: string; dias: string }>>({});
+  const [rotSalvando, setRotSalvando] = useState<string | null>(null);
+  const [catalogo, setCatalogo] = useState<CatalogItem[]>([]);
+  const [addItensOpen, setAddItensOpen] = useState(false);
+  const [addItensSel, setAddItensSel] = useState<string[]>([]);
+  const [addItensSalvando, setAddItensSalvando] = useState(false);
+  const [addItensTipo, setAddItensTipo] = useState<string>("__todos__");
+
+
 
   // histórico de manutenções executadas
   const [histVehicle, setHistVehicle] = useState<Vehicle | null>(null);
@@ -273,14 +285,53 @@ export default function CVVehicles() {
   // ---- planos de manutenção ----
   const abrirPlanos = async (v: Vehicle) => {
     setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null); setAplicarEm([]);
+    setRotEdit({}); setAddItensSel([]); setAddItensTipo((v as any).fleet_type || "__todos__");
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", v.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
+    if (!catalogo.length) listarCatalogo().then(setCatalogo).catch(() => {});
   };
   const recarregarPlanos = async () => {
     if (!planVehicle) return;
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", planVehicle.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
   };
+
+  const planosRoteiro = plans.filter(p => ORIGENS_ROTEIRO.includes((p as any).origem));
+  const planosAdicionais = plans.filter(p => !ORIGENS_ROTEIRO.includes((p as any).origem));
+
+  const salvarIntervaloRoteiro = async (p: MaintenancePlan) => {
+    const e = rotEdit[p.id];
+    if (!e) return;
+    const km = e.km === "" ? null : Number(e.km);
+    const dias = e.dias === "" ? null : Number(e.dias);
+    if (!km && !dias) return toast.error("Informe pelo menos KM ou dias.");
+    setRotSalvando(p.id);
+    const { error } = await supabase.from("cv_maintenance_plans")
+      .update({ interval_km: km, interval_days: dias, tipo: km && dias ? "ambos" : dias ? "dias" : "km" })
+      .eq("id", p.id);
+    setRotSalvando(null);
+    if (error) return toast.error(error.message);
+    toast.success("Intervalo atualizado");
+    setRotEdit(prev => { const n = { ...prev }; delete n[p.id]; return n; });
+    recarregarPlanos(); load();
+  };
+
+  const adicionarAvulsos = async () => {
+    if (!planVehicle || !addItensSel.length) return;
+    setAddItensSalvando(true);
+    try {
+      const itens = catalogo.filter(i => addItensSel.includes(i.id));
+      const n = await adicionarItensRoteiro(planVehicle, itens);
+      toast.success(`${n} item(ns) adicionado(s) ao roteiro`);
+      setAddItensSel([]); setAddItensOpen(false);
+      recarregarPlanos(); load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAddItensSalvando(false);
+    }
+  };
+
 
   const aplicarRoteiroPadrao = async () => {
     if (!planVehicle) return;
@@ -570,36 +621,78 @@ export default function CVVehicles() {
                   <p className="text-sm font-semibold">Roteiro padrão do tipo de frota</p>
                   <p className="text-xs text-muted-foreground">
                     {(planVehicle as any)?.fleet_type
-                      ? `Tipo: ${(planVehicle as any).fleet_type} · ${plans.filter(p => (p as any).origem === "catalogo").length} item(ns) aplicados`
+                      ? `Tipo: ${(planVehicle as any).fleet_type} · ${planosRoteiro.length} item(ns) aplicados`
                       : "Defina o Tipo de frota no cadastro do veículo para usar a biblioteca."}
                   </p>
                 </div>
-                <Button size="sm" variant="outline" disabled={sincronizando} onClick={aplicarRoteiroPadrao}>
-                  {sincronizando ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wrench className="h-3.5 w-3.5 mr-1" />}
-                  Aplicar / atualizar roteiro
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setAddItensOpen(true)}>
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar item avulso
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={sincronizando} onClick={aplicarRoteiroPadrao}>
+                    {sincronizando ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wrench className="h-3.5 w-3.5 mr-1" />}
+                    Aplicar / atualizar roteiro
+                  </Button>
+                </div>
               </div>
-              <div className="max-h-40 overflow-y-auto space-y-1">
-                {plans.filter(p => (p as any).origem === "catalogo").map(p => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1 text-xs">
-                    <span className="truncate">{p.name}</span>
-                    <span className="text-muted-foreground shrink-0">
-                      {p.interval_km ? `${p.interval_km.toLocaleString("pt-BR")} km` : ""}
-                      {p.interval_km && p.interval_days ? " / " : ""}
-                      {p.interval_days ? `${p.interval_days} dias` : ""}
-                    </span>
-                  </div>
-                ))}
-                {plans.filter(p => (p as any).origem === "catalogo").length === 0 && (
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {planosRoteiro.map(p => {
+                  const ed = rotEdit[p.id];
+                  return (
+                    <div key={p.id} className="flex flex-wrap items-center gap-2 rounded border bg-background px-2 py-1.5 text-xs">
+                      <span className="truncate flex-1 min-w-[140px]">
+                        {p.name}
+                        {(p as any).origem === "catalogo_avulso" && <Badge variant="secondary" className="ml-1 text-[10px]">avulso</Badge>}
+                      </span>
+                      {ed ? (
+                        <>
+                          <Input
+                            type="number" placeholder="km" value={ed.km}
+                            onChange={e => setRotEdit({ ...rotEdit, [p.id]: { ...ed, km: e.target.value } })}
+                            className="h-7 w-24 text-xs"
+                          />
+                          <Input
+                            type="number" placeholder="dias" value={ed.dias}
+                            onChange={e => setRotEdit({ ...rotEdit, [p.id]: { ...ed, dias: e.target.value } })}
+                            className="h-7 w-20 text-xs"
+                          />
+                          <Button size="sm" className="h-7 text-xs" disabled={rotSalvando === p.id} onClick={() => salvarIntervaloRoteiro(p)}>
+                            {rotSalvando === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Salvar"}
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setRotEdit(prev => { const n = { ...prev }; delete n[p.id]; return n; })}>
+                            Cancelar
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-muted-foreground shrink-0">
+                            {p.interval_km ? `${p.interval_km.toLocaleString("pt-BR")} km` : ""}
+                            {p.interval_km && p.interval_days ? " / " : ""}
+                            {p.interval_days ? `${p.interval_days} dias` : ""}
+                          </span>
+                          <Button
+                            size="icon" variant="ghost" className="h-7 w-7" title="Alterar km/dias"
+                            onClick={() => setRotEdit({ ...rotEdit, [p.id]: { km: p.interval_km ? String(p.interval_km) : "", dias: p.interval_days ? String(p.interval_days) : "" } })}
+                          ><Pencil className="h-3 w-3" /></Button>
+                          <Button
+                            size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Remover do roteiro"
+                            onClick={() => excluirPlano(p.id)}
+                          ><Trash2 className="h-3 w-3" /></Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                {planosRoteiro.length === 0 && (
                   <p className="text-xs text-muted-foreground">Nenhum item do roteiro padrão aplicado.</p>
                 )}
               </div>
             </div>
 
             <p className="text-sm font-semibold pt-1">Itens adicionais (fora da lista padrão)</p>
-            {plans.filter(p => (p as any).origem !== "catalogo").length === 0 ? (
+            {planosAdicionais.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum item adicional cadastrado.</p>
-            ) : plans.filter(p => (p as any).origem !== "catalogo").map(p => (
+            ) : planosAdicionais.map(p => (
               <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate">{p.name} {!p.active && <Badge variant="secondary" className="ml-1">Inativo</Badge>}</p>
@@ -709,6 +802,60 @@ export default function CVVehicles() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Adicionar itens avulsos da biblioteca ao roteiro */}
+      <Dialog open={addItensOpen} onOpenChange={setAddItensOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Adicionar itens da biblioteca ao roteiro
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tipo de frota da biblioteca</Label>
+              <Select value={addItensTipo} onValueChange={setAddItensTipo}>
+                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__todos__">Todos os tipos</SelectItem>
+                  {Array.from(new Set(catalogo.map(i => i.tipo_veiculo))).sort().map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <FilteredCheckboxList
+              idPrefix="cv-cat"
+              searchPlaceholder="Buscar item da biblioteca..."
+              maxHeightClass="max-h-[320px]"
+              emptyText="Nenhum item disponível na biblioteca."
+              selected={addItensSel}
+              onToggle={(id, checked) => setAddItensSel(checked ? [...addItensSel, id] : addItensSel.filter(i => i !== id))}
+              items={catalogo
+                .filter(i => i.ativo)
+                .filter(i => addItensTipo === "__todos__" || i.tipo_veiculo === addItensTipo)
+                .filter(i => !plans.some(p => (p as any).catalog_item_id === i.id))
+                .map(i => ({
+                  id: i.id,
+                  label: nomeItem(i),
+                  extra: [
+                    i.interval_principal ? `${i.interval_principal.toLocaleString("pt-BR")} km` : null,
+                    i.interval_days ? `${i.interval_days} dias` : null,
+                  ].filter(Boolean).join(" / "),
+                  searchableText: `${i.sistema} ${i.tipo_veiculo} ${i.criticidade}`,
+                }))}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAddItensOpen(false)}>Cancelar</Button>
+              <Button onClick={adicionarAvulsos} disabled={addItensSalvando || !addItensSel.length}>
+                {addItensSalvando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+                Adicionar {addItensSel.length > 0 ? `(${addItensSel.length})` : ""}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Histórico de manutenções do veículo */}
       <Dialog open={!!histVehicle} onOpenChange={o => { if (!o) setHistVehicle(null); }}>
