@@ -689,38 +689,6 @@ export default function CVVehicles() {
               </div>
             </div>
 
-            <p className="text-sm font-semibold pt-1">Itens adicionais (fora da lista padrão)</p>
-            {planosAdicionais.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum item adicional cadastrado.</p>
-            ) : planosAdicionais.map(p => (
-              <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-sm truncate">{p.name} {!p.active && <Badge variant="secondary" className="ml-1">Inativo</Badge>}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.tipo === "km" && `A cada ${p.interval_km?.toLocaleString()} km`}
-                    {p.tipo === "dias" && `A cada ${p.interval_days} dias`}
-                    {p.tipo === "ambos" && `A cada ${p.interval_km?.toLocaleString()} km ou ${p.interval_days} dias`}
-                  </p>
-                  <Badge variant="outline" className="mt-1 gap-1 text-[11px] font-normal border-emerald-500/60 text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Última execução: {p.last_done_km.toLocaleString()} km · {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
-                  </Badge>
-
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
-                    setPlanEditing(p.id);
-                    setPlanForm({
-                      name: p.name, tipo: p.tipo, interval_km: p.interval_km ?? 10000, interval_days: p.interval_days ?? 90,
-                      last_done_km: p.last_done_km, last_done_at: p.last_done_at.slice(0, 10),
-                      alert_km_antecedencia: p.alert_km_antecedencia, alert_days_antecedencia: p.alert_days_antecedencia,
-                      active: p.active,
-                    });
-                  }}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => excluirPlano(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                </div>
-              </div>
-            ))}
 
             <div className="rounded-lg border-2 border-dashed p-3 space-y-3">
               <p className="text-sm font-semibold">{planEditing ? "Editar item de manutenção" : "Incluir item de manutenção (ex.: TROCA DE ÓLEO)"}</p>
