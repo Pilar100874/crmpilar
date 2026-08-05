@@ -621,36 +621,78 @@ export default function CVVehicles() {
                   <p className="text-sm font-semibold">Roteiro padrão do tipo de frota</p>
                   <p className="text-xs text-muted-foreground">
                     {(planVehicle as any)?.fleet_type
-                      ? `Tipo: ${(planVehicle as any).fleet_type} · ${plans.filter(p => (p as any).origem === "catalogo").length} item(ns) aplicados`
+                      ? `Tipo: ${(planVehicle as any).fleet_type} · ${planosRoteiro.length} item(ns) aplicados`
                       : "Defina o Tipo de frota no cadastro do veículo para usar a biblioteca."}
                   </p>
                 </div>
-                <Button size="sm" variant="outline" disabled={sincronizando} onClick={aplicarRoteiroPadrao}>
-                  {sincronizando ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wrench className="h-3.5 w-3.5 mr-1" />}
-                  Aplicar / atualizar roteiro
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setAddItensOpen(true)}>
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar item avulso
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={sincronizando} onClick={aplicarRoteiroPadrao}>
+                    {sincronizando ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wrench className="h-3.5 w-3.5 mr-1" />}
+                    Aplicar / atualizar roteiro
+                  </Button>
+                </div>
               </div>
-              <div className="max-h-40 overflow-y-auto space-y-1">
-                {plans.filter(p => (p as any).origem === "catalogo").map(p => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1 text-xs">
-                    <span className="truncate">{p.name}</span>
-                    <span className="text-muted-foreground shrink-0">
-                      {p.interval_km ? `${p.interval_km.toLocaleString("pt-BR")} km` : ""}
-                      {p.interval_km && p.interval_days ? " / " : ""}
-                      {p.interval_days ? `${p.interval_days} dias` : ""}
-                    </span>
-                  </div>
-                ))}
-                {plans.filter(p => (p as any).origem === "catalogo").length === 0 && (
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {planosRoteiro.map(p => {
+                  const ed = rotEdit[p.id];
+                  return (
+                    <div key={p.id} className="flex flex-wrap items-center gap-2 rounded border bg-background px-2 py-1.5 text-xs">
+                      <span className="truncate flex-1 min-w-[140px]">
+                        {p.name}
+                        {(p as any).origem === "catalogo_avulso" && <Badge variant="secondary" className="ml-1 text-[10px]">avulso</Badge>}
+                      </span>
+                      {ed ? (
+                        <>
+                          <Input
+                            type="number" placeholder="km" value={ed.km}
+                            onChange={e => setRotEdit({ ...rotEdit, [p.id]: { ...ed, km: e.target.value } })}
+                            className="h-7 w-24 text-xs"
+                          />
+                          <Input
+                            type="number" placeholder="dias" value={ed.dias}
+                            onChange={e => setRotEdit({ ...rotEdit, [p.id]: { ...ed, dias: e.target.value } })}
+                            className="h-7 w-20 text-xs"
+                          />
+                          <Button size="sm" className="h-7 text-xs" disabled={rotSalvando === p.id} onClick={() => salvarIntervaloRoteiro(p)}>
+                            {rotSalvando === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Salvar"}
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setRotEdit(prev => { const n = { ...prev }; delete n[p.id]; return n; })}>
+                            Cancelar
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-muted-foreground shrink-0">
+                            {p.interval_km ? `${p.interval_km.toLocaleString("pt-BR")} km` : ""}
+                            {p.interval_km && p.interval_days ? " / " : ""}
+                            {p.interval_days ? `${p.interval_days} dias` : ""}
+                          </span>
+                          <Button
+                            size="icon" variant="ghost" className="h-7 w-7" title="Alterar km/dias"
+                            onClick={() => setRotEdit({ ...rotEdit, [p.id]: { km: p.interval_km ? String(p.interval_km) : "", dias: p.interval_days ? String(p.interval_days) : "" } })}
+                          ><Pencil className="h-3 w-3" /></Button>
+                          <Button
+                            size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Remover do roteiro"
+                            onClick={() => excluirPlano(p.id)}
+                          ><Trash2 className="h-3 w-3" /></Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                {planosRoteiro.length === 0 && (
                   <p className="text-xs text-muted-foreground">Nenhum item do roteiro padrão aplicado.</p>
                 )}
               </div>
             </div>
 
             <p className="text-sm font-semibold pt-1">Itens adicionais (fora da lista padrão)</p>
-            {plans.filter(p => (p as any).origem !== "catalogo").length === 0 ? (
+            {planosAdicionais.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum item adicional cadastrado.</p>
-            ) : plans.filter(p => (p as any).origem !== "catalogo").map(p => (
+            ) : planosAdicionais.map(p => (
               <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate">{p.name} {!p.active && <Badge variant="secondary" className="ml-1">Inativo</Badge>}</p>
