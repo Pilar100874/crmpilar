@@ -5,8 +5,12 @@ o **Coletor Pilar** num PC comum, com:
 
 - **Interface gráfica local** — o Coletor abre em modo kiosk (tela cheia) assim que
   a máquina liga, sem login. O operador configura direto na TV/monitor conectado.
-- **Acesso remoto** — SSH (porta 22) e **Cockpit** (web em `https://IP:9090`)
-  para administrar a máquina de longe.
+- **Acesso remoto** — SSH (porta 22) e **Cockpit** (web em `http://IP:9090`, sem HTTPS,
+  sem certificado e sem senha) para administrar a máquina de longe.
+- **Wi-Fi** — ISO com firmware non-free (Intel/Realtek/Broadcom/Atheros); no kiosk,
+  `F9` abre o gerenciador de redes.
+- **Sem login** — o sistema sobe direto na tela gráfica do Coletor; o usuário `pilar`
+  tem senha em branco e sudo liberado.
 - **Auto-start e auto-recuperação** — serviço systemd reinicia o Coletor se ele cair,
   e a máquina liga sozinha no app após reboot/queda de energia.
 
@@ -67,7 +71,9 @@ No Windows use **Rufus** ou **balenaEtcher** (modo imagem DD).
 
 1. Boot pelo pen drive (F12/F11/Del conforme a BIOS).
 2. Escolha **"Instalar Coletor Pilar (apaga o disco)"**.
-3. A instalação é automática (~10 min). Não há perguntas.
+3. A instalação é automática (~10 min): uma única tela com barra de progresso, sem perguntas.
+   Se só houver Wi-Fi e a rede não conectar sozinha, o instalador pede SSID/senha uma vez
+   (ou preencha `netcfg/wireless_*` no `preseed.cfg` antes de gerar a ISO).
 4. A máquina reinicia e abre o Coletor em tela cheia.
 
 Credenciais padrão (troque no primeiro acesso):
@@ -75,12 +81,14 @@ Credenciais padrão (troque no primeiro acesso):
 | Item          | Valor          |
 | ------------- | -------------- |
 | Usuário       | `pilar`        |
-| Senha         | `pilar2468`    |
-| SSH           | habilitado     |
-| Cockpit       | `https://IP:9090` |
+| Senha         | *(em branco)*  |
+| Login local   | automático (sem tela de login) |
+| SSH           | `ssh pilar@IP` (senha vazia — só Enter) |
+| Cockpit       | `http://IP:9090` (usuário `pilar`, senha vazia) |
 
-> A senha padrão está em `preseed.cfg`. Para produção, gere um hash novo com
-> `mkpasswd -m sha-512` e substitua antes de buildar.
+> O appliance é feito para rede interna confiável. Para expor na internet,
+> defina uma senha (`sudo passwd pilar`), remova
+> `/etc/ssh/sshd_config.d/10-coletor.conf` e o `/etc/pam.d/cockpit` customizado.
 
 ## 4. Configurar o Coletor
 
@@ -96,11 +104,12 @@ Atalhos do kiosk:
 | ------------ | ----------------------------- |
 | `F11`        | sai/entra em tela cheia       |
 | `F12`        | DevTools (log do coletor)     |
-| `Ctrl+Alt+F2`| console texto (login `pilar`) |
+| `F9`         | gerenciador de Wi-Fi / redes  |
+| `Ctrl+Alt+F2`| console texto (autologin `pilar`) |
 
 ## 5. Acesso remoto
 
-- **Cockpit** (recomendado): `https://<ip-do-appliance>:9090` — status, logs,
+- **Cockpit** (recomendado): `http://<ip-do-appliance>:9090` — status, logs,
   rede, terminal e reinício de serviços pelo navegador.
 - **SSH**: `ssh pilar@<ip-do-appliance>`
 - Logs do coletor: `journalctl -u coletor-kiosk -f`
