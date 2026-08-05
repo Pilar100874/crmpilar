@@ -170,7 +170,6 @@ import CVDrivers from "./pages/controle-veiculos/CVDrivers";
 import CVVehicleExit from "./pages/controle-veiculos/CVVehicleExit";
 import CVVehicleEntry from "./pages/controle-veiculos/CVVehicleEntry";
 import CVMovements from "./pages/controle-veiculos/CVMovements";
-import CVDefects from "./pages/controle-veiculos/CVDefects";
 import CVDefectTypes from "./pages/controle-veiculos/CVDefectTypes";
 import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVMaintenanceCatalog from "./pages/controle-veiculos/CVMaintenanceCatalog";
@@ -651,7 +650,7 @@ const App = () => (
                 <Route path="saida" element={<CVVehicleExit />} />
                 <Route path="entrada" element={<CVVehicleEntry />} />
                 <Route path="movimentacoes" element={<CVMovements />} />
-                <Route path="defeitos" element={<CVDefects />} />
+                <Route path="defeitos" element={<Navigate to="/controle-veiculos/paradas" replace />} />
                 <Route path="tipos-defeito" element={<CVDefectTypes />} />
                 <Route path="manutencao" element={<CVMaintenance />} />
                 <Route path="paradas" element={<CVParadas />} />
