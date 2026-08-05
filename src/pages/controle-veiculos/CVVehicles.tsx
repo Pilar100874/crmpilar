@@ -364,15 +364,16 @@ export default function CVVehicles() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Placa</span>
-                    <Badge variant="outline" className="font-mono">{v.plate}</Badge>
+                <CardContent className="space-y-3 px-3 sm:px-4 pb-4 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                    <span className="text-muted-foreground shrink-0">Placa</span>
+                    <Badge variant="outline" className="font-mono truncate max-w-[60%]">{v.plate}</Badge>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Tipo</span>
-                    <span>{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
+                  <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                    <span className="text-muted-foreground shrink-0">Tipo</span>
+                    <span className="truncate text-right">{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
                   </div>
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-1"><Gauge className="h-4 w-4" />KM Atual</span>
                     <span className="font-semibold text-primary">{v.current_km.toLocaleString()} km</span>
