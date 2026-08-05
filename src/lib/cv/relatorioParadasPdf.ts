@@ -81,6 +81,7 @@ export async function gerarRelatorioParadasPdf(filtro: FiltroRelatorioParadas) {
   if (!ordens.length) throw new Error("Nenhuma parada de manutenção no período selecionado");
 
   const checklists = await carregarChecklistPorOrdens(ordens.map((o) => o.id));
+  const planos = await carregarPlanosPorId(ids);
   const logo = await carregarLogo();
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
