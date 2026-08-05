@@ -319,6 +319,21 @@ export default function CVVehicles() {
   const filtered = rows.filter(v =>
     !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
   );
+
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === "name") {
+      cmp = a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+    } else if (sortBy === "km") {
+      cmp = a.current_km - b.current_km;
+    } else if (sortBy === "last_maintenance") {
+      const da = lastMaintByVehicle[a.id] ? new Date(lastMaintByVehicle[a.id]).getTime() : 0;
+      const db = lastMaintByVehicle[b.id] ? new Date(lastMaintByVehicle[b.id]).getTime() : 0;
+      cmp = da - db;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
   const jaVinculados = new Set(rows.filter(r => r.id !== editing).map(r => (r as any).veiculo_id).filter(Boolean));
   const opcoesLogistica = logVeiculos.filter(lv => !jaVinculados.has(lv.id));
 
