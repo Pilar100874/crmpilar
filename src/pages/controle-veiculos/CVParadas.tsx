@@ -9,16 +9,18 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from "sonner";
 import {
   Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
-  ListTree, ChevronRight,
+  ListTree, ChevronRight, Plus,
 } from "lucide-react";
 import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import CVBaixaDialog from "@/components/cv/CVBaixaDialog";
+import CVNovoLancamentoDialog from "@/components/cv/CVNovoLancamentoDialog";
 import {
   carregarParadas, consolidarParada, darBaixaParada, imprimirFicha,
   PRIORIDADE_LABEL, TIPO_LABEL, TIPO_TONE,
   type ParadaVeiculo, type Prioridade, type TipoServico,
 } from "@/lib/cv/ordens";
+
 
 const tonePrioridade: Record<Prioridade, string> = {
   quebra: "border-destructive bg-destructive/10 text-destructive",
