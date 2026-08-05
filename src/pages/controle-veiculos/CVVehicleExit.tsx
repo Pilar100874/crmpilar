@@ -19,6 +19,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { CVMaintenanceVencidasDialog } from "@/components/cv/CVMaintenanceVencidasDialog";
+
 import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
