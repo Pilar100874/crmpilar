@@ -3,9 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn, Video, Smartphone, ImagePlus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ImageZoomDialog } from "@/components/ui/image-zoom-dialog";
+import { CVWebcamDialog } from "@/components/cv/CVWebcamDialog";
+
 
 export interface PhotoAngle {
   key: string;
