@@ -447,7 +447,10 @@ export default function CVDefects() {
                             cost: defect.cost || 0,
                             resolvedBy: defect.resolved_by || "",
                             validatedBy: defect.validated_by || "",
+                            dataBaixa: (defect.data_baixa ?? new Date().toISOString()).slice(0, 10),
+                            kmBaixa: String(defect.km_baixa ?? getVehicle(defect.vehicle_id)?.current_km ?? ""),
                           });
+
                           setDialogOpen(true);
                           abrirSolucao(defect);
                         }} className="bg-primary hover:opacity-90">
