@@ -402,6 +402,40 @@ export default function CVVehicles() {
                 <Switch checked={planForm.active} onCheckedChange={c => setPlanForm({ ...planForm, active: c })} />
                 <Label>Ativo</Label>
               </div>
+
+              {!planEditing && (
+                <div className="rounded-md border p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Aplicar este plano também em outros veículos</Label>
+                    <Button
+                      type="button" size="sm" variant="ghost" className="h-7 text-xs"
+                      onClick={() => {
+                        const outros = rows.filter(r => r.id !== planVehicle?.id).map(r => r.id);
+                        setAplicarEm(aplicarEm.length === outros.length ? [] : outros);
+                      }}
+                    >
+                      {aplicarEm.length === rows.length - 1 && rows.length > 1 ? "Limpar" : "Selecionar todos"}
+                    </Button>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto grid gap-1 sm:grid-cols-2">
+                    {rows.filter(r => r.id !== planVehicle?.id).map(r => (
+                      <label key={r.id} className="flex items-center gap-2 text-sm rounded px-2 py-1 hover:bg-muted cursor-pointer">
+                        <Checkbox
+                          checked={aplicarEm.includes(r.id)}
+                          onCheckedChange={c => setAplicarEm(c ? [...aplicarEm, r.id] : aplicarEm.filter(i => i !== r.id))}
+                        />
+                        <span className="truncate">{r.plate} — {r.name}</span>
+                      </label>
+                    ))}
+                    {rows.length <= 1 && <p className="text-xs text-muted-foreground">Nenhum outro veículo cadastrado.</p>}
+                  </div>
+                  {aplicarEm.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      O plano será criado em {aplicarEm.length + 1} veículos, usando o KM atual de cada um como referência inicial.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 justify-end">
                 {planEditing && <Button variant="ghost" onClick={() => { setPlanEditing(null); setPlanForm({ ...planoVazio, last_done_km: planVehicle?.current_km ?? 0 }); }}>Cancelar edição</Button>}
                 <Button onClick={salvarPlano} disabled={savingPlan}>
