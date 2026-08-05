@@ -159,6 +159,7 @@ export async function darBaixaParada(params: {
   data: string; // ISO
   responsavel: string;
   custo?: number | null;
+  observacao?: string;
 }) {
   const { parada, marcados, km, data, responsavel } = params;
   let feitos = 0;
@@ -189,6 +190,7 @@ export async function darBaixaParada(params: {
     const todos = itensDaOrdem.every(i => marcados[i.id]);
     const algum = itensDaOrdem.some(i => marcados[i.id]);
     if (!algum) continue;
+    const padrao = todos ? "Executado na parada programada" : "Parcialmente executado na parada programada";
     await supabase.from("cv_defect_reports").update({
       status: todos ? "resolved" : "in_progress",
       resolved_at: todos ? data : null,
@@ -196,8 +198,9 @@ export async function darBaixaParada(params: {
       data_baixa: data,
       km_baixa: km,
       ...(params.custo ? { cost: params.custo } : {}),
-      solution: todos ? "Executado na parada programada de manutenção" : "Parcialmente executado na parada programada",
+      solution: params.observacao ? `${padrao} — ${params.observacao}` : padrao,
     }).eq("id", ordemId);
+
   }
 
   if (km && km > (parada.vehicle.current_km ?? 0)) {
