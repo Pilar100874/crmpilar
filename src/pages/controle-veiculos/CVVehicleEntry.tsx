@@ -18,6 +18,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { CVMaintenanceVencidasDialog } from "@/components/cv/CVMaintenanceVencidasDialog";
+
 import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
@@ -29,6 +31,8 @@ export default function CVVehicleEntry() {
   const [photosRequired, setPhotosRequired] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
+  const [popupMove, setPopupMove] = useState<any | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(0);
@@ -80,7 +84,9 @@ export default function CVVehicleEntry() {
     });
     setPhotos([]);
     setStep(1);
+    if ((alertas[move.vehicle_id]?.length ?? 0) > 0) setPopupMove(move);
   };
+
 
   const requiredAngles = useMemo(() => angles.filter((a) => a.required), [angles]);
   const missingRequired = requiredAngles.filter((a) => !photos.some((p) => p.angle_key === a.key));
@@ -291,19 +297,9 @@ export default function CVVehicleEntry() {
               <div className="p-3 bg-muted/50 rounded text-sm">
                 <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
               </div>
-              {(alertas[selected.vehicle_id]?.length ?? 0) > 0 && (
-                <CVMaintenanceAlert
-                  alertas={alertas[selected.vehicle_id]}
-                  vehicleId={selected.vehicle_id}
-                  vehicleKm={form.entry_km ? Number(form.entry_km) : null}
-                  driverId={selected.driver_id}
-                  movementId={selected.id}
-                  onGerado={() => recalcSelected(form.entry_km)}
-                />
-
-              )}
             </div>
           )}
+
 
 
           {step === 1 && selected && (
@@ -425,6 +421,19 @@ export default function CVVehicleEntry() {
           )}
         </div>
       </Card>
+
+      <CVMaintenanceVencidasDialog
+        open={!!popupMove}
+        onOpenChange={(o) => { if (!o) setPopupMove(null); }}
+        alertas={popupMove ? (alertas[popupMove.vehicle_id] ?? []) : []}
+        vehicleLabel={popupMove?.vehicle?.plate}
+        vehicleId={popupMove?.vehicle_id ?? null}
+        vehicleKm={popupMove?.vehicle?.current_km ?? null}
+        driverId={popupMove?.driver_id ?? null}
+        movementId={popupMove?.id ?? null}
+        onGerado={() => recalcSelected(form.entry_km)}
+      />
     </div>
+
   );
 }

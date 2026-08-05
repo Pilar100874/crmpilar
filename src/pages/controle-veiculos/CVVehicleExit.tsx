@@ -19,6 +19,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { CVMaintenanceVencidasDialog } from "@/components/cv/CVMaintenanceVencidasDialog";
+
 import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
@@ -30,6 +32,8 @@ export default function CVVehicleExit() {
   const [busyVehicleIds, setBusyVehicleIds] = useState<Set<string>>(new Set());
   const [busyDriverIds, setBusyDriverIds] = useState<Set<string>>(new Set());
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
+  const [popupVeiculo, setPopupVeiculo] = useState<string | null>(null);
+
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -237,7 +241,7 @@ export default function CVVehicleExit() {
                     const al = alertas[v.id] ?? [];
                     const venc = al.some((a) => a.vencido);
                     return (
-                      <button key={v.id} type="button" onClick={() => setForm({ ...form, vehicle_id: v.id })}
+                      <button key={v.id} type="button" onClick={() => { setForm({ ...form, vehicle_id: v.id }); if (al.length) setPopupVeiculo(v.id); }}
                         className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                           active ? "border-primary bg-primary/5 shadow-md"
                             : venc ? "border-destructive bg-destructive/5"
@@ -256,19 +260,8 @@ export default function CVVehicleExit() {
                     );
                   })}
                 </div>
-                {selectedVehicle && (alertas[selectedVehicle.id]?.length ?? 0) > 0 && (
-                  <div className="mt-4">
-                    <CVMaintenanceAlert
-                      alertas={alertas[selectedVehicle.id]}
-                      vehicleId={selectedVehicle.id}
-                      vehicleKm={selectedVehicle.current_km}
-                      driverId={form.driver_id || null}
-                      onGerado={load}
-                    />
-
-                  </div>
-                )}
               </div>
+
 
             )}
 
@@ -405,7 +398,19 @@ export default function CVVehicleExit() {
             )}
           </div>
         </Card>
+
+        <CVMaintenanceVencidasDialog
+          open={!!popupVeiculo}
+          onOpenChange={(o) => { if (!o) setPopupVeiculo(null); }}
+          alertas={popupVeiculo ? (alertas[popupVeiculo] ?? []) : []}
+          vehicleLabel={vehicles.find((v) => v.id === popupVeiculo)?.plate}
+          vehicleId={popupVeiculo}
+          vehicleKm={vehicles.find((v) => v.id === popupVeiculo)?.current_km ?? null}
+          driverId={form.driver_id || null}
+          onGerado={load}
+        />
       </div>
+
     </>
   );
 }

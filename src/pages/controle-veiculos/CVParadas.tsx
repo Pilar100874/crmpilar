@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from "sonner";
 import {
   Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
+  ListTree, ChevronRight,
+
 } from "lucide-react";
 import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
@@ -31,6 +33,8 @@ export default function CVParadas() {
   const [filtro, setFiltro] = useState<"todas" | Prioridade>("todas");
 
   const [baixa, setBaixa] = useState<ParadaVeiculo | null>(null);
+  const [detalhe, setDetalhe] = useState<ParadaVeiculo | null>(null);
+
   const [marcados, setMarcados] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({ km: "", data: "", responsavel: "", custo: "" });
   const [salvando, setSalvando] = useState(false);
@@ -63,12 +67,23 @@ export default function CVParadas() {
     setExpGerando(false);
   };
 
-  const load = async () => {
+  const load = async (autoGerar = true) => {
     setLoading(true);
-    try { setParadas(await carregarParadas()); }
+    try {
+      let lista = await carregarParadas();
+      // Ordens de serviço são geradas automaticamente para as preventivas pendentes
+      if (autoGerar && lista.some(p => p.alertasSemOrdem.length)) {
+        for (const p of lista.filter(x => x.alertasSemOrdem.length)) {
+          try { await consolidarParada(p); } catch { /* ignora */ }
+        }
+        lista = await carregarParadas();
+      }
+      setParadas(lista);
+    }
     catch (e: any) { toast.error(e?.message ?? "Erro ao carregar paradas"); }
     setLoading(false);
   };
+
   useEffect(() => { load(); }, []);
 
   const filtradas = useMemo(() => paradas.filter(p => {
@@ -177,10 +192,14 @@ export default function CVParadas() {
           <Card key={p.vehicle.id} className={`border-l-4 ${p.prioridade === "quebra" ? "border-l-destructive" : p.prioridade === "preventiva" ? "border-l-primary" : "border-l-muted-foreground/40"}`}>
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base flex items-center gap-2 min-w-0">
+                <CardTitle
+                  className="text-base flex items-center gap-2 min-w-0 cursor-pointer hover:underline"
+                  onClick={() => setDetalhe(p)}
+                >
                   <span className="truncate">{p.vehicle.name} — {p.vehicle.plate}</span>
                   <Badge variant="outline" className={tonePrioridade[p.prioridade]}>{PRIORIDADE_LABEL[p.prioridade]}</Badge>
                 </CardTitle>
+
                 <div className="flex flex-wrap gap-2">
                   {!!p.alertasSemOrdem.length && (
                     <Button size="sm" variant="secondary" disabled={busy === p.vehicle.id} onClick={() => agrupar(p)}>
@@ -204,15 +223,10 @@ export default function CVParadas() {
               </p>
             </CardHeader>
             <CardContent className="space-y-2">
-              {p.itens.map(i => (
-                <div key={i.id} className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-2 py-1.5">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{i.descricao}</p>
-                    {i.pecas && <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {i.pecas}</p>}
-                  </div>
-                  <Badge variant="outline" className={`shrink-0 text-[10px] ${tonePrioridade[i.prioridade]}`}>{PRIORIDADE_LABEL[i.prioridade]}</Badge>
-                </div>
-              ))}
+              <Button variant="outline" size="sm" className="w-full justify-between" onClick={() => setDetalhe(p)}>
+                <span className="flex items-center gap-2"><ListTree className="h-4 w-4" /> Ver ordens e serviços ({p.itens.length})</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
               {!!p.alertasSemOrdem.length && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
                   {p.alertasSemOrdem.length} preventiva(s) vencida(s)/próxima(s) ainda sem ordem — agrupe para incluir nesta parada.
@@ -227,9 +241,64 @@ export default function CVParadas() {
                 </div>
               )}
             </CardContent>
+
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!detalhe} onOpenChange={o => { if (!o) setDetalhe(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListTree className="h-4 w-4" /> {detalhe?.vehicle.name} — {detalhe?.vehicle.plate}
+            </DialogTitle>
+            <DialogDescription>
+              Ordens de serviço abertas e seus itens (sub-itens do checklist).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {Array.from(new Set((detalhe?.itens ?? []).map(i => i.ordemId))).map((ordemId, idx) => {
+              const itens = (detalhe?.itens ?? []).filter(i => i.ordemId === ordemId);
+              return (
+                <div key={ordemId} className="rounded-md border">
+                  <div className="flex items-center justify-between gap-2 border-b bg-muted/50 px-3 py-2">
+                    <p className="text-sm font-semibold">Ordem #{idx + 1}</p>
+                    <Badge variant="outline" className="text-[10px]">{itens.length} item(ns)</Badge>
+                  </div>
+                  <div className="p-2 space-y-1.5">
+                    {itens.map(i => (
+                      <div key={i.id} className="flex items-start justify-between gap-2 rounded-md border bg-background px-2 py-1.5">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">{i.descricao}</p>
+                          {i.pecas && <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {i.pecas}</p>}
+                        </div>
+                        <Badge variant="outline" className={`shrink-0 text-[10px] ${tonePrioridade[i.prioridade]}`}>{PRIORIDADE_LABEL[i.prioridade]}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {!detalhe?.itens.length && (
+              <p className="text-sm text-muted-foreground text-center py-6">Nenhuma ordem aberta para este veículo.</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            {!!detalhe?.itens.length && (
+              <Button variant="outline" onClick={() => detalhe && imprimirFicha(detalhe)}>
+                <Printer className="h-4 w-4 mr-1" /> Imprimir ficha
+              </Button>
+            )}
+            <Button onClick={() => { const d = detalhe; setDetalhe(null); if (d?.itens.length) abrirBaixa(d); }} disabled={!detalhe?.itens.length}>
+              <ClipboardCheck className="h-4 w-4 mr-1" /> Dar baixa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
       <Dialog open={!!baixa} onOpenChange={o => { if (!o) setBaixa(null); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
