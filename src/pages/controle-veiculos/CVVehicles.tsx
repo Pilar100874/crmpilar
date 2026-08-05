@@ -643,6 +643,10 @@ export default function CVVehicles() {
                       <span className="truncate flex-1 min-w-[140px]">
                         {p.name}
                         {(p as any).origem === "catalogo_avulso" && <Badge variant="secondary" className="ml-1 text-[10px]">avulso</Badge>}
+                        {!ORIGENS_ROTEIRO.includes((p as any).origem) && <Badge variant="secondary" className="ml-1 text-[10px]">manual</Badge>}
+                        <span className="ml-1 text-[10px] text-muted-foreground">
+                          · última: {p.last_done_km?.toLocaleString("pt-BR")} km · {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
+                        </span>
                       </span>
                       {ed ? (
                         <>
