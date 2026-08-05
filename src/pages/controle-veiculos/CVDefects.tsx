@@ -288,15 +288,26 @@ export default function CVDefects() {
                   <Input placeholder="Ex.: FILTRO DE ÓLEO; ÓLEO 15W40" value={newDefect.pecas}
                     onChange={(e) => setNewDefect({ ...newDefect, pecas: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Quilometragem do veículo (KM)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Ex: 45.230"
-                    value={newDefect.vehicle_km}
-                    onChange={(e) => setNewDefect({ ...newDefect, vehicle_km: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Data do lançamento *</Label>
+                    <Input
+                      type="date"
+                      value={newDefect.data}
+                      onChange={(e) => setNewDefect({ ...newDefect, data: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>KM do veículo *</Label>
+                    <Input
+                      type="number"
+                      placeholder="Ex: 45230"
+                      value={newDefect.vehicle_km}
+                      onChange={(e) => setNewDefect({ ...newDefect, vehicle_km: e.target.value })}
+                    />
+                  </div>
                 </div>
+
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
                   <Button onClick={handleCreate}>Reportar Defeito</Button>
