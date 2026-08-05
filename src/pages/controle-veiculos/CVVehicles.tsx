@@ -126,8 +126,17 @@ export default function CVVehicles() {
   const save = async () => {
     if (!form.veiculo_id) return toast.error("Selecione um veículo do cadastro de Logística");
     if (!form.name || !form.plate) return toast.error("Nome e placa são obrigatórios");
-    const next_oil_change_km = Number(form.last_oil_change_km) + Number(form.oil_change_interval);
-    const payload: any = { ...form, next_oil_change_km, plate: String(form.plate).toUpperCase() };
+    // óleo/revisões passaram a ser controlados pelos planos de manutenção
+    const last_oil_change_km = Number(form.current_km) || 0;
+    const oil_change_interval = Number(form.oil_change_interval) || 10000;
+    const payload: any = {
+      ...form,
+      last_oil_change_km,
+      oil_change_interval,
+      next_oil_change_km: last_oil_change_km + oil_change_interval,
+      plate: String(form.plate).toUpperCase(),
+    };
+
     if (!editing) {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", user?.id).maybeSingle();
