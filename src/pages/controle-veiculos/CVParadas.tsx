@@ -40,6 +40,9 @@ export default function CVParadas() {
   const [preSelecionados, setPreSelecionados] = useState<string[] | undefined>();
   const [detalhe, setDetalhe] = useState<ParadaVeiculo | null>(null);
   const [selecao, setSelecao] = useState<Record<string, boolean>>({});
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [novoVeiculo, setNovoVeiculo] = useState<string | undefined>();
+
 
   const hoje = new Date();
   const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
