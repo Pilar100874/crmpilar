@@ -374,10 +374,11 @@ export default function CVVehicles() {
                     <span className="truncate text-right">{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-1"><Gauge className="h-4 w-4" />KM Atual</span>
-                    <span className="font-semibold text-primary">{v.current_km.toLocaleString()} km</span>
+                  <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                    <span className="text-muted-foreground flex items-center gap-1 shrink-0"><Gauge className="h-4 w-4" />KM Atual</span>
+                    <span className="font-semibold text-primary truncate">{v.current_km.toLocaleString()} km</span>
                   </div>
+
                   <div className="pt-2 border-t">
                     <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={() => abrirHistorico(v)}>
                       <History className="h-3.5 w-3.5 mr-1" /> Últimas manutenções
