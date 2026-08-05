@@ -188,6 +188,9 @@ export default function CVParadas() {
                       Agrupar {p.alertasSemOrdem.length} preventiva(s)
                     </Button>
                   )}
+                  <Button size="sm" variant="ghost" onClick={() => { setExp(v => ({ ...v, veiculo: p.vehicle.id })); setExpOpen(true); }}>
+                    <FileDown className="h-4 w-4 mr-1" /> PDF
+                  </Button>
                   <Button size="sm" variant="outline" disabled={!p.itens.length} onClick={() => imprimirFicha(p)}>
                     <Printer className="h-4 w-4 mr-1" /> Imprimir ficha
                   </Button>
