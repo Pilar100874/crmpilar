@@ -190,10 +190,16 @@ export default function CVParadas() {
         title="Manutenções & Defeitos"
         subtitle={`${paradas.length} veículo(s) com pendências • ${totalManutencao} manutenção(ões) • ${totalDefeito} defeito(s)`}
         actions={
-          <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
-            <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
+              <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
+            </Button>
+            <Button size="sm" className="bg-white text-primary hover:bg-white/90" onClick={() => { setNovoVeiculo(undefined); setNovoOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Novo lançamento
+            </Button>
+          </div>
         }
+
       />
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
