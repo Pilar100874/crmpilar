@@ -11,38 +11,62 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge, Droplets,
-  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search, Truck,
+  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2,
 } from "lucide-react";
 import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
+import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { carregarAlertasManutencao, type AlertaManutencao, type MaintenancePlan, type PlanoTipo } from "@/lib/cv/manutencao";
 
 const TYPES: { value: VehicleType; label: string }[] = [
   { value: "carro", label: "Carro" }, { value: "vuc", label: "VUC" },
   { value: "truck", label: "Truck" }, { value: "carreta", label: "Carreta" },
   { value: "outro", label: "Outro" },
 ];
+
+const TIPO_MAP: Record<string, VehicleType> = {
+  carro: "carro", vuc: "vuc", truck: "truck", caminhao: "truck",
+  "caminhão": "truck", carreta: "carreta", moto: "outro", pessoa: "outro",
+};
+
 const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
   veiculo_id: null as string | null,
 };
 
-interface LogVeic { id: string; placa: string; descricao: string | null }
+const planoVazio = {
+  name: "", tipo: "km" as PlanoTipo, interval_km: 10000, interval_days: 90,
+  last_done_km: 0, last_done_at: new Date().toISOString().slice(0, 10),
+  alert_km_antecedencia: 500, alert_days_antecedencia: 7, active: true,
+};
+
+interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
   const [logVeiculos, setLogVeiculos] = useState<LogVeic[]>([]);
+  const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
 
+  // manutenção
+  const [planVehicle, setPlanVehicle] = useState<Vehicle | null>(null);
+  const [plans, setPlans] = useState<MaintenancePlan[]>([]);
+  const [planForm, setPlanForm] = useState<any>(planoVazio);
+  const [planEditing, setPlanEditing] = useState<string | null>(null);
+  const [savingPlan, setSavingPlan] = useState(false);
+
   const load = async () => {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
     if (error) return toast.error(error.message);
-    setRows((data ?? []) as Vehicle[]);
-    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao").eq("ativo", true).order("placa");
+    const list = (data ?? []) as Vehicle[];
+    setRows(list);
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
+    setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
   };
   useEffect(() => { load(); }, []);
 
@@ -56,7 +80,21 @@ export default function CVVehicles() {
     });
     setEditing(v.id); setOpen(true);
   };
+
+  const selecionarLogistica = (id: string) => {
+    const lv = logVeiculos.find(v => v.id === id);
+    if (!lv) return;
+    setForm((f: any) => ({
+      ...f,
+      veiculo_id: lv.id,
+      plate: lv.placa,
+      name: (lv.descricao || lv.placa).toUpperCase(),
+      vehicle_type: TIPO_MAP[(lv.tipo_veiculo ?? "").toLowerCase()] ?? f.vehicle_type,
+    }));
+  };
+
   const save = async () => {
+    if (!form.veiculo_id) return toast.error("Selecione um veículo do cadastro de Logística");
     if (!form.name || !form.plate) return toast.error("Nome e placa são obrigatórios");
     const next_oil_change_km = Number(form.last_oil_change_km) + Number(form.oil_change_interval);
     const payload: any = { ...form, next_oil_change_km, plate: String(form.plate).toUpperCase() };
@@ -83,9 +121,57 @@ export default function CVVehicles() {
     load();
   };
 
+  // ---- planos de manutenção ----
+  const abrirPlanos = async (v: Vehicle) => {
+    setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null);
+    const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", v.id).order("name");
+    setPlans((data ?? []) as any as MaintenancePlan[]);
+  };
+  const recarregarPlanos = async () => {
+    if (!planVehicle) return;
+    const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", planVehicle.id).order("name");
+    setPlans((data ?? []) as any as MaintenancePlan[]);
+  };
+  const salvarPlano = async () => {
+    if (!planVehicle) return;
+    if (!planForm.name) return toast.error("Informe o nome do serviço");
+    if ((planForm.tipo === "km" || planForm.tipo === "ambos") && !Number(planForm.interval_km)) return toast.error("Informe o intervalo em KM");
+    if ((planForm.tipo === "dias" || planForm.tipo === "ambos") && !Number(planForm.interval_days)) return toast.error("Informe o intervalo em dias");
+    setSavingPlan(true);
+    const payload: any = {
+      vehicle_id: planVehicle.id,
+      estabelecimento_id: planVehicle.estabelecimento_id,
+      name: String(planForm.name).toUpperCase(),
+      tipo: planForm.tipo,
+      interval_km: planForm.tipo === "dias" ? null : Number(planForm.interval_km),
+      interval_days: planForm.tipo === "km" ? null : Number(planForm.interval_days),
+      last_done_km: Number(planForm.last_done_km) || 0,
+      last_done_at: new Date(planForm.last_done_at).toISOString(),
+      alert_km_antecedencia: Number(planForm.alert_km_antecedencia) || 0,
+      alert_days_antecedencia: Number(planForm.alert_days_antecedencia) || 0,
+      active: planForm.active,
+    };
+    const { error } = planEditing
+      ? await supabase.from("cv_maintenance_plans").update(payload).eq("id", planEditing)
+      : await supabase.from("cv_maintenance_plans").insert(payload);
+    setSavingPlan(false);
+    if (error) return toast.error(error.message);
+    toast.success("Plano salvo");
+    setPlanForm({ ...planoVazio, last_done_km: planVehicle.current_km }); setPlanEditing(null);
+    recarregarPlanos(); load();
+  };
+  const excluirPlano = async (id: string) => {
+    if (!confirm("Excluir este plano de manutenção?")) return;
+    const { error } = await supabase.from("cv_maintenance_plans").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    recarregarPlanos(); load();
+  };
+
   const filtered = rows.filter(v =>
     !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
   );
+  const jaVinculados = new Set(rows.filter(r => r.id !== editing).map(r => (r as any).veiculo_id).filter(Boolean));
+  const opcoesLogistica = logVeiculos.filter(lv => !jaVinculados.has(lv.id));
 
   return (
     <div className="space-y-4">
@@ -125,6 +211,7 @@ export default function CVVehicles() {
                       {v.name}
                     </CardTitle>
                     <div className="flex gap-0.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Planos de manutenção" onClick={() => abrirPlanos(v)}><Wrench className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(v)}>
                         {v.active ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
@@ -163,6 +250,7 @@ export default function CVVehicles() {
                         : <>Próxima em {km.toLocaleString()} km ({v.next_oil_change_km.toLocaleString()} km)</>}
                     </p>
                   </div>
+                  <CVMaintenanceAlert alertas={alertas[v.id] ?? []} onGerado={load} />
                   {!v.active && <Badge variant="secondary" className="w-full justify-center">Inativo</Badge>}
                 </CardContent>
               </Card>
@@ -175,9 +263,22 @@ export default function CVVehicles() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? "Editar Veículo" : "Novo Veículo"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+            <div>
+              <Label>Veículo / Pessoa (cadastro de Logística)</Label>
+              <Select value={form.veiculo_id ?? ""} onValueChange={selecionarLogistica}>
+                <SelectTrigger><SelectValue placeholder="Selecione o veículo cadastrado na Logística" /></SelectTrigger>
+                <SelectContent>
+                  {opcoesLogistica.length === 0 && <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum veículo disponível</div>}
+                  {opcoesLogistica.map(lv => (
+                    <SelectItem key={lv.id} value={lv.id}>{lv.placa}{lv.descricao ? ` — ${lv.descricao}` : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">O nome e a placa são preenchidos a partir do cadastro de Logística.</p>
+            </div>
+            <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })} /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><Label>Placa</Label><Input value={form.plate} onChange={e => setForm({ ...form, plate: e.target.value.toUpperCase() })} /></div>
+              <div><Label>Placa</Label><Input value={form.plate} readOnly className="bg-muted font-mono" /></div>
               <div>
                 <Label>Tipo</Label>
                 <Select value={form.vehicle_type} onValueChange={v => setForm({ ...form, vehicle_type: v })}>
@@ -187,39 +288,108 @@ export default function CVVehicles() {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div><Label>KM Atual</Label><Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: +e.target.value })} /></div>
-              <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: +e.target.value })} /></div>
-              <div><Label>Intervalo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: +e.target.value })} /></div>
-            </div>
-            <div>
-              <Label>Vincular ao veículo da Logística (opcional)</Label>
-              <Select
-                value={form.veiculo_id ?? "__none__"}
-                onValueChange={v => setForm({ ...form, veiculo_id: v === "__none__" ? null : v })}
-              >
-                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Nenhum</SelectItem>
-                  {logVeiculos.map(lv => (
-                    <SelectItem key={lv.id} value={lv.id}>
-                      {lv.placa}{lv.descricao ? ` — ${lv.descricao}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Usado no monitoramento da Logística para exibir motorista e WhatsApp em tempo real.
-              </p>
+              <div><Label>KM Atual</Label><Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} /></div>
+              <div><Label>Intervalo Óleo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: e.target.value })} /></div>
+              <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: e.target.value })} /></div>
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
+              <Switch checked={form.active} onCheckedChange={c => setForm({ ...form, active: c })} />
               <Label>Ativo</Label>
             </div>
+            {editing && (
+              <p className="text-xs text-muted-foreground">
+                Use o botão <Wrench className="inline h-3 w-3" /> no card para cadastrar planos de manutenção (por KM ou por dias).
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Planos de manutenção */}
+      <Dialog open={!!planVehicle} onOpenChange={o => { if (!o) setPlanVehicle(null); }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" /> Manutenções — {planVehicle?.name} ({planVehicle?.plate})
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {plans.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum plano cadastrado.</p>
+            ) : plans.map(p => (
+              <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{p.name} {!p.active && <Badge variant="secondary" className="ml-1">Inativo</Badge>}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.tipo === "km" && `A cada ${p.interval_km?.toLocaleString()} km`}
+                    {p.tipo === "dias" && `A cada ${p.interval_days} dias`}
+                    {p.tipo === "ambos" && `A cada ${p.interval_km?.toLocaleString()} km ou ${p.interval_days} dias`}
+                    {" · "}última: {p.last_done_km.toLocaleString()} km em {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
+                    setPlanEditing(p.id);
+                    setPlanForm({
+                      name: p.name, tipo: p.tipo, interval_km: p.interval_km ?? 10000, interval_days: p.interval_days ?? 90,
+                      last_done_km: p.last_done_km, last_done_at: p.last_done_at.slice(0, 10),
+                      alert_km_antecedencia: p.alert_km_antecedencia, alert_days_antecedencia: p.alert_days_antecedencia,
+                      active: p.active,
+                    });
+                  }}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => excluirPlano(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+            ))}
+
+            <div className="rounded-lg border-2 border-dashed p-3 space-y-3">
+              <p className="text-sm font-semibold">{planEditing ? "Editar plano" : "Novo plano de manutenção"}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><Label>Serviço</Label><Input placeholder="Ex.: TROCA DE ÓLEO" value={planForm.name} onChange={e => setPlanForm({ ...planForm, name: e.target.value.toUpperCase() })} /></div>
+                <div>
+                  <Label>Controlar por</Label>
+                  <Select value={planForm.tipo} onValueChange={v => setPlanForm({ ...planForm, tipo: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="km">Quilometragem</SelectItem>
+                      <SelectItem value="dias">Dias</SelectItem>
+                      <SelectItem value="ambos">Ambos (o que vencer primeiro)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {planForm.tipo !== "dias" && (
+                  <>
+                    <div><Label>A cada (km)</Label><Input type="number" value={planForm.interval_km} onChange={e => setPlanForm({ ...planForm, interval_km: e.target.value })} /></div>
+                    <div><Label>Avisar com (km) de antecedência</Label><Input type="number" value={planForm.alert_km_antecedencia} onChange={e => setPlanForm({ ...planForm, alert_km_antecedencia: e.target.value })} /></div>
+                  </>
+                )}
+                {planForm.tipo !== "km" && (
+                  <>
+                    <div><Label>A cada (dias)</Label><Input type="number" value={planForm.interval_days} onChange={e => setPlanForm({ ...planForm, interval_days: e.target.value })} /></div>
+                    <div><Label>Avisar com (dias) de antecedência</Label><Input type="number" value={planForm.alert_days_antecedencia} onChange={e => setPlanForm({ ...planForm, alert_days_antecedencia: e.target.value })} /></div>
+                  </>
+                )}
+                <div><Label>Última execução (km)</Label><Input type="number" value={planForm.last_done_km} onChange={e => setPlanForm({ ...planForm, last_done_km: e.target.value })} /></div>
+                <div><Label>Última execução (data)</Label><Input type="date" value={planForm.last_done_at} onChange={e => setPlanForm({ ...planForm, last_done_at: e.target.value })} /></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={planForm.active} onCheckedChange={c => setPlanForm({ ...planForm, active: c })} />
+                <Label>Ativo</Label>
+              </div>
+              <div className="flex gap-2 justify-end">
+                {planEditing && <Button variant="ghost" onClick={() => { setPlanEditing(null); setPlanForm({ ...planoVazio, last_done_km: planVehicle?.current_km ?? 0 }); }}>Cancelar edição</Button>}
+                <Button onClick={salvarPlano} disabled={savingPlan}>
+                  {savingPlan ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+                  {planEditing ? "Salvar plano" : "Adicionar plano"}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

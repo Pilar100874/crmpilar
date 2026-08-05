@@ -18,6 +18,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
 
@@ -27,6 +29,7 @@ export default function CVVehicleExit() {
   const [helpers, setHelpers] = useState<{ id: string; name: string; phone: string | null }[]>([]);
   const [busyVehicleIds, setBusyVehicleIds] = useState<Set<string>>(new Set());
   const [busyDriverIds, setBusyDriverIds] = useState<Set<string>>(new Set());
+  const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -49,7 +52,9 @@ export default function CVVehicleExit() {
       supabase.from("cv_vehicle_movements").select("vehicle_id, driver_id").eq("status", "out"),
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
-    setVehicles((v.data ?? []) as Vehicle[]);
+    const vlist = (v.data ?? []) as Vehicle[];
+    setVehicles(vlist);
+    carregarAlertasManutencao(vlist.map((x) => ({ id: x.id, current_km: x.current_km }))).then(setAlertas);
     setDrivers((d.data ?? []) as Driver[]);
     setHelpers((h.data ?? []) as any);
     setBusyVehicleIds(new Set((m.data ?? []).map((x: any) => x.vehicle_id)));
@@ -229,10 +234,15 @@ export default function CVVehicleExit() {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {availableVehicles.map((v) => {
                     const active = form.vehicle_id === v.id;
+                    const al = alertas[v.id] ?? [];
+                    const venc = al.some((a) => a.vencido);
                     return (
                       <button key={v.id} type="button" onClick={() => setForm({ ...form, vehicle_id: v.id })}
                         className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-                          active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"
+                          active ? "border-primary bg-primary/5 shadow-md"
+                            : venc ? "border-destructive bg-destructive/5"
+                            : al.length ? "border-amber-500 bg-amber-500/5"
+                            : "border-border bg-card"
                         }`}>
                         <div className="flex items-center justify-between mb-2">
                           <Car className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
@@ -241,11 +251,22 @@ export default function CVVehicleExit() {
                         <p className="font-semibold truncate">{v.name}</p>
                         <Badge variant="outline" className="font-mono text-xs mt-1">{v.plate}</Badge>
                         <p className="text-xs text-muted-foreground mt-2">KM: {v.current_km?.toLocaleString()}</p>
+                        <CVMaintenanceAlert alertas={al} compact />
                       </button>
                     );
                   })}
                 </div>
+                {selectedVehicle && (alertas[selectedVehicle.id]?.length ?? 0) > 0 && (
+                  <div className="mt-4">
+                    <CVMaintenanceAlert
+                      alertas={alertas[selectedVehicle.id]}
+                      driverId={form.driver_id || null}
+                      onGerado={load}
+                    />
+                  </div>
+                )}
               </div>
+
             )}
 
             {step === 1 && (

@@ -17,6 +17,8 @@ import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
 
@@ -26,6 +28,7 @@ export default function CVVehicleEntry() {
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
+  const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(0);
@@ -48,12 +51,22 @@ export default function CVVehicleEntry() {
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     setOpenMoves(m.data ?? []);
+    carregarAlertasManutencao(
+      (m.data ?? []).map((x: any) => ({ id: x.vehicle_id, current_km: x.vehicle?.current_km ?? 0 })),
+    ).then(setAlertas);
     setDefectTypes(dt.data ?? []);
     setAngles(((cfg.data?.entry_photos as any) ?? []) as PhotoAngle[]);
     setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  // Recalcula os alertas do veículo selecionado usando a KM informada na entrada
+  const recalcSelected = async (km: number) => {
+    if (!selected?.vehicle_id) return;
+    const r = await carregarAlertasManutencao([{ id: selected.vehicle_id, current_km: km }]);
+    setAlertas((prev) => ({ ...prev, [selected.vehicle_id]: r[selected.vehicle_id] ?? [] }));
+  };
 
 
   const handleSelectVehicle = (move: any) => {

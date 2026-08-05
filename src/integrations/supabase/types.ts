@@ -6136,6 +6136,7 @@ export type Database = {
           estabelecimento_id: string | null
           id: string
           is_damage_report: boolean
+          maintenance_plan_id: string | null
           movement_id: string | null
           reported_at: string
           reported_by: string | null
@@ -6157,6 +6158,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           is_damage_report?: boolean
+          maintenance_plan_id?: string | null
           movement_id?: string | null
           reported_at?: string
           reported_by?: string | null
@@ -6178,6 +6180,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           is_damage_report?: boolean
+          maintenance_plan_id?: string | null
           movement_id?: string | null
           reported_at?: string
           reported_by?: string | null
@@ -6209,6 +6212,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_defect_reports_maintenance_plan_id_fkey"
+            columns: ["maintenance_plan_id"]
+            isOneToOne: false
+            referencedRelation: "cv_maintenance_plans"
             referencedColumns: ["id"]
           },
           {
@@ -6382,6 +6392,72 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_maintenance_plans: {
+        Row: {
+          active: boolean
+          alert_days_antecedencia: number
+          alert_km_antecedencia: number
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          interval_days: number | null
+          interval_km: number | null
+          last_done_at: string
+          last_done_km: number
+          name: string
+          tipo: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          active?: boolean
+          alert_days_antecedencia?: number
+          alert_km_antecedencia?: number
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          interval_days?: number | null
+          interval_km?: number | null
+          last_done_at?: string
+          last_done_km?: number
+          name: string
+          tipo?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          active?: boolean
+          alert_days_antecedencia?: number
+          alert_km_antecedencia?: number
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          interval_days?: number | null
+          interval_km?: number | null
+          last_done_at?: string
+          last_done_km?: number
+          name?: string
+          tipo?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_maintenance_plans_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_maintenance_plans_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "cv_vehicles"
             referencedColumns: ["id"]
           },
         ]
