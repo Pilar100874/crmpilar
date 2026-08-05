@@ -17,6 +17,8 @@ import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
 
@@ -26,6 +28,7 @@ export default function CVVehicleEntry() {
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
+  const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(0);
@@ -48,12 +51,22 @@ export default function CVVehicleEntry() {
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     setOpenMoves(m.data ?? []);
+    carregarAlertasManutencao(
+      (m.data ?? []).map((x: any) => ({ id: x.vehicle_id, current_km: x.vehicle?.current_km ?? 0 })),
+    ).then(setAlertas);
     setDefectTypes(dt.data ?? []);
     setAngles(((cfg.data?.entry_photos as any) ?? []) as PhotoAngle[]);
     setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  // Recalcula os alertas do veículo selecionado usando a KM informada na entrada
+  const recalcSelected = async (km: number) => {
+    if (!selected?.vehicle_id) return;
+    const r = await carregarAlertasManutencao([{ id: selected.vehicle_id, current_km: km }]);
+    setAlertas((prev) => ({ ...prev, [selected.vehicle_id]: r[selected.vehicle_id] ?? [] }));
+  };
 
 
   const handleSelectVehicle = (move: any) => {
@@ -263,6 +276,7 @@ export default function CVVehicleEntry() {
                           <Clock className="h-3 w-3 mr-1" />{h}h {min}min em trânsito
                         </Badge>
                       </div>
+                      <CVMaintenanceAlert alertas={alertas[m.vehicle_id] ?? []} compact />
                     </button>
                   );
                 })}
@@ -271,10 +285,21 @@ export default function CVVehicleEntry() {
           )}
 
           {step >= 1 && selected && (
-            <div className="mb-4 p-3 bg-muted/50 rounded text-sm">
-              <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
+            <div className="mb-4 space-y-3">
+              <div className="p-3 bg-muted/50 rounded text-sm">
+                <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
+              </div>
+              {(alertas[selected.vehicle_id]?.length ?? 0) > 0 && (
+                <CVMaintenanceAlert
+                  alertas={alertas[selected.vehicle_id]}
+                  driverId={selected.driver_id}
+                  movementId={selected.id}
+                  onGerado={() => recalcSelected(form.entry_km)}
+                />
+              )}
             </div>
           )}
+
 
           {step === 1 && selected && (
             <div className="space-y-4 max-w-xl">
@@ -285,6 +310,7 @@ export default function CVVehicleEntry() {
                   min={(selected.exit_km ?? 0) + 1}
                   value={form.entry_km}
                   onChange={(e) => setForm({ ...form, entry_km: +e.target.value })}
+                  onBlur={(e) => recalcSelected(+e.target.value)}
                   className={form.entry_km <= (selected.exit_km ?? 0) ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
