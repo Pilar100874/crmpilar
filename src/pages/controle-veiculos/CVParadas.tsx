@@ -364,7 +364,15 @@ export default function CVParadas() {
         </DialogContent>
       </Dialog>
 
+      <CVNovoLancamentoDialog
+        open={novoOpen}
+        onOpenChange={setNovoOpen}
+        vehicleId={novoVeiculo}
+        onCreated={() => load(false)}
+      />
+
       <CVBaixaDialog
+
         open={!!baixa}
         onOpenChange={o => { if (!o) setBaixa(null); }}
         titulo={`${baixa?.vehicle.name ?? ""} (${baixa?.vehicle.plate ?? ""})`}
