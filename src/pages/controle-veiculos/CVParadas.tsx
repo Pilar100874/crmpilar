@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from "sonner";
 import {
   Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
+  ListTree, ChevronRight,
+
 } from "lucide-react";
 import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
