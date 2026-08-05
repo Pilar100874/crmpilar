@@ -803,6 +803,60 @@ export default function CVVehicles() {
         </DialogContent>
       </Dialog>
 
+      {/* Adicionar itens avulsos da biblioteca ao roteiro */}
+      <Dialog open={addItensOpen} onOpenChange={setAddItensOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Adicionar itens da biblioteca ao roteiro
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tipo de frota da biblioteca</Label>
+              <Select value={addItensTipo} onValueChange={setAddItensTipo}>
+                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__todos__">Todos os tipos</SelectItem>
+                  {Array.from(new Set(catalogo.map(i => i.tipo_veiculo))).sort().map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <FilteredCheckboxList
+              idPrefix="cv-cat"
+              searchPlaceholder="Buscar item da biblioteca..."
+              maxHeightClass="max-h-[320px]"
+              emptyText="Nenhum item disponível na biblioteca."
+              selected={addItensSel}
+              onToggle={(id, checked) => setAddItensSel(checked ? [...addItensSel, id] : addItensSel.filter(i => i !== id))}
+              items={catalogo
+                .filter(i => i.ativo)
+                .filter(i => addItensTipo === "__todos__" || i.tipo_veiculo === addItensTipo)
+                .filter(i => !plans.some(p => (p as any).catalog_item_id === i.id))
+                .map(i => ({
+                  id: i.id,
+                  label: nomeItem(i),
+                  extra: [
+                    i.interval_principal ? `${i.interval_principal.toLocaleString("pt-BR")} km` : null,
+                    i.interval_days ? `${i.interval_days} dias` : null,
+                  ].filter(Boolean).join(" / "),
+                  searchableText: `${i.sistema} ${i.tipo_veiculo} ${i.criticidade}`,
+                }))}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAddItensOpen(false)}>Cancelar</Button>
+              <Button onClick={adicionarAvulsos} disabled={addItensSalvando || !addItensSel.length}>
+                {addItensSalvando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+                Adicionar {addItensSel.length > 0 ? `(${addItensSel.length})` : ""}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Histórico de manutenções do veículo */}
       <Dialog open={!!histVehicle} onOpenChange={o => { if (!o) setHistVehicle(null); }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
