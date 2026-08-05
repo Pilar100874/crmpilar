@@ -46,7 +46,11 @@ export interface ItemParada {
   pecas: string | null;
   prioridade: Prioridade;
   feito: boolean | null;
+  /** Atraso do plano vinculado: em km (controle por km) ou em dias (controle por dias) */
+  atraso?: string | null;
+  atrasado?: boolean;
 }
+
 
 export interface ParadaVeiculo {
   vehicle: any;
