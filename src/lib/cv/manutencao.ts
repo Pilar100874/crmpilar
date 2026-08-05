@@ -86,6 +86,19 @@ export async function carregarAlertasManutencao(
     ((defects ?? []) as any[]).map((d) => d.maintenance_plan_id).filter(Boolean) as string[],
   );
 
+  // itens de checklist ainda não concluídos também contam como ordem aberta
+  const ordensAbertas = ((defects ?? []) as any[]).map((d) => d.id);
+  if (ordensAbertas.length) {
+    const { data: chk } = await supabase
+      .from("cv_maintenance_checklist")
+      .select("plan_id, feito")
+      .in("defect_report_id", ordensAbertas);
+    ((chk ?? []) as any[]).forEach((c) => {
+      if (c.plan_id && c.feito !== true) abertos.add(c.plan_id as string);
+    });
+  }
+
+
   const out: Record<string, AlertaManutencao[]> = {};
   for (const v of vehicles) {
     const meus = ((plans ?? []) as any as MaintenancePlan[]).filter((p) => p.vehicle_id === v.id);
@@ -132,5 +145,61 @@ export async function gerarOrdemManutencao(params: {
     .select("id")
     .single();
   if (error) throw error;
+
+  await supabase.from("cv_maintenance_checklist").insert({
+    estabelecimento_id: params.estabelecimentoId ?? plan.estabelecimento_id,
+    defect_report_id: data.id,
+    plan_id: plan.id,
+    descricao: `${plan.name} (${detalhe})`,
+    ordem: 0,
+  } as any);
+
   return { id: data.id, criado: true };
 }
+
+/**
+ * Gera uma única ordem de manutenção preventiva agrupando todos os itens vencidos
+ * ou próximos do vencimento, com checklist obrigatório para o encarregado.
+ */
+export async function gerarOrdemAgrupada(params: {
+  vehicleId: string;
+  estabelecimentoId?: string | null;
+  alertas: AlertaManutencao[];
+  driverId?: string | null;
+  movementId?: string | null;
+  vehicleKm?: number | null;
+  reportedBy?: string | null;
+}) {
+  const pendentes = params.alertas.filter(a => !a.ordemAberta);
+  if (pendentes.length === 0) return { criado: false, itens: 0 };
+
+  const estab = params.estabelecimentoId ?? pendentes[0].plan.estabelecimento_id;
+  const { data, error } = await supabase
+    .from("cv_defect_reports")
+    .insert({
+      vehicle_id: params.vehicleId,
+      estabelecimento_id: estab,
+      driver_id: params.driverId ?? null,
+      movement_id: params.movementId ?? null,
+      vehicle_km: params.vehicleKm ?? null,
+      defect_description: `MANUTENÇÃO PREVENTIVA (${pendentes.length} item(ns) do roteiro)`,
+      reported_by: params.reportedBy ?? "Sistema (roteiro de manutenção)",
+      status: "pending",
+    } as any)
+    .select("id")
+    .single();
+  if (error) throw error;
+
+  const itens = pendentes.map((a, idx) => ({
+    estabelecimento_id: estab,
+    defect_report_id: data.id,
+    plan_id: a.plan.id,
+    descricao: `${a.plan.name} (${a.detalhe})`,
+    ordem: idx,
+  }));
+  const { error: e2 } = await supabase.from("cv_maintenance_checklist").insert(itens as any);
+  if (e2) throw e2;
+
+  return { criado: true, itens: itens.length, id: data.id };
+}
+

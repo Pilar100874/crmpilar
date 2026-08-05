@@ -294,10 +294,13 @@ export default function CVVehicleEntry() {
               {(alertas[selected.vehicle_id]?.length ?? 0) > 0 && (
                 <CVMaintenanceAlert
                   alertas={alertas[selected.vehicle_id]}
+                  vehicleId={selected.vehicle_id}
+                  vehicleKm={form.entry_km ? Number(form.entry_km) : null}
                   driverId={selected.driver_id}
                   movementId={selected.id}
                   onGerado={() => recalcSelected(form.entry_km)}
                 />
+
               )}
             </div>
           )}

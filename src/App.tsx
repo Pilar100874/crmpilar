@@ -173,6 +173,8 @@ import CVMovements from "./pages/controle-veiculos/CVMovements";
 import CVDefects from "./pages/controle-veiculos/CVDefects";
 import CVDefectTypes from "./pages/controle-veiculos/CVDefectTypes";
 import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
+import CVMaintenanceCatalog from "./pages/controle-veiculos/CVMaintenanceCatalog";
+
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
 import CVCameras from "./pages/controle-veiculos/CVCameras";
@@ -651,6 +653,8 @@ const App = () => (
                 <Route path="defeitos" element={<CVDefects />} />
                 <Route path="tipos-defeito" element={<CVDefectTypes />} />
                 <Route path="manutencao" element={<CVMaintenance />} />
+                <Route path="biblioteca-manutencao" element={<CVMaintenanceCatalog />} />
+
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
               <Route path="cameras" element={<CVCameras />} />

@@ -20,6 +20,8 @@ import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { carregarAlertasManutencao, type AlertaManutencao, type MaintenancePlan, type PlanoTipo } from "@/lib/cv/manutencao";
+import { listarTiposFrota, sincronizarRoteiro } from "@/lib/cv/catalogo";
+
 
 const TYPES: { value: VehicleType; label: string }[] = [
   { value: "carro", label: "Carro" }, { value: "vuc", label: "VUC" },
@@ -45,7 +47,9 @@ const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
   veiculo_id: null as string | null,
+  fleet_type: "" as string,
 };
+
 
 const planoVazio = {
   name: "", tipo: "km" as PlanoTipo, interval_km: 10000, interval_days: 90,
@@ -58,8 +62,11 @@ interface LogVeic { id: string; placa: string; descricao: string | null; tipo_ve
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
   const [logVeiculos, setLogVeiculos] = useState<LogVeic[]>([]);
+  const [tiposFrota, setTiposFrota] = useState<string[]>([]);
+  const [sincronizando, setSincronizando] = useState(false);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [q, setQ] = useState("");
+
   const [sortBy, setSortBy] = useState<"name" | "last_maintenance" | "km">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [lastMaintByVehicle, setLastMaintByVehicle] = useState<Record<string, string>>({});
@@ -194,7 +201,10 @@ export default function CVVehicles() {
       setLastMaintByVehicle({});
     }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    listarTiposFrota().then(setTiposFrota).catch(() => {});
+  }, []);
 
   const openNew = () => { setForm(empty); setEditing(null); setOpen(true); };
   const openEdit = (v: Vehicle) => {
@@ -203,7 +213,9 @@ export default function CVVehicles() {
       current_km: v.current_km, oil_change_interval: v.oil_change_interval,
       last_oil_change_km: v.last_oil_change_km, active: v.active,
       veiculo_id: (v as any).veiculo_id ?? null,
+      fleet_type: (v as any).fleet_type ?? "",
     });
+
     setEditing(v.id); setOpen(true);
   };
 
@@ -231,6 +243,8 @@ export default function CVVehicles() {
       oil_change_interval,
       next_oil_change_km: last_oil_change_km + oil_change_interval,
       plate: String(form.plate).toUpperCase(),
+      fleet_type: form.fleet_type || null,
+
     };
 
     if (!editing) {
@@ -267,6 +281,28 @@ export default function CVVehicles() {
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", planVehicle.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
   };
+
+  const aplicarRoteiroPadrao = async () => {
+    if (!planVehicle) return;
+    const ft = (planVehicle as any).fleet_type as string | null;
+    if (!ft) return toast.error("Defina o Tipo de frota do veículo (editar veículo) antes de aplicar o roteiro padrão.");
+    setSincronizando(true);
+    try {
+      const r = await sincronizarRoteiro({
+        id: planVehicle.id,
+        estabelecimento_id: planVehicle.estabelecimento_id,
+        current_km: planVehicle.current_km,
+        fleet_type: ft,
+      });
+      toast.success(`Roteiro sincronizado: ${r.criados} incluído(s), ${r.removidos} removido(s)`);
+      recarregarPlanos(); load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSincronizando(false);
+    }
+  };
+
   const salvarPlano = async () => {
     if (!planVehicle) return;
     if (!planForm.name) return toast.error("Informe o nome do serviço");
@@ -444,7 +480,7 @@ export default function CVVehicles() {
                     </Button>
                   </div>
 
-                  <CVMaintenanceAlert alertas={alertas[v.id] ?? []} vehicleKm={v.current_km} onGerado={load} />
+                  <CVMaintenanceAlert alertas={alertas[v.id] ?? []} vehicleId={v.id} vehicleKm={v.current_km} onGerado={load} />
                   {!v.active && <Badge variant="secondary" className="w-full justify-center">Inativo</Badge>}
                 </CardContent>
               </Card>
@@ -479,6 +515,20 @@ export default function CVVehicles() {
               </div>
             </div>
             <div>
+              <Label>Tipo de frota (roteiro de manutenção preventiva)</Label>
+              <Select value={form.fleet_type || "__none__"} onValueChange={v => setForm({ ...form, fleet_type: v === "__none__" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o tipo de frota" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem roteiro padrão</SelectItem>
+                  {tiposFrota.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Define quais itens da Biblioteca de Manutenção serão aplicados a este veículo.
+              </p>
+            </div>
+
+            <div>
               <Label>KM Inicial</Label>
               <Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} />
               <p className="text-xs text-muted-foreground mt-1">
@@ -508,14 +558,48 @@ export default function CVVehicles() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Wrench className="h-4 w-4" /> Manutenções — {planVehicle?.name} ({planVehicle?.plate})
+              <Wrench className="h-4 w-4" /> Item adicional de manutenção fora da lista padrão — {planVehicle?.name} ({planVehicle?.plate})
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
-            {plans.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum plano cadastrado.</p>
-            ) : plans.map(p => (
+            {/* Roteiro padrão vindo da biblioteca */}
+            <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Roteiro padrão do tipo de frota</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(planVehicle as any)?.fleet_type
+                      ? `Tipo: ${(planVehicle as any).fleet_type} · ${plans.filter(p => (p as any).origem === "catalogo").length} item(ns) aplicados`
+                      : "Defina o Tipo de frota no cadastro do veículo para usar a biblioteca."}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" disabled={sincronizando} onClick={aplicarRoteiroPadrao}>
+                  {sincronizando ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wrench className="h-3.5 w-3.5 mr-1" />}
+                  Aplicar / atualizar roteiro
+                </Button>
+              </div>
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {plans.filter(p => (p as any).origem === "catalogo").map(p => (
+                  <div key={p.id} className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1 text-xs">
+                    <span className="truncate">{p.name}</span>
+                    <span className="text-muted-foreground shrink-0">
+                      {p.interval_km ? `${p.interval_km.toLocaleString("pt-BR")} km` : ""}
+                      {p.interval_km && p.interval_days ? " / " : ""}
+                      {p.interval_days ? `${p.interval_days} dias` : ""}
+                    </span>
+                  </div>
+                ))}
+                {plans.filter(p => (p as any).origem === "catalogo").length === 0 && (
+                  <p className="text-xs text-muted-foreground">Nenhum item do roteiro padrão aplicado.</p>
+                )}
+              </div>
+            </div>
+
+            <p className="text-sm font-semibold pt-1">Itens adicionais (fora da lista padrão)</p>
+            {plans.filter(p => (p as any).origem !== "catalogo").length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum item adicional cadastrado.</p>
+            ) : plans.filter(p => (p as any).origem !== "catalogo").map(p => (
               <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate">{p.name} {!p.active && <Badge variant="secondary" className="ml-1">Inativo</Badge>}</p>
@@ -546,7 +630,8 @@ export default function CVVehicles() {
             ))}
 
             <div className="rounded-lg border-2 border-dashed p-3 space-y-3">
-              <p className="text-sm font-semibold">{planEditing ? "Editar plano" : "Novo plano de manutenção"}</p>
+              <p className="text-sm font-semibold">{planEditing ? "Editar item adicional" : "Novo item adicional de manutenção fora da lista padrão"}</p>
+
               <div className="grid gap-3 sm:grid-cols-2">
                 <div><Label>Serviço</Label><Input placeholder="Ex.: TROCA DE ÓLEO" value={planForm.name} onChange={e => setPlanForm({ ...planForm, name: e.target.value.toUpperCase() })} /></div>
                 <div>
