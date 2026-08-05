@@ -153,25 +153,39 @@ export default function CVDefects() {
     if (!newDefect.vehicle_id || !newDefect.driver_id || !newDefect.defect_type_id || !newDefect.defect_description.trim()) {
       return toast.error("Preencha todos os campos obrigatórios");
     }
+    if (!newDefect.data) return toast.error("Informe a data do lançamento");
+    const km = Number(newDefect.vehicle_km);
+    if (!km || km <= 0) return toast.error("Informe o KM do veículo no lançamento");
     const { data: { user } } = await supabase.auth.getUser();
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
+    const { data: dataField, ...rest } = newDefect;
     const { error } = await supabase.from("cv_defect_reports").insert({
-      ...newDefect,
+      ...rest,
       pecas: newDefect.pecas || null,
       agrupavel: newDefect.prioridade === "quebra" ? false : newDefect.agrupavel,
-      vehicle_km: newDefect.vehicle_km ? Number(newDefect.vehicle_km) : null,
-      reported_at: new Date().toISOString(),
+      vehicle_km: km,
+      reported_at: new Date(`${newDefect.data}T12:00:00`).toISOString(),
       reported_by: user?.id ?? null,
       status: "pending",
       estabelecimento_id: estId,
     });
     if (error) return toast.error(error.message);
+
+    const veic = getVehicle(newDefect.vehicle_id);
+    if (veic && km > (veic.current_km ?? 0)) {
+      await supabase.from("cv_vehicles").update({ current_km: km }).eq("id", newDefect.vehicle_id);
+    }
+
     toast.success("Defeito reportado!");
     setCreateOpen(false);
-    setNewDefect({ vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "", prioridade: "quebra", agrupavel: false, pecas: "" });
+    setNewDefect({
+      vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "",
+      data: new Date().toISOString().slice(0, 10), prioridade: "quebra", agrupavel: false, pecas: "",
+    });
     loadAll();
   };
+
 
   const handleWhatsApp = (defect: any) => {
     const v = getVehicle(defect.vehicle_id);
