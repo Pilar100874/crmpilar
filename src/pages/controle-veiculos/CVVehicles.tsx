@@ -463,6 +463,43 @@ export default function CVVehicles() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Histórico de manutenções do veículo */}
+      <Dialog open={!!histVehicle} onOpenChange={o => { if (!o) setHistVehicle(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-4 w-4" /> Manutenções — {histVehicle?.name} ({histVehicle?.plate})
+            </DialogTitle>
+          </DialogHeader>
+          {histLoading ? (
+            <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Carregando...</p>
+          ) : histRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma manutenção registrada para este veículo.</p>
+          ) : (
+            <div className="space-y-2">
+              {histRows.map(h => (
+                <div key={h.id} className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{h.defect_description}</p>
+                    <Badge variant={h.status === "resolved" ? "outline" : "secondary"} className="shrink-0">
+                      {h.status === "resolved" ? "Concluída" : h.status === "in_progress" ? "Em andamento" : "Pendente"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Aberta em {new Date(h.reported_at).toLocaleDateString("pt-BR")}
+                    {h.resolved_at && ` · Concluída em ${new Date(h.resolved_at).toLocaleDateString("pt-BR")}`}
+                    {h.resolved_by && ` · por ${h.resolved_by}`}
+                    {h.cost != null && ` · R$ ${Number(h.cost).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                  </p>
+                  {h.solution && <p className="text-xs">Solução: {h.solution}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
