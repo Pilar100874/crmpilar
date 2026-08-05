@@ -31,6 +31,8 @@ export default function CVParadas() {
   const [filtro, setFiltro] = useState<"todas" | Prioridade>("todas");
 
   const [baixa, setBaixa] = useState<ParadaVeiculo | null>(null);
+  const [detalhe, setDetalhe] = useState<ParadaVeiculo | null>(null);
+
   const [marcados, setMarcados] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({ km: "", data: "", responsavel: "", custo: "" });
   const [salvando, setSalvando] = useState(false);
