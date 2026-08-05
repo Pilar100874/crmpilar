@@ -498,6 +498,29 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                   );
                 })()}
 
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  title="Capturar usando a câmera ao vivo (webcam)"
+                  disabled={uploading === a.key}
+                  onClick={() => setWebcamFor({ key: a.key, label: a.label })}
+                >
+                  <Video className="h-4 w-4" />
+                </Button>
+
+                {(a.source ?? "device") !== "device" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    title="Tirar foto com o celular (caso a câmera não funcione)"
+                    disabled={uploading === a.key}
+                    onClick={() => captureFor(a)}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </Button>
+                )}
 
                 {captured && prev && aiCompare && (
                   <Button
@@ -516,7 +539,80 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
         );
       })}
       </div>
+
+      {/* Fotos extras */}
+      <Card className="border-dashed">
+        <CardContent className="p-3 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ImagePlus className="h-4 w-4 text-primary" />
+              Fotos extras
+              <Badge variant="outline" className="text-[10px]">{extras.length}</Badge>
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => extraInputRef.current?.click()}>
+                <Smartphone className="h-4 w-4 mr-2" /> Celular
+              </Button>
+              <Button type="button" size="sm" onClick={() => setWebcamFor({ key: "extra", label: "Foto extra", extra: true })}>
+                <Video className="h-4 w-4 mr-2" /> Câmera
+              </Button>
+            </div>
+          </div>
+          <input
+            ref={extraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => { addExtra(e.target.files?.[0]); e.currentTarget.value = ""; }}
+          />
+          {extras.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">
+              Adicione fotos além dos ângulos obrigatórios (detalhes, avarias, documentos...) e escreva uma observação em cada uma.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {extras.map((p) => (
+                <div key={p.angle_key} className="space-y-1">
+                  <div className="relative">
+                    <button type="button" onClick={() => setZoomSrc(previews[p.angle_key] ?? null)} className="block w-full">
+                      <img src={previews[p.angle_key]} alt={p.angle_label} className="w-full h-32 object-cover rounded border" />
+                    </button>
+                    <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded p-1 pointer-events-none"><ZoomIn className="h-3 w-3" /></span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-1 right-1 h-6 w-6"
+                      onClick={() => remove(p.angle_key)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={p.caption ?? ""}
+                    onChange={(e) => setCaption(p.angle_key, e.target.value)}
+                    placeholder="Escreva algo sobre esta foto"
+                    className="text-xs min-h-[52px]"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {uploading?.startsWith("extra-") && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Enviando foto extra…</div>
+          )}
+        </CardContent>
+      </Card>
+
       <ImageZoomDialog src={zoomSrc} onClose={() => setZoomSrc(null)} />
+      <CVWebcamDialog
+        open={!!webcamFor}
+        title={webcamFor ? `Capturar — ${webcamFor.label}` : "Capturar foto"}
+        onClose={() => setWebcamFor(null)}
+        onCapture={onWebcamCapture}
+      />
     </div>
   );
+
 }
