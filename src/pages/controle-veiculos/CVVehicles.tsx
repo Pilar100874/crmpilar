@@ -203,7 +203,7 @@ export default function CVVehicles() {
       <CVPageHeader
         icon={Truck}
         title="Veículos"
-        subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos`}
+        subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos • use o ícone 🔧 no card para os planos de manutenção`}
         actions={
           <Button onClick={openNew} className="bg-white text-primary hover:bg-white/90">
             <Plus className="h-4 w-4 mr-1" />Novo Veículo
