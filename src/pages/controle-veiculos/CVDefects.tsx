@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { carregarChecklist, salvarChecklist, type ChecklistItem } from "@/lib/cv/checklist";
+
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle, Search, Filter, Wrench, DollarSign, CheckCircle, Clock,
@@ -40,6 +42,8 @@ export default function CVDefects() {
   const [editing, setEditing] = useState<any | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ solution: "", cost: 0, resolvedBy: "", validatedBy: "" });
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newDefect, setNewDefect] = useState({
@@ -82,27 +86,53 @@ export default function CVDefects() {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  const abrirSolucao = async (defect: any) => {
+    setChecklist(await carregarChecklist(defect.id));
+  };
+
   const handleSave = async () => {
     if (!editing) return;
     if (!formData.solution.trim()) return toast.error("Descreva a solução");
     if (!formData.resolvedBy.trim()) return toast.error("Informe o mecânico responsável");
     if (formData.cost <= 0) return toast.error("Informe custo maior que zero");
+    if (checklist.length > 0 && checklist.some((i) => i.feito === null || i.feito === undefined)) {
+      return toast.error("Marque cada item do checklist como Feito ou Não feito");
+    }
 
+    let pendentes = 0;
+    if (checklist.length > 0) {
+      try {
+        const r = await salvarChecklist({
+          defectReportId: editing.id,
+          itens: checklist.map((i) => ({ id: i.id, feito: i.feito, observacao: i.observacao })),
+          responsavel: formData.resolvedBy,
+        });
+        pendentes = r.pendentes;
+      } catch (e: any) {
+        return toast.error(e.message);
+      }
+    }
+
+    const resolvido = pendentes === 0;
     const resolvedAt = new Date().toISOString();
     const { error } = await supabase.from("cv_defect_reports").update({
       solution: formData.solution,
       cost: formData.cost,
       resolved_by: formData.resolvedBy,
       validated_by: formData.validatedBy || null,
-      resolved_at: resolvedAt,
-      status: "resolved",
+      resolved_at: resolvido ? resolvedAt : null,
+      status: resolvido ? "resolved" : "in_progress",
     }).eq("id", editing.id);
     if (error) return toast.error(error.message);
-    toast.success("Defeito resolvido!");
+    toast[resolvido ? "success" : "warning"](
+      resolvido ? "Defeito resolvido!" : `${pendentes} item(ns) não feito(s) — ordem continua pendente`,
+    );
     setDialogOpen(false);
     setEditing(null);
+    setChecklist([]);
     loadAll();
   };
+
 
   const handleCreate = async () => {
     if (!newDefect.vehicle_id || !newDefect.driver_id || !newDefect.defect_type_id || !newDefect.defect_description.trim()) {
@@ -383,17 +413,42 @@ export default function CVDefects() {
                             validatedBy: defect.validated_by || "",
                           });
                           setDialogOpen(true);
+                          abrirSolucao(defect);
                         }} className="bg-primary hover:opacity-90">
                           <Wrench className="h-4 w-4 mr-2" />
                           {defect.status === "pending" ? "Adicionar Solução" : "Editar Solução"}
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-md">
+                      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Solução do Defeito</DialogTitle>
                           <DialogDescription>Registre custo e responsável pelo reparo.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
+                          {checklist.length > 0 && (
+                            <div className="rounded-lg border p-3 space-y-2">
+                              <p className="text-sm font-semibold">Checklist obrigatório ({checklist.filter(i => i.feito === true).length}/{checklist.length} feitos)</p>
+                              {checklist.map((item, idx) => (
+                                <div key={item.id} className="rounded-md border p-2 space-y-1.5">
+                                  <p className="text-xs font-medium">{item.descricao}
+                                    {item.criticidade && <span className="ml-1 text-muted-foreground">({item.criticidade})</span>}
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <Button type="button" size="sm" variant={item.feito === true ? "default" : "outline"} className="h-7 text-[11px] flex-1"
+                                      onClick={() => setChecklist(c => c.map((x, i) => i === idx ? { ...x, feito: true } : x))}>Feito</Button>
+                                    <Button type="button" size="sm" variant={item.feito === false ? "destructive" : "outline"} className="h-7 text-[11px] flex-1"
+                                      onClick={() => setChecklist(c => c.map((x, i) => i === idx ? { ...x, feito: false } : x))}>Não feito</Button>
+                                  </div>
+                                  <Input className="h-7 text-xs" placeholder="Observação (opcional)" value={item.observacao ?? ""}
+                                    onChange={(e) => setChecklist(c => c.map((x, i) => i === idx ? { ...x, observacao: e.target.value } : x))} />
+                                </div>
+                              ))}
+                              <p className="text-[11px] text-muted-foreground">
+                                Itens marcados como "Não feito" mantêm a ordem pendente para o encarregado.
+                              </p>
+                            </div>
+                          )}
+
                           <div className="space-y-2">
                             <Label>Solução Apresentada</Label>
                             <Textarea rows={3} value={formData.solution}

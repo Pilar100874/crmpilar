@@ -6399,11 +6399,166 @@ export type Database = {
           },
         ]
       }
+      cv_maintenance_catalog: {
+        Row: {
+          acao: string
+          ativo: boolean
+          codigo: string | null
+          componente: string
+          created_at: string
+          criticidade: string
+          estabelecimento_id: string | null
+          fabricante: string | null
+          id: string
+          interval_days: number | null
+          interval_principal: number | null
+          no_roteiro: boolean
+          observacoes: string | null
+          regra: string
+          sistema: string
+          tipo_veiculo: string
+          tol_days: number
+          tol_principal: number
+          updated_at: string
+        }
+        Insert: {
+          acao: string
+          ativo?: boolean
+          codigo?: string | null
+          componente: string
+          created_at?: string
+          criticidade?: string
+          estabelecimento_id?: string | null
+          fabricante?: string | null
+          id?: string
+          interval_days?: number | null
+          interval_principal?: number | null
+          no_roteiro?: boolean
+          observacoes?: string | null
+          regra?: string
+          sistema: string
+          tipo_veiculo: string
+          tol_days?: number
+          tol_principal?: number
+          updated_at?: string
+        }
+        Update: {
+          acao?: string
+          ativo?: boolean
+          codigo?: string | null
+          componente?: string
+          created_at?: string
+          criticidade?: string
+          estabelecimento_id?: string | null
+          fabricante?: string | null
+          id?: string
+          interval_days?: number | null
+          interval_principal?: number | null
+          no_roteiro?: boolean
+          observacoes?: string | null
+          regra?: string
+          sistema?: string
+          tipo_veiculo?: string
+          tol_days?: number
+          tol_principal?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_maintenance_catalog_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_maintenance_checklist: {
+        Row: {
+          catalog_item_id: string | null
+          created_at: string
+          criticidade: string | null
+          defect_report_id: string
+          descricao: string
+          done_at: string | null
+          done_by: string | null
+          estabelecimento_id: string | null
+          feito: boolean | null
+          id: string
+          observacao: string | null
+          ordem: number
+          plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          catalog_item_id?: string | null
+          created_at?: string
+          criticidade?: string | null
+          defect_report_id: string
+          descricao: string
+          done_at?: string | null
+          done_by?: string | null
+          estabelecimento_id?: string | null
+          feito?: boolean | null
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          plan_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          catalog_item_id?: string | null
+          created_at?: string
+          criticidade?: string | null
+          defect_report_id?: string
+          descricao?: string
+          done_at?: string | null
+          done_by?: string | null
+          estabelecimento_id?: string | null
+          feito?: boolean | null
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_maintenance_checklist_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "cv_maintenance_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_maintenance_checklist_defect_report_id_fkey"
+            columns: ["defect_report_id"]
+            isOneToOne: false
+            referencedRelation: "cv_defect_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_maintenance_checklist_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_maintenance_checklist_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "cv_maintenance_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_maintenance_plans: {
         Row: {
           active: boolean
           alert_days_antecedencia: number
           alert_km_antecedencia: number
+          catalog_item_id: string | null
           created_at: string
           estabelecimento_id: string | null
           id: string
@@ -6412,6 +6567,7 @@ export type Database = {
           last_done_at: string
           last_done_km: number
           name: string
+          origem: string
           tipo: string
           updated_at: string
           vehicle_id: string
@@ -6420,6 +6576,7 @@ export type Database = {
           active?: boolean
           alert_days_antecedencia?: number
           alert_km_antecedencia?: number
+          catalog_item_id?: string | null
           created_at?: string
           estabelecimento_id?: string | null
           id?: string
@@ -6428,6 +6585,7 @@ export type Database = {
           last_done_at?: string
           last_done_km?: number
           name: string
+          origem?: string
           tipo?: string
           updated_at?: string
           vehicle_id: string
@@ -6436,6 +6594,7 @@ export type Database = {
           active?: boolean
           alert_days_antecedencia?: number
           alert_km_antecedencia?: number
+          catalog_item_id?: string | null
           created_at?: string
           estabelecimento_id?: string | null
           id?: string
@@ -6444,11 +6603,19 @@ export type Database = {
           last_done_at?: string
           last_done_km?: number
           name?: string
+          origem?: string
           tipo?: string
           updated_at?: string
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cv_maintenance_plans_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "cv_maintenance_catalog"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cv_maintenance_plans_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
@@ -6619,6 +6786,7 @@ export type Database = {
           created_at: string
           current_km: number
           estabelecimento_id: string | null
+          fleet_type: string | null
           id: string
           last_oil_change_km: number
           name: string
@@ -6634,6 +6802,7 @@ export type Database = {
           created_at?: string
           current_km?: number
           estabelecimento_id?: string | null
+          fleet_type?: string | null
           id?: string
           last_oil_change_km?: number
           name: string
@@ -6649,6 +6818,7 @@ export type Database = {
           created_at?: string
           current_km?: number
           estabelecimento_id?: string | null
+          fleet_type?: string | null
           id?: string
           last_oil_change_km?: number
           name?: string

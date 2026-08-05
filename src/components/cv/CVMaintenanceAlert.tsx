@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { AlertTriangle, Wrench, Loader2, CheckCircle } from "lucide-react";
+import { AlertTriangle, Wrench, Loader2, CheckCircle, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { gerarOrdemManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
+import { gerarOrdemManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 interface Props {
   alertas: AlertaManutencao[];
@@ -10,15 +10,17 @@ interface Props {
   driverId?: string | null;
   movementId?: string | null;
   vehicleKm?: number | null;
+  vehicleId?: string | null;
   onGerado?: () => void;
 }
 
 /** Bloco chamativo de alertas de manutenção exibido nos cards de veículo. */
-export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, vehicleKm, onGerado }: Props) {
+export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, vehicleKm, vehicleId, onGerado }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   if (!alertas?.length) return null;
 
   const vencidos = alertas.filter((a) => a.vencido);
+  const pendentes = alertas.filter((a) => !a.ordemAberta);
   const tone = vencidos.length
     ? "border-destructive bg-destructive/10 text-destructive"
     : "border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400";
@@ -38,6 +40,24 @@ export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, veh
     }
   };
 
+  const gerarTudo = async () => {
+    if (!vehicleId) return;
+    setBusy("__todos__");
+    try {
+      const r = await gerarOrdemAgrupada({ vehicleId, alertas, driverId, movementId, vehicleKm });
+      toast[r.criado ? "success" : "info"](
+        r.criado
+          ? `Ordem gerada com checklist de ${r.itens} item(ns) para o encarregado`
+          : "Todos os itens já possuem ordem aberta",
+      );
+      onGerado?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao gerar ordem");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   if (compact) {
     return (
       <div className={`mt-2 rounded-md border-2 px-2 py-1 text-[11px] font-semibold flex items-center gap-1 animate-pulse ${tone}`}>
@@ -46,6 +66,7 @@ export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, veh
       </div>
     );
   }
+
 
   return (
     <div className={`rounded-lg border-2 p-3 space-y-2 ${tone}`}>
@@ -71,6 +92,16 @@ export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, veh
           )}
         </div>
       ))}
+      {vehicleId && pendentes.length > 1 && (
+        <Button
+          size="sm" variant="secondary" className="w-full h-8 text-[11px]"
+          disabled={busy === "__todos__"} onClick={gerarTudo}
+        >
+          {busy === "__todos__" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ListChecks className="h-3 w-3 mr-1" />}
+          Gerar 1 ordem com checklist ({pendentes.length} itens)
+        </Button>
+      )}
     </div>
+
   );
 }

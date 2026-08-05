@@ -260,9 +260,12 @@ export default function CVVehicleExit() {
                   <div className="mt-4">
                     <CVMaintenanceAlert
                       alertas={alertas[selectedVehicle.id]}
+                      vehicleId={selectedVehicle.id}
+                      vehicleKm={selectedVehicle.current_km}
                       driverId={form.driver_id || null}
                       onGerado={load}
                     />
+
                   </div>
                 )}
               </div>
