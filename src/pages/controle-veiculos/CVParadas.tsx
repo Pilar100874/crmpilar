@@ -210,15 +210,10 @@ export default function CVParadas() {
               </p>
             </CardHeader>
             <CardContent className="space-y-2">
-              {p.itens.map(i => (
-                <div key={i.id} className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-2 py-1.5">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{i.descricao}</p>
-                    {i.pecas && <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {i.pecas}</p>}
-                  </div>
-                  <Badge variant="outline" className={`shrink-0 text-[10px] ${tonePrioridade[i.prioridade]}`}>{PRIORIDADE_LABEL[i.prioridade]}</Badge>
-                </div>
-              ))}
+              <Button variant="outline" size="sm" className="w-full justify-between" onClick={() => setDetalhe(p)}>
+                <span className="flex items-center gap-2"><ListTree className="h-4 w-4" /> Ver ordens e serviços ({p.itens.length})</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
               {!!p.alertasSemOrdem.length && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
                   {p.alertasSemOrdem.length} preventiva(s) vencida(s)/próxima(s) ainda sem ordem — agrupe para incluir nesta parada.
@@ -233,6 +228,7 @@ export default function CVParadas() {
                 </div>
               )}
             </CardContent>
+
           </Card>
         ))}
       </div>
