@@ -143,6 +143,9 @@ export async function gerarOrdemManutencao(params: {
       defect_description: `MANUTENÇÃO PREVENTIVA: ${plan.name} (${detalhe})`,
       reported_by: params.reportedBy ?? "Sistema (plano de manutenção)",
       status: "pending",
+      prioridade: "preventiva",
+      agrupavel: true,
+      pecas: plan.pecas ?? null,
     } as any)
     .select("id")
     .single();
@@ -153,6 +156,7 @@ export async function gerarOrdemManutencao(params: {
     defect_report_id: data.id,
     plan_id: plan.id,
     descricao: `${plan.name} (${detalhe})`,
+    pecas: plan.pecas ?? null,
     ordem: 0,
   } as any);
 
