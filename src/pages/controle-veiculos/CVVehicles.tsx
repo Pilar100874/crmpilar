@@ -609,7 +609,7 @@ export default function CVVehicles() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Wrench className="h-4 w-4" /> Item adicional de manutenção fora da lista padrão — {planVehicle?.name} ({planVehicle?.plate})
+              <Wrench className="h-4 w-4" /> Plano de manutenção — {planVehicle?.name} ({planVehicle?.plate})
             </DialogTitle>
           </DialogHeader>
 
