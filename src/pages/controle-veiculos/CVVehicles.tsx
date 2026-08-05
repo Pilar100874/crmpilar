@@ -82,6 +82,13 @@ export default function CVVehicles() {
   const [histFiltroKmMin, setHistFiltroKmMin] = useState("");
   const [histFiltroKmMax, setHistFiltroKmMax] = useState("");
 
+  // registro rápido de nova ocorrência dentro do histórico
+  const novaOcorrenciaVazia = { plano: "nenhum", descricao: "", solucao: "", data: "", km: "", custo: "", responsavel: "" };
+  const [histPlanos, setHistPlanos] = useState<MaintenancePlan[]>([]);
+  const [histNova, setHistNova] = useState<any>(novaOcorrenciaVazia);
+  const [histSalvando, setHistSalvando] = useState(false);
+  const [histFormAberto, setHistFormAberto] = useState(false);
+
   const limparFiltrosHistorico = () => {
     setHistFiltroTexto("");
     setHistFiltroTipo("todos");
@@ -91,20 +98,70 @@ export default function CVVehicles() {
     setHistFiltroKmMax("");
   };
 
+  const carregarHistorico = async (vehicleId: string) => {
+    const { data } = await supabase
+      .from("cv_defect_reports")
+      .select("id, defect_description, solution, cost, reported_at, resolved_at, resolved_by, status, maintenance_plan_id, vehicle_km, maintenance_plan:cv_maintenance_plans!maintenance_plan_id(name, tipo)")
+      .eq("vehicle_id", vehicleId)
+      .order("resolved_at", { ascending: false, nullsFirst: false })
+      .limit(200);
+    setHistRows(data ?? []);
+  };
+
   const abrirHistorico = async (v: Vehicle) => {
     setHistVehicle(v);
     limparFiltrosHistorico();
     setHistRows([]);
+    setHistFormAberto(false);
+    setHistNova({ ...novaOcorrenciaVazia, data: new Date().toISOString().slice(0, 10), km: String(v.current_km ?? "") });
     setHistLoading(true);
-    const { data } = await supabase
-      .from("cv_defect_reports")
-      .select("id, defect_description, solution, cost, reported_at, resolved_at, resolved_by, status, maintenance_plan_id, vehicle_km, maintenance_plan:cv_maintenance_plans!maintenance_plan_id(name, tipo)")
-      .eq("vehicle_id", v.id)
-      .order("resolved_at", { ascending: false, nullsFirst: false })
-      .limit(200);
-    setHistRows(data ?? []);
+    const [{ data: planos }] = await Promise.all([
+      supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", v.id).order("name"),
+      carregarHistorico(v.id),
+    ]);
+    setHistPlanos((planos ?? []) as MaintenancePlan[]);
     setHistLoading(false);
   };
+
+  const salvarNovaOcorrencia = async () => {
+    if (!histVehicle) return;
+    const planoSel = histNova.plano !== "nenhum" ? histPlanos.find(p => p.id === histNova.plano) : null;
+    const descricao = (histNova.descricao || planoSel?.name || "").trim();
+    if (!descricao) return toast.error("Informe a descrição da manutenção (ou selecione um plano).");
+    if (!histNova.data) return toast.error("Informe a data da manutenção.");
+
+    setHistSalvando(true);
+    const quando = new Date(histNova.data + "T12:00:00").toISOString();
+    const km = histNova.km !== "" ? Number(histNova.km) : null;
+
+    const { error } = await supabase.from("cv_defect_reports").insert({
+      vehicle_id: histVehicle.id,
+      defect_description: descricao,
+      solution: histNova.solucao || null,
+      cost: histNova.custo !== "" ? Number(histNova.custo) : null,
+      vehicle_km: km,
+      maintenance_plan_id: planoSel?.id ?? null,
+      reported_at: quando,
+      resolved_at: quando,
+      resolved_by: histNova.responsavel || null,
+      status: "resolved" as const,
+    });
+    if (error) { setHistSalvando(false); return toast.error(error.message); }
+
+    // atualiza KM atual do veículo se a ocorrência for mais recente
+    if (km != null && km > (histVehicle.current_km ?? 0)) {
+      await supabase.from("cv_vehicles").update({ current_km: km }).eq("id", histVehicle.id);
+      setHistVehicle({ ...histVehicle, current_km: km });
+    }
+
+    await carregarHistorico(histVehicle.id);
+    setHistNova({ ...novaOcorrenciaVazia, data: new Date().toISOString().slice(0, 10), km: String(km ?? histVehicle.current_km ?? "") });
+    setHistFormAberto(false);
+    setHistSalvando(false);
+    toast.success("Ocorrência de manutenção registrada.");
+    load();
+  };
+
 
 
   const load = async () => {
