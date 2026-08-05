@@ -362,8 +362,12 @@ export default function CVVehicles() {
                     {p.tipo === "km" && `A cada ${p.interval_km?.toLocaleString()} km`}
                     {p.tipo === "dias" && `A cada ${p.interval_days} dias`}
                     {p.tipo === "ambos" && `A cada ${p.interval_km?.toLocaleString()} km ou ${p.interval_days} dias`}
-                    {" · "}última: {p.last_done_km.toLocaleString()} km em {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
                   </p>
+                  <Badge variant="outline" className="mt-1 gap-1 text-[11px] font-normal border-emerald-500/60 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Última execução: {p.last_done_km.toLocaleString()} km · {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
+                  </Badge>
+
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
