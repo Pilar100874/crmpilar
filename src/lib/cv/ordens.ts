@@ -88,10 +88,17 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
   const alertasPorVeiculo = await carregarAlertasManutencao(
     veiculos.map(v => ({ id: v.id, current_km: v.current_km ?? 0 })),
   );
+  const planos = await carregarPlanosPorId(veiculos.map(v => v.id));
 
   const paradas: ParadaVeiculo[] = veiculos.map(v => {
     const minhas = ordens.filter(o => o.vehicle_id === v.id);
     const itens: ItemParada[] = [];
+    const atrasoDe = (planId: string | null) => {
+      const plan = planId ? planos[planId] : null;
+      if (!plan) return { atraso: null as string | null, atrasado: false };
+      const a = calcularAtraso(plan, v.current_km ?? 0);
+      return { atraso: a.atrasado ? a.label : null, atrasado: a.atrasado };
+    };
     for (const o of minhas) {
       const prioridade = norm(o.prioridade);
       const tipoOrdem: TipoServico = o.maintenance_plan_id ? "manutencao" : "defeito";
@@ -103,6 +110,7 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
             ordemId: o.id, planId: c.plan_id,
             descricao: c.descricao, pecas: (c as any).pecas ?? null,
             prioridade, feito: c.feito ?? null,
+            ...atrasoDe(c.plan_id),
           }),
         );
       } else {
@@ -110,9 +118,11 @@ export async function carregarParadas(): Promise<ParadaVeiculo[]> {
           id: o.id, origem: "ordem", tipo: tipoOrdem, ordemId: o.id, planId: o.maintenance_plan_id ?? null,
           descricao: o.defect_description, pecas: o.pecas ?? null,
           prioridade, feito: null,
+          ...atrasoDe(o.maintenance_plan_id ?? null),
         });
       }
     }
+
 
     const alertas = alertasPorVeiculo[v.id] ?? [];
     const alertasSemOrdem = alertas.filter(a => !a.ordemAberta);
