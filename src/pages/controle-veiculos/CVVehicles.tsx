@@ -309,11 +309,14 @@ export default function CVVehicles() {
                 <Input value={TYPES.find(t => t.value === form.vehicle_type)?.label ?? ""} readOnly className="bg-muted" />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div><Label>KM Atual</Label><Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} /></div>
-              <div><Label>Intervalo Óleo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: e.target.value })} /></div>
-              <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: e.target.value })} /></div>
+            <div>
+              <Label>KM Inicial</Label>
+              <Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} />
+              <p className="text-xs text-muted-foreground mt-1">
+                KM de início dos dados. Trocas de óleo e revisões são cadastradas nos planos de manutenção (ícone 🔧 no card).
+              </p>
             </div>
+
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={c => setForm({ ...form, active: c })} />
               <Label>Ativo</Label>
