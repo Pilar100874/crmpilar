@@ -393,14 +393,14 @@ export default function CVVehicles() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {sortedFiltered.length === 0 ? (
         <Card><CardContent className="py-16 text-center text-muted-foreground">
           <Car className="h-12 w-12 mx-auto mb-3 opacity-40" />
           Nenhum veículo encontrado.
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {filtered.map(v => {
+          {sortedFiltered.map(v => {
             const km = v.next_oil_change_km - v.current_km;
             const overdue = km <= 0;
             const near = km > 0 && km <= 1000;
