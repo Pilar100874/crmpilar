@@ -236,7 +236,7 @@ export function imprimirFicha(parada: ParadaVeiculo) {
     <tr>
       <td class="c">${idx + 1}</td>
       <td><span class="tag t-${i.prioridade}">${PRIORIDADE_LABEL[i.prioridade]}</span></td>
-      <td>${i.descricao}</td>
+      <td>${i.descricao}${i.atraso ? ` <b style="color:#c00">(${i.atraso})</b>` : ""}</td>
       <td>${i.pecas ?? "-"}</td>
       <td class="c box"></td>
       <td class="c box"></td>
