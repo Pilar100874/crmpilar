@@ -144,30 +144,66 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
 
   const captureFor = (angle: PhotoAngle) => inputRefs.current[angle.key]?.click();
 
-  const handleFile = async (angle: PhotoAngle, file: File | undefined) => {
+  const uploadPhoto = async (
+    key: string,
+    label: string,
+    file: File | undefined,
+    opts?: { extra?: boolean; angle?: PhotoAngle },
+  ) => {
     if (!file) return;
-    setUploading(angle.key);
+    setUploading(key);
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `${stage}/${Date.now()}-${angle.key}.${ext}`;
+    const path = `${stage}/${Date.now()}-${key}.${ext}`;
     const { error } = await supabase.storage.from("cv-vehicle-photos").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
-      contentType: file.type,
+      contentType: file.type || "image/jpeg",
     });
     if (error) {
-      toast.error(`Falha ao enviar ${angle.label}: ${error.message}`);
+      toast.error(`Falha ao enviar ${label}: ${error.message}`);
       setUploading(null);
       return;
     }
     const url = await getUrl(path);
-    setPreviews((p) => ({ ...p, [angle.key]: url }));
-    const next = value.filter((p) => p.angle_key !== angle.key);
-    next.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
+    setPreviews((p) => ({ ...p, [key]: url }));
+    const existing = value.find((p) => p.angle_key === key);
+    const next = value.filter((p) => p.angle_key !== key);
+    next.push({
+      angle_key: key,
+      angle_label: label,
+      photo_url: path,
+      caption: existing?.caption ?? "",
+      is_extra: opts?.extra ?? false,
+    });
     onChange(next);
     setUploading(null);
-    // dispara IA em background
-    runAiCompare(angle, path);
+    if (opts?.angle) runAiCompare(opts.angle, path);
   };
+
+  const handleFile = (angle: PhotoAngle, file: File | undefined) =>
+    uploadPhoto(angle.key, angle.label, file, { angle });
+
+  const addExtra = (file: File | undefined) => {
+    if (!file) return;
+    const count = value.filter((p) => p.is_extra).length + 1;
+    uploadPhoto(`extra-${Date.now()}`, `Foto extra ${count}`, file, { extra: true });
+  };
+
+  const setCaption = (key: string, caption: string) => {
+    onChange(value.map((p) => (p.angle_key === key ? { ...p, caption } : p)));
+  };
+
+  const onWebcamCapture = (file: File) => {
+    if (!webcamFor) return;
+    if (webcamFor.extra) addExtra(file);
+    else {
+      const angle = angles.find((a) => a.key === webcamFor.key);
+      uploadPhoto(webcamFor.key, webcamFor.label, file, { angle });
+    }
+  };
+
+  const extras = value.filter((p) => p.is_extra);
+
 
   const captureFromIpCamera = async (angle: PhotoAngle, cameraId: string) => {
     setCapturingCam(angle.key);
