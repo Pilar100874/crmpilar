@@ -173,9 +173,15 @@ export default function CVParadas() {
                   </span>
                 )}
               </span>
+              {i.atraso && (
+                <Badge variant="outline" className="shrink-0 text-[10px] border-destructive/50 bg-destructive/10 text-destructive">
+                  <Clock className="h-3 w-3 mr-1" /> {i.atraso}
+                </Badge>
+              )}
               <Badge variant="outline" className={`shrink-0 text-[10px] ${tonePrioridade[i.prioridade]}`}>
                 {PRIORIDADE_LABEL[i.prioridade]}
               </Badge>
+
             </label>
           ))}
         </div>
