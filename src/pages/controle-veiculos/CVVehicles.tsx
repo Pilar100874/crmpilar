@@ -11,9 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
-  Plus, Pencil, Trash2, Car, Gauge, Droplets,
-  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2,
+  Plus, Pencil, Trash2, Car, Gauge,
+  ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2,
 } from "lucide-react";
+
 import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
@@ -70,6 +71,24 @@ export default function CVVehicles() {
   const [savingPlan, setSavingPlan] = useState(false);
   const [aplicarEm, setAplicarEm] = useState<string[]>([]);
 
+  // histórico de manutenções executadas
+  const [histVehicle, setHistVehicle] = useState<Vehicle | null>(null);
+  const [histRows, setHistRows] = useState<any[]>([]);
+  const [histLoading, setHistLoading] = useState(false);
+
+  const abrirHistorico = async (v: Vehicle) => {
+    setHistVehicle(v); setHistRows([]); setHistLoading(true);
+    const { data } = await supabase
+      .from("cv_defect_reports")
+      .select("id, defect_description, solution, cost, reported_at, resolved_at, resolved_by, status, maintenance_plan_id")
+      .eq("vehicle_id", v.id)
+      .order("resolved_at", { ascending: false, nullsFirst: false })
+      .limit(100);
+    setHistRows(data ?? []);
+    setHistLoading(false);
+  };
+
+
   const load = async () => {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
     if (error) return toast.error(error.message);
@@ -107,8 +126,17 @@ export default function CVVehicles() {
   const save = async () => {
     if (!form.veiculo_id) return toast.error("Selecione um veículo do cadastro de Logística");
     if (!form.name || !form.plate) return toast.error("Nome e placa são obrigatórios");
-    const next_oil_change_km = Number(form.last_oil_change_km) + Number(form.oil_change_interval);
-    const payload: any = { ...form, next_oil_change_km, plate: String(form.plate).toUpperCase() };
+    // óleo/revisões passaram a ser controlados pelos planos de manutenção
+    const last_oil_change_km = Number(form.current_km) || 0;
+    const oil_change_interval = Number(form.oil_change_interval) || 10000;
+    const payload: any = {
+      ...form,
+      last_oil_change_km,
+      oil_change_interval,
+      next_oil_change_km: last_oil_change_km + oil_change_interval,
+      plate: String(form.plate).toUpperCase(),
+    };
+
     if (!editing) {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", user?.id).maybeSingle();
@@ -258,23 +286,12 @@ export default function CVVehicles() {
                     <span className="text-muted-foreground flex items-center gap-1"><Gauge className="h-4 w-4" />KM Atual</span>
                     <span className="font-semibold text-primary">{v.current_km.toLocaleString()} km</span>
                   </div>
-                  <div className="space-y-1.5 pt-2 border-t">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1"><Droplets className="h-4 w-4" />Troca de Óleo</span>
-                      {overdue ? (
-                        <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Vencida</Badge>
-                      ) : near ? (
-                        <Badge variant="outline" className="gap-1 border-amber-500 text-amber-500"><AlertTriangle className="h-3 w-3" />Próxima</Badge>
-                      ) : (
-                        <Badge variant="outline" className="gap-1 border-emerald-500 text-emerald-500"><CheckCircle className="h-3 w-3" />Em dia</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {overdue
-                        ? <span className="text-destructive">Atrasada em {Math.abs(km).toLocaleString()} km</span>
-                        : <>Próxima em {km.toLocaleString()} km ({v.next_oil_change_km.toLocaleString()} km)</>}
-                    </p>
+                  <div className="pt-2 border-t">
+                    <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={() => abrirHistorico(v)}>
+                      <History className="h-3.5 w-3.5 mr-1" /> Últimas manutenções
+                    </Button>
                   </div>
+
                   <CVMaintenanceAlert alertas={alertas[v.id] ?? []} onGerado={load} />
                   {!v.active && <Badge variant="secondary" className="w-full justify-center">Inativo</Badge>}
                 </CardContent>
@@ -309,11 +326,14 @@ export default function CVVehicles() {
                 <Input value={TYPES.find(t => t.value === form.vehicle_type)?.label ?? ""} readOnly className="bg-muted" />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div><Label>KM Atual</Label><Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} /></div>
-              <div><Label>Intervalo Óleo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: e.target.value })} /></div>
-              <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: e.target.value })} /></div>
+            <div>
+              <Label>KM Inicial</Label>
+              <Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} />
+              <p className="text-xs text-muted-foreground mt-1">
+                KM de início dos dados. Trocas de óleo e revisões são cadastradas nos planos de manutenção (ícone 🔧 no card).
+              </p>
             </div>
+
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={c => setForm({ ...form, active: c })} />
               <Label>Ativo</Label>
@@ -351,8 +371,12 @@ export default function CVVehicles() {
                     {p.tipo === "km" && `A cada ${p.interval_km?.toLocaleString()} km`}
                     {p.tipo === "dias" && `A cada ${p.interval_days} dias`}
                     {p.tipo === "ambos" && `A cada ${p.interval_km?.toLocaleString()} km ou ${p.interval_days} dias`}
-                    {" · "}última: {p.last_done_km.toLocaleString()} km em {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
                   </p>
+                  <Badge variant="outline" className="mt-1 gap-1 text-[11px] font-normal border-emerald-500/60 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Última execução: {p.last_done_km.toLocaleString()} km · {new Date(p.last_done_at).toLocaleDateString("pt-BR")}
+                  </Badge>
+
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
@@ -448,6 +472,43 @@ export default function CVVehicles() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Histórico de manutenções do veículo */}
+      <Dialog open={!!histVehicle} onOpenChange={o => { if (!o) setHistVehicle(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-4 w-4" /> Manutenções — {histVehicle?.name} ({histVehicle?.plate})
+            </DialogTitle>
+          </DialogHeader>
+          {histLoading ? (
+            <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Carregando...</p>
+          ) : histRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma manutenção registrada para este veículo.</p>
+          ) : (
+            <div className="space-y-2">
+              {histRows.map(h => (
+                <div key={h.id} className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{h.defect_description}</p>
+                    <Badge variant={h.status === "resolved" ? "outline" : "secondary"} className="shrink-0">
+                      {h.status === "resolved" ? "Concluída" : h.status === "in_progress" ? "Em andamento" : "Pendente"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Aberta em {new Date(h.reported_at).toLocaleDateString("pt-BR")}
+                    {h.resolved_at && ` · Concluída em ${new Date(h.resolved_at).toLocaleDateString("pt-BR")}`}
+                    {h.resolved_by && ` · por ${h.resolved_by}`}
+                    {h.cost != null && ` · R$ ${Number(h.cost).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                  </p>
+                  {h.solution && <p className="text-xs">Solução: {h.solution}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
