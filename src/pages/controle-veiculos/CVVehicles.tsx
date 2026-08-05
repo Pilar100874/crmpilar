@@ -285,14 +285,53 @@ export default function CVVehicles() {
   // ---- planos de manutenção ----
   const abrirPlanos = async (v: Vehicle) => {
     setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null); setAplicarEm([]);
+    setRotEdit({}); setAddItensSel([]); setAddItensTipo((v as any).fleet_type || "__todos__");
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", v.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
+    if (!catalogo.length) listarCatalogo().then(setCatalogo).catch(() => {});
   };
   const recarregarPlanos = async () => {
     if (!planVehicle) return;
     const { data } = await supabase.from("cv_maintenance_plans").select("*").eq("vehicle_id", planVehicle.id).order("name");
     setPlans((data ?? []) as any as MaintenancePlan[]);
   };
+
+  const planosRoteiro = plans.filter(p => ORIGENS_ROTEIRO.includes((p as any).origem));
+  const planosAdicionais = plans.filter(p => !ORIGENS_ROTEIRO.includes((p as any).origem));
+
+  const salvarIntervaloRoteiro = async (p: MaintenancePlan) => {
+    const e = rotEdit[p.id];
+    if (!e) return;
+    const km = e.km === "" ? null : Number(e.km);
+    const dias = e.dias === "" ? null : Number(e.dias);
+    if (!km && !dias) return toast.error("Informe pelo menos KM ou dias.");
+    setRotSalvando(p.id);
+    const { error } = await supabase.from("cv_maintenance_plans")
+      .update({ interval_km: km, interval_days: dias, tipo: km && dias ? "ambos" : dias ? "dias" : "km" })
+      .eq("id", p.id);
+    setRotSalvando(null);
+    if (error) return toast.error(error.message);
+    toast.success("Intervalo atualizado");
+    setRotEdit(prev => { const n = { ...prev }; delete n[p.id]; return n; });
+    recarregarPlanos(); load();
+  };
+
+  const adicionarAvulsos = async () => {
+    if (!planVehicle || !addItensSel.length) return;
+    setAddItensSalvando(true);
+    try {
+      const itens = catalogo.filter(i => addItensSel.includes(i.id));
+      const n = await adicionarItensRoteiro(planVehicle, itens);
+      toast.success(`${n} item(ns) adicionado(s) ao roteiro`);
+      setAddItensSel([]); setAddItensOpen(false);
+      recarregarPlanos(); load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAddItensSalvando(false);
+    }
+  };
+
 
   const aplicarRoteiroPadrao = async () => {
     if (!planVehicle) return;
