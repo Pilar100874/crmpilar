@@ -131,6 +131,8 @@ export default function CVVehicleEntry() {
           angle_key: p.angle_key,
           angle_label: p.angle_label,
           photo_url: p.photo_url,
+          caption: p.caption || null,
+          is_extra: p.is_extra ?? false,
           created_by: user?.id ?? null,
         })),
       );

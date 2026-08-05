@@ -28,6 +28,8 @@ interface Photo {
   stage: string;
   photo_url: string;
   created_at: string;
+  caption?: string | null;
+  is_extra?: boolean | null;
   signedUrl?: string;
 }
 
@@ -77,7 +79,7 @@ export default function CVVehicleHistory() {
       if (!ids.length) { setPhotos([]); setLoading(false); return; }
       const { data: ph } = await supabase
         .from("cv_movement_photos")
-        .select("id,movement_id,angle_key,angle_label,stage,photo_url,created_at")
+        .select("id,movement_id,angle_key,angle_label,stage,photo_url,created_at,caption,is_extra")
         .in("movement_id", ids)
         .order("created_at", { ascending: true });
       const list = (ph ?? []) as Photo[];
@@ -238,7 +240,7 @@ function PhotoBlock({
               type="button"
               onClick={() => p.signedUrl && onOpen(p.signedUrl)}
               className="group relative aspect-square overflow-hidden rounded border bg-background hover:ring-2 hover:ring-primary transition"
-              title={p.angle_label}
+              title={p.caption || p.angle_label}
             >
               {p.signedUrl ? (
                 <img src={p.signedUrl} alt={p.angle_label} className="w-full h-full object-cover" loading="lazy" />
@@ -246,7 +248,7 @@ function PhotoBlock({
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">...</div>
               )}
               <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] px-1 py-0.5 truncate">
-                {p.angle_label}
+                {p.caption || p.angle_label}
               </div>
             </button>
           ))}

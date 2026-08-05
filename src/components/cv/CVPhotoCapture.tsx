@@ -3,9 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Camera, CheckCircle, X, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn, Video, Smartphone, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ImageZoomDialog } from "@/components/ui/image-zoom-dialog";
+import { CVWebcamDialog } from "@/components/cv/CVWebcamDialog";
+
 
 export interface PhotoAngle {
   key: string;
@@ -22,7 +25,12 @@ export interface CapturedPhoto {
   angle_key: string;
   angle_label: string;
   photo_url: string;
+  /** Texto livre escrito pelo usuário sobre a foto. */
+  caption?: string;
+  /** Foto extra adicionada manualmente (fora dos ângulos configurados). */
+  is_extra?: boolean;
 }
+
 
 interface AiFinding {
   has_changes: boolean;
@@ -58,7 +66,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [ipCams, setIpCams] = useState<any[]>([]);
   const [capturingCam, setCapturingCam] = useState<string | null>(null);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
+  const [webcamFor, setWebcamFor] = useState<{ key: string; label: string; extra?: boolean } | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const extraInputRef = useRef<HTMLInputElement | null>(null);
+
 
   const getUrl = async (path: string) => {
     const { data } = await supabase.storage.from("cv-vehicle-photos").createSignedUrl(path, 3600);
@@ -133,30 +144,66 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
 
   const captureFor = (angle: PhotoAngle) => inputRefs.current[angle.key]?.click();
 
-  const handleFile = async (angle: PhotoAngle, file: File | undefined) => {
+  const uploadPhoto = async (
+    key: string,
+    label: string,
+    file: File | undefined,
+    opts?: { extra?: boolean; angle?: PhotoAngle },
+  ) => {
     if (!file) return;
-    setUploading(angle.key);
+    setUploading(key);
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `${stage}/${Date.now()}-${angle.key}.${ext}`;
+    const path = `${stage}/${Date.now()}-${key}.${ext}`;
     const { error } = await supabase.storage.from("cv-vehicle-photos").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
-      contentType: file.type,
+      contentType: file.type || "image/jpeg",
     });
     if (error) {
-      toast.error(`Falha ao enviar ${angle.label}: ${error.message}`);
+      toast.error(`Falha ao enviar ${label}: ${error.message}`);
       setUploading(null);
       return;
     }
     const url = await getUrl(path);
-    setPreviews((p) => ({ ...p, [angle.key]: url }));
-    const next = value.filter((p) => p.angle_key !== angle.key);
-    next.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
+    setPreviews((p) => ({ ...p, [key]: url }));
+    const existing = value.find((p) => p.angle_key === key);
+    const next = value.filter((p) => p.angle_key !== key);
+    next.push({
+      angle_key: key,
+      angle_label: label,
+      photo_url: path,
+      caption: existing?.caption ?? "",
+      is_extra: opts?.extra ?? false,
+    });
     onChange(next);
     setUploading(null);
-    // dispara IA em background
-    runAiCompare(angle, path);
+    if (opts?.angle) runAiCompare(opts.angle, path);
   };
+
+  const handleFile = (angle: PhotoAngle, file: File | undefined) =>
+    uploadPhoto(angle.key, angle.label, file, { angle });
+
+  const addExtra = (file: File | undefined) => {
+    if (!file) return;
+    const count = value.filter((p) => p.is_extra).length + 1;
+    uploadPhoto(`extra-${Date.now()}`, `Foto extra ${count}`, file, { extra: true });
+  };
+
+  const setCaption = (key: string, caption: string) => {
+    onChange(value.map((p) => (p.angle_key === key ? { ...p, caption } : p)));
+  };
+
+  const onWebcamCapture = (file: File) => {
+    if (!webcamFor) return;
+    if (webcamFor.extra) addExtra(file);
+    else {
+      const angle = angles.find((a) => a.key === webcamFor.key);
+      uploadPhoto(webcamFor.key, webcamFor.label, file, { angle });
+    }
+  };
+
+  const extras = value.filter((p) => p.is_extra);
+
 
   const captureFromIpCamera = async (angle: PhotoAngle, cameraId: string) => {
     setCapturingCam(angle.key);
@@ -323,19 +370,35 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                       </Button>
                     </div>
                   ) : (
-                    <div className="h-32 border-2 border-dashed rounded flex flex-col items-center justify-center bg-muted/30 text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => captureFor(a)}
+                      disabled={uploading === a.key}
+                      title="Clique para tirar a foto com a câmera do celular"
+                      className="w-full h-32 border-2 border-dashed rounded flex flex-col items-center justify-center bg-muted/30 text-muted-foreground hover:bg-muted/60 transition"
+                    >
                       {uploading === a.key ? (
                         <Loader2 className="h-6 w-6 animate-spin" />
                       ) : (
                         <>
-                          <Upload className="h-6 w-6 mb-1" />
-                          <span className="text-[11px]">Sem foto</span>
+                          <Smartphone className="h-6 w-6 mb-1" />
+                          <span className="text-[11px]">Clique para tirar foto</span>
                         </>
                       )}
-                    </div>
+                    </button>
                   )}
                 </div>
               </div>
+
+              {captured && (
+                <Textarea
+                  value={captured.caption ?? ""}
+                  onChange={(e) => setCaption(a.key, e.target.value)}
+                  placeholder="Observação sobre esta foto (opcional)"
+                  className="text-xs min-h-[52px]"
+                />
+              )}
+
 
               {/* Resultado IA */}
               {(loadingAi || ai) && (
@@ -380,7 +443,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                 accept="image/*"
                 capture="environment"
                 className="hidden"
-                onChange={(e) => handleFile(a, e.target.files?.[0])}
+                onChange={(e) => { handleFile(a, e.target.files?.[0]); e.currentTarget.value = ""; }}
               />
               <div className="flex gap-2 flex-wrap">
                 {(() => {
@@ -435,6 +498,29 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                   );
                 })()}
 
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  title="Capturar usando a câmera ao vivo (webcam)"
+                  disabled={uploading === a.key}
+                  onClick={() => setWebcamFor({ key: a.key, label: a.label })}
+                >
+                  <Video className="h-4 w-4" />
+                </Button>
+
+                {(a.source ?? "device") !== "device" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    title="Tirar foto com o celular (caso a câmera não funcione)"
+                    disabled={uploading === a.key}
+                    onClick={() => captureFor(a)}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </Button>
+                )}
 
                 {captured && prev && aiCompare && (
                   <Button
@@ -453,7 +539,80 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
         );
       })}
       </div>
+
+      {/* Fotos extras */}
+      <Card className="border-dashed">
+        <CardContent className="p-3 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ImagePlus className="h-4 w-4 text-primary" />
+              Fotos extras
+              <Badge variant="outline" className="text-[10px]">{extras.length}</Badge>
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => extraInputRef.current?.click()}>
+                <Smartphone className="h-4 w-4 mr-2" /> Celular
+              </Button>
+              <Button type="button" size="sm" onClick={() => setWebcamFor({ key: "extra", label: "Foto extra", extra: true })}>
+                <Video className="h-4 w-4 mr-2" /> Câmera
+              </Button>
+            </div>
+          </div>
+          <input
+            ref={extraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => { addExtra(e.target.files?.[0]); e.currentTarget.value = ""; }}
+          />
+          {extras.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">
+              Adicione fotos além dos ângulos obrigatórios (detalhes, avarias, documentos...) e escreva uma observação em cada uma.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {extras.map((p) => (
+                <div key={p.angle_key} className="space-y-1">
+                  <div className="relative">
+                    <button type="button" onClick={() => setZoomSrc(previews[p.angle_key] ?? null)} className="block w-full">
+                      <img src={previews[p.angle_key]} alt={p.angle_label} className="w-full h-32 object-cover rounded border" />
+                    </button>
+                    <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded p-1 pointer-events-none"><ZoomIn className="h-3 w-3" /></span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-1 right-1 h-6 w-6"
+                      onClick={() => remove(p.angle_key)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={p.caption ?? ""}
+                    onChange={(e) => setCaption(p.angle_key, e.target.value)}
+                    placeholder="Escreva algo sobre esta foto"
+                    className="text-xs min-h-[52px]"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {uploading?.startsWith("extra-") && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Enviando foto extra…</div>
+          )}
+        </CardContent>
+      </Card>
+
       <ImageZoomDialog src={zoomSrc} onClose={() => setZoomSrc(null)} />
+      <CVWebcamDialog
+        open={!!webcamFor}
+        title={webcamFor ? `Capturar — ${webcamFor.label}` : "Capturar foto"}
+        onClose={() => setWebcamFor(null)}
+        onCapture={onWebcamCapture}
+      />
     </div>
   );
+
 }

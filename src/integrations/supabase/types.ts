@@ -6390,9 +6390,11 @@ export type Database = {
         Row: {
           angle_key: string
           angle_label: string
+          caption: string | null
           created_at: string
           created_by: string | null
           id: string
+          is_extra: boolean
           movement_id: string
           photo_url: string
           stage: string
@@ -6400,9 +6402,11 @@ export type Database = {
         Insert: {
           angle_key: string
           angle_label: string
+          caption?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          is_extra?: boolean
           movement_id: string
           photo_url: string
           stage: string
@@ -6410,9 +6414,11 @@ export type Database = {
         Update: {
           angle_key?: string
           angle_label?: string
+          caption?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          is_extra?: boolean
           movement_id?: string
           photo_url?: string
           stage?: string
