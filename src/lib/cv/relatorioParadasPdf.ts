@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { supabase } from "@/integrations/supabase/client";
 import { carregarChecklistPorOrdens, type ChecklistItem } from "./checklist";
 import { PRIORIDADE_LABEL, type Prioridade } from "./ordens";
+import { carregarPlanosPorId, calcularAtraso } from "./manutencao";
 
 export interface FiltroRelatorioParadas {
   /** vazio = todos os veículos */
