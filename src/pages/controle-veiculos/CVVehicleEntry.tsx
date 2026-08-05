@@ -419,6 +419,19 @@ export default function CVVehicleEntry() {
           )}
         </div>
       </Card>
+
+      <CVMaintenanceVencidasDialog
+        open={!!popupMove}
+        onOpenChange={(o) => { if (!o) setPopupMove(null); }}
+        alertas={popupMove ? (alertas[popupMove.vehicle_id] ?? []) : []}
+        vehicleLabel={popupMove?.vehicle?.plate}
+        vehicleId={popupMove?.vehicle_id ?? null}
+        vehicleKm={popupMove?.vehicle?.current_km ?? null}
+        driverId={popupMove?.driver_id ?? null}
+        movementId={popupMove?.id ?? null}
+        onGerado={() => recalcSelected(form.entry_km)}
+      />
     </div>
+
   );
 }
