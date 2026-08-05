@@ -276,6 +276,7 @@ export default function CVVehicleEntry() {
                           <Clock className="h-3 w-3 mr-1" />{h}h {min}min em trânsito
                         </Badge>
                       </div>
+                      <CVMaintenanceAlert alertas={alertas[m.vehicle_id] ?? []} compact />
                     </button>
                   );
                 })}
@@ -284,10 +285,21 @@ export default function CVVehicleEntry() {
           )}
 
           {step >= 1 && selected && (
-            <div className="mb-4 p-3 bg-muted/50 rounded text-sm">
-              <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
+            <div className="mb-4 space-y-3">
+              <div className="p-3 bg-muted/50 rounded text-sm">
+                <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
+              </div>
+              {(alertas[selected.vehicle_id]?.length ?? 0) > 0 && (
+                <CVMaintenanceAlert
+                  alertas={alertas[selected.vehicle_id]}
+                  driverId={selected.driver_id}
+                  movementId={selected.id}
+                  onGerado={() => recalcSelected(form.entry_km)}
+                />
+              )}
             </div>
           )}
+
 
           {step === 1 && selected && (
             <div className="space-y-4 max-w-xl">
