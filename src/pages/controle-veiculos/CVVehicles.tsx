@@ -11,9 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
-  Plus, Pencil, Trash2, Car, Gauge, Droplets,
-  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2,
+  Plus, Pencil, Trash2, Car, Gauge,
+  ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2,
 } from "lucide-react";
+
 import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
