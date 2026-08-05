@@ -739,8 +739,11 @@ export default function CVVehicles() {
                   })
                 )}
               </div>
+                </div>
+              )}
             </div>
           )}
+
         </DialogContent>
       </Dialog>
     </div>
