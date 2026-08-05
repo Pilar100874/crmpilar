@@ -8,8 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search,
+  Wrench, Printer, AlertOctagon, Clock, Layers, Loader2, ClipboardCheck, Package, Search, FileDown,
 } from "lucide-react";
+import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import {
   carregarParadas, consolidarParada, darBaixaParada, imprimirFicha,
@@ -33,6 +34,34 @@ export default function CVParadas() {
   const [marcados, setMarcados] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({ km: "", data: "", responsavel: "", custo: "" });
   const [salvando, setSalvando] = useState(false);
+
+  const hoje = new Date();
+  const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const [expOpen, setExpOpen] = useState(false);
+  const [expGerando, setExpGerando] = useState(false);
+  const [exp, setExp] = useState({
+    inicio: primeiroDia.toISOString().slice(0, 10),
+    fim: hoje.toISOString().slice(0, 10),
+    veiculo: "todos",
+    incluirPendentes: true,
+  });
+
+  const exportarPdf = async () => {
+    if (!exp.inicio || !exp.fim) return toast.error("Informe o período");
+    if (exp.inicio > exp.fim) return toast.error("Data inicial maior que a final");
+    setExpGerando(true);
+    try {
+      const r = await gerarRelatorioParadasPdf({
+        inicio: exp.inicio,
+        fim: exp.fim,
+        vehicleIds: exp.veiculo === "todos" ? [] : [exp.veiculo],
+        incluirPendentes: exp.incluirPendentes,
+      });
+      toast.success(`PDF gerado: ${r.ordens} ordem(ns) em ${r.veiculos} veículo(s)`);
+      setExpOpen(false);
+    } catch (e: any) { toast.error(e?.message ?? "Erro ao gerar PDF"); }
+    setExpGerando(false);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -108,6 +137,11 @@ export default function CVParadas() {
         icon={Wrench}
         title="Paradas de Manutenção"
         subtitle={`${paradas.length} veículo(s) com pendências • ${totalItens} serviço(s)`}
+        actions={
+          <Button size="sm" variant="outline" onClick={() => setExpOpen(true)}>
+            <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
+          </Button>
+        }
       />
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
