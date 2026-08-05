@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge,
   ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2, X, Filter,
+  ArrowUpDown, ArrowUp, ArrowDown,
 } from "lucide-react";
 
 import { CVPageHeader } from "./CVPageHeader";
@@ -59,6 +60,9 @@ export default function CVVehicles() {
   const [logVeiculos, setLogVeiculos] = useState<LogVeic[]>([]);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [q, setQ] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "last_maintenance" | "km">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [lastMaintByVehicle, setLastMaintByVehicle] = useState<Record<string, string>>({});
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
@@ -172,6 +176,23 @@ export default function CVVehicles() {
     const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
     setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
+
+    // última manutenção por veículo para ordenação
+    if (list.length > 0) {
+      const { data: lastMaint } = await supabase
+        .from("cv_defect_reports")
+        .select("vehicle_id, resolved_at")
+        .in("vehicle_id", list.map(v => v.id))
+        .not("resolved_at", "is", null)
+        .order("resolved_at", { ascending: false });
+      const map: Record<string, string> = {};
+      (lastMaint ?? []).forEach((r: any) => {
+        if (!map[r.vehicle_id]) map[r.vehicle_id] = r.resolved_at;
+      });
+      setLastMaintByVehicle(map);
+    } else {
+      setLastMaintByVehicle({});
+    }
   };
   useEffect(() => { load(); }, []);
 
@@ -298,6 +319,21 @@ export default function CVVehicles() {
   const filtered = rows.filter(v =>
     !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
   );
+
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === "name") {
+      cmp = a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+    } else if (sortBy === "km") {
+      cmp = a.current_km - b.current_km;
+    } else if (sortBy === "last_maintenance") {
+      const da = lastMaintByVehicle[a.id] ? new Date(lastMaintByVehicle[a.id]).getTime() : 0;
+      const db = lastMaintByVehicle[b.id] ? new Date(lastMaintByVehicle[b.id]).getTime() : 0;
+      cmp = da - db;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
   const jaVinculados = new Set(rows.filter(r => r.id !== editing).map(r => (r as any).veiculo_id).filter(Boolean));
   const opcoesLogistica = logVeiculos.filter(lv => !jaVinculados.has(lv.id));
 
@@ -329,19 +365,42 @@ export default function CVVehicles() {
         }
       />
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar nome ou placa..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar nome ou placa..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Ordenar por</span>
+          <Select value={sortBy} onValueChange={v => setSortBy(v as any)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Nome</SelectItem>
+              <SelectItem value="last_maintenance">Última manutenção</SelectItem>
+              <SelectItem value="km">KM</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            title={sortDir === "asc" ? "Crescente" : "Decrescente"}
+            onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")}
+          >
+            {sortDir === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {sortedFiltered.length === 0 ? (
         <Card><CardContent className="py-16 text-center text-muted-foreground">
           <Car className="h-12 w-12 mx-auto mb-3 opacity-40" />
           Nenhum veículo encontrado.
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {filtered.map(v => {
+          {sortedFiltered.map(v => {
             const km = v.next_oil_change_km - v.current_km;
             const overdue = km <= 0;
             const near = km > 0 && km <= 1000;
