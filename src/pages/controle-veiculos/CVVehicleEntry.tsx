@@ -80,7 +80,9 @@ export default function CVVehicleEntry() {
     });
     setPhotos([]);
     setStep(1);
+    if ((alertas[move.vehicle_id]?.length ?? 0) > 0) setPopupMove(move);
   };
+
 
   const requiredAngles = useMemo(() => angles.filter((a) => a.required), [angles]);
   const missingRequired = requiredAngles.filter((a) => !photos.some((p) => p.angle_key === a.key));
