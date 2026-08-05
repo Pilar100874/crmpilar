@@ -574,10 +574,72 @@ export default function CVVehicles() {
 
           {histLoading ? (
             <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Carregando...</p>
-          ) : histRows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma manutenção registrada para este veículo.</p>
           ) : (
             <div className="space-y-4">
+              {/* Registrar nova ocorrência */}
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Plus className="h-4 w-4" /> Registrar manutenção realizada
+                  </h4>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setHistFormAberto(o => !o)}>
+                    {histFormAberto ? "Fechar" : "Abrir"}
+                  </Button>
+                </div>
+
+                {histFormAberto && (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Plano de manutenção (opcional)</Label>
+                        <Select value={histNova.plano} onValueChange={v => setHistNova((f: any) => ({ ...f, plano: v }))}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="nenhum">Nenhum (avulsa)</SelectItem>
+                            {histPlanos.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Data da manutenção *</Label>
+                        <Input type="date" value={histNova.data} onChange={e => setHistNova((f: any) => ({ ...f, data: e.target.value }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">KM do veículo</Label>
+                        <Input type="number" value={histNova.km} onChange={e => setHistNova((f: any) => ({ ...f, km: e.target.value }))} className="h-8 text-sm" placeholder="Ex: 125000" />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label className="text-xs">Descrição *</Label>
+                        <Input value={histNova.descricao} onChange={e => setHistNova((f: any) => ({ ...f, descricao: e.target.value }))} className="h-8 text-sm" placeholder="Ex: Troca de óleo e filtros" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Responsável</Label>
+                        <Input value={histNova.responsavel} onChange={e => setHistNova((f: any) => ({ ...f, responsavel: e.target.value }))} className="h-8 text-sm" placeholder="Oficina / mecânico" />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label className="text-xs">Serviço executado / observações</Label>
+                        <Input value={histNova.solucao} onChange={e => setHistNova((f: any) => ({ ...f, solucao: e.target.value }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Custo (R$)</Label>
+                        <Input type="number" step="0.01" value={histNova.custo} onChange={e => setHistNova((f: any) => ({ ...f, custo: e.target.value }))} className="h-8 text-sm" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={salvarNovaOcorrencia} disabled={histSalvando}>
+                        {histSalvando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+                        Registrar ocorrência
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {histRows.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma manutenção registrada para este veículo.</p>
+              ) : (
+                <div className="space-y-4">
+
               {/* Filtros */}
               <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
                 <div className="flex items-center justify-between">
