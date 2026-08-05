@@ -30,7 +30,7 @@ export default function CVVehicleEntry() {
   const [photosRequired, setPhotosRequired] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
-  const [popupMove, setPopupMove] = useState<any | null>(null);
+  const geradosRef = useRef<Set<string>>(new Set());
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
