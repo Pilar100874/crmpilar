@@ -43,7 +43,7 @@ export default function CVDefects() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newDefect, setNewDefect] = useState({
-    vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "",
+    vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "",
   });
 
   const loadAll = async () => {
@@ -113,6 +113,7 @@ export default function CVDefects() {
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const { error } = await supabase.from("cv_defect_reports").insert({
       ...newDefect,
+      vehicle_km: newDefect.vehicle_km ? Number(newDefect.vehicle_km) : null,
       reported_at: new Date().toISOString(),
       reported_by: user?.id ?? null,
       status: "pending",
@@ -121,7 +122,7 @@ export default function CVDefects() {
     if (error) return toast.error(error.message);
     toast.success("Defeito reportado!");
     setCreateOpen(false);
-    setNewDefect({ vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "" });
+    setNewDefect({ vehicle_id: "", driver_id: "", defect_type_id: "", defect_description: "", vehicle_km: "" });
     loadAll();
   };
 
@@ -200,6 +201,15 @@ export default function CVDefects() {
                   <Textarea rows={3} value={newDefect.defect_description}
                     onChange={(e) => setNewDefect({ ...newDefect, defect_description: e.target.value })}
                     placeholder="Descreva o defeito..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>Quilometragem do veículo (KM)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 45.230"
+                    value={newDefect.vehicle_km}
+                    onChange={(e) => setNewDefect({ ...newDefect, vehicle_km: e.target.value })}
+                  />
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>

@@ -9,11 +9,12 @@ interface Props {
   compact?: boolean;
   driverId?: string | null;
   movementId?: string | null;
+  vehicleKm?: number | null;
   onGerado?: () => void;
 }
 
 /** Bloco chamativo de alertas de manutenção exibido nos cards de veículo. */
-export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, onGerado }: Props) {
+export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, vehicleKm, onGerado }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   if (!alertas?.length) return null;
 
@@ -25,7 +26,7 @@ export function CVMaintenanceAlert({ alertas, compact, driverId, movementId, onG
   const gerar = async (a: AlertaManutencao) => {
     setBusy(a.plan.id);
     try {
-      const r = await gerarOrdemManutencao({ plan: a.plan, detalhe: a.detalhe, driverId, movementId });
+      const r = await gerarOrdemManutencao({ plan: a.plan, detalhe: a.detalhe, driverId, movementId, vehicleKm });
       toast[r.criado ? "success" : "info"](
         r.criado ? "Ordem de manutenção gerada para o encarregado" : "Já existe uma ordem aberta para este serviço",
       );
