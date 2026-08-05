@@ -60,6 +60,9 @@ export default function CVVehicles() {
   const [logVeiculos, setLogVeiculos] = useState<LogVeic[]>([]);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [q, setQ] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "last_maintenance" | "km">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [lastMaintByVehicle, setLastMaintByVehicle] = useState<Record<string, string>>({});
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
