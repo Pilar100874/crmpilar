@@ -340,42 +340,45 @@ export default function CVVehicles() {
           Nenhum veículo encontrado.
         </CardContent></Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {filtered.map(v => {
             const km = v.next_oil_change_km - v.current_km;
             const overdue = km <= 0;
             const near = km > 0 && km <= 1000;
             return (
-              <Card key={v.id} className="hover:shadow-lg transition-all">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Car className="h-5 w-5 text-primary" />
-                      {v.name}
+              <Card key={v.id} className="hover:shadow-lg transition-all overflow-hidden flex flex-col">
+                <CardHeader className="pb-3 px-3 sm:px-4">
+                  <div className="flex flex-col gap-2 min-w-0">
+                    <CardTitle className="text-base sm:text-lg flex items-center gap-2 min-w-0">
+                      <Car className="h-5 w-5 text-primary shrink-0" />
+                      <span className="truncate" title={v.name}>{v.name}</span>
                     </CardTitle>
-                    <div className="flex gap-0.5">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Planos de manutenção" onClick={() => abrirPlanos(v)}><Wrench className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(v)}>
+                    <div className="flex flex-wrap items-center gap-0.5 -ml-1.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Planos de manutenção" onClick={() => abrirPlanos(v)}><Wrench className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Editar" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title={v.active ? "Desativar" : "Ativar"} onClick={() => toggle(v)}>
                         {v.active ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(v.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive" title="Excluir" onClick={() => remove(v.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Placa</span>
-                    <Badge variant="outline" className="font-mono">{v.plate}</Badge>
+
+                <CardContent className="space-y-3 px-3 sm:px-4 pb-4 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                    <span className="text-muted-foreground shrink-0">Placa</span>
+                    <Badge variant="outline" className="font-mono truncate max-w-[60%]">{v.plate}</Badge>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Tipo</span>
-                    <span>{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
+                  <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                    <span className="text-muted-foreground shrink-0">Tipo</span>
+                    <span className="truncate text-right">{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-1"><Gauge className="h-4 w-4" />KM Atual</span>
-                    <span className="font-semibold text-primary">{v.current_km.toLocaleString()} km</span>
+
+                  <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                    <span className="text-muted-foreground flex items-center gap-1 shrink-0"><Gauge className="h-4 w-4" />KM Atual</span>
+                    <span className="font-semibold text-primary truncate">{v.current_km.toLocaleString()} km</span>
                   </div>
+
                   <div className="pt-2 border-t">
                     <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={() => abrirHistorico(v)}>
                       <History className="h-3.5 w-3.5 mr-1" /> Últimas manutenções
