@@ -66,7 +66,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [ipCams, setIpCams] = useState<any[]>([]);
   const [capturingCam, setCapturingCam] = useState<string | null>(null);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
+  const [webcamFor, setWebcamFor] = useState<{ key: string; label: string; extra?: boolean } | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const extraInputRef = useRef<HTMLInputElement | null>(null);
+
 
   const getUrl = async (path: string) => {
     const { data } = await supabase.storage.from("cv-vehicle-photos").createSignedUrl(path, 3600);
