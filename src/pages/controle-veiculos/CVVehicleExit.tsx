@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
-import { CVMaintenanceVencidasDialog } from "@/components/cv/CVMaintenanceVencidasDialog";
 
-import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
+import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
 
