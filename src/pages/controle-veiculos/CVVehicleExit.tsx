@@ -30,6 +30,8 @@ export default function CVVehicleExit() {
   const [busyVehicleIds, setBusyVehicleIds] = useState<Set<string>>(new Set());
   const [busyDriverIds, setBusyDriverIds] = useState<Set<string>>(new Set());
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
+  const [popupVeiculo, setPopupVeiculo] = useState<string | null>(null);
+
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
   const [loading, setLoading] = useState(true);
