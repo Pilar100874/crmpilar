@@ -43,7 +43,7 @@ export default function CVDefects() {
 
   const [editing, setEditing] = useState<any | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ solution: "", cost: 0, resolvedBy: "", validatedBy: "" });
+  const [formData, setFormData] = useState({ solution: "", cost: 0, resolvedBy: "", validatedBy: "", dataBaixa: "", kmBaixa: "" });
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
 
 
