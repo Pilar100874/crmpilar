@@ -618,7 +618,7 @@ export default function CVVehicles() {
             <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold">Roteiro padrão do tipo de frota</p>
+                  <p className="text-sm font-semibold">Itens de manutenção do veículo</p>
                   <p className="text-xs text-muted-foreground">
                     {(planVehicle as any)?.fleet_type
                       ? `Tipo: ${(planVehicle as any).fleet_type} · ${planosRoteiro.length} item(ns) aplicados`
