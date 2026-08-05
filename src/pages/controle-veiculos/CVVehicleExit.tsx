@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
-import { CVMaintenanceVencidasDialog } from "@/components/cv/CVMaintenanceVencidasDialog";
 
-import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
+import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
 
@@ -32,7 +31,7 @@ export default function CVVehicleExit() {
   const [busyVehicleIds, setBusyVehicleIds] = useState<Set<string>>(new Set());
   const [busyDriverIds, setBusyDriverIds] = useState<Set<string>>(new Set());
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
-  const [popupVeiculo, setPopupVeiculo] = useState<string | null>(null);
+  const geradosRef = useRef<Set<string>>(new Set());
 
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
@@ -241,7 +240,15 @@ export default function CVVehicleExit() {
                     const al = alertas[v.id] ?? [];
                     const venc = al.some((a) => a.vencido);
                     return (
-                      <button key={v.id} type="button" onClick={() => { setForm({ ...form, vehicle_id: v.id }); if (al.length) setPopupVeiculo(v.id); }}
+                      <button key={v.id} type="button" onClick={() => {
+                          setForm({ ...form, vehicle_id: v.id });
+                          if (al.length && !geradosRef.current.has(v.id)) {
+                            geradosRef.current.add(v.id);
+                            gerarOrdemAgrupada({ vehicleId: v.id, alertas: al, vehicleKm: v.current_km })
+                              .then((r) => { if (r.criado) toast.success(`Ordem de manutenção gerada automaticamente (${r.itens} item(ns))`); })
+                              .catch(() => {});
+                          }
+                        }}
                         className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                           active ? "border-primary bg-primary/5 shadow-md"
                             : venc ? "border-destructive bg-destructive/5"
@@ -399,16 +406,6 @@ export default function CVVehicleExit() {
           </div>
         </Card>
 
-        <CVMaintenanceVencidasDialog
-          open={!!popupVeiculo}
-          onOpenChange={(o) => { if (!o) setPopupVeiculo(null); }}
-          alertas={popupVeiculo ? (alertas[popupVeiculo] ?? []) : []}
-          vehicleLabel={vehicles.find((v) => v.id === popupVeiculo)?.plate}
-          vehicleId={popupVeiculo}
-          vehicleKm={vehicles.find((v) => v.id === popupVeiculo)?.current_km ?? null}
-          driverId={form.driver_id || null}
-          onGerado={load}
-        />
       </div>
 
     </>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
-import { CVMaintenanceVencidasDialog } from "@/components/cv/CVMaintenanceVencidasDialog";
 
-import { carregarAlertasManutencao, type AlertaManutencao } from "@/lib/cv/manutencao";
+import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
 
@@ -31,7 +30,7 @@ export default function CVVehicleEntry() {
   const [photosRequired, setPhotosRequired] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
-  const [popupMove, setPopupMove] = useState<any | null>(null);
+  const geradosRef = useRef<Set<string>>(new Set());
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -84,7 +83,20 @@ export default function CVVehicleEntry() {
     });
     setPhotos([]);
     setStep(1);
-    if ((alertas[move.vehicle_id]?.length ?? 0) > 0) setPopupMove(move);
+
+    const al = alertas[move.vehicle_id] ?? [];
+    if (al.length && !geradosRef.current.has(move.id)) {
+      geradosRef.current.add(move.id);
+      gerarOrdemAgrupada({
+        vehicleId: move.vehicle_id,
+        alertas: al,
+        driverId: move.driver_id ?? null,
+        movementId: move.id ?? null,
+        vehicleKm: move.vehicle?.current_km ?? null,
+      })
+        .then((r) => { if (r.criado) toast.success(`Ordem de manutenção gerada automaticamente (${r.itens} item(ns))`); })
+        .catch(() => {});
+    }
   };
 
 
@@ -422,17 +434,6 @@ export default function CVVehicleEntry() {
         </div>
       </Card>
 
-      <CVMaintenanceVencidasDialog
-        open={!!popupMove}
-        onOpenChange={(o) => { if (!o) setPopupMove(null); }}
-        alertas={popupMove ? (alertas[popupMove.vehicle_id] ?? []) : []}
-        vehicleLabel={popupMove?.vehicle?.plate}
-        vehicleId={popupMove?.vehicle_id ?? null}
-        vehicleKm={popupMove?.vehicle?.current_km ?? null}
-        driverId={popupMove?.driver_id ?? null}
-        movementId={popupMove?.id ?? null}
-        onGerado={() => recalcSelected(form.entry_km)}
-      />
     </div>
 
   );
