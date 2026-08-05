@@ -291,19 +291,9 @@ export default function CVVehicleEntry() {
               <div className="p-3 bg-muted/50 rounded text-sm">
                 <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
               </div>
-              {(alertas[selected.vehicle_id]?.length ?? 0) > 0 && (
-                <CVMaintenanceAlert
-                  alertas={alertas[selected.vehicle_id]}
-                  vehicleId={selected.vehicle_id}
-                  vehicleKm={form.entry_km ? Number(form.entry_km) : null}
-                  driverId={selected.driver_id}
-                  movementId={selected.id}
-                  onGerado={() => recalcSelected(form.entry_km)}
-                />
-
-              )}
             </div>
           )}
+
 
 
           {step === 1 && selected && (
