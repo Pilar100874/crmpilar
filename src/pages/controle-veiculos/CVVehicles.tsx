@@ -340,29 +340,30 @@ export default function CVVehicles() {
           Nenhum veículo encontrado.
         </CardContent></Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {filtered.map(v => {
             const km = v.next_oil_change_km - v.current_km;
             const overdue = km <= 0;
             const near = km > 0 && km <= 1000;
             return (
-              <Card key={v.id} className="hover:shadow-lg transition-all">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Car className="h-5 w-5 text-primary" />
-                      {v.name}
+              <Card key={v.id} className="hover:shadow-lg transition-all overflow-hidden flex flex-col">
+                <CardHeader className="pb-3 px-3 sm:px-4">
+                  <div className="flex flex-col gap-2 min-w-0">
+                    <CardTitle className="text-base sm:text-lg flex items-center gap-2 min-w-0">
+                      <Car className="h-5 w-5 text-primary shrink-0" />
+                      <span className="truncate" title={v.name}>{v.name}</span>
                     </CardTitle>
-                    <div className="flex gap-0.5">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Planos de manutenção" onClick={() => abrirPlanos(v)}><Wrench className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(v)}>
+                    <div className="flex flex-wrap items-center gap-0.5 -ml-1.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Planos de manutenção" onClick={() => abrirPlanos(v)}><Wrench className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Editar" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title={v.active ? "Desativar" : "Ativar"} onClick={() => toggle(v)}>
                         {v.active ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(v.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive" title="Excluir" onClick={() => remove(v.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Placa</span>
