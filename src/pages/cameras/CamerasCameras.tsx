@@ -282,9 +282,10 @@ export default function CamerasCameras() {
     if (collectorId) {
       await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", collectorId);
     } else {
+      const estId = await getEstabelecimentoId();
       const { data } = await supabase
         .from("cv_coletor_config")
-        .insert({ cameras_habilitado: v })
+        .insert({ cameras_habilitado: v, estabelecimento_id: estId })
         .select()
         .single();
       if (data) setCollectorId(data.id);
