@@ -39,6 +39,8 @@ cp -r "$WORK/payload/." "$WORK/iso/coletor/" 2>/dev/null || true
 cp -r "$HERE/scripts" "$WORK/iso/coletor/scripts"
 cp "$HERE/scripts/late-command.sh" "$WORK/iso/scripts/late-command.sh"
 cp "$HERE/preseed.cfg" "$WORK/iso/preseed.cfg"
+mkdir -p "$WORK/iso/branding"
+cp -r "$HERE/branding/." "$WORK/iso/branding/" 2>/dev/null || true
 
 # Preseed também dentro do initrd, para o d-i achar sem rede
 echo "==> injetando preseed no initrd"
@@ -50,7 +52,7 @@ cp "$HERE/preseed.cfg" "$IRD/preseed.cfg"
 # Parâmetros de kernel: instalação silenciosa, uma única barra de progresso
 KOPTS="auto=true priority=critical file=/preseed.cfg \
 DEBIAN_FRONTEND=text debian-installer/quiet=true debconf/priority=critical \
-theme=dark quiet loglevel=0 rd.systemd.show_status=false vt.global_cursor_default=0 splash"
+theme=dark quiet loglevel=0 plymouth.enable=1 rd.systemd.show_status=false vt.global_cursor_default=0 splash"
 
 echo "==> menu de boot (tela única do instalador)"
 mkdir -p "$WORK/iso/isolinux"
