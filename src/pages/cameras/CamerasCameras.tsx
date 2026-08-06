@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 import { StatusPingDot } from "@/components/StatusPingDot";
 import { CAMERA_MODELS, findModel } from "@/lib/cameraModels";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 
 const MARCAS = [
@@ -234,9 +235,10 @@ export default function CamerasCameras() {
     const payload: any = { ...editing };
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
+    const estId = await getEstabelecimentoId();
     const q = editing.id
       ? supabase.from("cv_cameras").update(payload).eq("id", editing.id).select().single()
-      : supabase.from("cv_cameras").insert(payload).select().single();
+      : supabase.from("cv_cameras").insert({ ...payload, estabelecimento_id: estId }).select().single();
     const { error, data: saved } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
@@ -280,9 +282,10 @@ export default function CamerasCameras() {
     if (collectorId) {
       await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", collectorId);
     } else {
+      const estId = await getEstabelecimentoId();
       const { data } = await supabase
         .from("cv_coletor_config")
-        .insert({ cameras_habilitado: v })
+        .insert({ cameras_habilitado: v, estabelecimento_id: estId })
         .select()
         .single();
       if (data) setCollectorId(data.id);

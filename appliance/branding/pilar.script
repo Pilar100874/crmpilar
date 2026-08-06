@@ -1,0 +1,88 @@
+// Tema Plymouth do Coletor Pilar
+// Logo + nome do programa + UMA barra de progresso com percentual.
+
+Window.SetBackgroundTopColor(0.04, 0.06, 0.11);
+Window.SetBackgroundBottomColor(0.01, 0.02, 0.04);
+
+sw = Window.GetWidth();
+sh = Window.GetHeight();
+
+// ── Logo ────────────────────────────────────────────────────────────────
+logo.image = Image("logo.png");
+if (logo.image) {
+    max_w = sw * 0.22;
+    if (logo.image.GetWidth() > max_w) {
+        ratio = max_w / logo.image.GetWidth();
+        logo.image = logo.image.Scale(max_w, logo.image.GetHeight() * ratio);
+    }
+    logo.sprite = Sprite(logo.image);
+    logo.sprite.SetX(sw / 2 - logo.image.GetWidth() / 2);
+    logo.sprite.SetY(sh / 2 - logo.image.GetHeight() - 60);
+    logo.sprite.SetZ(1);
+}
+
+// ── Nome do programa ────────────────────────────────────────────────────
+title.image = Image.Text("Coletor Pilar", 1, 1, 1, 1, "Sans 26");
+title.sprite = Sprite(title.image);
+title.sprite.SetX(sw / 2 - title.image.GetWidth() / 2);
+title.sprite.SetY(sh / 2 - 30);
+title.sprite.SetZ(2);
+
+sub.image = Image.Text("Instalando o sistema, aguarde...", 0.75, 0.8, 0.9, 1, "Sans 12");
+sub.sprite = Sprite(sub.image);
+sub.sprite.SetX(sw / 2 - sub.image.GetWidth() / 2);
+sub.sprite.SetY(sh / 2 + 14);
+sub.sprite.SetZ(2);
+
+// ── Barra de progresso (única) ──────────────────────────────────────────
+bar_w = sw * 0.42;
+bar_h = 10;
+bar_x = sw / 2 - bar_w / 2;
+bar_y = sh / 2 + 60;
+
+bg.image = Image("bar-bg.png").Scale(bar_w, bar_h);
+bg.sprite = Sprite(bg.image);
+bg.sprite.SetX(bar_x);
+bg.sprite.SetY(bar_y);
+bg.sprite.SetZ(1);
+
+fill.sprite = Sprite();
+fill.sprite.SetX(bar_x);
+fill.sprite.SetY(bar_y);
+fill.sprite.SetZ(2);
+
+pct.sprite = Sprite();
+pct.sprite.SetZ(2);
+
+fun draw(progress) {
+    if (progress < 0) progress = 0;
+    if (progress > 1) progress = 1;
+    w = bar_w * progress;
+    if (w < 1) w = 1;
+    fill.sprite.SetImage(Image("bar-fill.png").Scale(w, bar_h));
+
+    p = Math.Int(progress * 100);
+    img = Image.Text(p + "%", 0.85, 0.9, 1, 1, "Sans 11");
+    pct.sprite.SetImage(img);
+    pct.sprite.SetX(sw / 2 - img.GetWidth() / 2);
+    pct.sprite.SetY(bar_y + bar_h + 14);
+}
+
+draw(0);
+
+fun progress_callback(duration, progress) {
+    draw(progress);
+}
+Plymouth.SetBootProgressFunction(progress_callback);
+
+fun refresh_callback() { }
+Plymouth.SetRefreshFunction(refresh_callback);
+
+// Sem log de mensagens na tela: apenas logo + barra.
+fun message_callback(text) { }
+Plymouth.SetMessageFunction(message_callback);
+
+fun quit_callback() {
+    draw(1);
+}
+Plymouth.SetQuitFunction(quit_callback);

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Coletor Pilar
+Description=Tela de instalacao/boot do Coletor Pilar
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/pilar
+ScriptFile=/usr/share/plymouth/themes/pilar/pilar.script

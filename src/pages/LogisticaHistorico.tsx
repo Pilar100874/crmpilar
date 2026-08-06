@@ -177,17 +177,31 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
         
         if (!veiculo) continue;
 
-        const { data, error } = await supabase
-          .from('veiculo_posicoes')
-          .select('*')
-          .eq('veiculo_id', veiculoId)
-          .gte('data_hora', start.toISOString())
-          .lte('data_hora', end.toISOString())
-          .order('data_hora', { ascending: true });
+        // Paginação: sem isto o backend devolve no máx. 1000 pontos e o
+        // roteiro do dia aparece cortado (só parte do trajeto).
+        const PAGE = 1000;
+        let from = 0;
+        const todas: VeiculoPosicao[] = [];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data, error } = await supabase
+            .from('veiculo_posicoes')
+            .select('*')
+            .eq('veiculo_id', veiculoId)
+            .gte('data_hora', start.toISOString())
+            .lte('data_hora', end.toISOString())
+            .order('data_hora', { ascending: true })
+            .range(from, from + PAGE - 1);
 
-        if (error) throw error;
+          if (error) throw error;
+          const lote = (data || []) as VeiculoPosicao[];
+          todas.push(...lote);
+          if (lote.length < PAGE) break;
+          from += PAGE;
+          if (from > 200000) break; // trava de segurança
+        }
 
-        const posicoes = (data || []) as VeiculoPosicao[];
+        const posicoes = todas;
         const estatisticas = calculateEstatisticas(posicoes);
 
         results.push({

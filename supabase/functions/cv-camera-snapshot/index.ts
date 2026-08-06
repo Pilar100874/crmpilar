@@ -119,9 +119,12 @@ Deno.serve(async (req) => {
         : Infinity;
       const coletorOnline = cam.ultimo_status === "online" && seenMs < 120_000;
       const isRtsp = (cam.protocolo || "").toLowerCase() === "rtsp" || cam.porta === 554;
+      // Mostra o erro real reportado pelo Coletor (ex.: ffmpeg ausente, 401, timeout)
+      const detalhe = cam.ultimo_erro ? ` Detalhe do Coletor: ${cam.ultimo_erro}` : "";
       if (coletorOnline && isRtsp) {
         throw new Error(
-          "Coletor online, mas não conseguiu capturar snapshot RTSP. Verifique se o ffmpeg está disponível (o Coletor v1.4.9+ traz embutido — atualize) e se as credenciais/porta RTSP da câmera estão corretas.",
+          "Coletor online, mas não conseguiu capturar snapshot RTSP. No appliance/Linux instale o ffmpeg (`sudo apt install -y ffmpeg`) ou atualize o Coletor (v1.4.9+ já traz embutido) e confira usuário/senha, porta (554) e caminho RTSP da câmera." +
+            detalhe,
         );
       }
       if (coletorOnline) {

@@ -17,7 +17,7 @@ if ! command -v openbox >/dev/null 2>&1; then
   apt-get install -y --no-install-recommends \
     xserver-xorg xinit openbox unclutter x11-xserver-utils network-manager \
     network-manager-gnome wireless-tools wpasupplicant iw rfkill \
-    cockpit curl ca-certificates fonts-dejavu libnss3 libatk-bridge2.0-0 \
+    cockpit curl ca-certificates fonts-dejavu ffmpeg libnss3 libatk-bridge2.0-0 \
     libgtk-3-0 libgbm1 libasound2 libxss1 libsecret-1-0 chrony || true
 fi
 
@@ -192,5 +192,12 @@ systemctl set-default graphical.target
 systemctl daemon-reload
 systemctl enable coletor-kiosk.service
 systemctl enable ssh cockpit.socket NetworkManager || true
+
+# ffmpeg e obrigatorio para snapshot RTSP das cameras
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  log "instalando ffmpeg (snapshot RTSP)"
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg || \
+    log "AVISO: ffmpeg nao pode ser instalado - snapshots RTSP ficarao indisponiveis"
+fi
 
 log "instalação concluída — reinicie para abrir o Coletor"
