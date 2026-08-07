@@ -18,6 +18,8 @@ import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+
 import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/toast-config";
@@ -2270,8 +2272,62 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
+            <>
+            {/* Celular/tablet: cartões */}
+            <CadastroCardList
+              className="lg:hidden"
+              items={sortedContacts.map((contact) => ({
+                id: contact.id,
+                title: contact.name,
+                subtitle: contact.position || undefined,
+                fields: [
+                  { label: "WhatsApp", value: contact.phone || "-" },
+                  { label: "Telefone", value: contact.tel || "-" },
+                  { label: "E-mail", value: contact.email || "-", full: true },
+                ],
+                actions: (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`h-8 px-2.5 rounded-full ${selectedContact?.id === contact.id ? 'bg-primary text-primary-foreground border-primary' : 'border-primary/20'}`}
+                      onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 rounded-full border-primary/20"
+                      onClick={() => runWithDirtyGuard(() => handleEditContact(contact))}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 rounded-full border-primary/20"
+                      onClick={() => setNotasContato(contact)}
+                    >
+                      <NotebookPen className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 rounded-full border-destructive/20 text-destructive ml-auto"
+                      onClick={() => handleDeleteContact(contact.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </>
+                ),
+              }))}
+            />
+
+            {/* Desktop: tabela */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
               <table className="w-full table-fixed">
+
 
                 <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">
                   <tr>
@@ -2281,7 +2337,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                          className={`text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
                           index === 0 && column.id === 'actions' ? 'sticky left-0 z-30 bg-muted text-center text-foreground border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]' : index === 0 ? 'sticky left-0 z-30 bg-muted border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]' : ''
                         }`}
-                        style={{ width: column.width, minWidth: column.width }}
+                        style={{ width: column.id === 'actions' ? Math.max(column.width, 180) : column.width, minWidth: column.id === 'actions' ? Math.max(column.width, 180) : column.width }}
                       >
                        <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>
@@ -2466,6 +2522,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                 </tbody>
               </table>
             </div>
+            </>
+
           )}
         </div>
 

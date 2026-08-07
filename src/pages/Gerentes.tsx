@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 interface Gerente {
@@ -503,8 +505,31 @@ export default function Gerentes() {
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
+            <>
+            <CadastroCardList
+              className="lg:hidden"
+              items={filtrados.map(g => ({
+                id: g.id,
+                title: g.nome,
+                subtitle: g.email,
+                badge: (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">
+                    {contagemVendedores[g.id] || 0} vend.
+                  </span>
+                ),
+                fields: [{ label: "Telefone", value: g.whatsapp || "-", full: true }],
+                actions: (
+                  <Button variant="outline" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8 rounded-full border-primary/20">
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span className="text-xs">Vínculos</span>
+                  </Button>
+                ),
+              }))}
+            />
+
+            <div className="hidden lg:block bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
               <table className="w-full table-fixed">
+
                 <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">
                   <tr>
                     <th className="text-center px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-foreground sticky left-0 z-30 bg-muted border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]" style={{ width: 120, minWidth: 120 }}>
@@ -539,6 +564,8 @@ export default function Gerentes() {
                 </tbody>
               </table>
             </div>
+            </>
+
           )}
         </div>
       </div>
