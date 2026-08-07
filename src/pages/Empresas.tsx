@@ -2326,6 +2326,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </tbody>
               </table>
             </div>
+            </>
+
           )}
         </div>
 
