@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 interface Gerente {
