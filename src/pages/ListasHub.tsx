@@ -103,6 +103,10 @@ const sections: TabSection[] = [
 
 const tabItems: TabItem[] = sections.flatMap(s => s.items);
 
+/** Telas que já possuem cabeçalho próprio (CadastroHeader) — evita título duplicado. */
+const selfHeaderTabs = ['contatos', 'empresas', 'vendedores', 'transportadoras', 'gerentes'];
+
+
 const ListasHub: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
