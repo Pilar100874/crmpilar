@@ -18,6 +18,8 @@ import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+
 import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/toast-config";
