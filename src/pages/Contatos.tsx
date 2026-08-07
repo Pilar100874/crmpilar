@@ -2270,8 +2270,62 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
+            <>
+            {/* Celular/tablet: cartões */}
+            <CadastroCardList
+              className="lg:hidden"
+              items={sortedContacts.map((contact) => ({
+                id: contact.id,
+                title: contact.name,
+                subtitle: contact.position || undefined,
+                fields: [
+                  { label: "WhatsApp", value: contact.phone || "-" },
+                  { label: "Telefone", value: contact.tel || "-" },
+                  { label: "E-mail", value: contact.email || "-", full: true },
+                ],
+                actions: (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`h-8 px-2.5 rounded-full ${selectedContact?.id === contact.id ? 'bg-primary text-primary-foreground border-primary' : 'border-primary/20'}`}
+                      onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 rounded-full border-primary/20"
+                      onClick={() => runWithDirtyGuard(() => handleEditContact(contact))}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 rounded-full border-primary/20"
+                      onClick={() => setNotasContato(contact)}
+                    >
+                      <NotebookPen className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 rounded-full border-destructive/20 text-destructive ml-auto"
+                      onClick={() => handleDeleteContact(contact.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </>
+                ),
+              }))}
+            />
+
+            {/* Desktop: tabela */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
               <table className="w-full table-fixed">
+
 
                 <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">
                   <tr>
