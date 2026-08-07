@@ -21,6 +21,8 @@ import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
