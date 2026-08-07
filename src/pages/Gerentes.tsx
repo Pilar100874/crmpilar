@@ -562,6 +562,8 @@ export default function Gerentes() {
                 </tbody>
               </table>
             </div>
+            </>
+
           )}
         </div>
       </div>
