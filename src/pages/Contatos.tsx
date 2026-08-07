@@ -2520,6 +2520,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                 </tbody>
               </table>
             </div>
+            </>
+
           )}
         </div>
 
