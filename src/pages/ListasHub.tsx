@@ -282,11 +282,21 @@ const ListasHub: React.FC = () => {
           </aside>
 
           {/* Content area */}
-          <div className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
+          <div className="flex-1 overflow-auto p-0 lg:p-4 xl:p-6">
             {tabItems.map((tab) => {
               const Icon = tab.icon;
+              const fullBleed = selfHeaderTabs.includes(tab.id);
+              if (fullBleed) {
+                return (
+                  <TabsContent key={tab.id} value={tab.id} className="mt-0 h-full">
+                    <div className="h-full lg:rounded-xl lg:border lg:border-border/60 lg:bg-card lg:shadow-sm lg:overflow-hidden">
+                      {activeTab === tab.id && renderContent()}
+                    </div>
+                  </TabsContent>
+                );
+              }
               return (
-                <TabsContent key={tab.id} value={tab.id} className="mt-0">
+                <TabsContent key={tab.id} value={tab.id} className="mt-0 p-2 sm:p-3 lg:p-0">
                   <Card className="shadow-sm border-border/60">
                     <CardHeader className="px-3 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -311,6 +321,7 @@ const ListasHub: React.FC = () => {
               );
             })}
           </div>
+
         </Tabs>
       </div>
     </div>
