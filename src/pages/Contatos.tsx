@@ -2337,7 +2337,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                          className={`text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
                           index === 0 && column.id === 'actions' ? 'sticky left-0 z-30 bg-muted text-center text-foreground border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]' : index === 0 ? 'sticky left-0 z-30 bg-muted border-r border-border shadow-[4px_0_10px_-4px_hsl(var(--foreground)/0.18)]' : ''
                         }`}
-                        style={{ width: column.width, minWidth: column.width }}
+                        style={{ width: column.id === 'actions' ? Math.max(column.width, 180) : column.width, minWidth: column.id === 'actions' ? Math.max(column.width, 180) : column.width }}
                       >
                        <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>
