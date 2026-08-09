@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +26,6 @@ type Estado =
 
 export default function AvisoCreditosIA() {
   const [estado, setEstado] = useState<Estado>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     instalarInterceptorIA();
