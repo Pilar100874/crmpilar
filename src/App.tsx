@@ -378,6 +378,8 @@ const App = () => (
           <PWAInstallPrompt />
           <PWAUpdateNotifier />
           <StudioBackgroundIndicator />
+          <AvisoCreditosIA />
+
           <WakeLockManager />
           <GlobalOpenInNewTabButton />
           <GlobalBackToTelaButton />
