@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { EditorPopupProvider } from "@/lib/editores/editorPopup";
 import AvisoCreditosIA from "@/components/ai/AvisoCreditosIA";
+import BannerCreditosIA from "@/components/ai/BannerCreditosIA";
+
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -381,6 +383,8 @@ const App = () => (
           <PWAUpdateNotifier />
           <StudioBackgroundIndicator />
           <AvisoCreditosIA />
+          <BannerCreditosIA />
+
 
           <WakeLockManager />
           <GlobalOpenInNewTabButton />

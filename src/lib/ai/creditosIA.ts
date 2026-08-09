@@ -69,12 +69,23 @@ export function ehErroDeCreditos(err: any): boolean {
 
 /* --------------------------- flag persistida --------------------------- */
 
+export const EVENTO_ESTADO_CREDITOS = "ia:estado-creditos";
+
+function emitirEstadoCreditos() {
+  try {
+    window.dispatchEvent(new CustomEvent(EVENTO_ESTADO_CREDITOS));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function marcarCreditosEsgotados() {
   try {
     localStorage.setItem(CHAVE_FLAG, String(Date.now()));
   } catch {
     /* ignore */
   }
+  emitirEstadoCreditos();
 }
 
 export function limparAvisoCreditos() {
@@ -83,7 +94,9 @@ export function limparAvisoCreditos() {
   } catch {
     /* ignore */
   }
+  emitirEstadoCreditos();
 }
+
 
 export function creditosPossivelmenteEsgotados(): boolean {
   try {
