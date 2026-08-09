@@ -113,16 +113,8 @@ export default function AvisoCreditosIA() {
             </>
           ) : (
             <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  fechar();
-                  navigate("/configuracoes-ia");
-                }}
-              >
-                Configurações de IA
-              </Button>
               <AlertDialogAction onClick={() => fechar()}>Entendi</AlertDialogAction>
+
             </>
           )}
         </AlertDialogFooter>
