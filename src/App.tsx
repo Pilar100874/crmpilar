@@ -381,6 +381,8 @@ const App = () => (
           <PWAUpdateNotifier />
           <StudioBackgroundIndicator />
           <AvisoCreditosIA />
+          <BannerCreditosIA />
+
 
           <WakeLockManager />
           <GlobalOpenInNewTabButton />
