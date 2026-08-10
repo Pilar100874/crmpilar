@@ -87,15 +87,14 @@ export default function EcommerceAccount() {
       const stored = JSON.parse(localStorage.getItem("ecommerce_orders") || "[]");
       if (stored.length === 0) { setOrders([]); setLoading(false); return; }
 
-      const orderIds = stored.map((o: any) => o.id);
+      const tokens = stored.map((o: any) => o.token).filter(Boolean);
+      if (tokens.length === 0) { setOrders([]); setLoading(false); return; }
+
       const { data, error } = await supabase
-        .from("pedidos_ecommerce")
-        .select("*")
-        .in("id", orderIds)
-        .order("created_at", { ascending: false });
+        .rpc("lookup_pedidos_ecommerce_by_tokens" as any, { p_tokens: tokens } as any);
 
       if (error) throw error;
-      setOrders((data as PedidoEcommerce[]) || []);
+      setOrders(((data as any[]) || []) as PedidoEcommerce[]);
     } catch (err) {
       console.error("Erro ao carregar pedidos:", err);
     } finally {
@@ -103,16 +102,20 @@ export default function EcommerceAccount() {
     }
   };
 
+  const fetchItensByToken = async (order: PedidoEcommerce): Promise<PedidoItem[]> => {
+    const token = (order as any).token_rastreamento;
+    if (!token) return [];
+    const { data, error } = await supabase
+      .rpc("lookup_pedido_ecommerce_itens_by_token" as any, { p_token: token } as any);
+    if (error) throw error;
+    return ((data as any[]) || []) as PedidoItem[];
+  };
+
   const openDetails = async (order: PedidoEcommerce) => {
     setSelectedOrder(order);
     setLoadingItems(true);
     try {
-      const { data, error } = await supabase
-        .from("pedidos_ecommerce_itens")
-        .select("*")
-        .eq("pedido_id", order.id);
-      if (error) throw error;
-      setOrderItems((data as PedidoItem[]) || []);
+      setOrderItems(await fetchItensByToken(order));
     } catch (err) {
       console.error(err);
     } finally {
@@ -122,10 +125,7 @@ export default function EcommerceAccount() {
 
   const handleRecomprar = async (order: PedidoEcommerce) => {
     try {
-      const { data: itens } = await supabase
-        .from("pedidos_ecommerce_itens")
-        .select("*")
-        .eq("pedido_id", order.id);
+      const itens = await fetchItensByToken(order);
 
       if (!itens || itens.length === 0) {
         toast.error("Nenhum item encontrado neste pedido.");
@@ -157,27 +157,22 @@ export default function EcommerceAccount() {
     const search = trackingSearch.trim();
 
     const { data, error } = await supabase
-      .from("pedidos_ecommerce")
-      .select("*")
-      .or(`numero_pedido.ilike.%${search}%,token_rastreamento.ilike.%${search}%,email_cliente.ilike.%${search}%`)
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .rpc("lookup_pedido_ecommerce_by_token" as any, { p_token: search } as any);
 
-    if (error || !data || data.length === 0) {
-      toast.error("Nenhum pedido encontrado.");
+    const pedido = data as any;
+    if (error || !pedido) {
+      toast.error("Nenhum pedido encontrado. Informe o código de rastreamento completo.");
       return;
     }
 
-    setOrders(data as PedidoEcommerce[]);
-    // Save these to local too
+    setOrders([pedido as PedidoEcommerce]);
+    // Save this to local too
     const stored = JSON.parse(localStorage.getItem("ecommerce_orders") || "[]");
-    for (const o of data) {
-      if (!stored.find((s: any) => s.id === o.id)) {
-        stored.push({ id: o.id, numero: o.numero_pedido, token: o.token_rastreamento, email: o.email_cliente, date: o.created_at });
-      }
+    if (!stored.find((s: any) => s.id === pedido.id)) {
+      stored.push({ id: pedido.id, numero: pedido.numero_pedido, token: pedido.token_rastreamento, email: pedido.email_cliente, date: pedido.created_at });
     }
     localStorage.setItem("ecommerce_orders", JSON.stringify(stored.slice(0, 50)));
-    toast.success(`${data.length} pedido(s) encontrado(s).`);
+    toast.success("Pedido encontrado.");
   };
 
   const getStatusInfo = (status: string) => statusMap[status] || { label: status, color: "bg-muted text-muted-foreground" };

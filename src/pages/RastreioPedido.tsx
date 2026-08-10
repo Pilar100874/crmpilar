@@ -40,11 +40,8 @@ export default function RastreioPedido() {
       setPedido(pedidoData);
 
       const { data: histData } = await supabase
-        .from("pedido_tracking_historico")
-        .select("*")
-        .eq("pedido_tracking_id", pedidoData.id)
-        .order("created_at", { ascending: true });
-      setHistorico(histData || []);
+        .rpc("lookup_pedido_historico_by_token" as any, { p_token: tk } as any);
+      setHistorico((histData as any[]) || []);
 
       const { data: configData } = await supabase
         .from("pedido_tracking_status_config")

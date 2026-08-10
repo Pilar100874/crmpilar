@@ -19627,6 +19627,7 @@ export type Database = {
           email: string | null
           empresa_id: string | null
           endereco: string | null
+          estabelecimento_id: string | null
           estado: string | null
           extras: Json | null
           faturamento_estimado: string | null
@@ -19674,6 +19675,7 @@ export type Database = {
           email?: string | null
           empresa_id?: string | null
           endereco?: string | null
+          estabelecimento_id?: string | null
           estado?: string | null
           extras?: Json | null
           faturamento_estimado?: string | null
@@ -19721,6 +19723,7 @@ export type Database = {
           email?: string | null
           empresa_id?: string | null
           endereco?: string | null
+          estabelecimento_id?: string | null
           estado?: string | null
           extras?: Json | null
           faturamento_estimado?: string | null
@@ -26216,6 +26219,7 @@ export type Database = {
         Args: { p_entity: string; p_id: string }
         Returns: boolean
       }
+      is_profile_admin: { Args: { _user_id: string }; Returns: boolean }
       is_screen_share_host: { Args: { session_id: string }; Returns: boolean }
       is_screen_share_participant: {
         Args: { session_id: string }
@@ -26226,6 +26230,7 @@ export type Database = {
         Args: { p_data_fim: string; p_data_inicio: string; p_tipo: string }
         Returns: Json
       }
+      lookup_orcamento_by_token: { Args: { p_token: string }; Returns: Json }
       lookup_pedido_by_token: {
         Args: { p_token: string }
         Returns: {
@@ -26251,6 +26256,22 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      lookup_pedido_ecommerce_by_token: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      lookup_pedido_ecommerce_itens_by_token: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      lookup_pedido_historico_by_token: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      lookup_pedidos_ecommerce_by_tokens: {
+        Args: { p_tokens: string[] }
+        Returns: Json
       }
       mark_bot_response: {
         Args: {
