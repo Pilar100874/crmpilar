@@ -87,15 +87,14 @@ export default function EcommerceAccount() {
       const stored = JSON.parse(localStorage.getItem("ecommerce_orders") || "[]");
       if (stored.length === 0) { setOrders([]); setLoading(false); return; }
 
-      const orderIds = stored.map((o: any) => o.id);
+      const tokens = stored.map((o: any) => o.token).filter(Boolean);
+      if (tokens.length === 0) { setOrders([]); setLoading(false); return; }
+
       const { data, error } = await supabase
-        .from("pedidos_ecommerce")
-        .select("*")
-        .in("id", orderIds)
-        .order("created_at", { ascending: false });
+        .rpc("lookup_pedidos_ecommerce_by_tokens" as any, { p_tokens: tokens } as any);
 
       if (error) throw error;
-      setOrders((data as PedidoEcommerce[]) || []);
+      setOrders(((data as any[]) || []) as PedidoEcommerce[]);
     } catch (err) {
       console.error("Erro ao carregar pedidos:", err);
     } finally {
