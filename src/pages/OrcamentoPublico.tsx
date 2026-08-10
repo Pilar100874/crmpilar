@@ -31,10 +31,11 @@ export default function OrcamentoPublico() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .rpc('lookup_orcamento_by_token', { p_token: token } as any);
+      const { data: rpcData, error } = await supabase
+        .rpc('lookup_orcamento_by_token' as any, { p_token: token } as any);
 
       if (error) throw error;
+      const data = rpcData as any;
       if (!data) throw new Error('Orçamento não encontrado');
 
       setOrcamento(data);
