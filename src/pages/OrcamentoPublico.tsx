@@ -32,21 +32,10 @@ export default function OrcamentoPublico() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('orcamentos')
-        .select(`
-          *,
-          cliente:customers(nome, email, telefone),
-          vendedor:usuarios(nome, email),
-          condicao_pagamento:condicoes_pagamento(nome, descricao),
-          itens:orcamento_itens(
-            *,
-            produto:produtos(nome, foto_url)
-          )
-        `)
-        .eq('token_compartilhamento', token)
-        .single();
+        .rpc('lookup_orcamento_by_token', { p_token: token } as any);
 
       if (error) throw error;
+      if (!data) throw new Error('Orçamento não encontrado');
 
       setOrcamento(data);
       
