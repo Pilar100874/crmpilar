@@ -131,7 +131,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
   const fetchUsuarios = async () => {
     let query = supabase
-      .from("usuarios")
+      .from("usuarios" as any)
       .select(`
         ${USUARIO_COLUNAS_PUBLICAS},
         unidades(nome),
@@ -433,7 +433,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       const { data, error } = await supabase
         .from("usuarios")
         .insert([usuarioData])
-        .select(USUARIO_COLUNAS_PUBLICAS)
+        .select(USUARIO_COLUNAS_PUBLICAS as any)
         .single();
 
       if (error) {

@@ -75,7 +75,7 @@ export default function Perfil() {
       }
 
       // Buscar dados do usuário
-      const { data: usuario, error: userError } = await supabase
+      const { data: usuario, error: userError } = await (supabase as any)
         .from("usuarios")
         .select(USUARIO_COLUNAS_PUBLICAS)
         .eq("auth_user_id", user.id)
