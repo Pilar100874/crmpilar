@@ -499,14 +499,13 @@ export async function executarAutomacoesLogistica(
           const cfgAny = config as any;
           if (!cfgAny.disparar_bot || !cfgAny.bot_flow_id) return;
           try {
-            await supabase.functions.invoke('executar-bot-flow', {
-              body: {
-                flowId: cfgAny.bot_flow_id,
-                estabelecimentoId,
-                origem: 'logistica_automacao',
-                variaveis: { telefone, automacao_nome: automacao.nome, ...extras },
-              },
-            });
+            const { invokeComRetry } = await import('@/lib/invokeComRetry');
+            await invokeComRetry('executar-bot-flow', {
+              flowId: cfgAny.bot_flow_id,
+              estabelecimentoId,
+              origem: 'logistica_automacao',
+              variaveis: { telefone, automacao_nome: automacao.nome, ...extras },
+            }, { tentativas: 3 });
           } catch (e) {
             console.error('[logistica] falha ao disparar bot', e);
           }
