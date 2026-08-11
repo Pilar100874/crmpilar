@@ -26,20 +26,29 @@ Deno.serve(async (req) => {
     const chaveHeader = req.headers.get("x-chave-comunicacao") || chave_comunicacao;
     const equipamentoId = equipamentoIdBody || registros.find(r => r.equipamento_id)?.equipamento_id;
     let equipamento: any = null;
-    if (equipamentoId) {
+    // 🔐 Todo lote precisa identificar o equipamento e apresentar a chave
+    if (!equipamentoId || !chaveHeader) {
+      return new Response(JSON.stringify({ error: "equipamento_id e chave_comunicacao obrigatórios" }),
+        { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+    {
       const { data } = await supabase.from("ponto_equipamentos")
-        .select("id, status, chave_comunicacao, data_inicio_coleta, emails_notificacao, nome")
+        .select("id, status, chave_comunicacao, data_inicio_coleta, emails_notificacao, nome, empresa_id")
         .eq("id", equipamentoId).maybeSingle();
       equipamento = data;
       if (!equipamento) {
         return new Response(JSON.stringify({ error: "equipamento não encontrado" }),
           { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
       }
+      if (equipamento.empresa_id && equipamento.empresa_id !== empresa_id) {
+        return new Response(JSON.stringify({ error: "equipamento não pertence à empresa" }),
+          { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
+      }
       if (equipamento.status === "inativo") {
         return new Response(JSON.stringify({ error: "equipamento inativo" }),
           { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
       }
-      if (equipamento.chave_comunicacao && equipamento.chave_comunicacao !== chaveHeader) {
+      if (!equipamento.chave_comunicacao || equipamento.chave_comunicacao !== chaveHeader) {
         return new Response(JSON.stringify({ error: "chave_comunicacao inválida" }),
           { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
       }
