@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getAuthContext, unauthorized, forbidden } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -109,6 +110,10 @@ serve(async (req) => {
       );
     }
 
+    // 🔐 Exige sessão autenticada
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const { data: apiConfig, error: configError } = await query.single();
 
     if (configError || !apiConfig) {
@@ -120,6 +125,11 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
+    }
+
+    // 🔐 Endpoint deve pertencer ao estabelecimento do chamador
+    if (!auth.isAdmin && apiConfig.estabelecimento_id !== auth.estabelecimentoId) {
+      return forbidden(corsHeaders, 'Endpoint não pertence ao seu estabelecimento');
     }
 
     // Get query parameters - use bodyParams that we already parsed, excluding our control params
