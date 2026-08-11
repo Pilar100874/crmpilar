@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getAuthContext, unauthorized, forbidden } from '../_shared/auth.ts';
 import { PDFDocument, rgb } from 'https://esm.sh/pdf-lib@1.17.1';
 
 const corsHeaders = {
@@ -26,15 +27,26 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const authHeader = req.headers.get('Authorization');
-    let userId: string | null = null;
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      userId = user?.id ?? null;
-    }
+    // 🔐 Exige sessão autenticada
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+    const userId: string | null = auth.userId;
 
     const body: PreviewRequest = await req.json();
+
+    // 🔐 Relatório deve pertencer ao estabelecimento do chamador
+    const { data: reportRow } = await supabase
+      .from('relatorios')
+      .select('id, estabelecimento_id')
+      .eq('id', body.reportId)
+      .maybeSingle();
+    if (!reportRow) {
+      return new Response(JSON.stringify({ error: 'Relatório não encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!auth.isAdmin && reportRow.estabelecimento_id && reportRow.estabelecimento_id !== auth.estabelecimentoId) {
+      return forbidden(corsHeaders, 'Relatório não pertence ao seu estabelecimento');
+    }
     const pageSize = Math.max(100, Math.min(1000, body.pageSize ?? 500));
     const page = Math.max(1, body.page ?? 1);
 
