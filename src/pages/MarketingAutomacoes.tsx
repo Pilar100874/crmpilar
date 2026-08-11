@@ -236,15 +236,49 @@ export default function MarketingAutomacoes() {
       setExecProgress(100);
       const metodo = automacaoToExecute.config?.metodo_disparo
         || (automacaoToExecute.config?.bot_id ? "bot" : "webhook");
-      toast.success(
-        metodo === "bot" ? "Bot disparado com sucesso!" : "Webhook executado com sucesso!",
-      );
+      const inicioExec = new Date().toISOString();
+      toast.info("Execução iniciada. Aguardando o resultado…");
       setTimeout(() => {
         setExecuteDialogOpen(false);
         setAutomacaoToExecute(null);
         setExecProgress(0);
       }, 400);
       loadAutomacoes();
+
+      // Acompanha o resultado real da execução (o disparo roda em segundo plano).
+      const automationId = automacaoToExecute.id;
+      (async () => {
+        for (let i = 0; i < 30; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          const { data: logs } = await supabase
+            .from("marketing_automation_execution_logs")
+            .select("status, error_message, totals, executed_at")
+            .eq("automation_id", automationId)
+            .gt("executed_at", inicioExec)
+            .order("executed_at", { ascending: false })
+            .limit(1);
+          const log: any = logs?.[0];
+          if (!log) continue;
+          if (log.status === "ok") {
+            toast.success(
+              `Automação concluída — ${log.totals?.enviados ?? 0} envio(s) realizado(s).`,
+            );
+          } else {
+            toast.error(
+              log.error_message || "A automação falhou. Confira o histórico de execuções.",
+              { duration: 12000 },
+            );
+          }
+          loadAutomacoes();
+          return;
+        }
+        toast.info(
+          metodo === "bot"
+            ? "O bot ainda está processando. Acompanhe pelo histórico de execuções."
+            : "Execução em andamento. Acompanhe pelo histórico.",
+        );
+      })();
+
     } catch (error: any) {
       console.error("Erro ao executar automação:", error);
       toast.error(`Erro ao executar: ${error?.message ?? error}`);
