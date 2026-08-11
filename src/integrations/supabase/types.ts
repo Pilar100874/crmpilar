@@ -26198,6 +26198,20 @@ export type Database = {
       }
       get_current_usuario_id: { Args: never; Returns: string }
       get_current_usuario_id_safe: { Args: never; Returns: string }
+      get_minhas_credenciais: {
+        Args: never
+        Returns: {
+          estabelecimento_id: string
+          imap: string
+          porta_imap: number
+          porta_smtp: number
+          ramal: string
+          senha_email: string
+          senha_sip: string
+          smtp: string
+          usuario_sip: string
+        }[]
+      }
       get_user_conversation_ids: {
         Args: { _auth_uid: string }
         Returns: string[]

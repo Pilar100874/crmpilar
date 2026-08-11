@@ -1,4 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getAuthContext, unauthorized, assertPublicUrl } from "../_shared/auth.ts";
+
+// Segredos que podem ser usados por agentes externos (allow-list)
+const SECRET_ALLOWLIST = new Set([
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "GEMINI_API_KEY",
+  "GROQ_API_KEY",
+  "OPENROUTER_API_KEY",
+  "AGENT_SDK_TOKEN",
+]);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +29,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // 🔐 Exige sessão autenticada
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const body = await req.json();
     const {
       provider = "claude",
@@ -29,6 +44,20 @@ serve(async (req) => {
       apiKeySecret,
       timeoutSeconds = 120,
     } = body || {};
+
+    // 🔐 Não vazar segredos arbitrários e não permitir destinos internos
+    if (apiKeySecret && !SECRET_ALLOWLIST.has(String(apiKeySecret))) {
+      return new Response(JSON.stringify({ ok: false, error: "Segredo não permitido" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (endpointUrl) {
+      try {
+        assertPublicUrl(String(endpointUrl));
+      } catch (e) {
+        return new Response(JSON.stringify({ ok: false, error: e instanceof Error ? e.message : "URL não permitida" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
 
     const finalPrompt = interp(prompt, variables);
     const finalSystem = interp(systemPrompt, variables);

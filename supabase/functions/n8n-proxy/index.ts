@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getAuthContext, unauthorized, assertPublicUrl } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,7 +45,23 @@ serve(async (req) => {
   }
 
   try {
+    // 🔐 Exige sessão autenticada
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const { webhookUrl, payload, expectResponse = true, httpMethod = 'AUTO' } = await req.json();
+
+    // 🔐 Bloqueia SSRF para redes internas
+    if (webhookUrl) {
+      try {
+        assertPublicUrl(webhookUrl);
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ error: e instanceof Error ? e.message : 'URL não permitida' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     console.log('n8n-proxy: Received request');
     console.log('n8n-proxy: webhookUrl:', webhookUrl);

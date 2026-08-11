@@ -352,6 +352,13 @@ async function persistEmpresaFromInfo(
   }
 }
 
+async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 serve(async (req) => {
 
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -384,6 +391,21 @@ serve(async (req) => {
     } catch {
       raw = {};
     }
+    // 🔐 Verificação de assinatura (Meta) quando o segredo estiver configurado
+    const appSecret = Deno.env.get("META_APP_SECRET");
+    if (appSecret) {
+      const sigHeader = req.headers.get("x-hub-signature-256") || "";
+      const expected = await hmacSha256Hex(appSecret, rawText);
+      const received = sigHeader.replace(/^sha256=/i, "").toLowerCase();
+      if (!received || received !== expected) {
+        console.warn("Assinatura do webhook inválida");
+        return new Response(JSON.stringify({ error: "Assinatura inválida" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     console.log("RAW body:", rawText);
     console.log("Received JSON webhook:", JSON.stringify(raw, null, 2));
 

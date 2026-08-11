@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getAuthContext, unauthorized, forbidden } from "../_shared/auth.ts";
 import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
 import * as XLSX from "https://esm.sh/xlsx@0.18.5?target=deno";
 
@@ -17,6 +18,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 🔐 Exige sessão autenticada
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
 
     const requestBody = await req.json();
     console.log("📦 Body completo recebido:", JSON.stringify(requestBody, null, 2));
@@ -39,6 +44,11 @@ serve(async (req) => {
 
     if (relError || !relatorio) {
       throw new Error('Relatório não encontrado');
+    }
+
+    // 🔐 Relatório deve pertencer ao estabelecimento do chamador
+    if (!auth.isAdmin && relatorio.estabelecimento_id && relatorio.estabelecimento_id !== auth.estabelecimentoId) {
+      return forbidden(corsHeaders, 'Relatório não pertence ao seu estabelecimento');
     }
 
     console.log("✅ Relatório encontrado:", relatorio.nome);

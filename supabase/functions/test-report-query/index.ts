@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getAuthContext, unauthorized, forbidden } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,7 +54,24 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 🔐 Exige sessão autenticada
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const body: TestQueryRequest = await req.json();
+
+    // 🔐 Apenas SELECT de leitura, sem múltiplos comandos
+    const sql = String(body.query || '').trim();
+    const sqlLower = sql.toLowerCase();
+    const proibido = /\b(insert|update|delete|drop|alter|truncate|grant|revoke|create|copy|call|do|vacuum)\b/;
+    if (!sqlLower.startsWith('select') && !sqlLower.startsWith('with')) {
+      return new Response(JSON.stringify({ success: false, error: 'Apenas consultas SELECT são permitidas' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (proibido.test(sqlLower) || sql.replace(/;\s*$/, '').includes(';')) {
+      return new Response(JSON.stringify({ success: false, error: 'Consulta não permitida' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     console.log('Test query request received for connection:', body.connectionId);
 
     // Buscar conexão
@@ -76,6 +94,11 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
+    }
+
+    // 🔐 Conexão deve pertencer ao estabelecimento do chamador
+    if (!auth.isAdmin && connection.estabelecimento_id !== auth.estabelecimentoId) {
+      return forbidden(corsHeaders, 'Conexão não pertence ao seu estabelecimento');
     }
 
     console.log('Connection found:', connection.name, connection.database_type);

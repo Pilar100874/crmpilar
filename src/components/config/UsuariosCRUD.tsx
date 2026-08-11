@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { USUARIO_COLUNAS_PUBLICAS } from "@/lib/usuariosColunas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,10 +130,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   };
 
   const fetchUsuarios = async () => {
-    let query = supabase
+    let query = (supabase as any)
       .from("usuarios")
       .select(`
-        *,
+        ${USUARIO_COLUNAS_PUBLICAS},
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
@@ -429,10 +430,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       resetForm();
       fetchUsuarios();
     } else {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("usuarios")
         .insert([usuarioData])
-        .select()
+        .select(USUARIO_COLUNAS_PUBLICAS)
         .single();
 
       if (error) {

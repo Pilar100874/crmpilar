@@ -141,11 +141,8 @@ export const useVideoCall = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('ramal, senha_sip')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
+      const { data: credRows } = await (supabase as any).rpc('get_minhas_credenciais');
+      const userData = Array.isArray(credRows) ? credRows[0] : credRows;
 
       if (!userData?.ramal || !userData?.senha_sip) {
         throw new Error('Configure seu ramal e senha SIP');

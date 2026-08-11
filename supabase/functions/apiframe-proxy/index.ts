@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { getAuthContext, unauthorized, forbidden } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,8 +40,17 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // 🔐 Exige sessão autenticada; usa sempre o estabelecimento do próprio usuário
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const body = await req.json();
-    const { action, estabelecimentoId, params } = body;
+    const { action, params } = body;
+    const estabelecimentoId = auth.estabelecimentoId;
+
+    if (body.estabelecimentoId && body.estabelecimentoId !== estabelecimentoId && !auth.isAdmin) {
+      return forbidden(corsHeaders, "Estabelecimento inválido");
+    }
 
     if (!estabelecimentoId) {
       return new Response(JSON.stringify({ error: "estabelecimentoId obrigatório" }), {
