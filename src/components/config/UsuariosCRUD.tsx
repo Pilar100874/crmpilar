@@ -130,8 +130,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   };
 
   const fetchUsuarios = async () => {
-    let query = supabase
-      .from("usuarios" as any)
+    let query = (supabase as any)
+      .from("usuarios")
       .select(`
         ${USUARIO_COLUNAS_PUBLICAS},
         unidades(nome),
@@ -430,10 +430,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       resetForm();
       fetchUsuarios();
     } else {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("usuarios")
         .insert([usuarioData])
-        .select(USUARIO_COLUNAS_PUBLICAS as any)
+        .select(USUARIO_COLUNAS_PUBLICAS)
         .single();
 
       if (error) {
