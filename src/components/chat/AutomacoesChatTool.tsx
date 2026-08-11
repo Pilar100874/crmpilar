@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeComRetry } from "@/lib/invokeComRetry";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import {
