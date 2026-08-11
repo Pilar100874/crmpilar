@@ -76,11 +76,9 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      const { data: usuario, error } = await supabase
-        .from('usuarios')
-        .select('smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id')
-        .ilike('email', user.email || '')
-        .maybeSingle() as { data: { smtp: string | null; porta_smtp: number | null; imap: string | null; porta_imap: number | null; senha_email: string | null; estabelecimento_id: string | null } | null; error: any };
+      const { data: credRows, error } = await (supabase as any).rpc('get_minhas_credenciais');
+      const usuario = (Array.isArray(credRows) ? credRows[0] : credRows) as
+        { smtp: string | null; porta_smtp: number | null; imap: string | null; porta_imap: number | null; senha_email: string | null; estabelecimento_id: string | null } | null;
 
       if (error) {
         console.error('Erro ao verificar configuração:', error);

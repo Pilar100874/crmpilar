@@ -44,11 +44,9 @@ export default function Softphone({ embedded = false }: SoftphoneProps) {
         return;
       }
 
-      const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('ramal, senha_sip')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
+      // Credenciais só podem ser lidas pelo próprio usuário via RPC seguro
+      const { data: credRows, error: userError } = await (supabase as any).rpc('get_minhas_credenciais');
+      const userData = Array.isArray(credRows) ? credRows[0] : credRows;
 
       if (userError) {
         console.error('Erro ao buscar dados do usuário:', userError);
