@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { toast } from 'sonner';
 
 interface IsochroneData {
@@ -92,7 +93,7 @@ export function useIsochrone() {
           tempo_minutos: tempoMinutos,
           modo_transporte: modo,
           geometria_geojson: geojson,
-          estabelecimento_id: 'default' // TODO: pegar do contexto
+          estabelecimento_id: estabelecimentoId
         });
 
         if (!error) {
