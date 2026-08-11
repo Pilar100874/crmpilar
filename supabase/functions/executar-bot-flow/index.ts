@@ -270,6 +270,24 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
+  };
+
+  if (emBackground) {
+    try {
+      // @ts-ignore EdgeRuntime existe no runtime do Supabase
+      EdgeRuntime.waitUntil(
+        executar().catch((e) => console.error("[executar-bot-flow] erro em background:", e)),
+      );
+    } catch {
+      executar().catch((e) => console.error("[executar-bot-flow] erro em background:", e));
+    }
+    return new Response(
+      JSON.stringify({ success: true, background: true, message: "Execução iniciada em segundo plano" }),
+      { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  return await executar();
 });
 
 // Grava um registro em marketing_automation_execution_logs a partir do trace,
