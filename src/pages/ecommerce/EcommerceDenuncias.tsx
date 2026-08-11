@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
 
 interface DenunciasConfig {
   titulo: string; intro: string; email_destino?: string;
@@ -49,10 +50,35 @@ export default function EcommerceDenuncias() {
     })();
   }, []);
 
+const denunciaSchema = z
+  .object({
+    descricao: z.string().trim().min(10, "Descreva a ocorrência com pelo menos 10 caracteres").max(5000, "Descrição muito longa (máx. 5000 caracteres)"),
+    categoria: z.string().trim().max(120).optional().or(z.literal("")),
+    local: z.string().trim().max(200, "Local muito longo").optional().or(z.literal("")),
+    anonimo: z.boolean(),
+    nome: z.string().trim().max(120, "Nome muito longo").optional().or(z.literal("")),
+    email: z.string().trim().max(254).email("E-mail inválido").optional().or(z.literal("")),
+    telefone: z.string().trim().max(20, "Telefone inválido").optional().or(z.literal("")),
+  })
+  .refine((d) => d.anonimo || !!d.nome?.trim(), {
+    message: "Informe seu nome ou marque como anônimo",
+    path: ["nome"],
+  });
+
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    if (!descricao.trim()) return toast.error("Descreva a ocorrência");
-    if (!anonimo && !nome.trim()) return toast.error("Informe seu nome ou marque como anônimo");
+    const parsed = denunciaSchema.safeParse({
+      descricao,
+      categoria,
+      local,
+      anonimo,
+      nome,
+      email,
+      telefone,
+    });
+    if (!parsed.success) {
+      return toast.error(parsed.error.issues[0].message);
+    }
     setSaving(true);
     const { error } = await supabase.from("ecommerce_denuncias" as any).insert({
       estabelecimento_id: estId,
