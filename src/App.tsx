@@ -8,6 +8,7 @@ import BannerCreditosIA from "@/components/ai/BannerCreditosIA";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -357,9 +358,11 @@ const queryClient = new QueryClient();
 
 // Layout wrapper component
 const LayoutWrapper = () => (
-  <Layout>
-    <Outlet />
-  </Layout>
+  <ProtectedRoute>
+    <Layout>
+      <Outlet />
+    </Layout>
+  </ProtectedRoute>
 );
 
 const App = () => (
