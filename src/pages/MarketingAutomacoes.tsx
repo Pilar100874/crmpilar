@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeComRetry } from "@/lib/invokeComRetry";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import { formatDistanceToNow } from "date-fns";
@@ -217,12 +218,19 @@ export default function MarketingAutomacoes() {
       setExecProgress((p) => (p < 90 ? p + Math.max(1, Math.round((90 - p) * 0.08)) : p));
     }, 500);
     try {
-      const { data, error } = await supabase.functions.invoke(
+      const data = await invokeComRetry<any>(
         "marketing-automation-execute",
-        { body: { automationId: automacaoToExecute.id } },
+        { automationId: automacaoToExecute.id },
+        {
+          tentativas: 3,
+          onRetry: (tentativa, causa, espera) => {
+            toast.info(
+              `Falha temporária (${causa.status ?? "rede"}). Tentando novamente em ${Math.round(espera / 1000)}s… (${tentativa}/2)`,
+            );
+          },
+        },
       );
 
-      if (error) throw error;
       if (data && data.success === false) throw new Error(data.error || "Falha");
 
       setExecProgress(100);

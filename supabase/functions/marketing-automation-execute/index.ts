@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { descreverCausa, invokeComRetry } from "../_shared/retry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,52 +141,60 @@ async function runExecution(supabase: any, automationId: string, automation: any
 
       if (botErr || !bot) throw new Error("Bot não encontrado");
 
-      // Executa o fluxo do bot no servidor (suporta bloco "Envio em massa")
-      const { data: execData, error: execErr } = await supabase.functions.invoke(
-        "executar-bot-flow",
-        {
-          body: {
+      // Executa o fluxo do bot no servidor (suporta bloco "Envio em massa").
+      // Retenta com backoff exponencial em falhas transitórias (5xx/429/timeout).
+      const { data: execData, error: execErr, causa: execCausa, tentativas: execTent } =
+        await invokeComRetry(
+          supabase,
+          "executar-bot-flow",
+          {
             flowId: botId,
             estabelecimentoId: automation.estabelecimento_id,
             automationId,
             variaveis: allVars,
             origem: "marketing_automation",
           },
-        },
-      );
+          { rotulo: "executar-bot-flow", tentativas: 3 },
+        );
 
       const invoked = !execErr && (execData as any)?.success !== false;
       result = {
         type: "bot",
         botName: bot.name,
         invoked,
+        tentativas: execTent,
         variaveis: allVars,
-        details: execData ?? execErr?.message,
+        details: execData ?? descreverCausa(execCausa, execErr?.message),
+        erro_causa: execCausa
+          ? { status: execCausa.status, transitorio: execCausa.transitorio, mensagem: execCausa.mensagem }
+          : null,
       };
       if (!invoked) {
         throw new Error(
           typeof execData === "object" && execData && (execData as any).error
             ? (execData as any).error
-            : (execErr?.message || "Falha ao executar bot"),
+            : descreverCausa(execCausa, execErr?.message || "Falha ao executar bot"),
         );
       }
     } else if (metodo === "push") {
       const pushCfg = config.push_config || {};
-      const { data: pushData, error: pushErr } = await supabase.functions.invoke(
-        "push-send",
-        {
-          body: {
+      const { data: pushData, error: pushErr, causa: pushCausa, tentativas: pushTent } =
+        await invokeComRetry(
+          supabase,
+          "push-send",
+          {
             ...pushCfg,
             workflow_id: automationId,
             workflow_tipo: "marketing",
             origem: "marketing_automation",
           },
-        },
-      );
+          { rotulo: "push-send", tentativas: 3 },
+        );
       result = {
         type: "push",
         invoked: !pushErr,
-        details: pushData ?? pushErr?.message,
+        tentativas: pushTent,
+        details: pushData ?? descreverCausa(pushCausa, pushErr?.message),
       };
     } else {
       throw new Error(`Método de disparo desconhecido: ${metodo}`);

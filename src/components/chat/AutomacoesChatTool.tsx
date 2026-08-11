@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeComRetry } from "@/lib/invokeComRetry";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import {
@@ -75,10 +76,11 @@ export default function AutomacoesChatTool({ disabled }: Props) {
     if (!pending) return;
     setRunning(true);
     try {
-      const { error } = await supabase.functions.invoke("marketing-automation-execute", {
-        body: { automationId: pending.id },
+      await invokeComRetry("marketing-automation-execute", { automationId: pending.id }, {
+        tentativas: 3,
+        onRetry: (_t, causa, espera) =>
+          toast.info(`Falha temporária (${causa.status ?? "rede"}). Nova tentativa em ${Math.round(espera / 1000)}s…`),
       });
-      if (error) throw error;
       toast.success(`Automação "${pending.name}" iniciada!`);
       setPending(null);
     } catch (e: any) {
