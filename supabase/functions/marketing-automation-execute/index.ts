@@ -177,21 +177,23 @@ async function runExecution(supabase: any, automationId: string, automation: any
       }
     } else if (metodo === "push") {
       const pushCfg = config.push_config || {};
-      const { data: pushData, error: pushErr } = await supabase.functions.invoke(
-        "push-send",
-        {
-          body: {
+      const { data: pushData, error: pushErr, causa: pushCausa, tentativas: pushTent } =
+        await invokeComRetry(
+          supabase,
+          "push-send",
+          {
             ...pushCfg,
             workflow_id: automationId,
             workflow_tipo: "marketing",
             origem: "marketing_automation",
           },
-        },
-      );
+          { rotulo: "push-send", tentativas: 3 },
+        );
       result = {
         type: "push",
         invoked: !pushErr,
-        details: pushData ?? pushErr?.message,
+        tentativas: pushTent,
+        details: pushData ?? descreverCausa(pushCausa, pushErr?.message),
       };
     } else {
       throw new Error(`Método de disparo desconhecido: ${metodo}`);
