@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { USUARIO_COLUNAS_PUBLICAS } from "@/lib/usuariosColunas";
 import { toast } from "@/lib/toast-config";
 import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2, Smartphone, Car } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -76,7 +77,7 @@ export default function Perfil() {
       // Buscar dados do usuário
       const { data: usuario, error: userError } = await supabase
         .from("usuarios")
-        .select("*")
+        .select(USUARIO_COLUNAS_PUBLICAS)
         .eq("auth_user_id", user.id)
         .maybeSingle();
 
