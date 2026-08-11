@@ -65,9 +65,26 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  let reqBody: any = {};
+  try {
+    reqBody = await req.json();
+  } catch {
+    reqBody = {};
+  }
+
+  // Disparos vindos de automações/rotinas podem levar minutos (envio em massa).
+  // Nesses casos respondemos imediatamente e seguimos processando em background,
+  // evitando o erro "Edge Function returned a non-2xx status code" por timeout.
+  const emBackground = !!(
+    reqBody?.background ||
+    reqBody?.automationId ||
+    reqBody?.origem === "marketing_automation"
+  );
+
+  const executar = async (): Promise<Response> => {
   const trace: any[] = [];
   try {
-    const body = await req.json();
+    const body = reqBody;
     const { flowId, estabelecimentoId, variaveis, automationId, origem } = body || {};
     if (!flowId) throw new Error("flowId é obrigatório");
 
