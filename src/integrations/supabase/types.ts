@@ -26540,6 +26540,8 @@ export type Database = {
         Args: { _data: string; _empresa: string }
         Returns: boolean
       }
+      ponto_user_empresa_ids: { Args: never; Returns: string[] }
+      ponto_user_funcionario_ids: { Args: never; Returns: string[] }
       ritmo_humano_consumir: {
         Args: { p_est: string; p_sessao?: string }
         Returns: number
