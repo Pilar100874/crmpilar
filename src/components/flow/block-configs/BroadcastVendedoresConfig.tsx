@@ -683,6 +683,22 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </p>
       </div>
 
+      {/* Ritmo Humano (anti-bloqueio) */}
+      <div className="space-y-2 border-t pt-3">
+        <Label className="text-xs font-semibold flex items-center gap-1">
+          <Gauge className="h-3 w-3" /> Ritmo Humano (anti-bloqueio)
+        </Label>
+        <p className="text-[11px] text-muted-foreground">
+          Intervalos aleatórios, lotes com pausa, teto diário por linha, janela de horário e variação de texto.
+        </p>
+        <Button variant="outline" size="sm" className="gap-2 h-8 text-xs" onClick={() => setRitmoOpen(true)}>
+          <Gauge className="h-3 w-3" />
+          Configurar Ritmo Humano
+        </Button>
+        <RitmoHumanoDialog open={ritmoOpen} onOpenChange={setRitmoOpen} />
+      </div>
+
+
       {/* Mensagem */}
       <div className="space-y-2 border-t pt-3">
         <Label className="text-xs font-semibold flex items-center gap-1">
