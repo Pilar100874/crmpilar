@@ -763,12 +763,14 @@ async function executeBroadcast(
     const bloqueio = foraDaJanela(ritmo);
     if (bloqueio) {
       console.warn("[ritmo]", bloqueio);
+      await monitorUpdate({ status: "bloqueado", pulados: total, erro: bloqueio, finalizado_em: new Date().toISOString() });
       return {
         total, enviados: 0, falhas: 0, invalidos: 0, pulados: total, detalhes: [],
         mensagem: "", mediaUrl: "", mediaType: "",
         textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
         aborted: true,
         error: bloqueio,
+        monitorId,
         ritmo: { bloqueado: true, motivo: bloqueio },
       } as any;
     }
