@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { revisarPortugues } from "../_shared/revisar-pt.ts";
+import {
+  carregarRitmo,
+  foraDaJanela,
+  esperarEntreEnvios,
+  esperarLote,
+  consumirCota,
+  variarTexto,
+} from "../_shared/ritmoHumano.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -694,8 +702,44 @@ async function executeBroadcast(
   };
 
 
+  // ===== Ritmo Humano (anti-bloqueio) =====
+  const ritmo = await carregarRitmo(supabase, estabelecimentoId);
+  const sessaoRitmo = String(cfg.whatsappSessionName || cfg.whatsappSessionId || "");
+  let pulados = 0;
+  let motivoRitmo: string | null = null;
+  if (ritmo.ativo) {
+    const bloqueio = foraDaJanela(ritmo);
+    if (bloqueio) {
+      console.warn("[ritmo]", bloqueio);
+      return {
+        total, enviados: 0, falhas: 0, invalidos: 0, pulados: total, detalhes: [],
+        mensagem: "", mediaUrl: "", mediaType: "",
+        textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
+        aborted: true,
+        error: bloqueio,
+        ritmo: { bloqueado: true, motivo: bloqueio },
+      } as any;
+    }
+    console.log("[ritmo] ativo:", JSON.stringify(ritmo));
+  }
+
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
+  let indiceRitmo = 0;
   for (const d of destinatarios) {
+    if (ritmo.ativo) {
+      if (indiceRitmo > 0) {
+        await esperarLote(ritmo, indiceRitmo);
+        await esperarEntreEnvios(ritmo);
+      }
+      const usados = await consumirCota(supabase, estabelecimentoId, sessaoRitmo);
+      if (ritmo.limiteDiario > 0 && usados > ritmo.limiteDiario) {
+        motivoRitmo = `Ritmo Humano: limite diário de ${ritmo.limiteDiario} mensagens atingido para esta linha.`;
+        pulados = total - indiceRitmo;
+        console.warn("[ritmo]", motivoRitmo);
+        break;
+      }
+      indiceRitmo++;
+    }
     const vObj = { ...(d.vendedorObj || {}) };
     if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
     const perCtx: any = {
@@ -709,9 +753,12 @@ async function executeBroadcast(
     const antes = interp(cfg.textoAntes || "", perCtx).trim();
     const depois = interp(cfg.textoDepois || "", perCtx).trim();
     // Se há mídia com a frase pré-definida embutida na imagem/vídeo, NÃO reenvia a frase como texto.
-    const msgInterp = (cfg.usarMensagemPreDefinida && mediaUrlPre)
-      ? interp(extraTexto || "", perCtx)
-      : interp(msg, perCtx);
+    const msgInterp = variarTexto(
+      (cfg.usarMensagemPreDefinida && mediaUrlPre)
+        ? interp(extraTexto || "", perCtx)
+        : interp(msg, perCtx),
+      ritmo,
+    );
 
     let ok = true;
     let invalid = false;
@@ -1012,5 +1059,10 @@ async function executeBroadcast(
     console.warn("[executar-bot-flow] erro no envio de resumo:", err);
   }
 
-  return { total, enviados, falhas, invalidos, detalhes, mensagem: msg, mediaUrl: mediaUrlPre, mediaType, textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "" };
+  return {
+    total, enviados, falhas, invalidos, detalhes,
+    pulados, ritmo: ritmo.ativo ? { ativo: true, motivo: motivoRitmo, sessao: sessaoRitmo } : { ativo: false },
+    mensagem: msg, mediaUrl: mediaUrlPre, mediaType,
+    textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
+  };
 }

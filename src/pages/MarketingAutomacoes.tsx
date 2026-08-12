@@ -8,7 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock } from "lucide-react";
+import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock, Gauge } from "lucide-react";
+import { RitmoHumanoDialog } from "@/components/whatsapp/RitmoHumanoDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeComRetry } from "@/lib/invokeComRetry";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -25,6 +26,7 @@ export default function MarketingAutomacoes() {
   const [automacoes, setAutomacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [ritmoOpen, setRitmoOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedAutomacao, setSelectedAutomacao] = useState<any>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -291,18 +293,26 @@ export default function MarketingAutomacoes() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-4 md:space-y-8 animate-fade-in bg-background dark:bg-background min-h-full">
-      <div>
-        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-          <SubMenuHeader 
-            title="Marketing"
-            onOpenSubmenu={() => openSubmenu("Marketing")}
-          />
-          <h1 className="text-base sm:text-lg font-bold text-foreground">Automações de Marketing</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+            <SubMenuHeader 
+              title="Marketing"
+              onOpenSubmenu={() => openSubmenu("Marketing")}
+            />
+            <h1 className="text-base sm:text-lg font-bold text-foreground">Automações de Marketing</h1>
+          </div>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Configure automações de marketing para diferentes contextos
+          </p>
         </div>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Configure automações de marketing para diferentes contextos
-        </p>
+        <Button variant="outline" className="gap-2 shrink-0" onClick={() => setRitmoOpen(true)}>
+          <Gauge className="w-4 h-4" />
+          Ritmo Humano
+        </Button>
       </div>
+
+      <RitmoHumanoDialog open={ritmoOpen} onOpenChange={setRitmoOpen} />
 
       <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Card
