@@ -9,9 +9,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Eye, Loader2, MessageSquare } from "lucide-react";
+import { Users, Eye, Loader2, MessageSquare, Gauge } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { fetchWhatsappSessions, WhatsappSessionOption } from "@/lib/whatsapp/sessionUsage";
+import { RitmoHumanoDialog } from "@/components/whatsapp/RitmoHumanoDialog";
 
 interface Props {
   config: any;
@@ -40,6 +41,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sessoes, setSessoes] = useState<WhatsappSessionOption[]>([]);
   const [loadingSessoes, setLoadingSessoes] = useState(false);
+  const [ritmoOpen, setRitmoOpen] = useState(false);
 
   // ---------- Cascata: público → subfiltro → entidade ----------
   const audiencia: string = config.audiencia || "vendedores";
@@ -682,6 +684,22 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           Este canal será usado para a mensagem principal, textos antes/depois, contato compartilhado e resumos.
         </p>
       </div>
+
+      {/* Ritmo Humano (anti-bloqueio) */}
+      <div className="space-y-2 border-t pt-3">
+        <Label className="text-xs font-semibold flex items-center gap-1">
+          <Gauge className="h-3 w-3" /> Ritmo Humano (anti-bloqueio)
+        </Label>
+        <p className="text-[11px] text-muted-foreground">
+          Intervalos aleatórios, lotes com pausa, teto diário por linha, janela de horário e variação de texto.
+        </p>
+        <Button variant="outline" size="sm" className="gap-2 h-8 text-xs" onClick={() => setRitmoOpen(true)}>
+          <Gauge className="h-3 w-3" />
+          Configurar Ritmo Humano
+        </Button>
+        <RitmoHumanoDialog open={ritmoOpen} onOpenChange={setRitmoOpen} />
+      </div>
+
 
       {/* Mensagem */}
       <div className="space-y-2 border-t pt-3">

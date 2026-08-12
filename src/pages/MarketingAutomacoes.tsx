@@ -8,8 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock, Gauge } from "lucide-react";
-import { RitmoHumanoDialog } from "@/components/whatsapp/RitmoHumanoDialog";
+import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeComRetry } from "@/lib/invokeComRetry";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -26,7 +25,6 @@ export default function MarketingAutomacoes() {
   const [automacoes, setAutomacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [ritmoOpen, setRitmoOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedAutomacao, setSelectedAutomacao] = useState<any>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -306,13 +304,7 @@ export default function MarketingAutomacoes() {
             Configure automações de marketing para diferentes contextos
           </p>
         </div>
-        <Button variant="outline" className="gap-2 shrink-0" onClick={() => setRitmoOpen(true)}>
-          <Gauge className="w-4 h-4" />
-          Ritmo Humano
-        </Button>
       </div>
-
-      <RitmoHumanoDialog open={ritmoOpen} onOpenChange={setRitmoOpen} />
 
       <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Card
