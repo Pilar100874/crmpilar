@@ -9,9 +9,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Eye, Loader2, MessageSquare } from "lucide-react";
+import { Users, Eye, Loader2, MessageSquare, Gauge } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { fetchWhatsappSessions, WhatsappSessionOption } from "@/lib/whatsapp/sessionUsage";
+import { RitmoHumanoDialog } from "@/components/whatsapp/RitmoHumanoDialog";
 
 interface Props {
   config: any;
