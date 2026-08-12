@@ -956,6 +956,8 @@ async function executeBroadcast(
       providerStatus, messageId, attempts,
       startedAt, finishedAt,
     });
+    await monitorItemEnd(monitorItemId, invalid ? "invalido" : (ok ? "enviado" : "falha"), motivoFinal);
+    await monitorUpdate({ enviados, falhas, invalidos });
     if (d.gerente?.id) {
       const key = d.gerente.id;
       if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: d.gerente, itens: [] });
