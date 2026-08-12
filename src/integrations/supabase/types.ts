@@ -21254,6 +21254,106 @@ export type Database = {
           },
         ]
       }
+      ritmo_humano_config: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          delay_max_seg: number
+          delay_min_seg: number
+          dias_semana: number[]
+          estabelecimento_id: string
+          hora_fim: number
+          hora_inicio: number
+          id: string
+          limite_diario: number
+          lote_tamanho: number
+          pausa_lote_max_minutos: number
+          pausa_lote_min_minutos: number
+          respeitar_janela: boolean
+          updated_at: string
+          variar_texto: boolean
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          delay_max_seg?: number
+          delay_min_seg?: number
+          dias_semana?: number[]
+          estabelecimento_id: string
+          hora_fim?: number
+          hora_inicio?: number
+          id?: string
+          limite_diario?: number
+          lote_tamanho?: number
+          pausa_lote_max_minutos?: number
+          pausa_lote_min_minutos?: number
+          respeitar_janela?: boolean
+          updated_at?: string
+          variar_texto?: boolean
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          delay_max_seg?: number
+          delay_min_seg?: number
+          dias_semana?: number[]
+          estabelecimento_id?: string
+          hora_fim?: number
+          hora_inicio?: number
+          id?: string
+          limite_diario?: number
+          lote_tamanho?: number
+          pausa_lote_max_minutos?: number
+          pausa_lote_min_minutos?: number
+          respeitar_janela?: boolean
+          updated_at?: string
+          variar_texto?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ritmo_humano_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ritmo_humano_contador: {
+        Row: {
+          dia: string
+          enviados: number
+          estabelecimento_id: string
+          id: string
+          sessao: string
+          updated_at: string
+        }
+        Insert: {
+          dia?: string
+          enviados?: number
+          estabelecimento_id: string
+          id?: string
+          sessao?: string
+          updated_at?: string
+        }
+        Update: {
+          dia?: string
+          enviados?: number
+          estabelecimento_id?: string
+          id?: string
+          sessao?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ritmo_humano_contador_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rotas_salvas: {
         Row: {
           coordenadas_json: Json
@@ -26439,6 +26539,10 @@ export type Database = {
       ponto_periodo_bloqueado: {
         Args: { _data: string; _empresa: string }
         Returns: boolean
+      }
+      ritmo_humano_consumir: {
+        Args: { p_est: string; p_sessao?: string }
+        Returns: number
       }
       roles_present: { Args: never; Returns: boolean }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }

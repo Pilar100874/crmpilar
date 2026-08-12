@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MessageSquare, Mail, Check } from "lucide-react";
+import { MessageSquare, Mail, Check, Gauge } from "lucide-react";
 import { CanalEnvio } from "../types";
 import { cn } from "@/lib/utils";
+import { RitmoHumanoDialog } from "@/components/whatsapp/RitmoHumanoDialog";
 
 interface StepChannelProps {
   selectedCanal: CanalEnvio | null;
@@ -15,6 +17,7 @@ export function StepChannel({
   onSelectCanal,
   onNext
 }: StepChannelProps) {
+  const [ritmoOpen, setRitmoOpen] = useState(false);
   const channels = [
     {
       id: 'whatsapp' as CanalEnvio,
@@ -91,6 +94,23 @@ export function StepChannel({
             );
           })}
         </div>
+
+        {selectedCanal === 'whatsapp' && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Ritmo Humano (anti-bloqueio)</p>
+              <p className="text-xs text-muted-foreground">
+                Intervalos aleatórios, lotes com pausa, teto diário e janela de horário para proteger sua linha.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => setRitmoOpen(true)}>
+              <Gauge className="h-4 w-4" />
+              Configurar
+            </Button>
+          </div>
+        )}
+
+        <RitmoHumanoDialog open={ritmoOpen} onOpenChange={setRitmoOpen} />
       </div>
 
       {/* Footer - Always at bottom */}
