@@ -490,6 +490,27 @@ export default function MarketingAutomacoes() {
                   <p className="text-[10px] text-primary mt-1 font-medium">Ver histórico completo →</p>
                 </button>
 
+                {metodo === "bot" && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMonitorAutomacao(automacao);
+                      setMonitorOpen(true);
+                    }}
+                    className="mt-2 w-full text-left rounded-lg border bg-muted/30 hover:bg-muted/60 p-2.5 transition-colors"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                      <Radio className="w-3 h-3" /> Monitor de envios
+                    </p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
+                      Acompanhe o disparo em massa mensagem por mensagem
+                    </p>
+                    <p className="text-[10px] text-primary mt-1 font-medium">Abrir monitor ao vivo →</p>
+                  </button>
+                )}
+
+
                 <p className="text-[11px] text-muted-foreground/80 mt-2">
                   Criada {formatDistanceToNow(new Date(automacao.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
