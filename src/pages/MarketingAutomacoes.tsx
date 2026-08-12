@@ -241,10 +241,15 @@ export default function MarketingAutomacoes() {
         || (automacaoToExecute.config?.bot_id ? "bot" : "webhook");
       const inicioExec = new Date().toISOString();
       toast.info("Execução iniciada. Aguardando o resultado…");
+      const automacaoExecutada = automacaoToExecute;
       setTimeout(() => {
         setExecuteDialogOpen(false);
         setAutomacaoToExecute(null);
         setExecProgress(0);
+        if (metodo === "bot") {
+          setMonitorAutomacao(automacaoExecutada);
+          setMonitorOpen(true);
+        }
       }, 400);
       loadAutomacoes();
 
