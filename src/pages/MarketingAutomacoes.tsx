@@ -45,6 +45,8 @@ export default function MarketingAutomacoes() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [historicoOpen, setHistoricoOpen] = useState(false);
   const [historicoAutomacao, setHistoricoAutomacao] = useState<any>(null);
+  const [monitorOpen, setMonitorOpen] = useState(false);
+  const [monitorAutomacao, setMonitorAutomacao] = useState<any>(null);
 
   useEffect(() => {
     loadAutomacoes();
