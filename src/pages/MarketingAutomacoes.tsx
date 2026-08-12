@@ -716,6 +716,16 @@ export default function MarketingAutomacoes() {
         automationId={historicoAutomacao?.id ?? null}
         automationName={historicoAutomacao?.name}
       />
+
+      <MonitorEnviosDialog
+        open={monitorOpen}
+        onOpenChange={(o) => {
+          setMonitorOpen(o);
+          if (!o) setMonitorAutomacao(null);
+        }}
+        automationId={monitorAutomacao?.id ?? null}
+        automationName={monitorAutomacao?.name}
+      />
     </div>
   );
 }
