@@ -3719,6 +3719,125 @@ export type Database = {
           },
         ]
       }
+      broadcast_monitor: {
+        Row: {
+          atual: number
+          atual_nome: string | null
+          atual_telefone: string | null
+          atualizado_em: string
+          automation_id: string | null
+          bot_flow_id: string | null
+          enviados: number
+          erro: string | null
+          estabelecimento_id: string
+          falhas: number
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string
+          invalidos: number
+          mensagem_base: string | null
+          origem: string | null
+          pulados: number
+          status: string
+          total: number
+        }
+        Insert: {
+          atual?: number
+          atual_nome?: string | null
+          atual_telefone?: string | null
+          atualizado_em?: string
+          automation_id?: string | null
+          bot_flow_id?: string | null
+          enviados?: number
+          erro?: string | null
+          estabelecimento_id: string
+          falhas?: number
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          invalidos?: number
+          mensagem_base?: string | null
+          origem?: string | null
+          pulados?: number
+          status?: string
+          total?: number
+        }
+        Update: {
+          atual?: number
+          atual_nome?: string | null
+          atual_telefone?: string | null
+          atualizado_em?: string
+          automation_id?: string | null
+          bot_flow_id?: string | null
+          enviados?: number
+          erro?: string | null
+          estabelecimento_id?: string
+          falhas?: number
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          invalidos?: number
+          mensagem_base?: string | null
+          origem?: string | null
+          pulados?: number
+          status?: string
+          total?: number
+        }
+        Relationships: []
+      }
+      broadcast_monitor_itens: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          mensagem: string | null
+          monitor_id: string
+          motivo: string | null
+          nome: string | null
+          ordem: number
+          status: string
+          telefone: string | null
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          mensagem?: string | null
+          monitor_id: string
+          motivo?: string | null
+          nome?: string | null
+          ordem?: number
+          status?: string
+          telefone?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          mensagem?: string | null
+          monitor_id?: string
+          motivo?: string | null
+          nome?: string | null
+          ordem?: number
+          status?: string
+          telefone?: string | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_monitor_itens_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "broadcast_monitor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendario_regras: {
         Row: {
           ativa: boolean

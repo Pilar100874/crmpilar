@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock } from "lucide-react";
+import { Plus, Zap, MoreVertical, Edit, Trash2, Power, Calendar, Bot, Webhook, Sparkles, Clock, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeComRetry } from "@/lib/invokeComRetry";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -19,6 +19,7 @@ import NovaAutomacaoDialog from "@/components/marketing/NovaAutomacaoDialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Progress } from "@/components/ui/progress";
 import HistoricoEnviosDialog from "@/components/marketing/HistoricoEnviosDialog";
+import MonitorEnviosDialog from "@/components/marketing/MonitorEnviosDialog";
 
 export default function MarketingAutomacoes() {
   const { openSubmenu } = useLayout();
@@ -45,6 +46,8 @@ export default function MarketingAutomacoes() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [historicoOpen, setHistoricoOpen] = useState(false);
   const [historicoAutomacao, setHistoricoAutomacao] = useState<any>(null);
+  const [monitorOpen, setMonitorOpen] = useState(false);
+  const [monitorAutomacao, setMonitorAutomacao] = useState<any>(null);
 
   useEffect(() => {
     loadAutomacoes();
@@ -238,10 +241,15 @@ export default function MarketingAutomacoes() {
         || (automacaoToExecute.config?.bot_id ? "bot" : "webhook");
       const inicioExec = new Date().toISOString();
       toast.info("Execução iniciada. Aguardando o resultado…");
+      const automacaoExecutada = automacaoToExecute;
       setTimeout(() => {
         setExecuteDialogOpen(false);
         setAutomacaoToExecute(null);
         setExecProgress(0);
+        if (metodo === "bot") {
+          setMonitorAutomacao(automacaoExecutada);
+          setMonitorOpen(true);
+        }
       }, 400);
       loadAutomacoes();
 
@@ -490,6 +498,27 @@ export default function MarketingAutomacoes() {
                   <p className="text-[10px] text-primary mt-1 font-medium">Ver histórico completo →</p>
                 </button>
 
+                {metodo === "bot" && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMonitorAutomacao(automacao);
+                      setMonitorOpen(true);
+                    }}
+                    className="mt-2 w-full text-left rounded-lg border bg-muted/30 hover:bg-muted/60 p-2.5 transition-colors"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                      <Radio className="w-3 h-3" /> Monitor de envios
+                    </p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
+                      Acompanhe o disparo em massa mensagem por mensagem
+                    </p>
+                    <p className="text-[10px] text-primary mt-1 font-medium">Abrir monitor ao vivo →</p>
+                  </button>
+                )}
+
+
                 <p className="text-[11px] text-muted-foreground/80 mt-2">
                   Criada {formatDistanceToNow(new Date(automacao.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
@@ -692,6 +721,16 @@ export default function MarketingAutomacoes() {
         }}
         automationId={historicoAutomacao?.id ?? null}
         automationName={historicoAutomacao?.name}
+      />
+
+      <MonitorEnviosDialog
+        open={monitorOpen}
+        onOpenChange={(o) => {
+          setMonitorOpen(o);
+          if (!o) setMonitorAutomacao(null);
+        }}
+        automationId={monitorAutomacao?.id ?? null}
+        automationName={monitorAutomacao?.name}
       />
     </div>
   );

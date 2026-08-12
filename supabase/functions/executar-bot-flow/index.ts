@@ -195,7 +195,7 @@ serve(async (req) => {
             handle = "sem_frase";
           }
         } else if (t === "broadcast_vendedores") {
-          const res = await executeBroadcast(supabase, estId, cfg, ctx, origem || "bot", bot.id);
+          const res = await executeBroadcast(supabase, estId, cfg, ctx, origem || "bot", bot.id, automationId);
           const outputVar = cfg.outputVariable || "broadcast_vendedores_resultado";
           ctx[outputVar] = res;
           trace.push({ node: current.id, broadcast: res });
@@ -442,6 +442,7 @@ async function executeBroadcast(
   baseCtx: Record<string, any>,
   origem: string,
   botFlowId?: string,
+  automationId?: string,
 ) {
   // ===== Pre-check: sessão de WhatsApp precisa estar WORKING =====
   try {
@@ -669,7 +670,58 @@ async function executeBroadcast(
     : "";
 
   let enviados = 0, falhas = 0, invalidos = 0;
+
+  // ===== Monitor de envios em tempo real =====
+  let monitorId: string | null = null;
+  try {
+    const { data: mon } = await supabase.from("broadcast_monitor").insert({
+      estabelecimento_id: estabelecimentoId,
+      automation_id: automationId || null,
+      bot_flow_id: botFlowId || null,
+      origem,
+      status: "executando",
+      total,
+      mensagem_base: (msg || "").slice(0, 4000),
+    }).select("id").single();
+    monitorId = mon?.id || null;
+  } catch (e) {
+    console.warn("[monitor] falha ao criar monitor:", e);
+  }
+  const monitorUpdate = async (patch: Record<string, unknown>) => {
+    if (!monitorId) return;
+    try {
+      await supabase.from("broadcast_monitor")
+        .update({ ...patch, atualizado_em: new Date().toISOString() })
+        .eq("id", monitorId);
+    } catch (_) { /* noop */ }
+  };
+  const monitorItemStart = async (ordem: number, d: any, mensagem: string): Promise<string | null> => {
+    if (!monitorId) return null;
+    try {
+      const { data } = await supabase.from("broadcast_monitor_itens").insert({
+        monitor_id: monitorId,
+        estabelecimento_id: estabelecimentoId,
+        ordem,
+        nome: d.nome || null,
+        telefone: d.phone || null,
+        tipo: d.kind || null,
+        status: "enviando",
+        mensagem: (mensagem || "").slice(0, 4000),
+      }).select("id").single();
+      return data?.id || null;
+    } catch (_) { return null; }
+  };
+  const monitorItemEnd = async (itemId: string | null, status: string, motivo: string | null) => {
+    if (!itemId) return;
+    try {
+      await supabase.from("broadcast_monitor_itens")
+        .update({ status, motivo, updated_at: new Date().toISOString() })
+        .eq("id", itemId);
+    } catch (_) { /* noop */ }
+  };
+
   const detalhes: any[] = [];
+
   // Evita reenvio do mesmo cartão de contato para o mesmo destinatário (phone -> Set de telefones do contato já enviados).
   const contatoJaEnviado = new Map<string, Set<string>>();
   type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
@@ -711,12 +763,14 @@ async function executeBroadcast(
     const bloqueio = foraDaJanela(ritmo);
     if (bloqueio) {
       console.warn("[ritmo]", bloqueio);
+      await monitorUpdate({ status: "bloqueado", pulados: total, erro: bloqueio, finalizado_em: new Date().toISOString() });
       return {
         total, enviados: 0, falhas: 0, invalidos: 0, pulados: total, detalhes: [],
         mensagem: "", mediaUrl: "", mediaType: "",
         textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
         aborted: true,
         error: bloqueio,
+        monitorId,
         ritmo: { bloqueado: true, motivo: bloqueio },
       } as any;
     }
@@ -725,6 +779,7 @@ async function executeBroadcast(
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   let indiceRitmo = 0;
+  let ordemEnvio = 0;
   for (const d of destinatarios) {
     if (ritmo.ativo) {
       if (indiceRitmo > 0) {
@@ -736,10 +791,12 @@ async function executeBroadcast(
         motivoRitmo = `Ritmo Humano: limite diário de ${ritmo.limiteDiario} mensagens atingido para esta linha.`;
         pulados = total - indiceRitmo;
         console.warn("[ritmo]", motivoRitmo);
+        await monitorUpdate({ pulados, erro: motivoRitmo });
         break;
       }
       indiceRitmo++;
     }
+    ordemEnvio++;
     const vObj = { ...(d.vendedorObj || {}) };
     if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
     const perCtx: any = {
@@ -759,6 +816,11 @@ async function executeBroadcast(
         : interp(msg, perCtx),
       ritmo,
     );
+
+    const mensagemMonitor = [antes, msgInterp, depois].filter((s) => s && s.trim()).join("\n\n");
+    const monitorItemId = await monitorItemStart(ordemEnvio, d, mensagemMonitor);
+    await monitorUpdate({ atual: ordemEnvio, atual_nome: d.nome || null, atual_telefone: d.phone || null });
+
 
     let ok = true;
     let invalid = false;
@@ -894,6 +956,8 @@ async function executeBroadcast(
       providerStatus, messageId, attempts,
       startedAt, finishedAt,
     });
+    await monitorItemEnd(monitorItemId, invalid ? "invalido" : (ok ? "enviado" : "falha"), motivoFinal);
+    await monitorUpdate({ enviados, falhas, invalidos });
     if (d.gerente?.id) {
       const key = d.gerente.id;
       if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: d.gerente, itens: [] });
@@ -1059,10 +1123,17 @@ async function executeBroadcast(
     console.warn("[executar-bot-flow] erro no envio de resumo:", err);
   }
 
+  await monitorUpdate({
+    status: falhas > 0 ? (enviados > 0 ? "parcial" : "falha") : "concluido",
+    enviados, falhas, invalidos, pulados,
+    finalizado_em: new Date().toISOString(),
+  });
+
   return {
     total, enviados, falhas, invalidos, detalhes,
     pulados, ritmo: ritmo.ativo ? { ativo: true, motivo: motivoRitmo, sessao: sessaoRitmo } : { ativo: false },
     mensagem: msg, mediaUrl: mediaUrlPre, mediaType,
+    monitorId,
     textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
   };
 }
