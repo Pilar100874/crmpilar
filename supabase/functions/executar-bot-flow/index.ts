@@ -779,6 +779,7 @@ async function executeBroadcast(
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   let indiceRitmo = 0;
+  let ordemEnvio = 0;
   for (const d of destinatarios) {
     if (ritmo.ativo) {
       if (indiceRitmo > 0) {
@@ -790,10 +791,12 @@ async function executeBroadcast(
         motivoRitmo = `Ritmo Humano: limite diário de ${ritmo.limiteDiario} mensagens atingido para esta linha.`;
         pulados = total - indiceRitmo;
         console.warn("[ritmo]", motivoRitmo);
+        await monitorUpdate({ pulados, erro: motivoRitmo });
         break;
       }
       indiceRitmo++;
     }
+    ordemEnvio++;
     const vObj = { ...(d.vendedorObj || {}) };
     if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
     const perCtx: any = {
