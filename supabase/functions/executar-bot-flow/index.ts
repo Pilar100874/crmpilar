@@ -1123,10 +1123,17 @@ async function executeBroadcast(
     console.warn("[executar-bot-flow] erro no envio de resumo:", err);
   }
 
+  await monitorUpdate({
+    status: falhas > 0 ? (enviados > 0 ? "parcial" : "falha") : "concluido",
+    enviados, falhas, invalidos, pulados,
+    finalizado_em: new Date().toISOString(),
+  });
+
   return {
     total, enviados, falhas, invalidos, detalhes,
     pulados, ritmo: ritmo.ativo ? { ativo: true, motivo: motivoRitmo, sessao: sessaoRitmo } : { ativo: false },
     mensagem: msg, mediaUrl: mediaUrlPre, mediaType,
+    monitorId,
     textoAntes: cfg.textoAntes || "", textoDepois: cfg.textoDepois || "",
   };
 }
