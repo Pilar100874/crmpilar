@@ -195,7 +195,7 @@ serve(async (req) => {
             handle = "sem_frase";
           }
         } else if (t === "broadcast_vendedores") {
-          const res = await executeBroadcast(supabase, estId, cfg, ctx, origem || "bot", bot.id);
+          const res = await executeBroadcast(supabase, estId, cfg, ctx, origem || "bot", bot.id, automationId);
           const outputVar = cfg.outputVariable || "broadcast_vendedores_resultado";
           ctx[outputVar] = res;
           trace.push({ node: current.id, broadcast: res });
