@@ -817,6 +817,11 @@ async function executeBroadcast(
       ritmo,
     );
 
+    const mensagemMonitor = [antes, msgInterp, depois].filter((s) => s && s.trim()).join("\n\n");
+    const monitorItemId = await monitorItemStart(ordemEnvio, d, mensagemMonitor);
+    await monitorUpdate({ atual: ordemEnvio, atual_nome: d.nome || null, atual_telefone: d.phone || null });
+
+
     let ok = true;
     let invalid = false;
     let sendReason: string | null = null;
