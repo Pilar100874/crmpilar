@@ -41,6 +41,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sessoes, setSessoes] = useState<WhatsappSessionOption[]>([]);
   const [loadingSessoes, setLoadingSessoes] = useState(false);
+  const [ritmoOpen, setRitmoOpen] = useState(false);
 
   // ---------- Cascata: público → subfiltro → entidade ----------
   const audiencia: string = config.audiencia || "vendedores";
