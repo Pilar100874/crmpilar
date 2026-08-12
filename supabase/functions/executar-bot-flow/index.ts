@@ -442,6 +442,7 @@ async function executeBroadcast(
   baseCtx: Record<string, any>,
   origem: string,
   botFlowId?: string,
+  automationId?: string,
 ) {
   // ===== Pre-check: sessão de WhatsApp precisa estar WORKING =====
   try {
