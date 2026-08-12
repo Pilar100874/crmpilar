@@ -670,7 +670,58 @@ async function executeBroadcast(
     : "";
 
   let enviados = 0, falhas = 0, invalidos = 0;
+
+  // ===== Monitor de envios em tempo real =====
+  let monitorId: string | null = null;
+  try {
+    const { data: mon } = await supabase.from("broadcast_monitor").insert({
+      estabelecimento_id: estabelecimentoId,
+      automation_id: automationId || null,
+      bot_flow_id: botFlowId || null,
+      origem,
+      status: "executando",
+      total,
+      mensagem_base: (msg || "").slice(0, 4000),
+    }).select("id").single();
+    monitorId = mon?.id || null;
+  } catch (e) {
+    console.warn("[monitor] falha ao criar monitor:", e);
+  }
+  const monitorUpdate = async (patch: Record<string, unknown>) => {
+    if (!monitorId) return;
+    try {
+      await supabase.from("broadcast_monitor")
+        .update({ ...patch, atualizado_em: new Date().toISOString() })
+        .eq("id", monitorId);
+    } catch (_) { /* noop */ }
+  };
+  const monitorItemStart = async (ordem: number, d: any, mensagem: string): Promise<string | null> => {
+    if (!monitorId) return null;
+    try {
+      const { data } = await supabase.from("broadcast_monitor_itens").insert({
+        monitor_id: monitorId,
+        estabelecimento_id: estabelecimentoId,
+        ordem,
+        nome: d.nome || null,
+        telefone: d.phone || null,
+        tipo: d.kind || null,
+        status: "enviando",
+        mensagem: (mensagem || "").slice(0, 4000),
+      }).select("id").single();
+      return data?.id || null;
+    } catch (_) { return null; }
+  };
+  const monitorItemEnd = async (itemId: string | null, status: string, motivo: string | null) => {
+    if (!itemId) return;
+    try {
+      await supabase.from("broadcast_monitor_itens")
+        .update({ status, motivo, updated_at: new Date().toISOString() })
+        .eq("id", itemId);
+    } catch (_) { /* noop */ }
+  };
+
   const detalhes: any[] = [];
+
   // Evita reenvio do mesmo cartão de contato para o mesmo destinatário (phone -> Set de telefones do contato já enviados).
   const contatoJaEnviado = new Map<string, Set<string>>();
   type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
