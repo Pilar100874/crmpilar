@@ -6,7 +6,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2 } from "lucide-react";
+
+interface RetryConfig {
+  maxTentativas: number;
+  backoffBaseSegundos: number;
+  backoffFator: number;
+  backoffMaxSegundos: number;
+}
+
+const RETRY_PADRAO: RetryConfig = { maxTentativas: 3, backoffBaseSegundos: 60, backoffFator: 2, backoffMaxSegundos: 900 };
+const RETRY_STORAGE_KEY = "broadcast_retry_config";
+
+function carregarRetryConfig(): RetryConfig {
+  try {
+    const raw = localStorage.getItem(RETRY_STORAGE_KEY);
+    return raw ? { ...RETRY_PADRAO, ...JSON.parse(raw) } : RETRY_PADRAO;
+  } catch {
+    return RETRY_PADRAO;
+  }
+}
 
 interface Monitor {
   id: string;
@@ -138,6 +160,15 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
   }, [itens.length]);
 
   const [reenviando, setReenviando] = useState(false);
+  const [retry, setRetry] = useState<RetryConfig>(() => carregarRetryConfig());
+
+  const atualizarRetry = useCallback((patch: Partial<RetryConfig>) => {
+    setRetry((prev) => {
+      const novo = { ...prev, ...patch };
+      try { localStorage.setItem(RETRY_STORAGE_KEY, JSON.stringify(novo)); } catch { /* noop */ }
+      return novo;
+    });
+  }, []);
   const falhasReenviaveis = itens.filter(
     (i) => i.status === "falha" && (i.telefone || "").replace(/\D/g, "").length >= 10,
   ).length;
@@ -147,18 +178,20 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
     setReenviando(true);
     try {
       const { data, error } = await supabase.functions.invoke("reenviar-falhas-broadcast", {
-        body: { monitorId: monitor.id },
+        body: { monitorId: monitor.id, ...retry },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success(`Reenviando ${(data as any)?.reenviando ?? ""} envio(s) que falharam. Os já enviados foram preservados.`);
+      toast.success(
+        `Reenviando ${(data as any)?.reenviando ?? ""} envio(s) que falharam — até ${retry.maxTentativas} tentativa(s) com intervalo crescente. Os já enviados foram preservados.`,
+      );
       carregar();
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível reenviar as falhas.");
     } finally {
       setReenviando(false);
     }
-  }, [monitor?.id, carregar]);
+  }, [monitor?.id, carregar, retry]);
 
 
   const total = monitor?.total || 0;
@@ -239,12 +272,61 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-xs">
                   <span className="font-semibold text-destructive">{falhasReenviaveis} envio(s) com falha.</span>{" "}
-                  <span className="text-muted-foreground">Reenvie somente estes — os já enviados são preservados.</span>
+                  <span className="text-muted-foreground">Reenvie somente estes — até {retry.maxTentativas} tentativa(s), intervalo inicial de {retry.backoffBaseSegundos}s. Os já enviados são preservados.</span>
                 </p>
-                <Button size="sm" onClick={reenviarFalhas} disabled={reenviando}>
-                  {reenviando ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
-                  Tentar novamente as falhas
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        <Settings2 className="w-3.5 h-3.5 mr-1" /> Retentativas
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 space-y-3" align="end">
+                      <div>
+                        <p className="text-sm font-semibold">Configurar retentativas</p>
+                        <p className="text-xs text-muted-foreground">
+                          O intervalo entre rodadas cresce a cada tentativa (backoff). O progresso já enviado é sempre mantido.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Limite de tentativas (1 a 10)</Label>
+                        <Input
+                          type="number" min={1} max={10} value={retry.maxTentativas}
+                          onChange={(e) => atualizarRetry({ maxTentativas: Math.min(10, Math.max(1, Number(e.target.value) || 1)) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Intervalo inicial (segundos)</Label>
+                        <Input
+                          type="number" min={5} max={3600} value={retry.backoffBaseSegundos}
+                          onChange={(e) => atualizarRetry({ backoffBaseSegundos: Math.min(3600, Math.max(5, Number(e.target.value) || 5)) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Multiplicador do intervalo (1 a 5)</Label>
+                        <Input
+                          type="number" min={1} max={5} step={0.5} value={retry.backoffFator}
+                          onChange={(e) => atualizarRetry({ backoffFator: Math.min(5, Math.max(1, Number(e.target.value) || 1)) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Intervalo máximo (segundos)</Label>
+                        <Input
+                          type="number" min={retry.backoffBaseSegundos} max={7200} value={retry.backoffMaxSegundos}
+                          onChange={(e) => atualizarRetry({ backoffMaxSegundos: Math.min(7200, Math.max(retry.backoffBaseSegundos, Number(e.target.value) || retry.backoffBaseSegundos)) })}
+                        />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        Ex.: {retry.backoffBaseSegundos}s, depois {Math.min(retry.backoffMaxSegundos, Math.round(retry.backoffBaseSegundos * retry.backoffFator))}s,
+                        até no máximo {retry.backoffMaxSegundos}s entre as rodadas.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
+                  <Button size="sm" onClick={reenviarFalhas} disabled={reenviando}>
+                    {reenviando ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
+                    Tentar novamente as falhas
+                  </Button>
+                </div>
               </div>
             )}
 
