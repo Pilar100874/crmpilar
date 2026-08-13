@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2, Pause, Play, PauseCircle, StopCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2, Pause, Play, PauseCircle, StopCircle, FileSpreadsheet, FileText } from "lucide-react";
 
 interface RetryConfig {
   maxTentativas: number;
