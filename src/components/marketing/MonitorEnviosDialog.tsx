@@ -210,12 +210,26 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
               )}
             </div>
 
+            {falhasReenviaveis > 0 && !emAndamento && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-xs">
+                  <span className="font-semibold text-destructive">{falhasReenviaveis} envio(s) com falha.</span>{" "}
+                  <span className="text-muted-foreground">Reenvie somente estes — os já enviados são preservados.</span>
+                </p>
+                <Button size="sm" onClick={reenviarFalhas} disabled={reenviando}>
+                  {reenviando ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
+                  Tentar novamente as falhas
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mensagem por mensagem</p>
               <Button variant="ghost" size="sm" onClick={carregar} disabled={loading}>
                 <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
               </Button>
             </div>
+
 
             <ScrollArea className="flex-1 min-h-0 rounded-lg border">
               <div className="divide-y">
