@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2, Pause, Play, PauseCircle, StopCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2, Pause, Play, PauseCircle, StopCircle, FileSpreadsheet, FileText } from "lucide-react";
 
 interface RetryConfig {
   maxTentativas: number;
@@ -234,6 +234,123 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
   const pausado = monitor?.status === "pausado";
   const ativo = emAndamento || pausado;
 
+  // ===== Exportação do relatório (CSV / PDF) =====
+  const nomeArquivo = useCallback(
+    (ext: string) => {
+      const base = (automationName || "disparo").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
+      const d = monitor ? new Date(monitor.iniciado_em) : new Date();
+      const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+      return `monitor-envios-${base}-${stamp}.${ext}`;
+    },
+    [automationName, monitor],
+  );
+
+  const baixar = (conteudo: BlobPart, nome: string, tipo: string) => {
+    const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nome;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportarCSV = useCallback(() => {
+    if (!monitor) return;
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const linhas: string[] = [];
+    linhas.push(esc("Relatório do Monitor de Envios"));
+    linhas.push([esc("Automação"), esc(automationName || "-")].join(";"));
+    linhas.push([esc("Status"), esc(statusLabel[monitor.status] || monitor.status)].join(";"));
+    linhas.push([esc("Início"), esc(new Date(monitor.iniciado_em).toLocaleString("pt-BR"))].join(";"));
+    linhas.push([esc("Fim"), esc(monitor.finalizado_em ? new Date(monitor.finalizado_em).toLocaleString("pt-BR") : "-")].join(";"));
+    linhas.push("");
+    linhas.push([esc("Total"), esc("Enviados"), esc("Falhas"), esc("Inválidos"), esc("Pulados"), esc("Restantes"), esc("% concluído")].join(";"));
+    linhas.push([total, monitor.enviados, monitor.falhas, monitor.invalidos, monitor.pulados, restantes, `${pct}%`].map(esc).join(";"));
+    linhas.push("");
+    linhas.push([esc("#"), esc("Nome"), esc("Telefone"), esc("Tipo"), esc("Status"), esc("Motivo"), esc("Mensagem")].join(";"));
+    itens.forEach((i) => {
+      linhas.push([i.ordem, i.nome || "", formatTelefone(i.telefone), i.tipo || "", i.status, i.motivo || "", (i.mensagem || "").replace(/\s+/g, " ")].map(esc).join(";"));
+    });
+    const falhasList = itens.filter((i) => i.status === "falha" || i.status === "invalido");
+    if (falhasList.length) {
+      linhas.push("");
+      linhas.push(esc(`Falhas e inválidos (${falhasList.length})`));
+      linhas.push([esc("#"), esc("Nome"), esc("Telefone"), esc("Status"), esc("Motivo")].join(";"));
+      falhasList.forEach((i) => linhas.push([i.ordem, i.nome || "", formatTelefone(i.telefone), i.status, i.motivo || ""].map(esc).join(";")));
+    }
+    baixar("\uFEFF" + linhas.join("\n"), nomeArquivo("csv"), "text/csv;charset=utf-8;");
+    toast.success("Relatório CSV exportado.");
+  }, [monitor, itens, automationName, total, restantes, pct, nomeArquivo]);
+
+  const exportarPDF = useCallback(async () => {
+    if (!monitor) return;
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const { default: autoTable } = await import("jspdf-autotable");
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt" });
+      doc.setFontSize(14);
+      doc.text("Relatório do Monitor de Envios", 40, 40);
+      doc.setFontSize(9);
+      doc.text(
+        [
+          `Automação: ${automationName || "-"}`,
+          `Status: ${statusLabel[monitor.status] || monitor.status}`,
+          `Início: ${new Date(monitor.iniciado_em).toLocaleString("pt-BR")}${monitor.finalizado_em ? `   |   Fim: ${new Date(monitor.finalizado_em).toLocaleString("pt-BR")}` : ""}`,
+        ].join("\n"),
+        40,
+        58,
+      );
+
+      autoTable(doc, {
+        startY: 100,
+        head: [["Total", "Enviados", "Falhas", "Inválidos", "Pulados", "Restantes", "% concluído"]],
+        body: [[total, monitor.enviados, monitor.falhas, monitor.invalidos, monitor.pulados, restantes, `${pct}%`].map(String)],
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [37, 99, 235] },
+      });
+
+      const falhasList = itens.filter((i) => i.status === "falha" || i.status === "invalido");
+      if (falhasList.length) {
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 18,
+          head: [[`Falhas e inválidos (${falhasList.length})`, "", "", ""]],
+          body: [],
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [220, 38, 38] },
+        });
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY,
+          head: [["#", "Nome", "Telefone", "Motivo"]],
+          body: falhasList.map((i) => [String(i.ordem), i.nome || "-", formatTelefone(i.telefone), i.motivo || "-"]),
+          styles: { fontSize: 8, cellWidth: "wrap" },
+          headStyles: { fillColor: [120, 120, 120] },
+        });
+      }
+
+      autoTable(doc, {
+        startY: (doc as any).lastAutoTable.finalY + 18,
+        head: [["#", "Nome", "Telefone", "Status", "Mensagem enviada"]],
+        body: itens.map((i) => [
+          String(i.ordem),
+          i.nome || "-",
+          formatTelefone(i.telefone),
+          i.status,
+          (i.mensagem || "").replace(/\s+/g, " ").slice(0, 300),
+        ]),
+        styles: { fontSize: 8, overflow: "linebreak" },
+        columnStyles: { 4: { cellWidth: 380 } },
+        headStyles: { fillColor: [37, 99, 235] },
+      });
+
+      doc.save(nomeArquivo("pdf"));
+      toast.success("Relatório PDF exportado.");
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível gerar o PDF.");
+    }
+  }, [monitor, itens, automationName, total, restantes, pct, nomeArquivo]);
+
+
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -388,12 +505,21 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
               </div>
             )}
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mensagem por mensagem</p>
-              <Button variant="ghost" size="sm" onClick={carregar} disabled={loading}>
-                <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={exportarCSV} disabled={!monitor}>
+                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1" /> CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportarPDF} disabled={!monitor}>
+                  <FileText className="w-3.5 h-3.5 mr-1" /> PDF
+                </Button>
+                <Button variant="ghost" size="sm" onClick={carregar} disabled={loading}>
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
+                </Button>
+              </div>
             </div>
+
 
 
             <ScrollArea className="flex-1 min-h-0 rounded-lg border">
