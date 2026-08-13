@@ -3737,6 +3737,7 @@ export type Database = {
           invalidos: number
           mensagem_base: string | null
           origem: string | null
+          pausado_em: string | null
           pulados: number
           status: string
           total: number
@@ -3758,6 +3759,7 @@ export type Database = {
           invalidos?: number
           mensagem_base?: string | null
           origem?: string | null
+          pausado_em?: string | null
           pulados?: number
           status?: string
           total?: number
@@ -3779,6 +3781,7 @@ export type Database = {
           invalidos?: number
           mensagem_base?: string | null
           origem?: string | null
+          pausado_em?: string | null
           pulados?: number
           status?: string
           total?: number

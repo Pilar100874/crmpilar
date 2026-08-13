@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw, Settings2, Pause, Play, PauseCircle, StopCircle } from "lucide-react";
 
 interface RetryConfig {
   maxTentativas: number;
@@ -67,11 +67,14 @@ interface Props {
 
 const statusLabel: Record<string, string> = {
   executando: "Em andamento",
+  pausado: "Pausado",
+  cancelado: "Cancelado",
   concluido: "Concluído",
   parcial: "Concluído com falhas",
   falha: "Falhou",
   bloqueado: "Bloqueado",
 };
+
 
 function formatTelefone(tel?: string | null) {
   const d = (tel || "").replace(/\D/g, "");
@@ -194,11 +197,43 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
   }, [monitor?.id, carregar, retry]);
 
 
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const alterarStatus = useCallback(async (novo: "pausado" | "executando" | "cancelado") => {
+    if (!monitor?.id) return;
+    setAlterandoStatus(true);
+    try {
+      const { error } = await supabase
+        .from("broadcast_monitor" as any)
+        .update({
+          status: novo,
+          pausado_em: novo === "pausado" ? new Date().toISOString() : null,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq("id", monitor.id);
+      if (error) throw error;
+      setMonitor((prev) => (prev ? { ...prev, status: novo } : prev));
+      toast.success(
+        novo === "pausado"
+          ? "Disparo pausado. Os destinatários já processados foram preservados."
+          : novo === "executando"
+            ? "Disparo retomado de onde parou."
+            : "Disparo cancelado. O status dos já processados foi mantido.",
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível alterar o status do disparo.");
+    } finally {
+      setAlterandoStatus(false);
+    }
+  }, [monitor?.id]);
+
   const total = monitor?.total || 0;
   const processados = (monitor?.enviados || 0) + (monitor?.falhas || 0);
   const restantes = Math.max(0, total - processados - (monitor?.pulados || 0));
   const pct = total > 0 ? Math.round((processados / total) * 100) : 0;
   const emAndamento = monitor?.status === "executando";
+  const pausado = monitor?.status === "pausado";
+  const ativo = emAndamento || pausado;
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -261,6 +296,29 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
                   <span className="text-muted-foreground">{formatTelefone(monitor.atual_telefone)}</span>
                 </p>
               )}
+              {pausado && (
+                <p className="text-xs mt-3 flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <PauseCircle className="w-3.5 h-3.5" />
+                  Disparo pausado — {processados} já processados foram preservados. Retome para continuar de onde parou.
+                </p>
+              )}
+              {ativo && (
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  {pausado ? (
+                    <Button size="sm" onClick={() => alterarStatus("executando")} disabled={alterandoStatus}>
+                      <Play className="w-3.5 h-3.5 mr-1" /> Retomar disparo
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => alterarStatus("pausado")} disabled={alterandoStatus}>
+                      <Pause className="w-3.5 h-3.5 mr-1" /> Pausar disparo
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => alterarStatus("cancelado")} disabled={alterandoStatus}>
+                    <StopCircle className="w-3.5 h-3.5 mr-1" /> Cancelar
+                  </Button>
+                </div>
+              )}
+
               {monitor.erro && (
                 <p className="text-xs mt-2 text-destructive flex items-start gap-1.5">
                   <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" /> {monitor.erro}
@@ -268,7 +326,7 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
               )}
             </div>
 
-            {falhasReenviaveis > 0 && !emAndamento && (
+            {falhasReenviaveis > 0 && !ativo && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-xs">
                   <span className="font-semibold text-destructive">{falhasReenviaveis} envio(s) com falha.</span>{" "}

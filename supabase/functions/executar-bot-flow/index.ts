@@ -778,10 +778,43 @@ async function executeBroadcast(
   }
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
+
+  // ===== Pausar / Retomar (controle pelo Monitor de envios) =====
+  // Aguarda enquanto o monitor estiver com status "pausado". Retorna "cancelado"
+  // se o usuário cancelar o disparo, preservando o status de quem já foi processado.
+  const PAUSA_POLL_MS = 3000;
+  const PAUSA_MAX_MS = 30 * 60 * 1000; // segurança: no máximo 30 min pausado
+  const checarControle = async (): Promise<"seguir" | "cancelado"> => {
+    if (!monitorId) return "seguir";
+    let esperado = 0;
+    for (;;) {
+      const { data } = await supabase
+        .from("broadcast_monitor").select("status").eq("id", monitorId).maybeSingle();
+      const st = (data as any)?.status;
+      if (st === "cancelado") return "cancelado";
+      if (st !== "pausado") return "seguir";
+      if (esperado >= PAUSA_MAX_MS) {
+        await monitorUpdate({ erro: "Disparo pausado por mais de 30 minutos — execução encerrada. Use 'Tentar novamente as falhas' ou execute de novo para continuar." });
+        return "cancelado";
+      }
+      await sleep(PAUSA_POLL_MS);
+      esperado += PAUSA_POLL_MS;
+    }
+  };
+
   let indiceRitmo = 0;
   let ordemEnvio = 0;
+  let canceladoPeloUsuario = false;
   for (const d of destinatarios) {
+    const controle = await checarControle();
+    if (controle === "cancelado") {
+      canceladoPeloUsuario = true;
+      pulados = total - (enviados + falhas);
+      await monitorUpdate({ status: "cancelado", pulados, finalizado_em: new Date().toISOString() });
+      break;
+    }
     if (ritmo.ativo) {
+
       if (indiceRitmo > 0) {
         await esperarLote(ritmo, indiceRitmo);
         await esperarEntreEnvios(ritmo);
@@ -1124,10 +1157,11 @@ async function executeBroadcast(
   }
 
   await monitorUpdate({
-    status: falhas > 0 ? (enviados > 0 ? "parcial" : "falha") : "concluido",
+    status: canceladoPeloUsuario ? "cancelado" : (falhas > 0 ? (enviados > 0 ? "parcial" : "falha") : "concluido"),
     enviados, falhas, invalidos, pulados,
     finalizado_em: new Date().toISOString(),
   });
+
 
   return {
     total, enviados, falhas, invalidos, detalhes,
