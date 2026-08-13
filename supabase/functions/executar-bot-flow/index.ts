@@ -1157,10 +1157,11 @@ async function executeBroadcast(
   }
 
   await monitorUpdate({
-    status: falhas > 0 ? (enviados > 0 ? "parcial" : "falha") : "concluido",
+    status: canceladoPeloUsuario ? "cancelado" : (falhas > 0 ? (enviados > 0 ? "parcial" : "falha") : "concluido"),
     enviados, falhas, invalidos, pulados,
     finalizado_em: new Date().toISOString(),
   });
+
 
   return {
     total, enviados, falhas, invalidos, detalhes,
