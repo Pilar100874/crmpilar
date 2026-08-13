@@ -137,6 +137,30 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
     listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [itens.length]);
 
+  const [reenviando, setReenviando] = useState(false);
+  const falhasReenviaveis = itens.filter(
+    (i) => i.status === "falha" && (i.telefone || "").replace(/\D/g, "").length >= 10,
+  ).length;
+
+  const reenviarFalhas = useCallback(async () => {
+    if (!monitor?.id) return;
+    setReenviando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reenviar-falhas-broadcast", {
+        body: { monitorId: monitor.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(`Reenviando ${(data as any)?.reenviando ?? ""} envio(s) que falharam. Os já enviados foram preservados.`);
+      carregar();
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível reenviar as falhas.");
+    } finally {
+      setReenviando(false);
+    }
+  }, [monitor?.id, carregar]);
+
+
   const total = monitor?.total || 0;
   const processados = (monitor?.enviados || 0) + (monitor?.falhas || 0);
   const restantes = Math.max(0, total - processados - (monitor?.pulados || 0));
