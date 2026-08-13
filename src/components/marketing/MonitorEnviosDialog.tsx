@@ -5,7 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio } from "lucide-react";
+import { toast } from "sonner";
+import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw } from "lucide-react";
 
 interface Monitor {
   id: string;
