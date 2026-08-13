@@ -67,11 +67,14 @@ interface Props {
 
 const statusLabel: Record<string, string> = {
   executando: "Em andamento",
+  pausado: "Pausado",
+  cancelado: "Cancelado",
   concluido: "Concluído",
   parcial: "Concluído com falhas",
   falha: "Falhou",
   bloqueado: "Bloqueado",
 };
+
 
 function formatTelefone(tel?: string | null) {
   const d = (tel || "").replace(/\D/g, "");
