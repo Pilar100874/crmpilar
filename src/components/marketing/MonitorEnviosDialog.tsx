@@ -296,6 +296,29 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
                   <span className="text-muted-foreground">{formatTelefone(monitor.atual_telefone)}</span>
                 </p>
               )}
+              {pausado && (
+                <p className="text-xs mt-3 flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <PauseCircle className="w-3.5 h-3.5" />
+                  Disparo pausado — {processados} já processados foram preservados. Retome para continuar de onde parou.
+                </p>
+              )}
+              {ativo && (
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  {pausado ? (
+                    <Button size="sm" onClick={() => alterarStatus("executando")} disabled={alterandoStatus}>
+                      <Play className="w-3.5 h-3.5 mr-1" /> Retomar disparo
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => alterarStatus("pausado")} disabled={alterandoStatus}>
+                      <Pause className="w-3.5 h-3.5 mr-1" /> Pausar disparo
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => alterarStatus("cancelado")} disabled={alterandoStatus}>
+                    <StopCircle className="w-3.5 h-3.5 mr-1" /> Cancelar
+                  </Button>
+                </div>
+              )}
+
               {monitor.erro && (
                 <p className="text-xs mt-2 text-destructive flex items-start gap-1.5">
                   <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" /> {monitor.erro}
