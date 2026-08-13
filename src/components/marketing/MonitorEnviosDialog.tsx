@@ -505,12 +505,21 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
               </div>
             )}
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mensagem por mensagem</p>
-              <Button variant="ghost" size="sm" onClick={carregar} disabled={loading}>
-                <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={exportarCSV} disabled={!monitor}>
+                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1" /> CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportarPDF} disabled={!monitor}>
+                  <FileText className="w-3.5 h-3.5 mr-1" /> PDF
+                </Button>
+                <Button variant="ghost" size="sm" onClick={carregar} disabled={loading}>
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
+                </Button>
+              </div>
             </div>
+
 
 
             <ScrollArea className="flex-1 min-h-0 rounded-lg border">
