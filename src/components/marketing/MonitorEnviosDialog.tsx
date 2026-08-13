@@ -197,11 +197,43 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
   }, [monitor?.id, carregar, retry]);
 
 
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const alterarStatus = useCallback(async (novo: "pausado" | "executando" | "cancelado") => {
+    if (!monitor?.id) return;
+    setAlterandoStatus(true);
+    try {
+      const { error } = await supabase
+        .from("broadcast_monitor" as any)
+        .update({
+          status: novo,
+          pausado_em: novo === "pausado" ? new Date().toISOString() : null,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq("id", monitor.id);
+      if (error) throw error;
+      setMonitor((prev) => (prev ? { ...prev, status: novo } : prev));
+      toast.success(
+        novo === "pausado"
+          ? "Disparo pausado. Os destinatários já processados foram preservados."
+          : novo === "executando"
+            ? "Disparo retomado de onde parou."
+            : "Disparo cancelado. O status dos já processados foi mantido.",
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível alterar o status do disparo.");
+    } finally {
+      setAlterandoStatus(false);
+    }
+  }, [monitor?.id]);
+
   const total = monitor?.total || 0;
   const processados = (monitor?.enviados || 0) + (monitor?.falhas || 0);
   const restantes = Math.max(0, total - processados - (monitor?.pulados || 0));
   const pct = total > 0 ? Math.round((processados / total) * 100) : 0;
   const emAndamento = monitor?.status === "executando";
+  const pausado = monitor?.status === "pausado";
+  const ativo = emAndamento || pausado;
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
