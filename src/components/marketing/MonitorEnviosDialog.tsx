@@ -5,7 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio } from "lucide-react";
+import { toast } from "sonner";
+import { CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Radio, RotateCcw } from "lucide-react";
 
 interface Monitor {
   id: string;
@@ -136,6 +137,30 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
     listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [itens.length]);
 
+  const [reenviando, setReenviando] = useState(false);
+  const falhasReenviaveis = itens.filter(
+    (i) => i.status === "falha" && (i.telefone || "").replace(/\D/g, "").length >= 10,
+  ).length;
+
+  const reenviarFalhas = useCallback(async () => {
+    if (!monitor?.id) return;
+    setReenviando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reenviar-falhas-broadcast", {
+        body: { monitorId: monitor.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(`Reenviando ${(data as any)?.reenviando ?? ""} envio(s) que falharam. Os já enviados foram preservados.`);
+      carregar();
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível reenviar as falhas.");
+    } finally {
+      setReenviando(false);
+    }
+  }, [monitor?.id, carregar]);
+
+
   const total = monitor?.total || 0;
   const processados = (monitor?.enviados || 0) + (monitor?.falhas || 0);
   const restantes = Math.max(0, total - processados - (monitor?.pulados || 0));
@@ -210,12 +235,26 @@ export default function MonitorEnviosDialog({ open, onOpenChange, automationId, 
               )}
             </div>
 
+            {falhasReenviaveis > 0 && !emAndamento && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-xs">
+                  <span className="font-semibold text-destructive">{falhasReenviaveis} envio(s) com falha.</span>{" "}
+                  <span className="text-muted-foreground">Reenvie somente estes — os já enviados são preservados.</span>
+                </p>
+                <Button size="sm" onClick={reenviarFalhas} disabled={reenviando}>
+                  {reenviando ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
+                  Tentar novamente as falhas
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mensagem por mensagem</p>
               <Button variant="ghost" size="sm" onClick={carregar} disabled={loading}>
                 <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
               </Button>
             </div>
+
 
             <ScrollArea className="flex-1 min-h-0 rounded-lg border">
               <div className="divide-y">
