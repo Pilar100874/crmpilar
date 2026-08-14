@@ -63,7 +63,6 @@ const veiculoCores = [
 ];
 
 export default function TvDashboardVeiculos() {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
@@ -111,6 +110,7 @@ export default function TvDashboardVeiculos() {
     setPinnedVeiculoId(null);
     setFocusVeiculoId(null);
   }, []);
+
 
   useEffect(() => {
     const fetchEstabelecimento = async () => {
