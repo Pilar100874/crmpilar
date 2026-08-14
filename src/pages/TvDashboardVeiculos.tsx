@@ -433,7 +433,7 @@ export default function TvDashboardVeiculos() {
       {/* Vehicle List - Right Side */}
       {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
-        className={`fixed bg-black/80 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
+        className={`fixed bg-black/55 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
           md:top-3 md:right-3 md:bottom-3 md:w-56 lg:w-64 md:translate-x-0
           ${isMobile 
             ? `left-2 right-2 bottom-2 max-h-[55vh] ${listaAberta ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'}`
@@ -441,6 +441,7 @@ export default function TvDashboardVeiculos() {
         `}
         style={{ zIndex: 999999 }}
       >
+
         <div className="px-2 py-1.5 border-b border-white/10 flex items-center justify-between">
           <h3 className="font-medium text-[10px] text-white/90 flex items-center gap-1">
             <Car className="h-3 w-3" />
