@@ -828,7 +828,19 @@ async function executeBroadcast(
         break;
       }
       indiceRitmo++;
+    } else if (indiceRitmo > 0) {
+      // Rede de segurança: mesmo sem Ritmo Humano configurado, nunca dispara em
+      // rajada (isso derruba a sessão do WhatsApp). Pausa aleatória entre envios
+      // e uma pausa longa a cada 30 mensagens.
+      if (indiceRitmo % 30 === 0) {
+        await sleep(aleatorio(3, 7) * 60 * 1000);
+      }
+      await sleep(aleatorio(SEGURANCA_MIN_SEG, SEGURANCA_MAX_SEG) * 1000);
+      indiceRitmo++;
+    } else {
+      indiceRitmo++;
     }
+
     ordemEnvio++;
     const vObj = { ...(d.vendedorObj || {}) };
     if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
