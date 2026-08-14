@@ -73,12 +73,30 @@ export default function TvApresentacaoEmpresa() {
     (async () => {
       setCarregando(true);
       setProgresso(0);
-      const { data, error } = await supabase
-        .from("apresentacoes_empresa")
-        .select("id,nome,itens,duracao_padrao_imagem,transicao,ativo")
-        .eq("id", id)
-        .maybeSingle();
-      if (error || !data) { setErro("Apresentação não encontrada"); return; }
+
+      let data: any = null;
+      const tvToken = getTvDeviceToken();
+      if (tvToken) {
+        // Dispositivo de sinalização (TV Box) — não tem sessão de usuário
+        try {
+          const resp = await callTvDeviceFunction<{ apresentacao: any }>(
+            `tv-apresentacao?id=${encodeURIComponent(id)}`,
+            tvToken,
+          );
+          data = resp?.apresentacao ?? null;
+        } catch (e: any) {
+          setErro(e?.message || "Falha ao carregar apresentação no dispositivo");
+          return;
+        }
+      } else {
+        const res = await supabase
+          .from("apresentacoes_empresa")
+          .select("id,nome,itens,duracao_padrao_imagem,transicao,ativo")
+          .eq("id", id)
+          .maybeSingle();
+        data = res.data;
+      }
+      if (!data) { setErro("Apresentação não encontrada"); return; }
       const a: Apresentacao = {
         ...(data as any),
         itens: Array.isArray((data as any).itens) ? (data as any).itens : [],
