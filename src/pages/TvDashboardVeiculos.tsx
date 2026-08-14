@@ -1,14 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, ArrowLeft, X, List, Pin, Maximize2, KeyRound, Power } from 'lucide-react';
-import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
-import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
+  Fuel, Route, Timer, Zap, X, List, Pin, KeyRound, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -23,6 +21,9 @@ import { rodarAutomacoesLogistica } from '@/lib/logistica/automacaoRunner';
 import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+
+
 
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-400', hex: '#22C55E', icon: Activity },
@@ -62,7 +63,6 @@ const veiculoCores = [
 ];
 
 export default function TvDashboardVeiculos() {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
@@ -110,6 +110,7 @@ export default function TvDashboardVeiculos() {
     setPinnedVeiculoId(null);
     setFocusVeiculoId(null);
   }, []);
+
 
   useEffect(() => {
     const fetchEstabelecimento = async () => {
@@ -432,7 +433,7 @@ export default function TvDashboardVeiculos() {
       {/* Vehicle List - Right Side */}
       {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
-        className={`fixed bg-black/80 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
+        className={`fixed bg-black/55 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
           md:top-3 md:right-3 md:bottom-3 md:w-56 lg:w-64 md:translate-x-0
           ${isMobile 
             ? `left-2 right-2 bottom-2 max-h-[55vh] ${listaAberta ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'}`
@@ -440,6 +441,7 @@ export default function TvDashboardVeiculos() {
         `}
         style={{ zIndex: 999999 }}
       >
+
         <div className="px-2 py-1.5 border-b border-white/10 flex items-center justify-between">
           <h3 className="font-medium text-[10px] text-white/90 flex items-center gap-1">
             <Car className="h-3 w-3" />
@@ -604,44 +606,15 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
 
-        {/* Top Left - Back Button & Clock */}
+        {/* Top Left - Clock Only */}
         <div className="fixed top-3 left-3 flex items-center gap-2" style={{ zIndex: 999999 }}>
-          <Button 
-            variant="secondary" 
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
             <p className="text-sm font-medium">
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
-          {gruposFixos.length > 0 ? (
-            <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl text-sm font-medium">
-              {gruposFixos.length === 1
-                ? unidades.find(u => u.id === gruposFixos[0])?.nome || 'Grupo'
-                : `${gruposFixos.length} grupos`}
-            </div>
-          ) : (
-            <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
-              <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
-            </div>
-          )}
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={showAll}
-            className="h-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl gap-1"
-            title="Mostrar todos os veículos no mapa"
-          >
-            <Maximize2 className="h-4 w-4" />
-            Ver todos
-          </Button>
         </div>
+
 
         {/* Bottom Left - Alerts */}
         <div className="fixed bottom-3 left-3 right-20 md:right-auto space-y-2 md:max-w-[50%]" style={{ zIndex: 999999 }}>
