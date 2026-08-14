@@ -8,7 +8,13 @@ import {
   esperarLote,
   consumirCota,
   variarTexto,
+  aleatorio,
 } from "../_shared/ritmoHumano.ts";
+
+// Pausa mínima de segurança entre destinatários quando o Ritmo Humano está desligado.
+const SEGURANCA_MIN_SEG = 12;
+const SEGURANCA_MAX_SEG = 28;
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -729,7 +735,7 @@ async function executeBroadcast(
 
   // Pausa entre etapas para garantir a ordem correta no WhatsApp (Baileys pode
   // inverter mensagens enviadas quase simultaneamente).
-  const STEP_DELAY_MS = 1500;
+  const STEP_DELAY_MS = 3000;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   const invokeSend = async (body: Record<string, unknown>) => {
@@ -828,7 +834,19 @@ async function executeBroadcast(
         break;
       }
       indiceRitmo++;
+    } else if (indiceRitmo > 0) {
+      // Rede de segurança: mesmo sem Ritmo Humano configurado, nunca dispara em
+      // rajada (isso derruba a sessão do WhatsApp). Pausa aleatória entre envios
+      // e uma pausa longa a cada 30 mensagens.
+      if (indiceRitmo % 30 === 0) {
+        await sleep(aleatorio(3, 7) * 60 * 1000);
+      }
+      await sleep(aleatorio(SEGURANCA_MIN_SEG, SEGURANCA_MAX_SEG) * 1000);
+      indiceRitmo++;
+    } else {
+      indiceRitmo++;
     }
+
     ordemEnvio++;
     const vObj = { ...(d.vendedorObj || {}) };
     if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
