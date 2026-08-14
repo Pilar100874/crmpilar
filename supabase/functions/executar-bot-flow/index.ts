@@ -735,7 +735,7 @@ async function executeBroadcast(
 
   // Pausa entre etapas para garantir a ordem correta no WhatsApp (Baileys pode
   // inverter mensagens enviadas quase simultaneamente).
-  const STEP_DELAY_MS = 1500;
+  const STEP_DELAY_MS = 3000;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   const invokeSend = async (body: Record<string, unknown>) => {
