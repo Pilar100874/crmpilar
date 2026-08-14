@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { MonitorPlay, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
