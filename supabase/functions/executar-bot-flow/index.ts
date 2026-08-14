@@ -8,7 +8,13 @@ import {
   esperarLote,
   consumirCota,
   variarTexto,
+  aleatorio,
 } from "../_shared/ritmoHumano.ts";
+
+// Pausa mínima de segurança entre destinatários quando o Ritmo Humano está desligado.
+const SEGURANCA_MIN_SEG = 12;
+const SEGURANCA_MAX_SEG = 28;
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
