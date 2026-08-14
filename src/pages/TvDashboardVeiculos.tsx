@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
+import { useSearchParams } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, List, Pin, KeyRound, Power } from 'lucide-react';
+  Fuel, Route, Timer, Zap, X, List, Pin, KeyRound, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -21,6 +22,7 @@ import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+
 
 
 const statusConfig = {
