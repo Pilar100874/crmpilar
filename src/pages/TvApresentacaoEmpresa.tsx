@@ -150,7 +150,7 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [item]);
 
-  const CloseBtn = () => (
+  const CloseBtn = () => getTvDeviceToken() ? null : (
     <Button
       size="icon"
       variant="ghost"
