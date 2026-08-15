@@ -145,7 +145,7 @@ object Updater {
     }
 
     /** Instalação silenciosa (root / system / device owner). Retorna true se concluiu. */
-    private fun trySilentInstall(file: File): Boolean {
+    fun instalarSilencioso(file: File): Boolean {
         for (cmd in listOf(
             arrayOf("su", "-c", "pm install -r -d \"${file.absolutePath}\""),
             arrayOf("pm", "install", "-r", "-d", file.absolutePath)
@@ -158,6 +158,7 @@ object Updater {
         }
         return false
     }
+
 
     /** Abre o instalador do sistema. Deve ser chamado na thread principal. */
     private fun openInstaller(ctx: Context, file: File) {
