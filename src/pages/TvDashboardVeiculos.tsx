@@ -610,14 +610,53 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
 
-        {/* Top Left - Clock Only */}
+        {/* Top Left - Relógio (+ controles somente fora do modo dispositivo/TV) */}
         <div className="fixed top-3 left-3 flex items-center gap-2" style={{ zIndex: 999999 }}>
+          {!modoTv && !tvDeviceToken && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="h-10 w-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl"
+              data-tv-hide
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
             <p className="text-sm font-medium">
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
+          {!modoTv && !tvDeviceToken && (
+            <>
+              {gruposFixos.length > 0 ? (
+                <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl text-sm font-medium" data-tv-hide>
+                  {gruposFixos.length === 1
+                    ? unidades.find(u => u.id === gruposFixos[0])?.nome || 'Grupo'
+                    : `${gruposFixos.length} grupos`}
+                </div>
+              ) : (
+                <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl" data-tv-hide>
+                  <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
+                </div>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={showAll}
+                className="h-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl gap-1"
+                title="Mostrar todos os veículos no mapa"
+                data-tv-hide
+              >
+                <Maximize2 className="h-4 w-4" />
+                Ver todos
+              </Button>
+            </>
+          )}
         </div>
+
+
 
 
         {/* Bottom Left - Alerts */}
