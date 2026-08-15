@@ -374,3 +374,12 @@ verify_jwt = true
 
 [functions.tv-device-fila]
 verify_jwt = false
+
+[functions.tv-apresentacao]
+verify_jwt = false
+
+[functions.tv-dashboard-veiculos]
+verify_jwt = false
+
+[functions.tv-dashboard-vendas]
+verify_jwt = false
