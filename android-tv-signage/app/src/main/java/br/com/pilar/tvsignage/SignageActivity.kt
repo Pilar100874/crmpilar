@@ -79,6 +79,10 @@ class SignageActivity : AppCompatActivity() {
         )
         applyImmersive()
 
+        // Verifica se uma atualização OTA anterior falhou (não instalou / não reiniciou na versão nova)
+        verificarAtualizacaoPendente()
+
+
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
