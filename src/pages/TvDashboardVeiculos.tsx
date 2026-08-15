@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, X, List, Pin, KeyRound, Power } from 'lucide-react';
+  Fuel, Route, Timer, Zap, X, List, Pin, KeyRound, Power, ArrowLeft, Maximize2 } from 'lucide-react';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
