@@ -34,6 +34,33 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     return () => clearTimeout(t);
   }, [status]);
 
+  // TV Box: WebView antiga bloqueia autoplay até haver interação. Insiste no
+  // play() (mudo + inline) enquanto o vídeo estiver pausado com stream ativo.
+  useEffect(() => {
+    const tentar = () => {
+      const v = videoRef.current;
+      if (!v || !v.srcObject) return;
+      v.muted = true;
+      (v as any).playsInline = true;
+      if (v.paused) v.play().catch(() => {});
+    };
+    const id = setInterval(tentar, 1500);
+    const onVis = () => tentar();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    document.addEventListener("click", onVis, true);
+    document.addEventListener("keydown", onVis, true);
+    tentar();
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+      document.removeEventListener("click", onVis, true);
+      document.removeEventListener("keydown", onVis, true);
+    };
+  }, []);
+
+
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -283,7 +310,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   return (
     <div
       ref={containerRef}
-      className={cn("relative bg-black rounded-md overflow-hidden aspect-video group", className)}
+      className={cn("relative bg-black overflow-hidden group", hideOverlays ? "rounded-none" : "rounded-md aspect-video", className)}
       onWheel={onWheel}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
@@ -297,7 +324,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         playsInline
         muted
         draggable={false}
-        className="w-full h-full object-contain transition-transform will-change-transform"
+        className={cn("w-full h-full transition-transform will-change-transform", hideOverlays ? "object-cover" : "object-contain")}
         style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}
       />
       {!hideOverlays && (
