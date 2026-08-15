@@ -54,34 +54,26 @@ export default function TvApresentacaoEmpresa() {
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState(0);
 
+  // Só pré-carrega imagens (leve). Vídeos são transmitidos direto — em TV Box o
+  // "canplaythrough" muitas vezes nunca dispara e a tela ficava presa no loading.
   const preloadItem = (it: ApresentacaoItem): Promise<void> =>
     new Promise((resolve) => {
-      if (!it?.url) return resolve();
-      if (it.tipo === "image") {
-        const img = new Image();
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-        img.src = it.url;
-      } else {
-        const v = document.createElement("video");
-        v.preload = "auto";
-        v.muted = true;
-        v.playsInline = true;
-        v.crossOrigin = "anonymous";
-        const done = () => resolve();
-        v.oncanplaythrough = done;
-        v.onloadeddata = done;
-        v.onerror = done;
-        v.src = it.url;
-        try { v.load(); } catch {}
-        // Fallback timeout: don't block forever on slow videos
-        setTimeout(done, 15000);
-      }
+      if (!it?.url || it.tipo !== "image") return resolve();
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = it.url;
+      setTimeout(resolve, 8000);
     });
 
   useEffect(() => {
     if (!id) { setErro("Informe ?id=<apresentacao>"); return; }
-    (async () => {
+    let cancelado = false;
+    let tentativa = 0;
+    let retryTimer: number | null = null;
+
+    const carregar = async () => {
+      setErro(null);
       setCarregando(true);
       setProgresso(0);
 
@@ -96,8 +88,7 @@ export default function TvApresentacaoEmpresa() {
           );
           data = resp?.apresentacao ?? null;
         } catch (e: any) {
-          setErro(e?.message || "Falha ao carregar apresentação no dispositivo");
-          return;
+          return falhar(e?.message || "Falha ao carregar apresentação no dispositivo");
         }
       } else {
         const res = await supabase
@@ -107,15 +98,16 @@ export default function TvApresentacaoEmpresa() {
           .maybeSingle();
         data = res.data;
       }
-      if (!data) { setErro("Apresentação não encontrada"); return; }
+      if (cancelado) return;
+      if (!data) return falhar("Apresentação não encontrada");
       const a: Apresentacao = {
         ...(data as any),
         itens: Array.isArray((data as any).itens) ? (data as any).itens : [],
       };
-      if (!a.ativo) { setErro("Apresentação está inativa"); return; }
-      if (a.itens.length === 0) { setErro("Sem mídias cadastradas"); return; }
+      if (!a.ativo) return falhar("Apresentação está inativa");
+      if (a.itens.length === 0) return falhar("Sem mídias cadastradas");
 
-      // Pré-carrega todas as mídias antes de iniciar
+      // Pré-carrega apenas as imagens antes de iniciar
       let feitos = 0;
       await Promise.all(
         a.itens.map((it) =>
@@ -125,12 +117,29 @@ export default function TvApresentacaoEmpresa() {
           })
         )
       );
+      if (cancelado) return;
 
       setApresentacao(a);
       setIdx(0);
       setCarregando(false);
-    })();
+    };
+
+    const falhar = (msg: string) => {
+      if (cancelado) return;
+      setErro(msg);
+      setCarregando(false);
+      tentativa += 1;
+      const espera = Math.min(30000, 5000 * tentativa);
+      retryTimer = window.setTimeout(carregar, espera);
+    };
+
+    carregar();
+    return () => {
+      cancelado = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
   }, [id]);
+
 
   const item = useMemo(() => apresentacao?.itens[idx] || null, [apresentacao, idx]);
 
