@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink, Download, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { downloadApk } from "@/lib/downloadApk";
-import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
+import { getLatestTvSignageApkInfo, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const BASE = `${SUPABASE_URL}/functions/v1`;
@@ -44,7 +44,10 @@ export default function TvSignageApi() {
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
                 <b> lendo o QR Code</b> — sem digitar nada. Nas TVs sem câmera, digite o código + token exibidos.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Sempre a versão mais recente · Android 7.0+ (API 24) · com leitor de QR embutido</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {apkInfo.versionName ? `Versão ${apkInfo.versionName} (build ${apkInfo.versionCode ?? "-"})` : "Sempre a versão mais recente"} · Android 7.0+ (API 24) · com leitor de QR embutido
+                {apkInfo.updated_at ? ` · publicado em ${new Date(apkInfo.updated_at).toLocaleDateString("pt-BR")}` : ""}
+              </p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
