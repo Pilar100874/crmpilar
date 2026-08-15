@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useTvMode } from "@/lib/tvMode";
+import { useAutoReload } from "@/lib/tvAutoReload";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
