@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useTvMode } from "@/lib/tvMode";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
@@ -24,7 +25,9 @@ interface Apresentacao {
 }
 
 export default function TvApresentacaoEmpresa() {
+  const modoTv = useTvMode();
   const [params] = useSearchParams();
+
   const navigate = useNavigate();
   const id = params.get("id");
   const rotateMs = parseInt(params.get("rotate") || "0"); // rotate through multiple presentations (comma-sep in ids?)
@@ -150,7 +153,7 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [item]);
 
-  const CloseBtn = () => getTvDeviceToken() ? null : (
+  const CloseBtn = () => (modoTv || getTvDeviceToken()) ? null : (
     <Button
       size="icon"
       variant="ghost"
