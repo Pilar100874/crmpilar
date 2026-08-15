@@ -102,6 +102,7 @@ class SignageActivity : AppCompatActivity() {
         b.webview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         b.webview.setBackgroundColor(android.graphics.Color.BLACK)
         w.userAgentString = w.userAgentString + " PilarTvSignage/1.0"
+        b.webview.addJavascriptInterface(PilarTvBridge(), "PilarTV")
         b.webview.webViewClient = object : WebViewClient() {
             override fun onReceivedError(
                 view: WebView?,
