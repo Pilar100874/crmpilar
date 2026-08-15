@@ -163,12 +163,22 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [apresentacao, item, next]);
 
+  // Vídeo: em TV Box o autoplay às vezes falha silenciosamente — insiste no play
   useEffect(() => {
-    if (item?.tipo === "video" && videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+    if (item?.tipo !== "video") return;
+    const tentarPlay = () => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (v.paused || v.readyState < 2) v.play().catch(() => {});
+    };
+    if (videoRef.current) {
+      try { videoRef.current.currentTime = 0; } catch { /* ignore */ }
     }
+    tentarPlay();
+    const iv = window.setInterval(tentarPlay, 3000);
+    return () => window.clearInterval(iv);
   }, [item]);
+
 
   const CloseBtn = () => (modoTv || getTvDeviceToken()) ? (
     <SaidaOcultaOverlay progresso={progressoSaida} />
