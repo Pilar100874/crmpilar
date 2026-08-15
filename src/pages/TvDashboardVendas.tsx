@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTvMode } from "@/lib/tvMode";
+import { useAutoReload } from "@/lib/tvAutoReload";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +63,7 @@ interface VendasMensais {
 
 export default function TvDashboardVendas() {
   const modoTv = useTvMode();
+  useAutoReload({ minutosPadrao: 60 });
   const navigate = useNavigate();
   useFullscreen(true);
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
