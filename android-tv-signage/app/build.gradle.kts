@@ -3,6 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// versionCode/versionName sobem automaticamente a cada build no CI (env TV_VERSION_CODE / TV_VERSION_NAME).
+val baseVersionCode = 18
+val ciVersionCode = System.getenv("TV_VERSION_CODE")?.toIntOrNull() ?: baseVersionCode
+val ciVersionName = System.getenv("TV_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.5.1"
+
 android {
     namespace = "br.com.pilar.tvsignage"
     compileSdk = 34
@@ -11,8 +16,9 @@ android {
         applicationId = "br.com.pilar.tvsignage"
         minSdk = 24
         targetSdk = 34
-        versionCode = 18
-        versionName = "1.5.1"
+        versionCode = ciVersionCode
+        versionName = ciVersionName
+
 
 
         buildConfigField("String", "SUPABASE_URL", "\"https://ioxugupvxlcdweldocmq.supabase.co\"")
