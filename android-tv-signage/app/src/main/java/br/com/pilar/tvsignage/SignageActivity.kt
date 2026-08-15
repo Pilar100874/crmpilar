@@ -460,7 +460,9 @@ class SignageActivity : AppCompatActivity() {
                         }
                         is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
                             Toast.makeText(this@SignageActivity, "Instalando nova versão...", Toast.LENGTH_LONG).show()
+                            verificarAtualizacaoPendente()
                         }
+
                         is Updater.Result.Erro -> {
                             status = "erro"
                             withContext(Dispatchers.Main) {
