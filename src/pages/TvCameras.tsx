@@ -1,6 +1,7 @@
 // TV: mosaico 4x4 (16 câmeras) sem espaçamento, rotacionando a cada 10s
 // entre os grupos de 16 quando houver mais câmeras no sistema.
 import { useEffect, useMemo, useState } from "react";
+import { useTvMode } from "@/lib/tvMode";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,7 @@ const PAGE_SIZE = 16;
 const ORDER_KEY = "tv-cameras-order-v1";
 
 export default function TvCameras() {
+  const modoTv = useTvMode();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const gruposParam = searchParams.get("grupos") || "";
@@ -334,6 +336,7 @@ export default function TvCameras() {
             <ListOrdered className="h-4 w-4" /> <span className="hidden xs:inline sm:inline">Ordem</span>
           </button>
           <button
+            data-tv-hide
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
             className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md bg-white text-black hover:bg-white/90 text-xs sm:text-sm font-medium shadow-lg"
             title="Voltar"

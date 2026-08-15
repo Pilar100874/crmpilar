@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTvMode } from "@/lib/tvMode";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +61,7 @@ interface VendasMensais {
 }
 
 export default function TvDashboardVendas() {
+  const modoTv = useTvMode();
   const navigate = useNavigate();
   useFullscreen(true);
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
@@ -556,7 +558,7 @@ export default function TvDashboardVendas() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-y-auto md:overflow-hidden p-3 sm:p-4 md:p-6">
       {/* Header Minimal - apenas botão voltar */}
-      <div className="absolute top-2 right-2 sm:top-4 sm:right-6 z-10">
+      <div data-tv-hide className="absolute top-2 right-2 sm:top-4 sm:right-6 z-10">
         <Button 
           variant="ghost" 
           size="icon"

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useTvMode } from "@/lib/tvMode";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
@@ -150,7 +151,7 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [item]);
 
-  const CloseBtn = () => getTvDeviceToken() ? null : (
+  const CloseBtn = () => (modoTv || getTvDeviceToken()) ? null : (
     <Button
       size="icon"
       variant="ghost"

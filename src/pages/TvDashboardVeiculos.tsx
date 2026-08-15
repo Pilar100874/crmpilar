@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTvMode } from "@/lib/tvMode";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useSearchParams } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
@@ -63,6 +64,7 @@ const veiculoCores = [
 ];
 
 export default function TvDashboardVeiculos() {
+  const modoTv = useTvMode();
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
