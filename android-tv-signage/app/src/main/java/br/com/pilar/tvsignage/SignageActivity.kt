@@ -445,37 +445,26 @@ class SignageActivity : AppCompatActivity() {
                 "alterar_refresh" -> withContext(Dispatchers.Main) { b.webview.reload() }
                 "atualizar_versao" -> {
                     val forcar = cmd.optJSONObject("payload")?.optBoolean("forcar", false) ?: false
-                    withContext(Dispatchers.Main) { mostrarTelaAtualizacao() }
-                    val inicio = System.currentTimeMillis()
-                    val r = Updater.atualizar(
-                        applicationContext,
-                        forcar,
-                        onInfo = { info ->
-                            ui.post {
-                                b.updVersao.text = if (info.versionName.isNotBlank())
-                                    "Versão ${info.versionName}" else ""
-                            }
-                        },
-                        onProgress = { lidos, total -> ui.post { atualizarProgresso(lidos, total, inicio) } },
-                        onEtapa = { etapa -> ui.post { b.updStatus.text = etapa } },
-                        onInstaller = { file -> ui.post { Updater.instalarArquivo(this@SignageActivity, file) } }
-                    )
-                    when (r) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@SignageActivity, "Buscando atualização...", Toast.LENGTH_SHORT).show()
+                    }
+                    when (val r = Updater.atualizar(applicationContext, forcar) { file ->
+                        ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+                    }) {
                         is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
-                            finalizarTelaAtualizacao("✅ Já está na versão mais nova", true)
+                            Toast.makeText(this@SignageActivity, "Já está na versão mais nova", Toast.LENGTH_LONG).show()
                         }
                         is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
-                            finalizarTelaAtualizacao("✅ Download concluído — instalando nova versão...", false)
+                            Toast.makeText(this@SignageActivity, "Instalando nova versão...", Toast.LENGTH_LONG).show()
                         }
                         is Updater.Result.Erro -> {
                             status = "erro"
                             withContext(Dispatchers.Main) {
-                                finalizarTelaAtualizacao("❌ Falha ao atualizar: ${r.msg}", true)
+                                Toast.makeText(this@SignageActivity, "Falha ao atualizar: ${r.msg}", Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 }
-
                 else -> status = "confirmado"
 
             }
@@ -484,51 +473,7 @@ class SignageActivity : AppCompatActivity() {
         ApiClient.post("tv-device-command-confirm", body, token())
     }
 
-    // ---------- Tela de atualização (OTA) ----------
-
-    private fun mostrarTelaAtualizacao() {
-        b.updVersao.text = ""
-        b.updProgresso.progress = 0
-        b.updProgresso.isIndeterminate = false
-        b.updPercent.text = "0%"
-        b.updRestante.text = ""
-        b.updStatus.text = "Verificando versão mais nova..."
-        b.updateOverlay.visibility = View.VISIBLE
-    }
-
-    private fun atualizarProgresso(lidos: Long, total: Long, inicio: Long) {
-        val mb = { v: Long -> String.format("%.1f MB", v / 1048576.0) }
-        if (total > 0) {
-            val pct = ((lidos * 100) / total).toInt().coerceIn(0, 100)
-            b.updProgresso.isIndeterminate = false
-            b.updProgresso.progress = pct
-            b.updPercent.text = "$pct%  (${mb(lidos)} de ${mb(total)})"
-            val decorrido = (System.currentTimeMillis() - inicio) / 1000.0
-            if (decorrido > 1 && lidos > 0) {
-                val vel = lidos / decorrido // bytes/s
-                val restanteSeg = ((total - lidos) / vel).toLong().coerceAtLeast(0)
-                val min = restanteSeg / 60
-                val seg = restanteSeg % 60
-                val tempo = if (min > 0) "${min}m ${seg}s" else "${seg}s"
-                b.updRestante.text = "Tempo restante: ~$tempo  •  ${String.format("%.1f", vel / 1048576.0)} MB/s"
-            }
-        } else {
-            b.updProgresso.isIndeterminate = true
-            b.updPercent.text = mb(lidos)
-            b.updRestante.text = "Calculando tempo restante..."
-        }
-    }
-
-    private fun finalizarTelaAtualizacao(mensagem: String, esconderDepois: Boolean) {
-        b.updProgresso.isIndeterminate = false
-        b.updStatus.text = mensagem
-        if (esconderDepois) {
-            ui.postDelayed({ b.updateOverlay.visibility = View.GONE }, 8000)
-        }
-    }
-
     private fun handleUnauthorized() {
-
         stopKioskMode()
         DeviceStore.clear(this)
         startActivity(Intent(this, PairingActivity::class.java))

@@ -2,6 +2,8 @@ package br.com.pilar.tvsignage
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.FileProvider
@@ -9,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
+import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
 /**
@@ -17,13 +20,20 @@ import java.util.concurrent.TimeUnit
  * Fluxo:
  * 1. Baixa o manifesto public/apps/android-tv-signage-latest.json do sistema.
  * 2. Compara versionCode com o instalado (se o manifesto informar).
- * 3. Baixa o APK para o cache e instala:
+ * 3. Baixa o APK para o cache, valida tamanho, checksum SHA-256 e assinatura digital.
+ * 4. Instala:
  *    - silenciosamente via `pm install -r` quando o app tem privilégio (root/system/device owner);
  *    - senão, abre o instalador padrão do Android (ACTION_VIEW / FileProvider).
  */
 object Updater {
 
-    data class Info(val url: String, val versionCode: Int, val versionName: String)
+    data class Info(
+        val url: String,
+        val versionCode: Int,
+        val versionName: String,
+        val sha256: String = "",
+        val size: Long = 0L
+    )
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
@@ -53,40 +63,85 @@ object Updater {
             return Info(
                 url = apk,
                 versionCode = j.optInt("versionCode", 0),
-                versionName = j.optString("versionName", "")
+                versionName = j.optString("versionName", ""),
+                sha256 = j.optString("sha256", "").trim().lowercase(),
+                size = j.optLong("size", 0L)
             )
         }
     }
 
-    /**
-     * Baixa o APK para o cache do app, reportando progresso.
-     * [onProgress] recebe (bytesBaixados, totalBytes ou -1 quando desconhecido).
-     */
-    fun download(ctx: Context, url: String, onProgress: (Long, Long) -> Unit = { _, _ -> }): File? {
+    /** Baixa o APK para o cache do app. Retorna o arquivo ou null. */
+    fun download(ctx: Context, url: String): File? {
         val out = File(ctx.cacheDir, "update.apk")
         try { if (out.exists()) out.delete() } catch (_: Exception) {}
         val req = Request.Builder().url(url).build()
         http.newCall(req).execute().use { r ->
             if (!r.isSuccessful) return null
-            val body = r.body ?: return null
-            val total = body.contentLength()
-            val stream = body.byteStream()
-            out.outputStream().use { dst ->
-                val buf = ByteArray(64 * 1024)
-                var lidos = 0L
-                var ultimo = 0L
-                while (true) {
-                    val n = stream.read(buf)
-                    if (n <= 0) break
-                    dst.write(buf, 0, n)
-                    lidos += n
-                    val agora = System.currentTimeMillis()
-                    if (agora - ultimo >= 250) { ultimo = agora; onProgress(lidos, total) }
-                }
-                onProgress(lidos, total)
-            }
+            val stream = r.body?.byteStream() ?: return null
+            out.outputStream().use { dst -> stream.copyTo(dst, 64 * 1024) }
         }
         return if (out.length() > 100_000) out else null
+    }
+
+    /** SHA-256 do arquivo baixado, em hexadecimal minusculo. */
+    fun sha256(file: File): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buf = ByteArray(64 * 1024)
+            while (true) {
+                val n = input.read(buf)
+                if (n <= 0) break
+                md.update(buf, 0, n)
+            }
+        }
+        return md.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private fun archiveInfo(ctx: Context, file: File): PackageInfo? {
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+            PackageManager.GET_SIGNING_CERTIFICATES else @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES
+        return try { ctx.packageManager.getPackageArchiveInfo(file.absolutePath, flags) } catch (_: Exception) { null }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun certHashes(pi: PackageInfo?): Set<String> {
+        if (pi == null) return emptySet()
+        val sigs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val si = pi.signingInfo
+            (si?.apkContentsSigners ?: si?.signingCertificateHistory)?.toList()
+        } else pi.signatures?.toList()
+        val md = MessageDigest.getInstance("SHA-256")
+        return sigs.orEmpty().map { s -> md.digest(s.toByteArray()).joinToString("") { b -> "%02x".format(b) } }.toSet()
+    }
+
+    /**
+     * Valida o APK baixado antes de instalar:
+     * - tamanho e checksum SHA-256 (quando o manifesto os informa);
+     * - arquivo e um APK legivel e do mesmo pacote;
+     * - assinatura identica a do app instalado (bloqueia APK adulterado/de outra origem).
+     * Retorna null quando esta tudo certo, ou a mensagem de erro.
+     */
+    fun verificar(ctx: Context, file: File, info: Info): String? {
+        if (info.size > 0 && file.length() != info.size)
+            return "tamanho invalido (${file.length()} de ${info.size} bytes)"
+        if (info.sha256.isNotBlank()) {
+            val calc = try { sha256(file) } catch (_: Exception) { "" }
+            if (!calc.equals(info.sha256, ignoreCase = true))
+                return "checksum nao confere (download corrompido)"
+        }
+        val arq = archiveInfo(ctx, file) ?: return "APK invalido ou corrompido"
+        if (arq.packageName != ctx.packageName) return "pacote diferente (${arq.packageName})"
+        val instalado = try {
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                PackageManager.GET_SIGNING_CERTIFICATES else @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES
+            ctx.packageManager.getPackageInfo(ctx.packageName, flags)
+        } catch (_: Exception) { null }
+        val novas = certHashes(arq)
+        if (novas.isEmpty()) return "APK sem assinatura digital"
+        val atuais = certHashes(instalado)
+        if (atuais.isNotEmpty() && novas.intersect(atuais).isEmpty())
+            return "assinatura diferente da versao instalada"
+        return null
     }
 
     /** Instalação silenciosa (root / system / device owner). Retorna true se concluiu. */
@@ -136,22 +191,16 @@ object Updater {
      * [onInstaller] é invocado (na thread chamadora) quando é preciso abrir a UI do instalador —
      * a Activity deve repassar para a main thread.
      */
-    fun atualizar(
-        ctx: Context,
-        forcar: Boolean,
-        onInfo: (Info) -> Unit = {},
-        onProgress: (Long, Long) -> Unit = { _, _ -> },
-        onEtapa: (String) -> Unit = {},
-        onInstaller: (File) -> Unit
-    ): Result {
-        onEtapa("Verificando versão mais nova...")
+    fun atualizar(ctx: Context, forcar: Boolean, onInstaller: (File) -> Unit): Result {
         val info = fetchLatest() ?: return Result.Erro("manifesto indisponível")
-        onInfo(info)
         val atual = currentVersionCode(ctx)
         if (!forcar && info.versionCode in 1..atual) return Result.JaAtualizado
-        onEtapa("Baixando atualização...")
-        val file = download(ctx, info.url, onProgress) ?: return Result.Erro("download falhou")
-        onEtapa("Instalando...")
+        val file = download(ctx, info.url) ?: return Result.Erro("download falhou")
+        val problema = verificar(ctx, file, info)
+        if (problema != null) {
+            try { file.delete() } catch (_: Exception) {}
+            return Result.Erro(problema)
+        }
         if (trySilentInstall(file)) return Result.Instalando
         onInstaller(file)
         return Result.Instalando

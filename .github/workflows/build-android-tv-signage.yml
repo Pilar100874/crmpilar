@@ -147,12 +147,17 @@ jobs:
           mkdir -p ../public/apps
           VCODE=$(grep -m1 'versionCode' app/build.gradle.kts | tr -dc '0-9')
           VNAME=$(grep -m1 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          APK=app/build/outputs/apk/release/app-release.apk
+          SHA=$(sha256sum "$APK" | awk '{print $1}')
+          SIZE=$(stat -c%s "$APK")
           cat > ../public/apps/android-tv-signage-latest.json <<EOF
           {
             "repo": "${{ github.repository }}",
             "tag": "android-tv-signage-latest",
             "asset": "app-release.apk",
             "url": "https://github.com/${{ github.repository }}/releases/download/android-tv-signage-latest/app-release.apk",
+            "sha256": "${SHA}",
+            "size": ${SIZE},
             "versionCode": ${VCODE:-0},
             "versionName": "${VNAME}",
             "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
