@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
+import { useSaidaOculta } from "@/lib/tvSaidaOculta";
+import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +70,7 @@ const ORDER_KEY = "tv-cameras-order-v1";
 export default function TvCameras() {
   const modoTv = useTvMode();
   useAutoReload({ minutosPadrao: 60 });
+  const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const gruposParam = searchParams.get("grupos") || "";
@@ -412,6 +415,7 @@ export default function TvCameras() {
           </div>
         </div>
       )}
+      <SaidaOcultaOverlay progresso={progressoSaida} />
       <TvNotificationBarAuto />
     </div>
   );
