@@ -232,13 +232,18 @@ export default function CamerasCameras() {
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `camera_${Date.now()}`;
 
   const save = async () => {
-    const payload: any = { ...editing };
+    let payload: any = { ...editing };
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
-    const estId = await getEstabelecimentoId();
+    try {
+      payload = await comEstabelecimento(payload);
+    } catch (e: any) {
+      return toast.error(e.message);
+    }
     const q = editing.id
       ? supabase.from("cv_cameras").update(payload).eq("id", editing.id).select().single()
-      : supabase.from("cv_cameras").insert({ ...payload, estabelecimento_id: estId }).select().single();
+      : supabase.from("cv_cameras").insert(payload).select().single();
+
     const { error, data: saved } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
