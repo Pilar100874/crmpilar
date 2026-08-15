@@ -40,6 +40,9 @@ export default function TvApresentacaoEmpresa() {
     navigate(-1);
   }, [navigate]);
 
+  // Saída oculta: manter pressionado por 5s (ou segurar ESC) para sair
+  const { progresso: progressoSaida } = useSaidaOculta(closePreview);
+
   const [apresentacao, setApresentacao] = useState<Apresentacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
