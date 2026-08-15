@@ -26,6 +26,14 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
   const [erro, setErro] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+
+  // Em telas remotas (TV) ninguém clica em "tentar novamente": reconecta sozinho.
+  useEffect(() => {
+    if (status !== "erro") return;
+    const t = setTimeout(() => setNonce((n) => n + 1), 20_000);
+    return () => clearTimeout(t);
+  }, [status]);
+
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
