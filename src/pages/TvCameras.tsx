@@ -243,7 +243,7 @@ export default function TvCameras() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
-      <div className="w-full h-full grid gap-0 grid-cols-2 grid-rows-8 landscape:grid-cols-4 landscape:grid-rows-4 sm:grid-cols-3 sm:grid-rows-[repeat(6,minmax(0,1fr))] md:grid-cols-4 md:grid-rows-4">
+      <div className="w-full h-full grid gap-0 grid-cols-4 grid-rows-4">
         {slots.map((c, i) =>
           c ? (
             <div
