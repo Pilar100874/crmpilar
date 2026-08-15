@@ -47,6 +47,10 @@ object Updater {
         else @Suppress("DEPRECATION") pi.versionCode
     } catch (_: Exception) { 0 }
 
+    fun currentVersionName(ctx: Context): String = try {
+        ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty()
+    } catch (_: Exception) { "" }
+
     fun fetchLatest(): Info? {
         val base = BuildConfig.APP_BASE_URL.trimEnd('/')
         val url = "$base/apps/android-tv-signage-latest.json?_=${System.currentTimeMillis()}"
