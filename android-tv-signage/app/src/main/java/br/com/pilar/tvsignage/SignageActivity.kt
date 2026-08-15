@@ -221,10 +221,36 @@ class SignageActivity : AppCompatActivity() {
         try { stopLockTask() } catch (_: Exception) {}
     }
 
-    // Bloqueia botão voltar e teclas de mídia — usuário só sai pelo hotspot com senha
+    // ===================== Saída oculta (segurar VOLTAR/ESC por 5s) =====================
+
+    private var saidaInicio = 0L
+    private val saidaRunnable = Runnable {
+        saidaInicio = 0L
+        promptExitPassword()
+    }
+
+    private fun ehTeclaSaida(keyCode: Int) = keyCode == KeyEvent.KEYCODE_BACK ||
+        keyCode == KeyEvent.KEYCODE_ESCAPE ||
+        keyCode == KeyEvent.KEYCODE_DEL
+
+    private fun iniciarSaidaOculta() {
+        if (saidaInicio != 0L) return
+        saidaInicio = android.os.SystemClock.elapsedRealtime()
+        ui.postDelayed(saidaRunnable, 5000L)
+    }
+
+    private fun cancelarSaidaOculta() {
+        saidaInicio = 0L
+        ui.removeCallbacks(saidaRunnable)
+    }
+
+    // Bloqueia botão voltar e teclas de mídia — sai segurando VOLTAR/ESC por 5s (pede senha)
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (ehTeclaSaida(keyCode)) {
+            iniciarSaidaOculta()
+            return true
+        }
         return when (keyCode) {
-            KeyEvent.KEYCODE_BACK,
             KeyEvent.KEYCODE_MENU,
             KeyEvent.KEYCODE_HOME,
             KeyEvent.KEYCODE_APP_SWITCH -> true
@@ -232,9 +258,31 @@ class SignageActivity : AppCompatActivity() {
         }
     }
 
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (ehTeclaSaida(keyCode)) {
+            // Alguns controles emitem key up entre repetições: tolera pequenas quebras
+            ui.postDelayed({
+                if (saidaInicio != 0L &&
+                    android.os.SystemClock.elapsedRealtime() - saidaInicio < 5000L
+                ) cancelarSaidaOculta()
+            }, 400L)
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
     override fun onBackPressed() {
         // ignora — bloqueio de kiosk
     }
+
+    /** Bridge chamado pela web (window.PilarTV.sair()) quando a saída oculta é acionada na página. */
+    inner class PilarTvBridge {
+        @android.webkit.JavascriptInterface
+        fun sair() {
+            ui.post { promptExitPassword() }
+        }
+    }
+
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
