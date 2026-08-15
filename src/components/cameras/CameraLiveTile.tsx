@@ -283,7 +283,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   return (
     <div
       ref={containerRef}
-      className={cn("relative bg-black rounded-md overflow-hidden aspect-video group", className)}
+      className={cn("relative bg-black overflow-hidden group", hideOverlays ? "rounded-none" : "rounded-md aspect-video", className)}
       onWheel={onWheel}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
