@@ -101,6 +101,9 @@ export function useSaidaOculta(
 
     return () => {
       cancelar();
+      window.clearTimeout(cancelamentoPendente);
+      window.clearTimeout(janelaCliques);
+
       window.removeEventListener("pointerdown", iniciar, true);
       window.removeEventListener("pointerup", cancelar, true);
       window.removeEventListener("pointercancel", cancelar, true);
