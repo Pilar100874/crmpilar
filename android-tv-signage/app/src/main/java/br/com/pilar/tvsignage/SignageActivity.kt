@@ -445,26 +445,37 @@ class SignageActivity : AppCompatActivity() {
                 "alterar_refresh" -> withContext(Dispatchers.Main) { b.webview.reload() }
                 "atualizar_versao" -> {
                     val forcar = cmd.optJSONObject("payload")?.optBoolean("forcar", false) ?: false
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@SignageActivity, "Buscando atualização...", Toast.LENGTH_SHORT).show()
-                    }
-                    when (val r = Updater.atualizar(applicationContext, forcar) { file ->
-                        ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
-                    }) {
+                    withContext(Dispatchers.Main) { mostrarTelaAtualizacao() }
+                    val inicio = System.currentTimeMillis()
+                    val r = Updater.atualizar(
+                        applicationContext,
+                        forcar,
+                        onInfo = { info ->
+                            ui.post {
+                                b.updVersao.text = if (info.versionName.isNotBlank())
+                                    "Versão ${info.versionName}" else ""
+                            }
+                        },
+                        onProgress = { lidos, total -> ui.post { atualizarProgresso(lidos, total, inicio) } },
+                        onEtapa = { etapa -> ui.post { b.updStatus.text = etapa } },
+                        onInstaller = { file -> ui.post { Updater.instalarArquivo(this@SignageActivity, file) } }
+                    )
+                    when (r) {
                         is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
-                            Toast.makeText(this@SignageActivity, "Já está na versão mais nova", Toast.LENGTH_LONG).show()
+                            finalizarTelaAtualizacao("✅ Já está na versão mais nova", true)
                         }
                         is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
-                            Toast.makeText(this@SignageActivity, "Instalando nova versão...", Toast.LENGTH_LONG).show()
+                            finalizarTelaAtualizacao("✅ Download concluído — instalando nova versão...", false)
                         }
                         is Updater.Result.Erro -> {
                             status = "erro"
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(this@SignageActivity, "Falha ao atualizar: ${r.msg}", Toast.LENGTH_LONG).show()
+                                finalizarTelaAtualizacao("❌ Falha ao atualizar: ${r.msg}", true)
                             }
                         }
                     }
                 }
+
                 else -> status = "confirmado"
 
             }
