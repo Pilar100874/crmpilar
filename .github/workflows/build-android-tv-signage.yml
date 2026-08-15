@@ -16,6 +16,11 @@ on:
 permissions:
   contents: write
 
+env:
+  # Versão sobe automaticamente a cada build (nunca repete versionCode)
+  TV_VERSION_CODE: ${{ 18 + github.run_number }}
+  TV_VERSION_NAME: 1.5.${{ github.run_number }}
+
 jobs:
   build:
     name: Build APK
@@ -145,8 +150,8 @@ jobs:
       - name: Atualizar manifesto de download (public/apps)
         run: |
           mkdir -p ../public/apps
-          VCODE=$(grep -m1 'versionCode' app/build.gradle.kts | tr -dc '0-9')
-          VNAME=$(grep -m1 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          VCODE="${TV_VERSION_CODE}"
+          VNAME="${TV_VERSION_NAME}"
           APK=app/build/outputs/apk/release/app-release.apk
           SHA=$(sha256sum "$APK" | awk '{print $1}')
           SIZE=$(stat -c%s "$APK")
