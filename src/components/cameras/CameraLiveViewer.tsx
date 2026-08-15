@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { uuidSeguro } from "@/lib/uuidSeguro";
 import { acquireLiveSignalChannels, onLiveSignalHeartbeat, onLiveSignalMessage, requestLiveSignalHeartbeat } from "@/lib/cameras/liveSignalHub";
 
 interface Props {
@@ -37,7 +38,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
   useEffect(() => {
     if (!cameraId) return;
     let pc: RTCPeerConnection | null = null;
-    const viewerId = crypto.randomUUID();
+    const viewerId = uuidSeguro();
     let closed = false;
     let liveReached = false;
     let noFrameTimer: ReturnType<typeof setTimeout> | null = null;
