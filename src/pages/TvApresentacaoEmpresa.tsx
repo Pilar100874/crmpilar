@@ -26,6 +26,7 @@ interface Apresentacao {
 
 export default function TvApresentacaoEmpresa() {
   const modoTv = useTvMode();
+  const { marcarAtividade } = useAutoReload({ minutosPadrao: 60, watchdogMinutos: 10 });
   const [params] = useSearchParams();
 
   const navigate = useNavigate();
