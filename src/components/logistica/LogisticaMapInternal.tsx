@@ -261,17 +261,34 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const bounds = ultimoBoundsRef.current;
     if (!map || !bounds || !fitBounds || autoPausadoRef.current) return;
 
-    // Evita reenquadrar (e "piscar") quando nada mudou de forma relevante
-    const sig = [
-      bounds.getSouth().toFixed(4),
-      bounds.getWest().toFixed(4),
-      bounds.getNorth().toFixed(4),
-      bounds.getEast().toFixed(4),
-      Math.round(map.getSize().x),
-      Math.round(map.getSize().y),
-    ].join('|');
-    if (!forcar && sig === ultimoEnquadramentoRef.current) return;
-    ultimoEnquadramentoRef.current = sig;
+    if (!forcar) {
+      // Histerese: se tudo já está confortavelmente visível e o enquadramento
+      // continua adequado, não reposiciona. Reenquadrar a cada nova posição de GPS
+      // recarregava todos os tiles e causava a "piscada preta" na TV Box.
+      const visivel = map.getBounds();
+      const central = visivel.pad(-0.12);
+      if (central.contains(bounds)) {
+        const spanTelaLat = Math.abs(visivel.getNorth() - visivel.getSouth()) || 1;
+        const spanBoundsLat = Math.abs(bounds.getNorth() - bounds.getSouth());
+        const spanTelaLng = Math.abs(visivel.getEast() - visivel.getWest()) || 1;
+        const spanBoundsLng = Math.abs(bounds.getEast() - bounds.getWest());
+        const muitoLonge =
+          spanBoundsLat / spanTelaLat < 0.25 && spanBoundsLng / spanTelaLng < 0.25;
+        if (!muitoLonge) return;
+      }
+
+      // Segunda trava: ignora micro-variações de GPS (~1 km)
+      const sig = [
+        bounds.getSouth().toFixed(2),
+        bounds.getWest().toFixed(2),
+        bounds.getNorth().toFixed(2),
+        bounds.getEast().toFixed(2),
+        Math.round(map.getSize().x),
+        Math.round(map.getSize().y),
+      ].join('|');
+      if (sig === ultimoEnquadramentoRef.current) return;
+      ultimoEnquadramentoRef.current = sig;
+    }
 
     movimentoProgramaticoRef.current = true;
     enquadrarNoMapa(map, bounds, {
@@ -284,6 +301,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       movimentoProgramaticoRef.current = false;
     }, 500);
   }, [fitBounds, fitBoundsPadding]);
+
 
 
   const retomarAuto = useCallback(() => {
