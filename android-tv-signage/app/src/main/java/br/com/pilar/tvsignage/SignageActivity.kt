@@ -443,7 +443,30 @@ class SignageActivity : AppCompatActivity() {
                 "bloquear" -> withContext(Dispatchers.Main) { showStandby("Dispositivo bloqueado") }
                 "desbloquear" -> withContext(Dispatchers.Main) { loadConfig() }
                 "alterar_refresh" -> withContext(Dispatchers.Main) { b.webview.reload() }
+                "atualizar_versao" -> {
+                    val forcar = cmd.optJSONObject("payload")?.optBoolean("forcar", false) ?: false
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@SignageActivity, "Buscando atualização...", Toast.LENGTH_SHORT).show()
+                    }
+                    when (val r = Updater.atualizar(applicationContext, forcar) { file ->
+                        ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+                    }) {
+                        is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
+                            Toast.makeText(this@SignageActivity, "Já está na versão mais nova", Toast.LENGTH_LONG).show()
+                        }
+                        is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
+                            Toast.makeText(this@SignageActivity, "Instalando nova versão...", Toast.LENGTH_LONG).show()
+                        }
+                        is Updater.Result.Erro -> {
+                            status = "erro"
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@SignageActivity, "Falha ao atualizar: ${r.msg}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
                 else -> status = "confirmado"
+
             }
         } catch (e: Exception) { status = "erro" }
         val body = JSONObject().put("command_id", id).put("status", status).toString()
