@@ -926,3 +926,46 @@ html[data-main-menu-style="buttons"] .menu-buttons-fab {
 
 
 
+
+/* ============ Modo TV (TV Box / totem) ============
+   Ativado pela classe .tv-mode em <html> (ver src/lib/tvMode.ts).
+   Oculta todos os controles de saída e ajusta o layout para telas grandes. */
+html.tv-mode,
+html.tv-mode body {
+  overflow: hidden !important;
+  cursor: none !important;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Controles de saída/navegação nunca aparecem em modo TV */
+html.tv-mode [data-tv-hide],
+html.tv-mode [data-main-sidebar],
+html.tv-mode .slide-out-menu-tab,
+html.tv-mode .menu-buttons-fab {
+  display: none !important;
+}
+
+/* Área segura contra overscan de TVs antigas */
+html.tv-mode [data-tv-safe] {
+  padding: 2.5vh 2.5vw;
+}
+
+/* Escala de leitura à distância */
+@media (min-width: 1280px) {
+  html.tv-mode {
+    font-size: 18px;
+  }
+}
+@media (min-width: 1920px) {
+  html.tv-mode {
+    font-size: 20px;
+  }
+}
+
+/* Sem barras de rolagem visíveis na TV */
+html.tv-mode ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
