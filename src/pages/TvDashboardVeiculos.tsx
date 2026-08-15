@@ -66,6 +66,7 @@ const veiculoCores = [
 
 export default function TvDashboardVeiculos() {
   const modoTv = useTvMode();
+  const navigate = useNavigate();
   useAutoReload({ minutosPadrao: 60 });
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
