@@ -23,6 +23,7 @@ import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 import { StatusPingDot } from "@/components/StatusPingDot";
 import { CAMERA_MODELS, findModel } from "@/lib/cameraModels";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { comEstabelecimento } from "@/lib/cv/cameraTenant";
 
 
 const MARCAS = [
