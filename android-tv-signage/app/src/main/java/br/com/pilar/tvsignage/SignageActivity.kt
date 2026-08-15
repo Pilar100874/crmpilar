@@ -15,6 +15,7 @@ import android.text.InputType
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -89,6 +90,13 @@ class SignageActivity : AppCompatActivity() {
         w.domStorageEnabled = true
         w.mediaPlaybackRequiresUserGesture = false
         w.cacheMode = WebSettings.LOAD_DEFAULT
+        w.mediaPlaybackRequiresUserGesture = false
+        w.loadWithOverviewMode = true
+        w.useWideViewPort = true
+        // Necessário para reprodução de <video> HTML5 em muitas WebViews de TV Box
+        b.webview.webChromeClient = WebChromeClient()
+        b.webview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        b.webview.setBackgroundColor(android.graphics.Color.BLACK)
         w.userAgentString = w.userAgentString + " PilarTvSignage/1.0"
         b.webview.webViewClient = object : WebViewClient() {
             override fun onReceivedError(
