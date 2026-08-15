@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Pause, Play, Monitor } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, Monitor, X } from "lucide-react";
 import TvNotificationBar from "@/components/tv/TvNotificationBar";
 import { useFullscreen } from "@/hooks/useFullscreen";
 
@@ -333,12 +333,21 @@ export default function TvSignageSimulador() {
                 <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => setIdx((i) => (i + 1) % items.length)}><ChevronRight className="w-4 h-4" /></Button>
               </>
             )}
+            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => { try { window.close(); } catch {} navigate(-1); }}><X className="w-4 h-4" /></Button>
           </div>
 
         </div>
       )}
+      <Button
+        size="icon"
+        variant="ghost"
+        aria-label="Fechar prévia"
+        className="fixed top-3 right-3 z-[10000] h-10 w-10 rounded-full bg-black/60 text-white hover:bg-black/80"
+        onClick={() => { try { window.close(); } catch {} navigate(-1); }}
+      >
+        <X className="w-5 h-5" />
+      </Button>
       <TvNotificationBar deviceId={deviceId} />
     </div>
-
   );
 }
