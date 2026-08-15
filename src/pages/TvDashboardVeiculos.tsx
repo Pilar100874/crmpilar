@@ -316,9 +316,18 @@ export default function TvDashboardVeiculos() {
     return () => clearInterval(interval);
   }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
 
-  // Real-time subscription
+  // Real-time subscription (com debounce para não repintar a tela toda hora)
   useEffect(() => {
     if (!estabelecimentoId || tvDeviceToken) return;
+
+    let timer: number | null = null;
+    const agendarAtualizacao = () => {
+      if (timer !== null) return;
+      timer = window.setTimeout(() => {
+        timer = null;
+        fetchVeiculos();
+      }, 8000);
+    };
 
     const channel = supabase
       .channel('tv-veiculos-monitor')
@@ -329,16 +338,16 @@ export default function TvDashboardVeiculos() {
           schema: 'public',
           table: 'veiculo_posicoes'
         },
-        () => {
-          fetchVeiculos();
-        }
+        agendarAtualizacao
       )
       .subscribe();
 
     return () => {
+      if (timer !== null) window.clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
+
 
   const statusOrder: Record<VeiculoStatus, number> = { movendo: 0, parado: 1, offline: 2 };
   const veiculosFiltrados = useMemo(() => {
