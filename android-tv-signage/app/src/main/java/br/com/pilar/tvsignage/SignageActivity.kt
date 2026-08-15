@@ -508,7 +508,8 @@ class SignageActivity : AppCompatActivity() {
                 "desbloquear" -> withContext(Dispatchers.Main) { loadConfig() }
                 "alterar_refresh" -> withContext(Dispatchers.Main) { b.webview.reload() }
                 "atualizar_versao" -> {
-                    val forcar = cmd.optJSONObject("payload")?.optBoolean("forcar", false) ?: false
+                    // Por padrão força o download: sempre instala o APK publicado mais recente.
+                    val forcar = cmd.optJSONObject("payload")?.optBoolean("forcar", true) ?: true
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@SignageActivity, "Buscando atualização...", Toast.LENGTH_SHORT).show()
                     }
