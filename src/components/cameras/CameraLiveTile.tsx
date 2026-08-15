@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Radio, X, Camera as CameraIcon, ZoomIn, ZoomOut, Maximize2, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { uuidSeguro } from "@/lib/uuidSeguro";
 import { acquireLiveSignalChannels, onLiveSignalHeartbeat, onLiveSignalMessage, requestLiveSignalHeartbeat } from "@/lib/cameras/liveSignalHub";
 
 interface Props {
@@ -25,6 +26,14 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
   const [erro, setErro] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+
+  // Em telas remotas (TV) ninguém clica em "tentar novamente": reconecta sozinho.
+  useEffect(() => {
+    if (status !== "erro") return;
+    const t = setTimeout(() => setNonce((n) => n + 1), 20_000);
+    return () => clearTimeout(t);
+  }, [status]);
+
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -32,7 +41,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   useEffect(() => {
     if (!autoStart && nonce === 0) return;
     let pc: RTCPeerConnection | null = null;
-    const viewerId = crypto.randomUUID();
+    const viewerId = uuidSeguro();
     let closed = false;
     let liveReached = false;
     let noFrameTimer: ReturnType<typeof setTimeout> | null = null;
