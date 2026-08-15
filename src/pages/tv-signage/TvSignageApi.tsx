@@ -21,7 +21,13 @@ const endpoints = [
 export default function TvSignageApi() {
   const copy = (s: string) => { navigator.clipboard.writeText(s); toast.success("Copiado"); };
   const [apkUrl, setApkUrl] = useState<string>("");
-  useEffect(() => { getLatestTvSignageApkUrl().then(setApkUrl); }, []);
+  const [apkInfo, setApkInfo] = useState<{ versionName?: string; versionCode?: number; updated_at?: string }>({});
+  useEffect(() => {
+    getLatestTvSignageApkInfo().then((i) => {
+      setApkUrl(i.url);
+      setApkInfo({ versionName: i.versionName, versionCode: i.versionCode, updated_at: i.updated_at });
+    });
+  }, []);
 
   return (
     <div className="space-y-4">
