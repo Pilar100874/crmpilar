@@ -232,6 +232,7 @@ class SignageActivity : AppCompatActivity() {
 
     /** Sai do app na hora, sem pedir senha (segurar VOLTAR/ESC por 5s). */
     private fun sairImediato() {
+        saindo = true
         stopKioskMode()
         try { b.webview.loadUrl("about:blank") } catch (_: Exception) {}
         finishAndRemoveTask()
