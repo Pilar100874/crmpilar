@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
+import { useSaidaOculta } from "@/lib/tvSaidaOculta";
+import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
@@ -69,6 +71,7 @@ export default function TvDashboardVeiculos() {
   const modoTv = useTvMode();
   const navigate = useNavigate();
   useAutoReload({ minutosPadrao: 60 });
+  const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
@@ -689,6 +692,7 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
       </div>
+      <SaidaOcultaOverlay progresso={progressoSaida} />
       <TvNotificationBarAuto />
     </>
   );

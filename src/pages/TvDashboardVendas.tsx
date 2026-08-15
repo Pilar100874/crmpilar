@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
+import { useSaidaOculta } from "@/lib/tvSaidaOculta";
+import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +66,7 @@ interface VendasMensais {
 export default function TvDashboardVendas() {
   const modoTv = useTvMode();
   useAutoReload({ minutosPadrao: 60 });
+  const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const navigate = useNavigate();
   useFullscreen(true);
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
@@ -802,6 +805,7 @@ export default function TvDashboardVendas() {
           </Card>
         </div>
       </div>
+      <SaidaOcultaOverlay progresso={progressoSaida} />
       <TvNotificationBarAuto />
     </div>
   );

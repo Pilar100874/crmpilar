@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
+import { useSaidaOculta } from "@/lib/tvSaidaOculta";
+import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
@@ -39,6 +41,9 @@ export default function TvApresentacaoEmpresa() {
     try { window.close(); } catch {}
     navigate(-1);
   }, [navigate]);
+
+  // Saída oculta: manter pressionado por 5s (ou segurar ESC) para sair
+  const { progresso: progressoSaida } = useSaidaOculta(closePreview);
 
   const [apresentacao, setApresentacao] = useState<Apresentacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -156,7 +161,9 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [item]);
 
-  const CloseBtn = () => (modoTv || getTvDeviceToken()) ? null : (
+  const CloseBtn = () => (modoTv || getTvDeviceToken()) ? (
+    <SaidaOcultaOverlay progresso={progressoSaida} />
+  ) : (
     <Button
       size="icon"
       variant="ghost"
