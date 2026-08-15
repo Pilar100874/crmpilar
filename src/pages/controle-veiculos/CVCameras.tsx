@@ -12,7 +12,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
-import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { comEstabelecimento } from "@/lib/cv/cameraTenant";
 
 const MARCAS = [
   { value: "tplink_tapo", label: "TP-Link Tapo" },
