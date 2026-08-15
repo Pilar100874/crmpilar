@@ -378,6 +378,9 @@ verify_jwt = false
 [functions.tv-apresentacao]
 verify_jwt = false
 
+[functions.tv-cameras]
+verify_jwt = false
+
 [functions.tv-dashboard-veiculos]
 verify_jwt = false
 
