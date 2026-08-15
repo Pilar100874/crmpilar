@@ -8,6 +8,7 @@ import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getTvDeviceToken, callTvDeviceFunction } from "@/lib/tvDeviceClient";
 
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
 import {
@@ -87,15 +88,33 @@ export default function TvCameras() {
 
   useEffect(() => {
     (async () => {
-      let q = supabase
-        .from("cv_cameras")
-        .select("id,nome,filial_id,grupo_id,ativo")
-        .eq("ativo", true)
-        .order("nome");
-      if (camerasIds.length) q = q.in("id", camerasIds);
-      else if (gruposIds.length) q = q.in("grupo_id", gruposIds);
-      const { data } = await q;
-      const list = data ?? [];
+      let list: any[] = [];
+      const tvToken = getTvDeviceToken();
+      if (tvToken) {
+        // Dispositivo remoto (TV Box) não tem sessão de usuário: busca via Edge Function
+        const qs = new URLSearchParams();
+        if (camerasIds.length) qs.set("cameras", camerasIds.join(","));
+        else if (gruposIds.length) qs.set("grupos", gruposIds.join(","));
+        try {
+          const resp = await callTvDeviceFunction<{ cameras: any[] }>(
+            `tv-cameras${qs.toString() ? `?${qs.toString()}` : ""}`,
+            tvToken
+          );
+          list = resp?.cameras ?? [];
+        } catch {
+          list = [];
+        }
+      } else {
+        let q = supabase
+          .from("cv_cameras")
+          .select("id,nome,filial_id,grupo_id,ativo")
+          .eq("ativo", true)
+          .order("nome");
+        if (camerasIds.length) q = q.in("id", camerasIds);
+        else if (gruposIds.length) q = q.in("grupo_id", gruposIds);
+        const { data } = await q;
+        list = data ?? [];
+      }
       // Aplica ordem salva do usuário, se houver (apenas quando sem filtro específico)
       if (!camerasIds.length && !gruposIds.length) {
         try {
