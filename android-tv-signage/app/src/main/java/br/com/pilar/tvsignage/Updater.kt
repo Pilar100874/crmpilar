@@ -47,6 +47,10 @@ object Updater {
         else @Suppress("DEPRECATION") pi.versionCode
     } catch (_: Exception) { 0 }
 
+    fun currentVersionName(ctx: Context): String = try {
+        ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty()
+    } catch (_: Exception) { "" }
+
     fun fetchLatest(): Info? {
         val base = BuildConfig.APP_BASE_URL.trimEnd('/')
         val url = "$base/apps/android-tv-signage-latest.json?_=${System.currentTimeMillis()}"
@@ -195,7 +199,11 @@ object Updater {
     fun atualizar(ctx: Context, forcar: Boolean, onInstaller: (File) -> Unit): Result {
         val info = fetchLatest() ?: return Result.Erro("manifesto indisponível")
         val atual = currentVersionCode(ctx)
-        if (!forcar && info.versionCode in 1..atual) return Result.JaAtualizado
+        val nomeAtual = currentVersionName(ctx)
+        // Só considera "já atualizado" quando versionCode E versionName batem com o instalado.
+        val mesmaVersao = info.versionCode in 1..atual &&
+            (info.versionName.isBlank() || info.versionName == nomeAtual)
+        if (!forcar && mesmaVersao) return Result.JaAtualizado
         val file = download(ctx, info.url) ?: return Result.Erro("download falhou")
         val problema = verificar(ctx, file, info)
         if (problema != null) {
