@@ -29,14 +29,16 @@ jobs:
         working-directory: ./android-tv-signage
 
     steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
       - name: Definir versionCode automático
         run: |
           VCODE=$((18 + ${{ github.run_number }}))
           echo "TV_VERSION_CODE=${VCODE}" >> "$GITHUB_ENV"
           echo "versionCode=${VCODE}"
 
-      - name: Checkout do código
-        uses: actions/checkout@v4
+
 
 
       - name: Configurar JDK 17
