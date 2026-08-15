@@ -25,7 +25,9 @@ interface Apresentacao {
 }
 
 export default function TvApresentacaoEmpresa() {
+  const modoTv = useTvMode();
   const [params] = useSearchParams();
+
   const navigate = useNavigate();
   const id = params.get("id");
   const rotateMs = parseInt(params.get("rotate") || "0"); // rotate through multiple presentations (comma-sep in ids?)
