@@ -129,12 +129,13 @@ export default function TvApresentacaoEmpresa() {
 
   const next = useCallback(() => {
     if (!apresentacao) return;
+    marcarAtividade();
     setVisible(false);
     setTimeout(() => {
       setIdx((i) => (i + 1) % apresentacao.itens.length);
       setVisible(true);
     }, 300);
-  }, [apresentacao]);
+  }, [apresentacao, marcarAtividade]);
 
   // Timer for images (videos advance on 'ended')
   useEffect(() => {
