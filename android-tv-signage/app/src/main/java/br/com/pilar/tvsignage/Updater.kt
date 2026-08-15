@@ -58,15 +58,33 @@ object Updater {
         }
     }
 
-    /** Baixa o APK para o cache do app. Retorna o arquivo ou null. */
-    fun download(ctx: Context, url: String): File? {
+    /**
+     * Baixa o APK para o cache do app, reportando progresso.
+     * [onProgress] recebe (bytesBaixados, totalBytes ou -1 quando desconhecido).
+     */
+    fun download(ctx: Context, url: String, onProgress: (Long, Long) -> Unit = { _, _ -> }): File? {
         val out = File(ctx.cacheDir, "update.apk")
         try { if (out.exists()) out.delete() } catch (_: Exception) {}
         val req = Request.Builder().url(url).build()
         http.newCall(req).execute().use { r ->
             if (!r.isSuccessful) return null
-            val stream = r.body?.byteStream() ?: return null
-            out.outputStream().use { dst -> stream.copyTo(dst, 64 * 1024) }
+            val body = r.body ?: return null
+            val total = body.contentLength()
+            val stream = body.byteStream()
+            out.outputStream().use { dst ->
+                val buf = ByteArray(64 * 1024)
+                var lidos = 0L
+                var ultimo = 0L
+                while (true) {
+                    val n = stream.read(buf)
+                    if (n <= 0) break
+                    dst.write(buf, 0, n)
+                    lidos += n
+                    val agora = System.currentTimeMillis()
+                    if (agora - ultimo >= 250) { ultimo = agora; onProgress(lidos, total) }
+                }
+                onProgress(lidos, total)
+            }
         }
         return if (out.length() > 100_000) out else null
     }
@@ -118,11 +136,22 @@ object Updater {
      * [onInstaller] é invocado (na thread chamadora) quando é preciso abrir a UI do instalador —
      * a Activity deve repassar para a main thread.
      */
-    fun atualizar(ctx: Context, forcar: Boolean, onInstaller: (File) -> Unit): Result {
+    fun atualizar(
+        ctx: Context,
+        forcar: Boolean,
+        onInfo: (Info) -> Unit = {},
+        onProgress: (Long, Long) -> Unit = { _, _ -> },
+        onEtapa: (String) -> Unit = {},
+        onInstaller: (File) -> Unit
+    ): Result {
+        onEtapa("Verificando versão mais nova...")
         val info = fetchLatest() ?: return Result.Erro("manifesto indisponível")
+        onInfo(info)
         val atual = currentVersionCode(ctx)
         if (!forcar && info.versionCode in 1..atual) return Result.JaAtualizado
-        val file = download(ctx, info.url) ?: return Result.Erro("download falhou")
+        onEtapa("Baixando atualização...")
+        val file = download(ctx, info.url, onProgress) ?: return Result.Erro("download falhou")
+        onEtapa("Instalando...")
         if (trySilentInstall(file)) return Result.Instalando
         onInstaller(file)
         return Result.Instalando
