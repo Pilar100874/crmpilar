@@ -34,6 +34,33 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     return () => clearTimeout(t);
   }, [status]);
 
+  // TV Box: WebView antiga bloqueia autoplay até haver interação. Insiste no
+  // play() (mudo + inline) enquanto o vídeo estiver pausado com stream ativo.
+  useEffect(() => {
+    const tentar = () => {
+      const v = videoRef.current;
+      if (!v || !v.srcObject) return;
+      v.muted = true;
+      (v as any).playsInline = true;
+      if (v.paused) v.play().catch(() => {});
+    };
+    const id = setInterval(tentar, 1500);
+    const onVis = () => tentar();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    document.addEventListener("click", onVis, true);
+    document.addEventListener("keydown", onVis, true);
+    tentar();
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+      document.removeEventListener("click", onVis, true);
+      document.removeEventListener("keydown", onVis, true);
+    };
+  }, []);
+
+
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
