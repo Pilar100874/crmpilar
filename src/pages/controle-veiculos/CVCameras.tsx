@@ -12,6 +12,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { comEstabelecimento } from "@/lib/cv/cameraTenant";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const MARCAS = [
@@ -69,23 +70,24 @@ export default function CVCameras() {
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `camera_${Date.now()}`;
 
   const save = async () => {
-    const payload: any = { ...editing };
+    let payload: any = { ...editing };
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
-    let q;
-    if (editing.id) {
-      q = supabase.from("cv_cameras").update(payload).eq("id", editing.id);
-    } else {
-      const estId = await getEstabelecimentoId();
-      if (!estId) return toast.error("Estabelecimento não encontrado");
-      q = supabase.from("cv_cameras").insert({ ...payload, estabelecimento_id: estId });
+    try {
+      payload = await comEstabelecimento(payload);
+    } catch (e: any) {
+      return toast.error(e.message);
     }
+    const q = editing.id
+      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id)
+      : supabase.from("cv_cameras").insert(payload);
     const { error } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
     setDialogOpen(false);
     load();
   };
+
 
   const remove = async () => {
     if (!deleteId) return;

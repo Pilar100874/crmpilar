@@ -122,6 +122,24 @@ Deno.serve(async (req) => {
           ativo: true,
         }));
       if (!rows.length) throw new Error("nenhuma câmera válida no lote");
+      // Preenche o estabelecimento (org) para não criar câmeras "órfãs" invisíveis por RLS.
+      let estId: string | null = body.estabelecimento_id || null;
+      if (!estId) {
+        const { data: cfg } = await supabase
+          .from("cv_coletor_config")
+          .select("estabelecimento_id")
+          .not("estabelecimento_id", "is", null)
+          .limit(1)
+          .maybeSingle();
+        estId = cfg?.estabelecimento_id ?? null;
+      }
+      if (!estId) {
+        const { data: est } = await supabase
+          .from("estabelecimentos").select("id").limit(1).maybeSingle();
+        estId = est?.id ?? null;
+      }
+      if (estId) for (const r of rows) (r as any).estabelecimento_id = estId;
+
       const { error: insErr, data: ins } = await supabase
         .from("cv_cameras").insert(rows).select("id");
       if (insErr) throw insErr;
