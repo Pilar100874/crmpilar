@@ -79,6 +79,10 @@ class SignageActivity : AppCompatActivity() {
         )
         applyImmersive()
 
+        // Verifica se uma atualização OTA anterior falhou (não instalou / não reiniciou na versão nova)
+        verificarAtualizacaoPendente()
+
+
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
@@ -456,7 +460,9 @@ class SignageActivity : AppCompatActivity() {
                         }
                         is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
                             Toast.makeText(this@SignageActivity, "Instalando nova versão...", Toast.LENGTH_LONG).show()
+                            verificarAtualizacaoPendente()
                         }
+
                         is Updater.Result.Erro -> {
                             status = "erro"
                             withContext(Dispatchers.Main) {
@@ -473,7 +479,36 @@ class SignageActivity : AppCompatActivity() {
         ApiClient.post("tv-device-command-confirm", body, token())
     }
 
+    /**
+     * Rollback: confere o resultado da última atualização OTA. Se a versão nova não subiu
+     * dentro do prazo, reinstala automaticamente o APK da versão anterior.
+     */
+    private fun verificarAtualizacaoPendente() {
+        if (!Rollback.pendente(this)) return
+        CoroutineScope(Dispatchers.IO).launch {
+            when (val e = Rollback.verificar(applicationContext) { file ->
+                ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+            }) {
+                is Rollback.Estado.Sucesso -> withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignageActivity, "Atualização concluída (versão ${e.versao})", Toast.LENGTH_LONG).show()
+                }
+                is Rollback.Estado.Revertido -> withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignageActivity, "Atualização falhou. Restaurando versão anterior...", Toast.LENGTH_LONG).show()
+                }
+                is Rollback.Estado.Falhou -> withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignageActivity, "Atualização não concluída: ${e.msg}", Toast.LENGTH_LONG).show()
+                }
+                is Rollback.Estado.Aguardando -> withContext(Dispatchers.Main) {
+                    // Watchdog: se o app continuar vivo na versão antiga, reverte ao fim do prazo.
+                    ui.postDelayed({ verificarAtualizacaoPendente() }, e.restanteMs + 2_000)
+                }
+                else -> {}
+            }
+        }
+    }
+
     private fun handleUnauthorized() {
+
         stopKioskMode()
         DeviceStore.clear(this)
         startActivity(Intent(this, PairingActivity::class.java))

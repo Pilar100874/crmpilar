@@ -145,7 +145,7 @@ object Updater {
     }
 
     /** Instalação silenciosa (root / system / device owner). Retorna true se concluiu. */
-    private fun trySilentInstall(file: File): Boolean {
+    fun instalarSilencioso(file: File): Boolean {
         for (cmd in listOf(
             arrayOf("su", "-c", "pm install -r -d \"${file.absolutePath}\""),
             arrayOf("pm", "install", "-r", "-d", file.absolutePath)
@@ -158,6 +158,7 @@ object Updater {
         }
         return false
     }
+
 
     /** Abre o instalador do sistema. Deve ser chamado na thread principal. */
     private fun openInstaller(ctx: Context, file: File) {
@@ -201,10 +202,14 @@ object Updater {
             try { file.delete() } catch (_: Exception) {}
             return Result.Erro(problema)
         }
-        if (trySilentInstall(file)) return Result.Instalando
+        // Guarda a versão atual para poder voltar caso a nova não instale/reinicie.
+        Rollback.prepararBackup(ctx)
+        Rollback.marcarPendente(ctx, if (info.versionCode > 0) info.versionCode else atual + 1)
+        if (instalarSilencioso(file)) return Result.Instalando
         onInstaller(file)
         return Result.Instalando
     }
+
 
     fun instalarArquivo(ctx: Context, file: File) = openInstaller(ctx, file)
 }
