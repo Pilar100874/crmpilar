@@ -13,6 +13,7 @@ import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Image as ImageIcon } from "
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { comEstabelecimento } from "@/lib/cv/cameraTenant";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const MARCAS = [
   { value: "tplink_tapo", label: "TP-Link Tapo" },
