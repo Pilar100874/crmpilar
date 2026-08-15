@@ -156,7 +156,9 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [item]);
 
-  const CloseBtn = () => (modoTv || getTvDeviceToken()) ? null : (
+  const CloseBtn = () => (modoTv || getTvDeviceToken()) ? (
+    <SaidaOcultaOverlay progresso={progressoSaida} />
+  ) : (
     <Button
       size="icon"
       variant="ghost"
