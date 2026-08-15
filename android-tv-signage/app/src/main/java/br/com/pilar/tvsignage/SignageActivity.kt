@@ -227,7 +227,14 @@ class SignageActivity : AppCompatActivity() {
     private var saidaInicio = 0L
     private val saidaRunnable = Runnable {
         saidaInicio = 0L
-        promptExitPassword()
+        sairImediato()
+    }
+
+    /** Sai do app na hora, sem pedir senha (segurar VOLTAR/ESC por 5s). */
+    private fun sairImediato() {
+        stopKioskMode()
+        try { b.webview.loadUrl("about:blank") } catch (_: Exception) {}
+        finishAndRemoveTask()
     }
 
     private fun ehTeclaSaida(keyCode: Int) = keyCode == KeyEvent.KEYCODE_BACK ||
@@ -245,7 +252,7 @@ class SignageActivity : AppCompatActivity() {
         ui.removeCallbacks(saidaRunnable)
     }
 
-    // Bloqueia botão voltar e teclas de mídia — sai segurando VOLTAR/ESC por 5s (pede senha)
+    // Bloqueia botão voltar e teclas de mídia — sai segurando VOLTAR/ESC por 5s (sem senha)
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (ehTeclaSaida(keyCode)) {
             iniciarSaidaOculta()
@@ -280,13 +287,16 @@ class SignageActivity : AppCompatActivity() {
     inner class PilarTvBridge {
         @android.webkit.JavascriptInterface
         fun sair() {
-            ui.post { promptExitPassword() }
+            ui.post { sairImediato() }
         }
     }
 
 
+    private var saindo = false
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
+        if (saindo || isFinishing) return
         // Se o usuário tentar sair (home), reabre a activity
         val i = Intent(this, SignageActivity::class.java)
         i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
