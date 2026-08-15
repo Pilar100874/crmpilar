@@ -14,7 +14,20 @@ export function useSaidaOculta(
   const { segundos = 5, ativo = true } = opts ?? {};
   const [progresso, setProgresso] = useState(0); // 0..1
   const aoSairRef = useRef(aoSair);
-  aoSairRef.current = aoSair;
+  aoSairRef.current = () => {
+    // Dentro do app Android (WebView) o fechamento é feito nativamente
+    const bridge = (window as any)?.PilarTV;
+    if (bridge?.sair) {
+      try {
+        bridge.sair();
+        return;
+      } catch {
+        /* segue para a saída web */
+      }
+    }
+    aoSair();
+  };
+
 
   useEffect(() => {
     if (!ativo || typeof window === "undefined") return;
