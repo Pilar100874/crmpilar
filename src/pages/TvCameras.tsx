@@ -2,6 +2,7 @@
 // entre os grupos de 16 quando houver mais câmeras no sistema.
 import { useEffect, useMemo, useState } from "react";
 import { useTvMode } from "@/lib/tvMode";
+import { useAutoReload } from "@/lib/tvAutoReload";
 import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +67,7 @@ const ORDER_KEY = "tv-cameras-order-v1";
 
 export default function TvCameras() {
   const modoTv = useTvMode();
+  useAutoReload({ minutosPadrao: 60 });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const gruposParam = searchParams.get("grupos") || "";

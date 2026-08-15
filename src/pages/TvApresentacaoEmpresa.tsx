@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useTvMode } from "@/lib/tvMode";
+import { useAutoReload } from "@/lib/tvAutoReload";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
@@ -26,6 +27,7 @@ interface Apresentacao {
 
 export default function TvApresentacaoEmpresa() {
   const modoTv = useTvMode();
+  const { marcarAtividade } = useAutoReload({ minutosPadrao: 60, watchdogMinutos: 10 });
   const [params] = useSearchParams();
 
   const navigate = useNavigate();
@@ -129,12 +131,13 @@ export default function TvApresentacaoEmpresa() {
 
   const next = useCallback(() => {
     if (!apresentacao) return;
+    marcarAtividade();
     setVisible(false);
     setTimeout(() => {
       setIdx((i) => (i + 1) % apresentacao.itens.length);
       setVisible(true);
     }, 300);
-  }, [apresentacao]);
+  }, [apresentacao, marcarAtividade]);
 
   // Timer for images (videos advance on 'ended')
   useEffect(() => {
