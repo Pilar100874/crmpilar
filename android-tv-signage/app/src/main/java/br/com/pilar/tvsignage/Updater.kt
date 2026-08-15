@@ -195,7 +195,11 @@ object Updater {
     fun atualizar(ctx: Context, forcar: Boolean, onInstaller: (File) -> Unit): Result {
         val info = fetchLatest() ?: return Result.Erro("manifesto indisponível")
         val atual = currentVersionCode(ctx)
-        if (!forcar && info.versionCode in 1..atual) return Result.JaAtualizado
+        val nomeAtual = currentVersionName(ctx)
+        // Só considera "já atualizado" quando versionCode E versionName batem com o instalado.
+        val mesmaVersao = info.versionCode in 1..atual &&
+            (info.versionName.isBlank() || info.versionName == nomeAtual)
+        if (!forcar && mesmaVersao) return Result.JaAtualizado
         val file = download(ctx, info.url) ?: return Result.Erro("download falhou")
         val problema = verificar(ctx, file, info)
         if (problema != null) {
