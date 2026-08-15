@@ -46,12 +46,51 @@ export function useSaidaOculta(
       setProgresso(0);
     };
 
+    // Teclas de "Voltar" de controles remotos (Android TV, Tizen, webOS) + ESC
+    const TECLAS_SAIDA = new Set([
+      "Escape",
+      "Backspace",
+      "GoBack",
+      "BrowserBack",
+      "XF86Back",
+      "Back",
+    ]);
+    const CODIGOS_SAIDA = new Set([27, 8, 461, 10009, 166]);
+    const ehTeclaSaida = (e: KeyboardEvent) =>
+      TECLAS_SAIDA.has(e.key) || CODIGOS_SAIDA.has(e.keyCode);
+
+    // Alguns controles emitem keyup entre repetições: tolera pequenas quebras
+    let cancelamentoPendente = 0;
+    // Alternativa sem segurar: 3 toques rápidos no botão Voltar
+    let cliquesVoltar = 0;
+    let janelaCliques = 0;
+
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.key === "Backspace") iniciar();
+      if (!ehTeclaSaida(e)) return;
+      e.preventDefault();
+      window.clearTimeout(cancelamentoPendente);
+      iniciar();
     };
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.key === "Backspace") cancelar();
+      if (!ehTeclaSaida(e)) return;
+      e.preventDefault();
+
+      cliquesVoltar += 1;
+      window.clearTimeout(janelaCliques);
+      janelaCliques = window.setTimeout(() => {
+        cliquesVoltar = 0;
+      }, 2000);
+      if (cliquesVoltar >= 3) {
+        cliquesVoltar = 0;
+        cancelar();
+        aoSairRef.current();
+        return;
+      }
+
+      window.clearTimeout(cancelamentoPendente);
+      cancelamentoPendente = window.setTimeout(cancelar, 300);
     };
+
 
     window.addEventListener("pointerdown", iniciar, true);
     window.addEventListener("pointerup", cancelar, true);
