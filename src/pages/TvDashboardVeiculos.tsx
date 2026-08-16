@@ -70,7 +70,11 @@ const veiculoCores = [
 export default function TvDashboardVeiculos() {
   const modoTv = useTvMode();
   const navigate = useNavigate();
-  useAutoReload({ minutosPadrao: 60 });
+  // Sem reload periódico: os dados já atualizam sozinhos a cada 30s e o reload
+  // fazia a TV piscar/ficar preta.
+  useAutoReload({ minutosPadrao: 0 });
+
+
   const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);

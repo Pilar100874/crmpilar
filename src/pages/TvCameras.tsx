@@ -70,7 +70,10 @@ const ORDER_KEY = "tv-cameras-order-v1";
 
 export default function TvCameras() {
   const modoTv = useTvMode();
-  useAutoReload({ minutosPadrao: 60 });
+  // Sem reload periódico: recarregar a página derrubava todos os streams e
+  // deixava a TV preta por alguns segundos.
+  useAutoReload({ minutosPadrao: 0 });
+
   const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -87,8 +90,13 @@ export default function TvCameras() {
   const [draftOrder, setDraftOrder] = useState<any[] | null>(null);
 
   useEffect(() => {
-    (async () => {
+    let cancelado = false;
+    let tentativa = 0;
+    let retryTimer: number | null = null;
+
+    const carregar = async () => {
       let list: any[] = [];
+      let falhou = false;
       const tvToken = getTvDeviceToken();
       if (tvToken) {
         // Dispositivo remoto (TV Box) não tem sessão de usuário: busca via Edge Function
@@ -103,6 +111,7 @@ export default function TvCameras() {
           list = resp?.cameras ?? [];
         } catch {
           list = [];
+          falhou = true;
         }
       } else {
         let q = supabase
@@ -112,9 +121,22 @@ export default function TvCameras() {
           .order("nome");
         if (camerasIds.length) q = q.in("id", camerasIds);
         else if (gruposIds.length) q = q.in("grupo_id", gruposIds);
-        const { data } = await q;
+        const { data, error } = await q;
         list = data ?? [];
+        falhou = !!error;
       }
+      if (cancelado) return;
+
+      // Rede ainda não pronta logo após ligar a TV: tenta de novo em vez de
+      // ficar preso na tela vazia até reiniciar o aparelho.
+      if (falhou || list.length === 0) {
+        tentativa += 1;
+        if (tentativa <= 20) {
+          retryTimer = window.setTimeout(carregar, Math.min(30000, 3000 * tentativa));
+        }
+        if (falhou) return;
+      }
+
       // Aplica ordem salva do usuário, se houver (apenas quando sem filtro específico)
       if (!camerasIds.length && !gruposIds.length) {
         try {
@@ -137,8 +159,23 @@ export default function TvCameras() {
         } catch {}
       }
       setCams(list);
-    })();
+    };
+
+    carregar();
+
+    const aoVoltar = () => {
+      tentativa = 0;
+      carregar();
+    };
+    window.addEventListener("online", aoVoltar);
+
+    return () => {
+      cancelado = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      window.removeEventListener("online", aoVoltar);
+    };
   }, [gruposParam, camerasParam]);
+
 
 
   const pages = useMemo(() => {
