@@ -71,8 +71,9 @@ export default function TvDashboardVeiculos() {
   const modoTv = useTvMode();
   const navigate = useNavigate();
   // Sem reload periódico: os dados já atualizam sozinhos a cada 30s e o reload
-  // fazia a TV piscar/ficar preta. Só recarrega se ficar realmente travada.
-  useAutoReload({ minutosPadrao: 0, watchdogMinutos: 15 });
+  // fazia a TV piscar/ficar preta.
+  useAutoReload({ minutosPadrao: 0 });
+
 
   const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const isMobile = useIsMobile();
