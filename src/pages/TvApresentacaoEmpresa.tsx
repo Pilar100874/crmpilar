@@ -136,11 +136,29 @@ export default function TvApresentacaoEmpresa() {
     };
 
     carregar();
+
+    // TV Box recém-ligada: a rede costuma subir depois do app. Retenta ao voltar
+    // a conexão ou quando a tela volta a ficar visível, sem precisar reiniciar.
+    const retomar = () => {
+      if (cancelado) return;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      tentativa = 0;
+      carregar();
+    };
+    const aoVisibilidade = () => {
+      if (document.visibilityState === "visible" && (erro || !apresentacao)) retomar();
+    };
+    window.addEventListener("online", retomar);
+    document.addEventListener("visibilitychange", aoVisibilidade);
+
     return () => {
       cancelado = true;
       if (retryTimer) window.clearTimeout(retryTimer);
+      window.removeEventListener("online", retomar);
+      document.removeEventListener("visibilitychange", aoVisibilidade);
     };
   }, [id]);
+
 
 
   const item = useMemo(() => apresentacao?.itens[idx] || null, [apresentacao, idx]);
