@@ -70,7 +70,10 @@ const ORDER_KEY = "tv-cameras-order-v1";
 
 export default function TvCameras() {
   const modoTv = useTvMode();
-  useAutoReload({ minutosPadrao: 60 });
+  // Sem reload periódico: recarregar a página derrubava todos os streams e
+  // deixava a TV preta por alguns segundos.
+  useAutoReload({ minutosPadrao: 0 });
+
   const { progresso: progressoSaida } = useSaidaOculta(() => { try { window.close(); } catch {} navigate(-1); });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
