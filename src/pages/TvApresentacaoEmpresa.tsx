@@ -29,7 +29,9 @@ interface Apresentacao {
 
 export default function TvApresentacaoEmpresa() {
   const modoTv = useTvMode();
-  const { marcarAtividade } = useAutoReload({ minutosPadrao: 60, watchdogMinutos: 10 });
+  // Sem reload por tempo (a TV ficava preta); só recarrega se a apresentação travar.
+  const { marcarAtividade } = useAutoReload({ minutosPadrao: 0, watchdogMinutos: 15 });
+
   const [params] = useSearchParams();
 
   const navigate = useNavigate();
