@@ -279,13 +279,13 @@ export default function TvCameras() {
   const slots = Array.from({ length: PAGE_SIZE }, (_, i) => current[i] ?? null);
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
-      <div className="w-full h-full grid gap-0 grid-cols-4 grid-rows-4">
+    <div className="fixed inset-0 bg-black overflow-hidden p-0 m-0">
+      <div className="w-screen h-screen grid gap-0 grid-cols-4 grid-rows-4 [&>*]:rounded-none [&>*]:border-0">
         {slots.map((c, i) =>
           c ? (
             <div
               key={`${pageIdx}-${c.id}`}
-              className="w-full h-full overflow-hidden cursor-zoom-in"
+              className="w-full h-full overflow-hidden cursor-zoom-in rounded-none border-0 p-0 m-0"
               onClick={() => setZoomed(c)}
             >
               <CameraLiveTile
@@ -298,7 +298,7 @@ export default function TvCameras() {
               />
             </div>
           ) : (
-            <div key={`empty-${pageIdx}-${i}`} className="w-full h-full bg-black" />
+            <div key={`empty-${pageIdx}-${i}`} className="w-full h-full bg-black rounded-none border-0 p-0 m-0" />
           )
         )}
       </div>
