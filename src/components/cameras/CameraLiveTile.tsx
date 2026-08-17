@@ -324,7 +324,10 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         playsInline
         muted
         draggable={false}
-        className={cn("w-full h-full transition-transform will-change-transform", hideOverlays ? "object-cover" : "object-contain")}
+        className={cn(
+          "w-full h-full transition-transform will-change-transform",
+          hideOverlays ? "object-cover !w-full !h-full" : "object-contain"
+        )}
         style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}
       />
       {!hideOverlays && (
