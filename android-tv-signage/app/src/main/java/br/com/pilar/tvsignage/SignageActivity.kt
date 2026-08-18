@@ -42,6 +42,7 @@ class SignageActivity : AppCompatActivity() {
     private var commandsJob: Job? = null
     private var configJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var recuperandoRenderer = false
 
     // Playlist state
     private var playlistItems: List<JSONObject> = emptyList()
@@ -121,6 +122,36 @@ class SignageActivity : AppCompatActivity() {
                 // Simulamos um toque e forçamos o play periodicamente logo após carregar.
                 simularGesto()
                 forcarPlayVideos()
+            }
+
+            override fun onRenderProcessGone(
+                view: WebView?,
+                detail: android.webkit.RenderProcessGoneDetail?
+            ): Boolean {
+                // Em TV Boxes com pouca memória, o Android pode encerrar apenas o
+                // renderer/decoder da WebView depois de horas. A Activity continua
+                // viva, mas nenhum JavaScript ou watchdog roda. Recria a Activity
+                // e a WebView imediatamente, sem exigir reinício do equipamento.
+                if (!recuperandoRenderer && !isFinishing && !isDestroyed) {
+                    recuperandoRenderer = true
+                    ui.removeCallbacks(playVideosRunnable)
+                    ui.post {
+                        try {
+                            view?.stopLoading()
+                            view?.loadUrl("about:blank")
+                            view?.destroy()
+                        } catch (_: Exception) {}
+                        try {
+                            recreate()
+                        } catch (_: Exception) {
+                            val intent = Intent(this@SignageActivity, SignageActivity::class.java)
+                                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                            finish()
+                        }
+                    }
+                }
+                return true
             }
         }
 

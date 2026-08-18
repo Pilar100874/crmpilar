@@ -267,6 +267,7 @@ export default function TvApresentacaoEmpresa() {
         ultimoTempo = v.currentTime;
         paradoDesde = Date.now();
         tentativasPlay = 0;
+        ultimoAvanco.current = Date.now();
         marcarAtividade();
         return;
       }
