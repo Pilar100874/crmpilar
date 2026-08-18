@@ -55,6 +55,7 @@ export default function TvApresentacaoEmpresa() {
   const [visible, setVisible] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoRecoveryKey, setVideoRecoveryKey] = useState(0);
+  const ultimoAvanco = useRef<number>(Date.now());
 
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState(0);
@@ -212,7 +213,6 @@ export default function TvApresentacaoEmpresa() {
 
   // Guarda de travamento global: se a apresentação não avançar de item por
   // muito tempo (timers mortos, vídeo zumbi, WebView congelada), recupera.
-  const ultimoAvanco = useRef<number>(Date.now());
   useEffect(() => {
     ultimoAvanco.current = Date.now();
   }, [idx]);
