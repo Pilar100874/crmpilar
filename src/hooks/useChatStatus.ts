@@ -139,7 +139,7 @@ export const useChatStatus = () => {
           .eq('id', chatId)
           .single();
         
-        if (conversation) {
+        if (conversation?.customer_id && conversation?.canal) {
           // Enviar pesquisa de satisfação automaticamente
           await supabase.functions.invoke('enviar-pesquisa-satisfacao', {
             body: {

@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({})) as Partial<SendSurveyRequest>;
     const { conversation_id, customer_id, atendente_id, fila_id, canal } = body;
 
-    // Chamadas sem payload de conversa (ex.: cron de健康 check) não são erro
+    // Chamadas sem payload de conversa (ex.: cron de verificação) não são erro
     if (!conversation_id || !customer_id || !canal) {
       console.log('Payload sem conversation_id/customer_id/canal — nada a enviar', body);
       return new Response(
