@@ -112,6 +112,15 @@ class SignageActivity : AppCompatActivity() {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) scheduleRetry()
             }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Algumas WebViews de TV Box exigem "gesto do usuário" antes de iniciar
+                // <video>, deixando a tela presa no ícone de play até reiniciar o aparelho.
+                // Simulamos um toque e forçamos o play periodicamente logo após carregar.
+                simularGesto()
+                forcarPlayVideos()
+            }
         }
 
         // Hotspot invisível (canto superior esquerdo): long-press para pedir senha e sair
