@@ -151,12 +151,14 @@ const baixar = (file: string, url: string) => {
 
 export default function AdminApps() {
   const [coletorInfo, setColetorInfo] = useState<{ version: string; downloadUrl: string; notas?: string } | null>(null);
+  const [tvApkUrl, setTvApkUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/coletor/version.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setColetorInfo(data))
       .catch(() => {});
+    getLatestTvSignageApkUrl().then(setTvApkUrl).catch(() => {});
   }, []);
 
   const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
