@@ -135,8 +135,8 @@ Se o teste 1 (direct boot) registrar `startActivity falhou`, o retry deve abrir 
 - **package name:** `br.com.pilar.tvsignage`
 - **MainActivity:** `br.com.pilar.tvsignage.MainActivity`
 - **versão atual:** gerada automaticamente pelo CI — consulte `public/apps/android-tv-signage-latest.json`
-- **último build disponível:** v1.5.31 / versionCode 49 (commit `06b3cb643`, 2026-08-18 13:33 UTC)
+- **último build disponível:** v1.5.33 / versionCode 51 (commit `638e1ffd9`, 2026-08-18 18:03 UTC)
 - **assinatura:** keystore `pilar-release.keystore` (alias `pilar`, V1/V2/V3)
 
 
-<!-- build: rebuild solicitado em 2026-08-18T17:21:33Z (loop de vídeo na apresentação) -->
+<!-- build: rebuild solicitado em 2026-08-18T18:07:00Z (playback contínuo + bridge nativa de retomada de vídeo) -->
