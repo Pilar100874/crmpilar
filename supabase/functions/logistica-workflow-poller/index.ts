@@ -135,7 +135,7 @@ serve(async (req) => {
 async function carregarVeiculosComPos(admin: Admin, estId: string) {
   const { data: veics } = await admin
     .from("veiculos")
-    .select("id, placa, nome")
+    .select("id, placa, descricao")
     .eq("estabelecimento_id", estId);
   if (!veics?.length) return [];
 

@@ -165,7 +165,7 @@ async function detectarCaminhaoParado(admin: Admin): Promise<number> {
   // Considera parado: última posição >= 10 min atrás, ou última posição com velocidade=0 há 10+ min
   const limite = new Date(Date.now() - 10 * 60000).toISOString();
   const { data } = await admin.from("veiculo_posicoes")
-    .select("veiculo_id, velocidade, created_at, veiculos(estabelecimento_id, placa, nome)")
+    .select("veiculo_id, velocidade, created_at, veiculos(estabelecimento_id, placa, descricao)")
     .lt("created_at", limite)
     .eq("velocidade", 0)
     .order("created_at", { ascending: false })
@@ -179,7 +179,7 @@ async function detectarCaminhaoParado(admin: Admin): Promise<number> {
     if (jaAvisados.has(row.veiculo_id)) { novosAvisos.push(row.veiculo_id); continue; }
     const est = row.veiculos?.estabelecimento_id;
     if (!est) continue;
-    await dispatch("caminhao_parado", est, { veiculo_id: row.veiculo_id, placa: row.veiculos?.placa, nome: row.veiculos?.nome });
+    await dispatch("caminhao_parado", est, { veiculo_id: row.veiculo_id, placa: row.veiculos?.placa, nome: row.veiculos?.descricao });
     novosAvisos.push(row.veiculo_id);
     n++;
   }
@@ -192,7 +192,7 @@ async function detectarExcessoVelocidade(admin: Admin): Promise<number> {
   const st = await getState(admin, chave);
   const cursor = st?.ultimo_ref || new Date(Date.now() - 5 * 60000).toISOString();
   const { data } = await admin.from("veiculo_posicoes")
-    .select("id, veiculo_id, velocidade, created_at, veiculos(estabelecimento_id, placa, nome)")
+    .select("id, veiculo_id, velocidade, created_at, veiculos(estabelecimento_id, placa, descricao)")
     .gt("velocidade", 80)
     .gt("created_at", cursor)
     .order("created_at", { ascending: true })

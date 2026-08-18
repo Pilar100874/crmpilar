@@ -28,12 +28,12 @@ serve(async (req) => {
     // Busca configs de SLA ativas por estabelecimento
     const { data: slas } = await admin
       .from("sla_config")
-      .select("id, estabelecimento_id, tempo_primeira_resposta_min, tempo_resolucao_min, ativo")
+      .select("id, estabelecimento_id, tempo_primeira_resposta, tempo_resolucao, ativo")
       .eq("ativo", true);
 
     for (const sla of slas ?? []) {
       const limitePrimeira = new Date();
-      limitePrimeira.setMinutes(limitePrimeira.getMinutes() - (sla.tempo_primeira_resposta_min || 5));
+      limitePrimeira.setMinutes(limitePrimeira.getMinutes() - (sla.tempo_primeira_resposta || 5));
 
       // Conversas em espera há mais que o tempo definido
       const { data: pend } = await admin

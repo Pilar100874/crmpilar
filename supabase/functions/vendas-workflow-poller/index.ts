@@ -75,14 +75,14 @@ serve(async (req) => {
 
     {
       const { data: recentes } = await admin
-        .from("pedidos_recebidos")
+        .from("orcamentos")
         .select("empresa_id, created_at")
         .gte("created_at", inatividade.toISOString());
       const empresasAtivas = new Set((recentes ?? []).map((r: any) => r.empresa_id));
 
       const { data: empresas } = await admin
         .from("empresas")
-        .select("id, estabelecimento_id, nome_fantasia, razao_social, updated_at")
+        .select("id, estabelecimento_id, nome_fantasia, nome, updated_at")
         .lte("updated_at", inatividade.toISOString())
         .limit(200);
 
@@ -105,7 +105,7 @@ serve(async (req) => {
           usuario_id: u.id,
           tipo: "cliente_inativo",
           titulo: "Cliente inativo há 60+ dias",
-          mensagem: `${e.nome_fantasia || e.razao_social || "Cliente"} está sem compras há mais de 60 dias.`,
+          mensagem: `${e.nome_fantasia || e.nome || "Cliente"} está sem compras há mais de 60 dias.`,
           lida: false,
           estabelecimento_id: e.estabelecimento_id,
         }));
@@ -121,7 +121,7 @@ serve(async (req) => {
     const dd = String(hoje.getDate()).padStart(2, "0");
     const { data: aniv } = await admin
       .from("empresas")
-      .select("id, estabelecimento_id, nome_fantasia, razao_social, data_fundacao")
+      .select("id, estabelecimento_id, nome_fantasia, nome, data_fundacao")
       .not("data_fundacao", "is", null)
       .limit(500);
     for (const e of aniv ?? []) {
@@ -146,7 +146,7 @@ serve(async (req) => {
         usuario_id: u.id,
         tipo: "aniversario_cliente",
         titulo: "🎂 Aniversário de cliente",
-        mensagem: `Hoje é aniversário de ${e.nome_fantasia || e.razao_social}.`,
+        mensagem: `Hoje é aniversário de ${e.nome_fantasia || e.nome}.`,
         lida: false,
         estabelecimento_id: e.estabelecimento_id,
       }));
