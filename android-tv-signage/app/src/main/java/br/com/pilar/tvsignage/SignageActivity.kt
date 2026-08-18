@@ -210,6 +210,11 @@ class SignageActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         applyImmersive()
+        // A retomada da Activity pode pausar o decodificador de vídeo sem
+        // recarregar a página. Reativa o player imediatamente e mantém o
+        // guardião permanente enquanto a apresentação estiver aberta.
+        simularGesto()
+        forcarPlayVideos()
         // Durante uma instalação OTA o kiosk (lock task) impede a tela do instalador
         // de aparecer — o app "prende" a atualização atrás dele. Só religa depois.
         if (!instalandoOta) startKioskMode()
@@ -231,7 +236,7 @@ class SignageActivity : AppCompatActivity() {
         } catch (_: Exception) {}
     }
 
-    /** Insiste no play dos <video> nos primeiros segundos após carregar a página. */
+    /** Mantém os <video> em reprodução durante toda a vida da Activity. */
     private fun forcarPlayVideos() {
         ui.removeCallbacks(playVideosRunnable)
         playVideosTentativas = 0
@@ -243,14 +248,17 @@ class SignageActivity : AppCompatActivity() {
         override fun run() {
             try {
                 b.webview.evaluateJavascript(
-                    "(function(){var v=document.querySelectorAll('video');" +
+                    "(function(){try{window.dispatchEvent(new Event('pilar-tv-retomar-video'));}catch(e){}" +
+                        "var v=document.querySelectorAll('video');" +
                         "for(var i=0;i<v.length;i++){try{v[i].muted=true;v[i].playsInline=true;" +
                         "if(v[i].paused){var p=v[i].play();if(p&&p.catch)p.catch(function(){});}}catch(e){}}})();",
                     null
                 )
             } catch (_: Exception) {}
             playVideosTentativas++
-            if (playVideosTentativas < 20) ui.postDelayed(this, 3_000)
+            // Não limita tentativas: o problema normalmente aparece somente
+            // após horas, quando a TV suspende o pipeline de mídia da WebView.
+            if (!isFinishing && !isDestroyed) ui.postDelayed(this, 5_000)
         }
     }
 
@@ -661,6 +669,7 @@ class SignageActivity : AppCompatActivity() {
         heartbeatJob?.cancel(); commandsJob?.cancel(); configJob?.cancel()
         ui.removeCallbacks(playlistRunnable)
         ui.removeCallbacks(retryRunnable)
+        ui.removeCallbacks(playVideosRunnable)
         try {
             netCallback?.let {
                 (getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)

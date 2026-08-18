@@ -30,7 +30,9 @@ interface Apresentacao {
 export default function TvApresentacaoEmpresa() {
   const modoTv = useTvMode();
   // Sem reload por tempo (a TV ficava preta); só recarrega se a apresentação travar.
-  const { marcarAtividade } = useAutoReload({ minutosPadrao: 0, watchdogMinutos: 15 });
+  // O player já possui recuperação local. Recarregar a página pelo watchdog
+  // fazia algumas WebViews voltarem para a tela nativa com o símbolo de play.
+  const { marcarAtividade } = useAutoReload({ minutosPadrao: 0, watchdogMinutos: 0 });
 
   const [params] = useSearchParams();
 
@@ -276,6 +278,29 @@ export default function TvApresentacaoEmpresa() {
     return () => window.clearInterval(iv);
   }, [item, next, marcarAtividade]);
 
+  // Ao acordar a TV/retomar o app, continue do próprio player sem recarregar a
+  // página. O evento também é disparado pelo bridge Android continuamente.
+  useEffect(() => {
+    const retomarVideo = () => {
+      if (document.visibilityState === "hidden") return;
+      const v = videoRef.current;
+      if (!v) return;
+      v.muted = true;
+      v.play().catch(() => {});
+    };
+    const aoVisibilidade = () => {
+      if (document.visibilityState === "visible") retomarVideo();
+    };
+    document.addEventListener("visibilitychange", aoVisibilidade);
+    window.addEventListener("focus", retomarVideo);
+    window.addEventListener("pilar-tv-retomar-video", retomarVideo);
+    return () => {
+      document.removeEventListener("visibilitychange", aoVisibilidade);
+      window.removeEventListener("focus", retomarVideo);
+      window.removeEventListener("pilar-tv-retomar-video", retomarVideo);
+    };
+  }, []);
+
   // Primeiro gesto do usuário (ou do bridge nativo) libera o autoplay em WebViews antigas
   useEffect(() => {
     const liberar = () => {
@@ -346,6 +371,8 @@ export default function TvApresentacaoEmpresa() {
             muted
             preload="auto"
             playsInline
+            disablePictureInPicture
+            controls={false}
             onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
             onCanPlay={() => videoRef.current?.play().catch(() => {})}
             onPause={() => {
