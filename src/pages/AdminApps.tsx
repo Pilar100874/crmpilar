@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
+import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock, Tv } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
 import coletorLinuxAsset from "../../public/coletor/ColetorPilar-Linux.AppImage.asset.json";
 import applianceIsoAsset from "../../public/coletor/coletor-pilar-appliance-amd64.iso.asset.json";
 
