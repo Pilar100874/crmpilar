@@ -23,9 +23,20 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { conversation_id, customer_id, atendente_id, fila_id, canal }: SendSurveyRequest = await req.json();
+    const body = await req.json().catch(() => ({})) as Partial<SendSurveyRequest>;
+    const { conversation_id, customer_id, atendente_id, fila_id, canal } = body;
+
+    // Chamadas sem payload de conversa (ex.: cron de健康 check) não são erro
+    if (!conversation_id || !customer_id || !canal) {
+      console.log('Payload sem conversation_id/customer_id/canal — nada a enviar', body);
+      return new Response(
+        JSON.stringify({ skipped: true, message: 'Payload incompleto: conversation_id, customer_id e canal são obrigatórios' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
 
     console.log('Iniciando envio de pesquisa de satisfação:', { conversation_id, customer_id, canal });
+
 
     // Buscar a conversação para obter o estabelecimento_id
     const { data: conversation, error: convError } = await supabase
