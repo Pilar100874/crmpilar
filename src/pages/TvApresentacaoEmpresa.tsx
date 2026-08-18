@@ -305,9 +305,14 @@ export default function TvApresentacaoEmpresa() {
             playsInline
             onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
             onCanPlay={() => videoRef.current?.play().catch(() => {})}
+            onPause={() => {
+              const v = videoRef.current;
+              if (v && !v.ended) v.play().catch(() => {});
+            }}
             loop={apresentacao.itens.length === 1}
             onEnded={() => {
               if (apresentacao.itens.length === 1 && videoRef.current) {
+
                 try { videoRef.current.currentTime = 0; videoRef.current.play(); } catch {}
                 return;
               }
