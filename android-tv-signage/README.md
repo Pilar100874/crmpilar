@@ -138,3 +138,5 @@ Se o teste 1 (direct boot) registrar `startActivity falhou`, o retry deve abrir 
 - **versionName:** `1.3.0` (kiosk: `1.3.0-kiosk`)
 - **assinatura:** keystore `pilar-release.keystore` (alias `pilar`, V1/V2/V3)
 
+
+<!-- build: rebuild solicitado em 2026-08-18T13:12:49Z (loop de vídeo na apresentação) -->
