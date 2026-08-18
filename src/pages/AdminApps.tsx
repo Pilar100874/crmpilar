@@ -325,6 +325,63 @@ export default function AdminApps() {
           </ol>
         </div>
       </Card>
+
+      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300 sm:h-14 sm:w-14 sm:rounded-2xl">
+              <Tv className="h-8 w-8" />
+            </div>
+            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
+              Android TV · APK
+            </span>
+          </div>
+
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Telas Remotas (Android TV)</h2>
+          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
+            Instale em <b>Android TV, Google TV, TV Box ou Fire TV</b> para transformar qualquer televisão em uma tela de comunicação corporativa.
+            Exibe dashboards, apresentações, câmeras e playlists em loop, com controle remoto e comandos OTA.
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
+                APK Android TV
+              </span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">{TV_SIGNAGE_APK_FILENAME}</span>
+            </div>
+            <Button
+              onClick={() => tvApkUrl && baixar(TV_SIGNAGE_APK_FILENAME, tvApkUrl)}
+              disabled={!tvApkUrl}
+              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-indigo-500 hover:bg-indigo-400 text-white"
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar APK
+            </Button>
+          </div>
+        </CardContent>
+
+        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Como instalar
+          </h3>
+          <ol className="space-y-4">
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o APK no computador e transfira para a TV via <b>pendrive USB</b> ou <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">adb install pareamento-pilar-remotas.apk</code>.</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Abra o app na TV e faça o pareamento em <b>Telas Remotas → Dispositivos</b> neste sistema.</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                A TV exibe automaticamente o conteúdo configurado. Atualizações futuras podem ser enviadas remotamente pelo comando <b>Atualizar versão</b>.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </Card>
     </div>
   );
 }
