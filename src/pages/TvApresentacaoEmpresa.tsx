@@ -54,6 +54,8 @@ export default function TvApresentacaoEmpresa() {
   const [idx, setIdx] = useState(0);
   const [visible, setVisible] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoRecoveryKey, setVideoRecoveryKey] = useState(0);
+  const ultimoAvanco = useRef<number>(Date.now());
 
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState(0);
@@ -170,15 +172,26 @@ export default function TvApresentacaoEmpresa() {
 
   const item = useMemo(() => apresentacao?.itens[idx] || null, [apresentacao, idx]);
 
+  const reconstruirVideo = useCallback(() => {
+    // Remontar o elemento é mais confiável que apenas chamar load() em WebViews
+    // antigas: depois de horas o decodificador pode ficar em estado zumbi.
+    setVideoRecoveryKey((key) => key + 1);
+    ultimoAvanco.current = Date.now();
+  }, []);
+
   const next = useCallback(() => {
     if (!apresentacao) return;
     marcarAtividade();
+    if (apresentacao.itens.length === 1) {
+      if (apresentacao.itens[0]?.tipo === "video") reconstruirVideo();
+      return;
+    }
     // Avança imediatamente (não depende de setTimeout, que pode ser
     // descartado em WebViews de TV Box após horas ligadas).
     setIdx((i) => (i + 1) % apresentacao.itens.length);
     setVisible(false);
     window.setTimeout(() => setVisible(true), 60);
-  }, [apresentacao, marcarAtividade]);
+  }, [apresentacao, marcarAtividade, reconstruirVideo]);
 
 
   // Timer for images (videos advance on 'ended')
@@ -199,8 +212,7 @@ export default function TvApresentacaoEmpresa() {
   }, [apresentacao, item, next]);
 
   // Guarda de travamento global: se a apresentação não avançar de item por
-  // muito tempo (timers mortos, vídeo zumbi, WebView congelada), recarrega.
-  const ultimoAvanco = useRef<number>(Date.now());
+  // muito tempo (timers mortos, vídeo zumbi, WebView congelada), recupera.
   useEffect(() => {
     ultimoAvanco.current = Date.now();
   }, [idx]);
@@ -217,30 +229,25 @@ export default function TvApresentacaoEmpresa() {
       setVisible(true);
       if (apresentacao.itens.length > 1) {
         next();
-      } else {
-        const v = videoRef.current;
-        if (v) {
-          try { v.load(); v.play().catch(() => {}); } catch { /* ignore */ }
-        }
-      }
+      } else if (apresentacao.itens[0]?.tipo === "video") reconstruirVideo();
     }, 30_000);
     return () => window.clearInterval(iv);
-  }, [apresentacao, next]);
+  }, [apresentacao, next, reconstruirVideo]);
 
 
   // Vídeo: em TV Box o autoplay falha silenciosamente (fica no ícone de play).
   // Insiste no play, recarrega o vídeo se não avançar e, em último caso, pula o item.
   useEffect(() => {
     if (item?.tipo !== "video") return;
-    let recargas = 0;
     let ultimoTempo = -1;
     let paradoDesde = Date.now();
+    let tentativasPlay = 0;
 
     const tentarPlay = () => {
       const v = videoRef.current;
       if (!v) return;
       v.muted = true;
-      if (v.paused || v.readyState < 2) v.play().catch(() => {});
+      v.play().catch(() => {});
     };
 
     const v0 = videoRef.current;
@@ -259,30 +266,29 @@ export default function TvApresentacaoEmpresa() {
       if (v.currentTime > ultimoTempo + 0.15 || v.currentTime < ultimoTempo - 0.15) {
         ultimoTempo = v.currentTime;
         paradoDesde = Date.now();
-        recargas = 0;
+        tentativasPlay = 0;
+        ultimoAvanco.current = Date.now();
         marcarAtividade();
         return;
       }
 
       const travadoMs = Date.now() - paradoDesde;
-      if (travadoMs > 8000 && recargas < 3) {
-        recargas += 1;
-        paradoDesde = Date.now();
-        try { v.load(); } catch { /* ignore */ }
-        window.setTimeout(tentarPlay, 400);
-      } else if (travadoMs > 20000) {
-        next();
+      if (travadoMs > 5000 && tentativasPlay < 2) {
+        tentativasPlay += 1;
+        tentarPlay();
+      } else if (travadoMs > 12000) {
+        // Não reutiliza o mesmo elemento travado: derruba e cria um player novo.
+        reconstruirVideo();
       }
     }, 1500);
 
     return () => window.clearInterval(iv);
-  }, [item, next, marcarAtividade]);
+  }, [item, videoRecoveryKey, reconstruirVideo, marcarAtividade]);
 
   // Ao acordar a TV/retomar o app, continue do próprio player sem recarregar a
   // página. O evento também é disparado pelo bridge Android continuamente.
   useEffect(() => {
     const retomarVideo = () => {
-      if (document.visibilityState === "hidden") return;
       const v = videoRef.current;
       if (!v) return;
       v.muted = true;
@@ -364,6 +370,7 @@ export default function TvApresentacaoEmpresa() {
           <img src={item.url} alt={item.nome || ""} className="w-full h-full object-cover" />
         ) : (
           <video
+            key={`${item.id}-${videoRecoveryKey}`}
             ref={videoRef}
             src={item.url}
             className="w-full h-full object-cover"
@@ -388,7 +395,10 @@ export default function TvApresentacaoEmpresa() {
               }
               next();
             }}
-            onError={next}
+            onError={() => {
+              if (apresentacao.itens.length > 1) next();
+              else window.setTimeout(reconstruirVideo, 1500);
+            }}
           />
         )}
       </div>
