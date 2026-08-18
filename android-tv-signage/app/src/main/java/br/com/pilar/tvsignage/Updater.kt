@@ -119,22 +119,21 @@ object Updater {
     }
 
     /**
-     * Valida o APK baixado antes de instalar:
-     * - tamanho e checksum SHA-256 (quando o manifesto os informa);
-     * - arquivo e um APK legivel e do mesmo pacote;
-     * - assinatura identica a do app instalado (bloqueia APK adulterado/de outra origem).
-     * Retorna null quando esta tudo certo, ou a mensagem de erro.
+     * Valida o APK baixado antes de instalar.
+     *
+     * Importante: o manifesto publicado no site pode estar defasado em relacao ao release
+     * "rolling" do GitHub (o site so atualiza quando republicado). Por isso tamanho e SHA-256
+     * sao apenas indicativos: se nao baterem, o APK ainda e aceito desde que seja um pacote
+     * valido, do mesmo package, assinado com a MESMA chave do app instalado e com versionCode
+     * maior ou igual ao instalado. A assinatura digital e a garantia real de origem.
      */
     fun verificar(ctx: Context, file: File, info: Info): String? {
-        if (info.size > 0 && file.length() != info.size)
-            return "tamanho invalido (${file.length()} de ${info.size} bytes)"
-        if (info.sha256.isNotBlank()) {
-            val calc = try { sha256(file) } catch (_: Exception) { "" }
-            if (!calc.equals(info.sha256, ignoreCase = true))
-                return "checksum nao confere (download corrompido)"
-        }
         val arq = archiveInfo(ctx, file) ?: return "APK invalido ou corrompido"
         if (arq.packageName != ctx.packageName) return "pacote diferente (${arq.packageName})"
+
+        val divergente = (info.size > 0 && file.length() != info.size) ||
+            (info.sha256.isNotBlank() && !sha256Seguro(file).equals(info.sha256, ignoreCase = true))
+
         val instalado = try {
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
                 PackageManager.GET_SIGNING_CERTIFICATES else @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES
@@ -145,8 +144,20 @@ object Updater {
         val atuais = certHashes(instalado)
         if (atuais.isNotEmpty() && novas.intersect(atuais).isEmpty())
             return "assinatura diferente da versao instalada"
+
+        if (divergente) {
+            // Manifesto defasado: exige que o APK baixado nao seja mais antigo que o instalado.
+            val novoCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                arq.longVersionCode.toInt() else @Suppress("DEPRECATION") arq.versionCode
+            val atualCode = currentVersionCode(ctx)
+            if (novoCode in 1 until atualCode)
+                return "versao baixada e mais antiga que a instalada ($novoCode < $atualCode)"
+        }
         return null
     }
+
+    private fun sha256Seguro(file: File): String = try { sha256(file) } catch (_: Exception) { "" }
+
 
     /** Instalação silenciosa (root / system / device owner). Retorna true se concluiu. */
     fun instalarSilencioso(file: File): Boolean {
