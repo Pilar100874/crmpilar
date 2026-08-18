@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Bundle
@@ -593,7 +594,7 @@ class SignageActivity : AppCompatActivity() {
                         Toast.makeText(this@SignageActivity, "Buscando atualização...", Toast.LENGTH_SHORT).show()
                     }
                     when (val r = Updater.atualizar(applicationContext, forcar) { file ->
-                        ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+                        ui.post { instalarAtualizacao(file) }
                     }) {
                         is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
                             Toast.makeText(this@SignageActivity, "Já está na versão mais nova", Toast.LENGTH_LONG).show()
@@ -627,7 +628,7 @@ class SignageActivity : AppCompatActivity() {
         if (!Rollback.pendente(this)) return
         CoroutineScope(Dispatchers.IO).launch {
             when (val e = Rollback.verificar(applicationContext) { file ->
-                ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+                ui.post { instalarAtualizacao(file) }
             }) {
                 is Rollback.Estado.Sucesso -> withContext(Dispatchers.Main) {
                     Toast.makeText(this@SignageActivity, "Atualização concluída (versão ${e.versao})", Toast.LENGTH_LONG).show()
