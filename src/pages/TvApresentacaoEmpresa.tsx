@@ -210,12 +210,15 @@ export default function TvApresentacaoEmpresa() {
       tentarPlay();
 
       // Watchdog: o tempo do vídeo precisa avançar; se ficar travado, reage.
-      if (v.currentTime > ultimoTempo + 0.15) {
+      // Ao dar loop, currentTime volta a ~0 — isso também é progresso.
+      if (v.currentTime > ultimoTempo + 0.15 || v.currentTime < ultimoTempo - 0.15) {
         ultimoTempo = v.currentTime;
         paradoDesde = Date.now();
+        recargas = 0;
         marcarAtividade();
         return;
       }
+
       const travadoMs = Date.now() - paradoDesde;
       if (travadoMs > 8000 && recargas < 3) {
         recargas += 1;
@@ -302,9 +305,14 @@ export default function TvApresentacaoEmpresa() {
             playsInline
             onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
             onCanPlay={() => videoRef.current?.play().catch(() => {})}
+            onPause={() => {
+              const v = videoRef.current;
+              if (v && !v.ended) v.play().catch(() => {});
+            }}
             loop={apresentacao.itens.length === 1}
             onEnded={() => {
               if (apresentacao.itens.length === 1 && videoRef.current) {
+
                 try { videoRef.current.currentTime = 0; videoRef.current.play(); } catch {}
                 return;
               }
