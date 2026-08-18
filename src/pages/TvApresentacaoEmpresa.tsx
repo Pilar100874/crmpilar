@@ -171,22 +171,60 @@ export default function TvApresentacaoEmpresa() {
   const next = useCallback(() => {
     if (!apresentacao) return;
     marcarAtividade();
+    // Avança imediatamente (não depende de setTimeout, que pode ser
+    // descartado em WebViews de TV Box após horas ligadas).
+    setIdx((i) => (i + 1) % apresentacao.itens.length);
     setVisible(false);
-    setTimeout(() => {
-      setIdx((i) => (i + 1) % apresentacao.itens.length);
-      setVisible(true);
-    }, 300);
+    window.setTimeout(() => setVisible(true), 60);
   }, [apresentacao, marcarAtividade]);
 
+
   // Timer for images (videos advance on 'ended')
+  // Usa relógio de parede + interval: em TV Box, setTimeout longo pode ser
+  // descartado/congelado após horas, travando a apresentação.
   useEffect(() => {
     if (!apresentacao || !item) return;
-    if (item.tipo === "image") {
-      const dur = (item.duracao ?? apresentacao.duracao_padrao_imagem) * 1000;
-      const t = setTimeout(next, dur);
-      return () => clearTimeout(t);
-    }
+    if (item.tipo !== "image") return;
+    const dur = (item.duracao ?? apresentacao.duracao_padrao_imagem) * 1000;
+    const fim = Date.now() + dur;
+    const iv = window.setInterval(() => {
+      if (Date.now() >= fim) {
+        window.clearInterval(iv);
+        next();
+      }
+    }, 1000);
+    return () => window.clearInterval(iv);
   }, [apresentacao, item, next]);
+
+  // Guarda de travamento global: se a apresentação não avançar de item por
+  // muito tempo (timers mortos, vídeo zumbi, WebView congelada), recarrega.
+  const ultimoAvanco = useRef<number>(Date.now());
+  useEffect(() => {
+    ultimoAvanco.current = Date.now();
+  }, [idx]);
+  useEffect(() => {
+    if (!apresentacao || apresentacao.itens.length === 0) return;
+    const limiteMs = Math.max(
+      10 * 60_000,
+      (apresentacao.duracao_padrao_imagem || 10) * 1000 * 6,
+    );
+    const iv = window.setInterval(() => {
+      if (Date.now() - ultimoAvanco.current < limiteMs) return;
+      // Tenta destravar sem recarregar a página primeiro.
+      ultimoAvanco.current = Date.now();
+      setVisible(true);
+      if (apresentacao.itens.length > 1) {
+        next();
+      } else {
+        const v = videoRef.current;
+        if (v) {
+          try { v.load(); v.play().catch(() => {}); } catch { /* ignore */ }
+        }
+      }
+    }, 30_000);
+    return () => window.clearInterval(iv);
+  }, [apresentacao, next]);
+
 
   // Vídeo: em TV Box o autoplay falha silenciosamente (fica no ícone de play).
   // Insiste no play, recarrega o vídeo se não avançar e, em último caso, pula o item.
