@@ -212,6 +212,7 @@ export default function TvApresentacaoEmpresa() {
       if (Date.now() - ultimoAvanco.current < limiteMs) return;
       // Tenta destravar sem recarregar a página primeiro.
       ultimoAvanco.current = Date.now();
+      setVisible(true);
       if (apresentacao.itens.length > 1) {
         next();
       } else {
