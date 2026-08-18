@@ -183,21 +183,66 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [apresentacao, item, next]);
 
-  // Vídeo: em TV Box o autoplay às vezes falha silenciosamente — insiste no play
+  // Vídeo: em TV Box o autoplay falha silenciosamente (fica no ícone de play).
+  // Insiste no play, recarrega o vídeo se não avançar e, em último caso, pula o item.
   useEffect(() => {
     if (item?.tipo !== "video") return;
+    let recargas = 0;
+    let ultimoTempo = -1;
+    let paradoDesde = Date.now();
+
     const tentarPlay = () => {
       const v = videoRef.current;
       if (!v) return;
+      v.muted = true;
       if (v.paused || v.readyState < 2) v.play().catch(() => {});
     };
-    if (videoRef.current) {
-      try { videoRef.current.currentTime = 0; } catch { /* ignore */ }
+
+    const v0 = videoRef.current;
+    if (v0) {
+      try { v0.currentTime = 0; } catch { /* ignore */ }
     }
     tentarPlay();
-    const iv = window.setInterval(tentarPlay, 3000);
+
+    const iv = window.setInterval(() => {
+      const v = videoRef.current;
+      if (!v) return;
+      tentarPlay();
+
+      // Watchdog: o tempo do vídeo precisa avançar; se ficar travado, reage.
+      if (v.currentTime > ultimoTempo + 0.15) {
+        ultimoTempo = v.currentTime;
+        paradoDesde = Date.now();
+        marcarAtividade();
+        return;
+      }
+      const travadoMs = Date.now() - paradoDesde;
+      if (travadoMs > 8000 && recargas < 3) {
+        recargas += 1;
+        paradoDesde = Date.now();
+        try { v.load(); } catch { /* ignore */ }
+        window.setTimeout(tentarPlay, 400);
+      } else if (travadoMs > 20000) {
+        next();
+      }
+    }, 1500);
+
     return () => window.clearInterval(iv);
-  }, [item]);
+  }, [item, next, marcarAtividade]);
+
+  // Primeiro gesto do usuário (ou do bridge nativo) libera o autoplay em WebViews antigas
+  useEffect(() => {
+    const liberar = () => {
+      const v = videoRef.current;
+      if (v?.paused) v.play().catch(() => {});
+    };
+    window.addEventListener("pointerdown", liberar, true);
+    window.addEventListener("keydown", liberar, true);
+    return () => {
+      window.removeEventListener("pointerdown", liberar, true);
+      window.removeEventListener("keydown", liberar, true);
+    };
+  }, []);
 
 
   const CloseBtn = () => (modoTv || getTvDeviceToken()) ? (
@@ -253,7 +298,10 @@ export default function TvApresentacaoEmpresa() {
             className="w-full h-full object-cover"
             autoPlay
             muted
+            preload="auto"
             playsInline
+            onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
+            onCanPlay={() => videoRef.current?.play().catch(() => {})}
             loop={apresentacao.itens.length === 1}
             onEnded={() => {
               if (apresentacao.itens.length === 1 && videoRef.current) {

@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Bundle
@@ -112,6 +113,15 @@ class SignageActivity : AppCompatActivity() {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) scheduleRetry()
             }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Algumas WebViews de TV Box exigem "gesto do usuário" antes de iniciar
+                // <video>, deixando a tela presa no ícone de play até reiniciar o aparelho.
+                // Simulamos um toque e forçamos o play periodicamente logo após carregar.
+                simularGesto()
+                forcarPlayVideos()
+            }
         }
 
         // Hotspot invisível (canto superior esquerdo): long-press para pedir senha e sair
@@ -200,8 +210,78 @@ class SignageActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         applyImmersive()
-        startKioskMode()
+        // Durante uma instalação OTA o kiosk (lock task) impede a tela do instalador
+        // de aparecer — o app "prende" a atualização atrás dele. Só religa depois.
+        if (!instalandoOta) startKioskMode()
     }
+
+    // ===================== Autoplay de vídeo em WebView de TV Box =====================
+
+    /** Simula um toque para liberar o autoplay de mídia em WebViews que exigem gesto. */
+    private fun simularGesto() {
+        try {
+            val t = android.os.SystemClock.uptimeMillis()
+            val x = (b.webview.width / 2).toFloat()
+            val y = (b.webview.height / 2).toFloat()
+            val down = android.view.MotionEvent.obtain(t, t, android.view.MotionEvent.ACTION_DOWN, x, y, 0)
+            val up = android.view.MotionEvent.obtain(t, t + 40, android.view.MotionEvent.ACTION_UP, x, y, 0)
+            b.webview.dispatchTouchEvent(down)
+            b.webview.dispatchTouchEvent(up)
+            down.recycle(); up.recycle()
+        } catch (_: Exception) {}
+    }
+
+    /** Insiste no play dos <video> nos primeiros segundos após carregar a página. */
+    private fun forcarPlayVideos() {
+        ui.removeCallbacks(playVideosRunnable)
+        playVideosTentativas = 0
+        ui.post(playVideosRunnable)
+    }
+
+    private var playVideosTentativas = 0
+    private val playVideosRunnable = object : Runnable {
+        override fun run() {
+            try {
+                b.webview.evaluateJavascript(
+                    "(function(){var v=document.querySelectorAll('video');" +
+                        "for(var i=0;i<v.length;i++){try{v[i].muted=true;v[i].playsInline=true;" +
+                        "if(v[i].paused){var p=v[i].play();if(p&&p.catch)p.catch(function(){});}}catch(e){}}})();",
+                    null
+                )
+            } catch (_: Exception) {}
+            playVideosTentativas++
+            if (playVideosTentativas < 20) ui.postDelayed(this, 3_000)
+        }
+    }
+
+    // ===================== Instalação OTA =====================
+
+    private var instalandoOta = false
+
+    /** Libera a tela para o instalador do sistema aparecer (sai do kiosk e pede permissão). */
+    private fun prepararInstalacao() {
+        instalandoOta = true
+        stopKioskMode()
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+                !packageManager.canRequestPackageInstalls()
+            ) {
+                startActivity(
+                    Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                        .setData(Uri.parse("package:$packageName"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+        } catch (_: Exception) {}
+        // Se a instalação for cancelada, volta ao kiosk depois de alguns minutos.
+        ui.postDelayed({ instalandoOta = false }, 5 * 60_000)
+    }
+
+    private fun instalarAtualizacao(file: java.io.File) {
+        prepararInstalacao()
+        ui.postDelayed({ Updater.instalarArquivo(this@SignageActivity, file) }, 600)
+    }
+
 
     /** Ativa modo kiosk (screen pinning). No primeiro uso o Android pede confirmação. */
     private fun startKioskMode() {
@@ -514,7 +594,7 @@ class SignageActivity : AppCompatActivity() {
                         Toast.makeText(this@SignageActivity, "Buscando atualização...", Toast.LENGTH_SHORT).show()
                     }
                     when (val r = Updater.atualizar(applicationContext, forcar) { file ->
-                        ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+                        ui.post { instalarAtualizacao(file) }
                     }) {
                         is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
                             Toast.makeText(this@SignageActivity, "Já está na versão mais nova", Toast.LENGTH_LONG).show()
@@ -548,7 +628,7 @@ class SignageActivity : AppCompatActivity() {
         if (!Rollback.pendente(this)) return
         CoroutineScope(Dispatchers.IO).launch {
             when (val e = Rollback.verificar(applicationContext) { file ->
-                ui.post { Updater.instalarArquivo(this@SignageActivity, file) }
+                ui.post { instalarAtualizacao(file) }
             }) {
                 is Rollback.Estado.Sucesso -> withContext(Dispatchers.Main) {
                     Toast.makeText(this@SignageActivity, "Atualização concluída (versão ${e.versao})", Toast.LENGTH_LONG).show()
