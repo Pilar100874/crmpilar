@@ -210,6 +210,12 @@ class SignageActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         applyImmersive()
+        // Retoma explicitamente WebView e timers; alguns firmwares de TV Box
+        // mantêm o pipeline HTML5 suspenso mesmo após a Activity voltar ao foco.
+        try {
+            b.webview.onResume()
+            b.webview.resumeTimers()
+        } catch (_: Exception) {}
         // A retomada da Activity pode pausar o decodificador de vídeo sem
         // recarregar a página. Reativa o player imediatamente e mantém o
         // guardião permanente enquanto a apresentação estiver aberta.
@@ -250,8 +256,15 @@ class SignageActivity : AppCompatActivity() {
                 b.webview.evaluateJavascript(
                     "(function(){try{window.dispatchEvent(new Event('pilar-tv-retomar-video'));}catch(e){}" +
                         "var v=document.querySelectorAll('video');" +
-                        "for(var i=0;i<v.length;i++){try{v[i].muted=true;v[i].playsInline=true;" +
-                        "if(v[i].paused){var p=v[i].play();if(p&&p.catch)p.catch(function(){});}}catch(e){}}})();",
+                        "for(var i=0;i<v.length;i++){try{var x=v[i];x.muted=true;x.playsInline=true;" +
+                        "var now=Number(x.currentTime||0),last=Number(x.dataset.pilarLastTime||-1);" +
+                        "if(Math.abs(now-last)>.1){x.dataset.pilarLastTime=String(now);x.dataset.pilarStalls='0';}" +
+                        "else{x.dataset.pilarStalls=String(Number(x.dataset.pilarStalls||0)+1);}" +
+                        "var p=x.play();if(p&&p.catch)p.catch(function(){});" +
+                        "if(Number(x.dataset.pilarStalls||0)>=6){x.dataset.pilarStalls='0';" +
+                        "var src=x.currentSrc||x.src;x.pause();x.removeAttribute('src');x.load();x.src=src;x.load();" +
+                        "var q=x.play();if(q&&q.catch)q.catch(function(){});}" +
+                        "}catch(e){}}})();",
                     null
                 )
             } catch (_: Exception) {}
