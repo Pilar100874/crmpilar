@@ -298,7 +298,10 @@ export default function TvApresentacaoEmpresa() {
             className="w-full h-full object-cover"
             autoPlay
             muted
+            preload="auto"
             playsInline
+            onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
+            onCanPlay={() => videoRef.current?.play().catch(() => {})}
             loop={apresentacao.itens.length === 1}
             onEnded={() => {
               if (apresentacao.itens.length === 1 && videoRef.current) {
