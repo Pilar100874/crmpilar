@@ -210,12 +210,15 @@ export default function TvApresentacaoEmpresa() {
       tentarPlay();
 
       // Watchdog: o tempo do vídeo precisa avançar; se ficar travado, reage.
-      if (v.currentTime > ultimoTempo + 0.15) {
+      // Ao dar loop, currentTime volta a ~0 — isso também é progresso.
+      if (v.currentTime > ultimoTempo + 0.15 || v.currentTime < ultimoTempo - 0.15) {
         ultimoTempo = v.currentTime;
         paradoDesde = Date.now();
+        recargas = 0;
         marcarAtividade();
         return;
       }
+
       const travadoMs = Date.now() - paradoDesde;
       if (travadoMs > 8000 && recargas < 3) {
         recargas += 1;
