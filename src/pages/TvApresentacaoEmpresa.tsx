@@ -124,6 +124,7 @@ export default function TvApresentacaoEmpresa() {
       setApresentacao(a);
       setIdx(0);
       setCarregando(false);
+      carregouOk = true;
     };
 
     const falhar = (msg: string) => {
@@ -138,18 +139,20 @@ export default function TvApresentacaoEmpresa() {
     carregar();
 
     // TV Box recém-ligada: a rede costuma subir depois do app. Retenta ao voltar
-    // a conexão ou quando a tela volta a ficar visível, sem precisar reiniciar.
+    // a conexão ou quando a tela volta a ficar visível — apenas se ainda NÃO
+    // conseguimos carregar, para não reiniciar a apresentação já em execução.
     const retomar = () => {
-      if (cancelado) return;
+      if (cancelado || carregouOk) return;
       if (retryTimer) window.clearTimeout(retryTimer);
       tentativa = 0;
       carregar();
     };
     const aoVisibilidade = () => {
-      if (document.visibilityState === "visible" && (erro || !apresentacao)) retomar();
+      if (document.visibilityState === "visible") retomar();
     };
     window.addEventListener("online", retomar);
     document.addEventListener("visibilitychange", aoVisibilidade);
+
 
     return () => {
       cancelado = true;
