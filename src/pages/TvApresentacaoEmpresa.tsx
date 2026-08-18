@@ -171,12 +171,13 @@ export default function TvApresentacaoEmpresa() {
   const next = useCallback(() => {
     if (!apresentacao) return;
     marcarAtividade();
+    // Avança imediatamente (não depende de setTimeout, que pode ser
+    // descartado em WebViews de TV Box após horas ligadas).
+    setIdx((i) => (i + 1) % apresentacao.itens.length);
     setVisible(false);
-    setTimeout(() => {
-      setIdx((i) => (i + 1) % apresentacao.itens.length);
-      setVisible(true);
-    }, 300);
+    window.setTimeout(() => setVisible(true), 60);
   }, [apresentacao, marcarAtividade]);
+
 
   // Timer for images (videos advance on 'ended')
   // Usa relógio de parede + interval: em TV Box, setTimeout longo pode ser
