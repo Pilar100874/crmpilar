@@ -73,6 +73,8 @@ export default function TvApresentacaoEmpresa() {
     let cancelado = false;
     let tentativa = 0;
     let retryTimer: number | null = null;
+    let carregouOk = false;
+
 
     const carregar = async () => {
       setErro(null);
