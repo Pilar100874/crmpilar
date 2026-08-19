@@ -11,6 +11,7 @@ export type LogisticaBlockType =
   | 'condicao_zona_isenta'
   | 'acao_marcar_mapa'
   | 'acao_tempo_parado_mapa'
+  | 'acao_endereco_mapa'
   | 'acao_relatorio_pdf'
   | 'acao_whatsapp'
   | 'acao_notificacao'
@@ -45,6 +46,9 @@ export interface LogisticaBlockConfig {
   cor_tempo?: string;
   piscar_tempo?: boolean;
   formato_tempo?: 'hhmm' | 'minutos';
+  // Para acao_endereco_mapa
+  cor_endereco?: string;
+  endereco_curto?: boolean;
   // Para condicao_zona_isenta
   zona_nome?: string;
   zona_endereco?: string;
@@ -136,6 +140,8 @@ export interface ParadaMarcada {
   data_fim: string | null;
   ativa: boolean;
   mostrar_tempo?: boolean;
+  mostrar_endereco?: boolean;
+  endereco?: string | null;
 
   automacao_id: string | null;
   created_at: string;
@@ -262,6 +268,16 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     icon: 'TimerReset',
     description: 'Mostra no mapa, abaixo do nome do veículo, há quanto tempo ele está parado (piscando). Some quando o veículo volta a se mover.',
     defaultData: { cor_tempo: '#F43F5E', piscar_tempo: true, formato_tempo: 'hhmm' },
+    outputs: 1,
+  },
+  {
+    type: 'acao_endereco_mapa',
+    label: 'Endereço no Mapa (Balão)',
+    category: 'acao',
+    color: '#0EA5E9',
+    icon: 'MapPinned',
+    description: 'Mostra um balão com o endereço onde o veículo está parado. Some automaticamente quando o veículo volta a se mover.',
+    defaultData: { cor_endereco: '#0EA5E9', endereco_curto: true },
     outputs: 1,
   },
   {
