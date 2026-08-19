@@ -45,6 +45,11 @@ interface TempoParadoInfo {
   piscar: boolean;
 }
 
+interface EnderecoParadoInfo {
+  texto: string;
+  cor: string;
+}
+
 const createVeiculoIcon = (
   status: string,
   compact = false,
@@ -53,6 +58,7 @@ const createVeiculoIcon = (
   ignicao?: boolean | null,
   rotulo?: string,
   tempoParado?: TempoParadoInfo | null,
+  enderecoParado?: EnderecoParadoInfo | null,
 ) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
@@ -77,6 +83,9 @@ const createVeiculoIcon = (
   }
   if (tempoParado) {
     linhas.push(`<div style="white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:800; color:#fff; background:${tempoParado.cor}; border:1px solid rgba(255,255,255,.7); padding:1px 5px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.45); ${tempoParado.piscar ? 'animation: tempoParadoBlink 1s steps(1, end) infinite;' : ''}">⏱ ${tempoParado.texto}</div>`);
+  }
+  if (enderecoParado) {
+    linhas.push(`<div style="max-width:220px; font-size:${compact ? 9 : 11}px; font-weight:600; color:#0f172a; background:#ffffff; border:2px solid ${enderecoParado.cor}; padding:2px 6px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.35); line-height:1.25; white-space:normal;">📍 ${enderecoParado.texto}</div>`);
   }
   const label = linhas.length
     ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); display:flex; flex-direction:column; align-items:flex-start; gap:2px; pointer-events:none;">${linhas.join('')}</div>`
@@ -386,13 +395,22 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
     // Paradas com "Tempo Parado no Mapa" ativo → rótulo piscante abaixo do nome
     const tempoPorVeiculo = new Map<string, TempoParadoInfo>();
+    const enderecoPorVeiculo = new Map<string, EnderecoParadoInfo>();
     paradasMarcadas.forEach(p => {
-      if (!p.mostrar_tempo || p.data_fim || p.ativa === false) return;
-      tempoPorVeiculo.set(p.veiculo_id, {
-        texto: formatarTempoParado(p.data_inicio),
-        cor: p.cor_icone_parada || '#F43F5E',
-        piscar: true,
-      });
+      if (p.data_fim || p.ativa === false) return;
+      if (p.mostrar_tempo) {
+        tempoPorVeiculo.set(p.veiculo_id, {
+          texto: formatarTempoParado(p.data_inicio),
+          cor: p.cor_icone_parada || '#F43F5E',
+          piscar: true,
+        });
+      }
+      if (p.mostrar_endereco && p.endereco) {
+        enderecoPorVeiculo.set(p.veiculo_id, {
+          texto: String(p.endereco),
+          cor: '#0EA5E9',
+        });
+      }
     });
 
     // Remove markers that no longer exist
@@ -410,6 +428,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
       const tempo = veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null;
+      const enderecoBalao = veiculo.status === 'movendo' ? null : enderecoPorVeiculo.get(veiculo.id) || null;
 
       // Assinatura do visual: só recria o ícone quando algo realmente muda
       const sig = [
@@ -420,6 +439,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         String(veiculo.ultima_posicao?.ignicao),
         veiculo.placa || '',
         tempo ? `${tempo.texto}|${tempo.cor}` : '',
+        enderecoBalao ? `e:${enderecoBalao.texto}` : '',
       ].join('~');
 
       const criarIcone = () => createVeiculoIcon(
@@ -430,6 +450,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         veiculo.ultima_posicao?.ignicao,
         veiculo.placa,
         tempo,
+        enderecoBalao,
       );
 
       if (existingMarker) {
@@ -563,7 +584,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const map = mapRef.current;
     const currentParadasMarkers = paradasMarkersRef.current;
     // Paradas com rótulo de tempo no veículo não geram marcador separado
-    const paradasVisiveis = paradasMarcadas.filter(p => !p.mostrar_tempo);
+    const paradasVisiveis = paradasMarcadas.filter(p => !p.mostrar_tempo && !p.mostrar_endereco);
 
     // Remove markers that no longer exist
     const currentIds = new Set(paradasVisiveis.map(p => p.id));
