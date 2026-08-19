@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buscarAdminsEstabelecimento } from "../_shared/adminsNotificacao.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,11 +36,7 @@ serve(async (req) => {
         .update({ status: "cancelado_expirado", updated_at: new Date().toISOString() })
         .eq("id", p.id);
 
-      const { data: admins } = await admin
-        .from("usuarios")
-        .select("id")
-        .eq("estabelecimento_id", p.estabelecimento_id)
-        .in("nivel_acesso", ["admin", "administrador", "supervisor"]);
+      const admins = await buscarAdminsEstabelecimento(admin, p.estabelecimento_id, false);
       const links = (admins ?? []).map((u: any) => ({
         usuario_id: u.id,
         tipo: "pedido_expirado",

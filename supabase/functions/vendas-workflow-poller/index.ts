@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buscarAdminsEstabelecimento } from "../_shared/adminsNotificacao.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,16 +46,12 @@ serve(async (req) => {
       const key = `vendas_orc_parado:${o.id}`;
       const { data: existente } = await admin
         .from("logistica_workflow_state")
-        .select("id")
+        .select("chave")
         .eq("chave", key)
         .maybeSingle();
       if (existente) continue;
 
-      const { data: admins } = await admin
-        .from("usuarios")
-        .select("id")
-        .eq("estabelecimento_id", o.estabelecimento_id)
-        .in("nivel_acesso", ["admin", "administrador", "supervisor"]);
+      const admins = await buscarAdminsEstabelecimento(admin, o.estabelecimento_id, false);
 
       const links = (admins ?? []).map((u: any) => ({
         usuario_id: u.id,
@@ -91,16 +88,12 @@ serve(async (req) => {
         const key = `vendas_cliente_inativo:${e.id}:${new Date().toISOString().slice(0, 7)}`;
         const { data: existente } = await admin
           .from("logistica_workflow_state")
-          .select("id")
+          .select("chave")
           .eq("chave", key)
           .maybeSingle();
         if (existente) continue;
 
-        const { data: admins } = await admin
-          .from("usuarios")
-          .select("id")
-          .eq("estabelecimento_id", e.estabelecimento_id)
-          .in("nivel_acesso", ["admin", "administrador", "supervisor"]);
+        const admins = await buscarAdminsEstabelecimento(admin, e.estabelecimento_id, false);
         const links = (admins ?? []).map((u: any) => ({
           usuario_id: u.id,
           tipo: "cliente_inativo",
@@ -132,16 +125,12 @@ serve(async (req) => {
       const key = `vendas_aniv:${e.id}:${new Date().toISOString().slice(0, 10)}`;
       const { data: existente } = await admin
         .from("logistica_workflow_state")
-        .select("id")
+        .select("chave")
         .eq("chave", key)
         .maybeSingle();
       if (existente) continue;
 
-      const { data: admins } = await admin
-        .from("usuarios")
-        .select("id")
-        .eq("estabelecimento_id", e.estabelecimento_id)
-        .in("nivel_acesso", ["admin", "administrador", "supervisor", "vendedor"]);
+      const admins = await buscarAdminsEstabelecimento(admin, e.estabelecimento_id, true);
       const links = (admins ?? []).map((u: any) => ({
         usuario_id: u.id,
         tipo: "aniversario_cliente",

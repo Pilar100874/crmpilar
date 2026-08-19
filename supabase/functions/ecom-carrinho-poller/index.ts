@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buscarAdminsEstabelecimento } from "../_shared/adminsNotificacao.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,11 +39,7 @@ serve(async (req) => {
         .update({ recovery_triggered_at: new Date().toISOString(), status: "abandonado" })
         .eq("id", c.id);
 
-      const { data: admins } = await admin
-        .from("usuarios")
-        .select("id")
-        .eq("estabelecimento_id", c.estabelecimento_id)
-        .in("nivel_acesso", ["admin", "administrador", "supervisor"]);
+      const admins = await buscarAdminsEstabelecimento(admin, c.estabelecimento_id, false);
       const links = (admins ?? []).map((u: any) => ({
         usuario_id: u.id,
         tipo: "carrinho_abandonado",
