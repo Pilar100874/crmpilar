@@ -328,6 +328,46 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           </div>
         );
 
+      case 'acao_endereco_mapa':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Cor do balão</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="color"
+                  className="h-9 w-16 p-1"
+                  value={config.cor_endereco || '#0EA5E9'}
+                  onChange={(e) => updateConfig('cor_endereco', e.target.value)}
+                />
+                <Input
+                  value={config.cor_endereco || '#0EA5E9'}
+                  onChange={(e) => updateConfig('cor_endereco', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <Checkbox
+                id="endereco_curto"
+                checked={config.endereco_curto !== false}
+                onCheckedChange={(v) => updateConfig('endereco_curto', !!v)}
+              />
+              <div className="space-y-0.5">
+                <Label htmlFor="endereco_curto" className="text-sm cursor-pointer">Endereço resumido</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Mostra apenas rua, número e bairro (sem cidade/estado/CEP).
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground border-t pt-3">
+              Ligue este bloco após a condição "Veículo Parado" e da saída "Fora da zona" do bloco "Zona Isenta".
+              O balão com o endereço aparece ao lado do veículo no mapa e some assim que ele voltar a se mover.
+            </p>
+          </div>
+        );
+
       case 'condicao_zona_isenta':
         return (
           <div className="space-y-4">
