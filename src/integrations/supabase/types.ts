@@ -11296,12 +11296,14 @@ export type Database = {
           created_at: string
           data_fim: string | null
           data_inicio: string
+          endereco: string | null
           estabelecimento_id: string
           icone_parada: string | null
           id: string
           lat: number
           legenda_parada: string | null
           lng: number
+          mostrar_endereco: boolean
           mostrar_tempo: boolean
           tempo_parado_minutos: number
           veiculo_id: string
@@ -11314,12 +11316,14 @@ export type Database = {
           created_at?: string
           data_fim?: string | null
           data_inicio: string
+          endereco?: string | null
           estabelecimento_id: string
           icone_parada?: string | null
           id?: string
           lat: number
           legenda_parada?: string | null
           lng: number
+          mostrar_endereco?: boolean
           mostrar_tempo?: boolean
           tempo_parado_minutos: number
           veiculo_id: string
@@ -11332,12 +11336,14 @@ export type Database = {
           created_at?: string
           data_fim?: string | null
           data_inicio?: string
+          endereco?: string | null
           estabelecimento_id?: string
           icone_parada?: string | null
           id?: string
           lat?: number
           legenda_parada?: string | null
           lng?: number
+          mostrar_endereco?: boolean
           mostrar_tempo?: boolean
           tempo_parado_minutos?: number
           veiculo_id?: string
