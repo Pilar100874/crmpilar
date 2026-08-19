@@ -238,6 +238,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const currentMarkerRef = useRef<L.Marker | null>(null);
 
   const initialBoundsFittedRef = useRef(false);
+  // Fallback de endereço (geocodificação no cliente) para paradas sem endereço salvo
+  const [enderecosFallback, setEnderecosFallback] = useState<Record<string, string>>({});
+  const geocodePendenteRef = useRef<Set<string>>(new Set());
   const ultimoBoundsRef = useRef<L.LatLngBounds | null>(null);
   // Assinaturas para evitar recriar ícones/DOM a cada atualização (causa de "piscar")
   const iconSigRef = useRef<Map<string, string>>(new Map());
@@ -405,11 +408,11 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           piscar: true,
         });
       }
-      if (p.mostrar_endereco && p.endereco) {
-        enderecoPorVeiculo.set(p.veiculo_id, {
-          texto: String(p.endereco),
-          cor: '#0EA5E9',
-        });
+      if (p.mostrar_endereco) {
+        const texto = (p.endereco && String(p.endereco)) || enderecosFallback[p.veiculo_id];
+        if (texto) {
+          enderecoPorVeiculo.set(p.veiculo_id, { texto, cor: '#0EA5E9' });
+        }
       }
     });
 
@@ -517,7 +520,31 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, enderecosFallback]);
+
+  // Geocodifica no cliente as paradas com balão de endereço mas sem endereço salvo
+  useEffect(() => {
+    const pendentes = paradasMarcadas.filter(
+      p => p.mostrar_endereco && !p.endereco && !p.data_fim && p.ativa !== false
+    );
+    if (!pendentes.length) return;
+    let cancelado = false;
+    (async () => {
+      const { reverseGeocode } = await import('@/services/logisticaAutomacaoExecutor');
+      for (const p of pendentes) {
+        const chave = `${p.veiculo_id}`;
+        if (geocodePendenteRef.current.has(chave) || enderecosFallback[chave]) continue;
+        geocodePendenteRef.current.add(chave);
+        const texto = await reverseGeocode(Number(p.lat), Number(p.lng), true);
+        geocodePendenteRef.current.delete(chave);
+        if (cancelado) return;
+        if (texto) setEnderecosFallback(prev => ({ ...prev, [chave]: texto }));
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [paradasMarcadas, enderecosFallback]);
 
   // Reenquadra quando o container muda de tamanho (sidebar, painéis, rotação, resize)
   useEffect(() => {
