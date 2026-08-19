@@ -321,6 +321,7 @@ async function processarEstabelecimento(estabelecimentoId: string) {
       zonas.some((z) => distanciaMetros(lat, lng, z.lat, z.lng) <= z.raio);
 
     const tempoNode = nodes.find((n) => n.data?.type === "acao_tempo_parado_mapa");
+    const enderecoNode = nodes.find((n) => n.data?.type === "acao_endereco_mapa");
     const paradoNode = nodes.find((n) => n.data?.type === "condicao_parado");
     const repetirNode = nodes.find((n) => n.data?.type === "condicao_repetir_parado");
     const agendaNode = nodes.find((n) => n.data?.type === "gatilho_agendamento");
@@ -340,7 +341,7 @@ async function processarEstabelecimento(estabelecimentoId: string) {
       });
 
       // Marcações no mapa (tempo parado)
-      if (pc.marcar_no_mapa || tempoNode) {
+      if (pc.marcar_no_mapa || tempoNode || enderecoNode) {
         for (const v of elegiveis) {
           const min = minutosDesde(v.pos!.data_hora);
           const categoria = min >= 30 ? "mais_30" : min >= 15 ? "15_30" : min >= 5 ? "5_15" : "menos_5";
@@ -355,6 +356,8 @@ async function processarEstabelecimento(estabelecimentoId: string) {
             legenda_parada: `${pc.legenda_parada || `Parado há ${min} min`} (${automacao.nome})`,
             automacao_id: automacao.id,
             mostrar_tempo: !!tempoNode,
+            mostrar_endereco: !!enderecoNode,
+            endereco_curto: enderecoNode?.data?.config?.endereco_curto !== false,
             data_inicio: v.pos!.data_hora,
           });
         }
@@ -621,6 +624,31 @@ async function processarEstabelecimento(estabelecimentoId: string) {
   return { automacoes: automacoes.length, disparos };
 }
 
+// Geocodificação reversa (Nominatim) para o balão de endereço
+async function enderecoDe(lat: number, lng: number, curto: boolean): Promise<string | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`;
+    const res = await fetch(url, { headers: { "User-Agent": "PilarCRM/1.0 (logistica-automacao)" } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const a = json?.address || {};
+    const rua = a.road || a.pedestrian || a.residential || a.suburb || "";
+    const numero = a.house_number ? `, ${a.house_number}` : "";
+    const bairro = a.suburb || a.neighbourhood || a.city_district || "";
+    const cidade = a.city || a.town || a.village || a.municipality || "";
+    const uf = a.state_code || a.state || "";
+    if (curto) {
+      const partes = [rua ? `${rua}${numero}` : "", bairro].filter(Boolean);
+      return partes.length ? partes.join(" - ") : (json?.display_name ?? null);
+    }
+    const partes = [rua ? `${rua}${numero}` : "", bairro, cidade, uf].filter(Boolean);
+    return partes.length ? partes.join(" - ") : (json?.display_name ?? null);
+  } catch (e) {
+    console.error("[cron] geocodificação reversa falhou", e);
+    return null;
+  }
+}
+
 async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], veiculos: Veic[]) {
   const marcados = new Set(marcacoes.map((m) => m.veiculo_id));
   const emMovimento = veiculos.filter((v) => v.status === "movendo" && !marcados.has(v.id)).map((v) => v.id);
@@ -635,7 +663,7 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
   for (const m of marcacoes) {
     const { data: existing } = await admin
       .from("logistica_paradas_marcadas")
-      .select("id, lat, lng, data_inicio")
+      .select("id, lat, lng, data_inicio, endereco")
       .eq("estabelecimento_id", estabelecimentoId)
       .eq("veiculo_id", m.veiculo_id)
       .maybeSingle();
@@ -648,6 +676,11 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
           ? existing.data_inicio
           : m.data_inicio
         : m.data_inicio;
+      let endereco = (existing as any).endereco ?? null;
+      if (m.mostrar_endereco && (mudou || !endereco)) {
+        endereco = (await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)) ?? endereco;
+      }
+      if (!m.mostrar_endereco) endereco = null;
       await admin
         .from("logistica_paradas_marcadas")
         .update({
@@ -660,11 +693,18 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
           legenda_parada: m.legenda_parada,
           data_inicio: inicio,
           mostrar_tempo: m.mostrar_tempo,
+          mostrar_endereco: !!m.mostrar_endereco,
+          endereco,
         })
         .eq("id", existing.id);
     } else {
+      const endereco = m.mostrar_endereco
+        ? await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)
+        : null;
+      const { endereco_curto: _ec, ...campos } = m;
       await admin.from("logistica_paradas_marcadas").insert({
-        ...m,
+        ...campos,
+        endereco,
         estabelecimento_id: estabelecimentoId,
       });
     }
