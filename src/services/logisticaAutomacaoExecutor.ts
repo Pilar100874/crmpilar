@@ -36,6 +36,8 @@ interface ParadaMarcadaResult {
   automacao_id: string;
   automacao_nome: string;
   mostrar_tempo?: boolean;
+  mostrar_endereco?: boolean;
+  endereco?: string | null;
   data_inicio?: string;
 }
 
@@ -49,6 +51,33 @@ function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number)
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/** Geocodificação reversa (Nominatim) com cache simples em memória */
+const geocodeCache = new Map<string, string>();
+export async function reverseGeocode(lat: number, lng: number, curto = true): Promise<string | null> {
+  const key = `${lat.toFixed(4)},${lng.toFixed(4)},${curto ? 'c' : 'f'}`;
+  const cached = geocodeCache.get(key);
+  if (cached) return cached;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=pt-BR`
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const a = json?.address || {};
+    const completo: string = json?.display_name || '';
+    const texto = curto
+      ? [a.road || a.pedestrian || a.suburb, a.house_number, a.city || a.town || a.village]
+          .filter(Boolean)
+          .join(', ') || completo
+      : completo;
+    if (!texto) return null;
+    geocodeCache.set(key, texto);
+    return texto;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -240,6 +269,10 @@ export async function executarAutomacoesLogistica(
       const tempoNode = flowObj.nodes.find(n => n.data?.type === 'acao_tempo_parado_mapa');
       const tempoCfg = (tempoNode?.data?.config || null) as Record<string, unknown> | null;
 
+      // Bloco "Endereço no Mapa (Balão)"
+      const enderecoNode = flowObj.nodes.find(n => n.data?.type === 'acao_endereco_mapa');
+      const enderecoCfg = (enderecoNode?.data?.config || null) as Record<string, unknown> | null;
+
       // Bloco "Gerar Relatório PDF" (velocidades excedidas no período)
       const relatorioNode = flowObj.nodes.find(n => n.data?.type === 'acao_relatorio_pdf');
       let relatorioPdfUrl: string | null = null;
@@ -352,7 +385,7 @@ export async function executarAutomacoesLogistica(
 
 
         // Handle "condicao_parado" - Vehicle stopped condition
-        if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg)) {
+        if (nodeType === 'condicao_parado' && (config.marcar_no_mapa || tempoCfg || enderecoCfg)) {
           const condicoesTempo: CondicaoTempoParado[] = Array.isArray(config.condicoes_tempo) && config.condicoes_tempo.length
             ? (config.condicoes_tempo as CondicaoTempoParado[])
             : config.tempo_minutos
@@ -388,6 +421,14 @@ export async function executarAutomacoesLogistica(
                   automacao_id: automacao.id,
                   automacao_nome: automacao.nome,
                   mostrar_tempo: !!tempoCfg,
+                  mostrar_endereco: !!enderecoCfg,
+                  endereco: enderecoCfg
+                    ? await reverseGeocode(
+                        veiculo.ultima_posicao.lat,
+                        veiculo.ultima_posicao.lng,
+                        enderecoCfg.endereco_curto !== false
+                      )
+                    : null,
                   data_inicio: veiculo.ultima_posicao.data_hora,
                 });
               }
@@ -751,7 +792,9 @@ async function salvarParadasMarcadas(
             cor_icone_parada: parada.cor_icone_parada,
             legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
             data_inicio: dataInicioPersistida,
-            mostrar_tempo: !!parada.mostrar_tempo
+            mostrar_tempo: !!parada.mostrar_tempo,
+            mostrar_endereco: !!parada.mostrar_endereco,
+            ...(parada.endereco ? { endereco: parada.endereco } : {}),
 
           })
           .eq('id', existing.id);
@@ -771,7 +814,9 @@ async function salvarParadasMarcadas(
             legenda_parada: `${parada.legenda_parada} (${parada.automacao_nome})`,
             data_inicio: parada.data_inicio || now,
             automacao_id: parada.automacao_id,
-            mostrar_tempo: !!parada.mostrar_tempo
+            mostrar_tempo: !!parada.mostrar_tempo,
+            mostrar_endereco: !!parada.mostrar_endereco,
+            endereco: parada.endereco || null,
           });
 
       }
