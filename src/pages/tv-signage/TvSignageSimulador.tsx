@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pause, Play, Monitor, X } from "lucide-react";
 import TvNotificationBar from "@/components/tv/TvNotificationBar";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { TV_FIM_CONTEUDO } from "@/lib/tv/cicloConteudo";
 
-type Item = { url: string; nome: string; duracao: number; refresh: number };
+type Item = { url: string; nome: string; duracao: number; refresh: number; aoFinal?: boolean };
 
 export default function TvSignageSimulador() {
   const { deviceId, deviceCode } = useParams();
@@ -120,7 +121,7 @@ export default function TvSignageSimulador() {
           list = (playlist.itens || [])
             .map((it: any) => {
               const b = buildUrl(it.dashboard, previewDeviceId);
-              return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
+              return b ? { ...b, duracao: it.duracao_segundos || 10, aoFinal: it.modo_avanco === "fim_conteudo" } : null;
             })
             .filter(Boolean) as Item[];
         } else if (dashboard) {
@@ -183,7 +184,7 @@ export default function TvSignageSimulador() {
       if (playlist) {
         list = (playlist.itens || []).map((it: any) => {
           const b = buildUrl(it.dashboard, dev.id);
-          return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
+          return b ? { ...b, duracao: it.duracao_segundos || 10, aoFinal: it.modo_avanco === "fim_conteudo" } : null;
         }).filter(Boolean) as Item[];
       }
       if (!list.length && dashboard) {
@@ -273,9 +274,25 @@ export default function TvSignageSimulador() {
   useEffect(() => {
     if (paused || items.length <= 1) return;
     const cur = items[idx];
-    if (!cur || !cur.duracao) return;
-    const t = setTimeout(() => setIdx((i) => (i + 1) % items.length), cur.duracao * 1000);
+    if (!cur) return;
+    // Modo "ao final do conteúdo": aguarda o aviso do player interno.
+    // Mantém um limite de segurança para telas que nunca sinalizam.
+    const segundos = cur.aoFinal ? Math.max(60, cur.duracao || 0) * 30 : cur.duracao;
+    if (!segundos) return;
+    const t = setTimeout(() => setIdx((i) => (i + 1) % items.length), segundos * 1000);
     return () => clearTimeout(t);
+  }, [idx, items, paused]);
+
+  // Aviso de fim de ciclo enviado pelos players internos (apresentação/mural)
+  useEffect(() => {
+    const onMsg = (ev: MessageEvent) => {
+      if ((ev.data as any)?.tipo !== TV_FIM_CONTEUDO) return;
+      if (paused || items.length <= 1) return;
+      if (!items[idx]?.aoFinal) return;
+      setIdx((i) => (i + 1) % items.length);
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
   }, [idx, items, paused]);
 
   // Refresh do dashboard atual

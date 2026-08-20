@@ -19,6 +19,7 @@ export default function TvSignagePlaylists() {
   const [items, setItems] = useState<any[]>([]);
   const [addDashId, setAddDashId] = useState<string>("");
   const [addDur, setAddDur] = useState(30);
+  const [addModo, setAddModo] = useState<"tempo" | "fim_conteudo">("tempo");
 
   const carregar = async () => {
     const [{ data: p }, { data: d }] = await Promise.all([
@@ -54,7 +55,7 @@ export default function TvSignagePlaylists() {
     if (!edit?.id || !addDashId) return;
     const ordem = items.length;
     const { data } = await supabase.from("tv_playlist_items").insert({
-      playlist_id: edit.id, dashboard_id: addDashId, ordem, duracao_segundos: addDur,
+      playlist_id: edit.id, dashboard_id: addDashId, ordem, duracao_segundos: addDur, modo_avanco: addModo,
     } as any).select("*, dashboard:tv_dashboards(nome)").single();
     if (data) setItems([...items, data]);
     setAddDashId("");
@@ -78,7 +79,7 @@ export default function TvSignagePlaylists() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">Sequência de telas com temporizador para rotação automática.</p>
+        <p className="text-sm text-muted-foreground">Sequência de telas: cada uma pode avançar por tempo ou ao terminar a apresentação/mural exibido.</p>
         <Button onClick={() => abrirEditor({ loop: true })}><Plus className="w-4 h-4 mr-1" />Nova playlist</Button>
       </div>
 
@@ -137,7 +138,16 @@ export default function TvSignagePlaylists() {
                         <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione um dashboard" /></SelectTrigger>
                         <SelectContent>{dashboards.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
                       </Select>
-                      <Input type="number" className="w-24" value={addDur} onChange={(e) => setAddDur(parseInt(e.target.value) || 30)} placeholder="seg" />
+                      <Select value={addModo} onValueChange={(v) => setAddModo(v as any)}>
+                        <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tempo">Por tempo (segundos)</SelectItem>
+                          <SelectItem value="fim_conteudo">Ao terminar a apresentação</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {addModo === "tempo" && (
+                        <Input type="number" className="w-24" value={addDur} onChange={(e) => setAddDur(parseInt(e.target.value) || 30)} placeholder="seg" />
+                      )}
                       <Button onClick={addItem} disabled={!addDashId}>Adicionar</Button>
                     </div>
                     <div className="space-y-2">
@@ -146,8 +156,35 @@ export default function TvSignagePlaylists() {
                           <GripVertical className="w-4 h-4 text-muted-foreground" />
                           <div className="flex-1">
                             <div className="text-sm font-medium">{it.dashboard?.nome}</div>
-                            <div className="text-xs text-muted-foreground">{it.duracao_segundos}s</div>
+                            <div className="text-xs text-muted-foreground">
+                              {it.modo_avanco === "fim_conteudo" ? "Avança ao terminar a apresentação" : `${it.duracao_segundos}s`}
+                            </div>
                           </div>
+                          <Select
+                            value={it.modo_avanco === "fim_conteudo" ? "fim_conteudo" : "tempo"}
+                            onValueChange={async (v) => {
+                              await supabase.from("tv_playlist_items").update({ modo_avanco: v } as any).eq("id", it.id);
+                              setItems(items.map((x) => (x.id === it.id ? { ...x, modo_avanco: v } : x)));
+                            }}
+                          >
+                            <SelectTrigger className="w-52 h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="tempo">Por tempo</SelectItem>
+                              <SelectItem value="fim_conteudo">Ao terminar a apresentação</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {it.modo_avanco !== "fim_conteudo" && (
+                            <Input
+                              type="number"
+                              className="w-20 h-8 text-xs"
+                              value={it.duracao_segundos ?? 30}
+                              onChange={(e) => setItems(items.map((x) => (x.id === it.id ? { ...x, duracao_segundos: parseInt(e.target.value) || 0 } : x)))}
+                              onBlur={async (e) => {
+                                const seg = parseInt(e.target.value) || 30;
+                                await supabase.from("tv_playlist_items").update({ duracao_segundos: seg } as any).eq("id", it.id);
+                              }}
+                            />
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => move(idx, -1)}><ArrowUp className="w-4 h-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => move(idx, 1)}><ArrowDown className="w-4 h-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => removeItem(it.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>

@@ -9,6 +9,7 @@ import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { MonitorPlay, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { notificarFimDoConteudo } from "@/lib/tv/cicloConteudo";
 
 type ItemTipo = "image" | "video";
 interface ApresentacaoItem {
@@ -56,6 +57,7 @@ export default function TvApresentacaoEmpresa() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoRecoveryKey, setVideoRecoveryKey] = useState(0);
   const ultimoAvanco = useRef<number>(Date.now());
+  const idxRef = useRef(0);
 
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState(0);
@@ -183,12 +185,17 @@ export default function TvApresentacaoEmpresa() {
     if (!apresentacao) return;
     marcarAtividade();
     if (apresentacao.itens.length === 1) {
+      // Ciclo completo: avisa a playlist que hospeda esta apresentação
+      notificarFimDoConteudo("apresentacao");
       if (apresentacao.itens[0]?.tipo === "video") reconstruirVideo();
       return;
     }
     // Avança imediatamente (não depende de setTimeout, que pode ser
     // descartado em WebViews de TV Box após horas ligadas).
-    setIdx((i) => (i + 1) % apresentacao.itens.length);
+    const proximo = (idxRef.current + 1) % apresentacao.itens.length;
+    idxRef.current = proximo;
+    if (proximo === 0) notificarFimDoConteudo("apresentacao");
+    setIdx(proximo);
     setVisible(false);
     window.setTimeout(() => setVisible(true), 60);
   }, [apresentacao, marcarAtividade, reconstruirVideo]);
@@ -215,6 +222,7 @@ export default function TvApresentacaoEmpresa() {
   // muito tempo (timers mortos, vídeo zumbi, WebView congelada), recupera.
   useEffect(() => {
     ultimoAvanco.current = Date.now();
+    idxRef.current = idx;
   }, [idx]);
   useEffect(() => {
     if (!apresentacao || apresentacao.itens.length === 0) return;
