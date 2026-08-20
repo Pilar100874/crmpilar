@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 interface DenunciasConfig {
-  titulo: string; intro: string; email_destino?: string;
+  titulo: string; intro: string;
   aceita_anonimo: boolean; categorias: string[]; aviso_sigilo: string;
 }
 
