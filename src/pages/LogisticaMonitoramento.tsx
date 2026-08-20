@@ -32,6 +32,7 @@ import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 import { VeiculoDetalhesSheet } from '@/components/logistica/VeiculoDetalhesSheet';
 import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
+import { TrilhaFocoControls } from '@/components/logistica/TrilhaFocoControls';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -172,6 +173,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [modoFoco, setModoFoco] = useState(false);
   const modoFocoRef = useRef(false);
   useEffect(() => { modoFocoRef.current = modoFoco; }, [modoFoco]);
+  const [trilhaMinutos, setTrilhaMinutos] = useState<number>(() => Number(localStorage.getItem('logistica:trilhaMinutos') || 15));
+  const [trilhaLimparToken, setTrilhaLimparToken] = useState(0);
+  useEffect(() => { localStorage.setItem('logistica:trilhaMinutos', String(trilhaMinutos)); }, [trilhaMinutos]);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
   const [detalhesVeiculoId, setDetalhesVeiculoId] = useState<string | null>(null);
@@ -508,6 +512,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusTrigger={focusVehicle?.nonce}
                 modoFoco={modoFoco}
                 focoZoom={modoFoco ? 18 : 17}
+                trilhaMinutos={modoFoco ? trilhaMinutos : 0}
+                trilhaLimparToken={trilhaLimparToken}
                 className="absolute inset-0"
                 fitBounds={!pinnedVeiculoId && !detalhesVeiculoId}
               />
@@ -634,6 +640,16 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               Modo Foco
             </Button>
 
+            {modoFoco && (
+              <TrilhaFocoControls
+                minutos={trilhaMinutos}
+                onMinutosChange={setTrilhaMinutos}
+                onLimpar={() => setTrilhaLimparToken(Date.now())}
+              />
+            )}
+
+
+
             <Button
               variant={pinnedVeiculoId ? 'default' : 'outline'}
               size="sm"
@@ -719,6 +735,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusTrigger={focusVehicle?.nonce}
                 modoFoco={modoFoco}
                 focoZoom={modoFoco ? 18 : 17}
+                trilhaMinutos={modoFoco ? trilhaMinutos : 0}
+                trilhaLimparToken={trilhaLimparToken}
                 className="h-full w-full absolute inset-0"
                 fitBounds={!pinnedVeiculoId && !rotaCoords && !detalhesVeiculoId}
                 fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}

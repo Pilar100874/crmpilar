@@ -27,6 +27,7 @@ import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
+import { TrilhaFocoControls } from '@/components/logistica/TrilhaFocoControls';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 
@@ -98,6 +99,9 @@ export default function TvDashboardVeiculos() {
   const [modoFoco, setModoFoco] = useState(false);
   const modoFocoRef = useRef(false);
   useEffect(() => { modoFocoRef.current = modoFoco; }, [modoFoco]);
+  const [trilhaMinutos, setTrilhaMinutos] = useState<number>(() => Number(localStorage.getItem('logistica:trilhaMinutos') || 15));
+  const [trilhaLimparToken, setTrilhaLimparToken] = useState(0);
+  useEffect(() => { localStorage.setItem('logistica:trilhaMinutos', String(trilhaMinutos)); }, [trilhaMinutos]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
   const [searchParams] = useSearchParams();
   // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
@@ -629,6 +633,8 @@ export default function TvDashboardVeiculos() {
               focusTrigger={focusTrigger}
               modoFoco={modoFoco}
               focoZoom={modoFoco ? 18 : 17}
+              trilhaMinutos={modoFoco ? trilhaMinutos : 0}
+              trilhaLimparToken={trilhaLimparToken}
               onVeiculoClick={(v) => handleFocus(v.id)}
             />
           )}
@@ -691,6 +697,15 @@ export default function TvDashboardVeiculos() {
                 <Crosshair className="h-4 w-4" />
                 Modo Foco
               </Button>
+              {modoFoco && (
+                <TrilhaFocoControls
+                  minutos={trilhaMinutos}
+                  onMinutosChange={setTrilhaMinutos}
+                  onLimpar={() => setTrilhaLimparToken(Date.now())}
+                  className="h-10"
+                  compacto
+                />
+              )}
               <Button
                 variant="secondary"
                 size="sm"
