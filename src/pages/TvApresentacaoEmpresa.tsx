@@ -9,6 +9,7 @@ import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { MonitorPlay, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { notificarFimDoConteudo } from "@/lib/tv/cicloConteudo";
 
 type ItemTipo = "image" | "video";
 interface ApresentacaoItem {
