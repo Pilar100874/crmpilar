@@ -135,7 +135,8 @@ export default function EcommerceDenunciasConfig() {
         <CardContent className="space-y-3">
           <div>
             <Label>E-mail para notificação (opcional)</Label>
-            <Input type="email" placeholder="compliance@suaempresa.com" value={cfg.email_destino} onChange={e => setCfg({ ...cfg, email_destino: e.target.value })} />
+            <Input type="email" placeholder="compliance@suaempresa.com" value={emailDestino} onChange={e => setEmailDestino(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1">Este e-mail é interno e não fica visível na loja pública.</p>
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
