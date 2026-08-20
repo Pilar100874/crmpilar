@@ -10,7 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, X, List, Pin, KeyRound, Power, ArrowLeft, Maximize2 } from 'lucide-react';
+  Fuel, Route, Timer, Zap, X, List, Pin, KeyRound, Power, ArrowLeft, Maximize2, Crosshair } from 'lucide-react';
 import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
