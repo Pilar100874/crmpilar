@@ -501,7 +501,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     // Linhas guia ligando o marcador deslocado à posição real
     const guias = guiasRef.current;
     guias.clearLayers();
-    if (!guias.getPane()) guias.addTo(map);
+    if (!map.hasLayer(guias)) guias.addTo(map);
 
     // Add or update markers
     veiculosComPosicao.forEach(veiculo => {
