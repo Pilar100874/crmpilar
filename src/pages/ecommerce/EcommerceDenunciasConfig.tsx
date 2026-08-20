@@ -15,7 +15,6 @@ import { toast } from "sonner";
 interface DenunciasConfig {
   titulo: string;
   intro: string;
-  email_destino: string;
   aceita_anonimo: boolean;
   categorias: string[];
   aviso_sigilo: string;
@@ -24,7 +23,6 @@ interface DenunciasConfig {
 const DEFAULT_CFG: DenunciasConfig = {
   titulo: "Canal de Denúncias - NR-1",
   intro: "Este canal segue a Norma Regulamentadora nº 1 (NR-1) e o Programa de Gerenciamento de Riscos (PGR), incluindo riscos psicossociais. As denúncias podem ser feitas de forma anônima e serão tratadas com sigilo.",
-  email_destino: "",
   aceita_anonimo: true,
   categorias: ["Assédio moral","Assédio sexual","Riscos psicossociais","Condições inseguras de trabalho","Acidente ou quase-acidente","Discriminação","Outro"],
   aviso_sigilo: "As informações fornecidas serão tratadas com sigilo e utilizadas apenas para investigação interna, respeitando a LGPD (Lei 13.709/2018).",
@@ -44,6 +42,7 @@ export default function EcommerceDenunciasConfig() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [novaCat, setNovaCat] = useState("");
+  const [emailDestino, setEmailDestino] = useState("");
   const [denuncias, setDenuncias] = useState<any[]>([]);
   const [selecionada, setSelecionada] = useState<any | null>(null);
 
@@ -52,15 +51,17 @@ export default function EcommerceDenunciasConfig() {
   async function load() {
     const estId = localStorage.getItem("estabelecimentoId");
     if (!estId) { setLoading(false); return; }
-    const [{ data: c }, { data: d }] = await Promise.all([
+    const [{ data: c }, { data: d }, { data: p }] = await Promise.all([
       supabase.from("ecommerce_config" as any).select("denuncias_enabled, denuncias_config").eq("estabelecimento_id", estId).maybeSingle(),
       supabase.from("ecommerce_denuncias" as any).select("*").eq("estabelecimento_id", estId).order("created_at", { ascending: false }),
+      supabase.from("ecommerce_config_privado" as any).select("denuncias_email_destino").eq("estabelecimento_id", estId).maybeSingle(),
     ]);
     if (c) {
       setEnabled(!!(c as any).denuncias_enabled);
       const cc = (c as any).denuncias_config;
       if (cc) setCfg({ ...DEFAULT_CFG, ...cc });
     }
+    setEmailDestino(((p as any)?.denuncias_email_destino as string) || "");
     setDenuncias((d as any[]) || []);
     setLoading(false);
   }
@@ -72,7 +73,10 @@ export default function EcommerceDenunciasConfig() {
     const { error } = await supabase.from("ecommerce_config" as any)
       .update({ denuncias_enabled: enabled, denuncias_config: cfg as any })
       .eq("estabelecimento_id", estId);
-    if (error) toast.error(error.message); else toast.success("Canal de denúncias atualizado");
+    const { error: errPriv } = await supabase.from("ecommerce_config_privado" as any)
+      .upsert({ estabelecimento_id: estId, denuncias_email_destino: emailDestino.trim() || null, updated_at: new Date().toISOString() }, { onConflict: "estabelecimento_id" });
+    const falha = error || errPriv;
+    if (falha) toast.error(falha.message); else toast.success("Canal de denúncias atualizado");
     setSaving(false);
   }
 
@@ -131,7 +135,8 @@ export default function EcommerceDenunciasConfig() {
         <CardContent className="space-y-3">
           <div>
             <Label>E-mail para notificação (opcional)</Label>
-            <Input type="email" placeholder="compliance@suaempresa.com" value={cfg.email_destino} onChange={e => setCfg({ ...cfg, email_destino: e.target.value })} />
+            <Input type="email" placeholder="compliance@suaempresa.com" value={emailDestino} onChange={e => setEmailDestino(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1">Este e-mail é interno e não fica visível na loja pública.</p>
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
