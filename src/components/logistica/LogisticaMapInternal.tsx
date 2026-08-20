@@ -542,6 +542,16 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const centroLatLng = map.layerPointToLatLng(centro);
       const chave = grupo.map(g => g.veiculo.id).sort().join('|');
       const expandido = gruposExpandidos.has(chave);
+
+      // Ordem estável do círculo: reaproveita a disposição salva deste usuário
+      const salva = disposicaoRef.current.grupos[chave];
+      if (salva && salva.length === grupo.length) {
+        grupo.sort((a, b) => salva.indexOf(a.veiculo.id) - salva.indexOf(b.veiculo.id));
+      } else if (chaveDisposicaoRef.current) {
+        disposicaoRef.current.grupos[chave] = grupo.map(g => g.veiculo.id);
+        salvarDisposicao(chaveDisposicaoRef.current, disposicaoRef.current);
+      }
+
       const placas = grupo.map(g => g.veiculo.placa).filter(Boolean).join(', ');
 
       if (grupo.length >= LIMITE_CLUSTER && !expandido) {
