@@ -660,7 +660,24 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
       .in("veiculo_id", emMovimento);
   }
 
+  // Mescla marcações do mesmo veículo vindas de automações diferentes
+  // (ex.: uma com "tempo parado" e outra com "endereço no mapa").
+  const marcacoesMescladas = new Map<string, any>();
   for (const m of marcacoes) {
+    const atual = marcacoesMescladas.get(m.veiculo_id);
+    if (!atual) {
+      marcacoesMescladas.set(m.veiculo_id, { ...m });
+      continue;
+    }
+    marcacoesMescladas.set(m.veiculo_id, {
+      ...atual,
+      mostrar_tempo: !!atual.mostrar_tempo || !!m.mostrar_tempo,
+      mostrar_endereco: !!atual.mostrar_endereco || !!m.mostrar_endereco,
+      endereco_curto: atual.mostrar_endereco ? atual.endereco_curto : m.endereco_curto,
+    });
+  }
+
+  for (const m of Array.from(marcacoesMescladas.values())) {
     const { data: existing } = await admin
       .from("logistica_paradas_marcadas")
       .select("id, lat, lng, data_inicio, endereco")
