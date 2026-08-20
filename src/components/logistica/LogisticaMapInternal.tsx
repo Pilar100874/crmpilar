@@ -59,6 +59,8 @@ const createVeiculoIcon = (
   rotulo?: string,
   tempoParado?: TempoParadoInfo | null,
   enderecoParado?: EnderecoParadoInfo | null,
+  labelLado: 'left' | 'right' = 'right',
+  labelDeslocY = 0,
 ) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
@@ -87,8 +89,11 @@ const createVeiculoIcon = (
   if (enderecoParado) {
     linhas.push(`<div style="max-width:220px; font-size:${compact ? 9 : 11}px; font-weight:600; color:#0f172a; background:#ffffff; border:2px solid ${enderecoParado.cor}; padding:2px 6px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.35); line-height:1.25; white-space:normal;">📍 ${enderecoParado.texto}</div>`);
   }
+  const posicaoLado = labelLado === 'left'
+    ? `right:${size + 6}px; align-items:flex-end;`
+    : `left:${size + 6}px; align-items:flex-start;`;
   const label = linhas.length
-    ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); display:flex; flex-direction:column; align-items:flex-start; gap:2px; pointer-events:none;">${linhas.join('')}</div>`
+    ? `<div style="position:absolute; top:50%; ${posicaoLado} transform:translateY(calc(-50% + ${labelDeslocY}px)); display:flex; flex-direction:column; gap:2px; pointer-events:none; z-index:4;">${linhas.join('')}</div>`
     : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
@@ -238,6 +243,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const paradasMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayersRef = useRef<L.Polyline[]>([]);
+  const guiasRef = useRef<L.LayerGroup>(L.layerGroup());
   const currentMarkerRef = useRef<L.Marker | null>(null);
 
   const initialBoundsFittedRef = useRef(false);
@@ -257,6 +263,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
   // Atualiza os rótulos de tempo parado (piscando) a cada 30s
   const [tempoTick, setTempoTick] = useState(0);
+  // Reagrupa marcadores sobrepostos quando o zoom muda
+  const [zoomTick, setZoomTick] = useState(0);
+  const zoomListenerRef = useRef(false);
   useEffect(() => {
     const id = setInterval(() => setTempoTick(t => t + 1), 30000);
     return () => clearInterval(id);
@@ -403,6 +412,13 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const currentMarkers = markersRef.current;
     const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
 
+    // Reprocessa o espalhamento quando o zoom muda (a sobreposição depende da escala)
+    if (!zoomListenerRef.current) {
+      zoomListenerRef.current = true;
+      map.on('zoomend', () => setZoomTick(t => t + 1));
+    }
+
+
     // Paradas com "Tempo Parado no Mapa" ativo → rótulo piscante abaixo do nome
     const tempoPorVeiculo = new Map<string, TempoParadoInfo>();
     const enderecoPorVeiculo = new Map<string, EnderecoParadoInfo>();
@@ -433,12 +449,76 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       }
     });
 
+    // Espalha veículos sobrepostos em círculo (spiderfy) para que todos fiquem visíveis
+    const tamIcone = tamanhoMarcador(compactIcons);
+    const limiar = tamIcone * 2.2;
+    type Ponto = { veiculo: typeof veiculosComPosicao[number]; ponto: L.Point };
+    const pontos: Ponto[] = veiculosComPosicao.map(v => ({
+      veiculo: v,
+      ponto: map.latLngToLayerPoint([v.ultima_posicao!.lat, v.ultima_posicao!.lng]),
+    }));
+    const grupos: Ponto[][] = [];
+    pontos.forEach(item => {
+      const grupo = grupos.find(g => g.some(o => o.ponto.distanceTo(item.ponto) < limiar));
+      if (grupo) grupo.push(item);
+      else grupos.push([item]);
+    });
+
+    const layout = new Map<string, { pos: L.LatLngExpression; lado: 'left' | 'right'; dy: number; deslocado: boolean }>();
+    grupos.forEach(grupo => {
+      if (grupo.length === 1) {
+        const { veiculo } = grupo[0];
+        layout.set(veiculo.id, {
+          pos: [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng],
+          lado: 'right',
+          dy: 0,
+          deslocado: false,
+        });
+        return;
+      }
+      const centro = grupo.reduce(
+        (acc, p) => acc.add(p.ponto),
+        L.point(0, 0),
+      ).divideBy(grupo.length);
+      const n = grupo.length;
+      const raio = Math.max(limiar, (limiar / 2) / Math.sin(Math.PI / n));
+      grupo.forEach((item, i) => {
+        const angulo = (2 * Math.PI * i) / n - Math.PI / 2;
+        const destino = L.point(
+          centro.x + Math.cos(angulo) * raio,
+          centro.y + Math.sin(angulo) * raio,
+        );
+        const latlng = map.layerPointToLatLng(destino);
+        layout.set(item.veiculo.id, {
+          pos: [latlng.lat, latlng.lng],
+          lado: Math.cos(angulo) < -0.15 ? 'left' : 'right',
+          dy: Math.round(Math.sin(angulo) * (tamIcone * 0.6)),
+          deslocado: true,
+        });
+      });
+    });
+
+    // Linhas guia ligando o marcador deslocado à posição real
+    const guias = guiasRef.current;
+    guias.clearLayers();
+    if (!map.hasLayer(guias)) guias.addTo(map);
+
     // Add or update markers
     veiculosComPosicao.forEach(veiculo => {
-      const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
+      const info = layout.get(veiculo.id);
+      const pos: L.LatLngExpression = info?.pos ?? [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
       const tempo = veiculo.status === 'movendo' ? null : tempoPorVeiculo.get(veiculo.id) || null;
       const enderecoBalao = veiculo.status === 'movendo' ? null : enderecoPorVeiculo.get(veiculo.id) || null;
+
+      if (info?.deslocado) {
+        guias.addLayer(
+          L.polyline(
+            [[veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng], pos as L.LatLngTuple],
+            { color: veiculo.cor || '#94a3b8', weight: 1.5, opacity: 0.7, dashArray: '3,4', interactive: false },
+          ),
+        );
+      }
 
       // Assinatura do visual: só recria o ícone quando algo realmente muda
       const sig = [
@@ -450,6 +530,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         veiculo.placa || '',
         tempo ? `${tempo.texto}|${tempo.cor}` : '',
         enderecoBalao ? `e:${enderecoBalao.texto}` : '',
+        `l:${info?.lado ?? 'right'}:${info?.dy ?? 0}`,
       ].join('~');
 
       const criarIcone = () => createVeiculoIcon(
@@ -461,12 +542,15 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         veiculo.placa,
         tempo,
         enderecoBalao,
+        info?.lado ?? 'right',
+        info?.dy ?? 0,
       );
 
       if (existingMarker) {
         const atual = existingMarker.getLatLng();
-        if (Math.abs(atual.lat - veiculo.ultima_posicao!.lat) > 1e-7 || Math.abs(atual.lng - veiculo.ultima_posicao!.lng) > 1e-7) {
-          existingMarker.setLatLng(pos);
+        const alvo = L.latLng(pos as L.LatLngTuple);
+        if (Math.abs(atual.lat - alvo.lat) > 1e-7 || Math.abs(atual.lng - alvo.lng) > 1e-7) {
+          existingMarker.setLatLng(alvo);
         }
         if (iconSigRef.current.get(veiculo.id) !== sig) {
           existingMarker.setIcon(criarIcone());
@@ -527,7 +611,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, enderecosFallback]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback]);
 
   // Geocodifica no cliente as paradas com balão de endereço mas sem endereço salvo
   useEffect(() => {
