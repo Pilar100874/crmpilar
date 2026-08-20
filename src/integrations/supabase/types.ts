@@ -23973,7 +23973,9 @@ export type Database = {
           foco_segundos: number
           id: string
           overview_segundos: number
+          pausa_falha_segundos: number
           pausa_interacao_segundos: number
+          quiosque_ativo: boolean
           trilha_minutos: number
           updated_at: string
         }
@@ -23984,7 +23986,9 @@ export type Database = {
           foco_segundos?: number
           id?: string
           overview_segundos?: number
+          pausa_falha_segundos?: number
           pausa_interacao_segundos?: number
+          quiosque_ativo?: boolean
           trilha_minutos?: number
           updated_at?: string
         }
@@ -23995,7 +23999,9 @@ export type Database = {
           foco_segundos?: number
           id?: string
           overview_segundos?: number
+          pausa_falha_segundos?: number
           pausa_interacao_segundos?: number
+          quiosque_ativo?: boolean
           trilha_minutos?: number
           updated_at?: string
         }
