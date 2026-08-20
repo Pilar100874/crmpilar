@@ -335,7 +335,9 @@ async function processarEstabelecimento(estabelecimentoId: string) {
         : [{ tempo_minutos: Number(pc.tempo_minutos) || 30 }];
       const limite = Math.min(...cond.map((c: any) => Number(c.tempo_minutos) || 30));
       elegiveis = veiculos.filter((v) => {
-        if (v.status !== "parado" || !v.pos) return false;
+        if (!v.pos) return false;
+        // Parado = não está em movimento (inclui rastreador offline com última velocidade 0)
+        if (v.status === "movendo" || Number(v.pos.velocidade) > 5) return false;
         if (dentroZona(v.pos.lat, v.pos.lng)) return false;
         return minutosDesde(v.pos.data_hora) >= limite;
       });
