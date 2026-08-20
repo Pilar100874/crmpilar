@@ -512,6 +512,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusTrigger={focusVehicle?.nonce}
                 modoFoco={modoFoco}
                 focoZoom={modoFoco ? 18 : 17}
+                trilhaMinutos={modoFoco ? trilhaMinutos : 0}
+                trilhaLimparToken={trilhaLimparToken}
                 className="absolute inset-0"
                 fitBounds={!pinnedVeiculoId && !detalhesVeiculoId}
               />
