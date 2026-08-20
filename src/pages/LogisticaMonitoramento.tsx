@@ -31,6 +31,7 @@ import { VehicleLegend } from '@/components/logistica/VehicleLegend';
 import { IgnicaoBadge } from '@/components/logistica/IgnicaoBadge';
 import { CorteCombustivelBadge } from '@/components/logistica/CorteCombustivelBadge';
 import { VeiculoDetalhesSheet } from '@/components/logistica/VeiculoDetalhesSheet';
+import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -527,6 +528,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         
         {/* Hidden audio element for alerts */}
         <audio ref={audioRef} src="/notification.mp3" preload="auto" />
+
+      <AutomacaoMensagensFila posicao="top-right" />
       </div>
     );
   }

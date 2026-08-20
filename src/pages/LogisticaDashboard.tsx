@@ -16,6 +16,7 @@ import { List, X, Info, PanelLeftClose, PanelLeft, Car, Activity, Clock, WifiOff
 import { cn } from '@/lib/utils';
 import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -216,6 +217,7 @@ const LogisticaDashboard: React.FC = () => {
 
   return (
     <div className="h-[calc(100dvh-64px)] flex flex-col overflow-hidden bg-muted/30">
+      <AutomacaoMensagensFila posicao="top-right" />
       {/* Header */}
       <div className="shrink-0 border-b bg-background/80 backdrop-blur-md p-2 sm:p-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
