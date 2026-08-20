@@ -5,6 +5,12 @@ import { VeiculoComStatus } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { enquadrarNoMapa } from '@/lib/mapa/enquadrar';
 import { Crosshair } from 'lucide-react';
+import {
+  DisposicaoMapa,
+  carregarDisposicao,
+  obterChaveUsuario,
+  salvarDisposicao,
+} from '@/lib/logistica/spiderfyPersistencia';
 
 
 // Fix leaflet default icon issue
@@ -248,6 +254,30 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const currentMarkerRef = useRef<L.Marker | null>(null);
   // Grupos de veículos sobrepostos que o usuário expandiu (chave = ids ordenados)
   const [gruposExpandidos, setGruposExpandidos] = useState<Set<string>>(new Set());
+  // Disposição persistida por usuário (ordem estável do espalhamento/rótulos)
+  const chaveDisposicaoRef = useRef<string | null>(null);
+  const disposicaoRef = useRef<DisposicaoMapa>({ grupos: {}, expandidos: [] });
+  const [disposicaoCarregada, setDisposicaoCarregada] = useState(false);
+
+  useEffect(() => {
+    let ativo = true;
+    obterChaveUsuario().then(chave => {
+      if (!ativo) return;
+      chaveDisposicaoRef.current = chave;
+      const dados = carregarDisposicao(chave);
+      disposicaoRef.current = dados;
+      if (dados.expandidos.length) setGruposExpandidos(new Set(dados.expandidos));
+      setDisposicaoCarregada(true);
+    });
+    return () => { ativo = false; };
+  }, []);
+
+  // Persiste os grupos expandidos escolhidos pelo usuário
+  useEffect(() => {
+    if (!disposicaoCarregada || !chaveDisposicaoRef.current) return;
+    disposicaoRef.current.expandidos = Array.from(gruposExpandidos);
+    salvarDisposicao(chaveDisposicaoRef.current, disposicaoRef.current);
+  }, [gruposExpandidos, disposicaoCarregada]);
 
   const initialBoundsFittedRef = useRef(false);
   // Fallback de endereço (geocodificação no cliente) para paradas sem endereço salvo
@@ -456,10 +486,13 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const tamIcone = tamanhoMarcador(compactIcons);
     const limiar = tamIcone * 2.2;
     type Ponto = { veiculo: typeof veiculosComPosicao[number]; ponto: L.Point };
-    const pontos: Ponto[] = veiculosComPosicao.map(v => ({
-      veiculo: v,
-      ponto: map.latLngToLayerPoint([v.ultima_posicao!.lat, v.ultima_posicao!.lng]),
-    }));
+    const pontos: Ponto[] = veiculosComPosicao
+      .map(v => ({
+        veiculo: v,
+        ponto: map.latLngToLayerPoint([v.ultima_posicao!.lat, v.ultima_posicao!.lng]),
+      }))
+      // Ordem determinística: a lista de veículos pode chegar em ordens diferentes
+      .sort((a, b) => a.veiculo.id.localeCompare(b.veiculo.id));
     const grupos: Ponto[][] = [];
     pontos.forEach(item => {
       const grupo = grupos.find(g => g.some(o => o.ponto.distanceTo(item.ponto) < limiar));
@@ -512,6 +545,16 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const centroLatLng = map.layerPointToLatLng(centro);
       const chave = grupo.map(g => g.veiculo.id).sort().join('|');
       const expandido = gruposExpandidos.has(chave);
+
+      // Ordem estável do círculo: reaproveita a disposição salva deste usuário
+      const salva = disposicaoRef.current.grupos[chave];
+      if (salva && salva.length === grupo.length) {
+        grupo.sort((a, b) => salva.indexOf(a.veiculo.id) - salva.indexOf(b.veiculo.id));
+      } else if (chaveDisposicaoRef.current) {
+        disposicaoRef.current.grupos[chave] = grupo.map(g => g.veiculo.id);
+        salvarDisposicao(chaveDisposicaoRef.current, disposicaoRef.current);
+      }
+
       const placas = grupo.map(g => g.veiculo.placa).filter(Boolean).join(', ');
 
       if (grupo.length >= LIMITE_CLUSTER && !expandido) {
@@ -690,7 +733,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback, gruposExpandidos, pausarAuto]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback, gruposExpandidos, pausarAuto, disposicaoCarregada]);
 
   // Geocodifica no cliente as paradas com balão de endereço mas sem endereço salvo
   useEffect(() => {
