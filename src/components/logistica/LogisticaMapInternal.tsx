@@ -873,7 +873,31 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     return () => cancelAnimationFrame(raf);
   }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto, modoFoco, focoZoom]);
 
-  // Update paradas marcadas markers
+  // Seguimento suave no modo foco: a cada atualização de GPS recentraliza o mapa
+  // com animação suave (panTo com duração e desaceleração), evitando o "pulo" brusco.
+  useEffect(() => {
+    if (!mapRef.current || !modoFoco || !focusVeiculoId) return;
+    const map = mapRef.current;
+    const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
+    if (!veiculo) return;
+    const novo = { lat: veiculo.ultima_posicao!.lat, lng: veiculo.ultima_posicao!.lng };
+    const atual = focoSeguirRef.current;
+    if (!atual) {
+      focoSeguirRef.current = { ...novo, zoom: focoZoom, ultimoPan: 0, inicializado: false };
+      return;
+    }
+    const distancia = L.latLng(atual.lat, atual.lng).distanceTo(L.latLng(novo.lat, novo.lng));
+    const agora = Date.now();
+    const tempoDesdePan = agora - atual.ultimoPan;
+    // Só move se houver deslocamento real e tempo mínimo (evita micro-pulos e animações sobrepostas)
+    const deveSeguir = !atual.inicializado || (distancia > 5 && tempoDesdePan > 1200) || (distancia > 30 && tempoDesdePan > 500);
+    if (!deveSeguir || focoAnimandoRef.current) return;
+    focoAnimandoRef.current = true;
+    const duracao = distancia > 50 ? 1.2 : 0.8;
+    map.panTo(novo, { duration: duracao, easeLinearity: 0.25, animate: true });
+    focoSeguirRef.current = { ...novo, zoom: atual.zoom, ultimoPan: agora, inicializado: true };
+    window.setTimeout(() => { focoAnimandoRef.current = false; }, duracao * 1000);
+  }, [veiculos, modoFoco, focusVeiculoId, focoZoom]);
   useEffect(() => {
     if (!mapRef.current) return;
 
