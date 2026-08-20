@@ -395,7 +395,9 @@ export async function executarAutomacoesLogistica(
           
           
           for (const veiculo of veiculos) {
-            if (veiculo.status === 'parado' && veiculo.ultima_posicao) {
+            const paradoOuOffline =
+              veiculo.status !== 'movendo' && Number(veiculo.ultima_posicao?.velocidade || 0) <= 5;
+            if (paradoOuOffline && veiculo.ultima_posicao) {
               if (dentroZonaIsenta(veiculo.ultima_posicao.lat, veiculo.ultima_posicao.lng)) continue;
               const minutosParado = differenceInMinutes(
                 new Date(),
