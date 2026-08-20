@@ -28,6 +28,7 @@ import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
 import { TrilhaFocoControls } from '@/components/logistica/TrilhaFocoControls';
+import { carregarCicloConfig, lerCicloConfigCache, type TvVeiculosCicloConfig } from '@/lib/tv/veiculosCicloConfig';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 
@@ -408,22 +409,30 @@ export default function TvDashboardVeiculos() {
 
   // ===== Modo autônomo (TV sem mouse/teclado) =====
   // Alterna sozinho entre visão geral (todos os veículos) e foco em cada veículo.
-  const autonomoAtivo = modoTv || !!tvDeviceToken;
-  const OVERVIEW_MS = 25000;
-  const FOCO_MS = 15000;
+  const [cicloConfig, setCicloConfig] = useState<TvVeiculosCicloConfig>(() => lerCicloConfigCache());
+  useEffect(() => {
+    let vivo = true;
+    const carregar = () => { carregarCicloConfig().then(c => { if (vivo) setCicloConfig(c); }); };
+    carregar();
+    const t = window.setInterval(carregar, 5 * 60 * 1000);
+    return () => { vivo = false; window.clearInterval(t); };
+  }, []);
+  const autonomoAtivo = (modoTv || !!tvDeviceToken) && cicloConfig.autonomo_ativo;
+  const OVERVIEW_MS = Math.max(5, cicloConfig.overview_segundos) * 1000;
+  const FOCO_MS = Math.max(3, cicloConfig.foco_segundos) * 1000;
   const autoEtapaRef = useRef<{ fase: 'geral' | 'foco'; indice: number; ate: number }>({ fase: 'geral', indice: 0, ate: 0 });
   const interacaoAteRef = useRef(0);
 
   useEffect(() => {
     if (!autonomoAtivo) return;
-    const marcar = () => { interacaoAteRef.current = Date.now() + 90000; };
+    const marcar = () => { interacaoAteRef.current = Date.now() + Math.max(0, cicloConfig.pausa_interacao_segundos) * 1000; };
     window.addEventListener('pointerdown', marcar);
     window.addEventListener('keydown', marcar);
     return () => {
       window.removeEventListener('pointerdown', marcar);
       window.removeEventListener('keydown', marcar);
     };
-  }, [autonomoAtivo]);
+  }, [autonomoAtivo, cicloConfig.pausa_interacao_segundos]);
 
   const idsRotacao = useMemo(
     () => veiculosComPosicao.map(v => v.id).sort(),
@@ -469,7 +478,7 @@ export default function TvDashboardVeiculos() {
     };
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [autonomoAtivo]);
+  }, [autonomoAtivo, OVERVIEW_MS, FOCO_MS]);
 
   // Calcular veículos parados há muito tempo (mais de 30 min)
   const veiculosParadosAlerta = useMemo(() => {
@@ -698,7 +707,7 @@ export default function TvDashboardVeiculos() {
               focusTrigger={focusTrigger}
               modoFoco={modoFoco}
               focoZoom={modoFoco ? 18 : 17}
-              trilhaMinutos={modoFoco ? trilhaMinutos : 0}
+              trilhaMinutos={modoFoco ? (autonomoAtivo ? cicloConfig.trilha_minutos : trilhaMinutos) : 0}
               trilhaLimparToken={trilhaLimparToken}
               onVeiculoClick={(v) => handleFocus(v.id)}
             />

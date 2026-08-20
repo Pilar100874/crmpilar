@@ -303,6 +303,7 @@ import TvSignageEventos from "./pages/tv-signage/TvSignageEventos";
 import TvSignageWorkflows from "./pages/tv-signage/TvSignageWorkflows";
 import TvWorkflowBuilder from "./pages/tv-signage/TvWorkflowBuilder";
 import TvSignageApi from "./pages/tv-signage/TvSignageApi";
+import TvSignageConfigVeiculos from "./pages/tv-signage/TvSignageConfigVeiculos";
 import TvSignageSimulador from "./pages/tv-signage/TvSignageSimulador";
 import TvPair from "./pages/TvPair";
 import TvCameras from "./pages/TvCameras";
@@ -712,6 +713,7 @@ const App = () => (
                 <Route path="workflows" element={<TvSignageWorkflows />} />
                 <Route path="workflows/:id/builder" element={<TvWorkflowBuilder />} />
                 <Route path="workflows/new/builder" element={<TvWorkflowBuilder />} />
+                <Route path="config-veiculos" element={<TvSignageConfigVeiculos />} />
                 <Route path="api" element={<TvSignageApi />} />
               </Route>
             </Route>
