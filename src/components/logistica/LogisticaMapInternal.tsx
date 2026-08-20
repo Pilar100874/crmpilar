@@ -244,7 +244,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const paradasMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayersRef = useRef<L.Polyline[]>([]);
   const guiasRef = useRef<L.LayerGroup>(L.layerGroup());
+  const clustersRef = useRef<L.LayerGroup>(L.layerGroup());
   const currentMarkerRef = useRef<L.Marker | null>(null);
+  // Grupos de veículos sobrepostos que o usuário expandiu (chave = ids ordenados)
+  const [gruposExpandidos, setGruposExpandidos] = useState<Set<string>>(new Set());
 
   const initialBoundsFittedRef = useRef(false);
   // Fallback de endereço (geocodificação no cliente) para paradas sem endereço salvo
@@ -464,6 +467,32 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       else grupos.push([item]);
     });
 
+    // Agrupamento inteligente: grupos grandes viram um contador clicável
+    const LIMITE_CLUSTER = 4;
+    const ocultos = new Set<string>();
+    const clusters = clustersRef.current;
+    clusters.clearLayers();
+    if (!map.hasLayer(clusters)) clusters.addTo(map);
+
+    const criarClusterIcon = (qtd: number, expandido: boolean) => {
+      const base = compactIcons ? 30 : 40;
+      const tam = Math.min(base + Math.min(qtd, 20), base + 20);
+      return L.divIcon({
+        className: 'cluster-veiculos-marker',
+        html: `
+          <div style="
+            width:${tam}px;height:${tam}px;border-radius:9999px;
+            background:${expandido ? 'rgba(15,23,42,0.85)' : 'rgba(37,99,235,0.92)'};
+            border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35);
+            display:flex;align-items:center;justify-content:center;
+            color:#fff;font-weight:700;font-size:${Math.round(tam / 2.8)}px;cursor:pointer;">
+            ${expandido ? '✕' : qtd}
+          </div>`,
+        iconSize: [tam, tam],
+        iconAnchor: [tam / 2, tam / 2],
+      });
+    };
+
     const layout = new Map<string, { pos: L.LatLngExpression; lado: 'left' | 'right'; dy: number; deslocado: boolean }>();
     grupos.forEach(grupo => {
       if (grupo.length === 1) {
@@ -480,6 +509,45 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         (acc, p) => acc.add(p.ponto),
         L.point(0, 0),
       ).divideBy(grupo.length);
+      const centroLatLng = map.layerPointToLatLng(centro);
+      const chave = grupo.map(g => g.veiculo.id).sort().join('|');
+      const expandido = gruposExpandidos.has(chave);
+      const placas = grupo.map(g => g.veiculo.placa).filter(Boolean).join(', ');
+
+      if (grupo.length >= LIMITE_CLUSTER && !expandido) {
+        grupo.forEach(g => ocultos.add(g.veiculo.id));
+        const clusterMarker = L.marker(centroLatLng, {
+          icon: criarClusterIcon(grupo.length, false),
+          zIndexOffset: 1000,
+          riseOnHover: true,
+        }).bindTooltip(
+          `<strong>${grupo.length} veículos aqui</strong><br/>${placas}<br/><em>Clique para expandir</em>`,
+          { direction: 'top', opacity: 0.95 },
+        );
+        clusterMarker.on('click', () => {
+          pausarAuto();
+          setGruposExpandidos(prev => new Set(prev).add(chave));
+        });
+        clusters.addLayer(clusterMarker);
+        return;
+      }
+
+      if (grupo.length >= LIMITE_CLUSTER && expandido) {
+        const recolher = L.marker(centroLatLng, {
+          icon: criarClusterIcon(grupo.length, true),
+          zIndexOffset: 900,
+        }).bindTooltip('Clique para recolher o grupo', { direction: 'top', opacity: 0.95 });
+        recolher.on('click', () => {
+          pausarAuto();
+          setGruposExpandidos(prev => {
+            const proximo = new Set(prev);
+            proximo.delete(chave);
+            return proximo;
+          });
+        });
+        clusters.addLayer(recolher);
+      }
+
       const n = grupo.length;
       const raio = Math.max(limiar, (limiar / 2) / Math.sin(Math.PI / n));
       grupo.forEach((item, i) => {
@@ -503,8 +571,19 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     guias.clearLayers();
     if (!map.hasLayer(guias)) guias.addTo(map);
 
+
     // Add or update markers
     veiculosComPosicao.forEach(veiculo => {
+      // Veículo representado por um cluster (contador): esconde o marcador individual
+      if (ocultos.has(veiculo.id)) {
+        const antigo = currentMarkers.get(veiculo.id);
+        if (antigo) {
+          antigo.remove();
+          currentMarkers.delete(veiculo.id);
+          iconSigRef.current.delete(veiculo.id);
+        }
+        return;
+      }
       const info = layout.get(veiculo.id);
       const pos: L.LatLngExpression = info?.pos ?? [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
@@ -611,7 +690,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback, gruposExpandidos, pausarAuto]);
 
   // Geocodifica no cliente as paradas com balão de endereço mas sem endereço salvo
   useEffect(() => {
