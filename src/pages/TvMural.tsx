@@ -206,7 +206,7 @@ export default function TvMural() {
 
   const renderMidia = (item: MuralItem, camada: "atual" | "anterior") => (
     <div
-      key={`${camada}-${item.id}-${indice}`}
+      key={`${camada}-${item.id}-${indice}-${recoveryKey}`}
       className={`absolute inset-0 ${camada === "atual" ? classeEntrada(transicaoAtual) : classeSaida(transicaoAtual)}`}
       style={estiloDuracao}
     >
@@ -240,6 +240,7 @@ export default function TvMural() {
     <div className="fixed inset-0 bg-black overflow-hidden">
       {itemAnterior && renderMidia(itemAnterior, "anterior")}
       {atual && renderMidia(atual, "atual")}
+      <TvWatchdogAviso mensagem={watchdog.mensagem} online={watchdog.online} />
     </div>
   );
 }
