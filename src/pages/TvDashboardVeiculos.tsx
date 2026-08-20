@@ -26,6 +26,7 @@ import { rodarAutomacoesLogistica } from '@/lib/logistica/automacaoRunner';
 import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
+import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 
@@ -452,6 +453,7 @@ export default function TvDashboardVeiculos() {
 
   return (
     <>
+      <AutomacaoMensagensFila posicao="bottom-left" tvMode maxVisiveis={3} />
       {/* Vehicle List - Right Side */}
       {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
