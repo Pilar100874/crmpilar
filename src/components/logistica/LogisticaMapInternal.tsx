@@ -486,10 +486,13 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const tamIcone = tamanhoMarcador(compactIcons);
     const limiar = tamIcone * 2.2;
     type Ponto = { veiculo: typeof veiculosComPosicao[number]; ponto: L.Point };
-    const pontos: Ponto[] = veiculosComPosicao.map(v => ({
-      veiculo: v,
-      ponto: map.latLngToLayerPoint([v.ultima_posicao!.lat, v.ultima_posicao!.lng]),
-    }));
+    const pontos: Ponto[] = veiculosComPosicao
+      .map(v => ({
+        veiculo: v,
+        ponto: map.latLngToLayerPoint([v.ultima_posicao!.lat, v.ultima_posicao!.lng]),
+      }))
+      // Ordem determinística: a lista de veículos pode chegar em ordens diferentes
+      .sort((a, b) => a.veiculo.id.localeCompare(b.veiculo.id));
     const grupos: Ponto[][] = [];
     pontos.forEach(item => {
       const grupo = grupos.find(g => g.some(o => o.ponto.distanceTo(item.ponto) < limiar));
