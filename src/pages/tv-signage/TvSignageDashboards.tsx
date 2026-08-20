@@ -19,6 +19,7 @@ export default function TvSignageDashboards() {
   const [camerasList, setCamerasList] = useState<any[]>([]);
   const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [gruposVeiculos, setGruposVeiculos] = useState<any[]>([]);
+  const [murais, setMurais] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
@@ -30,6 +31,7 @@ export default function TvSignageDashboards() {
     supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
     supabase.from("logistica_grupos").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setGruposVeiculos(data || []));
+    supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
   }, []);
 
 
@@ -56,6 +58,7 @@ export default function TvSignageDashboards() {
   const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
   const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
   const isVeiculosRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/veiculos";
+  const isMuralRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/mural";
   const veicGrupos = (() => {
     const r = edit?.rota_interna || "";
     if (!isVeiculosRoute(r)) return [] as string[];
@@ -87,7 +90,7 @@ export default function TvSignageDashboards() {
     if (edit.tipo === "url_externa" && !edit.url?.trim()) return toast.error("Informe a URL externa");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
-    const ehApres = edit.tipo === "tela_interna" && isApresRoute(edit.rota_interna);
+    const ehApres = edit.tipo === "tela_interna" && (isApresRoute(edit.rota_interna) || isMuralRoute(edit.rota_interna));
     const payload = {
       nome: edit.nome, tipo: edit.tipo || "url_externa",
       url: edit.tipo === "url_externa" ? edit.url : null,
@@ -267,6 +270,25 @@ export default function TvSignageDashboards() {
                       {apresentacoes.length === 0 && (
                         <p className="text-[11px] text-muted-foreground">
                           Nenhuma apresentação ativa. Cadastre em Marketing → Apresentação.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {isMuralRoute(edit.rota_interna) && (
+                    <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                      <Label className="text-xs">Mural de mídias a exibir</Label>
+                      <Select
+                        value={apresId}
+                        onValueChange={(v) => setEdit({ ...edit, rota_interna: `/tv/mural?id=${v}` })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Selecione um mural ativo" /></SelectTrigger>
+                        <SelectContent>
+                          {murais.map((m) => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {murais.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Nenhum mural ativo. Cadastre em Telas Remotas → Mural de Mídias.
                         </p>
                       )}
                     </div>

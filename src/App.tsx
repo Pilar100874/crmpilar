@@ -709,6 +709,7 @@ const App = () => (
                 <Route path="dispositivos" element={<TvSignageDispositivos />} />
                 <Route path="dashboards" element={<TvSignageDashboards />} />
                 <Route path="playlists" element={<TvSignagePlaylists />} />
+                <Route path="murais" element={<TvSignageMurais />} />
                 <Route path="grupos" element={<TvSignageGrupos />} />
                 <Route path="comandos" element={<TvSignageComandos />} />
                 <Route path="eventos" element={<TvSignageEventos />} />
