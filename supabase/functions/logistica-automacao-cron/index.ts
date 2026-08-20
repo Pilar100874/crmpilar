@@ -342,6 +342,7 @@ async function processarEstabelecimento(estabelecimentoId: string) {
         return minutosDesde(v.pos.data_hora) >= limite;
       });
 
+      console.log("[cron][dbg]", automacao.nome, {elegiveis: elegiveis.length, endereco: !!enderecoNode, tempo: !!tempoNode, marcar: !!pc.marcar_no_mapa});
       // Marcações no mapa (tempo parado)
       if (pc.marcar_no_mapa || tempoNode || enderecoNode) {
         for (const v of elegiveis) {
