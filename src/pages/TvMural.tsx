@@ -6,6 +6,8 @@ import { useTvMode } from "@/lib/tvMode";
 import { useKioskMode } from "@/lib/tv/kioskMode";
 import { Loader2 } from "lucide-react";
 import { notificarFimDoConteudo } from "@/lib/tv/cicloConteudo";
+import { useTvWatchdog } from "@/lib/tv/watchdogRede";
+import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
 
 export interface MuralItem {
   id: string;
@@ -82,6 +84,18 @@ export default function TvMural() {
   const [transicaoAtual, setTransicaoAtual] = useState("cinematic_fade");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<number | null>(null);
+  const [recoveryKey, setRecoveryKey] = useState(0);
+
+  // Watchdog: perda de rede ou ciclo travado -> reconecta e retoma
+  const watchdog = useTvWatchdog({
+    segundosSemProgresso: 300,
+    segundosSemRede: 20,
+    aoRecuperar: () => {
+      setAnterior(null);
+      setRecoveryKey((k) => k + 1);
+      setIndice((i) => i + 1);
+    },
+  });
 
   // ---- Carregamento ----
   useEffect(() => {
@@ -141,6 +155,9 @@ export default function TvMural() {
     setAnterior(indice);
     setIndice(proximo % itens.length);
   }, [mural, itens.length, indice]);
+
+  // Sinaliza progresso do ciclo ao watchdog
+  useEffect(() => { watchdog.marcarProgresso(); }, [indice, watchdog.marcarProgresso]);
 
   // Remove a camada anterior quando a transição termina
   useEffect(() => {
