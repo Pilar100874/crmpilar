@@ -15,7 +15,6 @@ import { toast } from "sonner";
 interface DenunciasConfig {
   titulo: string;
   intro: string;
-  email_destino: string;
   aceita_anonimo: boolean;
   categorias: string[];
   aviso_sigilo: string;
@@ -24,7 +23,6 @@ interface DenunciasConfig {
 const DEFAULT_CFG: DenunciasConfig = {
   titulo: "Canal de Denúncias - NR-1",
   intro: "Este canal segue a Norma Regulamentadora nº 1 (NR-1) e o Programa de Gerenciamento de Riscos (PGR), incluindo riscos psicossociais. As denúncias podem ser feitas de forma anônima e serão tratadas com sigilo.",
-  email_destino: "",
   aceita_anonimo: true,
   categorias: ["Assédio moral","Assédio sexual","Riscos psicossociais","Condições inseguras de trabalho","Acidente ou quase-acidente","Discriminação","Outro"],
   aviso_sigilo: "As informações fornecidas serão tratadas com sigilo e utilizadas apenas para investigação interna, respeitando a LGPD (Lei 13.709/2018).",
