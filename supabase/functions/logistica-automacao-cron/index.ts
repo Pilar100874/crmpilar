@@ -727,11 +727,12 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
         ? await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)
         : null;
       const { endereco_curto: _ec, ...campos } = m;
-      await admin.from("logistica_paradas_marcadas").insert({
+      const { error: errIns } = await admin.from("logistica_paradas_marcadas").insert({
         ...campos,
         endereco,
         estabelecimento_id: estabelecimentoId,
       });
+      if (errIns) console.error("[cron][persist] falha insert", m.veiculo_id, errIns.message, errIns.details);
     }
   }
 }
