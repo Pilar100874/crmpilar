@@ -670,6 +670,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         );
       }
 
+      // Escala/contraste dos rótulos conforme o zoom atual
+      const escalaLabel = escalaRotuloPorZoom(map.getZoom());
+
       // Assinatura do visual: só recria o ícone quando algo realmente muda
       const sig = [
         veiculo.status,
@@ -681,6 +684,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         tempo ? `${tempo.texto}|${tempo.cor}` : '',
         enderecoBalao ? `e:${enderecoBalao.texto}` : '',
         `l:${info?.lado ?? 'right'}:${info?.dy ?? 0}`,
+        `z:${escalaLabel.toFixed(2)}`,
       ].join('~');
 
       const criarIcone = () => createVeiculoIcon(
@@ -694,6 +698,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         enderecoBalao,
         info?.lado ?? 'right',
         info?.dy ?? 0,
+        escalaLabel,
       );
 
       if (existingMarker) {
