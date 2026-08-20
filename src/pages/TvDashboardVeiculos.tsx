@@ -406,6 +406,71 @@ export default function TvDashboardVeiculos() {
     // Não incrementa focusTrigger aqui; o mapa segue via modoFoco + focoVeiculoId.
   }, [pinnedVeiculoId, veiculos, focusVeiculoId]);
 
+  // ===== Modo autônomo (TV sem mouse/teclado) =====
+  // Alterna sozinho entre visão geral (todos os veículos) e foco em cada veículo.
+  const autonomoAtivo = modoTv || !!tvDeviceToken;
+  const OVERVIEW_MS = 25000;
+  const FOCO_MS = 15000;
+  const autoEtapaRef = useRef<{ fase: 'geral' | 'foco'; indice: number; ate: number }>({ fase: 'geral', indice: 0, ate: 0 });
+  const interacaoAteRef = useRef(0);
+
+  useEffect(() => {
+    if (!autonomoAtivo) return;
+    const marcar = () => { interacaoAteRef.current = Date.now() + 90000; };
+    window.addEventListener('pointerdown', marcar);
+    window.addEventListener('keydown', marcar);
+    return () => {
+      window.removeEventListener('pointerdown', marcar);
+      window.removeEventListener('keydown', marcar);
+    };
+  }, [autonomoAtivo]);
+
+  const idsRotacao = useMemo(
+    () => veiculosComPosicao.map(v => v.id).sort(),
+    [veiculosComPosicao],
+  );
+  const idsRotacaoRef = useRef<string[]>([]);
+  useEffect(() => { idsRotacaoRef.current = idsRotacao; }, [idsRotacao]);
+
+  useEffect(() => {
+    if (!autonomoAtivo) return;
+    autoEtapaRef.current = { fase: 'geral', indice: 0, ate: Date.now() + OVERVIEW_MS };
+    const tick = () => {
+      if (Date.now() < interacaoAteRef.current) return;
+      const etapa = autoEtapaRef.current;
+      if (Date.now() < etapa.ate) return;
+      const ids = idsRotacaoRef.current;
+      if (ids.length === 0) {
+        etapa.ate = Date.now() + OVERVIEW_MS;
+        return;
+      }
+      if (etapa.fase === 'geral') {
+        const idx = etapa.indice % ids.length;
+        autoEtapaRef.current = { fase: 'foco', indice: idx, ate: Date.now() + FOCO_MS };
+        setModoFoco(true);
+        setPinnedVeiculoId(ids[idx]);
+        setFocusVeiculoId(ids[idx]);
+        setFocusTrigger(t => t + 1);
+      } else {
+        const proximo = etapa.indice + 1;
+        if (proximo >= ids.length) {
+          // Ciclo completo: volta para a visão geral
+          autoEtapaRef.current = { fase: 'geral', indice: 0, ate: Date.now() + OVERVIEW_MS };
+          setModoFoco(false);
+          setPinnedVeiculoId(null);
+          setFocusVeiculoId(null);
+        } else {
+          autoEtapaRef.current = { fase: 'foco', indice: proximo, ate: Date.now() + FOCO_MS };
+          setPinnedVeiculoId(ids[proximo]);
+          setFocusVeiculoId(ids[proximo]);
+          setFocusTrigger(t => t + 1);
+        }
+      }
+    };
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [autonomoAtivo]);
+
   // Calcular veículos parados há muito tempo (mais de 30 min)
   const veiculosParadosAlerta = useMemo(() => {
     return veiculos.filter(v => {
