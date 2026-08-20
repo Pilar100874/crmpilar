@@ -130,6 +130,8 @@ export default function TvMural() {
   const avancar = useCallback(() => {
     if (!mural || itens.length === 0) return;
     const proximo = indice + 1;
+    // Ciclo completo do mural: avisa a playlist que hospeda esta tela
+    if (proximo >= itens.length) notificarFimDoConteudo("mural");
     if (proximo >= itens.length && !mural.loop) return;
     const escolhida = mural.transicao === "aleatoria"
       ? TRANSICOES_SORTEAVEIS[Math.floor(Math.random() * TRANSICOES_SORTEAVEIS.length)]
