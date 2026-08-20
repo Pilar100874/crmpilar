@@ -690,7 +690,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       enquadrarTudo();
     }
 
-  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback]);
+  }, [veiculos, fitBounds, fitBoundsPadding, onVeiculoClick, routes, paradasMarcadas, compactIcons, enquadrarTudo, tempoTick, zoomTick, enderecosFallback, gruposExpandidos, pausarAuto]);
 
   // Geocodifica no cliente as paradas com balão de endereço mas sem endereço salvo
   useEffect(() => {
