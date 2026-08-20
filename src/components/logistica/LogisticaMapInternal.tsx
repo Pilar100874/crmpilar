@@ -56,6 +56,15 @@ interface EnderecoParadoInfo {
   cor: string;
 }
 
+// Escala/contraste dos rótulos conforme o zoom do mapa:
+// zoom baixo (visão ampla) → texto compacto e fundo mais opaco; zoom alto → texto maior.
+export const escalaRotuloPorZoom = (zoom: number) => {
+  if (!Number.isFinite(zoom)) return 1;
+  if (zoom <= 8) return 0.8;
+  if (zoom >= 17) return 1.45;
+  return 0.8 + ((zoom - 8) / 9) * 0.65;
+};
+
 const createVeiculoIcon = (
   status: string,
   compact = false,
@@ -67,6 +76,7 @@ const createVeiculoIcon = (
   enderecoParado?: EnderecoParadoInfo | null,
   labelLado: 'left' | 'right' = 'right',
   labelDeslocY = 0,
+  escala = 1,
 ) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
@@ -85,19 +95,37 @@ const createVeiculoIcon = (
   const devePulsar = status === 'movendo' || status === 'parado';
   const halo = `<div style="position:absolute; top:50%; left:50%; width:${Math.round(size * 1.9)}px; height:${Math.round(size * 1.9)}px; margin-left:-${Math.round(size * 0.95)}px; margin-top:-${Math.round(size * 0.95)}px; border-radius:50%; background:${color}33; ${devePulsar ? `animation: veiculoPulse ${status === 'movendo' ? '1.8' : '2.2'}s infinite;` : ''}"></div>`;
 
+  // Tipografia adaptativa: nunca abaixo de 9px para manter legibilidade
+  const fonteBase = compact ? 9 : 11;
+  const fonte = Math.max(9, Math.round(fonteBase * escala));
+  const padV = escala < 1 ? 1 : 2;
+  const padH = Math.max(4, Math.round(5 * escala));
+  const raio = Math.max(5, Math.round(6 * escala));
+  // Zoom afastado → mais contraste (fundo opaco, borda e sombra reforçadas)
+  const distante = escala < 1;
+  const fundoPlaca = distante ? 'rgba(2,6,23,.96)' : 'rgba(15,23,42,.85)';
+  const sombraTexto = distante ? '0 1px 3px rgba(0,0,0,.95)' : '0 1px 2px rgba(0,0,0,.6)';
+  const larguraEndereco = Math.round(220 * Math.min(1.2, Math.max(0.7, escala)));
+  const textoEndereco = enderecoParado
+    ? (distante && enderecoParado.texto.length > 46
+        ? `${enderecoParado.texto.slice(0, 44)}…`
+        : enderecoParado.texto)
+    : '';
+
   const linhas: string[] = [];
   if (rotulo) {
-    linhas.push(`<div style="white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:700; color:#fff; background:rgba(15,23,42,.85); border:1px solid ${color}; padding:1px 5px; border-radius:6px; letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.6);">${rotulo}</div>`);
+    linhas.push(`<div style="white-space:nowrap; font-size:${fonte}px; font-weight:${distante ? 800 : 700}; color:#fff; background:${fundoPlaca}; border:${distante ? 2 : 1}px solid ${color}; padding:${padV}px ${padH}px; border-radius:${raio}px; letter-spacing:.3px; text-shadow:${sombraTexto};">${rotulo}</div>`);
   }
   if (tempoParado) {
-    linhas.push(`<div style="white-space:nowrap; font-size:${compact ? 9 : 11}px; font-weight:800; color:#fff; background:${tempoParado.cor}; border:1px solid rgba(255,255,255,.7); padding:1px 5px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.45); ${tempoParado.piscar ? 'animation: tempoParadoBlink 1s steps(1, end) infinite;' : ''}">⏱ ${tempoParado.texto}</div>`);
+    linhas.push(`<div style="white-space:nowrap; font-size:${fonte}px; font-weight:800; color:#fff; background:${tempoParado.cor}; border:${distante ? 2 : 1}px solid rgba(255,255,255,.85); padding:${padV}px ${padH}px; border-radius:${raio}px; box-shadow:0 1px 4px rgba(0,0,0,.5); text-shadow:${sombraTexto}; ${tempoParado.piscar ? 'animation: tempoParadoBlink 1s steps(1, end) infinite;' : ''}">⏱ ${tempoParado.texto}</div>`);
   }
   if (enderecoParado) {
-    linhas.push(`<div style="max-width:220px; font-size:${compact ? 9 : 11}px; font-weight:600; color:#0f172a; background:#ffffff; border:2px solid ${enderecoParado.cor}; padding:2px 6px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.35); line-height:1.25; white-space:normal;">📍 ${enderecoParado.texto}</div>`);
+    linhas.push(`<div style="max-width:${larguraEndereco}px; font-size:${fonte}px; font-weight:${distante ? 700 : 600}; color:#0f172a; background:#ffffff; border:${distante ? 3 : 2}px solid ${enderecoParado.cor}; padding:${padV + 1}px ${padH + 1}px; border-radius:${raio + 2}px; box-shadow:0 2px 8px rgba(0,0,0,.45); line-height:1.25; white-space:normal;">📍 ${textoEndereco}</div>`);
   }
+  const afastamento = Math.round(6 * escala);
   const posicaoLado = labelLado === 'left'
-    ? `right:${size + 6}px; align-items:flex-end;`
-    : `left:${size + 6}px; align-items:flex-start;`;
+    ? `right:${size + afastamento}px; align-items:flex-end;`
+    : `left:${size + afastamento}px; align-items:flex-start;`;
   const label = linhas.length
     ? `<div style="position:absolute; top:50%; ${posicaoLado} transform:translateY(calc(-50% + ${labelDeslocY}px)); display:flex; flex-direction:column; gap:2px; pointer-events:none; z-index:4;">${linhas.join('')}</div>`
     : '';
@@ -642,6 +670,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         );
       }
 
+      // Escala/contraste dos rótulos conforme o zoom atual
+      const escalaLabel = escalaRotuloPorZoom(map.getZoom());
+
       // Assinatura do visual: só recria o ícone quando algo realmente muda
       const sig = [
         veiculo.status,
@@ -653,6 +684,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         tempo ? `${tempo.texto}|${tempo.cor}` : '',
         enderecoBalao ? `e:${enderecoBalao.texto}` : '',
         `l:${info?.lado ?? 'right'}:${info?.dy ?? 0}`,
+        `z:${escalaLabel.toFixed(2)}`,
       ].join('~');
 
       const criarIcone = () => createVeiculoIcon(
@@ -666,6 +698,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         enderecoBalao,
         info?.lado ?? 'right',
         info?.dy ?? 0,
+        escalaLabel,
       );
 
       if (existingMarker) {
