@@ -57,6 +57,7 @@ export default function TvApresentacaoEmpresa() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoRecoveryKey, setVideoRecoveryKey] = useState(0);
   const ultimoAvanco = useRef<number>(Date.now());
+  const idxRef = useRef(0);
 
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState(0);
