@@ -262,6 +262,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
   // Atualiza os rótulos de tempo parado (piscando) a cada 30s
   const [tempoTick, setTempoTick] = useState(0);
+  // Reagrupa marcadores sobrepostos quando o zoom muda
+  const [zoomTick, setZoomTick] = useState(0);
+  const zoomListenerRef = useRef(false);
   useEffect(() => {
     const id = setInterval(() => setTempoTick(t => t + 1), 30000);
     return () => clearInterval(id);
