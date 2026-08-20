@@ -255,6 +255,10 @@ interface LogisticaMapInternalProps {
   modoFoco?: boolean;
   /** Zoom aplicado ao focar/seguir um veículo (padrão 17) */
   focoZoom?: number;
+  /** Duração (minutos) da trilha/histórico recente do veículo em foco. 0 = desligada */
+  trilhaMinutos?: number;
+  /** Ao alterar este valor, a trilha acumulada é apagada */
+  trilhaLimparToken?: number;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
