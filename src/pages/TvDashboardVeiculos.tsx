@@ -392,12 +392,15 @@ export default function TvDashboardVeiculos() {
     return { topLeft: [80, 20] as [number, number], bottomRight: [20, 280] as [number, number] };
   }, [isMobile, listaAberta]);
 
-  // Follow mode: recentraliza no veículo fixado toda vez que houver nova posição
+  // Follow mode: mantém o id do veículo fixado, mas não dispara novo foco a cada atualização de GPS.
+  // O componente de mapa faz o seguimento suave internamente (panTo com duração).
   useEffect(() => {
     if (!pinnedVeiculoId) return;
-    setFocusVeiculoId(pinnedVeiculoId);
-    setFocusTrigger(t => t + 1);
-  }, [pinnedVeiculoId, veiculos]);
+    if (focusVeiculoId !== pinnedVeiculoId) {
+      setFocusVeiculoId(pinnedVeiculoId);
+    }
+    // Não incrementa focusTrigger aqui; o mapa segue via modoFoco + focoVeiculoId.
+  }, [pinnedVeiculoId, veiculos, focusVeiculoId]);
 
   // Calcular veículos parados há muito tempo (mais de 30 min)
   const veiculosParadosAlerta = useMemo(() => {

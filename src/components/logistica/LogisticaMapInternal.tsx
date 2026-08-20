@@ -322,6 +322,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const iconSigRef = useRef<Map<string, string>>(new Map());
   const paradaSigRef = useRef<Map<string, string>>(new Map());
   const ultimoEnquadramentoRef = useRef<string>('');
+  // Estado de suavizacao do modo foco: ultima posicao conhecida, zoom e throttle
+  const focoSeguirRef = useRef<{ lat: number; lng: number; zoom: number; ultimoPan: number; inicializado: boolean } | null>(null);
+  const focoAnimandoRef = useRef(false);
 
 
   // Auto-enquadramento: pausa quando o usuário interage (zoom, arrasto, seleção)
@@ -743,7 +746,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         });
         marker.on('dblclick', () => {
           pausarAuto();
-          map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+          map.flyTo(pos, Math.max(map.getZoom(), 17), { duration: 1.0, easeLinearity: 0.25 });
           marker.openPopup();
         });
 
@@ -841,24 +844,60 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     // Selecionar um veículo pausa o auto-enquadramento
     pausarAuto();
     const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
+    const zoomAlvo = modoFoco ? focoZoom : Math.max(map.getZoom(), focoZoom);
     // Defer to next frame so container resize (details panel opening) settles first
     const raf = requestAnimationFrame(() => {
       map.invalidateSize();
-      // Modo foco: zoom sempre no nível definido; fora dele, respeita o zoom atual se já for maior
-      const zoomAlvo = modoFoco ? focoZoom : Math.max(map.getZoom(), focoZoom);
-      map.setView(pos, zoomAlvo, { animate: true });
+      if (modoFoco) {
+        // Animação suave com desaceleração (ease-out) no modo foco
+        map.flyTo(pos, zoomAlvo, { duration: 1.2, easeLinearity: 0.25 });
+      } else {
+        map.setView(pos, zoomAlvo, { animate: true });
+      }
+      // Guarda estado para o seguimento suave entre atualizações de GPS
+      focoSeguirRef.current = {
+        lat: veiculo.ultima_posicao!.lat,
+        lng: veiculo.ultima_posicao!.lng,
+        zoom: zoomAlvo,
+        ultimoPan: Date.now(),
+        inicializado: true,
+      };
       const marker = markersRef.current.get(veiculo.id);
       // Open popup without auto-panning so the marker stays centered on screen
       marker?.openPopup();
       // Re-center after popup opens to counter Leaflet's autoPan shift
       setTimeout(() => {
-        map.panTo(pos, { animate: true });
+        map.panTo(pos, { animate: true, duration: 0.3 });
       }, 350);
     });
     return () => cancelAnimationFrame(raf);
   }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto, modoFoco, focoZoom]);
 
-  // Update paradas marcadas markers
+  // Seguimento suave no modo foco: a cada atualização de GPS recentraliza o mapa
+  // com animação suave (panTo com duração e desaceleração), evitando o "pulo" brusco.
+  useEffect(() => {
+    if (!mapRef.current || !modoFoco || !focusVeiculoId) return;
+    const map = mapRef.current;
+    const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
+    if (!veiculo) return;
+    const novo = { lat: veiculo.ultima_posicao!.lat, lng: veiculo.ultima_posicao!.lng };
+    const atual = focoSeguirRef.current;
+    if (!atual) {
+      focoSeguirRef.current = { ...novo, zoom: focoZoom, ultimoPan: 0, inicializado: false };
+      return;
+    }
+    const distancia = L.latLng(atual.lat, atual.lng).distanceTo(L.latLng(novo.lat, novo.lng));
+    const agora = Date.now();
+    const tempoDesdePan = agora - atual.ultimoPan;
+    // Só move se houver deslocamento real e tempo mínimo (evita micro-pulos e animações sobrepostas)
+    const deveSeguir = !atual.inicializado || (distancia > 5 && tempoDesdePan > 1200) || (distancia > 30 && tempoDesdePan > 500);
+    if (!deveSeguir || focoAnimandoRef.current) return;
+    focoAnimandoRef.current = true;
+    const duracao = distancia > 50 ? 1.2 : 0.8;
+    map.panTo(novo, { duration: duracao, easeLinearity: 0.25, animate: true });
+    focoSeguirRef.current = { ...novo, zoom: atual.zoom, ultimoPan: agora, inicializado: true };
+    window.setTimeout(() => { focoAnimandoRef.current = false; }, duracao * 1000);
+  }, [veiculos, modoFoco, focusVeiculoId, focoZoom]);
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -1058,7 +1097,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
         /* Movimento suave dos marcadores entre atualizações de posição */
         .logistica-map-container .leaflet-marker-icon {
-          transition: transform .8s linear;
+          transition: transform .8s cubic-bezier(0.25, 0.1, 0.25, 1);
           will-change: transform;
         }
         .logistica-map-container.leaflet-zoom-anim .leaflet-marker-icon,

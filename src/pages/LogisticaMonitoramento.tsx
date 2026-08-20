@@ -457,10 +457,11 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   ).filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
-  // Follow mode: recentraliza no veículo fixado sempre que houver nova posição
+  // Follow mode: mantém o id do veículo fixado, mas não dispara novo foco a cada atualização de GPS.
+  // O componente de mapa faz o seguimento suave internamente (panTo com duração).
   useEffect(() => {
     if (!pinnedVeiculoId) return;
-    setFocusVehicle({ id: pinnedVeiculoId, nonce: Date.now() });
+    setFocusVehicle(prev => (prev?.id === pinnedVeiculoId ? prev : { id: pinnedVeiculoId, nonce: Date.now() }));
   }, [pinnedVeiculoId, veiculos]);
 
   const stats = {
