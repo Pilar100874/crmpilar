@@ -746,7 +746,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         });
         marker.on('dblclick', () => {
           pausarAuto();
-          map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+          map.flyTo(pos, Math.max(map.getZoom(), 17), { duration: 1.0, easeLinearity: 0.25 });
           marker.openPopup();
         });
 
