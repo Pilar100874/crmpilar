@@ -7925,6 +7925,35 @@ export type Database = {
           },
         ]
       }
+      ecommerce_config_privado: {
+        Row: {
+          created_at: string
+          denuncias_email_destino: string | null
+          estabelecimento_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          denuncias_email_destino?: string | null
+          estabelecimento_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          denuncias_email_destino?: string | null
+          estabelecimento_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_config_privado_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ecommerce_conteudos: {
         Row: {
           ativo: boolean | null
