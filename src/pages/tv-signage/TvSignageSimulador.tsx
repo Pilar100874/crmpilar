@@ -330,6 +330,7 @@ export default function TvSignageSimulador() {
 
   return (
     <div className="fixed inset-0 bg-black z-[9999]" onMouseMove={() => setShowBar(true)}>
+      <TvWatchdogAviso mensagem={watchdog.mensagem} online={watchdog.online} />
       {loading && <div className="flex h-full items-center justify-center text-white">Carregando simulação…</div>}
       {erro && (
         <div className="flex h-full items-center justify-center flex-col gap-3 text-white">
