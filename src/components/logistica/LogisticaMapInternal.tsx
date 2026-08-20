@@ -322,6 +322,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const iconSigRef = useRef<Map<string, string>>(new Map());
   const paradaSigRef = useRef<Map<string, string>>(new Map());
   const ultimoEnquadramentoRef = useRef<string>('');
+  // Estado de suavizacao do modo foco: ultima posicao conhecida, zoom e throttle
+  const focoSeguirRef = useRef<{ lat: number; lng: number; zoom: number; ultimoPan: number; inicializado: boolean } | null>(null);
+  const focoAnimandoRef = useRef(false);
 
 
   // Auto-enquadramento: pausa quando o usuário interage (zoom, arrasto, seleção)
