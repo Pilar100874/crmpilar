@@ -633,6 +633,8 @@ export default function TvDashboardVeiculos() {
               focusTrigger={focusTrigger}
               modoFoco={modoFoco}
               focoZoom={modoFoco ? 18 : 17}
+              trilhaMinutos={modoFoco ? trilhaMinutos : 0}
+              trilhaLimparToken={trilhaLimparToken}
               onVeiculoClick={(v) => handleFocus(v.id)}
             />
           )}
