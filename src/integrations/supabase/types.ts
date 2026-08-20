@@ -23965,6 +23965,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_veiculos_config: {
+        Row: {
+          autonomo_ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          foco_segundos: number
+          id: string
+          overview_segundos: number
+          pausa_interacao_segundos: number
+          trilha_minutos: number
+          updated_at: string
+        }
+        Insert: {
+          autonomo_ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          foco_segundos?: number
+          id?: string
+          overview_segundos?: number
+          pausa_interacao_segundos?: number
+          trilha_minutos?: number
+          updated_at?: string
+        }
+        Update: {
+          autonomo_ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          foco_segundos?: number
+          id?: string
+          overview_segundos?: number
+          pausa_interacao_segundos?: number
+          trilha_minutos?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tv_workflow_execucoes: {
         Row: {
           created_at: string
