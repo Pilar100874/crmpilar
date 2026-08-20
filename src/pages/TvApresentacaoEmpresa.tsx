@@ -183,12 +183,17 @@ export default function TvApresentacaoEmpresa() {
     if (!apresentacao) return;
     marcarAtividade();
     if (apresentacao.itens.length === 1) {
+      // Ciclo completo: avisa a playlist que hospeda esta apresentação
+      notificarFimDoConteudo("apresentacao");
       if (apresentacao.itens[0]?.tipo === "video") reconstruirVideo();
       return;
     }
     // Avança imediatamente (não depende de setTimeout, que pode ser
     // descartado em WebViews de TV Box após horas ligadas).
-    setIdx((i) => (i + 1) % apresentacao.itens.length);
+    const proximo = (idxRef.current + 1) % apresentacao.itens.length;
+    idxRef.current = proximo;
+    if (proximo === 0) notificarFimDoConteudo("apresentacao");
+    setIdx(proximo);
     setVisible(false);
     window.setTimeout(() => setVisible(true), 60);
   }, [apresentacao, marcarAtividade, reconstruirVideo]);
