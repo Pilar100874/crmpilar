@@ -160,16 +160,27 @@ export function WorkflowBuilderLayout({
 
           <div className="hidden lg:block h-8 w-px bg-border flex-shrink-0" />
 
-          {/* Flow name: read-only display. Renaming é feito pelo card na tela de listagem. */}
+          {/* Nome do fluxo: editável quando onFlowNameChange for informado */}
           {flowName !== undefined && (
-            <div
-              className="hidden md:flex items-center h-8 px-3 rounded-md bg-muted/40 border border-border max-w-[220px] flex-shrink-0"
-              title={flowName || "Nome do fluxo"}
-            >
-              <span className="text-sm font-medium text-foreground truncate">
-                {flowName || "Sem nome"}
-              </span>
-            </div>
+            onFlowNameChange ? (
+              <input
+                value={flowName}
+                onChange={(e) => onFlowNameChange(e.target.value)}
+                placeholder="Nome do fluxo"
+                title="Renomear fluxo"
+                aria-label="Nome do fluxo"
+                className="hidden md:flex items-center h-8 px-3 rounded-md bg-muted/40 border border-border max-w-[220px] flex-shrink-0 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-ring"
+              />
+            ) : (
+              <div
+                className="hidden md:flex items-center h-8 px-3 rounded-md bg-muted/40 border border-border max-w-[220px] flex-shrink-0"
+                title={flowName || "Nome do fluxo"}
+              >
+                <span className="text-sm font-medium text-foreground truncate">
+                  {flowName || "Sem nome"}
+                </span>
+              </div>
+            )
           )}
 
           {hasViewControls && (
