@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTvWatchdog } from "@/lib/tv/watchdogRede";
+import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -311,10 +313,24 @@ export default function TvSignageSimulador() {
   }, [showBar, idx]);
 
   const cur = items[idx];
+
+  // Watchdog: reconexão e retomada automática do ciclo da playlist
+  const watchdog = useTvWatchdog({
+    segundosSemProgresso: 300,
+    segundosSemRede: 20,
+    ativo: !paused,
+    aoRecuperar: () => {
+      setReloadKey((k) => k + 1);
+      if (items.length > 1) setIdx((i) => (i + 1) % items.length);
+    },
+  });
+  useEffect(() => { watchdog.marcarProgresso(); }, [idx, reloadKey, watchdog.marcarProgresso]);
+
   const url = useMemo(() => cur ? `${cur.url}${cur.url.includes("?") ? "&" : "?"}_r=${reloadKey}` : "", [cur, reloadKey]);
 
   return (
     <div className="fixed inset-0 bg-black z-[9999]" onMouseMove={() => setShowBar(true)}>
+      <TvWatchdogAviso mensagem={watchdog.mensagem} online={watchdog.online} />
       {loading && <div className="flex h-full items-center justify-center text-white">Carregando simulação…</div>}
       {erro && (
         <div className="flex h-full items-center justify-center flex-col gap-3 text-white">

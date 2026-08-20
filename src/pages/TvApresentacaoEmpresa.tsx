@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
+import { useTvWatchdog } from "@/lib/tv/watchdogRede";
+import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
 import { useSaidaOculta } from "@/lib/tvSaidaOculta";
 import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -61,6 +63,17 @@ export default function TvApresentacaoEmpresa() {
 
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState(0);
+
+  // Watchdog: perda de rede ou ciclo travado -> reconecta e retoma sozinho
+  const watchdog = useTvWatchdog({
+    segundosSemProgresso: 600,
+    segundosSemRede: 20,
+    aoRecuperar: () => {
+      setVideoRecoveryKey((k) => k + 1);
+      setIdx((i) => i + 1);
+    },
+  });
+  useEffect(() => { watchdog.marcarProgresso(); }, [idx, videoRecoveryKey, watchdog.marcarProgresso]);
 
   // Só pré-carrega imagens (leve). Vídeos são transmitidos direto — em TV Box o
   // "canplaythrough" muitas vezes nunca dispara e a tela ficava presa no loading.
@@ -348,6 +361,7 @@ export default function TvApresentacaoEmpresa() {
     return (
       <div className="w-screen h-screen bg-black text-white flex items-center justify-center flex-col gap-3">
         <CloseBtn />
+      <TvWatchdogAviso mensagem={watchdog.mensagem} online={watchdog.online} />
         <MonitorPlay className="w-12 h-12 opacity-50" />
         <p className="text-lg">{erro}</p>
       </div>
