@@ -34,6 +34,8 @@ interface LazyLogisticaMapProps {
   focusVeiculoId?: string;
   focusTrigger?: number;
   zoomMaximoSempre?: boolean;
+  modoFoco?: boolean;
+  focoZoom?: number;
 }
 
 // Retry dynamic import; se o chunk sumiu após novo deploy, força reload (com janela de 30s p/ evitar loop).
