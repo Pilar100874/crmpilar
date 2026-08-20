@@ -697,6 +697,15 @@ export default function TvDashboardVeiculos() {
                 <Crosshair className="h-4 w-4" />
                 Modo Foco
               </Button>
+              {modoFoco && (
+                <TrilhaFocoControls
+                  minutos={trilhaMinutos}
+                  onMinutosChange={setTrilhaMinutos}
+                  onLimpar={() => setTrilhaLimparToken(Date.now())}
+                  className="h-10"
+                  compacto
+                />
+              )}
               <Button
                 variant="secondary"
                 size="sm"
