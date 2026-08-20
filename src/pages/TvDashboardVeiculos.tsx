@@ -99,6 +99,9 @@ export default function TvDashboardVeiculos() {
   const [modoFoco, setModoFoco] = useState(false);
   const modoFocoRef = useRef(false);
   useEffect(() => { modoFocoRef.current = modoFoco; }, [modoFoco]);
+  const [trilhaMinutos, setTrilhaMinutos] = useState<number>(() => Number(localStorage.getItem('logistica:trilhaMinutos') || 15));
+  const [trilhaLimparToken, setTrilhaLimparToken] = useState(0);
+  useEffect(() => { localStorage.setItem('logistica:trilhaMinutos', String(trilhaMinutos)); }, [trilhaMinutos]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
   const [searchParams] = useSearchParams();
   // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
