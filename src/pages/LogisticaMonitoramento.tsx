@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, ChevronDown, ChevronUp, 
-  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User, Pin
+  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User, Pin, Crosshair
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -169,6 +169,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [showVeiculosPanel, setShowVeiculosPanel] = useState(true);
 
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
+  const [modoFoco, setModoFoco] = useState(false);
+  const modoFocoRef = useRef(false);
+  useEffect(() => { modoFocoRef.current = modoFoco; }, [modoFoco]);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
   const [detalhesVeiculoId, setDetalhesVeiculoId] = useState<string | null>(null);
@@ -187,6 +190,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
+    // Modo foco: passa a seguir o veículo selecionado
+    if (modoFocoRef.current) setPinnedVeiculoId(id);
   }, []);
   const abrirDetalhes = useCallback((id: string) => {
     setSelectedVeiculoId(id);
@@ -220,6 +225,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
     setPinnedVeiculoId(null);
     setFocusVehicle(null);
     setSelectedVeiculoId(null);
+    setModoFoco(false);
   }, []);
   
   const alertConfig: AlertConfig = {
@@ -499,6 +505,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 onVeiculoClick={(v) => zoomToVehicle(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
+                modoFoco={modoFoco}
+                focoZoom={modoFoco ? 18 : 17}
                 className="absolute inset-0"
                 fitBounds={!pinnedVeiculoId && !detalhesVeiculoId}
               />
@@ -605,6 +613,27 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             </TooltipProvider>
 
             <Button
+              variant={modoFoco ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setModoFoco(prev => {
+                  const next = !prev;
+                  const alvo = focusVehicle?.id ?? selectedVeiculoId;
+                  if (next && alvo) {
+                    setPinnedVeiculoId(alvo);
+                    setFocusVehicle({ id: alvo, nonce: Date.now() });
+                  }
+                  if (!next) setPinnedVeiculoId(null);
+                  return next;
+                });
+              }}
+              title="Modo foco: centraliza e amplia no veículo selecionado"
+            >
+              <Crosshair className="h-4 w-4 mr-2" />
+              Modo Foco
+            </Button>
+
+            <Button
               variant={pinnedVeiculoId ? 'default' : 'outline'}
               size="sm"
               onClick={showAll}
@@ -687,6 +716,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 onVeiculoClick={(v) => abrirDetalhes(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
+                modoFoco={modoFoco}
+                focoZoom={modoFoco ? 18 : 17}
                 className="h-full w-full absolute inset-0"
                 fitBounds={!pinnedVeiculoId && !rotaCoords && !detalhesVeiculoId}
                 fitBoundsPadding={{ topLeft: [300, 60], bottomRight: [300, 40] }}

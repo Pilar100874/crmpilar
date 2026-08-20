@@ -251,6 +251,10 @@ interface LogisticaMapInternalProps {
   focusTrigger?: number;
   /** Sempre reenquadra no maior zoom possível englobando todos os pontos (modo TV) */
   zoomMaximoSempre?: boolean;
+  /** Modo foco: mantém o veículo selecionado centralizado e com zoom fixo */
+  modoFoco?: boolean;
+  /** Zoom aplicado ao focar/seguir um veículo (padrão 17) */
+  focoZoom?: number;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
@@ -271,6 +275,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   focusVeiculoId,
   focusTrigger,
   zoomMaximoSempre = false,
+  modoFoco = false,
+  focoZoom = 17,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -838,7 +844,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     // Defer to next frame so container resize (details panel opening) settles first
     const raf = requestAnimationFrame(() => {
       map.invalidateSize();
-      map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+      // Modo foco: zoom sempre no nível definido; fora dele, respeita o zoom atual se já for maior
+      const zoomAlvo = modoFoco ? focoZoom : Math.max(map.getZoom(), focoZoom);
+      map.setView(pos, zoomAlvo, { animate: true });
       const marker = markersRef.current.get(veiculo.id);
       // Open popup without auto-panning so the marker stays centered on screen
       marker?.openPopup();
@@ -848,7 +856,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       }, 350);
     });
     return () => cancelAnimationFrame(raf);
-  }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto]);
+  }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto, modoFoco, focoZoom]);
 
   // Update paradas marcadas markers
   useEffect(() => {
