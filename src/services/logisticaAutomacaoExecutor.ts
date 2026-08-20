@@ -748,7 +748,25 @@ async function salvarParadasMarcadas(
   estabelecimentoId: string
 ): Promise<void> {
   try {
-    for (const parada of paradas) {
+    // Várias automações podem marcar o mesmo veículo (ex.: uma com "tempo parado"
+    // e outra com "endereço no mapa"). Como existe apenas 1 linha por veículo,
+    // é preciso mesclar as flags — senão a última automação apaga a anterior.
+    const mescladas = new Map<string, ParadaMarcadaResult>();
+    for (const p of paradas) {
+      const atual = mescladas.get(p.veiculo_id);
+      if (!atual) {
+        mescladas.set(p.veiculo_id, { ...p });
+        continue;
+      }
+      mescladas.set(p.veiculo_id, {
+        ...atual,
+        mostrar_tempo: !!atual.mostrar_tempo || !!p.mostrar_tempo,
+        mostrar_endereco: !!atual.mostrar_endereco || !!p.mostrar_endereco,
+        endereco: atual.endereco || p.endereco,
+      });
+    }
+
+    for (const parada of Array.from(mescladas.values())) {
       // Check if marker already exists for this vehicle (to avoid duplicates)
       const { data: existing } = await supabase
         .from('logistica_paradas_marcadas')
