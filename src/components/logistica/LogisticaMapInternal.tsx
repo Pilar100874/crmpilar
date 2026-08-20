@@ -1097,7 +1097,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
         /* Movimento suave dos marcadores entre atualizações de posição */
         .logistica-map-container .leaflet-marker-icon {
-          transition: transform .8s linear;
+          transition: transform .8s cubic-bezier(0.25, 0.1, 0.25, 1);
           will-change: transform;
         }
         .logistica-map-container.leaflet-zoom-anim .leaflet-marker-icon,
