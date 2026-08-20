@@ -222,6 +222,7 @@ export default function TvApresentacaoEmpresa() {
   // muito tempo (timers mortos, vídeo zumbi, WebView congelada), recupera.
   useEffect(() => {
     ultimoAvanco.current = Date.now();
+    idxRef.current = idx;
   }, [idx]);
   useEffect(() => {
     if (!apresentacao || apresentacao.itens.length === 0) return;
