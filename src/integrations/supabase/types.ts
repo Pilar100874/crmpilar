@@ -23896,6 +23896,54 @@ export type Database = {
           },
         ]
       }
+      tv_murais: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          duracao_padrao_imagem: number
+          embaralhar: boolean
+          estabelecimento_id: string
+          id: string
+          itens: Json
+          loop: boolean
+          nome: string
+          transicao: string
+          transicao_ms: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          duracao_padrao_imagem?: number
+          embaralhar?: boolean
+          estabelecimento_id: string
+          id?: string
+          itens?: Json
+          loop?: boolean
+          nome: string
+          transicao?: string
+          transicao_ms?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          duracao_padrao_imagem?: number
+          embaralhar?: boolean
+          estabelecimento_id?: string
+          id?: string
+          itens?: Json
+          loop?: boolean
+          nome?: string
+          transicao?: string
+          transicao_ms?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tv_playlist_items: {
         Row: {
           created_at: string

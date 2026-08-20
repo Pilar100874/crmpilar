@@ -1022,3 +1022,49 @@ html.kiosk-mode ::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
+
+/* ============ Transições cinematográficas do Mural de Mídias ============ */
+@keyframes muralFadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes muralFadeOut { from { opacity: 1 } to { opacity: 0 } }
+@keyframes muralZoomBlurIn {
+  from { opacity: 0; transform: scale(1.18); filter: blur(16px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes muralZoomBlurOut {
+  from { opacity: 1; transform: scale(1); filter: blur(0); }
+  to { opacity: 0; transform: scale(0.9); filter: blur(14px); }
+}
+@keyframes muralSlideIn { from { opacity: 0.4; transform: translateX(8%) } to { opacity: 1; transform: translateX(0) } }
+@keyframes muralSlideOut { from { opacity: 1; transform: translateX(0) } to { opacity: 0; transform: translateX(-8%) } }
+@keyframes muralWipeIn {
+  from { clip-path: inset(0 100% 0 0); opacity: 1 }
+  to { clip-path: inset(0 0 0 0); opacity: 1 }
+}
+@keyframes muralFlashIn {
+  0% { opacity: 0; filter: brightness(6) }
+  35% { opacity: 1; filter: brightness(2.2) }
+  100% { opacity: 1; filter: brightness(1) }
+}
+@keyframes muralKenBurnsIn {
+  from { opacity: 0; transform: scale(1.12) }
+  to { opacity: 1; transform: scale(1) }
+}
+@keyframes muralKenBurnsLoop {
+  from { transform: scale(1) translate3d(0, 0, 0) }
+  to { transform: scale(1.08) translate3d(-1%, -1%, 0) }
+}
+
+.mural-in-fade { animation: muralFadeIn var(--mural-dur, 1200ms) ease-in-out both; }
+.mural-in-kenburns { animation: muralKenBurnsIn var(--mural-dur, 1200ms) ease-out both; }
+.mural-in-zoomblur { animation: muralZoomBlurIn var(--mural-dur, 1200ms) cubic-bezier(0.22, 1, 0.36, 1) both; }
+.mural-in-slide { animation: muralSlideIn var(--mural-dur, 1200ms) cubic-bezier(0.22, 1, 0.36, 1) both; }
+.mural-in-wipe { animation: muralWipeIn var(--mural-dur, 1200ms) cubic-bezier(0.65, 0, 0.35, 1) both; }
+.mural-in-flash { animation: muralFlashIn var(--mural-dur, 1200ms) ease-out both; }
+.mural-out-fade { animation: muralFadeOut var(--mural-dur, 1200ms) ease-in-out both; }
+.mural-out-slide { animation: muralSlideOut var(--mural-dur, 1200ms) cubic-bezier(0.22, 1, 0.36, 1) both; }
+.mural-out-zoomblur { animation: muralZoomBlurOut var(--mural-dur, 1200ms) ease-in both; }
+.mural-kenburns-loop { animation: muralKenBurnsLoop 20s ease-out both; }
+
+/* TV Box com GPU fraca: desfoque pesado é substituído por fade simples */
+html.tv-mode .mural-in-zoomblur { animation-name: muralFadeIn; }
+html.tv-mode .mural-out-zoomblur { animation-name: muralFadeOut; }
