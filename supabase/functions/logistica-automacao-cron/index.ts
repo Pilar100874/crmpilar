@@ -701,7 +701,7 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
         endereco = (await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)) ?? endereco;
       }
       if (!m.mostrar_endereco) endereco = null;
-      await admin
+      const { error: errUpd } = await admin
         .from("logistica_paradas_marcadas")
         .update({
           lat: m.lat,
@@ -717,6 +717,8 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
           endereco,
         })
         .eq("id", existing.id);
+      if (errUpd) console.error("[cron] falha ao atualizar marcação", existing.id, errUpd);
+      else console.log("[cron] marcação atualizada", existing.id, m.veiculo_id, m.mostrar_endereco);
     } else {
       const endereco = m.mostrar_endereco
         ? await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)
