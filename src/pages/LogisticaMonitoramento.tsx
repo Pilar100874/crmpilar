@@ -640,6 +640,16 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               Modo Foco
             </Button>
 
+            {modoFoco && (
+              <TrilhaFocoControls
+                minutos={trilhaMinutos}
+                onMinutosChange={setTrilhaMinutos}
+                onLimpar={() => setTrilhaLimparToken(Date.now())}
+              />
+            )}
+
+
+
             <Button
               variant={pinnedVeiculoId ? 'default' : 'outline'}
               size="sm"
