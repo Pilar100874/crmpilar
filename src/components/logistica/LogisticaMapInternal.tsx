@@ -844,7 +844,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     // Defer to next frame so container resize (details panel opening) settles first
     const raf = requestAnimationFrame(() => {
       map.invalidateSize();
-      map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+      // Modo foco: zoom sempre no nível definido; fora dele, respeita o zoom atual se já for maior
+      const zoomAlvo = modoFoco ? focoZoom : Math.max(map.getZoom(), focoZoom);
+      map.setView(pos, zoomAlvo, { animate: true });
       const marker = markersRef.current.get(veiculo.id);
       // Open popup without auto-panning so the marker stays centered on screen
       marker?.openPopup();
@@ -854,7 +856,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       }, 350);
     });
     return () => cancelAnimationFrame(raf);
-  }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto]);
+  }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto, modoFoco, focoZoom]);
 
   // Update paradas marcadas markers
   useEffect(() => {
