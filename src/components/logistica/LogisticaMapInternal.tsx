@@ -210,6 +210,8 @@ interface LogisticaMapInternalProps {
   disableInteraction?: boolean;
   focusVeiculoId?: string;
   focusTrigger?: number;
+  /** Sempre reenquadra no maior zoom possível englobando todos os pontos (modo TV) */
+  zoomMaximoSempre?: boolean;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
