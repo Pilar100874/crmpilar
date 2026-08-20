@@ -904,6 +904,67 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     focoSeguirRef.current = { ...novo, zoom: atual.zoom, ultimoPan: agora, inicializado: true };
     window.setTimeout(() => { focoAnimandoRef.current = false; }, duracao * 1000);
   }, [veiculos, modoFoco, focusVeiculoId, focoZoom]);
+
+  // ===== Trilha (histórico recente) do veículo em foco =====
+  const trilhaPontosRef = useRef<Map<string, { lat: number; lng: number; ts: number }[]>>(new Map());
+  const trilhaLayerRef = useRef<L.LayerGroup | null>(null);
+  const [trilhaTick, setTrilhaTick] = useState(0);
+
+  // Limpa a trilha quando solicitado ou quando a trilha é desligada / muda o veículo
+  useEffect(() => {
+    trilhaPontosRef.current.clear();
+    trilhaLayerRef.current?.clearLayers();
+    setTrilhaTick(t => t + 1);
+  }, [trilhaLimparToken, focusVeiculoId]);
+
+  useEffect(() => {
+    if (trilhaMinutos > 0) return;
+    trilhaPontosRef.current.clear();
+    trilhaLayerRef.current?.clearLayers();
+  }, [trilhaMinutos]);
+
+  // Acumula pontos e desenha a polilinha
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!trilhaLayerRef.current) {
+      trilhaLayerRef.current = L.layerGroup().addTo(map);
+    }
+    const layer = trilhaLayerRef.current;
+    if (!trilhaMinutos || !focusVeiculoId) {
+      layer.clearLayers();
+      return;
+    }
+    const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
+    if (!veiculo) return;
+
+    const agora = Date.now();
+    const pontos = trilhaPontosRef.current.get(focusVeiculoId) ?? [];
+    const ultimo = pontos[pontos.length - 1];
+    const lat = veiculo.ultima_posicao!.lat;
+    const lng = veiculo.ultima_posicao!.lng;
+    const mudou = !ultimo || L.latLng(ultimo.lat, ultimo.lng).distanceTo(L.latLng(lat, lng)) > 3;
+    if (mudou) pontos.push({ lat, lng, ts: agora });
+
+    // Descarta pontos fora da janela configurada
+    const limite = agora - trilhaMinutos * 60_000;
+    const recentes = pontos.filter(p => p.ts >= limite).slice(-800);
+    trilhaPontosRef.current.set(focusVeiculoId, recentes);
+
+    layer.clearLayers();
+    if (recentes.length >= 2) {
+      const coords = recentes.map(p => [p.lat, p.lng] as [number, number]);
+      L.polyline(coords, { color: '#0f172a', weight: 7, opacity: 0.25, lineCap: 'round' }).addTo(layer);
+      L.polyline(coords, { color: '#22d3ee', weight: 3.5, opacity: 0.95, lineCap: 'round', dashArray: '1 8' }).addTo(layer);
+      const inicio = recentes[0];
+      L.circleMarker([inicio.lat, inicio.lng], {
+        radius: 5, color: '#22d3ee', weight: 2, fillColor: '#0f172a', fillOpacity: 1,
+      }).bindTooltip('Início da trilha', { direction: 'top' }).addTo(layer);
+    }
+  }, [veiculos, focusVeiculoId, trilhaMinutos, trilhaTick]);
+
+  useEffect(() => () => { trilhaLayerRef.current?.remove(); trilhaLayerRef.current = null; }, []);
+
   useEffect(() => {
     if (!mapRef.current) return;
 
