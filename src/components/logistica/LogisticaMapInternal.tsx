@@ -244,7 +244,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const paradasMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayersRef = useRef<L.Polyline[]>([]);
   const guiasRef = useRef<L.LayerGroup>(L.layerGroup());
+  const clustersRef = useRef<L.LayerGroup>(L.layerGroup());
   const currentMarkerRef = useRef<L.Marker | null>(null);
+  // Grupos de veículos sobrepostos que o usuário expandiu (chave = ids ordenados)
+  const [gruposExpandidos, setGruposExpandidos] = useState<Set<string>>(new Set());
 
   const initialBoundsFittedRef = useRef(false);
   // Fallback de endereço (geocodificação no cliente) para paradas sem endereço salvo
