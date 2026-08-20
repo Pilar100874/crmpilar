@@ -89,8 +89,11 @@ const createVeiculoIcon = (
   if (enderecoParado) {
     linhas.push(`<div style="max-width:220px; font-size:${compact ? 9 : 11}px; font-weight:600; color:#0f172a; background:#ffffff; border:2px solid ${enderecoParado.cor}; padding:2px 6px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.35); line-height:1.25; white-space:normal;">📍 ${enderecoParado.texto}</div>`);
   }
+  const posicaoLado = labelLado === 'left'
+    ? `right:${size + 6}px; align-items:flex-end;`
+    : `left:${size + 6}px; align-items:flex-start;`;
   const label = linhas.length
-    ? `<div style="position:absolute; top:50%; left:${size + 6}px; transform:translateY(-50%); display:flex; flex-direction:column; align-items:flex-start; gap:2px; pointer-events:none;">${linhas.join('')}</div>`
+    ? `<div style="position:absolute; top:50%; ${posicaoLado} transform:translateY(calc(-50% + ${labelDeslocY}px)); display:flex; flex-direction:column; gap:2px; pointer-events:none; z-index:4;">${linhas.join('')}</div>`
     : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
