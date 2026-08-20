@@ -681,13 +681,15 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
     });
   }
 
+  console.log("[cron][persist] mescladas", marcacoesMescladas.size);
   for (const m of Array.from(marcacoesMescladas.values())) {
-    const { data: existing } = await admin
+    const { data: existing, error: errSel } = await admin
       .from("logistica_paradas_marcadas")
       .select("id, lat, lng, data_inicio, endereco")
       .eq("estabelecimento_id", estabelecimentoId)
       .eq("veiculo_id", m.veiculo_id)
       .maybeSingle();
+    console.log("[cron][persist] item", m.veiculo_id, { existing: !!existing, errSel: errSel?.message });
 
     if (existing) {
       const mudou =
