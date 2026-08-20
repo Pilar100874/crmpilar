@@ -42,6 +42,7 @@ export default function EcommerceDenunciasConfig() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [novaCat, setNovaCat] = useState("");
+  const [emailDestino, setEmailDestino] = useState("");
   const [denuncias, setDenuncias] = useState<any[]>([]);
   const [selecionada, setSelecionada] = useState<any | null>(null);
 
@@ -50,15 +51,17 @@ export default function EcommerceDenunciasConfig() {
   async function load() {
     const estId = localStorage.getItem("estabelecimentoId");
     if (!estId) { setLoading(false); return; }
-    const [{ data: c }, { data: d }] = await Promise.all([
+    const [{ data: c }, { data: d }, { data: p }] = await Promise.all([
       supabase.from("ecommerce_config" as any).select("denuncias_enabled, denuncias_config").eq("estabelecimento_id", estId).maybeSingle(),
       supabase.from("ecommerce_denuncias" as any).select("*").eq("estabelecimento_id", estId).order("created_at", { ascending: false }),
+      supabase.from("ecommerce_config_privado" as any).select("denuncias_email_destino").eq("estabelecimento_id", estId).maybeSingle(),
     ]);
     if (c) {
       setEnabled(!!(c as any).denuncias_enabled);
       const cc = (c as any).denuncias_config;
       if (cc) setCfg({ ...DEFAULT_CFG, ...cc });
     }
+    setEmailDestino(((p as any)?.denuncias_email_destino as string) || "");
     setDenuncias((d as any[]) || []);
     setLoading(false);
   }
@@ -70,7 +73,10 @@ export default function EcommerceDenunciasConfig() {
     const { error } = await supabase.from("ecommerce_config" as any)
       .update({ denuncias_enabled: enabled, denuncias_config: cfg as any })
       .eq("estabelecimento_id", estId);
-    if (error) toast.error(error.message); else toast.success("Canal de denúncias atualizado");
+    const { error: errPriv } = await supabase.from("ecommerce_config_privado" as any)
+      .upsert({ estabelecimento_id: estId, denuncias_email_destino: emailDestino.trim() || null, updated_at: new Date().toISOString() }, { onConflict: "estabelecimento_id" });
+    const falha = error || errPriv;
+    if (falha) toast.error(falha.message); else toast.success("Canal de denúncias atualizado");
     setSaving(false);
   }
 
