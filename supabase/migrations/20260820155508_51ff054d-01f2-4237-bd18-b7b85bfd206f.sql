@@ -1,0 +1,3 @@
+ALTER TABLE public.tv_veiculos_config
+  ADD COLUMN IF NOT EXISTS quiosque_ativo BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS pausa_falha_segundos INTEGER NOT NULL DEFAULT 60;

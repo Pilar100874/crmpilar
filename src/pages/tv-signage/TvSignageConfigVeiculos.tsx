@@ -129,6 +129,36 @@ export default function TvSignageConfigVeiculos() {
             </div>
           </div>
 
+          <div className="rounded-lg border border-border p-3 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Modo quiosque</p>
+                <p className="text-sm text-muted-foreground">
+                  Tela cheia, sem cursor nem controles clicáveis, com bloqueio de scroll, zoom e atalhos.
+                </p>
+              </div>
+              <Switch
+                checked={config.quiosque_ativo}
+                onCheckedChange={v => setConfig(prev => ({ ...prev, quiosque_ativo: v }))}
+              />
+            </div>
+            <div className="space-y-1.5 sm:max-w-xs">
+              <Label htmlFor="pausaFalha">Pausa após falha (segundos)</Label>
+              <Input
+                id="pausaFalha"
+                type="number"
+                min={10}
+                max={3600}
+                value={config.pausa_falha_segundos}
+                onChange={e => setNum('pausa_falha_segundos', e.target.value, 10, 3600)}
+                disabled={!config.quiosque_ativo}
+              />
+              <p className="text-xs text-muted-foreground">
+                Se ocorrer erro ou queda de rede, o ciclo automático pausa por este tempo e retoma sozinho.
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2 pt-2">
             <Button onClick={salvar} disabled={salvando} className="gap-2">
               {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

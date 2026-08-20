@@ -7,6 +7,8 @@ export interface TvVeiculosCicloConfig {
   foco_segundos: number;
   trilha_minutos: number;
   pausa_interacao_segundos: number;
+  quiosque_ativo: boolean;
+  pausa_falha_segundos: number;
 }
 
 export const TV_VEICULOS_CICLO_PADRAO: TvVeiculosCicloConfig = {
@@ -15,6 +17,8 @@ export const TV_VEICULOS_CICLO_PADRAO: TvVeiculosCicloConfig = {
   foco_segundos: 15,
   trilha_minutos: 15,
   pausa_interacao_segundos: 90,
+  quiosque_ativo: true,
+  pausa_falha_segundos: 60,
 };
 
 const CACHE_KEY = 'tv:veiculos:cicloConfig';
@@ -33,7 +37,7 @@ export async function carregarCicloConfig(): Promise<TvVeiculosCicloConfig> {
     if (!estabId) return lerCicloConfigCache();
     const { data } = await supabase
       .from('tv_veiculos_config')
-      .select('autonomo_ativo, overview_segundos, foco_segundos, trilha_minutos, pausa_interacao_segundos')
+      .select('autonomo_ativo, overview_segundos, foco_segundos, trilha_minutos, pausa_interacao_segundos, quiosque_ativo, pausa_falha_segundos')
       .eq('estabelecimento_id', estabId)
       .maybeSingle();
     const cfg = { ...TV_VEICULOS_CICLO_PADRAO, ...(data || {}) } as TvVeiculosCicloConfig;

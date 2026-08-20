@@ -28,6 +28,7 @@ import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
 import { TrilhaFocoControls } from '@/components/logistica/TrilhaFocoControls';
+import { useKioskMode } from '@/lib/tv/kioskMode';
 import { carregarCicloConfig, lerCicloConfigCache, type TvVeiculosCicloConfig } from '@/lib/tv/veiculosCicloConfig';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
@@ -417,7 +418,11 @@ export default function TvDashboardVeiculos() {
     const t = window.setInterval(carregar, 5 * 60 * 1000);
     return () => { vivo = false; window.clearInterval(t); };
   }, []);
-  const autonomoAtivo = (modoTv || !!tvDeviceToken) && cicloConfig.autonomo_ativo;
+  const quiosque = useKioskMode(
+    (modoTv || !!tvDeviceToken) && cicloConfig.quiosque_ativo,
+    { pausaFalhaSegundos: cicloConfig.pausa_falha_segundos },
+  );
+  const autonomoAtivo = (modoTv || !!tvDeviceToken) && cicloConfig.autonomo_ativo && !quiosque.pausadoPorFalha;
   const OVERVIEW_MS = Math.max(5, cicloConfig.overview_segundos) * 1000;
   const FOCO_MS = Math.max(3, cicloConfig.foco_segundos) * 1000;
   const autoEtapaRef = useRef<{ fase: 'geral' | 'foco'; indice: number; ate: number }>({ fase: 'geral', indice: 0, ate: 0 });
@@ -740,6 +745,11 @@ export default function TvDashboardVeiculos() {
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
+          {quiosque.pausadoPorFalha && (
+            <div className="px-3 py-2 bg-destructive/90 text-destructive-foreground rounded-xl shadow-xl">
+              <span className="text-sm font-medium">Ciclo pausado por falha</span>
+            </div>
+          )}
           {autonomoAtivo && (
             <div className="px-3 py-2 bg-primary/90 text-primary-foreground rounded-xl shadow-xl flex items-center gap-1.5">
               <Crosshair className="h-4 w-4" />

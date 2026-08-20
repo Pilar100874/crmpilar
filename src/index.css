@@ -986,3 +986,39 @@ html.tv-mode .animate-bounce {
 html.tv-mode body {
   background-color: #000 !important;
 }
+
+/* ============ Modo Quiosque (TV em tela cheia sem interação) ============
+   Ativado pela classe .kiosk-mode em <html> (ver src/lib/tv/kioskMode.ts). */
+html.kiosk-mode,
+html.kiosk-mode body {
+  overflow: hidden !important;
+  cursor: none !important;
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Nada é clicável, exceto o que estiver marcado como permitido */
+html.kiosk-mode body * {
+  pointer-events: none !important;
+}
+html.kiosk-mode [data-kiosk-allow],
+html.kiosk-mode [data-kiosk-allow] * {
+  pointer-events: auto !important;
+}
+
+/* Controles de saída/navegação ficam ocultos */
+html.kiosk-mode [data-tv-hide],
+html.kiosk-mode [data-kiosk-hide],
+html.kiosk-mode [data-main-sidebar],
+html.kiosk-mode .slide-out-menu-tab,
+html.kiosk-mode .menu-buttons-fab {
+  display: none !important;
+}
+
+html.kiosk-mode ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
