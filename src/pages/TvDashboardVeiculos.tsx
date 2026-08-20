@@ -27,6 +27,7 @@ import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
 import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 import { AutomacaoMensagensFila } from '@/components/logistica/AutomacaoMensagensFila';
+import { TrilhaFocoControls } from '@/components/logistica/TrilhaFocoControls';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 
