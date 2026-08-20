@@ -173,6 +173,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [modoFoco, setModoFoco] = useState(false);
   const modoFocoRef = useRef(false);
   useEffect(() => { modoFocoRef.current = modoFoco; }, [modoFoco]);
+  const [trilhaMinutos, setTrilhaMinutos] = useState<number>(() => Number(localStorage.getItem('logistica:trilhaMinutos') || 15));
+  const [trilhaLimparToken, setTrilhaLimparToken] = useState(0);
+  useEffect(() => { localStorage.setItem('logistica:trilhaMinutos', String(trilhaMinutos)); }, [trilhaMinutos]);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<'todos' | 'movendo' | 'parado' | 'alertas' | 'offline'>('todos');
   const [detalhesVeiculoId, setDetalhesVeiculoId] = useState<string | null>(null);
