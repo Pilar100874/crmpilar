@@ -59,6 +59,8 @@ const createVeiculoIcon = (
   rotulo?: string,
   tempoParado?: TempoParadoInfo | null,
   enderecoParado?: EnderecoParadoInfo | null,
+  labelLado: 'left' | 'right' = 'right',
+  labelDeslocY = 0,
 ) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
