@@ -574,6 +574,16 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
     // Add or update markers
     veiculosComPosicao.forEach(veiculo => {
+      // Veículo representado por um cluster (contador): esconde o marcador individual
+      if (ocultos.has(veiculo.id)) {
+        const antigo = currentMarkers.get(veiculo.id);
+        if (antigo) {
+          antigo.remove();
+          currentMarkers.delete(veiculo.id);
+          iconSigRef.current.delete(veiculo.id);
+        }
+        return;
+      }
       const info = layout.get(veiculo.id);
       const pos: L.LatLngExpression = info?.pos ?? [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
       const existingMarker = currentMarkers.get(veiculo.id);
