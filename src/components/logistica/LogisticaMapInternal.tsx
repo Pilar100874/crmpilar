@@ -408,6 +408,13 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     const currentMarkers = markersRef.current;
     const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
 
+    // Reprocessa o espalhamento quando o zoom muda (a sobreposição depende da escala)
+    if (!zoomListenerRef.current) {
+      zoomListenerRef.current = true;
+      map.on('zoomend', () => setZoomTick(t => t + 1));
+    }
+
+
     // Paradas com "Tempo Parado no Mapa" ativo → rótulo piscante abaixo do nome
     const tempoPorVeiculo = new Map<string, TempoParadoInfo>();
     const enderecoPorVeiculo = new Map<string, EnderecoParadoInfo>();
