@@ -243,6 +243,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const paradasMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayersRef = useRef<L.Polyline[]>([]);
+  const guiasRef = useRef<L.LayerGroup>(L.layerGroup());
   const currentMarkerRef = useRef<L.Marker | null>(null);
 
   const initialBoundsFittedRef = useRef(false);
