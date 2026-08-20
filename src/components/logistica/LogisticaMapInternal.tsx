@@ -251,6 +251,10 @@ interface LogisticaMapInternalProps {
   focusTrigger?: number;
   /** Sempre reenquadra no maior zoom possível englobando todos os pontos (modo TV) */
   zoomMaximoSempre?: boolean;
+  /** Modo foco: mantém o veículo selecionado centralizado e com zoom fixo */
+  modoFoco?: boolean;
+  /** Zoom aplicado ao focar/seguir um veículo (padrão 17) */
+  focoZoom?: number;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
@@ -271,6 +275,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   focusVeiculoId,
   focusTrigger,
   zoomMaximoSempre = false,
+  modoFoco = false,
+  focoZoom = 17,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
