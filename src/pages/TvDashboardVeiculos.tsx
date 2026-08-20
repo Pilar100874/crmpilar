@@ -731,6 +731,14 @@ export default function TvDashboardVeiculos() {
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
+          {autonomoAtivo && (
+            <div className="px-3 py-2 bg-primary/90 text-primary-foreground rounded-xl shadow-xl flex items-center gap-1.5">
+              <Crosshair className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                {modoFoco ? 'Foco automático' : 'Visão geral'}
+              </span>
+            </div>
+          )}
           {!modoTv && !tvDeviceToken && (
             <>
               {gruposFixos.length > 0 ? (
