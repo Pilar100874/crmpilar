@@ -342,7 +342,6 @@ async function processarEstabelecimento(estabelecimentoId: string) {
         return minutosDesde(v.pos.data_hora) >= limite;
       });
 
-      console.log("[cron][dbg]", automacao.nome, {elegiveis: elegiveis.length, endereco: !!enderecoNode, tempo: !!tempoNode, marcar: !!pc.marcar_no_mapa});
       // Marcações no mapa (tempo parado)
       if (pc.marcar_no_mapa || tempoNode || enderecoNode) {
         for (const v of elegiveis) {
@@ -653,7 +652,6 @@ async function enderecoDe(lat: number, lng: number, curto: boolean): Promise<str
 }
 
 async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], veiculos: Veic[]) {
-  console.log("[cron][persist] inicio", marcacoes.length);
   const marcados = new Set(marcacoes.map((m) => m.veiculo_id));
   const emMovimento = veiculos.filter((v) => v.status === "movendo" && !marcados.has(v.id)).map((v) => v.id);
   if (emMovimento.length) {
@@ -681,15 +679,13 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
     });
   }
 
-  console.log("[cron][persist] mescladas", marcacoesMescladas.size);
   for (const m of Array.from(marcacoesMescladas.values())) {
-    const { data: existing, error: errSel } = await admin
+    const { data: existing } = await admin
       .from("logistica_paradas_marcadas")
       .select("id, lat, lng, data_inicio, endereco")
       .eq("estabelecimento_id", estabelecimentoId)
       .eq("veiculo_id", m.veiculo_id)
       .maybeSingle();
-    console.log("[cron][persist] item", m.veiculo_id, { existing: !!existing, errSel: errSel?.message });
 
     if (existing) {
       const mudou =
@@ -720,8 +716,7 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
           endereco,
         })
         .eq("id", existing.id);
-      if (errUpd) console.error("[cron] falha ao atualizar marcação", existing.id, errUpd);
-      else console.log("[cron] marcação atualizada", existing.id, m.veiculo_id, m.mostrar_endereco);
+      if (errUpd) console.error("[cron] falha ao atualizar marcação", existing.id, errUpd.message);
     } else {
       const endereco = m.mostrar_endereco
         ? await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)
