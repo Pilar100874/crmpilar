@@ -231,6 +231,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   disableInteraction = false,
   focusVeiculoId,
   focusTrigger,
+  zoomMaximoSempre = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
