@@ -95,6 +95,9 @@ export default function TvDashboardVeiculos() {
   const [focusVeiculoId, setFocusVeiculoId] = useState<string | null>(null);
   const [focusTrigger, setFocusTrigger] = useState(0);
   const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
+  const [modoFoco, setModoFoco] = useState(false);
+  const modoFocoRef = useRef(false);
+  useEffect(() => { modoFocoRef.current = modoFoco; }, [modoFoco]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
   const [searchParams] = useSearchParams();
   // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
@@ -107,6 +110,8 @@ export default function TvDashboardVeiculos() {
   const handleFocus = useCallback((id: string) => {
     setFocusVeiculoId(id);
     setFocusTrigger(t => t + 1);
+    // Modo foco: segue automaticamente o veículo selecionado
+    if (modoFocoRef.current) setPinnedVeiculoId(id);
   }, []);
 
   const togglePin = useCallback((id: string) => {
@@ -123,6 +128,7 @@ export default function TvDashboardVeiculos() {
   const showAll = useCallback(() => {
     setPinnedVeiculoId(null);
     setFocusVeiculoId(null);
+    setModoFoco(false);
   }, []);
 
 
@@ -618,6 +624,8 @@ export default function TvDashboardVeiculos() {
               compactIcons
               focusVeiculoId={focusVeiculoId || undefined}
               focusTrigger={focusTrigger}
+              modoFoco={modoFoco}
+              focoZoom={modoFoco ? 18 : 17}
               onVeiculoClick={(v) => handleFocus(v.id)}
             />
           )}
@@ -662,6 +670,24 @@ export default function TvDashboardVeiculos() {
                   <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
                 </div>
               )}
+              <Button
+                variant={modoFoco ? 'default' : 'secondary'}
+                size="sm"
+                onClick={() => {
+                  setModoFoco(prev => {
+                    const next = !prev;
+                    if (next && focusVeiculoId) setPinnedVeiculoId(focusVeiculoId);
+                    if (!next) setPinnedVeiculoId(null);
+                    return next;
+                  });
+                }}
+                className="h-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl gap-1"
+                title="Modo foco: centraliza e amplia no veículo selecionado"
+                data-tv-hide
+              >
+                <Crosshair className="h-4 w-4" />
+                Modo Foco
+              </Button>
               <Button
                 variant="secondary"
                 size="sm"
