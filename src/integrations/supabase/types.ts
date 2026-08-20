@@ -23950,6 +23950,7 @@ export type Database = {
           dashboard_id: string
           duracao_segundos: number
           id: string
+          modo_avanco: string
           ordem: number
           playlist_id: string
         }
@@ -23958,6 +23959,7 @@ export type Database = {
           dashboard_id: string
           duracao_segundos?: number
           id?: string
+          modo_avanco?: string
           ordem?: number
           playlist_id: string
         }
@@ -23966,6 +23968,7 @@ export type Database = {
           dashboard_id?: string
           duracao_segundos?: number
           id?: string
+          modo_avanco?: string
           ordem?: number
           playlist_id?: string
         }
