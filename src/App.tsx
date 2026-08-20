@@ -304,6 +304,8 @@ import TvSignageWorkflows from "./pages/tv-signage/TvSignageWorkflows";
 import TvWorkflowBuilder from "./pages/tv-signage/TvWorkflowBuilder";
 import TvSignageApi from "./pages/tv-signage/TvSignageApi";
 import TvSignageConfigVeiculos from "./pages/tv-signage/TvSignageConfigVeiculos";
+import TvSignageMurais from "./pages/tv-signage/TvSignageMurais";
+import TvMural from "./pages/TvMural";
 import TvSignageSimulador from "./pages/tv-signage/TvSignageSimulador";
 import TvPair from "./pages/TvPair";
 import TvCameras from "./pages/TvCameras";
@@ -738,6 +740,7 @@ const App = () => (
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/tv/cameras" element={<TvCameras />} />
             <Route path="/tv/apresentacao" element={<TvApresentacaoEmpresa />} />
+            <Route path="/tv/mural" element={<TvMural />} />
             <Route path="/tv-pair" element={<TvPair />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}

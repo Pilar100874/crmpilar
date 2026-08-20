@@ -59,4 +59,5 @@ export const ROTAS_INTERNAS = [
   { value: "/tv/veiculos", label: "TV — Veículos" },
   { value: "/tv/cameras", label: "TV — Câmeras (Mosaico)" },
   { value: "/tv/apresentacao", label: "TV — Apresentação" },
+  { value: "/tv/mural", label: "TV — Mural de Mídias (transições)" },
 ];

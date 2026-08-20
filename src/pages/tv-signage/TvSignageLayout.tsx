@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Code2, Zap, Crosshair } from "lucide-react";
+import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Code2, Zap, Crosshair, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -7,6 +7,7 @@ const items = [
   { to: "/tv-signage/dispositivos", icon: Tv, label: "Dispositivos" },
   { to: "/tv-signage/dashboards", icon: MonitorPlay, label: "Telas / Dashboards" },
   { to: "/tv-signage/playlists", icon: ListVideo, label: "Playlists" },
+  { to: "/tv-signage/murais", icon: Images, label: "Mural de Mídias" },
   { to: "/tv-signage/grupos", icon: Users, label: "Grupos" },
   { to: "/tv-signage/comandos", icon: Terminal, label: "Comandos" },
   { to: "/tv-signage/workflows", icon: Zap, label: "Workflows" },
@@ -33,7 +34,7 @@ export default function TvSignageLayout() {
             </p>
           </div>
         </div>
-        <nav className="px-2 sm:px-4 pb-3 grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-10 gap-1.5">
+        <nav className="px-2 sm:px-4 pb-3 grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-11 gap-1.5">
           {items.map((it) => (
             <NavLink
               key={it.to}
