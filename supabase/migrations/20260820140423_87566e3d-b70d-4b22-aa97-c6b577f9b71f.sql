@@ -1,0 +1,1 @@
+update public.logistica_automacoes set nome = 'Veiculo Parado (Cópia)' where nome = 'TESTE RENOMEAR X';
