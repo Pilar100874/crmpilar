@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { getEstabelecimentoId } from '@/lib/estabelecimento';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 export interface TvVeiculosCicloConfig {
   autonomo_ativo: boolean;
