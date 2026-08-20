@@ -400,7 +400,7 @@ export default function TvDashboardVeiculos() {
       setFocusVeiculoId(pinnedVeiculoId);
     }
     // Não incrementa focusTrigger aqui; o mapa segue via modoFoco + focoVeiculoId.
-  }, [pinnedVeiculoId, veiculos]);
+  }, [pinnedVeiculoId, veiculos, focusVeiculoId]);
 
   // Calcular veículos parados há muito tempo (mais de 30 min)
   const veiculosParadosAlerta = useMemo(() => {
