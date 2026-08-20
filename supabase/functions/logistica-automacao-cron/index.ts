@@ -335,7 +335,9 @@ async function processarEstabelecimento(estabelecimentoId: string) {
         : [{ tempo_minutos: Number(pc.tempo_minutos) || 30 }];
       const limite = Math.min(...cond.map((c: any) => Number(c.tempo_minutos) || 30));
       elegiveis = veiculos.filter((v) => {
-        if (v.status !== "parado" || !v.pos) return false;
+        if (!v.pos) return false;
+        // Parado = não está em movimento (inclui rastreador offline com última velocidade 0)
+        if (v.status === "movendo" || Number(v.pos.velocidade) > 5) return false;
         if (dentroZona(v.pos.lat, v.pos.lng)) return false;
         return minutosDesde(v.pos.data_hora) >= limite;
       });
@@ -698,7 +700,7 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
         endereco = (await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)) ?? endereco;
       }
       if (!m.mostrar_endereco) endereco = null;
-      await admin
+      const { error: errUpd } = await admin
         .from("logistica_paradas_marcadas")
         .update({
           lat: m.lat,
@@ -714,16 +716,18 @@ async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], v
           endereco,
         })
         .eq("id", existing.id);
+      if (errUpd) console.error("[cron] falha ao atualizar marcação", existing.id, errUpd.message);
     } else {
       const endereco = m.mostrar_endereco
         ? await enderecoDe(m.lat, m.lng, m.endereco_curto !== false)
         : null;
       const { endereco_curto: _ec, ...campos } = m;
-      await admin.from("logistica_paradas_marcadas").insert({
+      const { error: errIns } = await admin.from("logistica_paradas_marcadas").insert({
         ...campos,
         endereco,
         estabelecimento_id: estabelecimentoId,
       });
+      if (errIns) console.error("[cron][persist] falha insert", m.veiculo_id, errIns.message, errIns.details);
     }
   }
 }
