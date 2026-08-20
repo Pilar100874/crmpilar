@@ -5,6 +5,12 @@ import { VeiculoComStatus } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { enquadrarNoMapa } from '@/lib/mapa/enquadrar';
 import { Crosshair } from 'lucide-react';
+import {
+  DisposicaoMapa,
+  carregarDisposicao,
+  obterChaveUsuario,
+  salvarDisposicao,
+} from '@/lib/logistica/spiderfyPersistencia';
 
 
 // Fix leaflet default icon issue
