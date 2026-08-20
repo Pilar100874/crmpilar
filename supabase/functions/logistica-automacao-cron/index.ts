@@ -653,6 +653,7 @@ async function enderecoDe(lat: number, lng: number, curto: boolean): Promise<str
 }
 
 async function persistirMarcacoes(estabelecimentoId: string, marcacoes: any[], veiculos: Veic[]) {
+  console.log("[cron][persist] inicio", marcacoes.length);
   const marcados = new Set(marcacoes.map((m) => m.veiculo_id));
   const emMovimento = veiculos.filter((v) => v.status === "movendo" && !marcados.has(v.id)).map((v) => v.id);
   if (emMovimento.length) {
