@@ -248,6 +248,30 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const currentMarkerRef = useRef<L.Marker | null>(null);
   // Grupos de veículos sobrepostos que o usuário expandiu (chave = ids ordenados)
   const [gruposExpandidos, setGruposExpandidos] = useState<Set<string>>(new Set());
+  // Disposição persistida por usuário (ordem estável do espalhamento/rótulos)
+  const chaveDisposicaoRef = useRef<string | null>(null);
+  const disposicaoRef = useRef<DisposicaoMapa>({ grupos: {}, expandidos: [] });
+  const [disposicaoCarregada, setDisposicaoCarregada] = useState(false);
+
+  useEffect(() => {
+    let ativo = true;
+    obterChaveUsuario().then(chave => {
+      if (!ativo) return;
+      chaveDisposicaoRef.current = chave;
+      const dados = carregarDisposicao(chave);
+      disposicaoRef.current = dados;
+      if (dados.expandidos.length) setGruposExpandidos(new Set(dados.expandidos));
+      setDisposicaoCarregada(true);
+    });
+    return () => { ativo = false; };
+  }, []);
+
+  // Persiste os grupos expandidos escolhidos pelo usuário
+  useEffect(() => {
+    if (!disposicaoCarregada || !chaveDisposicaoRef.current) return;
+    disposicaoRef.current.expandidos = Array.from(gruposExpandidos);
+    salvarDisposicao(chaveDisposicaoRef.current, disposicaoRef.current);
+  }, [gruposExpandidos, disposicaoCarregada]);
 
   const initialBoundsFittedRef = useRef(false);
   // Fallback de endereço (geocodificação no cliente) para paradas sem endereço salvo
