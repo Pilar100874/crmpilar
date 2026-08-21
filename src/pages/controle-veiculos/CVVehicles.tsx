@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge,
   ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2, X, Filter,
-  ArrowUpDown, ArrowUp, ArrowDown,
+  ArrowUpDown, ArrowUp, ArrowDown, Download,
 } from "lucide-react";
 
 import { CVPageHeader } from "./CVPageHeader";
@@ -78,6 +78,12 @@ export default function CVVehicles() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
+
+  // importação em massa por grupo (do cadastro de Logística)
+  const [impOpen, setImpOpen] = useState(false);
+  const [impGrupo, setImpGrupo] = useState<string>(CV_GRUPO_ALL);
+  const [importando, setImportando] = useState(false);
+
 
   // manutenção
   const [planVehicle, setPlanVehicle] = useState<Vehicle | null>(null);
@@ -290,6 +296,58 @@ export default function CVVehicles() {
     load();
   };
 
+  // ---- importar todos os veículos de um grupo da Logística ----
+  const abrirImportacao = () => {
+    setImpGrupo(grupoId);
+    setImpOpen(true);
+  };
+
+  const grupoDoLog = (lv: LogVeic) => lv.logistica_grupo_id ?? lv.grupo_id ?? null;
+
+  const pendentesImportacao = logVeiculos.filter(lv => {
+    const jaExiste = rows.some(r => (r as any).veiculo_id === lv.id);
+    if (jaExiste) return false;
+    if (impGrupo === CV_GRUPO_ALL) return true;
+    return grupoDoLog(lv) === impGrupo;
+  });
+
+  const importarGrupo = async () => {
+    if (pendentesImportacao.length === 0) return toast.error("Nenhum veículo novo para importar neste grupo");
+    setImportando(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", user?.id).maybeSingle();
+      if (!u?.estabelecimento_id) { setImportando(false); return toast.error("Usuário sem estabelecimento vinculado"); }
+
+      const payloads = pendentesImportacao.map(lv => ({
+        estabelecimento_id: u.estabelecimento_id,
+        veiculo_id: lv.id,
+        plate: String(lv.placa || "").toUpperCase(),
+        name: String(lv.descricao || lv.placa || "").toUpperCase(),
+        vehicle_type: mapTipo(lv.tipo_veiculo) ?? "outro",
+        fleet_type: (lv.tipo_veiculo || "").trim() || null,
+        logistica_grupo_id: grupoDoLog(lv),
+        current_km: 0,
+        oil_change_interval: 10000,
+        last_oil_change_km: 0,
+        next_oil_change_km: 10000,
+        active: true,
+      }));
+
+      const { error } = await supabase.from("cv_vehicles").insert(payloads as any);
+      if (error) throw error;
+      toast.success(`${payloads.length} veículo(s) importado(s). Informe o KM atual de cada um depois.`);
+      setImpOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao importar veículos");
+    } finally {
+      setImportando(false);
+    }
+  };
+
+
+
   // ---- planos de manutenção ----
   const abrirPlanos = async (v: Vehicle) => {
     setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null); setAplicarEm([]);
@@ -454,11 +512,59 @@ export default function CVVehicles() {
         title="Veículos"
         subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos • use o ícone 🔧 no card para os planos de manutenção`}
         actions={
-          <Button onClick={openNew} className="bg-white text-primary hover:bg-white/90">
-            <Plus className="h-4 w-4 mr-1" />Novo Veículo
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={abrirImportacao} className="bg-white/15 text-white hover:bg-white/25 border border-white/30">
+              <Download className="h-4 w-4 mr-1" />Importar grupo da Logística
+            </Button>
+            <Button onClick={openNew} className="bg-white text-primary hover:bg-white/90">
+              <Plus className="h-4 w-4 mr-1" />Novo Veículo
+            </Button>
+          </div>
         }
       />
+
+      <Dialog open={impOpen} onOpenChange={setImpOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Importar veículos da Logística</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Grupo</Label>
+              <Select value={impGrupo} onValueChange={setImpGrupo}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CV_GRUPO_ALL}>Todos os grupos</SelectItem>
+                  {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Serão criados {pendentesImportacao.length} veículo(s) ainda não cadastrados no Controle de Veículos.
+              O KM atual entra como 0 e pode ser ajustado depois.
+            </p>
+            <div className="max-h-56 overflow-auto rounded-md border p-2 space-y-1">
+              {pendentesImportacao.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum veículo novo neste grupo.</p>
+              )}
+              {pendentesImportacao.map(lv => (
+                <div key={lv.id} className="text-sm flex items-center justify-between gap-2">
+                  <span className="font-medium">{lv.placa}</span>
+                  <span className="text-muted-foreground truncate">{lv.descricao || "—"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImpOpen(false)}>Cancelar</Button>
+            <Button onClick={importarGrupo} disabled={importando || pendentesImportacao.length === 0}>
+              {importando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+              Importar {pendentesImportacao.length || ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="relative w-full sm:max-w-md">
