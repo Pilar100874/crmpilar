@@ -10,12 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
   LogIn, Car, Clock, AlertTriangle, CheckCircle, Save, X, ChevronLeft, ChevronRight,
-  Camera, Tags, AlertCircle, MessageSquare,
+  Camera, Tags, AlertCircle, MessageSquare, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
+import { CVMapaVeiculoDialog } from "@/components/cv/CVMapaVeiculoDialog";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
@@ -46,6 +47,7 @@ export default function CVVehicleEntry() {
     inspected_all_sides: false,
   });
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const [mapaVeiculo, setMapaVeiculo] = useState<{ id: string | null; titulo: string } | null>(null);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const load = async () => {
@@ -299,9 +301,20 @@ export default function CVVehicleEntry() {
                           <span className="font-semibold truncate">{m.vehicle?.name}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            title="Ver localização no mapa"
+                            onClick={(e) => { e.stopPropagation(); setMapaVeiculo({ id: (m.vehicle as any)?.veiculo_id ?? null, titulo: `${m.vehicle?.name ?? ""} ${m.vehicle?.plate ?? ""}`.trim() }); }}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setMapaVeiculo({ id: (m.vehicle as any)?.veiculo_id ?? null, titulo: `${m.vehicle?.name ?? ""} ${m.vehicle?.plate ?? ""}`.trim() }); } }}
+                            className="p-1 rounded hover:bg-muted text-primary cursor-pointer"
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </span>
                           <CVRastreamentoDot veiculoLogisticaId={(m.vehicle as any)?.veiculo_id} dotOnly />
                           <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
                         </div>
+
                       </div>
                       <p className="text-sm text-muted-foreground truncate"><span className="font-medium">Motorista:</span> {m.driver?.name}</p>
                       {m.has_helper && <Badge variant="outline" className="text-xs mt-2">Ajudante: {m.helper_name}</Badge>}
@@ -450,6 +463,12 @@ export default function CVVehicleEntry() {
         </div>
       </Card>
 
+      <CVMapaVeiculoDialog
+        open={!!mapaVeiculo}
+        onOpenChange={(v) => !v && setMapaVeiculo(null)}
+        veiculoLogisticaId={mapaVeiculo?.id}
+        titulo={mapaVeiculo?.titulo}
+      />
     </div>
 
   );
