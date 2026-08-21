@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
+import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
@@ -51,7 +52,7 @@ export default function CVVehicleEntry() {
     setLoading(true);
     const [m, dt, cfg] = await Promise.all([
       supabase.from("cv_vehicle_movements")
-        .select("*, vehicle:cv_vehicles(*), driver:cv_drivers(*)")
+        .select("*, vehicle:cv_vehicles(id, name, plate, current_km, logistica_grupo_id, veiculo_id), driver:cv_drivers(*)")
         .eq("status", "out").order("exit_time", { ascending: false }),
       supabase.from("cv_defect_types").select("*").neq("category", "bodywork").order("name"),
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
@@ -297,7 +298,10 @@ export default function CVVehicleEntry() {
                           <Car className="h-4 w-4 text-primary shrink-0" />
                           <span className="font-semibold truncate">{m.vehicle?.name}</span>
                         </div>
-                        <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          <CVRastreamentoDot veiculoLogisticaId={(m.vehicle as any)?.veiculo_id} dotOnly />
+                          <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground truncate"><span className="font-medium">Motorista:</span> {m.driver?.name}</p>
                       {m.has_helper && <Badge variant="outline" className="text-xs mt-2">Ajudante: {m.helper_name}</Badge>}
@@ -317,8 +321,9 @@ export default function CVVehicleEntry() {
 
           {step >= 1 && selected && (
             <div className="mb-4 space-y-3">
-              <div className="p-3 bg-muted/50 rounded text-sm">
+              <div className="p-3 bg-muted/50 rounded text-sm flex items-center gap-2 flex-wrap">
                 <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
+                <CVRastreamentoDot veiculoLogisticaId={(selected.vehicle as any)?.veiculo_id} />
               </div>
             </div>
           )}
@@ -413,7 +418,7 @@ export default function CVVehicleEntry() {
             <div className="space-y-3 max-w-xl">
               <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-success" /><h3 className="font-semibold">Confirme os dados</h3></div>
               <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
-                <p><strong>Veículo:</strong> {selected.vehicle?.name} — {selected.vehicle?.plate}</p>
+                <p className="flex items-center gap-2"><strong>Veículo:</strong> {selected.vehicle?.name} — {selected.vehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selected.vehicle as any)?.veiculo_id} /></p>
                 <p><strong>Motorista:</strong> {selected.driver?.name}</p>
                 <p><strong>KM entrada:</strong> {form.entry_km.toLocaleString()} (+{(form.entry_km - selected.exit_km).toLocaleString()} km)</p>
                 {form.reported_defects && <p><strong>Defeitos reportados:</strong> {form.reported_defects}</p>}

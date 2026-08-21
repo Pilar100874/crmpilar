@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
+import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
 
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -271,7 +272,10 @@ export default function CVVehicleExit() {
                         }`}>
                         <div className="flex items-center justify-between mb-2">
                           <Car className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                          {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                          <div className="flex items-center gap-1.5">
+                            <CVRastreamentoDot veiculoLogisticaId={(v as any).veiculo_id} dotOnly />
+                            {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                          </div>
                         </div>
                         <p className="font-semibold truncate">{v.name}</p>
                         <Badge variant="outline" className="font-mono text-xs mt-1">{v.plate}</Badge>
@@ -320,7 +324,7 @@ export default function CVVehicleExit() {
               <div className="space-y-4 max-w-xl">
                 <div className="mb-1 flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /><h3 className="font-semibold">Detalhes da saída</h3></div>
                 <div className="p-3 bg-muted/50 rounded text-sm space-y-1">
-                  <p><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate}</p>
+                  <p className="flex items-center gap-2"><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selectedVehicle as any)?.veiculo_id} /></p>
                   <p><strong>Motorista:</strong> {selectedDriver?.name}</p>
                   <p><strong>KM saída:</strong> {selectedVehicle?.current_km?.toLocaleString()}</p>
                 </div>
@@ -401,7 +405,7 @@ export default function CVVehicleExit() {
               <div className="space-y-3 max-w-xl">
                 <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-success" /><h3 className="font-semibold">Confirme os dados</h3></div>
                 <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
-                  <p><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate}</p>
+                  <p className="flex items-center gap-2"><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selectedVehicle as any)?.veiculo_id} /></p>
                   <p><strong>Motorista:</strong> {selectedDriver?.name}</p>
                   <p><strong>KM saída:</strong> {selectedVehicle?.current_km?.toLocaleString()}</p>
                   {form.has_helper && <p><strong>Ajudante:</strong> {form.helper_name}</p>}
