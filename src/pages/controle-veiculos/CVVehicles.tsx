@@ -632,7 +632,7 @@ export default function CVVehicles() {
                   </div>
                   <div className="flex items-center justify-between gap-2 text-sm min-w-0">
                     <span className="text-muted-foreground shrink-0">Tipo</span>
-                    <span className="truncate text-right">{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
+                    <span className="truncate text-right">{(v as any).fleet_type || TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2 text-sm min-w-0">
@@ -677,7 +677,7 @@ export default function CVVehicles() {
               <div><Label>Placa</Label><Input value={form.plate} readOnly className="bg-muted font-mono" /></div>
               <div>
                 <Label>Tipo</Label>
-                <Input value={TYPES.find(t => t.value === form.vehicle_type)?.label ?? ""} readOnly className="bg-muted" />
+                <Input value={form.fleet_type || TYPES.find(t => t.value === form.vehicle_type)?.label || ""} readOnly className="bg-muted" />
               </div>
             </div>
             <div>
