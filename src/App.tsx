@@ -217,6 +217,7 @@ import OpTVTaskTracker from "./pages/operacional-hub/TVTaskTracker";
 import FerrLayout from "./pages/ferramentas/FerrLayout";
 import FerrDashboard from "./pages/ferramentas/Dashboard";
 import FerrTools from "./pages/ferramentas/Tools";
+import FerrLoans from "./pages/ferramentas/Loans";
 import FerrToolForm from "./pages/ferramentas/ToolForm";
 import FerrReturnLoan from "./pages/ferramentas/ReturnLoan";
 import FerrRelend from "./pages/ferramentas/Relend";
@@ -760,6 +761,7 @@ const App = () => (
               <Route path="/ferramentas" element={<FerrLayout />}>
                 <Route index element={<FerrDashboard />} />
                 <Route path="tools" element={<FerrTools />} />
+                <Route path="loans" element={<FerrLoans />} />
                 <Route path="tools/new" element={<FerrToolForm />} />
                 <Route path="tools/:id/edit" element={<FerrToolForm />} />
                 <Route path="loan/return" element={<FerrReturnLoan />} />
