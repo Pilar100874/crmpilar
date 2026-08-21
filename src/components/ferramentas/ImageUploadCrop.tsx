@@ -49,7 +49,14 @@ export function ImageUploadCrop({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError("Selecione uma imagem");
+      setError("Selecione uma imagem (JPG, PNG ou WEBP)");
+      return;
+    }
+
+    if (file.size > maxSize * 1024 * 1024) {
+      const tamanho = (file.size / (1024 * 1024)).toFixed(1);
+      setError(`Imagem muito grande (${tamanho} MB). O limite é de ${maxSize} MB.`);
+      e.target.value = '';
       return;
     }
 
@@ -76,7 +83,7 @@ export function ImageUploadCrop({
         ? `${folder}/${timestamp}.jpg`
         : `${timestamp}.jpg`;
 
-      const signedUrl = await uploadFerrFoto(bucket, filePath, croppedFile);
+      const signedUrl = await uploadFerrFoto(bucket, filePath, croppedFile, croppedFile.type || "image/jpeg", maxSize);
 
       // Adiciona timestamp para bust de cache
       const finalUrl = `${signedUrl}&t=${timestamp}`;
