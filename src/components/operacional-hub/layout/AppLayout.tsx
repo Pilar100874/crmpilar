@@ -31,9 +31,11 @@ import {
   Store,
   Shield,
   LucideIcon,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { EstablishmentSelector } from "./EstablishmentSelector";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +61,7 @@ interface NavItem {
   icon: LucideIcon;
   label: string;
   href: string;
+  description?: string;
 }
 
 interface NavSection {
@@ -73,48 +76,48 @@ const adminSections: NavSection[] = [
     id: "operacao",
     title: "Operação",
     items: [
-      { icon: LayoutDashboard, label: "Painel", href: "/operacional" },
-      { icon: UserX, label: "Ausências", href: "/operacional/absences" },
-      { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
-      { icon: CloudRain, label: "Condições", href: "/operacional/conditions" },
-      { icon: AlertOctagon, label: "Incidentes", href: "/operacional/incidents" },
-      { icon: ShieldCheck, label: "Aprovações", href: "/operacional/approvals" },
+      { icon: LayoutDashboard, label: "Painel", href: "/operacional", description: "Visão geral e tarefas do dia" },
+      { icon: UserX, label: "Ausências", href: "/operacional/absences", description: "Gestão de presença e ausências da equipe" },
+      { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities", description: "Registro e acompanhamento de irregularidades" },
+      { icon: CloudRain, label: "Condições", href: "/operacional/conditions", description: "Condições operacionais que afetam as tarefas" },
+      { icon: AlertOctagon, label: "Incidentes", href: "/operacional/incidents", description: "Ocorrências e incidentes registrados" },
+      { icon: ShieldCheck, label: "Aprovações", href: "/operacional/approvals", description: "Aprovações pendentes de execuções" },
     ],
   },
   {
     id: "analises",
     title: "Análises",
     items: [
-      { icon: TrendingUp, label: "Produtividade", href: "/operacional/productivity" },
-      { icon: CalendarClock, label: "Simulação", href: "/operacional/schedule-simulation" },
-      { icon: BarChart3, label: "Previsto x Real", href: "/operacional/planned-vs-actual" },
-      { icon: Timer, label: "Ociosidade", href: "/operacional/idle-time" },
-      { icon: History, label: "Histórico", href: "/operacional/history" },
+      { icon: TrendingUp, label: "Produtividade", href: "/operacional/productivity", description: "Indicadores de produtividade por equipe" },
+      { icon: CalendarClock, label: "Simulação", href: "/operacional/schedule-simulation", description: "Simulação de jornada e escala" },
+      { icon: BarChart3, label: "Previsto x Real", href: "/operacional/planned-vs-actual", description: "Comparativo entre previsto e realizado" },
+      { icon: Timer, label: "Ociosidade", href: "/operacional/idle-time", description: "Análise de ociosidade das equipes" },
+      { icon: History, label: "Histórico", href: "/operacional/history", description: "Histórico e auditoria das operações" },
     ],
   },
   {
     id: "cadastros",
     title: "Cadastros",
     items: [
-      { icon: FileText, label: "Templates", href: "/operacional/templates" },
-      { icon: Users, label: "Usuários", href: "/operacional/users" },
-      { icon: Building2, label: "Setores", href: "/operacional/sectors" },
-      { icon: Briefcase, label: "Funções", href: "/operacional/functions" },
-      { icon: Clock, label: "Turnos", href: "/operacional/shifts" },
-      { icon: Package, label: "Materiais", href: "/operacional/materials" },
-      { icon: Wrench, label: "Ferramentas", href: "/operacional/tools" },
-      { icon: Repeat, label: "Frequências", href: "/operacional/frequencies" },
+      { icon: FileText, label: "Templates", href: "/operacional/templates", description: "Templates de tarefas operacionais" },
+      { icon: Users, label: "Usuários", href: "/operacional/users", description: "Usuários e permissões do hub" },
+      { icon: Building2, label: "Setores", href: "/operacional/sectors", description: "Setores da operação" },
+      { icon: Briefcase, label: "Funções", href: "/operacional/functions", description: "Funções exercidas pelos colaboradores" },
+      { icon: Clock, label: "Turnos", href: "/operacional/shifts", description: "Turnos e horários de trabalho" },
+      { icon: Package, label: "Materiais", href: "/operacional/materials", description: "Materiais e controle de estoque" },
+      { icon: Wrench, label: "Ferramentas", href: "/operacional/tools", description: "Ferramentas e status de manutenção" },
+      { icon: Repeat, label: "Frequências", href: "/operacional/frequencies", description: "Frequências de execução das tarefas" },
     ],
   },
   {
     id: "exibicao",
     title: "Exibição & Configurações",
     items: [
-      { icon: Tv, label: "Modo TV", href: "/operacional/tv" },
-      { icon: Tv, label: "TV Tarefas", href: "/operacional/tv-tasks" },
-      { icon: Bell, label: "Alertas", href: "/operacional/alerts" },
-      { icon: Shield, label: "Níveis de Acesso", href: "/operacional/access-levels" },
-      { icon: Settings, label: "Configurações", href: "/operacional/settings" },
+      { icon: Tv, label: "Modo TV", href: "/operacional/tv", description: "Painel de controle para exibição em TV" },
+      { icon: Tv, label: "TV Tarefas", href: "/operacional/tv-tasks", description: "Acompanhamento de tarefas em TV" },
+      { icon: Bell, label: "Alertas", href: "/operacional/alerts", description: "Alertas operacionais configurados" },
+      { icon: Shield, label: "Níveis de Acesso", href: "/operacional/access-levels", description: "Níveis de acesso e menus permitidos" },
+      { icon: Settings, label: "Configurações", href: "/operacional/settings", description: "Configurações gerais do módulo" },
     ],
   },
 ];
@@ -122,15 +125,15 @@ const adminSections: NavSection[] = [
 const superAdminSection: NavSection = {
   id: "super",
   title: "Administração",
-  items: [{ icon: Store, label: "Estabelecimentos", href: "/operacional/establishments" }],
+  items: [{ icon: Store, label: "Estabelecimentos", href: "/operacional/establishments", description: "Estabelecimentos do sistema" }],
 };
 
 const workerSection: NavSection = {
   id: "minhas",
   title: "Minhas Atividades",
   items: [
-    { icon: LayoutDashboard, label: "Minhas Tarefas", href: "/operacional" },
-    { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
+    { icon: LayoutDashboard, label: "Minhas Tarefas", href: "/operacional", description: "Visão geral e tarefas do dia" },
+    { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities", description: "Registro e acompanhamento de irregularidades" },
   ],
 };
 
@@ -355,10 +358,36 @@ function AppLayoutInner({ children }: AppLayoutProps) {
         </aside>
 
         {/* Conteúdo */}
-        <div className="flex-1 overflow-auto p-3 lg:p-4 xl:p-6">
-          <div className="lg:rounded-xl lg:border lg:border-border/60 lg:bg-card lg:shadow-sm p-0 lg:p-6">
-            <AppLayoutContext.Provider value={true}>{children}</AppLayoutContext.Provider>
-          </div>
+        <div className="flex-1 overflow-auto p-2 sm:p-3 lg:p-4 xl:p-6">
+          <Card className="shadow-sm border-border/60">
+            <CardHeader className="px-3 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <CurrentIcon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  {currentSection && (
+                    <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
+                      <span className="truncate">{currentSection.title}</span>
+                      <ChevronRight className="h-3 w-3 shrink-0" />
+                      <span className="truncate text-primary/80">{currentItem?.label}</span>
+                    </div>
+                  )}
+                  <CardTitle className="text-base sm:text-lg leading-tight truncate">
+                    {currentItem?.label}
+                  </CardTitle>
+                  {currentItem?.description && (
+                    <CardDescription className="text-xs sm:text-sm mt-0.5 line-clamp-2">
+                      {currentItem.description}
+                    </CardDescription>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-4 lg:p-6">
+              <AppLayoutContext.Provider value={true}>{children}</AppLayoutContext.Provider>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
