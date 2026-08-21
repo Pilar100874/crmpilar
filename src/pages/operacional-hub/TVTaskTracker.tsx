@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 
 interface ProfileData {
   user_id: string;
@@ -159,12 +159,12 @@ export default function TVTaskTracker() {
 
   const fetchBaseData = async () => {
     const [p, jf, s, sh, t, abs] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, job_function_id, shift_id").eq("is_active", true),
-      supabase.from("job_functions").select("id, name, sector_id"),
-      supabase.from("sectors").select("id, name, color"),
-      supabase.from("shifts").select("id, start_time, end_time, work_days, lunch_start, lunch_end, day_schedules"),
-      supabase.from("task_templates").select("id, name, estimated_time_minutes, frequency, job_function_id, default_assigned_user_id, priority, is_active, sector_id").eq("is_active", true).eq("is_irregularity_template", false),
-      supabase.from("absences").select("user_id, absence_date").eq("absence_date", format(new Date(), "yyyy-MM-dd")),
+      supabase.from("op_profiles").select("user_id, full_name, job_function_id, shift_id").eq("is_active", true),
+      supabase.from("op_job_functions").select("id, name, sector_id"),
+      supabase.from("op_sectors").select("id, name, color"),
+      supabase.from("op_shifts").select("id, start_time, end_time, work_days, lunch_start, lunch_end, day_schedules"),
+      supabase.from("op_task_templates").select("id, name, estimated_time_minutes, frequency, job_function_id, default_assigned_user_id, priority, is_active, sector_id").eq("is_active", true).eq("is_irregularity_template", false),
+      supabase.from("op_absences").select("user_id, absence_date").eq("absence_date", format(new Date(), "yyyy-MM-dd")),
     ]);
     setProfiles(p.data || []);
     setJobFunctions(jf.data || []);
@@ -178,7 +178,7 @@ export default function TVTaskTracker() {
   const fetchExecutions = async () => {
     const todayStr = format(new Date(), "yyyy-MM-dd");
     const { data } = await supabase
-      .from("task_executions")
+      .from("op_task_executions")
       .select(`
         id, status, time_spent_minutes, assigned_user_id, executed_by_user_id, 
         started_at, completed_at, planned_start_time, priority_score, paused_at,

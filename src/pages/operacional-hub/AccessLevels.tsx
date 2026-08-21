@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Shield, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 
 // All available menus in the system
 const ALL_MENUS = [
@@ -76,7 +76,7 @@ export default function AccessLevels() {
   const fetchAccessLevels = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("access_levels")
+      .from("op_access_levels")
       .select("*")
       .order("name");
 
@@ -124,7 +124,7 @@ export default function AccessLevels() {
     try {
       if (editingLevel) {
         const { error } = await supabase
-          .from("access_levels")
+          .from("op_access_levels")
           .update({
             name: name.trim(),
             base_role: baseRole as any,
@@ -135,7 +135,7 @@ export default function AccessLevels() {
         toast({ title: "Nível atualizado!" });
       } else {
         const { error } = await supabase
-          .from("access_levels")
+          .from("op_access_levels")
           .insert({
             name: name.trim(),
             base_role: baseRole as any,
@@ -162,7 +162,7 @@ export default function AccessLevels() {
     }
     if (!confirm(`Excluir o nível "${level.name}"?`)) return;
 
-    const { error } = await supabase.from("access_levels").delete().eq("id", level.id);
+    const { error } = await supabase.from("op_access_levels").delete().eq("id", level.id);
     if (error) {
       toast({ title: "Erro ao excluir. Verifique se há usuários vinculados.", variant: "destructive" });
     } else {

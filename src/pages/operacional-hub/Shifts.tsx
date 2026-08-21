@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -84,7 +84,7 @@ export default function Shifts() {
   const fetchShifts = async () => {
     try {
       const { data, error } = await supabase
-        .from("shifts")
+        .from("op_shifts")
         .select("*")
         .order("start_time");
 
@@ -237,11 +237,11 @@ export default function Shifts() {
       };
 
       if (editingId) {
-        const { error } = await supabase.from("shifts").update(payload).eq("id", editingId);
+        const { error } = await supabase.from("op_shifts").update(payload).eq("id", editingId);
         if (error) throw error;
         toast({ title: "Turno atualizado!" });
       } else {
-        const { error } = await supabase.from("shifts").insert(payload);
+        const { error } = await supabase.from("op_shifts").insert(payload);
         if (error) throw error;
         toast({ title: "Turno criado!" });
       }
@@ -260,7 +260,7 @@ export default function Shifts() {
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este turno?")) return;
     try {
-      const { error } = await supabase.from("shifts").delete().eq("id", id);
+      const { error } = await supabase.from("op_shifts").delete().eq("id", id);
       if (error) throw error;
       toast({ title: "Turno excluído!" });
       fetchShifts();

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,16 +43,16 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { validateTaskCompletion, calculateImageHash } from "@/lib/antifraud";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { LocationPhotosViewer } from "@/components/tasks/LocationPhotosViewer";
-import { WeatherCheckDialog } from "@/components/tasks/WeatherCheckDialog";
-import { useWeatherCondition } from "@/hooks/useWeatherCondition";
-import { ToolCheckDialog } from "@/components/tasks/ToolCheckDialog";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { LocationPhotosViewer } from "@/components/operacional-hub/tasks/LocationPhotosViewer";
+import { WeatherCheckDialog } from "@/components/operacional-hub/tasks/WeatherCheckDialog";
+import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition";
+import { ToolCheckDialog } from "@/components/operacional-hub/tasks/ToolCheckDialog";
+import { useOfflineSync } from "@/hooks/operacional-hub/useOfflineSync";
 import { getCachedData, addToPhotoQueue, fileToBase64 } from "@/lib/offlineDb";
 
 interface ChecklistItem {
@@ -222,7 +222,7 @@ export default function TaskExecution() {
   const fetchTask = async () => {
     try {
       const { data, error } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`
           id,
           status,
@@ -283,7 +283,7 @@ export default function TaskExecution() {
         
         if (allUserIds.length > 0) {
           const { data: memberProfiles } = await supabase
-            .from("profiles")
+            .from("op_profiles")
             .select("user_id, full_name")
             .in("user_id", allUserIds);
           
@@ -327,7 +327,7 @@ export default function TaskExecution() {
       // Check material availability
       if (data.task_template_id && data.status === "pending") {
         const { data: materialsNeeded } = await supabase
-          .from("task_template_materials")
+          .from("op_task_template_materials")
           .select(`
             quantity_needed,
             materials (current_stock, name)
@@ -454,7 +454,7 @@ export default function TaskExecution() {
       }
 
       const { error } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .update(updateData)
         .eq("id", task.id);
 
@@ -503,7 +503,7 @@ export default function TaskExecution() {
         await queueAction("task_executions", "update", updateData, "id", task.id);
       } else {
         const { error } = await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .update(updateData)
           .eq("id", task.id);
         if (error) throw error;
@@ -553,7 +553,7 @@ export default function TaskExecution() {
         await queueAction("task_executions", "update", updateData, "id", task.id);
       } else {
         const { error } = await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .update(updateData)
           .eq("id", task.id);
         if (error) throw error;
@@ -594,7 +594,7 @@ export default function TaskExecution() {
         await queueAction("task_executions", "update", updateData, "id", task.id);
       } else {
         await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .update(updateData)
           .eq("id", task.id);
       }
@@ -617,7 +617,7 @@ export default function TaskExecution() {
 
     try {
       await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .update({ checklist_progress: JSON.parse(JSON.stringify(updatedChecklist)) })
         .eq("id", task.id);
     } catch (error) {
@@ -632,7 +632,7 @@ export default function TaskExecution() {
       
       // Fetch sector name for the destination sector
       if (item.sector_id) {
-        supabase.from("sectors").select("name").eq("id", item.sector_id).single().then(({ data }) => {
+        supabase.from("op_sectors").select("name").eq("id", item.sector_id).single().then(({ data }) => {
           setIrregularitySectorName(data?.name || null);
         });
       } else {
@@ -660,7 +660,7 @@ export default function TaskExecution() {
         photoUrl = publicUrl;
       }
 
-      const { error } = await supabase.from("irregularities").insert([{
+      const { error } = await supabase.from("op_irregularities").insert([{
         title: irregularityTitle,
         description: irregularityDescription || null,
         photo_url: photoUrl || `https://placehold.co/400x300?text=Irregularidade`,
@@ -799,7 +799,7 @@ export default function TaskExecution() {
       }
 
       if (navigator.onLine) {
-        const { error } = await supabase.from("task_executions").update(updateData).eq("id", task.id);
+        const { error } = await supabase.from("op_task_executions").update(updateData).eq("id", task.id);
         if (error) throw error;
       } else {
         await queueAction("task_executions", "update", updateData, "id", task.id);
@@ -827,14 +827,14 @@ export default function TaskExecution() {
 
     // Get user's shift to calculate remaining time
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("op_profiles")
       .select("shift_id, job_function_id")
       .eq("user_id", user.id)
       .single();
     if (!profile?.shift_id) return;
 
     const { data: shift } = await supabase
-      .from("shifts")
+      .from("op_shifts")
       .select("end_time, lunch_start, lunch_end")
       .eq("id", profile.shift_id)
       .single();
@@ -858,7 +858,7 @@ export default function TaskExecution() {
 
     // Get today's pending tasks time
     const { data: todayTasks } = await supabase
-      .from("task_executions")
+      .from("op_task_executions")
       .select("id, task_template_id, task_templates(estimated_time_minutes)")
       .eq("scheduled_date", today)
       .in("status", ["pending", "in_progress"])
@@ -873,7 +873,7 @@ export default function TaskExecution() {
 
     // Get today's completed template IDs to avoid advancing already-done tasks
     const { data: completedToday } = await supabase
-      .from("task_executions")
+      .from("op_task_executions")
       .select("task_template_id")
       .eq("scheduled_date", today)
       .in("status", ["completed", "not_done"])
@@ -885,7 +885,7 @@ export default function TaskExecution() {
 
     // Find future tasks for this user (only pending, not yet executed today)
     const { data: futureTasks } = await supabase
-      .from("task_executions")
+      .from("op_task_executions")
       .select("id, task_template_id, scheduled_date, task_templates(estimated_time_minutes, name)")
       .eq("assigned_user_id", user.id)
       .eq("status", "pending")
@@ -914,7 +914,7 @@ export default function TaskExecution() {
       if (filledMinutes + taskTime > gapMinutes) continue;
 
       const { error } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .update({
           scheduled_date: today,
           carried_over: true,
@@ -970,7 +970,7 @@ export default function TaskExecution() {
         : notDoneReason;
 
       const { error: updateError } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .update({
           status: "not_done",
           observations: fullReason,
@@ -982,7 +982,7 @@ export default function TaskExecution() {
 
       // Auto-reschedule to next day
       const { data: currentTask, error: fetchError } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select("task_template_id, photo_before_url, establishment_id")
         .eq("id", task.id)
         .single();
@@ -990,7 +990,7 @@ export default function TaskExecution() {
       if (!fetchError && currentTask?.task_template_id) {
         const nextDay = format(addDays(new Date(), 1), "yyyy-MM-dd");
         await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .insert([{
             task_template_id: currentTask.task_template_id,
             scheduled_date: nextDay,
@@ -1106,7 +1106,7 @@ export default function TaskExecution() {
             if (task?.id || id) {
               const taskId = task?.id || id;
               await supabase
-                .from("task_executions")
+                .from("op_task_executions")
                 .update({
                   status: "not_done",
                   observations: reason,

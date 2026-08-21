@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -105,8 +105,8 @@ export default function Incidents() {
     if (!user) return;
     try {
       const [flagsRes, roleRes] = await Promise.all([
-        supabase.rpc("get_my_profile_flags" as any).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.rpc("op_get_my_profile_flags" as any).maybeSingle(),
+        supabase.from("op_user_roles").select("role").eq("user_id", user.id),
       ]);
       const isAdminOrManager = (roleRes.data || []).some(r => r.role === "admin" || r.role === "manager");
       setCanDeleteIncidents(isAdminOrManager || (flagsRes.data as any)?.can_delete_incidents || false);
@@ -117,7 +117,7 @@ export default function Incidents() {
   const handleDelete = async () => {
     if (!deletingId) return;
     try {
-      const { error } = await supabase.from("incidents").delete().eq("id", deletingId);
+      const { error } = await supabase.from("op_incidents").delete().eq("id", deletingId);
       if (error) throw error;
       toast({ title: "Incidente excluído!" });
       setDeleteDialogOpen(false);
@@ -131,12 +131,12 @@ export default function Incidents() {
   const fetchData = async () => {
     try {
       const [incidentsRes, sectorsRes, profilesRes] = await Promise.all([
-        supabase.from("incidents").select(`
+        supabase.from("op_incidents").select(`
           id, title, description, status, severity, created_at, reported_by_user_id, resolved_at, resolution_notes, sector_id,
           sectors (name, color)
         `).order("created_at", { ascending: false }),
-        supabase.from("sectors").select("id, name, color").order("name"),
-        supabase.from("profiles").select("user_id, full_name"),
+        supabase.from("op_sectors").select("id, name, color").order("name"),
+        supabase.from("op_profiles").select("user_id, full_name"),
       ]);
 
       if (sectorsRes.data) setSectors(sectorsRes.data);
@@ -176,7 +176,7 @@ export default function Incidents() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("incidents").insert({
+      const { error } = await supabase.from("op_incidents").insert({
         title: form.title,
         description: form.description || null,
         sector_id: form.sectorId || null,
@@ -215,7 +215,7 @@ export default function Incidents() {
     setResolving(true);
     try {
       const { error } = await supabase
-        .from("incidents")
+        .from("op_incidents")
         .update({
           status: "resolved",
           resolved_at: new Date().toISOString(),

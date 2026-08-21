@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Bell, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ export default function Alerts() {
   const fetchAlerts = async () => {
     try {
       const { data, error } = await supabase
-        .from("alerts")
+        .from("op_alerts")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -49,7 +49,7 @@ export default function Alerts() {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase.from("alerts").update({ is_read: true }).eq("id", id);
+      await supabase.from("op_alerts").update({ is_read: true }).eq("id", id);
       setAlerts((prev) =>
         prev.map((a) => (a.id === id ? { ...a, isRead: true } : a))
       );

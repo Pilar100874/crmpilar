@@ -18,16 +18,16 @@ export function useNavBadges() {
     const fetchBadges = async () => {
       const [approvalsRes, toolsRes, materialsRes] = await Promise.all([
         supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .select("id", { count: "exact", head: true })
           .eq("is_irregularity_template", true)
           .eq("approval_status", "pending"),
         supabase
-          .from("tools")
+          .from("op_tools")
           .select("id", { count: "exact", head: true })
           .eq("needs_repair", true),
         supabase
-          .from("materials")
+          .from("op_materials")
           .select("id, current_stock, min_stock")
           .gt("min_stock", 0),
       ]);

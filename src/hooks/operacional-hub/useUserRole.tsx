@@ -19,7 +19,7 @@ export function useUserRole() {
     const fetchRole = async () => {
       try {
         const { data, error } = await supabase
-          .from("user_roles")
+          .from("op_user_roles")
           .select("role")
           .eq("user_id", user.id)
           .single();

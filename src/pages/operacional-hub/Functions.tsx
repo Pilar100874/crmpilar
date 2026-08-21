@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import {
   Dialog,
   DialogContent,
@@ -60,10 +60,10 @@ export default function Functions() {
     try {
       const [functionsRes, sectorsRes] = await Promise.all([
         supabase
-          .from("job_functions")
+          .from("op_job_functions")
           .select(`*, sectors (id, name, color)`)
           .order("name"),
-        supabase.from("sectors").select("*").order("name"),
+        supabase.from("op_sectors").select("*").order("name"),
       ]);
 
       if (functionsRes.data) {
@@ -115,11 +115,11 @@ export default function Functions() {
       };
 
       if (editingId) {
-        const { error } = await supabase.from("job_functions").update(data).eq("id", editingId);
+        const { error } = await supabase.from("op_job_functions").update(data).eq("id", editingId);
         if (error) throw error;
         toast({ title: "Função atualizada!" });
       } else {
-        const { error } = await supabase.from("job_functions").insert(data);
+        const { error } = await supabase.from("op_job_functions").insert(data);
         if (error) throw error;
         toast({ title: "Função criada!" });
       }
@@ -139,7 +139,7 @@ export default function Functions() {
     if (!confirm("Tem certeza que deseja excluir esta função?")) return;
 
     try {
-      const { error } = await supabase.from("job_functions").delete().eq("id", id);
+      const { error } = await supabase.from("op_job_functions").delete().eq("id", id);
       if (error) throw error;
       toast({ title: "Função excluída!" });
       fetchData();

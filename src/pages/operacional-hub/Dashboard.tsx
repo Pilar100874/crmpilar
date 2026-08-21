@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { StatCard } from "@/components/dashboard/StatCard";
-import { SectorStatus } from "@/components/dashboard/SectorStatus";
-import { TaskList, TaskStatus } from "@/components/dashboard/TaskList";
-import { MaterialAlert } from "@/components/dashboard/MaterialAlert";
-import { ProductivityRanking } from "@/components/dashboard/ProductivityRanking";
-import { NextTaskButton } from "@/components/tasks/NextTaskButton";
-import { DailyMaterialsSummary } from "@/components/dashboard/DailyMaterialsSummary";
-import { FunctionDepartureDialog } from "@/components/dashboard/FunctionDepartureDialog";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useShiftStatus } from "@/hooks/useShiftStatus";
-import { useAuth } from "@/hooks/useAuth";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
+import { StatCard } from "@/components/operacional-hub/dashboard/StatCard";
+import { SectorStatus } from "@/components/operacional-hub/dashboard/SectorStatus";
+import { TaskList, TaskStatus } from "@/components/operacional-hub/dashboard/TaskList";
+import { MaterialAlert } from "@/components/operacional-hub/dashboard/MaterialAlert";
+import { ProductivityRanking } from "@/components/operacional-hub/dashboard/ProductivityRanking";
+import { NextTaskButton } from "@/components/operacional-hub/tasks/NextTaskButton";
+import { DailyMaterialsSummary } from "@/components/operacional-hub/dashboard/DailyMaterialsSummary";
+import { FunctionDepartureDialog } from "@/components/operacional-hub/dashboard/FunctionDepartureDialog";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { useShiftStatus } from "@/hooks/operacional-hub/useShiftStatus";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { 
@@ -131,7 +131,7 @@ export default function Dashboard() {
   const fetchWorkerName = async () => {
     if (!user) return;
     const { data } = await supabase
-      .from("profiles")
+      .from("op_profiles")
       .select("full_name")
       .eq("user_id", user.id)
       .maybeSingle();
@@ -148,7 +148,7 @@ export default function Dashboard() {
 
       // First get user profile with job function and its sector
       const profileRes = await supabase
-        .from("profiles")
+        .from("op_profiles")
         .select(`
           full_name, 
           job_function_id,
@@ -168,7 +168,7 @@ export default function Dashboard() {
       const [myTasksRes, sectorTasksRes, dependenciesRes, allExecutionsRes] = await Promise.all([
         // Tasks directly assigned to me
         supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select(`
             id,
             status,
@@ -190,7 +190,7 @@ export default function Dashboard() {
           .eq("assigned_user_id", user.id),
         // Tasks from my sector (unassigned)
         sectorId ? supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select(`
             id,
             status,
@@ -212,10 +212,10 @@ export default function Dashboard() {
           .eq("task_templates.sector_id", sectorId)
           .is("assigned_user_id", null) : Promise.resolve({ data: [] }),
         // Get all dependencies
-        supabase.from("task_dependencies").select("task_template_id, depends_on_template_id"),
+        supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
         // Get all executions for today to check dependencies
         supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select("id, status, task_template_id")
           .eq("scheduled_date", today),
       ]);
@@ -316,7 +316,7 @@ export default function Dashboard() {
       // Fetch all data in parallel
       const [executionsRes, materialsRes, sectorsRes, profilesRes, absencesRes, incidentsRes] = await Promise.all([
         supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select(`
             id,
             status,
@@ -335,11 +335,11 @@ export default function Dashboard() {
             )
           `)
           .eq("scheduled_date", today),
-        supabase.from("materials").select("*").order("name"),
-        supabase.from("sectors").select("*").order("name"),
-        supabase.from("profiles").select("id, user_id, full_name"),
-        supabase.from("absences").select("id").eq("absence_date", today),
-        supabase.from("incidents").select("id").eq("status", "open"),
+        supabase.from("op_materials").select("*").order("name"),
+        supabase.from("op_sectors").select("*").order("name"),
+        supabase.from("op_profiles").select("id, user_id, full_name"),
+        supabase.from("op_absences").select("id").eq("absence_date", today),
+        supabase.from("op_incidents").select("id").eq("status", "open"),
       ]);
 
       const executions = executionsRes.data || [];

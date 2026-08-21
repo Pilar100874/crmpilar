@@ -1,6 +1,6 @@
 import { ReactNode, useState, useMemo } from "react";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { useNavBadges } from "@/hooks/useNavBadges";
+import { OfflineIndicator } from "@/components/operacional-hub/OfflineIndicator";
+import { useNavBadges } from "@/hooks/operacional-hub/useNavBadges";
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -37,9 +37,9 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { EstablishmentSelector } from "./EstablishmentSelector";
 import { useNavigate } from "react-router-dom";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useEstablishment } from "@/hooks/useEstablishment";
-import { useAccessLevel } from "@/hooks/useAccessLevel";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
+import { useAccessLevel } from "@/hooks/operacional-hub/useAccessLevel";
 
 interface AppLayoutProps {
   children: ReactNode;

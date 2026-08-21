@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CloudRain, CloudOff, Play, LogOut, Loader2 } from "lucide-react";
-import { useShiftStatus } from "@/hooks/useShiftStatus";
-import { useWeatherCondition } from "@/hooks/useWeatherCondition";
+import { useShiftStatus } from "@/hooks/operacional-hub/useShiftStatus";
+import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

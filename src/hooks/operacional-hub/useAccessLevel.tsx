@@ -25,7 +25,7 @@ export function useAccessLevel() {
       try {
         // Get the current user's own permission flags (server-side scoped)
         const { data: flags, error: profileError } = await supabase
-          .rpc("get_my_profile_flags" as any)
+          .rpc("op_get_my_profile_flags" as any)
           .maybeSingle();
 
         const accessLevelId = (flags as any)?.access_level_id as string | undefined;
@@ -39,7 +39,7 @@ export function useAccessLevel() {
 
         // Fetch the access level details
         const { data: level, error: levelError } = await supabase
-          .from("access_levels")
+          .from("op_access_levels")
           .select("id, name, base_role, allowed_menus")
           .eq("id", accessLevelId)
           .single();

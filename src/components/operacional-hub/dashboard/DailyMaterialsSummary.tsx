@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Package, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 
 interface MaterialNeed {
   materialId: string;
@@ -42,7 +42,7 @@ export function DailyMaterialsSummary({ filterUserId }: DailyMaterialsSummaryPro
 
       // Build query - for admin/manager show ALL tasks, for workers filter by assignment
       let query = supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`
           id,
           assigned_user_id,
@@ -68,7 +68,7 @@ export function DailyMaterialsSummary({ filterUserId }: DailyMaterialsSummaryPro
       // If a specific user filter is provided, filter by that user
       if (filterUserId) {
         const { data: filterProfile } = await supabase
-          .from("profiles")
+          .from("op_profiles")
           .select("job_function_id, job_functions(sector_id)")
           .eq("user_id", filterUserId)
           .maybeSingle();
@@ -94,7 +94,7 @@ export function DailyMaterialsSummary({ filterUserId }: DailyMaterialsSummaryPro
       } else if (!isAdminOrManager) {
         // Worker viewing own materials
         const { data: profile } = await supabase
-          .from("profiles")
+          .from("op_profiles")
           .select("job_function_id, job_functions(sector_id)")
           .eq("user_id", user?.id)
           .maybeSingle();

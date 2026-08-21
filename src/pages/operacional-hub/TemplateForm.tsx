@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,15 +39,15 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { LocationPhotosUpload } from "@/components/templates/LocationPhotosUpload";
+import { LocationPhotosUpload } from "@/components/operacional-hub/templates/LocationPhotosUpload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-import { useFrequencies } from "@/hooks/useFrequencies";
-import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface Sector {
@@ -156,14 +156,14 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
   const fetchData = async () => {
     try {
       const [sectorsRes, functionsRes, usersRes, templatesRes, dependenciesRes, toolsRes, materialsRes, priorityOrdersRes] = await Promise.all([
-        supabase.from("sectors").select("*").order("name"),
-        supabase.from("job_functions").select("id, name, sector_id").order("name"),
-        supabase.from("profiles").select("user_id, full_name, job_function_id").eq("is_active", true).order("full_name"),
-        supabase.from("task_templates").select("id, name, is_active, sectors(name, color)").order("name"),
-        supabase.from("task_dependencies").select("task_template_id, depends_on_template_id"),
-        supabase.from("tools").select("id, name, sector_id").eq("is_available", true).order("name"),
-        supabase.from("materials").select("id, name, unit, sector_id, current_stock").order("name"),
-        supabase.from("task_templates").select("id, priority_order").not("priority_order", "is", null),
+        supabase.from("op_sectors").select("*").order("name"),
+        supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+        supabase.from("op_profiles").select("user_id, full_name, job_function_id").eq("is_active", true).order("full_name"),
+        supabase.from("op_task_templates").select("id, name, is_active, sectors(name, color)").order("name"),
+        supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
+        supabase.from("op_tools").select("id, name, sector_id").eq("is_available", true).order("name"),
+        supabase.from("op_materials").select("id, name, unit, sector_id, current_stock").order("name"),
+        supabase.from("op_task_templates").select("id, priority_order").not("priority_order", "is", null),
       ]);
 
       if (sectorsRes.data) setSectors(sectorsRes.data);
@@ -197,7 +197,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
       // Load existing template if editing
       if (id) {
         const { data: template } = await supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .select("*")
           .eq("id", id)
           .single();
@@ -254,8 +254,8 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
 
           // Load template tools and materials
           const [templateToolsRes, templateMaterialsRes] = await Promise.all([
-            supabase.from("task_template_tools").select("tool_id").eq("task_template_id", id),
-            supabase.from("task_template_materials").select("material_id, quantity_needed").eq("task_template_id", id),
+            supabase.from("op_task_template_tools").select("tool_id").eq("task_template_id", id),
+            supabase.from("op_task_template_materials").select("material_id, quantity_needed").eq("task_template_id", id),
           ]);
           if (templateToolsRes.data) {
             setSelectedToolIds(templateToolsRes.data.map((t: any) => t.tool_id));
@@ -345,13 +345,13 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
 
       if (id) {
         const { error } = await supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .update(data as any)
           .eq("id", id);
         if (error) throw error;
       } else {
         const { data: newTemplate, error } = await supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .insert([data as any])
           .select("id")
           .single();
@@ -362,7 +362,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
       // Update dependencies (with circular dependency check)
       if (templateId) {
         await supabase
-          .from("task_dependencies")
+          .from("op_task_dependencies")
           .delete()
           .eq("task_template_id", templateId);
 
@@ -379,14 +379,14 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
               task_template_id: templateId,
               depends_on_template_id: depId,
             }));
-            await supabase.from("task_dependencies").insert(dependenciesToInsert);
+            await supabase.from("op_task_dependencies").insert(dependenciesToInsert);
           }
         }
       }
 
         // Update tools
         await supabase
-          .from("task_template_tools")
+          .from("op_task_template_tools")
           .delete()
           .eq("task_template_id", templateId);
 
@@ -395,12 +395,12 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
             task_template_id: templateId!,
             tool_id: toolId,
           }));
-          await supabase.from("task_template_tools").insert(toolsToInsert);
+          await supabase.from("op_task_template_tools").insert(toolsToInsert);
         }
 
         // Update materials
         await supabase
-          .from("task_template_materials")
+          .from("op_task_template_materials")
           .delete()
           .eq("task_template_id", templateId);
 
@@ -413,7 +413,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
               quantity_needed: m.quantityNeeded || 1,
             }));
           if (materialsToInsert.length > 0) {
-            await supabase.from("task_template_materials").insert(materialsToInsert);
+            await supabase.from("op_task_template_materials").insert(materialsToInsert);
           }
         }
 

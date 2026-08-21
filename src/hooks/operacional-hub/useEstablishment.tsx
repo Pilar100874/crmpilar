@@ -43,7 +43,7 @@ export function EstablishmentProvider({ children }: { children: ReactNode }) {
       try {
         // Get user's linked establishments
         const { data: userEsts } = await supabase
-          .from("user_establishments")
+          .from("op_user_establishments")
           .select("establishment_id, establishments(id, name)")
           .eq("user_id", user.id);
 
@@ -55,7 +55,7 @@ export function EstablishmentProvider({ children }: { children: ReactNode }) {
 
         // Get the active one from profile
         const { data: profile } = await supabase
-          .from("profiles")
+          .from("op_profiles")
           .select("establishment_id")
           .eq("user_id", user.id)
           .single();
@@ -73,7 +73,7 @@ export function EstablishmentProvider({ children }: { children: ReactNode }) {
         // Super admin: fetch all establishments
         if (isSuperAdmin) {
           const { data: allEst } = await supabase
-            .from("establishments")
+            .from("op_establishments")
             .select("id, name")
             .eq("is_active", true)
             .order("name");
@@ -99,7 +99,7 @@ export function EstablishmentProvider({ children }: { children: ReactNode }) {
 
       // Update profile's active establishment
       await supabase
-        .from("profiles")
+        .from("op_profiles")
         .update({ establishment_id: est.id })
         .eq("user_id", user.id);
     }

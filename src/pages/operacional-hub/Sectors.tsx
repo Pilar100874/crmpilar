@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import {
 import { Plus, Building2, Trash2, Edit2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 
 interface Sector {
   id: string;
@@ -46,7 +46,7 @@ export default function Sectors() {
   const fetchSectors = async () => {
     try {
       const { data, error } = await supabase
-        .from("sectors")
+        .from("op_sectors")
         .select("*")
         .order("name");
       
@@ -84,14 +84,14 @@ export default function Sectors() {
     try {
       if (editingId) {
         const { error } = await supabase
-          .from("sectors")
+          .from("op_sectors")
           .update({ name: form.name, description: form.description || null, color: form.color })
           .eq("id", editingId);
         if (error) throw error;
         toast({ title: "Setor atualizado!" });
       } else {
         const { error } = await supabase
-          .from("sectors")
+          .from("op_sectors")
           .insert({ name: form.name, description: form.description || null, color: form.color, establishment_id: establishmentId });
         if (error) throw error;
         toast({ title: "Setor criado!" });
@@ -112,7 +112,7 @@ export default function Sectors() {
     if (!confirm("Tem certeza que deseja excluir este setor?")) return;
 
     try {
-      const { error } = await supabase.from("sectors").delete().eq("id", id);
+      const { error } = await supabase.from("op_sectors").delete().eq("id", id);
       if (error) throw error;
       toast({ title: "Setor excluído!" });
       fetchSectors();

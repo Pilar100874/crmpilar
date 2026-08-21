@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -79,8 +79,8 @@ export default function Tools() {
   const fetchData = async () => {
     try {
       const [toolsRes, sectorsRes] = await Promise.all([
-        supabase.from("tools").select("*, sectors(id, name, color)").order("name"),
-        supabase.from("sectors").select("*").order("name"),
+        supabase.from("op_tools").select("*, sectors(id, name, color)").order("name"),
+        supabase.from("op_sectors").select("*").order("name"),
       ]);
 
       if (toolsRes.data) {
@@ -136,11 +136,11 @@ export default function Tools() {
       };
 
       if (editingId) {
-        const { error } = await supabase.from("tools").update(data).eq("id", editingId);
+        const { error } = await supabase.from("op_tools").update(data).eq("id", editingId);
         if (error) throw error;
         toast({ title: "Ferramenta atualizada!" });
       } else {
-        const { error } = await supabase.from("tools").insert(data);
+        const { error } = await supabase.from("op_tools").insert(data);
         if (error) throw error;
         toast({ title: "Ferramenta cadastrada!" });
       }
@@ -159,7 +159,7 @@ export default function Tools() {
   const handleDelete = async () => {
     if (!deletingId) return;
     try {
-      const { error } = await supabase.from("tools").delete().eq("id", deletingId);
+      const { error } = await supabase.from("op_tools").delete().eq("id", deletingId);
       if (error) throw error;
       toast({ title: "Ferramenta excluída!" });
       fetchData();
@@ -174,7 +174,7 @@ export default function Tools() {
   const handleMarkRepaired = async (toolId: string) => {
     try {
       const { error } = await supabase
-        .from("tools")
+        .from("op_tools")
         .update({
           needs_repair: false,
           is_available: true,

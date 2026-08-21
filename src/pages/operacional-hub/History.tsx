@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -72,14 +72,14 @@ export default function History() {
     setLoading(true);
     try {
       const [sectorsRes, profilesRes] = await Promise.all([
-        supabase.from("sectors").select("id, name").order("name"),
-        supabase.from("profiles").select("user_id, full_name"),
+        supabase.from("op_sectors").select("id, name").order("name"),
+        supabase.from("op_profiles").select("user_id, full_name"),
       ]);
 
       if (sectorsRes.data) setSectors(sectorsRes.data);
 
       let query = supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`
           id, status, scheduled_date, completed_at, time_spent_minutes,
           photo_completion_url, latitude, longitude, observations,

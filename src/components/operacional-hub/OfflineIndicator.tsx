@@ -1,5 +1,5 @@
 import { WifiOff, CloudOff, Loader2, Upload, Camera } from "lucide-react";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { useOfflineSync } from "@/hooks/operacional-hub/useOfflineSync";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

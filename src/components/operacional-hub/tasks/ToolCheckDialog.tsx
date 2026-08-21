@@ -13,7 +13,7 @@ import { Wrench, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 
 interface ToolItem {
   id: string;
@@ -49,7 +49,7 @@ export function ToolCheckDialog({ open, taskTemplateId, onAllConfirmed, onSkip }
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("task_template_tools")
+        .from("op_task_template_tools")
         .select("tool_id, tools(id, name, description, is_available, needs_repair)")
         .eq("task_template_id", taskTemplateId);
 
@@ -98,7 +98,7 @@ export function ToolCheckDialog({ open, taskTemplateId, onAllConfirmed, onSkip }
       // Mark tools as needing repair
       for (const toolId of unavailableToolIds) {
         await supabase
-          .from("tools")
+          .from("op_tools")
           .update({
             needs_repair: true,
             is_available: false,

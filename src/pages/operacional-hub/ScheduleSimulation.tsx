@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import TemplateForm from "./TemplateForm";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import {
   Select,
   SelectContent,
@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfWeek, addDays, subDays, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 import {
   Tooltip,
   TooltipContent,
@@ -258,9 +258,9 @@ export default function ScheduleSimulation() {
 
   const fetchBaseData = async () => {
     const [profilesRes, functionsRes, shiftsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
-      supabase.from("job_functions").select("id, name, sector_id").order("name"),
-      supabase.from("shifts").select("*"),
+      supabase.from("op_profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
+      supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+      supabase.from("op_shifts").select("*"),
     ]);
     setProfiles(profilesRes.data || []);
     setJobFunctions(functionsRes.data || []);
@@ -287,36 +287,36 @@ export default function ScheduleSimulation() {
 
     const [tasksRes, templatesRes, absencesRes, depsRes, ttToolsRes, brokenToolsRes, historicalTasksRes] = await Promise.all([
       supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select("*, task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)")
         .or(userFilter)
         .gte("scheduled_date", startStr)
         .lte("scheduled_date", endStr)
         .order("priority_score", { ascending: false }),
       supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .select("id, name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, frequency, job_function_id, default_assigned_user_id, additional_assigned_user_ids, required_workers, sector_id, is_active, is_outdoor, priority_order, work_days")
         .eq("is_active", true)
         .eq("is_irregularity_template", false),
       supabase
-        .from("absences")
+        .from("op_absences")
         .select("user_id, absence_date")
         .in("user_id", selectedUserIds)
         .gte("absence_date", startStr)
         .lte("absence_date", endStr),
       supabase
-        .from("task_dependencies")
+        .from("op_task_dependencies")
         .select("task_template_id, depends_on_template_id"),
       supabase
-        .from("task_template_tools")
+        .from("op_task_template_tools")
         .select("task_template_id, tool_id"),
       supabase
-        .from("tools")
+        .from("op_tools")
         .select("id")
         .eq("needs_repair", true),
       // Fetch historical executions before the period to determine last execution dates
       supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select("task_template_id, assigned_user_id, executed_by_user_id, scheduled_date, status")
         .or(userFilter)
         .gte("scheduled_date", lookbackDate)

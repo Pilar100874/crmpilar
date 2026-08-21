@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,26 +47,26 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { DailyMaterialsSummary } from "@/components/dashboard/DailyMaterialsSummary";
-import { StatCard } from "@/components/dashboard/StatCard";
-import { SectorStatus } from "@/components/dashboard/SectorStatus";
-import { MaterialAlert } from "@/components/dashboard/MaterialAlert";
-import { ProductivityRanking } from "@/components/dashboard/ProductivityRanking";
-import { useShiftStatus } from "@/hooks/useShiftStatus";
-import { FunctionDepartureDialog } from "@/components/dashboard/FunctionDepartureDialog";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useAuth } from "@/hooks/useAuth";
-import { useEstablishment } from "@/hooks/useEstablishment";
-import { useFrequencies } from "@/hooks/useFrequencies";
-import { useWeatherCondition } from "@/hooks/useWeatherCondition";
+import { DailyMaterialsSummary } from "@/components/operacional-hub/dashboard/DailyMaterialsSummary";
+import { StatCard } from "@/components/operacional-hub/dashboard/StatCard";
+import { SectorStatus } from "@/components/operacional-hub/dashboard/SectorStatus";
+import { MaterialAlert } from "@/components/operacional-hub/dashboard/MaterialAlert";
+import { ProductivityRanking } from "@/components/operacional-hub/dashboard/ProductivityRanking";
+import { useShiftStatus } from "@/hooks/operacional-hub/useShiftStatus";
+import { FunctionDepartureDialog } from "@/components/operacional-hub/dashboard/FunctionDepartureDialog";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
+import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { useOfflineTaskCache } from "@/hooks/useOfflineTaskCache";
-import { useOnlineStatus } from "@/hooks/useOfflineSync";
+import { useOfflineTaskCache } from "@/hooks/operacional-hub/useOfflineTaskCache";
+import { useOnlineStatus } from "@/hooks/operacional-hub/useOfflineSync";
 
 type TaskStatus = "pending" | "in_progress" | "completed" | "delayed" | "not_done" | "blocked" | "blocked_weather";
 
@@ -189,7 +189,7 @@ export default function Tasks() {
     const profile = profiles.find(p => p.user_id === effectiveUserId);
     if (!profile?.shift_id) { setShiftInfo(null); return; }
     const { data } = await supabase
-      .from("shifts")
+      .from("op_shifts")
       .select("start_time, end_time, lunch_start, lunch_end")
       .eq("id", profile.shift_id)
       .single();
@@ -202,30 +202,30 @@ export default function Tasks() {
       const dateStr = format(selectedDate, "yyyy-MM-dd");
       const queries: any[] = [
         supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select(`id, status, scheduled_date, task_template_id, assigned_user_id, executed_by_user_id, time_spent_minutes, photo_completion_url,
             task_templates (name, description, estimated_time_minutes, job_function_id, sector_id, priority, requires_photo, is_outdoor, sectors (id, name, color))`)
           .eq("scheduled_date", dateStr)
           .order("created_at", { ascending: false }),
-        supabase.from("task_dependencies").select("task_template_id, depends_on_template_id"),
+        supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
         supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .select("id, name, description, estimated_time_minutes, frequency, is_active, is_outdoor, priority, priority_order, work_days, is_irregularity_template, sector_id, job_function_id, default_assigned_user_id, requires_photo, required_workers, additional_assigned_user_ids, sectors(id, name, color), job_functions(id, name)")
           .eq("is_active", true)
           .order("priority", { ascending: false }),
-        supabase.from("job_functions").select("id, name, sector_id").order("name"),
-        supabase.from("profiles").select("user_id, full_name, job_function_id, is_active, shift_id").eq("is_active", true).order("full_name"),
-        supabase.from("task_template_tools").select("task_template_id, tool_id"),
-        supabase.from("tools").select("id").eq("needs_repair", true),
+        supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+        supabase.from("op_profiles").select("user_id, full_name, job_function_id, is_active, shift_id").eq("is_active", true).order("full_name"),
+        supabase.from("op_task_template_tools").select("task_template_id, tool_id"),
+        supabase.from("op_tools").select("id").eq("needs_repair", true),
       ];
 
       // Admin extra queries
       if (isAdminOrManager) {
         queries.push(
-          supabase.from("materials").select("*").order("name"),
-          supabase.from("sectors").select("*").order("name"),
-          supabase.from("absences").select("id").eq("absence_date", dateStr),
-          supabase.from("incidents").select("id").eq("status", "open"),
+          supabase.from("op_materials").select("*").order("name"),
+          supabase.from("op_sectors").select("*").order("name"),
+          supabase.from("op_absences").select("id").eq("absence_date", dateStr),
+          supabase.from("op_incidents").select("id").eq("status", "open"),
         );
       }
 
@@ -727,7 +727,7 @@ export default function Tasks() {
     try {
       const dateStr = format(isAdminOrManager ? selectedDate : new Date(), "yyyy-MM-dd");
       const { data, error } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .insert({
           task_template_id: task.templateId,
           assigned_user_id: effectiveUserId,
@@ -829,7 +829,7 @@ export default function Tasks() {
       if (reason) {
         // Log early departure
         try {
-          await supabase.from("function_departures").insert({
+          await supabase.from("op_function_departures").insert({
             user_id: user!.id,
             reason: `Saída antecipada: ${reason}`,
             observations: earlyCheckoutDetail || null,
@@ -913,7 +913,7 @@ export default function Tasks() {
 
       // Create a task_template for the ad-hoc task
       const { data: template, error: tErr } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .insert({
           name: adHocTitle,
           description: adHocDescription || "Atividade avulsa",
@@ -930,7 +930,7 @@ export default function Tasks() {
 
       // Create the execution
       const { error: eErr } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .insert({
           task_template_id: template.id,
           assigned_user_id: user!.id,

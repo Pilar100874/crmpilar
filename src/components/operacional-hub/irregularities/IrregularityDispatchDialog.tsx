@@ -23,8 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import {
   Users,
   Loader2,
@@ -103,9 +103,9 @@ export function IrregularityDispatchDialog({ open, onOpenChange, irregularity, o
   const fetchData = async () => {
     setLoading(true);
     const [profilesRes, functionsRes, sectorsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
-      supabase.from("job_functions").select("id, name, sector_id"),
-      supabase.from("sectors").select("id, name, color").order("name"),
+      supabase.from("op_profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
+      supabase.from("op_job_functions").select("id, name, sector_id"),
+      supabase.from("op_sectors").select("id, name, color").order("name"),
     ]);
 
     setProfiles(profilesRes.data || []);
@@ -164,7 +164,7 @@ export function IrregularityDispatchDialog({ open, onOpenChange, irregularity, o
       // Sector = first worker's sector, function = null (any), assigned = first worker
       // Location photo = irregularity photo
       const { data: template, error: templateError } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .insert([{
           name: taskName.trim(),
           description: irregularity.description || `Corrigir irregularidade: ${irregularity.title}`,
@@ -204,19 +204,19 @@ export function IrregularityDispatchDialog({ open, onOpenChange, irregularity, o
       }));
 
       const { error: execError } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .insert(executions);
 
       if (execError) throw execError;
 
       // Unlink any task_executions that reference this irregularity, then delete it
       await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .update({ irregularity_id: null })
         .eq("irregularity_id", irregularity.id);
 
       await supabase
-        .from("irregularities")
+        .from("op_irregularities")
         .delete()
         .eq("id", irregularity.id);
 

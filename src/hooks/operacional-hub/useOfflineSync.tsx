@@ -67,7 +67,7 @@ export function useOfflineSync() {
 
         // Update the task execution with the photo URL
         const { error: updateError } = await (supabase as any)
-          .from("task_executions")
+          .from("op_task_executions")
           .update({ [photo.fieldName]: publicUrl })
           .eq("id", photo.taskExecutionId);
         if (updateError) throw updateError;

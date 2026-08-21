@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 import {
   CheckCircle2,
   XCircle,
@@ -56,7 +56,7 @@ export default function Approvals() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .select("id, name, description, created_at, created_by_user_id, approval_status, rejection_reason")
         .eq("is_irregularity_template", true)
         .in("approval_status", ["pending", "rejected"])
@@ -69,7 +69,7 @@ export default function Approvals() {
       let profileMap: Record<string, string> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("op_profiles")
           .select("user_id, full_name")
           .in("user_id", userIds as string[]);
         profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
@@ -90,7 +90,7 @@ export default function Approvals() {
     setActionLoading(templateId);
     try {
       const { error } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .update({
           approval_status: "approved",
           approved_by_user_id: user?.id,
@@ -116,7 +116,7 @@ export default function Approvals() {
     setActionLoading(rejectingId);
     try {
       const { error } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .update({
           approval_status: "rejected",
           rejection_reason: rejectionReason,

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 
 interface SmartTask {
   id: string;
@@ -52,7 +52,7 @@ export function SmartNextTask() {
   const fetchActiveConditions = async () => {
     try {
       const { data } = await supabase
-        .from("operational_conditions")
+        .from("op_operational_conditions")
         .select("id, name, type, severity")
         .eq("is_active", true)
         .order("severity", { ascending: false });
@@ -69,7 +69,7 @@ export function SmartNextTask() {
 
       // Get tasks with material and condition checks
       const { data: tasks, error } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`
           id, status, priority_score, blocked_by_condition_id,
           task_templates (
@@ -94,7 +94,7 @@ export function SmartNextTask() {
             
             // Check material availability
             const { data: materialsNeeded } = await supabase
-              .from("task_template_materials")
+              .from("op_task_template_materials")
               .select(`
                 quantity_needed,
                 materials (current_stock, name)
@@ -111,7 +111,7 @@ export function SmartNextTask() {
 
             if (isBlocked) {
               const { data: condition } = await supabase
-                .from("operational_conditions")
+                .from("op_operational_conditions")
                 .select("name")
                 .eq("id", task.blocked_by_condition_id)
                 .single();

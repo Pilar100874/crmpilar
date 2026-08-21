@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import {
   Clock,
   Users,
@@ -126,15 +126,15 @@ export default function IdleTimeAnalysis() {
     const endStr = format(periodRange.end, "yyyy-MM-dd");
 
     const [profilesRes, functionsRes, shiftsRes, tasksRes, templatesRes, absencesRes, depsRes, ttToolsRes, brokenToolsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
-      supabase.from("job_functions").select("id, name, sector_id").order("name"),
-      supabase.from("shifts").select("*"),
-      supabase.from("task_executions").select("*, task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)").gte("scheduled_date", startStr).lte("scheduled_date", endStr),
-      supabase.from("task_templates").select("id, name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, frequency, job_function_id, default_assigned_user_id, additional_assigned_user_ids, required_workers, sector_id, is_active, is_outdoor").eq("is_active", true).eq("is_irregularity_template", false),
-      supabase.from("absences").select("user_id, absence_date").gte("absence_date", startStr).lte("absence_date", endStr),
-      supabase.from("task_dependencies").select("task_template_id, depends_on_template_id"),
-      supabase.from("task_template_tools").select("task_template_id, tool_id"),
-      supabase.from("tools").select("id").eq("needs_repair", true),
+      supabase.from("op_profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
+      supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+      supabase.from("op_shifts").select("*"),
+      supabase.from("op_task_executions").select("*, task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)").gte("scheduled_date", startStr).lte("scheduled_date", endStr),
+      supabase.from("op_task_templates").select("id, name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, frequency, job_function_id, default_assigned_user_id, additional_assigned_user_ids, required_workers, sector_id, is_active, is_outdoor").eq("is_active", true).eq("is_irregularity_template", false),
+      supabase.from("op_absences").select("user_id, absence_date").gte("absence_date", startStr).lte("absence_date", endStr),
+      supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
+      supabase.from("op_task_template_tools").select("task_template_id, tool_id"),
+      supabase.from("op_tools").select("id").eq("needs_repair", true),
     ]);
 
     const brokenIds = new Set((brokenToolsRes.data || []).map((t: any) => t.id));
@@ -339,7 +339,7 @@ export default function IdleTimeAnalysis() {
     try {
       // First create a task template for the ad-hoc task
       const { data: template, error: templateError } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .insert({
           name: taskName.trim(),
           description: taskDescription.trim() || null,
@@ -370,7 +370,7 @@ export default function IdleTimeAnalysis() {
       }));
 
       const { error: execError } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .insert(executions);
 
       if (execError) throw execError;

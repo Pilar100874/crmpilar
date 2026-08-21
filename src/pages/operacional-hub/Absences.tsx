@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -96,7 +96,7 @@ export default function Absences() {
       
       const [usersRes, absencesRes, attendanceRes] = await Promise.all([
         supabase
-          .from("profiles")
+          .from("op_profiles")
           .select(`
             id,
             user_id,
@@ -108,12 +108,12 @@ export default function Absences() {
           .eq("is_active", true)
           .order("full_name"),
         supabase
-          .from("absences")
+          .from("op_absences")
           .select(`id, user_id, absence_date, reason, is_planned`)
           .gte("absence_date", today)
           .order("absence_date"),
         supabase
-          .from("daily_attendance")
+          .from("op_daily_attendance")
           .select("user_id, checked_in_at")
           .eq("attendance_date", today),
       ]);
@@ -199,14 +199,14 @@ export default function Absences() {
         const absencesWithTasks = await Promise.all(
           absencesData.map(async (a: any) => {
             const { count: tasksCount } = await supabase
-              .from("task_executions")
+              .from("op_task_executions")
               .select("*", { count: "exact", head: true })
               .eq("assigned_user_id", a.user_id)
               .eq("scheduled_date", a.absence_date)
               .in("status", ["pending", "in_progress"]);
 
             const { count: redistributedCount } = await supabase
-              .from("task_executions")
+              .from("op_task_executions")
               .select("*", { count: "exact", head: true })
               .eq("original_assigned_user_id", a.user_id)
               .eq("scheduled_date", a.absence_date)
@@ -245,7 +245,7 @@ export default function Absences() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("absences").insert([
+      const { error } = await supabase.from("op_absences").insert([
         {
           user_id: selectedUserId,
           absence_date: format(selectedDate, "yyyy-MM-dd"),
@@ -285,7 +285,7 @@ export default function Absences() {
       }
 
       const { data: tasks, error: tasksError } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`id, task_templates (name, priority, job_function_id)`)
         .eq("assigned_user_id", absence.userId)
         .eq("scheduled_date", absence.absenceDate)
@@ -321,7 +321,7 @@ export default function Absences() {
         userIndex++;
         
         await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .update({
             original_assigned_user_id: absence.userId,
             assigned_user_id: targetUser.userId,

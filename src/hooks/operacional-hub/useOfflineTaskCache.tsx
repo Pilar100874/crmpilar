@@ -17,7 +17,7 @@ export function useOfflineTaskCache(userId: string | undefined, establishmentId:
       // Cache today's task executions with template info
       const today = new Date().toISOString().split("T")[0];
       const { data: executions } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`
           *,
           task_template:task_templates(
@@ -38,7 +38,7 @@ export function useOfflineTaskCache(userId: string | undefined, establishmentId:
 
       // Cache profiles for team member display
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("op_profiles")
         .select("id, user_id, full_name")
         .eq("establishment_id", establishmentId);
 

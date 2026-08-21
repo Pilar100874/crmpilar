@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 
 interface Frequency {
   id: string;
@@ -44,7 +44,7 @@ export default function Frequencies() {
     queryKey: ["frequencies"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("frequencies")
+        .from("op_frequencies")
         .select("*")
         .order("interval_days", { ascending: true, nullsFirst: false });
       if (error) throw error;
@@ -57,7 +57,7 @@ export default function Frequencies() {
     queryKey: ["frequency-template-usage"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .select("id, name, frequency");
       if (error) throw error;
       const map: Record<string, TemplateUsage[]> = {};
@@ -89,13 +89,13 @@ export default function Frequencies() {
 
       if (editingFrequency) {
         const { error } = await supabase
-          .from("frequencies")
+          .from("op_frequencies")
           .update(payload)
           .eq("id", editingFrequency.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("frequencies")
+          .from("op_frequencies")
           .insert(payload);
         if (error) throw error;
       }
@@ -117,7 +117,7 @@ export default function Frequencies() {
   const toggleMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const { error } = await supabase
-        .from("frequencies")
+        .from("op_frequencies")
         .update({ is_active })
         .eq("id", id);
       if (error) throw error;
@@ -129,7 +129,7 @@ export default function Frequencies() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("frequencies").delete().eq("id", id);
+      const { error } = await supabase.from("op_frequencies").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

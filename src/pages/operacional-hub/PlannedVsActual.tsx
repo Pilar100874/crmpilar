@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import {
   eachDayOfInterval, subDays,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 import {
   ChevronLeft, ChevronRight, Clock, CheckCircle2, XCircle,
   AlertTriangle, TrendingUp, TrendingDown, Minus, Users, BarChart3,
@@ -109,13 +109,13 @@ export default function PlannedVsActual() {
 
   const fetchBaseData = async () => {
     const [p, s, t, d, jf, ttTools, toolsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, job_function_id, shift_id").eq("is_active", true).order("full_name"),
-      supabase.from("shifts").select("id, start_time, end_time, lunch_start, lunch_end, work_days"),
-      supabase.from("task_templates").select("id, name, estimated_time_minutes, frequency, job_function_id, default_assigned_user_id, priority, priority_order, is_active, sector_id").eq("is_active", true).eq("is_irregularity_template", false),
-      supabase.from("task_dependencies").select("task_template_id, depends_on_template_id"),
-      supabase.from("job_functions").select("id, name, sector_id").order("name"),
-      supabase.from("task_template_tools").select("task_template_id, tool_id"),
-      supabase.from("tools").select("id, name"),
+      supabase.from("op_profiles").select("user_id, full_name, job_function_id, shift_id").eq("is_active", true).order("full_name"),
+      supabase.from("op_shifts").select("id, start_time, end_time, lunch_start, lunch_end, work_days"),
+      supabase.from("op_task_templates").select("id, name, estimated_time_minutes, frequency, job_function_id, default_assigned_user_id, priority, priority_order, is_active, sector_id").eq("is_active", true).eq("is_irregularity_template", false),
+      supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
+      supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+      supabase.from("op_task_template_tools").select("task_template_id, tool_id"),
+      supabase.from("op_tools").select("id, name"),
     ]);
     setProfiles(p.data || []);
     setShifts((s.data || []) as unknown as ShiftData[]);
@@ -151,12 +151,12 @@ export default function PlannedVsActual() {
 
     const [exec, abs] = await Promise.all([
       supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select("id, assigned_user_id, executed_by_user_id, scheduled_date, status, time_spent_minutes, started_at, completed_at, task_template_id, observations, quality_score, is_suspicious, suspicious_reason, was_redistributed, pause_count, total_pause_minutes, pause_reason, planned_start_time, actual_start_time, task_templates(name, estimated_time_minutes, priority, frequency, is_irregularity_template)")
         .gte("scheduled_date", startStr)
         .lte("scheduled_date", endStr),
       supabase
-        .from("absences")
+        .from("op_absences")
         .select("user_id, absence_date")
         .gte("absence_date", startStr)
         .lte("absence_date", endStr),

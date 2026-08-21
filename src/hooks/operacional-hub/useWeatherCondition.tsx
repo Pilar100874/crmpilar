@@ -44,7 +44,7 @@ export function useWeatherCondition() {
   const checkCurrentCondition = async () => {
     try {
       const { data, error } = await supabase
-        .from("operational_conditions")
+        .from("op_operational_conditions")
         .select("id, is_active")
         .eq("type", "weather")
         .eq("name", "Chuva")
@@ -71,7 +71,7 @@ export function useWeatherCondition() {
       if (condition.isRaining && condition.conditionId) {
         // Turn off rain - deactivate the condition
         const { error } = await supabase
-          .from("operational_conditions")
+          .from("op_operational_conditions")
           .update({ is_active: false })
           .eq("id", condition.conditionId);
 
@@ -79,7 +79,7 @@ export function useWeatherCondition() {
       } else {
         // Turn on rain - create or reactivate condition
         const { data: existing } = await supabase
-          .from("operational_conditions")
+          .from("op_operational_conditions")
           .select("id")
           .eq("type", "weather")
           .eq("name", "Chuva")
@@ -88,7 +88,7 @@ export function useWeatherCondition() {
         if (existing) {
           // Reactivate existing condition
           const { error } = await supabase
-            .from("operational_conditions")
+            .from("op_operational_conditions")
             .update({ 
               is_active: true, 
               started_at: new Date().toISOString(),
@@ -100,7 +100,7 @@ export function useWeatherCondition() {
         } else {
           // Create new condition
           const { error } = await supabase
-            .from("operational_conditions")
+            .from("op_operational_conditions")
             .insert({
               type: "weather",
               name: "Chuva",

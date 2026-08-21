@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -36,7 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { format } from "date-fns";
 
 interface Condition {
@@ -99,11 +99,11 @@ export default function Conditions() {
     try {
       const [conditionsRes, sectorsRes] = await Promise.all([
         supabase
-          .from("operational_conditions")
+          .from("op_operational_conditions")
           .select("*")
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: false }),
-        supabase.from("sectors").select("id, name").order("name"),
+        supabase.from("op_sectors").select("id, name").order("name"),
       ]);
 
       if (conditionsRes.data) setConditions(conditionsRes.data);
@@ -135,7 +135,7 @@ export default function Conditions() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("operational_conditions").insert([{
+      const { error } = await supabase.from("op_operational_conditions").insert([{
         type: form.type,
         name: form.name,
         description: form.description || null,
@@ -164,7 +164,7 @@ export default function Conditions() {
   const toggleActive = async (id: string, isActive: boolean) => {
     try {
       const { error } = await supabase
-        .from("operational_conditions")
+        .from("op_operational_conditions")
         .update({ is_active: !isActive })
         .eq("id", id);
 
@@ -185,7 +185,7 @@ export default function Conditions() {
 
     try {
       const { error } = await supabase
-        .from("operational_conditions")
+        .from("op_operational_conditions")
         .delete()
         .eq("id", id);
 

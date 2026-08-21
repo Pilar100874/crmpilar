@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 import { Textarea } from "@/components/ui/textarea";
-import { IrregularityDispatchDialog } from "@/components/irregularities/IrregularityDispatchDialog";
+import { IrregularityDispatchDialog } from "@/components/operacional-hub/irregularities/IrregularityDispatchDialog";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +46,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { useNavigate } from "react-router-dom";
 
 interface Irregularity {
@@ -112,14 +112,14 @@ export default function Irregularities() {
     try {
       const [irregRes, sectorsRes] = await Promise.all([
         supabase
-          .from("irregularities")
+          .from("op_irregularities")
           .select(`
             id, title, description, photo_url, location_description, status, created_at,
             sectors (id, name, color),
             task_executions!irregularities_task_execution_id_fkey (id, status, photo_after_url)
           `)
           .order("created_at", { ascending: false }),
-        supabase.from("sectors").select("*").order("name"),
+        supabase.from("op_sectors").select("*").order("name"),
       ]);
 
       if (irregRes.data) {
@@ -200,7 +200,7 @@ export default function Irregularities() {
       }
 
       const { error } = await supabase
-        .from("irregularities")
+        .from("op_irregularities")
         .update({
           title: form.title,
           description: form.description || null,
@@ -230,12 +230,12 @@ export default function Irregularities() {
     try {
       // Unlink any task_executions referencing this irregularity
       await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .update({ irregularity_id: null })
         .eq("irregularity_id", irregularityToDelete.id);
 
       const { error } = await supabase
-        .from("irregularities")
+        .from("op_irregularities")
         .delete()
         .eq("id", irregularityToDelete.id);
 
@@ -278,7 +278,7 @@ export default function Irregularities() {
         .getPublicUrl(fileName);
 
       // Create irregularity
-      const { error } = await supabase.from("irregularities").insert([{
+      const { error } = await supabase.from("op_irregularities").insert([{
         title: form.title,
         description: form.description || null,
         photo_url: publicUrl,
@@ -307,7 +307,7 @@ export default function Irregularities() {
     try {
       // Create a task template for the irregularity
       const { data: template, error: templateError } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .insert([{
           name: `Correção: ${irregularity.title}`,
           description: irregularity.description || `Corrigir irregularidade: ${irregularity.title}`,
@@ -324,7 +324,7 @@ export default function Irregularities() {
 
       // Create task execution
       const { data: execution, error: execError } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .insert([{
           task_template_id: template.id,
           photo_before_url: irregularity.photo_url,
@@ -338,7 +338,7 @@ export default function Irregularities() {
 
       // Update irregularity
       const { error: updateError } = await supabase
-        .from("irregularities")
+        .from("op_irregularities")
         .update({ 
           status: "task_created",
           task_execution_id: execution.id,

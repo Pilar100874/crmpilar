@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 
 interface ProfileData {
   user_id: string;
@@ -114,10 +114,10 @@ export default function TVMode() {
 
   const fetchBaseData = async () => {
     const [p, jf, s, t] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, job_function_id, shift_id, is_active").eq("is_active", true),
-      supabase.from("job_functions").select("id, name, sector_id"),
-      supabase.from("shifts").select("id, start_time, end_time, work_days"),
-      supabase.from("task_templates").select("id, name, estimated_time_minutes, frequency, job_function_id, default_assigned_user_id, priority, is_active, sector_id").eq("is_active", true).eq("is_irregularity_template", false),
+      supabase.from("op_profiles").select("user_id, full_name, job_function_id, shift_id, is_active").eq("is_active", true),
+      supabase.from("op_job_functions").select("id, name, sector_id"),
+      supabase.from("op_shifts").select("id, start_time, end_time, work_days"),
+      supabase.from("op_task_templates").select("id, name, estimated_time_minutes, frequency, job_function_id, default_assigned_user_id, priority, is_active, sector_id").eq("is_active", true).eq("is_irregularity_template", false),
     ]);
     setProfiles(p.data || []);
     setJobFunctions(jf.data || []);
@@ -167,17 +167,17 @@ export default function TVMode() {
 
       const [executionsRes, materialsRes, sectorsRes, absencesRes, incidentsRes, conditionsRes] = await Promise.all([
         supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select(`
             id, status, photo_completion_url, time_spent_minutes, executed_by_user_id, assigned_user_id, task_template_id,
             task_templates (name, estimated_time_minutes, requires_photo, sector_id, priority)
           `)
           .eq("scheduled_date", todayStr),
-        supabase.from("materials").select("*"),
-        supabase.from("sectors").select("*"),
-        supabase.from("absences").select("*").eq("absence_date", todayStr),
-        supabase.from("incidents").select("*").eq("status", "open"),
-        supabase.from("operational_conditions").select("id").eq("is_active", true),
+        supabase.from("op_materials").select("*"),
+        supabase.from("op_sectors").select("*"),
+        supabase.from("op_absences").select("*").eq("absence_date", todayStr),
+        supabase.from("op_incidents").select("*").eq("status", "open"),
+        supabase.from("op_operational_conditions").select("id").eq("is_active", true),
       ]);
 
       const executions = executionsRes.data || [];

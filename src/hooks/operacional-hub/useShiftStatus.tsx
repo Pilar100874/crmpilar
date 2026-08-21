@@ -32,7 +32,7 @@ export function useShiftStatus() {
     try {
       const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
-        .from("daily_attendance")
+        .from("op_daily_attendance")
         .select("checked_in_at, checked_out_at")
         .eq("user_id", user.id)
         .eq("attendance_date", today)
@@ -77,7 +77,7 @@ export function useShiftStatus() {
 
       // Check if there's an existing record for today (previously checked out)
       const { data: existing } = await supabase
-        .from("daily_attendance")
+        .from("op_daily_attendance")
         .select("id")
         .eq("user_id", user.id)
         .eq("attendance_date", today)
@@ -86,7 +86,7 @@ export function useShiftStatus() {
       if (existing) {
         // Re-open shift: clear checkout time and update check-in time
         const { error } = await supabase
-          .from("daily_attendance")
+          .from("op_daily_attendance")
           .update({
             checked_in_at: new Date().toISOString(),
             checked_out_at: null,
@@ -99,7 +99,7 @@ export function useShiftStatus() {
       } else {
         // First check-in of the day
         const { error } = await supabase
-          .from("daily_attendance")
+          .from("op_daily_attendance")
           .insert({
             user_id: user.id,
             attendance_date: today,
@@ -126,7 +126,7 @@ export function useShiftStatus() {
       const today = new Date().toISOString().split("T")[0];
       
       const { error } = await supabase
-        .from("daily_attendance")
+        .from("op_daily_attendance")
         .update({ checked_out_at: new Date().toISOString() })
         .eq("user_id", user.id)
         .eq("attendance_date", today);

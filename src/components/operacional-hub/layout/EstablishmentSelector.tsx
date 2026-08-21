@@ -1,5 +1,5 @@
-import { useEstablishment } from "@/hooks/useEstablishment";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 import {
   Select,
   SelectContent,

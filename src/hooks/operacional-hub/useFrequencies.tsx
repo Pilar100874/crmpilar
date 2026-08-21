@@ -16,7 +16,7 @@ export function useFrequencies() {
     queryKey: ["frequencies"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("frequencies")
+        .from("op_frequencies")
         .select("*")
         .eq("is_active", true)
         .order("interval_days", { ascending: true, nullsFirst: false });

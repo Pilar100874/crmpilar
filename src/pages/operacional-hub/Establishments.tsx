@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export default function Establishments() {
   const fetchEstablishments = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("establishments")
+      .from("op_establishments")
       .select("*")
       .order("name");
 
@@ -82,7 +82,7 @@ export default function Establishments() {
 
     if (editingId) {
       const { error } = await supabase
-        .from("establishments")
+        .from("op_establishments")
         .update(payload)
         .eq("id", editingId);
 
@@ -93,7 +93,7 @@ export default function Establishments() {
       }
     } else {
       const { error } = await supabase
-        .from("establishments")
+        .from("op_establishments")
         .insert([payload]);
 
       if (error) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -26,8 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 
 interface TaskTemplate {
   id: string;
@@ -96,15 +96,15 @@ export default function Templates() {
     try {
       const [templatesRes, sectorsRes, functionsRes] = await Promise.all([
         supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .select(`
             id, name, description, estimated_time_minutes, frequency, requires_photo, is_active, is_outdoor, priority, is_irregularity_template, required_workers, location_photos,
             sectors (id, name, color),
             job_functions (id, name)
           `)
           .order("name"),
-        supabase.from("sectors").select("*").order("name"),
-        supabase.from("job_functions").select("*").order("name"),
+        supabase.from("op_sectors").select("*").order("name"),
+        supabase.from("op_job_functions").select("*").order("name"),
       ]);
 
       if (templatesRes.data) {
@@ -148,7 +148,7 @@ export default function Templates() {
     try {
       // First, unlink any irregularities referencing executions of this template
       const { data: executions } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select("id")
         .eq("task_template_id", templateToDelete.id);
 
@@ -156,18 +156,18 @@ export default function Templates() {
         const execIds = executions.map(e => e.id);
         // Unlink irregularities that reference these executions
         await supabase
-          .from("irregularities")
+          .from("op_irregularities")
           .update({ task_execution_id: null })
           .in("task_execution_id", execIds);
 
         // Delete the executions
         await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .delete()
           .eq("task_template_id", templateToDelete.id);
       }
 
-      const { error } = await supabase.from("task_templates").delete().eq("id", templateToDelete.id);
+      const { error } = await supabase.from("op_task_templates").delete().eq("id", templateToDelete.id);
       if (error) throw error;
       toast({ title: "Template excluído!" });
       fetchData();
@@ -191,7 +191,7 @@ export default function Templates() {
     if (!templateToDuplicate || !duplicateName.trim()) return;
     try {
       const { data: original, error: fetchErr } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .select("*")
         .eq("id", templateToDuplicate.id)
         .single();
@@ -199,7 +199,7 @@ export default function Templates() {
 
       const { id, created_at, updated_at, approved_at, approved_by_user_id, ...rest } = original as any;
       const { data: newTemplate, error: insertErr } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .insert([{ ...rest, name: duplicateName.trim(), approval_status: "approved", is_active: true }])
         .select("id")
         .single();
@@ -207,19 +207,19 @@ export default function Templates() {
 
       const newId = newTemplate.id;
       const [depsRes, toolsRes, matsRes] = await Promise.all([
-        supabase.from("task_dependencies").select("depends_on_template_id").eq("task_template_id", templateToDuplicate.id),
-        supabase.from("task_template_tools").select("tool_id").eq("task_template_id", templateToDuplicate.id),
-        supabase.from("task_template_materials").select("material_id, quantity_needed").eq("task_template_id", templateToDuplicate.id),
+        supabase.from("op_task_dependencies").select("depends_on_template_id").eq("task_template_id", templateToDuplicate.id),
+        supabase.from("op_task_template_tools").select("tool_id").eq("task_template_id", templateToDuplicate.id),
+        supabase.from("op_task_template_materials").select("material_id, quantity_needed").eq("task_template_id", templateToDuplicate.id),
       ]);
 
       if (depsRes.data?.length) {
-        await supabase.from("task_dependencies").insert(depsRes.data.map((d: any) => ({ task_template_id: newId, depends_on_template_id: d.depends_on_template_id })));
+        await supabase.from("op_task_dependencies").insert(depsRes.data.map((d: any) => ({ task_template_id: newId, depends_on_template_id: d.depends_on_template_id })));
       }
       if (toolsRes.data?.length) {
-        await supabase.from("task_template_tools").insert(toolsRes.data.map((t: any) => ({ task_template_id: newId, tool_id: t.tool_id })));
+        await supabase.from("op_task_template_tools").insert(toolsRes.data.map((t: any) => ({ task_template_id: newId, tool_id: t.tool_id })));
       }
       if (matsRes.data?.length) {
-        await supabase.from("task_template_materials").insert(matsRes.data.map((m: any) => ({ task_template_id: newId, material_id: m.material_id, quantity_needed: m.quantity_needed })));
+        await supabase.from("op_task_template_materials").insert(matsRes.data.map((m: any) => ({ task_template_id: newId, material_id: m.material_id, quantity_needed: m.quantity_needed })));
       }
 
       toast({ title: "Template duplicado com sucesso!" });

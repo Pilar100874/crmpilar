@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CloudRain, Sun, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWeatherCondition } from "@/hooks/useWeatherCondition";
+import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition";
 import { useToast } from "@/hooks/use-toast";
 
 interface WeatherCheckDialogProps {

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -27,8 +27,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 
 interface IrregularityTemplate {
   id: string;
@@ -113,13 +113,13 @@ export default function ReportIrregularity() {
     try {
       const [templatesRes, sectorsRes, usersRes] = await Promise.all([
         supabase
-          .from("task_templates")
+          .from("op_task_templates")
           .select("id, name, description, estimated_time_minutes, location_photos")
           .eq("is_irregularity_template", true)
           .eq("is_active", true)
           .order("name"),
-        supabase.from("sectors").select("*").order("name"),
-        supabase.from("profiles").select("user_id, full_name").eq("is_active", true).order("full_name"),
+        supabase.from("op_sectors").select("*").order("name"),
+        supabase.from("op_profiles").select("user_id, full_name").eq("is_active", true).order("full_name"),
       ]);
 
       if (templatesRes.data) {
@@ -199,7 +199,7 @@ export default function ReportIrregularity() {
         if (!templateId) {
           // Find the first irregularity template to use as base
           const { data: existingTemplate } = await supabase
-            .from("task_templates")
+            .from("op_task_templates")
             .select("id")
             .eq("is_irregularity_template", true)
             .limit(1)
@@ -210,7 +210,7 @@ export default function ReportIrregularity() {
           } else {
             // Create a generic template if none exists
             const { data: newTemplate, error: templateError } = await supabase
-              .from("task_templates")
+              .from("op_task_templates")
               .insert([{
                 name: "Tarefa Pontual",
                 description: "Tarefa criada por gestor para resolver problema pontual",
@@ -230,7 +230,7 @@ export default function ReportIrregularity() {
 
         // Create task execution with priority
         const { error: taskError } = await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .insert([{
             task_template_id: templateId,
             target_sector_id: selectedSectorId,
@@ -246,7 +246,7 @@ export default function ReportIrregularity() {
 
         // Create irregularity record
         await supabase
-          .from("irregularities")
+          .from("op_irregularities")
           .insert([{
             title: taskTitle,
             description: description || null,
@@ -264,7 +264,7 @@ export default function ReportIrregularity() {
       } else {
         // Standard flow for workers or admin/manager using a template
         const { error: taskError } = await supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .insert([{
             task_template_id: selectedTemplateId,
             target_sector_id: selectedSectorId,
@@ -280,7 +280,7 @@ export default function ReportIrregularity() {
 
         // Also create an irregularity record for tracking
         await supabase
-          .from("irregularities")
+          .from("op_irregularities")
           .insert([{
             title: selectedTemplate?.name || "Irregularidade Reportada",
             description: description || null,

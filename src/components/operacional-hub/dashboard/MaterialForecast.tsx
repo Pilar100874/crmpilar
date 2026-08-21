@@ -34,7 +34,7 @@ export function MaterialForecast() {
     try {
       // Fetch all active templates with their materials
       const { data: templates, error: templatesError } = await supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .select(`
           id,
           name,

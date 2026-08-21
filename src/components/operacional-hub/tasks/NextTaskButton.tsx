@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
 
 interface NextTask {
   id: string;
@@ -29,7 +29,7 @@ export function NextTaskButton() {
 
       // Get pending/in_progress tasks for today, ordered by priority
       const { data, error } = await supabase
-        .from("task_executions")
+        .from("op_task_executions")
         .select(`
           id, status, priority_score,
           task_templates (

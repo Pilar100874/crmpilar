@@ -8,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { UserPlus, Loader2, Lock, User, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEstablishment } from "@/hooks/useEstablishment";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 import { z } from "zod";
 
 const createUserSchema = z.object({
@@ -94,11 +94,11 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
   const fetchOptions = async () => {
     const [sectorsRes, functionsRes, shiftsRes, estRes] = await Promise.all([
-      supabase.from("sectors").select("id, name, color").order("name"),
-      supabase.from("job_functions").select("id, name, sector_id").order("name"),
-      supabase.from("shifts").select("id, name").order("name"),
+      supabase.from("op_sectors").select("id, name, color").order("name"),
+      supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+      supabase.from("op_shifts").select("id, name").order("name"),
       (isSuperAdmin || isAdmin)
-        ? supabase.from("establishments").select("id, name").eq("is_active", true).order("name")
+        ? supabase.from("op_establishments").select("id, name").eq("is_active", true).order("name")
         : Promise.resolve({ data: null }),
     ]);
     if (sectorsRes.data) setSectors(sectorsRes.data);
@@ -172,7 +172,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     try {
       // Check for duplicate names
       const { data: existingUsers } = await supabase
-        .from("profiles")
+        .from("op_profiles")
         .select("id")
         .ilike("full_name", fullName.trim());
 
@@ -213,13 +213,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       if (authData.user) {
         if (role !== "worker") {
           await supabase
-            .from("user_roles")
+            .from("op_user_roles")
             .update({ role })
             .eq("user_id", authData.user.id);
         }
 
         await supabase
-          .from("profiles")
+          .from("op_profiles")
           .update({
             login_email: generatedEmail,
             job_function_id: jobFunctionId || null,
@@ -232,7 +232,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         const additionalEsts = selectedEstablishments.filter(id => id !== primaryEstablishmentId);
         if (additionalEsts.length > 0) {
           await supabase
-            .from("user_establishments")
+            .from("op_user_establishments")
             .insert(
               additionalEsts.map(estId => ({
                 user_id: authData.user!.id,
@@ -243,7 +243,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
         // Ensure primary is also in user_establishments
         await supabase
-          .from("user_establishments")
+          .from("op_user_establishments")
           .upsert({
             user_id: authData.user.id,
             establishment_id: primaryEstablishmentId,

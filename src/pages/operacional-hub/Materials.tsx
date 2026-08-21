@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEstablishment } from "@/hooks/useEstablishment";
+import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import {
   Dialog,
   DialogContent,
@@ -40,8 +40,8 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { MaterialForecast } from "@/components/dashboard/MaterialForecast";
+import { useAuth } from "@/hooks/operacional-hub/useAuth";
+import { MaterialForecast } from "@/components/operacional-hub/dashboard/MaterialForecast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -123,9 +123,9 @@ export default function Materials() {
   const fetchData = async () => {
     try {
       const [materialsRes, sectorsRes, movTotalsRes] = await Promise.all([
-        supabase.from("materials").select(`*, sectors (id, name, color)`).order("name"),
-        supabase.from("sectors").select("*").order("name"),
-        supabase.from("material_movements").select("material_id, movement_type, quantity"),
+        supabase.from("op_materials").select(`*, sectors (id, name, color)`).order("name"),
+        supabase.from("op_sectors").select("*").order("name"),
+        supabase.from("op_material_movements").select("material_id, movement_type, quantity"),
       ]);
 
       if (materialsRes.data) {
@@ -161,7 +161,7 @@ export default function Materials() {
     setMovementsLoading(true);
     try {
       const { data, error } = await supabase
-        .from("material_movements")
+        .from("op_material_movements")
         .select("*, materials(name)")
         .order("created_at", { ascending: false })
         .limit(200);
@@ -213,11 +213,11 @@ export default function Materials() {
       };
 
       if (editingId) {
-        const { error } = await supabase.from("materials").update(data).eq("id", editingId);
+        const { error } = await supabase.from("op_materials").update(data).eq("id", editingId);
         if (error) throw error;
         toast({ title: "Material atualizado!" });
       } else {
-        const { error } = await supabase.from("materials").insert(data);
+        const { error } = await supabase.from("op_materials").insert(data);
         if (error) throw error;
         toast({ title: "Material criado!" });
       }
@@ -237,7 +237,7 @@ export default function Materials() {
     if (!confirm("Tem certeza que deseja excluir este material?")) return;
 
     try {
-      const { error } = await supabase.from("materials").delete().eq("id", id);
+      const { error } = await supabase.from("op_materials").delete().eq("id", id);
       if (error) throw error;
       toast({ title: "Material excluído!" });
       fetchData();
@@ -255,7 +255,7 @@ export default function Materials() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("material_movements").insert({
+      const { error } = await supabase.from("op_material_movements").insert({
         material_id: movForm.materialId,
         movement_type: movForm.movementType,
         quantity: parseFloat(movForm.quantity),
@@ -287,7 +287,7 @@ export default function Materials() {
     if (!deletingMovementId) return;
     try {
       const { error } = await supabase
-        .from("material_movements")
+        .from("op_material_movements")
         .delete()
         .eq("id", deletingMovementId);
       if (error) throw error;

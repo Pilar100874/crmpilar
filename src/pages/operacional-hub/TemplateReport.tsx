@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { useFrequencies } from "@/hooks/useFrequencies";
+import { useFrequencies } from "@/hooks/operacional-hub/useFrequencies";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,12 +171,12 @@ export default function TemplateReport() {
   useEffect(() => {
     Promise.all([
       supabase
-        .from("task_templates")
+        .from("op_task_templates")
         .select("id, name, description, frequency, priority, priority_order, estimated_time_minutes, is_active, is_outdoor, requires_photo, required_workers, location_photos, is_irregularity_template, default_assigned_user_id, additional_assigned_user_ids, sectors(id, name, color), job_functions(id, name)")
         .eq("is_irregularity_template", false)
         .order("name"),
-      supabase.from("task_dependencies").select("task_template_id, depends_on_template_id"),
-      supabase.from("profiles").select("user_id, full_name"),
+      supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
+      supabase.from("op_profiles").select("user_id, full_name"),
     ]).then(([tRes, dRes, pRes]) => {
       if (tRes.data) setTemplates(tRes.data as any);
       if (dRes.data) setDependencies(dRes.data);

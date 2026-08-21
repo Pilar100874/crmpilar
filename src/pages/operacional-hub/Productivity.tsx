@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import {
   Select,
   SelectContent,
@@ -109,7 +109,7 @@ export default function Productivity() {
 
       const [execResult, profileResult, shiftResult] = await Promise.all([
         supabase
-          .from("task_executions")
+          .from("op_task_executions")
           .select(`
             id, status, time_spent_minutes, scheduled_date, executed_by_user_id, assigned_user_id,
             pause_count, total_pause_minutes, pause_reason, observations,
@@ -118,10 +118,10 @@ export default function Productivity() {
           .gte("scheduled_date", startStr)
           .lte("scheduled_date", endStr),
         supabase
-          .from("profiles")
+          .from("op_profiles")
           .select("user_id, full_name, shift_id"),
         supabase
-          .from("shifts")
+          .from("op_shifts")
           .select("id, name, start_time, end_time, lunch_start, lunch_end, day_schedules"),
       ]);
 

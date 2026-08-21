@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -102,15 +102,15 @@ export function EditUserDialog({
     setDataLoading(true);
     try {
       const [sectorsRes, functionsRes, shiftsRes, profileRes, userEstRes, accessLevelsRes] = await Promise.all([
-        supabase.from("sectors").select("id, name, color").order("name"),
-        supabase.from("job_functions").select("id, name, sector_id").order("name"),
-        supabase.from("shifts").select("id, name").order("name"),
-        supabase.rpc("get_profile_admin_details" as any, { p_profile_id: userId }).maybeSingle(),
-        supabase.from("user_establishments").select("establishment_id").eq("user_id", userAuthId),
-        supabase.from("access_levels").select("id, name, base_role").order("name"),
+        supabase.from("op_sectors").select("id, name, color").order("name"),
+        supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
+        supabase.from("op_shifts").select("id, name").order("name"),
+        supabase.rpc("op_get_profile_admin_details" as any, { p_profile_id: userId }).maybeSingle(),
+        supabase.from("op_user_establishments").select("establishment_id").eq("user_id", userAuthId),
+        supabase.from("op_access_levels").select("id, name, base_role").order("name"),
       ]);
 
-      const estRes = await supabase.from("establishments").select("id, name").eq("is_active", true).order("name");
+      const estRes = await supabase.from("op_establishments").select("id, name").eq("is_active", true).order("name");
 
       if (sectorsRes.data) setSectors(sectorsRes.data);
       if (functionsRes.data) setJobFunctions(functionsRes.data);
@@ -169,7 +169,7 @@ export function EditUserDialog({
     setLoading(true);
     try {
       const { error } = await supabase
-        .from("profiles")
+        .from("op_profiles")
         .update({
           full_name: fullName.trim(),
           job_function_id: jobFunctionId === "none" ? null : jobFunctionId,
@@ -187,14 +187,14 @@ export function EditUserDialog({
       if ((isSuperAdmin || isAdmin) && userAuthId) {
         // Delete existing
         await supabase
-          .from("user_establishments")
+          .from("op_user_establishments")
           .delete()
           .eq("user_id", userAuthId);
 
         // Insert new
         if (selectedEstablishments.length > 0) {
           await supabase
-            .from("user_establishments")
+            .from("op_user_establishments")
             .insert(
               selectedEstablishments.map(estId => ({
                 user_id: userAuthId,
@@ -205,7 +205,7 @@ export function EditUserDialog({
 
         // Update profile's primary establishment
         await supabase
-          .from("profiles")
+          .from("op_profiles")
           .update({ establishment_id: selectedEstablishments[0] })
           .eq("id", userId);
       }

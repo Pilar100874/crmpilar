@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/operacional-hub/layout/AppLayout";
 import { Users as UsersIcon, User, Edit2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { useUserRole } from "@/hooks/useUserRole";
-import { CreateUserDialog } from "@/components/users/CreateUserDialog";
-import { EditUserDialog } from "@/components/users/EditUserDialog";
+import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { CreateUserDialog } from "@/components/operacional-hub/users/CreateUserDialog";
+import { EditUserDialog } from "@/components/operacional-hub/users/EditUserDialog";
 import { Button } from "@/components/ui/button";
 
 interface UserProfile {
@@ -36,7 +36,7 @@ export default function Users() {
   const fetchUsers = async () => {
     try {
       const { data: profiles, error } = await supabase
-        .from("profiles")
+        .from("op_profiles")
         .select(`
           id,
           user_id,
@@ -56,7 +56,7 @@ export default function Users() {
       // Get roles for each user
       const userIds = profiles?.map((p) => p.user_id) || [];
       const { data: roles } = await supabase
-        .from("user_roles")
+        .from("op_user_roles")
         .select("user_id, role")
         .in("user_id", userIds);
 
