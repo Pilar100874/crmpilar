@@ -229,7 +229,7 @@ export default function CVVehicles() {
       current_km: v.current_km, oil_change_interval: v.oil_change_interval,
       last_oil_change_km: v.last_oil_change_km, active: v.active,
       veiculo_id: (v as any).veiculo_id ?? null,
-      fleet_type: (v as any).fleet_type ?? "",
+      fleet_type: (logVeiculos.find(l => l.id === (v as any).veiculo_id)?.tipo_veiculo || "").trim() || (v as any).fleet_type || "",
       logistica_grupo_id: (v as any).logistica_grupo_id ?? null,
     });
 
