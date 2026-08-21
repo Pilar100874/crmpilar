@@ -203,11 +203,17 @@ export default function TvSignageMurais() {
                 <div className="space-y-2 max-h-72 overflow-y-auto">
                   {edit.itens.map((it, idx) => (
                     <div key={it.id} className="flex items-center gap-2 rounded-md border p-2">
-                      <div className="w-16 h-12 rounded bg-muted overflow-hidden shrink-0 flex items-center justify-center">
-                        {it.tipo === "video"
-                          ? <VideoIcon className="w-5 h-5 text-muted-foreground" />
-                          : <img src={it.url} alt={it.nome || "Mídia"} className="w-full h-full object-cover" loading="lazy" />}
+                      <div className="w-16 h-12 rounded bg-muted overflow-hidden shrink-0 flex items-center justify-center relative">
+                        {it.tipo === "video" ? (
+                          <>
+                            <video src={`${it.url}#t=0.1`} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                            <VideoIcon className="w-4 h-4 text-white absolute drop-shadow" />
+                          </>
+                        ) : (
+                          <img src={it.url} alt={it.nome || "Mídia"} className="w-full h-full object-cover" loading="lazy" />
+                        )}
                       </div>
+
                       <div className="min-w-0 flex-1">
                         <div className="text-sm truncate">{it.nome || (it.tipo === "video" ? "Vídeo" : "Imagem")}</div>
                         {it.tipo === "image" && (
