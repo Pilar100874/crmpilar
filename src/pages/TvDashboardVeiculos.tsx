@@ -83,6 +83,7 @@ export default function TvDashboardVeiculos() {
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
+  const [legendaVisivel, setLegendaVisivel] = useState(false);
   useFullscreen(true);
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
@@ -687,7 +688,32 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
 
+        {/* Top Right - Botão de legenda + legenda alternável */}
+        <div className="fixed top-3 right-3 flex flex-col items-end gap-2" style={{ zIndex: 999999 }}>
+          <Button
+            variant={legendaVisivel ? 'default' : 'secondary'}
+            size="icon"
+            onClick={() => setLegendaVisivel(v => !v)}
+            className="h-10 w-10 rounded-xl bg-background/80 backdrop-blur-md shadow-xl"
+            title={legendaVisivel ? 'Ocultar legenda' : 'Mostrar legenda'}
+          >
+            {legendaVisivel ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
+          </Button>
 
+          {legendaVisivel && (
+            <div className="px-4 py-3 bg-background/70 backdrop-blur-md rounded-xl shadow-xl space-y-2 min-w-[190px]">
+              {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((key) => (
+                <div key={key} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-3 w-3 rounded-full ${statusConfig[key].color}`} />
+                    <span className="text-sm">{statusConfig[key].label}</span>
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums">{stats[key]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
 
         {/* Bottom Left - Alerts */}
