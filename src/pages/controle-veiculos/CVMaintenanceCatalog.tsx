@@ -13,6 +13,7 @@ import { BookOpen, Search, Plus, Pencil, Trash2, Loader2, ListChecks } from "luc
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { listarCatalogo, CRITICIDADES, type CatalogItem } from "@/lib/cv/catalogo";
+import { listarTiposVeiculoLogistica } from "@/lib/logistica/tiposVeiculo";
 
 const itemVazio = {
   codigo: "", tipo_veiculo: "", sistema: "", componente: "", acao: "",
