@@ -358,8 +358,9 @@ function AppLayoutInner({ children }: AppLayoutProps) {
         </aside>
 
         {/* Conteúdo */}
-        <div className="flex-1 overflow-auto p-2 sm:p-3 lg:p-4 xl:p-6">
-          <Card className="shadow-sm border-border/60">
+        <div className="flex-1 overflow-auto p-0 lg:p-4 xl:p-6">
+          <div className="p-2 sm:p-3 lg:p-0">
+          <Card className="shadow-sm border-border/60 border-x-0 rounded-none sm:border-x sm:rounded-lg">
             <CardHeader className="px-3 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -388,6 +389,7 @@ function AppLayoutInner({ children }: AppLayoutProps) {
               <AppLayoutContext.Provider value={true}>{children}</AppLayoutContext.Provider>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     </div>
