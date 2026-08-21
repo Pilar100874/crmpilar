@@ -340,6 +340,16 @@ export default function TvSignageDashboards() {
                           Limpar seleção (mostrar todos)
                         </button>
                       )}
+                      <div className="pt-2 border-t mt-2">
+                        <label className="flex items-center gap-2 text-sm">
+                          <Switch checked={veicLegenda} onCheckedChange={updateVeicLegenda} />
+                          Mostrar legenda de status
+                        </label>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Exibe no canto da tela a legenda com as cores e a contagem de veículos (em movimento, parados e offline).
+                        </p>
+                      </div>
+
                     </div>
                   )}
                 </>
