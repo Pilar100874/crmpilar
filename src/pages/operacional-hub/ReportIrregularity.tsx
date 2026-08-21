@@ -73,7 +73,7 @@ const priorityConfig: Record<Priority, { label: string; description: string; col
   low: { 
     label: "Baixa", 
     description: "Resolver quando possível", 
-    color: "bg-gray-400",
+    color: "bg-muted-foreground",
     value: 2
   },
 };

@@ -1763,7 +1763,7 @@ export default function TaskExecution() {
             <Button
               onClick={handleWeatherPause}
               disabled={savingPause}
-              className="w-full h-14 rounded-xl gap-2 text-lg font-bold bg-blue-500 hover:bg-blue-600 text-white shadow-lg"
+              className="w-full h-14 rounded-xl gap-2 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
             >
               {savingPause ? <Loader2 className="h-5 w-5 animate-spin" /> : <Pause className="h-5 w-5" />}
               PAUSAR POR CHUVA

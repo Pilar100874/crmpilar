@@ -207,7 +207,7 @@ export default function TemplateReport() {
     if (priority >= 9) return { label: "Crítica", color: "bg-red-500" };
     if (priority >= 7) return { label: "Alta", color: "bg-orange-500" };
     if (priority >= 4) return { label: "Média", color: "bg-yellow-500" };
-    return { label: "Baixa", color: "bg-gray-400" };
+    return { label: "Baixa", color: "bg-muted-foreground" };
   };
 
   // Build dependency map: templateId -> depends on these template ids
