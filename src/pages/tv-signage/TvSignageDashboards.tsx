@@ -153,11 +153,12 @@ export default function TvSignageDashboards() {
                 />
               </div>
             </div>
-            <div className="text-xs text-muted-foreground flex gap-3 pt-2 border-t border-border">
-              <span>⏱ {d.refresh_segundos}s</span>
-              {d.fullscreen && <span>▣ Fullscreen</span>}
-              {d.cache_offline && <span>💾 Offline</span>}
-            </div>
+            {d.cache_offline && (
+              <div className="text-xs text-muted-foreground flex gap-3 pt-2 border-t border-border">
+                <span>💾 Cache offline</span>
+              </div>
+            )}
+
           </Card>
         ))}
         {list.length === 0 && <Card className="p-8 text-center text-muted-foreground col-span-full">Nenhum dashboard. Crie o primeiro.</Card>}
