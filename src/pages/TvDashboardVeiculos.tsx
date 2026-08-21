@@ -422,7 +422,11 @@ export default function TvDashboardVeiculos() {
     (modoTv || !!tvDeviceToken) && cicloConfig.quiosque_ativo,
     { pausaFalhaSegundos: cicloConfig.pausa_falha_segundos },
   );
-  const autonomoAtivo = (modoTv || !!tvDeviceToken) && cicloConfig.autonomo_ativo && !quiosque.pausadoPorFalha;
+  const modoTvAtivo = modoTv || !!tvDeviceToken;
+  // Quando "sempre visão geral" está ligado, a TV nunca dá foco em um veículo:
+  // mantém todos os veículos filtrados enquadrados no maior zoom possível.
+  const sempreVisaoGeral = modoTvAtivo && cicloConfig.sempre_visao_geral !== false;
+  const autonomoAtivo = modoTvAtivo && cicloConfig.autonomo_ativo && !quiosque.pausadoPorFalha && !sempreVisaoGeral;
   const OVERVIEW_MS = Math.max(5, cicloConfig.overview_segundos) * 1000;
   const FOCO_MS = Math.max(3, cicloConfig.foco_segundos) * 1000;
   const autoEtapaRef = useRef<{ fase: 'geral' | 'foco'; indice: number; ate: number }>({ fase: 'geral', indice: 0, ate: 0 });
@@ -445,6 +449,14 @@ export default function TvDashboardVeiculos() {
   );
   const idsRotacaoRef = useRef<string[]>([]);
   useEffect(() => { idsRotacaoRef.current = idsRotacao; }, [idsRotacao]);
+
+  // Modo "sempre visão geral": garante que nenhum foco fique ativo na TV
+  useEffect(() => {
+    if (!sempreVisaoGeral) return;
+    setModoFoco(false);
+    setPinnedVeiculoId(null);
+    setFocusVeiculoId(null);
+  }, [sempreVisaoGeral, veiculosComPosicao.length]);
 
   useEffect(() => {
     if (!autonomoAtivo) return;
@@ -704,13 +716,13 @@ export default function TvDashboardVeiculos() {
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               className="absolute inset-0"
-              fitBounds={!pinnedVeiculoId}
+              fitBounds={sempreVisaoGeral || !pinnedVeiculoId}
               fitBoundsPadding={fitBoundsPadding}
-              zoomMaximoSempre={!pinnedVeiculoId}
+              zoomMaximoSempre={sempreVisaoGeral || !pinnedVeiculoId}
               compactIcons
               focusVeiculoId={focusVeiculoId || undefined}
               focusTrigger={focusTrigger}
-              modoFoco={modoFoco}
+              modoFoco={!sempreVisaoGeral && modoFoco}
               focoZoom={modoFoco ? 18 : 17}
               trilhaMinutos={modoFoco ? (autonomoAtivo ? cicloConfig.trilha_minutos : trilhaMinutos) : 0}
               trilhaLimparToken={trilhaLimparToken}
