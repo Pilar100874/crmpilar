@@ -391,6 +391,12 @@ export default function TvDashboardVeiculos() {
 
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
 
+  // Paradas apenas dos veículos exibidos (evita abrir o zoom por causa de outros grupos)
+  const paradasMarcadasFiltradas = useMemo(() => {
+    const ids = new Set(veiculosFiltrados.map(v => v.id));
+    return paradasMarcadas.filter(p => ids.has(p.veiculo_id));
+  }, [paradasMarcadas, veiculosFiltrados]);
+
   // Padding do mapa para não deixar veículos atrás dos painéis
   const fitBoundsPadding = useMemo(() => {
     if (isMobile) {
