@@ -16,6 +16,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Pilar Ferramentas ============
   { path: "/ferramentas", titulo: "Pilar Ferramentas", aliases: ["ferramentas", "controle de ferramentas", "almoxarifado de ferramentas"] },
   { path: "/ferramentas/tools", titulo: "Cadastro de Ferramentas", aliases: ["cadastro de ferramentas", "lista de ferramentas"] },
+  { path: "/ferramentas/loans", titulo: "Registros de Empréstimos", aliases: ["registros de ferramentas", "registros de emprestimos", "historico de emprestimos"] },
   { path: "/ferramentas/loan/return", titulo: "Devolução de Ferramentas", aliases: ["devolucao de ferramentas", "devolver ferramenta"] },
   { path: "/ferramentas/loan/relend", titulo: "Novo Empréstimo de Ferramentas", aliases: ["emprestar ferramenta", "novo emprestimo de ferramenta"] },
   { path: "/ferramentas/loan/renewals", titulo: "Renovações de Empréstimo", aliases: ["renovacoes de emprestimo", "renovar emprestimo de ferramenta"] },
