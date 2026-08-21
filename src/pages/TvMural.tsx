@@ -238,14 +238,22 @@ export default function TvMural() {
           ref={camada === "atual" ? videoRef : undefined}
           src={item.url}
           /* Modo de exibição por mídia (padrão: esticar) */
-          className={`absolute inset-0 w-full h-full ${classeAjuste(item.ajuste)} bg-black`}
-
+          className={`absolute inset-0 w-full h-full ${classeAjuste(item.ajuste)} bg-black transition-opacity duration-200 ${
+            camada !== "atual" || videoTocando ? "opacity-100" : "opacity-0"
+          }`}
           autoPlay
           muted
+          preload="auto"
           playsInline
+          controls={false}
+          disablePictureInPicture
+          onLoadedMetadata={() => { if (camada === "atual") videoRef.current?.play().catch(() => {}); }}
+          onCanPlay={() => { if (camada === "atual") videoRef.current?.play().catch(() => {}); }}
+          onPlaying={() => { if (camada === "atual") setVideoTocando(true); }}
           onEnded={camada === "atual" ? avancar : undefined}
           onError={camada === "atual" ? avancar : undefined}
         />
+
       ) : (
         <img
           src={item.url}
