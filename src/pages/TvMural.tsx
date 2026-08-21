@@ -106,6 +106,8 @@ export default function TvMural() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const [recoveryKey, setRecoveryKey] = useState(0);
+  // Evita o "ícone de play" do WebView: o vídeo só aparece quando já está tocando
+  const [videoTocando, setVideoTocando] = useState(false);
 
   // Watchdog: perda de rede ou ciclo travado -> reconecta e retoma
   const watchdog = useTvWatchdog({
