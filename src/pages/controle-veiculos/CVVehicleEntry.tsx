@@ -18,6 +18,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
 
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
@@ -43,6 +45,7 @@ export default function CVVehicleEntry() {
     inspected_all_sides: false,
   });
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const load = async () => {
     setLoading(true);
@@ -63,6 +66,8 @@ export default function CVVehicleEntry() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const movesFiltrados = filtrarPorGrupo(openMoves, grupoId, (m: any) => m.vehicle?.logistica_grupo_id);
 
   // Recalcula os alertas do veículo selecionado usando a KM informada na entrada
   const recalcSelected = async (km: number) => {
@@ -272,9 +277,15 @@ export default function CVVehicleEntry() {
         <CardContent className="p-4 sm:p-6 min-h-[360px]">
           {step === 0 && (
             <div>
-              <div className="mb-3 flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo que está retornando</h3></div>
+              <div className="mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo que está retornando</h3></div>
+                <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} />
+              </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {openMoves.map((m) => {
+                {movesFiltrados.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhum veículo em trânsito neste grupo.</p>
+                )}
+                {movesFiltrados.map((m) => {
                   const timeOut = Date.now() - new Date(m.exit_time).getTime();
                   const h = Math.floor(timeOut / 3600000);
                   const min = Math.floor((timeOut % 3600000) / 60000);

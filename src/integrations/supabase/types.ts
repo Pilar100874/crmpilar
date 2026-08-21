@@ -6422,6 +6422,7 @@ export type Database = {
           estabelecimento_id: string | null
           id: string
           license: string
+          logistica_grupo_id: string | null
           name: string
           phone: string | null
           updated_at: string
@@ -6432,6 +6433,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           license: string
+          logistica_grupo_id?: string | null
           name: string
           phone?: string | null
           updated_at?: string
@@ -6442,6 +6444,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           license?: string
+          logistica_grupo_id?: string | null
           name?: string
           phone?: string | null
           updated_at?: string
@@ -6452,6 +6455,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_drivers_logistica_grupo_id_fkey"
+            columns: ["logistica_grupo_id"]
+            isOneToOne: false
+            referencedRelation: "logistica_grupos"
             referencedColumns: ["id"]
           },
         ]
@@ -6935,6 +6945,7 @@ export type Database = {
           fleet_type: string | null
           id: string
           last_oil_change_km: number
+          logistica_grupo_id: string | null
           name: string
           next_oil_change_km: number
           oil_change_interval: number
@@ -6951,6 +6962,7 @@ export type Database = {
           fleet_type?: string | null
           id?: string
           last_oil_change_km?: number
+          logistica_grupo_id?: string | null
           name: string
           next_oil_change_km?: number
           oil_change_interval?: number
@@ -6967,6 +6979,7 @@ export type Database = {
           fleet_type?: string | null
           id?: string
           last_oil_change_km?: number
+          logistica_grupo_id?: string | null
           name?: string
           next_oil_change_km?: number
           oil_change_interval?: number
@@ -6981,6 +6994,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicles_logistica_grupo_id_fkey"
+            columns: ["logistica_grupo_id"]
+            isOneToOne: false
+            referencedRelation: "logistica_grupos"
             referencedColumns: ["id"]
           },
           {

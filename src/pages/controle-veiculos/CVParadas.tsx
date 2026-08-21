@@ -15,6 +15,8 @@ import { gerarRelatorioParadasPdf } from "@/lib/cv/relatorioParadasPdf";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import CVBaixaDialog from "@/components/cv/CVBaixaDialog";
 import CVNovoLancamentoDialog from "@/components/cv/CVNovoLancamentoDialog";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, CV_GRUPO_ALL } from "@/lib/cv/grupoFilter";
 import {
   carregarParadas, consolidarParada, darBaixaParada, imprimirFicha,
   PRIORIDADE_LABEL, TIPO_LABEL, TIPO_TONE,
@@ -35,6 +37,7 @@ export default function CVParadas() {
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<"todas" | Prioridade>("todas");
   const [filtroTipo, setFiltroTipo] = useState<"todos" | TipoServico>("todos");
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const [baixa, setBaixa] = useState<ParadaVeiculo | null>(null);
   const [preSelecionados, setPreSelecionados] = useState<string[] | undefined>();
@@ -98,8 +101,9 @@ export default function CVParadas() {
       const okTexto = !q || texto.includes(q.toLowerCase());
       const okPrio = filtro === "todas" || p.prioridade === filtro;
       const okTipo = filtroTipo === "todos" || p.itens.length > 0;
-      return okTexto && okPrio && okTipo;
-    }), [paradas, q, filtro, filtroTipo]);
+      const okGrupo = grupoId === CV_GRUPO_ALL || p.vehicle.logistica_grupo_id === grupoId;
+      return okTexto && okPrio && okTipo && okGrupo;
+    }), [paradas, q, filtro, filtroTipo, grupoId]);
 
   const totalManutencao = paradas.reduce((s, p) => s + p.totalManutencao, 0);
   const totalDefeito = paradas.reduce((s, p) => s + p.totalDefeito, 0);
@@ -222,6 +226,7 @@ export default function CVParadas() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input className="pl-10" placeholder="Buscar veículo ou placa..." value={q} onChange={e => setQ(e.target.value)} />
             </div>
+            <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} />
             <div className="flex gap-2 flex-wrap">
               {(["todos", "manutencao", "defeito"] as const).map(t => (
                 <Button key={t} size="sm" variant={filtroTipo === t ? "default" : "outline"} onClick={() => setFiltroTipo(t)}>

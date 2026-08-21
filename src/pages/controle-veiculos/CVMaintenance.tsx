@@ -17,13 +17,16 @@ import {
 import { cn } from "@/lib/utils";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import type { Vehicle } from "@/types/vehicle";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, filtrarPorGrupo, CV_GRUPO_ALL } from "@/lib/cv/grupoFilter";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6"];
 
 type PeriodFilter = "30" | "60" | "90" | "year" | "all" | "custom";
 
 export default function CVMaintenance() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
   const [defects, setDefects] = useState<any[]>([]);
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("30");
@@ -34,10 +37,22 @@ export default function CVMaintenance() {
       supabase.from("cv_vehicles").select("*").order("name"),
       supabase.from("cv_defect_reports").select("vehicle_id, cost, status, resolved_at, reported_at"),
     ]);
-    setVehicles((v.data ?? []) as Vehicle[]);
+    setAllVehicles((v.data ?? []) as Vehicle[]);
     setDefects(d.data ?? []);
   };
   useEffect(() => { load(); }, []);
+
+  // Veículos visíveis conforme o grupo (unidade/filial) selecionado
+  const vehicles = useMemo(
+    () => filtrarPorGrupo(allVehicles, grupoId, (v: any) => v.logistica_grupo_id),
+    [allVehicles, grupoId],
+  );
+  const vehicleIds = useMemo(() => new Set(vehicles.map(v => v.id)), [vehicles]);
+
+  // Se o veículo selecionado sair do grupo, volta para "todos"
+  useEffect(() => {
+    if (vehicleFilter !== "all" && !vehicleIds.has(vehicleFilter)) setVehicleFilter("all");
+  }, [vehicleIds, vehicleFilter]);
 
   const periodBounds = useMemo(() => {
     const now = new Date();
@@ -76,10 +91,11 @@ export default function CVMaintenance() {
     () => defects.filter(d =>
       d.status === "resolved" &&
       d.cost &&
+      (grupoId === CV_GRUPO_ALL || vehicleIds.has(d.vehicle_id)) &&
       (vehicleFilter === "all" || d.vehicle_id === vehicleFilter) &&
       isWithinPeriod(d.resolved_at)
     ),
-    [defects, vehicleFilter, periodBounds],
+    [defects, vehicleFilter, periodBounds, vehicleIds, grupoId],
   );
 
   const byVehicle = useMemo(() =>
@@ -144,7 +160,9 @@ export default function CVMaintenance() {
             <BarChart3 className="h-4 w-4 text-primary" /> Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} className="w-full" />
+
           <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
             <SelectTrigger className="w-full"><SelectValue placeholder="Veículo" /></SelectTrigger>
             <SelectContent>

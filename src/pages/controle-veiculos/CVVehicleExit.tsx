@@ -19,6 +19,8 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
 
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
@@ -45,6 +47,7 @@ export default function CVVehicleExit() {
     vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "",
   });
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const load = async () => {
     setLoading(true);
@@ -75,8 +78,16 @@ export default function CVVehicleExit() {
   useEffect(() => { load(); }, []);
 
 
-  const availableVehicles = vehicles.filter((v) => !busyVehicleIds.has(v.id));
-  const availableDrivers = drivers.filter((d) => !busyDriverIds.has(d.id));
+  const availableVehicles = filtrarPorGrupo(
+    vehicles.filter((v) => !busyVehicleIds.has(v.id)),
+    grupoId,
+    (v: any) => v.logistica_grupo_id,
+  );
+  const availableDrivers = filtrarPorGrupo(
+    drivers.filter((d) => !busyDriverIds.has(d.id)),
+    grupoId,
+    (d: any) => d.logistica_grupo_id,
+  );
   const selectedVehicle = vehicles.find((v) => v.id === form.vehicle_id);
   const selectedDriver = drivers.find((d) => d.id === form.driver_id);
 
@@ -233,7 +244,10 @@ export default function CVVehicleExit() {
           <CardContent className="p-4 sm:p-6 min-h-[360px]">
             {step === 0 && (
               <div>
-                <div className="mb-3 flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo</h3></div>
+                <div className="mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                  <div className="flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo</h3></div>
+                  <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} />
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {availableVehicles.map((v) => {
                     const active = form.vehicle_id === v.id;
@@ -266,6 +280,9 @@ export default function CVVehicleExit() {
                       </button>
                     );
                   })}
+                  {availableVehicles.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhum veículo disponível neste grupo.</p>
+                  )}
                 </div>
               </div>
 
@@ -274,7 +291,10 @@ export default function CVVehicleExit() {
 
             {step === 1 && (
               <div>
-                <div className="mb-3 flex items-center gap-2"><User className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o motorista</h3></div>
+                <div className="mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                  <div className="flex items-center gap-2"><User className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o motorista</h3></div>
+                  <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} />
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {availableDrivers.map((d) => {
                     const active = form.driver_id === d.id;
