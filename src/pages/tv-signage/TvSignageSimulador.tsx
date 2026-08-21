@@ -42,9 +42,9 @@ export default function TvSignageSimulador() {
     } else if (dsh.tipo === "url_externa" && dsh.url) {
       url = dsh.url;
     } else return null;
-    // Apresentação (loop de mídias) ignora refresh — o próprio player faz o loop
-    const isApres = dsh.tipo === "tela_interna" && (dsh.rota_interna || "").split("?")[0] === "/tv/apresentacao";
-    return { url, nome: dsh.nome, duracao: 0, refresh: isApres ? 0 : (dsh.refresh_segundos || 0) };
+    // Playlists rodam de forma fluida: sem refresh automático (evita tela de carregando)
+    return { url, nome: dsh.nome, duracao: 0, refresh: 0 };
+
   };
 
 
