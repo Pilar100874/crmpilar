@@ -198,6 +198,7 @@ export const menuItems: MenuItem[] = [
   { id: "Controle de Ponto", title: "Controle de Ponto", url: "/ponto", icon: Clock },
 
   { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
+  { id: "Operacional Hub", title: "Operacional Hub", url: "/operacional", icon: LucideIcons.ClipboardList },
   { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
   { id: "Livro de Ocorrência", title: "Livro de Ocorrência", url: "/livro-ocorrencia", icon: LucideIcons.BookOpen },
   { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
