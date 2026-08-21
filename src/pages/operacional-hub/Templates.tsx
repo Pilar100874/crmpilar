@@ -250,7 +250,7 @@ export default function Templates() {
     10: { label: "Crítica", color: "bg-red-500" },
     8: { label: "Alta", color: "bg-orange-500" },
     5: { label: "Média", color: "bg-yellow-500" },
-    2: { label: "Baixa", color: "bg-gray-400" },
+    2: { label: "Baixa", color: "bg-muted-foreground" },
   };
 
   const getPriorityInfo = (priority: number) => {

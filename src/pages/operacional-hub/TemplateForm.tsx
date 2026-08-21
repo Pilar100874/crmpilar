@@ -1402,7 +1402,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
                     </SelectItem>
                     <SelectItem value="low">
                       <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-gray-400" />
+                        <span className="h-2 w-2 rounded-full bg-muted-foreground" />
                         Baixa
                       </span>
                     </SelectItem>

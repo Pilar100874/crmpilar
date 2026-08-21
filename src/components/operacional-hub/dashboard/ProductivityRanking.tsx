@@ -39,7 +39,7 @@ export function ProductivityRanking({ users, loading }: ProductivityRankingProps
   const getMedalColor = (position: number) => {
     switch (position) {
       case 0: return "bg-yellow-500";
-      case 1: return "bg-gray-400";
+      case 1: return "bg-muted-foreground";
       case 2: return "bg-amber-700";
       default: return "bg-muted";
     }
@@ -76,7 +76,7 @@ export function ProductivityRanking({ users, loading }: ProductivityRankingProps
               {/* Position */}
               <div
                 className={cn(
-                  "h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0",
+                  "h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground flex-shrink-0",
                   getMedalColor(index)
                 )}
               >

@@ -91,13 +91,13 @@ const getPriorityColor = (priority: number) => {
 };
 
 const getFrequencyColor = (freq: string, frequenciesList: any[]): { icon: string; label: string; short: string; bg: string; text: string; border: string; dot: string } => {
-  if (freq === "daily") return { icon: "📅", label: "Diária", short: "D", bg: "bg-slate-500/20", text: "text-slate-700 dark:text-slate-300", border: "border-slate-500/50", dot: "bg-slate-500" };
+  if (freq === "daily") return { icon: "📅", label: "Diária", short: "D", bg: "bg-slate-500/20", text: "text-foreground", border: "border-slate-500/50", dot: "bg-slate-500" };
   if (freq === "weekly") return { icon: "📆", label: "Semanal", short: "S", bg: "bg-indigo-500/20", text: "text-indigo-700 dark:text-indigo-300", border: "border-indigo-500/50", dot: "bg-indigo-500" };
   if (freq === "monthly") return { icon: "🗓️", label: "Mensal", short: "M", bg: "bg-purple-500/20", text: "text-purple-700 dark:text-purple-300", border: "border-purple-500/50", dot: "bg-purple-500" };
   if (freq === "on_demand") return { icon: "🔔", label: "Sob demanda", short: "SD", bg: "bg-amber-500/20", text: "text-amber-700 dark:text-amber-300", border: "border-amber-500/50", dot: "bg-amber-500" };
   const custom = frequenciesList.find((f: any) => f.name === freq);
   if (custom) return { icon: "🔁", label: custom.label, short: `${custom.interval_days}d`, bg: "bg-teal-500/20", text: "text-teal-700 dark:text-teal-300", border: "border-teal-500/50", dot: "bg-teal-500" };
-  return { icon: "❓", label: freq, short: "?", bg: "bg-gray-500/20", text: "text-gray-700 dark:text-gray-300", border: "border-gray-500/50", dot: "bg-gray-500" };
+  return { icon: "❓", label: freq, short: "?", bg: "bg-muted", text: "text-muted-foreground", border: "border-border", dot: "bg-muted-foreground" };
 };
 
 const getWorkloadStatus = (utilization: number) => {
@@ -1575,13 +1575,13 @@ export default function ScheduleSimulation() {
 
                               {sim.shiftInfo.lunchStart && sim.shiftInfo.lunchEnd && (
                                 <div
-                                  className="absolute top-1 bottom-1 rounded-sm bg-gray-400/20 border border-gray-400/30 flex items-center justify-center z-10"
+                                  className="absolute top-1 bottom-1 rounded-sm bg-muted border border-border flex items-center justify-center z-10"
                                   style={{
                                     left: `${minuteToPercent(timeToMinutes(sim.shiftInfo.lunchStart))}%`,
                                     width: `${minuteToPercent(timeToMinutes(sim.shiftInfo.lunchEnd)) - minuteToPercent(timeToMinutes(sim.shiftInfo.lunchStart))}%`,
                                   }}
                                 >
-                                  <UtensilsCrossed className="h-2.5 w-2.5 text-gray-400" />
+                                  <UtensilsCrossed className="h-2.5 w-2.5 text-muted-foreground" />
                                 </div>
                               )}
 
@@ -1815,7 +1815,7 @@ export default function ScheduleSimulation() {
             <h4 className="text-xs font-semibold text-muted-foreground mt-2">Frequência (pill no bloco)</h4>
             <div className="flex flex-wrap items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="rounded-sm px-1 py-0.5 text-[8px] font-bold bg-slate-500/20 text-slate-600">D</span> Diária
+                <span className="rounded-sm px-1 py-0.5 text-[8px] font-bold bg-muted text-muted-foreground">D</span> Diária
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="rounded-sm px-1 py-0.5 text-[8px] font-bold bg-indigo-500/20 text-indigo-600">S</span> Semanal
@@ -1834,7 +1834,7 @@ export default function ScheduleSimulation() {
             <h4 className="text-xs font-semibold text-muted-foreground mt-2">Outros indicadores</h4>
             <div className="flex flex-wrap items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5">
-                <UtensilsCrossed className="h-3 w-3 text-gray-400" /> Almoço
+                <UtensilsCrossed className="h-3 w-3 text-muted-foreground" /> Almoço
               </span>
               <span className="flex items-center gap-1.5">
                 <Coffee className="h-3 w-3 text-violet-500" /> Descanso

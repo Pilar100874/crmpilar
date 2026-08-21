@@ -115,7 +115,7 @@ export function ShiftAndWeatherControl() {
         disabled={actionLoading === "rain"}
         className={cn(
           "gap-2 transition-all",
-          isRaining && "bg-blue-500 hover:bg-blue-600 text-white"
+          isRaining && "bg-primary hover:bg-primary/90 text-primary-foreground"
         )}
       >
         {actionLoading === "rain" ? (

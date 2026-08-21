@@ -61,7 +61,7 @@ const typeConfig: Record<string, { icon: any; label: string; color: string }> = 
   access: { icon: ShieldAlert, label: "Acesso", color: "text-orange-500" },
   safety: { icon: AlertTriangle, label: "Segurança", color: "text-red-500" },
   equipment: { icon: Wrench, label: "Equipamento", color: "text-yellow-500" },
-  other: { icon: Info, label: "Outro", color: "text-gray-500" },
+  other: { icon: Info, label: "Outro", color: "text-muted-foreground" },
 };
 
 const severityConfig: Record<string, { label: string; color: string; bgColor: string }> = {

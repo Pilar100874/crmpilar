@@ -423,7 +423,7 @@ export default function TVMode() {
           )}
           {data.notDoneToday > 0 && (
             <div
-              className="h-full bg-critical transition-all duration-1000 flex items-center justify-center text-[10px] font-bold text-white"
+              className="h-full bg-critical transition-all duration-1000 flex items-center justify-center text-[10px] font-bold text-primary-foreground"
               style={{ width: `${data.plannedToday > 0 ? (data.notDoneToday / data.plannedToday) * 100 : 0}%` }}
             >
               {data.notDoneToday}
@@ -504,7 +504,7 @@ export default function TVMode() {
                   <div className={cn(
                     "h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg",
                     index === 0 && "bg-yellow-500/20 text-yellow-500",
-                    index === 1 && "bg-gray-400/20 text-gray-400",
+                    index === 1 && "bg-muted text-muted-foreground",
                     index === 2 && "bg-orange-600/20 text-orange-600",
                     index > 2 && "bg-muted text-muted-foreground"
                   )}>

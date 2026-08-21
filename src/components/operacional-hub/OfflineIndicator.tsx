@@ -15,7 +15,7 @@ export function OfflineIndicator() {
         "fixed top-14 lg:top-0 left-0 right-0 lg:left-72 z-40 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium transition-all",
         !isOnline
           ? "bg-destructive/90 text-destructive-foreground"
-          : "bg-amber-500/90 text-white"
+          : "bg-warning/90 text-warning-foreground"
       )}
     >
       <div className="flex items-center gap-2">

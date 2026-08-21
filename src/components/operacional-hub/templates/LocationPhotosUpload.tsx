@@ -99,7 +99,7 @@ export function LocationPhotosUpload({
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="absolute -top-2 -right-2 h-6 w-6 bg-critical text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                className="absolute -top-2 -right-2 h-6 w-6 bg-critical text-critical-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
               >
                 <X className="h-4 w-4" />
               </button>
