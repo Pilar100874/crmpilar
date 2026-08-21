@@ -272,7 +272,12 @@ export default function TvSignageSimulador() {
   }, [device?.estabelecimento_id]);
 
 
+  // Referência aos iframes montados (ativo + pré-carregado) para identificar a origem
+  // das mensagens de fim de conteúdo.
+  const iframesRef = useRef<Record<number, HTMLIFrameElement | null>>({});
+
   // Rotação da playlist
+
   useEffect(() => {
     if (paused || items.length <= 1) return;
     const cur = items[idx];
