@@ -54,12 +54,10 @@ export default function CVMaintenanceCatalog() {
     listarTiposVeiculoLogistica().then(setTiposLogistica).catch(() => {});
   }, []);
 
-  // Tipos vêm do cadastro de Logística; itens antigos com tipos fora da lista continuam visíveis
+  // Somente tipos cadastrados nos veículos da Logística
   const tipos = useMemo(
-    () => Array.from(new Set([...tiposLogistica, ...itens.map(i => i.tipo_veiculo)]))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, "pt-BR")),
-    [itens, tiposLogistica],
+    () => Array.from(new Set(tiposLogistica.filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [tiposLogistica],
   );
   const sistemas = useMemo(
     () => Array.from(new Set(itens.filter(i => tipo === "todos" || i.tipo_veiculo === tipo).map(i => i.sistema))).sort(),
