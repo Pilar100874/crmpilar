@@ -287,7 +287,7 @@ export default function TVMode() {
 
   const exitTVMode = () => {
     document.exitFullscreen?.().catch(() => {});
-    navigate("/");
+    navigate("/operacional");
   };
 
   return (

@@ -428,7 +428,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
       if (isDialog && onSaved) {
         onSaved();
       } else {
-        navigate("/templates");
+        navigate("/operacional/templates");
       }
     } catch (error) {
       console.error("Error saving template:", error);
@@ -454,7 +454,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
     if (isDialog && onSaved) {
       onSaved();
     } else {
-      navigate("/templates");
+      navigate("/operacional/templates");
     }
   };
 

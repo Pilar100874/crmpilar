@@ -347,7 +347,7 @@ export default function TaskExecution() {
               description: `Tarefa pulada por falta de: ${names}`,
               variant: "destructive",
             });
-            navigate("/tasks");
+            navigate("/operacional/tasks");
             return;
           }
         }
@@ -812,7 +812,7 @@ export default function TaskExecution() {
           : `Tempo: ${timeSpent} minutos${task.pauseCount > 0 ? ` (${task.pauseCount} pausa(s), ${task.totalPauseMinutes}min pausado)` : ""}`,
       });
       setDelayDialogOpen(false);
-      navigate("/tasks");
+      navigate("/operacional/tasks");
     } catch (error) {
       console.error("Error completing task:", error);
       toast({ title: "Erro", description: "Não foi possível concluir a tarefa", variant: "destructive" });
@@ -1019,7 +1019,7 @@ export default function TaskExecution() {
       setNotDoneAudioUrl(null);
       setNotDoneReason("");
       setNotDoneDialogOpen(false);
-      navigate("/tasks");
+      navigate("/operacional/tasks");
     } catch (error) {
       console.error("Error marking task as not done:", error);
       toast({
@@ -1079,7 +1079,7 @@ export default function TaskExecution() {
               setShowToolCheck(true);
             }
           }}
-          onCancel={() => navigate("/tasks")}
+          onCancel={() => navigate("/operacional/tasks")}
         />
       </>
     );
@@ -1126,7 +1126,7 @@ export default function TaskExecution() {
               description: reason,
               variant: "destructive",
             });
-            navigate("/tasks");
+            navigate("/operacional/tasks");
           }}
         />
       </>
@@ -1138,7 +1138,7 @@ export default function TaskExecution() {
       <AppLayout>
         <div className="text-center py-16">
           <p className="text-lg text-muted-foreground">Tarefa não encontrada</p>
-          <Button onClick={() => navigate("/tasks")} className="mt-4">
+          <Button onClick={() => navigate("/operacional/tasks")} className="mt-4">
             Voltar
           </Button>
         </div>
@@ -1994,7 +1994,7 @@ export default function TaskExecution() {
             <Button
               onClick={() => {
                 setShowNoTasksDialog(false);
-                navigate("/tasks");
+                navigate("/operacional/tasks");
               }}
               className="w-full h-12 rounded-xl text-base font-bold"
             >

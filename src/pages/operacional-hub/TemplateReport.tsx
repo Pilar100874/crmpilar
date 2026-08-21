@@ -374,7 +374,7 @@ export default function TemplateReport() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/templates")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/operacional/templates")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

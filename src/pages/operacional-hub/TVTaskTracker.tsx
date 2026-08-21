@@ -340,7 +340,7 @@ export default function TVTaskTracker() {
 
   const exitTVMode = () => {
     document.exitFullscreen?.().catch(() => {});
-    navigate("/");
+    navigate("/operacional");
   };
 
   // Airport-style auto-scroll

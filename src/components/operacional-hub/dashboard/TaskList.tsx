@@ -82,7 +82,7 @@ export function TaskList({ tasks, title, showAll = false }: TaskListProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {!showAll && tasks.length > 5 && (
-          <Link to="/tasks">
+          <Link to="/operacional/tasks">
             <Button variant="ghost" size="sm" className="text-primary">
               Ver todas
               <ChevronRight className="h-4 w-4 ml-1" />
