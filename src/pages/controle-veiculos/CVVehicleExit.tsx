@@ -405,7 +405,7 @@ export default function CVVehicleExit() {
               <div className="space-y-3 max-w-xl">
                 <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-success" /><h3 className="font-semibold">Confirme os dados</h3></div>
                 <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
-                  <p><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate}</p>
+                  <p className="flex items-center gap-2"><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selectedVehicle as any)?.veiculo_id} /></p>
                   <p><strong>Motorista:</strong> {selectedDriver?.name}</p>
                   <p><strong>KM saída:</strong> {selectedVehicle?.current_km?.toLocaleString()}</p>
                   {form.has_helper && <p><strong>Ajudante:</strong> {form.helper_name}</p>}
