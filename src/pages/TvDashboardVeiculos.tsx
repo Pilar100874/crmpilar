@@ -688,19 +688,9 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
 
-        {/* Top Right - Botão de legenda + legenda alternável */}
-        <div className="fixed top-3 right-3 flex flex-col items-end gap-2" style={{ zIndex: 999999 }}>
-          <Button
-            variant={legendaVisivel ? 'default' : 'secondary'}
-            size="icon"
-            onClick={() => setLegendaVisivel(v => !v)}
-            className="h-10 w-10 rounded-xl bg-background/80 backdrop-blur-md shadow-xl"
-            title={legendaVisivel ? 'Ocultar legenda' : 'Mostrar legenda'}
-          >
-            {legendaVisivel ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
-          </Button>
-
-          {legendaVisivel && (
+        {/* Top Right - Legenda (habilitada na configuração do dashboard) */}
+        {legendaVisivel && (
+          <div className="fixed top-3 right-3" style={{ zIndex: 999999 }}>
             <div className="px-4 py-3 bg-background/70 backdrop-blur-md rounded-xl shadow-xl space-y-2 min-w-[190px]">
               {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((key) => (
                 <div key={key} className="flex items-center justify-between gap-4">
@@ -712,8 +702,8 @@ export default function TvDashboardVeiculos() {
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
 
         {/* Bottom Left - Alerts */}
