@@ -418,7 +418,7 @@ export default function CVVehicleEntry() {
             <div className="space-y-3 max-w-xl">
               <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-success" /><h3 className="font-semibold">Confirme os dados</h3></div>
               <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
-                <p><strong>Veículo:</strong> {selected.vehicle?.name} — {selected.vehicle?.plate}</p>
+                <p className="flex items-center gap-2"><strong>Veículo:</strong> {selected.vehicle?.name} — {selected.vehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selected.vehicle as any)?.veiculo_id} /></p>
                 <p><strong>Motorista:</strong> {selected.driver?.name}</p>
                 <p><strong>KM entrada:</strong> {form.entry_km.toLocaleString()} (+{(form.entry_km - selected.exit_km).toLocaleString()} km)</p>
                 {form.reported_defects && <p><strong>Defeitos reportados:</strong> {form.reported_defects}</p>}
