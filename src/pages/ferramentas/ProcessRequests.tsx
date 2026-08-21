@@ -131,7 +131,7 @@ export default function ProcessRequestsPage() {
       const [requestsRes, usersRes] = await Promise.all([
         supabase
           .from("ferr_loan_requests")
-          .select("*, profiles!loan_requests_user_id_fkey(*), warehouses(*)")
+          .select("*, profiles:ferr_profiles!ferr_loan_requests_user_id_fkey(*), warehouses:ferr_warehouses(*)")
           .in("status", ["pendente", "separando", "pronto"])
           .order("created_at", { ascending: false }),
         supabase.from("ferr_profiles").select("*").order("full_name"),
@@ -141,7 +141,7 @@ export default function ProcessRequestsPage() {
         (requestsRes.data || []).map(async (req) => {
           const { data: items } = await supabase
             .from("ferr_loan_request_items")
-            .select("*, tools(*)")
+            .select("*, tools:ferr_tools(*)")
             .eq("request_id", req.id);
           return { ...req, items: items || [] };
         })

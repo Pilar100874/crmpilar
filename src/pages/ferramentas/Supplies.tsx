@@ -873,7 +873,7 @@ export default function Supplies() {
                 <ImageUploadCrop
                   value={supplyForm.photo_url}
                   onChange={(url) => setSupplyForm({ ...supplyForm, photo_url: url })}
-                  bucket="tool-photos"
+                  bucket="ferr-tool-photos"
                   folder="supplies"
                 />
               </div>

@@ -28953,6 +28953,7 @@ export type Database = {
       exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       expire_bot_response_tracking: { Args: never; Returns: number }
+      ferr_create_overdue_notifications: { Args: never; Returns: number }
       ferr_get_user_company_id: {
         Args: { check_user_id: string }
         Returns: string

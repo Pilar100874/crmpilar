@@ -32,20 +32,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, authEmail?: string | null, nome?: string | null) => {
     setIsProfileLoading(true);
     try {
-      const { data: profileData } = await supabase
+      let { data: profileData } = await supabase
         .from("ferr_profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      const { data: roleData } = await supabase
+      // Provisiona automaticamente o perfil do usuário do CRM no módulo.
+      if (!profileData) {
+        const { data: criado } = await supabase
+          .from("ferr_profiles")
+          .upsert({
+            id: userId,
+            email: authEmail ?? "",
+            full_name: nome || (authEmail ? authEmail.split("@")[0] : "Usuário"),
+            is_approved: true,
+            is_active: true,
+            qr_code: crypto.randomUUID(),
+          })
+          .select("*")
+          .maybeSingle();
+        profileData = criado ?? null;
+      }
+
+      let { data: roleData } = await supabase
         .from("ferr_user_roles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
+
+      if (!roleData) {
+        const { data: criadoRole } = await supabase
+          .from("ferr_user_roles")
+          .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" })
+          .select("*")
+          .maybeSingle();
+        roleData = criadoRole ?? null;
+      }
 
       if (profileData) {
         setProfile(profileData as Profile);
@@ -82,7 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            fetchProfile(
+              session.user.id,
+              session.user.email,
+              (session.user.user_metadata as { full_name?: string } | null)?.full_name ?? null,
+            );
           }, 0);
         } else {
           setProfile(null);
@@ -97,7 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(
+          session.user.id,
+          session.user.email,
+          (session.user.user_metadata as { full_name?: string } | null)?.full_name ?? null,
+        );
       }
       setIsLoading(false);
     });
@@ -150,7 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const companyStatus = getCompanyStatus();
-  const isCompanyActive = companyStatus === "active" || companyStatus === "trial" || profile?.email === "pilar@pilar.com.br";
+  // No CRM o módulo é interno: não há bloqueio por assinatura de empresa.
+  const isCompanyActive = true;
 
   const value: AuthContextType = {
     user,
@@ -161,8 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: isLoading || isProfileLoading,
     isAdmin: role === "admin",
     isAlmoxarifado: role === "almoxarifado",
-    isApproved: profile?.is_approved ?? false,
-    isSuperAdmin: profile?.email === "pilar@pilar.com.br",
+    isApproved: profile?.is_approved ?? true,
+    isSuperAdmin: role === "admin",
     isCompanyActive,
     companyStatus,
     signIn,

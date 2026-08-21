@@ -1,3 +1,4 @@
+import { uploadFerrFoto, FERR_BUCKET_LOANS } from "@/lib/ferramentas/storage";
 import { useState, useEffect, useCallback } from "react";
 import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
 import { PageHeader } from "@/components/ferramentas/ui/page-header";
@@ -188,7 +189,7 @@ export default function ReturnLoanPage() {
   const loadUserLoans = async (user: Profile) => {
     const { data: loans } = await supabase
       .from("ferr_loans")
-      .select("*, tools(*, kits(name))")
+      .select("*, tools:ferr_tools(*, kits:ferr_kits(name))")
       .eq("user_id", user.id)
       .in("status", ["ativo", "renovacao_solicitada"])
       .order("due_date", { ascending: true });
@@ -541,19 +542,8 @@ export default function ReturnLoanPage() {
           const fileName = `${loan.id}_${Date.now()}.jpg`;
           const filePath = `return-photos/${fileName}`;
           
-          const { error: uploadError } = await supabase.storage
-            .from('loan-photos')
-            .upload(filePath, blob, { contentType: 'image/jpeg' });
-
-          if (uploadError) {
-            console.error('Upload error:', uploadError);
-            return { loanId: loan.id, url: null };
-          }
-          
-          const { data: urlData } = supabase.storage
-            .from('loan-photos')
-            .getPublicUrl(filePath);
-          return { loanId: loan.id, url: urlData.publicUrl };
+          const signedUrl = await uploadFerrFoto(FERR_BUCKET_LOANS, filePath, blob);
+          return { loanId: loan.id, url: signedUrl };
         } catch (err) {
           console.error('Error uploading photo:', err);
           return { loanId: loan.id, url: null };

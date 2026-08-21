@@ -103,6 +103,7 @@
     "gifenc": "^1.0.3",
     "grapesjs": "^0.22.13",
     "html2canvas": "^1.4.1",
+    "html5-qrcode": "^2.3.8",
     "input-otp": "^1.4.2",
     "jsbarcode": "^3.12.1",
     "jspdf": "^4.2.1",

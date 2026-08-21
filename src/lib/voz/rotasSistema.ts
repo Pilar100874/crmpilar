@@ -13,6 +13,24 @@ export interface RotaSistema {
 }
 
 export const ROTAS_SISTEMA: RotaSistema[] = [
+  // ============ Pilar Ferramentas ============
+  { path: "/ferramentas", titulo: "Pilar Ferramentas", aliases: ["ferramentas", "controle de ferramentas", "almoxarifado de ferramentas"] },
+  { path: "/ferramentas/tools", titulo: "Cadastro de Ferramentas", aliases: ["cadastro de ferramentas", "lista de ferramentas"] },
+  { path: "/ferramentas/loan/return", titulo: "Devolução de Ferramentas", aliases: ["devolucao de ferramentas", "devolver ferramenta"] },
+  { path: "/ferramentas/loan/relend", titulo: "Novo Empréstimo de Ferramentas", aliases: ["emprestar ferramenta", "novo emprestimo de ferramenta"] },
+  { path: "/ferramentas/loan/renewals", titulo: "Renovações de Empréstimo", aliases: ["renovacoes de emprestimo", "renovar emprestimo de ferramenta"] },
+  { path: "/ferramentas/request-tools", titulo: "Solicitar Ferramentas", aliases: ["solicitar ferramentas", "pedido de ferramentas"] },
+  { path: "/ferramentas/process-requests", titulo: "Processar Solicitações de Ferramentas", aliases: ["processar solicitacoes de ferramentas"] },
+  { path: "/ferramentas/kits", titulo: "Kits de Ferramentas", aliases: ["kits de ferramentas"] },
+  { path: "/ferramentas/supplies", titulo: "Insumos de Ferramentas", aliases: ["insumos", "consumiveis do almoxarifado"] },
+  { path: "/ferramentas/warehouses", titulo: "Almoxarifados", aliases: ["almoxarifados", "depositos de ferramentas"] },
+  { path: "/ferramentas/tracking", titulo: "Rastreamento de Ferramentas", aliases: ["rastreamento de ferramentas"] },
+  { path: "/ferramentas/return-issues", titulo: "Ocorrências de Devolução", aliases: ["ocorrencias de devolucao", "avarias de ferramentas"] },
+  { path: "/ferramentas/reports", titulo: "Relatórios de Ferramentas", aliases: ["relatorios de ferramentas"] },
+  { path: "/ferramentas/users", titulo: "Usuários do Pilar Ferramentas", aliases: ["usuarios de ferramentas"] },
+  { path: "/ferramentas/permissions", titulo: "Permissões do Pilar Ferramentas", aliases: ["permissoes de ferramentas"] },
+  { path: "/ferramentas/settings", titulo: "Configurações do Pilar Ferramentas", aliases: ["configuracoes de ferramentas"] },
+  { path: "/ferramentas/tool-assistant", titulo: "Assistente de Ferramentas", aliases: ["assistente de ferramentas"] },
   { path: "/ia-platform/credenciais", titulo: "Credenciais e Segredos da IA", aliases: ["credenciais da ia", "cofre de segredos", "segredos da plataforma de ia", "chaves do claude code"] },
   { path: "/ia-platform/criar", titulo: "Criar com Assistente (Agentes IA)", aliases: ["criar com assistente", "assistente de criacao", "criar agente passo a passo", "criar rotina passo a passo"] },
   { path: "/ia-platform/wizard-inicial", titulo: "Wizard Inicial dos Agentes IA", aliases: ["wizard inicial", "configuracao inicial da ia", "assistente de configuracao da ia"] },
