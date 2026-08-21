@@ -298,7 +298,10 @@ export default function CVVehicleEntry() {
                           <Car className="h-4 w-4 text-primary shrink-0" />
                           <span className="font-semibold truncate">{m.vehicle?.name}</span>
                         </div>
-                        <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          <CVRastreamentoDot veiculoLogisticaId={(m.vehicle as any)?.veiculo_id} dotOnly />
+                          <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground truncate"><span className="font-medium">Motorista:</span> {m.driver?.name}</p>
                       {m.has_helper && <Badge variant="outline" className="text-xs mt-2">Ajudante: {m.helper_name}</Badge>}
