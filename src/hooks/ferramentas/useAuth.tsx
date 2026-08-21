@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!profileData) {
         const { data: criado } = await supabase
           .from("ferr_profiles")
-          .insert({
+          .upsert({
             id: userId,
             email: authEmail ?? "",
             full_name: nome || (authEmail ? authEmail.split("@")[0] : "Usuário"),
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!roleData) {
         const { data: criadoRole } = await supabase
           .from("ferr_user_roles")
-          .insert({ user_id: userId, role: "admin" })
+          .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" })
           .select("*")
           .maybeSingle();
         roleData = criadoRole ?? null;
