@@ -799,7 +799,7 @@ export default function TaskExecution() {
       }
 
       if (navigator.onLine) {
-        const { error } = await supabase.from("op_task_executions").update(updateData).eq("id", task.id);
+        const { error } = await supabase.from("op_task_executions").update(updateData as never).eq("id", task.id);
         if (error) throw error;
       } else {
         await queueAction("task_executions", "update", updateData, "id", task.id);
