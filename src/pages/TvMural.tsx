@@ -246,7 +246,7 @@ export default function TvMural() {
         <img
           src={item.url}
           alt={item.legenda || item.nome || "Mídia do mural"}
-          className="absolute inset-0 w-full h-full object-fill bg-black"
+          className={`absolute inset-0 w-full h-full ${classeAjuste(item.ajuste)} bg-black`}
         />
       )}
 
