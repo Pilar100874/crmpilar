@@ -214,6 +214,26 @@ import OpEstablishments from "./pages/operacional-hub/Establishments";
 import OpAccessLevels from "./pages/operacional-hub/AccessLevels";
 import OpTVMode from "./pages/operacional-hub/TVMode";
 import OpTVTaskTracker from "./pages/operacional-hub/TVTaskTracker";
+import FerrLayout from "./pages/ferramentas/FerrLayout";
+import FerrDashboard from "./pages/ferramentas/Dashboard";
+import FerrTools from "./pages/ferramentas/Tools";
+import FerrToolForm from "./pages/ferramentas/ToolForm";
+import FerrReturnLoan from "./pages/ferramentas/ReturnLoan";
+import FerrRelend from "./pages/ferramentas/Relend";
+import FerrLoanRenewals from "./pages/ferramentas/LoanRenewals";
+import FerrRequestTools from "./pages/ferramentas/RequestTools";
+import FerrProcessRequests from "./pages/ferramentas/ProcessRequests";
+import FerrUsers from "./pages/ferramentas/Users";
+import FerrWarehouses from "./pages/ferramentas/Warehouses";
+import FerrKits from "./pages/ferramentas/Kits";
+import FerrNotifications from "./pages/ferramentas/Notifications";
+import FerrReports from "./pages/ferramentas/Reports";
+import FerrSettings from "./pages/ferramentas/Settings";
+import FerrTracking from "./pages/ferramentas/Tracking";
+import FerrPermissions from "./pages/ferramentas/Permissions";
+import FerrReturnIssues from "./pages/ferramentas/ReturnIssues";
+import FerrToolAssistant from "./pages/ferramentas/ToolAssistant";
+import FerrSupplies from "./pages/ferramentas/Supplies";
 import CVisLayout from "./pages/controle-visitantes/CVisLayout";
 import CVisDashboard from "./pages/controle-visitantes/CVisDashboard";
 import CVisEntrada from "./pages/controle-visitantes/CVisEntrada";
@@ -736,6 +756,28 @@ const App = () => (
                 <Route path="access-levels" element={<OpAccessLevels />} />
                 <Route path="tv" element={<OpTVMode />} />
                 <Route path="tv-tasks" element={<OpTVTaskTracker />} />
+              </Route>
+              <Route path="/ferramentas" element={<FerrLayout />}>
+                <Route index element={<FerrDashboard />} />
+                <Route path="tools" element={<FerrTools />} />
+                <Route path="tools/new" element={<FerrToolForm />} />
+                <Route path="tools/:id/edit" element={<FerrToolForm />} />
+                <Route path="loan/return" element={<FerrReturnLoan />} />
+                <Route path="loan/relend" element={<FerrRelend />} />
+                <Route path="loan/renewals" element={<FerrLoanRenewals />} />
+                <Route path="request-tools" element={<FerrRequestTools />} />
+                <Route path="process-requests" element={<FerrProcessRequests />} />
+                <Route path="users" element={<FerrUsers />} />
+                <Route path="warehouses" element={<FerrWarehouses />} />
+                <Route path="kits" element={<FerrKits />} />
+                <Route path="notifications" element={<FerrNotifications />} />
+                <Route path="reports" element={<FerrReports />} />
+                <Route path="settings" element={<FerrSettings />} />
+                <Route path="tracking" element={<FerrTracking />} />
+                <Route path="permissions" element={<FerrPermissions />} />
+                <Route path="return-issues" element={<FerrReturnIssues />} />
+                <Route path="tool-assistant" element={<FerrToolAssistant />} />
+                <Route path="supplies" element={<FerrSupplies />} />
               </Route>
               <Route path="/controle-visitantes" element={<CVisLayout />}>
                 <Route index element={<CVisDashboard />} />
