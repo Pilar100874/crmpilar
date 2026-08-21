@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
-import { TRANSICOES_MURAL, type MuralItem } from "@/pages/TvMural";
+import { TRANSICOES_MURAL, AJUSTES_MURAL, type MuralItem, type MuralAjuste } from "@/pages/TvMural";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
