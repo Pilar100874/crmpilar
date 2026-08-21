@@ -296,6 +296,58 @@ export default function CVVehicles() {
     load();
   };
 
+  // ---- importar todos os veículos de um grupo da Logística ----
+  const abrirImportacao = () => {
+    setImpGrupo(grupoId);
+    setImpOpen(true);
+  };
+
+  const grupoDoLog = (lv: LogVeic) => lv.logistica_grupo_id ?? lv.grupo_id ?? null;
+
+  const pendentesImportacao = logVeiculos.filter(lv => {
+    const jaExiste = rows.some(r => (r as any).veiculo_id === lv.id);
+    if (jaExiste) return false;
+    if (impGrupo === CV_GRUPO_ALL) return true;
+    return grupoDoLog(lv) === impGrupo;
+  });
+
+  const importarGrupo = async () => {
+    if (pendentesImportacao.length === 0) return toast.error("Nenhum veículo novo para importar neste grupo");
+    setImportando(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", user?.id).maybeSingle();
+      if (!u?.estabelecimento_id) { setImportando(false); return toast.error("Usuário sem estabelecimento vinculado"); }
+
+      const payloads = pendentesImportacao.map(lv => ({
+        estabelecimento_id: u.estabelecimento_id,
+        veiculo_id: lv.id,
+        plate: String(lv.placa || "").toUpperCase(),
+        name: String(lv.descricao || lv.placa || "").toUpperCase(),
+        vehicle_type: mapTipo(lv.tipo_veiculo) ?? "outro",
+        fleet_type: (lv.tipo_veiculo || "").trim() || null,
+        logistica_grupo_id: grupoDoLog(lv),
+        current_km: 0,
+        oil_change_interval: 10000,
+        last_oil_change_km: 0,
+        next_oil_change_km: 10000,
+        active: true,
+      }));
+
+      const { error } = await supabase.from("cv_vehicles").insert(payloads as any);
+      if (error) throw error;
+      toast.success(`${payloads.length} veículo(s) importado(s). Informe o KM atual de cada um depois.`);
+      setImpOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao importar veículos");
+    } finally {
+      setImportando(false);
+    }
+  };
+
+
+
   // ---- planos de manutenção ----
   const abrirPlanos = async (v: Vehicle) => {
     setPlanVehicle(v); setPlanForm({ ...planoVazio, last_done_km: v.current_km }); setPlanEditing(null); setAplicarEm([]);
