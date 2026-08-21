@@ -208,8 +208,8 @@ export default function Conditions() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Condições Operacionais</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight text-foreground">Condições Operacionais</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Gerencie condições climáticas, de acesso e segurança que afetam as tarefas
             </p>
           </div>

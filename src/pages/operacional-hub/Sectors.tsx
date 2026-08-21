@@ -133,8 +133,8 @@ export default function Sectors() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Setores</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Setores</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Gerencie os setores da empresa
             </p>
           </div>
@@ -213,7 +213,7 @@ export default function Sectors() {
           ) : sectors.length === 0 ? (
             <div className="col-span-full text-center py-12 rounded-xl border border-border bg-card">
               <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum setor cadastrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum setor cadastrado</p>
             </div>
           ) : (
             sectors.map((sector) => (

@@ -378,8 +378,8 @@ export default function TemplateReport() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">Relatório de Templates</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Relatório de Templates</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 {templates.filter(t => t.is_active && !t.is_irregularity_template).length} templates ativos
               </p>
             </div>

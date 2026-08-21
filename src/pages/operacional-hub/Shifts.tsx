@@ -379,8 +379,8 @@ export default function Shifts() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Turnos</h1>
-            <p className="text-muted-foreground">Configure os turnos de trabalho</p>
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Turnos</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Configure os turnos de trabalho</p>
           </div>
           <Dialog
             open={dialogOpen}
@@ -635,7 +635,7 @@ export default function Shifts() {
           ) : shifts.length === 0 ? (
             <div className="col-span-full text-center py-12 rounded-xl border border-border bg-card">
               <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum turno cadastrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum turno cadastrado</p>
             </div>
           ) : (
             shifts.map((shift) => (

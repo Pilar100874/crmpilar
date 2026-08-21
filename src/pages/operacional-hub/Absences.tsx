@@ -354,8 +354,8 @@ export default function Absences() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Gestão de Presença</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Gestão de Presença</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Gerencie faltas, atrasos e redistribuição de tarefas
             </p>
           </div>
@@ -513,7 +513,7 @@ export default function Absences() {
             ) : todayAttendance.length === 0 ? (
               <div className="text-center py-12 rounded-xl border border-border bg-card">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Nenhum colaborador com turno configurado</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum colaborador com turno configurado</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -582,7 +582,7 @@ export default function Absences() {
             ) : todayAttendance.filter(a => a.status === "late").length === 0 ? (
               <div className="text-center py-12 rounded-xl border border-border bg-card">
                 <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-4" />
-                <p className="text-muted-foreground">Nenhum atraso registrado hoje</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum atraso registrado hoje</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -630,7 +630,7 @@ export default function Absences() {
             ) : absences.length === 0 ? (
               <div className="text-center py-12 rounded-xl border border-border bg-card">
                 <UserX className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Nenhuma ausência registrada</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhuma ausência registrada</p>
               </div>
             ) : (
               <div className="space-y-2">

@@ -1171,8 +1171,8 @@ export default function ScheduleSimulation() {
         {/* Header */}
          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Simulação de Jornada</h1>
-            <p className="text-muted-foreground">Simule a jornada de um ou mais colaboradores</p>
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Simulação de Jornada</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Simule a jornada de um ou mais colaboradores</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {selectedUserIds.length > 0 && !dataLoading && (
@@ -1427,27 +1427,27 @@ export default function ScheduleSimulation() {
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <div>
-                      <p className="text-muted-foreground">Jornada</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Jornada</p>
                       <p className="font-bold">{Math.round(u.totalAvailable / 60)}h</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Tarefas</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Tarefas</p>
                       <p className="font-bold">{Math.round(u.totalTask / 60)}h{u.totalTask % 60 > 0 ? `${u.totalTask % 60}m` : ""}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Ocioso</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Ocioso</p>
                       <p className={cn("font-bold", u.totalIdle > 60 ? "text-orange-500" : "text-muted-foreground")}>
                         {Math.floor(u.totalIdle / 60)}h{u.totalIdle % 60 > 0 ? `${u.totalIdle % 60}m` : ""}
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Utilização</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Utilização</p>
                       <p className={cn("font-bold", u.utilization > 100 ? "text-red-500" : u.utilization >= 80 ? "text-emerald-500" : u.utilization >= 60 ? "text-blue-500" : "text-orange-500")}>
                         {u.utilization}%
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Ausências</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Ausências</p>
                       <p className={cn("font-bold", u.absentDays > 0 ? "text-warning" : "text-foreground")}>{u.absentDays} dias</p>
                     </div>
                   </div>

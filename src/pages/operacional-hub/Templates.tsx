@@ -284,8 +284,8 @@ export default function Templates() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Templates de Tarefas</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Templates de Tarefas</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {templates.length} template{templates.length !== 1 ? "s" : ""} cadastrado{templates.length !== 1 ? "s" : ""}
             </p>
           </div>

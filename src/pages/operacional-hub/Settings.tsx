@@ -114,8 +114,8 @@ export default function Settings() {
     <AppLayout>
       <div className="space-y-6 max-w-2xl">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Configurações</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Configurações</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Configure automações e integrações
           </p>
         </div>

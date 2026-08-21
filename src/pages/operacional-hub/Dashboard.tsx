@@ -495,7 +495,7 @@ export default function Dashboard() {
               <h1 className="text-2xl font-bold text-foreground">
                 Olá, {workerData.userName || "Colaborador"}! 👋
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
               </p>
             </div>

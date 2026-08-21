@@ -71,8 +71,8 @@ export default function Alerts() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Alertas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Alertas</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Notificações e avisos do sistema
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function Alerts() {
           ) : alerts.length === 0 ? (
             <div className="text-center py-12 rounded-xl border border-border bg-card">
               <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum alerta</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum alerta</p>
             </div>
           ) : (
             alerts.map((alert) => (

@@ -348,7 +348,7 @@ export default function ReportIrregularity() {
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             {isAdminOrManager 
               ? "Crie uma tarefa pontual ou reporte um problema para o setor responsável"
               : "Informe um problema para que o setor responsável possa resolver"}

@@ -199,8 +199,8 @@ export default function Tools() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Ferramentas</h1>
-          <p className="text-muted-foreground">Cadastro e controle de ferramentas e equipamentos</p>
+          <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Ferramentas</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Cadastro e controle de ferramentas e equipamentos</p>
         </div>
 
         {/* Repair alerts */}
@@ -303,7 +303,7 @@ export default function Tools() {
         ) : availableTools.length === 0 && needsRepairTools.length === 0 ? (
           <div className="text-center py-12 rounded-xl border border-border bg-card">
             <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhuma ferramenta cadastrada</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhuma ferramenta cadastrada</p>
           </div>
         ) : (
           <div className="space-y-3">

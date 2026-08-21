@@ -201,8 +201,8 @@ export default function History() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Histórico e Auditoria</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Histórico e Auditoria</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Visualize o histórico completo de execuções
             </p>
           </div>
@@ -271,7 +271,7 @@ export default function History() {
           ) : filteredRecords.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum registro encontrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum registro encontrado</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
