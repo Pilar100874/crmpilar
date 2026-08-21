@@ -513,10 +513,10 @@ export default function CVVehicles() {
         subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos • use o ícone 🔧 no card para os planos de manutenção`}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={abrirImportacao} className="bg-white/15 text-white hover:bg-white/25 border border-white/30">
+            <Button variant="outline" onClick={abrirImportacao}>
               <Download className="h-4 w-4 mr-1" />Importar grupo da Logística
             </Button>
-            <Button onClick={openNew} className="bg-white text-primary hover:bg-white/90">
+            <Button onClick={openNew}>
               <Plus className="h-4 w-4 mr-1" />Novo Veículo
             </Button>
           </div>
