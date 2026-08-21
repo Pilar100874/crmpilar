@@ -233,8 +233,9 @@ export default function TvMural() {
         <video
           ref={camada === "atual" ? videoRef : undefined}
           src={item.url}
-          /* object-fill: estica para ocupar 100% da tela, sem bordas pretas e sem cortes */
-          className="absolute inset-0 w-full h-full object-fill bg-black"
+          /* Modo de exibição por mídia (padrão: esticar) */
+          className={`absolute inset-0 w-full h-full ${classeAjuste(item.ajuste)} bg-black`}
+
           autoPlay
           muted
           playsInline
