@@ -980,7 +980,7 @@ export default function Tasks() {
             <h1 className="text-2xl font-bold text-foreground">
               {isReopen ? "Turno encerrado" : "Olá! 👋"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
             </p>
             {isReopen && (

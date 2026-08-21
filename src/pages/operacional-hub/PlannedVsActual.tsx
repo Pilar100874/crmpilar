@@ -617,11 +617,11 @@ export default function PlannedVsActual() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight flex items-center gap-2">
               <BarChart3 className="h-7 w-7 text-primary" />
               Previsto x Realizado
             </h1>
-            <p className="text-muted-foreground">Compare o planejamento com a execução real</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Compare o planejamento com a execução real</p>
           </div>
         </div>
 
@@ -1020,13 +1020,13 @@ export default function PlannedVsActual() {
                                       <div className="px-4 pb-3 pt-1 ml-10 space-y-2 bg-muted/10 border-t border-border/30">
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                           <div>
-                                            <p className="text-muted-foreground">Início Planejado</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Início Planejado</p>
                                             <p className="font-medium">
                                               {task.plannedStartTime ? task.plannedStartTime.slice(0, 5) : "—"}
                                             </p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">Início Real</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Início Real</p>
                                             <p className={cn("font-medium",
                                               task.actualStartTime && task.plannedStartTime
                                                 ? "text-foreground"
@@ -1037,13 +1037,13 @@ export default function PlannedVsActual() {
                                             </p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">Conclusão</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Conclusão</p>
                                             <p className="font-medium">
                                               {task.completedAt ? format(new Date(task.completedAt), "HH:mm", { locale: ptBR }) : "—"}
                                             </p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">Qualidade</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Qualidade</p>
                                             <p className="font-medium">
                                               {task.qualityScore != null ? `${task.qualityScore}/10` : "—"}
                                             </p>
@@ -1057,19 +1057,19 @@ export default function PlannedVsActual() {
                                             <p className="font-medium">{task.pauseCount > 0 ? `${task.pauseCount}x` : "Nenhuma"}</p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">Tempo pausado</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Tempo pausado</p>
                                             <p className={cn("font-medium", task.totalPauseMinutes > 0 ? "text-violet-500" : "")}>
                                               {task.totalPauseMinutes > 0 ? formatMinutes(task.totalPauseMinutes) : "—"}
                                             </p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">Tempo ativo</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Tempo ativo</p>
                                             <p className="font-medium text-emerald-500">
                                               {activeMinutes != null ? formatMinutes(activeMinutes) : "—"}
                                             </p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">Diferença</p>
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Diferença</p>
                                             <p className={cn("font-medium",
                                               timeDiff != null && timeDiff > 5 ? "text-orange-500" :
                                               timeDiff != null && timeDiff < -5 ? "text-emerald-500" : ""

@@ -187,7 +187,7 @@ export default function Frequencies() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Frequências</h1>
-            <p className="text-muted-foreground">Gerencie os tipos de frequência para templates de tarefas</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Gerencie os tipos de frequência para templates de tarefas</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setDialogOpen(open); }}>
             <DialogTrigger asChild>

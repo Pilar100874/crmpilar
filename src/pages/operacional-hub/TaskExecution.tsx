@@ -1093,7 +1093,7 @@ export default function TaskExecution() {
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center space-y-3">
               <Wrench className="h-10 w-10 text-primary mx-auto" />
-              <p className="text-muted-foreground">Verificando ferramentas...</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Verificando ferramentas...</p>
             </div>
           </div>
         </AppLayout>
@@ -1206,7 +1206,7 @@ export default function TaskExecution() {
               )}
             </div>
             <div className="flex items-start gap-2">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight flex-1">{task.name}</h1>
+              <h1 className="text-xl sm:text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight text-foreground leading-tight flex-1">{task.name}</h1>
               <Button
                 variant="ghost"
                 size="icon"

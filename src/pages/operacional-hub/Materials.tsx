@@ -318,8 +318,8 @@ export default function Materials() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Materiais</h1>
-          <p className="text-muted-foreground">Cadastro, movimentação e controle de estoque</p>
+          <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Materiais</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Cadastro, movimentação e controle de estoque</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -418,7 +418,7 @@ export default function Materials() {
               ) : materials.length === 0 ? (
                 <div className="text-center py-12 rounded-xl border border-border bg-card">
                   <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Nenhum material cadastrado</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum material cadastrado</p>
                 </div>
               ) : (
                 materials.map((material) => {
@@ -478,7 +478,7 @@ export default function Materials() {
           {/* ===== MOVIMENTAÇÃO TAB ===== */}
           <TabsContent value="movimentacao" className="space-y-4 mt-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <p className="text-muted-foreground">Registre entradas e saídas de materiais do estoque</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Registre entradas e saídas de materiais do estoque</p>
               <Dialog open={movementDialogOpen} onOpenChange={setMovementDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="gap-2">
@@ -641,14 +641,14 @@ export default function Materials() {
 
           {/* ===== ALERTAS TAB ===== */}
           <TabsContent value="alertas" className="space-y-4 mt-4">
-            <p className="text-muted-foreground">Materiais com estoque abaixo do mínimo configurado</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Materiais com estoque abaixo do mínimo configurado</p>
 
             {lowStockMaterials.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <Package className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-lg font-medium text-foreground">Tudo em ordem!</p>
-                  <p className="text-muted-foreground">Nenhum material com estoque abaixo do mínimo.</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum material com estoque abaixo do mínimo.</p>
                 </CardContent>
               </Card>
             ) : (

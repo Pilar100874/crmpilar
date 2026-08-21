@@ -114,7 +114,7 @@ export default function Establishments() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Estabelecimentos</h1>
-            <p className="text-muted-foreground">Gerencie os estabelecimentos do sistema</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Gerencie os estabelecimentos do sistema</p>
           </div>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4 mr-2" />
@@ -130,7 +130,7 @@ export default function Establishments() {
           <Card>
             <CardContent className="py-12 text-center">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-              <p className="text-muted-foreground">Nenhum estabelecimento cadastrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum estabelecimento cadastrado</p>
             </CardContent>
           </Card>
         ) : (

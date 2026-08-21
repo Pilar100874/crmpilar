@@ -146,8 +146,8 @@ export default function Approvals() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Aprovações</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Aprovações</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Templates de irregularidade aguardando aprovação
           </p>
         </div>

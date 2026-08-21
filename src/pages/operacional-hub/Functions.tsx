@@ -155,8 +155,8 @@ export default function Functions() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Funções</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Funções</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Gerencie as funções de trabalho
             </p>
           </div>
@@ -230,7 +230,7 @@ export default function Functions() {
           ) : functions.length === 0 ? (
             <div className="col-span-full text-center py-12 rounded-xl border border-border bg-card">
               <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma função cadastrada</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhuma função cadastrada</p>
             </div>
           ) : (
             functions.map((fn) => (

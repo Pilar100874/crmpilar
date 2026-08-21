@@ -467,10 +467,10 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">
+              <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">
                 {isEditing ? "Editar Template" : "Novo Template"}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 {isEditing ? "Modifique as configurações do template" : "Configure um novo modelo de tarefa"}
               </p>
             </div>

@@ -271,8 +271,8 @@ export default function Incidents() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Incidentes</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-[26px] font-semibold tracking-tight">Incidentes</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Registre e acompanhe incidentes operacionais
             </p>
           </div>
@@ -398,7 +398,7 @@ export default function Incidents() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 rounded-xl border border-border bg-card">
               <AlertOctagon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum incidente encontrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Nenhum incidente encontrado</p>
             </div>
           ) : (
             filtered.map((incident) => (
