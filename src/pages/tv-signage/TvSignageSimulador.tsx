@@ -347,10 +347,14 @@ export default function TvSignageSimulador() {
         </div>
       )}
       {/* Transição fluida: o próximo item já fica pré-carregado (invisível) e a troca
-          é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro. */}
+          é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro.
+          Exceção: itens "ao final do conteúdo" NÃO são pré-carregados, senão a
+          apresentação já começa a rodar escondida e entra no ar pela metade. */}
       {items.map((item, i) => {
-        if (i !== idx && i !== proxIdx) return null;
+        const preCarregar = i === proxIdx && !item.aoFinal;
+        if (i !== idx && !preCarregar) return null;
         const ativo = i === idx;
+
         return (
           <iframe
             key={`${i}-${reloadKey}`}
