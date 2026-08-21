@@ -90,18 +90,19 @@ export default function TvSignageDashboards() {
     if (edit.tipo === "url_externa" && !edit.url?.trim()) return toast.error("Informe a URL externa");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
-    const ehApres = edit.tipo === "tela_interna" && (isApresRoute(edit.rota_interna) || isMuralRoute(edit.rota_interna));
+    const podeCache = edit.tipo === "tela_interna" && (isApresRoute(edit.rota_interna) || isMuralRoute(edit.rota_interna));
     const payload = {
       nome: edit.nome, tipo: edit.tipo || "url_externa",
       url: edit.tipo === "url_externa" ? edit.url : null,
       rota_interna: edit.tipo === "tela_interna" ? edit.rota_interna : null,
-      refresh_segundos: ehApres ? 0 : (edit.refresh_segundos || 60),
-      fullscreen: edit.fullscreen ?? true,
-      cache_offline: edit.cache_offline ?? false,
-      auto_update: edit.auto_update ?? true,
-      timeout_segundos: ehApres ? 0 : (edit.timeout_segundos || 30),
+      refresh_segundos: 0,
+      fullscreen: true,
+      cache_offline: podeCache ? (edit.cache_offline ?? false) : false,
+      auto_update: true,
+      timeout_segundos: 0,
       descricao: edit.descricao || null,
     };
+
     if (edit.id) {
       const { error } = await supabase.from("tv_dashboards").update(payload).eq("id", edit.id);
       if (error) return toast.error(error.message);
@@ -117,7 +118,7 @@ export default function TvSignageDashboards() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">Telas que podem ser projetadas nas TVs. Escolha uma URL externa ou uma tela interna do sistema.</p>
-        <Button onClick={() => setEdit({ tipo: "tela_interna", refresh_segundos: 60, fullscreen: true, timeout_segundos: 30, auto_update: true })}>
+        <Button onClick={() => setEdit({ tipo: "tela_interna", cache_offline: false })}>
           <Plus className="w-4 h-4 mr-1" />Novo dashboard
         </Button>
       </div>
@@ -153,11 +154,12 @@ export default function TvSignageDashboards() {
                 />
               </div>
             </div>
-            <div className="text-xs text-muted-foreground flex gap-3 pt-2 border-t border-border">
-              <span>⏱ {d.refresh_segundos}s</span>
-              {d.fullscreen && <span>▣ Fullscreen</span>}
-              {d.cache_offline && <span>💾 Offline</span>}
-            </div>
+            {d.cache_offline && (
+              <div className="text-xs text-muted-foreground flex gap-3 pt-2 border-t border-border">
+                <span>💾 Cache offline</span>
+              </div>
+            )}
+
           </Card>
         ))}
         {list.length === 0 && <Card className="p-8 text-center text-muted-foreground col-span-full">Nenhum dashboard. Crie o primeiro.</Card>}
@@ -328,21 +330,18 @@ export default function TvSignageDashboards() {
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
 
-              {!(edit.tipo === "tela_interna" && isApresRoute(edit.rota_interna)) ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Refresh (segundos)</Label><Input type="number" value={edit.refresh_segundos} onChange={(e) => setEdit({ ...edit, refresh_segundos: parseInt(e.target.value) || 60 })} /></div>
-                  <div><Label>Timeout (segundos)</Label><Input type="number" value={edit.timeout_segundos} onChange={(e) => setEdit({ ...edit, timeout_segundos: parseInt(e.target.value) || 30 })} /></div>
+              {edit.tipo === "tela_interna" && (isApresRoute(edit.rota_interna) || isMuralRoute(edit.rota_interna)) && (
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch checked={!!edit.cache_offline} onCheckedChange={(v) => setEdit({ ...edit, cache_offline: v })} />
+                    Cache offline
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Mantém as mídias em cache local para continuar exibindo mesmo sem internet.
+                  </p>
                 </div>
-              ) : (
-                <p className="text-[11px] text-muted-foreground">
-                  Apresentação roda em loop contínuo — refresh e timeout não se aplicam.
-                </p>
               )}
-              <div className="flex flex-wrap gap-4 pt-2">
-                <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.fullscreen} onCheckedChange={(v) => setEdit({ ...edit, fullscreen: v })} />Fullscreen</label>
-                <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.cache_offline} onCheckedChange={(v) => setEdit({ ...edit, cache_offline: v })} />Cache offline</label>
-                <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.auto_update} onCheckedChange={(v) => setEdit({ ...edit, auto_update: v })} />Auto-update</label>
-              </div>
+
             </div>
           )}
           <DialogFooter className="p-6 pt-2 border-t">
