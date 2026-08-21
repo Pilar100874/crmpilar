@@ -190,12 +190,10 @@ export default function TvMural() {
   );
 
   if (carregando) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-white/70" />
-      </div>
-    );
+    // Sem spinner: tela preta neutra para uma transição fluida entre conteúdos.
+    return <div className="fixed inset-0 bg-black" />;
   }
+
   if (erro) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center p-8 text-center">
