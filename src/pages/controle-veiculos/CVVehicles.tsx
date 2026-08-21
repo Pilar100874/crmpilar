@@ -196,7 +196,7 @@ export default function CVVehicles() {
     if (error) return toast.error(error.message);
     const list = (data ?? []) as Vehicle[];
     setRows(list);
-    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id").eq("ativo", true).order("placa");
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id, logistica_grupo_id").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
     setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
 
