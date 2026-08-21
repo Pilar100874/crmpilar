@@ -79,6 +79,12 @@ export default function CVVehicles() {
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
 
+  // importação em massa por grupo (do cadastro de Logística)
+  const [impOpen, setImpOpen] = useState(false);
+  const [impGrupo, setImpGrupo] = useState<string>(CV_GRUPO_ALL);
+  const [importando, setImportando] = useState(false);
+
+
   // manutenção
   const [planVehicle, setPlanVehicle] = useState<Vehicle | null>(null);
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
