@@ -354,7 +354,9 @@ export default function TvSignageSimulador() {
         return (
           <iframe
             key={`${i}-${reloadKey}`}
+            ref={(el) => { iframesRef.current[i] = el; }}
             src={montarUrl(item)}
+
             title={item.nome}
             className={`absolute inset-0 w-full h-full border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             allow="fullscreen; autoplay; camera; microphone; geolocation"
