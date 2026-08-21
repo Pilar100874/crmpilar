@@ -69,9 +69,9 @@ export default function ReturnIssuesPage() {
         .from("ferr_return_issues")
         .select(`
           *,
-          profiles!return_issues_user_id_fkey(*),
+          profiles:ferr_profiles!ferr_return_issues_user_id_fkey(*),
           tools:ferr_tools(*),
-          reporter:profiles!return_issues_reported_by_fkey(*)
+          reporter:ferr_profiles!ferr_return_issues_reported_by_fkey(*)
         `)
         .order("created_at", { ascending: false });
 

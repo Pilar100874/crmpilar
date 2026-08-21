@@ -1,3 +1,4 @@
+import { uploadFerrFoto, FERR_BUCKET_LOANS } from "@/lib/ferramentas/storage";
 import { useState, useEffect, useCallback } from "react";
 import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
 import { PageHeader } from "@/components/ferramentas/ui/page-header";
