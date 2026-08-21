@@ -245,7 +245,7 @@ export default function CVVehicles() {
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
       vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
-      logistica_grupo_id: lv.grupo_id ?? f.logistica_grupo_id ?? null,
+      logistica_grupo_id: lv.grupo_id ?? null,
     }));
   };
 
@@ -575,20 +575,16 @@ export default function CVVehicles() {
             </div>
             <div>
               <Label>Grupo (unidade / filial)</Label>
-              <Select
-                value={form.logistica_grupo_id ?? "__none__"}
-                onValueChange={v => setForm({ ...form, logistica_grupo_id: v === "__none__" ? null : v })}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Sem grupo</SelectItem>
-                  {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Input
+                value={grupos.find(g => g.id === form.logistica_grupo_id)?.nome ?? "Sem grupo"}
+                readOnly
+                className="bg-muted"
+              />
               <p className="text-xs text-muted-foreground mt-1">
-                Sugerido automaticamente pelo grupo do veículo na Logística. Usado para filtrar as telas do Controle de Veículos.
+                Vem automaticamente do cadastro do veículo na Logística. Usado para filtrar as telas do Controle de Veículos.
               </p>
             </div>
+
 
             <div>
               <Label>Tipo de frota (roteiro de manutenção preventiva)</Label>
