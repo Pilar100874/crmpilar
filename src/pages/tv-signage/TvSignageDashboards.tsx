@@ -118,7 +118,7 @@ export default function TvSignageDashboards() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">Telas que podem ser projetadas nas TVs. Escolha uma URL externa ou uma tela interna do sistema.</p>
-        <Button onClick={() => setEdit({ tipo: "tela_interna", refresh_segundos: 60, fullscreen: true, timeout_segundos: 30, auto_update: true })}>
+        <Button onClick={() => setEdit({ tipo: "tela_interna", cache_offline: false })}>
           <Plus className="w-4 h-4 mr-1" />Novo dashboard
         </Button>
       </div>
