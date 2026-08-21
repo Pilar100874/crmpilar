@@ -375,10 +375,15 @@ export default function CVVehicleExit() {
                 </div>
                 {form.has_helper && (
                   <div className="space-y-2 ml-6">
-                    <Label>Selecione o ajudante</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Selecione o ajudante</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setHelperDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-1" /> Novo ajudante
+                      </Button>
+                    </div>
                     {helpers.length === 0 ? (
                       <div className="p-3 bg-muted/50 rounded text-sm text-muted-foreground">
-                        Nenhum ajudante cadastrado. <a href="/controle-veiculos/ajudantes" className="text-primary hover:underline">Cadastrar agora</a>
+                        Nenhum ajudante cadastrado. Clique em <strong className="text-primary">Novo ajudante</strong> para adicionar.
                       </div>
                     ) : (
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -402,6 +407,39 @@ export default function CVVehicleExit() {
                     )}
                   </div>
                 )}
+
+                {/* Dialog para criar ajudante sem sair da tela */}
+                <Dialog open={helperDialogOpen} onOpenChange={setHelperDialogOpen}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Novo ajudante</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="helperName">Nome completo</Label>
+                        <Input id="helperName" value={helperForm.name} onChange={(e) => setHelperForm({ ...helperForm, name: e.target.value })}
+                          placeholder="Ex: João Silva" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="helperPhone">WhatsApp</Label>
+                        <Input id="helperPhone" inputMode="tel" value={helperForm.phone}
+                          onChange={(e) => setHelperForm({ ...helperForm, phone: maskWhatsapp(e.target.value) })}
+                          placeholder="(11) 99999-9999" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="helperDoc">CPF / Documento (opcional)</Label>
+                        <Input id="helperDoc" value={helperForm.document} onChange={(e) => setHelperForm({ ...helperForm, document: e.target.value })}
+                          placeholder="000.000.000-00" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="ghost" onClick={() => { setHelperForm({ name: "", phone: "", document: "" }); setHelperDialogOpen(false); }}>Cancelar</Button>
+                      <Button type="button" onClick={criarHelper} disabled={helperBusy || !helperForm.name.trim()}>
+                        {helperBusy ? "Salvando..." : "Salvar e selecionar"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
 
                 <div className="space-y-2">
