@@ -384,5 +384,10 @@ verify_jwt = false
 [functions.tv-dashboard-veiculos]
 verify_jwt = false
 
+[functions.tv-mural]
+verify_jwt = false
+
+
+
 [functions.tv-dashboard-vendas]
 verify_jwt = false

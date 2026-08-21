@@ -203,11 +203,17 @@ export default function TvSignageMurais() {
                 <div className="space-y-2 max-h-72 overflow-y-auto">
                   {edit.itens.map((it, idx) => (
                     <div key={it.id} className="flex items-center gap-2 rounded-md border p-2">
-                      <div className="w-16 h-12 rounded bg-muted overflow-hidden shrink-0 flex items-center justify-center">
-                        {it.tipo === "video"
-                          ? <VideoIcon className="w-5 h-5 text-muted-foreground" />
-                          : <img src={it.url} alt={it.nome || "Mídia"} className="w-full h-full object-cover" loading="lazy" />}
+                      <div className="w-16 h-12 rounded bg-muted overflow-hidden shrink-0 flex items-center justify-center relative">
+                        {it.tipo === "video" ? (
+                          <>
+                            <video src={`${it.url}#t=0.1`} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                            <VideoIcon className="w-4 h-4 text-white absolute drop-shadow" />
+                          </>
+                        ) : (
+                          <img src={it.url} alt={it.nome || "Mídia"} className="w-full h-full object-cover" loading="lazy" />
+                        )}
                       </div>
+
                       <div className="min-w-0 flex-1">
                         <div className="text-sm truncate">{it.nome || (it.tipo === "video" ? "Vídeo" : "Imagem")}</div>
                         {it.tipo === "image" && (
@@ -355,20 +361,31 @@ function MuralMediaPicker({
                 </Button>
               ))}
             </div>
-            <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 auto-rows-min content-start gap-3 p-1">
               {loading && <div className="col-span-full py-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
               {!loading && filtradas.map((m) => {
                 const on = !!selected[m.id];
                 return (
                   <button key={m.id} type="button" onClick={() => toggle(m)}
-                    className={`relative aspect-video rounded-md overflow-hidden border-2 ${on ? "border-primary" : "border-transparent"}`}>
-                    {m.tipo === "video"
-                      ? <div className="w-full h-full bg-muted flex items-center justify-center"><VideoIcon className="w-6 h-6 text-muted-foreground" /></div>
-                      : <img src={m.url} alt={m.nome || "Mídia"} className="w-full h-full object-cover" loading="lazy" />}
+                    className={`relative aspect-video w-full rounded-md overflow-hidden bg-muted border-2 ${on ? "border-primary" : "border-border"}`}>
+                    {m.tipo === "video" ? (
+                      <>
+                        <video src={`${m.url}#t=0.1`} className="absolute inset-0 w-full h-full object-cover" muted playsInline preload="metadata" />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                          <VideoIcon className="w-6 h-6 text-white drop-shadow" />
+                        </span>
+                      </>
+                    ) : (
+                      <img src={m.url} alt={m.nome || "Mídia"} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                    )}
+                    <span className="absolute bottom-0 inset-x-0 truncate bg-black/55 text-white text-[10px] px-1 py-0.5 text-left">
+                      {m.nome || (m.tipo === "video" ? "Vídeo" : "Imagem")}
+                    </span>
                     {on && <span className="absolute top-1 right-1 bg-primary text-primary-foreground text-[10px] px-1.5 rounded">✓</span>}
                   </button>
                 );
               })}
+
               {!loading && filtradas.length === 0 && (
                 <p className="col-span-full text-center text-sm text-muted-foreground py-8">Nenhuma mídia na galeria.</p>
               )}
