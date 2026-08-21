@@ -245,7 +245,7 @@ export default function CVVehicles() {
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
       vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
-      logistica_grupo_id: lv.grupo_id ?? f.logistica_grupo_id ?? null,
+      logistica_grupo_id: lv.grupo_id ?? null,
     }));
   };
 
