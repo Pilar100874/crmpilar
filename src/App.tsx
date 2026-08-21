@@ -675,6 +675,38 @@ const App = () => (
               <Route path="cameras" element={<CVCameras />} />
               <Route path="historico-imagens" element={<CVVehicleHistory />} />
               </Route>
+              <Route path="/operacional" element={<OpLayout />}>
+                <Route index element={<OpTasks />} />
+                <Route path="tasks/:id" element={<OpTaskExecution />} />
+                <Route path="templates" element={<OpTemplates />} />
+                <Route path="templates/new" element={<OpTemplateForm />} />
+                <Route path="templates/:id" element={<OpTemplateForm />} />
+                <Route path="templates-report" element={<OpTemplateReport />} />
+                <Route path="sectors" element={<OpSectors />} />
+                <Route path="functions" element={<OpFunctions />} />
+                <Route path="shifts" element={<OpShifts />} />
+                <Route path="materials" element={<OpMaterials />} />
+                <Route path="tools" element={<OpTools />} />
+                <Route path="users" element={<OpUsers />} />
+                <Route path="alerts" element={<OpAlerts />} />
+                <Route path="settings" element={<OpSettings />} />
+                <Route path="history" element={<OpHistory />} />
+                <Route path="incidents" element={<OpIncidents />} />
+                <Route path="irregularities" element={<OpIrregularities />} />
+                <Route path="conditions" element={<OpConditions />} />
+                <Route path="productivity" element={<OpProductivity />} />
+                <Route path="absences" element={<OpAbsences />} />
+                <Route path="report-irregularity" element={<OpReportIrregularity />} />
+                <Route path="schedule-simulation" element={<OpScheduleSimulation />} />
+                <Route path="planned-vs-actual" element={<OpPlannedVsActual />} />
+                <Route path="frequencies" element={<OpFrequencies />} />
+                <Route path="approvals" element={<OpApprovals />} />
+                <Route path="idle-time" element={<OpIdleTimeAnalysis />} />
+                <Route path="establishments" element={<OpEstablishments />} />
+                <Route path="access-levels" element={<OpAccessLevels />} />
+                <Route path="tv" element={<OpTVMode />} />
+                <Route path="tv-tasks" element={<OpTVTaskTracker />} />
+              </Route>
               <Route path="/controle-visitantes" element={<CVisLayout />}>
                 <Route index element={<CVisDashboard />} />
                 <Route path="entrada" element={<CVisEntrada />} />
