@@ -538,21 +538,31 @@ export default function ReturnLoanPage() {
           }
           const byteArray = new Uint8Array(byteNumbers);
           const blob = new Blob([byteArray], { type: 'image/jpeg' });
+          if (blob.size === 0) throw new Error('A foto capturada está vazia');
           
           const fileName = `${loan.id}_${Date.now()}.jpg`;
           const filePath = `return-photos/${fileName}`;
           
           const signedUrl = await uploadFerrFoto(FERR_BUCKET_LOANS, filePath, blob);
           return { loanId: loan.id, url: signedUrl };
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error uploading photo:', err);
-          return { loanId: loan.id, url: null };
+          return { loanId: loan.id, url: null, erro: err?.message || 'Falha ao enviar a foto' };
         }
       });
 
       // Wait for all uploads
       const uploadResults = await Promise.all(uploadPromises);
       const photoUrlMap = new Map(uploadResults.map(r => [r.loanId, r.url]));
+
+      const falhasFoto = uploadResults.filter((r: any) => r.erro);
+      if (falhasFoto.length > 0) {
+        toast({
+          variant: "destructive",
+          title: `Não foi possível enviar ${falhasFoto.length} foto(s)`,
+          description: `${(falhasFoto[0] as any).erro}. A devolução seguirá sem a(s) foto(s).`,
+        });
+      }
 
       // Prepare all loan updates in parallel
       const loanUpdatePromises = selectedLoansList.map((loan) =>
