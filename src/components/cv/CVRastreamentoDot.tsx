@@ -9,47 +9,59 @@ type Props = {
 };
 
 export function CVRastreamentoDot({ veiculoLogisticaId, className, dotOnly = false }: Props) {
-  const [ultimoAcesso, setUltimoAcesso] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [ultimoContato, setUltimoContato] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!veiculoLogisticaId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("dispositivos_rastreamento")
-        .select("ultimo_acesso, status")
+    if (!veiculoLogisticaId) return;
+
+    let cancelled = false;
+
+    const carregar = async () => {
+      // Fonte principal: mesma usada no monitoramento da Logística
+      const { data: pos } = await supabase
+        .from("veiculo_posicoes")
+        .select("data_hora")
         .eq("veiculo_id", veiculoLogisticaId)
-        .in("status", ["aprovado", "pendente"])
-        .order("ultimo_acesso", { ascending: false, nullsFirst: false })
+        .order("data_hora", { ascending: false })
         .limit(1)
         .maybeSingle();
-      setUltimoAcesso(data?.ultimo_acesso ?? null);
-      setStatus(data?.status ?? null);
-      setLoading(false);
+
+      let at: string | null = (pos as any)?.data_hora ?? null;
+
+      // Fallback: dispositivo Android de rastreamento
+      if (!at) {
+        const { data: disp } = await supabase
+          .from("dispositivos_rastreamento")
+          .select("ultimo_acesso")
+          .eq("veiculo_id", veiculoLogisticaId)
+          .in("status", ["aprovado", "pendente"])
+          .order("ultimo_acesso", { ascending: false, nullsFirst: false })
+          .limit(1)
+          .maybeSingle();
+        at = (disp as any)?.ultimo_acesso ?? null;
+      }
+
+      if (!cancelled) setUltimoContato(at);
     };
-    fetch();
+
+    carregar();
+
     const ch = supabase
-      .channel(`rastreamento-${veiculoLogisticaId}`)
+      .channel(`rastreamento-pos-${veiculoLogisticaId}`)
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "INSERT",
           schema: "public",
-          table: "dispositivos_rastreamento",
+          table: "veiculo_posicoes",
           filter: `veiculo_id=eq.${veiculoLogisticaId}`,
         },
-        (payload) => {
-          setUltimoAcesso((payload.new as any).ultimo_acesso ?? null);
-          setStatus((payload.new as any).status ?? null);
-        },
+        (payload) => setUltimoContato((payload.new as any)?.data_hora ?? null),
       )
       .subscribe();
+
     return () => {
+      cancelled = true;
       supabase.removeChannel(ch);
     };
   }, [veiculoLogisticaId]);
@@ -68,11 +80,10 @@ export function CVRastreamentoDot({ veiculoLogisticaId, className, dotOnly = fal
 
   return (
     <StatusPingDot
-      at={ultimoAcesso}
-      status={status === "bloqueado" ? "offline" : status ?? undefined}
+      at={ultimoContato}
       label="Rastreamento"
-      onlineMin={5}
-      warnMin={15}
+      onlineMin={30}
+      warnMin={120}
       dotOnly={dotOnly}
       className={className}
     />
