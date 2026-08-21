@@ -1,3 +1,4 @@
+import { uploadFerrFoto } from "@/lib/ferramentas/storage";
 import { useState, useId } from "react";
 import { Camera, Image, X, AlertCircle, Loader2 } from "lucide-react";
 import { CameraCapture } from "./CameraCapture";
@@ -75,22 +76,10 @@ export function ImageUploadCrop({
         ? `${folder}/${timestamp}.jpg`
         : `${timestamp}.jpg`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, croppedFile, {
-          cacheControl: "3600",
-          upsert: true,
-          contentType: "image/jpeg",
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+      const signedUrl = await uploadFerrFoto(bucket, filePath, croppedFile);
 
       // Adiciona timestamp para bust de cache
-      const finalUrl = `${urlData.publicUrl}?t=${timestamp}`;
+      const finalUrl = `${signedUrl}&t=${timestamp}`;
       setIsImageLoaded(false); // Reset para mostrar loading na nova imagem
       onChange(finalUrl);
 

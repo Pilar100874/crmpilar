@@ -541,19 +541,8 @@ export default function ReturnLoanPage() {
           const fileName = `${loan.id}_${Date.now()}.jpg`;
           const filePath = `return-photos/${fileName}`;
           
-          const { error: uploadError } = await supabase.storage
-            .from('loan-photos')
-            .upload(filePath, blob, { contentType: 'image/jpeg' });
-
-          if (uploadError) {
-            console.error('Upload error:', uploadError);
-            return { loanId: loan.id, url: null };
-          }
-          
-          const { data: urlData } = supabase.storage
-            .from('loan-photos')
-            .getPublicUrl(filePath);
-          return { loanId: loan.id, url: urlData.publicUrl };
+          const signedUrl = await uploadFerrFoto(FERR_BUCKET_LOANS, filePath, blob);
+          return { loanId: loan.id, url: signedUrl };
         } catch (err) {
           console.error('Error uploading photo:', err);
           return { loanId: loan.id, url: null };

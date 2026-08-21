@@ -177,7 +177,7 @@ export function ToolFormDialog({
                   <ImageUploadCrop
                     value={formData.photo_url}
                     onChange={(url) => setFormData({ ...formData, photo_url: url })}
-                    bucket="tool-photos"
+                    bucket="ferr-tool-photos"
                     folder="tools"
                   />
                 </div>
