@@ -272,7 +272,10 @@ export default function CVVehicleExit() {
                         }`}>
                         <div className="flex items-center justify-between mb-2">
                           <Car className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                          {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                          <div className="flex items-center gap-1.5">
+                            <CVRastreamentoDot veiculoLogisticaId={(v as any).veiculo_id} dotOnly />
+                            {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                          </div>
                         </div>
                         <p className="font-semibold truncate">{v.name}</p>
                         <Badge variant="outline" className="font-mono text-xs mt-1">{v.plate}</Badge>
