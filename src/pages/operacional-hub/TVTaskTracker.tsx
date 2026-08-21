@@ -182,7 +182,7 @@ export default function TVTaskTracker() {
       .select(`
         id, status, time_spent_minutes, assigned_user_id, executed_by_user_id, 
         started_at, completed_at, planned_start_time, priority_score, paused_at,
-        task_templates (name, estimated_time_minutes, priority, sector_id)
+        task_templates:op_task_templates(name, estimated_time_minutes, priority, sector_id)
       `)
       .eq("scheduled_date", todayStr)
       .order("planned_start_time", { ascending: true, nullsFirst: false });

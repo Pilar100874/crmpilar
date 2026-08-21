@@ -152,7 +152,7 @@ export default function PlannedVsActual() {
     const [exec, abs] = await Promise.all([
       supabase
         .from("op_task_executions")
-        .select("id, assigned_user_id, executed_by_user_id, scheduled_date, status, time_spent_minutes, started_at, completed_at, task_template_id, observations, quality_score, is_suspicious, suspicious_reason, was_redistributed, pause_count, total_pause_minutes, pause_reason, planned_start_time, actual_start_time, task_templates(name, estimated_time_minutes, priority, frequency, is_irregularity_template)")
+        .select("id, assigned_user_id, executed_by_user_id, scheduled_date, status, time_spent_minutes, started_at, completed_at, task_template_id, observations, quality_score, is_suspicious, suspicious_reason, was_redistributed, pause_count, total_pause_minutes, pause_reason, planned_start_time, actual_start_time, task_templates:op_task_templates(name, estimated_time_minutes, priority, frequency, is_irregularity_template)")
         .gte("scheduled_date", startStr)
         .lte("scheduled_date", endStr),
       supabase

@@ -46,8 +46,8 @@ export default function Users() {
           is_on_vacation,
           job_function_id,
           shift_id,
-          job_functions (name),
-          shifts (name)
+          job_functions:op_job_functions(name),
+          shifts:op_shifts(name)
         `)
         .order("full_name");
 

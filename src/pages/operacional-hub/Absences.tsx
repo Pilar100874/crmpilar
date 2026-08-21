@@ -102,8 +102,8 @@ export default function Absences() {
             user_id,
             full_name,
             job_function_id,
-            job_functions (name),
-            shifts (start_time, end_time)
+            job_functions:op_job_functions(name),
+            shifts:op_shifts(start_time, end_time)
           `)
           .eq("is_active", true)
           .order("full_name"),
@@ -286,7 +286,7 @@ export default function Absences() {
 
       const { data: tasks, error: tasksError } = await supabase
         .from("op_task_executions")
-        .select(`id, task_templates (name, priority, job_function_id)`)
+        .select(`id, task_templates:op_task_templates(name, priority, job_function_id)`)
         .eq("assigned_user_id", absence.userId)
         .eq("scheduled_date", absence.absenceDate)
         .in("status", ["pending", "in_progress"]);

@@ -45,7 +45,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
-import { validateTaskCompletion, calculateImageHash } from "@/lib/antifraud";
+import { validateTaskCompletion, calculateImageHash } from "@/lib/operacional-hub/antifraud";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LocationPhotosViewer } from "@/components/operacional-hub/tasks/LocationPhotosViewer";
@@ -53,7 +53,7 @@ import { WeatherCheckDialog } from "@/components/operacional-hub/tasks/WeatherCh
 import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition";
 import { ToolCheckDialog } from "@/components/operacional-hub/tasks/ToolCheckDialog";
 import { useOfflineSync } from "@/hooks/operacional-hub/useOfflineSync";
-import { getCachedData, addToPhotoQueue, fileToBase64 } from "@/lib/offlineDb";
+import { getCachedData, addToPhotoQueue, fileToBase64 } from "@/lib/operacional-hub/offlineDb";
 
 interface ChecklistItem {
   id: string;
@@ -241,7 +241,7 @@ export default function TaskExecution() {
           pause_count,
           total_pause_minutes,
           pause_reason,
-          task_templates (
+          task_templates:op_task_templates(
             name,
             description,
             estimated_time_minutes,
@@ -254,7 +254,7 @@ export default function TaskExecution() {
             additional_assigned_user_ids,
             default_assigned_user_id,
             is_outdoor,
-            sectors (
+            sectors:op_sectors(
               name,
               color
             )
@@ -330,7 +330,7 @@ export default function TaskExecution() {
           .from("op_task_template_materials")
           .select(`
             quantity_needed,
-            materials (current_stock, name)
+            materials:op_materials(current_stock, name)
           `)
           .eq("task_template_id", data.task_template_id);
 
@@ -859,7 +859,7 @@ export default function TaskExecution() {
     // Get today's pending tasks time
     const { data: todayTasks } = await supabase
       .from("op_task_executions")
-      .select("id, task_template_id, task_templates(estimated_time_minutes)")
+      .select("id, task_template_id, task_templates:op_task_templates(estimated_time_minutes)")
       .eq("scheduled_date", today)
       .in("status", ["pending", "in_progress"])
       .or(`assigned_user_id.eq.${user.id},assigned_user_id.is.null`);
@@ -886,7 +886,7 @@ export default function TaskExecution() {
     // Find future tasks for this user (only pending, not yet executed today)
     const { data: futureTasks } = await supabase
       .from("op_task_executions")
-      .select("id, task_template_id, scheduled_date, task_templates(estimated_time_minutes, name)")
+      .select("id, task_template_id, scheduled_date, task_templates:op_task_templates(estimated_time_minutes, name)")
       .eq("assigned_user_id", user.id)
       .eq("status", "pending")
       .gt("scheduled_date", today)

@@ -123,7 +123,7 @@ export default function Materials() {
   const fetchData = async () => {
     try {
       const [materialsRes, sectorsRes, movTotalsRes] = await Promise.all([
-        supabase.from("op_materials").select(`*, sectors (id, name, color)`).order("name"),
+        supabase.from("op_materials").select(`*, sectors:op_sectors(id, name, color)`).order("name"),
         supabase.from("op_sectors").select("*").order("name"),
         supabase.from("op_material_movements").select("material_id, movement_type, quantity"),
       ]);
@@ -162,7 +162,7 @@ export default function Materials() {
     try {
       const { data, error } = await supabase
         .from("op_material_movements")
-        .select("*, materials(name)")
+        .select("*, materials:op_materials(name)")
         .order("created_at", { ascending: false })
         .limit(200);
 

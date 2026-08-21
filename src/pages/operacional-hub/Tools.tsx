@@ -79,7 +79,7 @@ export default function Tools() {
   const fetchData = async () => {
     try {
       const [toolsRes, sectorsRes] = await Promise.all([
-        supabase.from("op_tools").select("*, sectors(id, name, color)").order("name"),
+        supabase.from("op_tools").select("*, sectors:op_sectors(id, name, color)").order("name"),
         supabase.from("op_sectors").select("*").order("name"),
       ]);
 

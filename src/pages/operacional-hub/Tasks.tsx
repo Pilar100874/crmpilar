@@ -204,13 +204,13 @@ export default function Tasks() {
         supabase
           .from("op_task_executions")
           .select(`id, status, scheduled_date, task_template_id, assigned_user_id, executed_by_user_id, time_spent_minutes, photo_completion_url,
-            task_templates (name, description, estimated_time_minutes, job_function_id, sector_id, priority, requires_photo, is_outdoor, sectors (id, name, color))`)
+            task_templates:op_task_templates(name, description, estimated_time_minutes, job_function_id, sector_id, priority, requires_photo, is_outdoor, sectors:op_sectors(id, name, color))`)
           .eq("scheduled_date", dateStr)
           .order("created_at", { ascending: false }),
         supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
         supabase
           .from("op_task_templates")
-          .select("id, name, description, estimated_time_minutes, frequency, is_active, is_outdoor, priority, priority_order, work_days, is_irregularity_template, sector_id, job_function_id, default_assigned_user_id, requires_photo, required_workers, additional_assigned_user_ids, sectors(id, name, color), job_functions(id, name)")
+          .select("id, name, description, estimated_time_minutes, frequency, is_active, is_outdoor, priority, priority_order, work_days, is_irregularity_template, sector_id, job_function_id, default_assigned_user_id, requires_photo, required_workers, additional_assigned_user_ids, sectors:op_sectors(id, name, color), job_functions:op_job_functions(id, name)")
           .eq("is_active", true)
           .order("priority", { ascending: false }),
         supabase.from("op_job_functions").select("id, name, sector_id").order("name"),

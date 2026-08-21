@@ -44,7 +44,7 @@ export function EstablishmentProvider({ children }: { children: ReactNode }) {
         // Get user's linked establishments
         const { data: userEsts } = await supabase
           .from("op_user_establishments")
-          .select("establishment_id, establishments(id, name)")
+          .select("establishment_id, establishments:op_establishments(id, name)")
           .eq("user_id", user.id);
 
         const mapped: Establishment[] = (userEsts || [])

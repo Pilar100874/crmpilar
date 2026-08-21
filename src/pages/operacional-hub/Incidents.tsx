@@ -133,7 +133,7 @@ export default function Incidents() {
       const [incidentsRes, sectorsRes, profilesRes] = await Promise.all([
         supabase.from("op_incidents").select(`
           id, title, description, status, severity, created_at, reported_by_user_id, resolved_at, resolution_notes, sector_id,
-          sectors (name, color)
+          sectors:op_sectors(name, color)
         `).order("created_at", { ascending: false }),
         supabase.from("op_sectors").select("id, name, color").order("name"),
         supabase.from("op_profiles").select("user_id, full_name"),

@@ -129,7 +129,7 @@ export default function IdleTimeAnalysis() {
       supabase.from("op_profiles").select("user_id, full_name, shift_id, job_function_id, is_on_vacation").eq("is_active", true).order("full_name"),
       supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
       supabase.from("op_shifts").select("*"),
-      supabase.from("op_task_executions").select("*, task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)").gte("scheduled_date", startStr).lte("scheduled_date", endStr),
+      supabase.from("op_task_executions").select("*, task_templates:op_task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)").gte("scheduled_date", startStr).lte("scheduled_date", endStr),
       supabase.from("op_task_templates").select("id, name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, frequency, job_function_id, default_assigned_user_id, additional_assigned_user_ids, required_workers, sector_id, is_active, is_outdoor").eq("is_active", true).eq("is_irregularity_template", false),
       supabase.from("op_absences").select("user_id, absence_date").gte("absence_date", startStr).lte("absence_date", endStr),
       supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),

@@ -99,8 +99,8 @@ export default function Templates() {
           .from("op_task_templates")
           .select(`
             id, name, description, estimated_time_minutes, frequency, requires_photo, is_active, is_outdoor, priority, is_irregularity_template, required_workers, location_photos,
-            sectors (id, name, color),
-            job_functions (id, name)
+            sectors:op_sectors(id, name, color),
+            job_functions:op_job_functions(id, name)
           `)
           .order("name"),
         supabase.from("op_sectors").select("*").order("name"),

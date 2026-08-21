@@ -32,9 +32,9 @@ export function NextTaskButton() {
         .from("op_task_executions")
         .select(`
           id, status, priority_score,
-          task_templates (
+          task_templates:op_task_templates(
             name, priority,
-            sectors (name, color)
+            sectors:op_sectors(name, color)
           )
         `)
         .eq("scheduled_date", today)

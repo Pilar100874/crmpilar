@@ -84,9 +84,9 @@ export default function History() {
           id, status, scheduled_date, completed_at, time_spent_minutes,
           photo_completion_url, latitude, longitude, observations,
           executed_by_user_id,
-          task_templates (
+          task_templates:op_task_templates(
             name, estimated_time_minutes,
-            sectors (id, name, color)
+            sectors:op_sectors(id, name, color)
           )
         `)
         .order("scheduled_date", { ascending: false })

@@ -39,9 +39,9 @@ export function MaterialForecast() {
           id,
           name,
           frequency,
-          task_template_materials (
+          task_template_materials:op_task_template_materials(
             quantity_needed,
-            materials (
+            materials:op_materials(
               id,
               name,
               unit,

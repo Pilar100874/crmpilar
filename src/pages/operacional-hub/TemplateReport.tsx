@@ -172,7 +172,7 @@ export default function TemplateReport() {
     Promise.all([
       supabase
         .from("op_task_templates")
-        .select("id, name, description, frequency, priority, priority_order, estimated_time_minutes, is_active, is_outdoor, requires_photo, required_workers, location_photos, is_irregularity_template, default_assigned_user_id, additional_assigned_user_ids, sectors(id, name, color), job_functions(id, name)")
+        .select("id, name, description, frequency, priority, priority_order, estimated_time_minutes, is_active, is_outdoor, requires_photo, required_workers, location_photos, is_irregularity_template, default_assigned_user_id, additional_assigned_user_ids, sectors:op_sectors(id, name, color), job_functions:op_job_functions(id, name)")
         .eq("is_irregularity_template", false)
         .order("name"),
       supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),

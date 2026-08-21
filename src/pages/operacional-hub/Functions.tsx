@@ -61,7 +61,7 @@ export default function Functions() {
       const [functionsRes, sectorsRes] = await Promise.all([
         supabase
           .from("op_job_functions")
-          .select(`*, sectors (id, name, color)`)
+          .select(`*, sectors:op_sectors(id, name, color)`)
           .order("name"),
         supabase.from("op_sectors").select("*").order("name"),
       ]);

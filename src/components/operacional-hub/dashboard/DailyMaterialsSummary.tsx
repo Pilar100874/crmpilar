@@ -46,14 +46,14 @@ export function DailyMaterialsSummary({ filterUserId }: DailyMaterialsSummaryPro
         .select(`
           id,
           assigned_user_id,
-          task_templates (
+          task_templates:op_task_templates(
             id,
             name,
             job_function_id,
             sector_id,
-            task_template_materials (
+            task_template_materials:op_task_template_materials(
               quantity_needed,
-              materials (
+              materials:op_materials(
                 id,
                 name,
                 unit,
@@ -69,7 +69,7 @@ export function DailyMaterialsSummary({ filterUserId }: DailyMaterialsSummaryPro
       if (filterUserId) {
         const { data: filterProfile } = await supabase
           .from("op_profiles")
-          .select("job_function_id, job_functions(sector_id)")
+          .select("job_function_id, job_functions:op_job_functions(sector_id)")
           .eq("user_id", filterUserId)
           .maybeSingle();
 
@@ -95,7 +95,7 @@ export function DailyMaterialsSummary({ filterUserId }: DailyMaterialsSummaryPro
         // Worker viewing own materials
         const { data: profile } = await supabase
           .from("op_profiles")
-          .select("job_function_id, job_functions(sector_id)")
+          .select("job_function_id, job_functions:op_job_functions(sector_id)")
           .eq("user_id", user?.id)
           .maybeSingle();
 
