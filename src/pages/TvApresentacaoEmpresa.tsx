@@ -369,17 +369,15 @@ export default function TvApresentacaoEmpresa() {
   }
 
   if (carregando || !apresentacao || !item) {
+    // Tela neutra (preta) enquanto carrega: nada de ícone de play ou barra de
+    // progresso — a troca entre conteúdos precisa ser totalmente fluida.
     return (
-      <div className="w-screen h-screen bg-black text-white flex items-center justify-center flex-col gap-4">
+      <div className="w-screen h-screen bg-black">
         <CloseBtn />
-        <MonitorPlay className="w-12 h-12 opacity-60 animate-pulse" />
-        <p className="text-lg">Carregando mídias… {progresso}%</p>
-        <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-white transition-all" style={{ width: `${progresso}%` }} />
-        </div>
       </div>
     );
   }
+
 
   return (
     <div className="w-screen h-screen bg-black overflow-hidden flex items-center justify-center relative">
