@@ -52,7 +52,7 @@ export default function CVVehicleEntry() {
     setLoading(true);
     const [m, dt, cfg] = await Promise.all([
       supabase.from("cv_vehicle_movements")
-        .select("*, vehicle:cv_vehicles(*), driver:cv_drivers(*)")
+        .select("*, vehicle:cv_vehicles(id, name, plate, current_km, logistica_grupo_id, veiculo_id), driver:cv_drivers(*)")
         .eq("status", "out").order("exit_time", { ascending: false }),
       supabase.from("cv_defect_types").select("*").neq("category", "bodywork").order("name"),
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
