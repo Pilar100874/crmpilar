@@ -61,7 +61,7 @@ const planoVazio = {
   alert_km_antecedencia: 500, alert_days_antecedencia: 7, active: true,
 };
 
-interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null }
+interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null; logistica_grupo_id?: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
