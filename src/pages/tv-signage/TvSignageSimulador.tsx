@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTvWatchdog } from "@/lib/tv/watchdogRede";
 import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
 import { useParams, useNavigate } from "react-router-dom";
