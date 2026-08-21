@@ -321,8 +321,9 @@ export default function CVVehicleEntry() {
 
           {step >= 1 && selected && (
             <div className="mb-4 space-y-3">
-              <div className="p-3 bg-muted/50 rounded text-sm">
+              <div className="p-3 bg-muted/50 rounded text-sm flex items-center gap-2 flex-wrap">
                 <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
+                <CVRastreamentoDot veiculoLogisticaId={(selected.vehicle as any)?.veiculo_id} />
               </div>
             </div>
           )}
