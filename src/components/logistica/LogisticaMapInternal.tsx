@@ -600,14 +600,19 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
       const placas = grupo.map(g => g.veiculo.placa).filter(Boolean).join(', ');
 
-      if (grupo.length >= LIMITE_CLUSTER && !expandido) {
-        grupo.forEach(g => ocultos.add(g.veiculo.id));
+      // Veículos com rótulo de "tempo parado" ou "endereço" nunca são escondidos no cluster
+      const temRotulo = (id: string) => tempoPorVeiculo.has(id) || enderecoPorVeiculo.has(id);
+      const rotulados = grupo.filter(g => temRotulo(g.veiculo.id));
+      const semRotulo = grupo.filter(g => !temRotulo(g.veiculo.id));
+
+      if (semRotulo.length >= LIMITE_CLUSTER && !expandido) {
+        semRotulo.forEach(g => ocultos.add(g.veiculo.id));
         const clusterMarker = L.marker(centroLatLng, {
-          icon: criarClusterIcon(grupo.length, false),
+          icon: criarClusterIcon(semRotulo.length, false),
           zIndexOffset: 1000,
           riseOnHover: true,
         }).bindTooltip(
-          `<strong>${grupo.length} veículos aqui</strong><br/>${placas}<br/><em>Clique para expandir</em>`,
+          `<strong>${semRotulo.length} veículos aqui</strong><br/>${placas}<br/><em>Clique para expandir</em>`,
           { direction: 'top', opacity: 0.95 },
         );
         clusterMarker.on('click', () => {
@@ -615,10 +620,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           setGruposExpandidos(prev => new Set(prev).add(chave));
         });
         clusters.addLayer(clusterMarker);
-        return;
-      }
-
-      if (grupo.length >= LIMITE_CLUSTER && expandido) {
+      } else if (grupo.length >= LIMITE_CLUSTER && expandido) {
         const recolher = L.marker(centroLatLng, {
           icon: criarClusterIcon(grupo.length, true),
           zIndexOffset: 900,
@@ -634,9 +636,20 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         clusters.addLayer(recolher);
       }
 
-      const n = grupo.length;
+      // Espalha somente os que continuam visíveis
+      const visiveis = grupo.filter(g => !ocultos.has(g.veiculo.id));
+      const n = Math.max(visiveis.length, 1);
       const raio = Math.max(limiar, (limiar / 2) / Math.sin(Math.PI / n));
-      grupo.forEach((item, i) => {
+      visiveis.forEach((item, i) => {
+        if (n === 1) {
+          layout.set(item.veiculo.id, {
+            pos: [item.veiculo.ultima_posicao!.lat, item.veiculo.ultima_posicao!.lng],
+            lado: 'right',
+            dy: 0,
+            deslocado: false,
+          });
+          return;
+        }
         const angulo = (2 * Math.PI * i) / n - Math.PI / 2;
         const destino = L.point(
           centro.x + Math.cos(angulo) * raio,
@@ -650,6 +663,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           deslocado: true,
         });
       });
+
     });
 
     // Linhas guia ligando o marcador deslocado à posição real
