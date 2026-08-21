@@ -216,19 +216,39 @@ export default function TvSignageMurais() {
 
                       <div className="min-w-0 flex-1">
                         <div className="text-sm truncate">{it.nome || (it.tipo === "video" ? "Vídeo" : "Imagem")}</div>
-                        {it.tipo === "image" && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Input type="number" min={2} max={600} className="h-7 w-20 text-xs"
-                              value={it.duracao ?? edit.duracao_padrao_imagem}
-                              onChange={(e) => {
-                                const arr = [...edit.itens];
-                                arr[idx] = { ...it, duracao: Math.max(2, Math.min(600, Number(e.target.value) || edit.duracao_padrao_imagem)) };
-                                setEdit({ ...edit, itens: arr });
-                              }} />
-                            <span className="text-[11px] text-muted-foreground">segundos</span>
-                          </div>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          {it.tipo === "image" && (
+                            <>
+                              <Input type="number" min={2} max={600} className="h-7 w-20 text-xs"
+                                value={it.duracao ?? edit.duracao_padrao_imagem}
+                                onChange={(e) => {
+                                  const arr = [...edit.itens];
+                                  arr[idx] = { ...it, duracao: Math.max(2, Math.min(600, Number(e.target.value) || edit.duracao_padrao_imagem)) };
+                                  setEdit({ ...edit, itens: arr });
+                                }} />
+                              <span className="text-[11px] text-muted-foreground mr-1">segundos</span>
+                            </>
+                          )}
+                          <Select
+                            value={it.ajuste ?? "esticar"}
+                            onValueChange={(v) => {
+                              const arr = [...edit.itens];
+                              arr[idx] = { ...it, ajuste: v as MuralAjuste };
+                              setEdit({ ...edit, itens: arr });
+                            }}
+                          >
+                            <SelectTrigger className="h-7 w-[190px] text-xs">
+                              <SelectValue placeholder="Modo de exibição" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {AJUSTES_MURAL.map((a) => (
+                                <SelectItem key={a.value} value={a.value} className="text-xs">{a.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
+
                       <div className="flex gap-1 shrink-0">
                         <Button variant="ghost" size="icon" onClick={() => mover(idx, -1)}><ArrowUp className="w-4 h-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => mover(idx, 1)}><ArrowDown className="w-4 h-4" /></Button>
