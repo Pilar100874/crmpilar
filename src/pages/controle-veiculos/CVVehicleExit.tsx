@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   LogOut, Car, User, Users, FileText, Camera, CheckCircle, ChevronRight, ChevronLeft,
-  AlertCircle, Save, X, Truck,
+  AlertCircle, Save, X, Truck, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
@@ -47,6 +47,9 @@ export default function CVVehicleExit() {
   const [form, setForm] = useState({
     vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "",
   });
+  const [helperDialogOpen, setHelperDialogOpen] = useState(false);
+  const [helperForm, setHelperForm] = useState({ name: "", phone: "", document: "" });
+  const [helperBusy, setHelperBusy] = useState(false);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
@@ -77,6 +80,42 @@ export default function CVVehicleExit() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const maskWhatsapp = (v: string) => {
+    const d = (v || "").replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 2) return d.length ? `(${d}` : "";
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  };
+
+  const criarHelper = async () => {
+    if (!helperForm.name.trim()) return toast.error("Nome do ajudante é obrigatório");
+    setHelperBusy(true);
+    const estabelecimentoId = await getEstabelecimentoId();
+    if (!estabelecimentoId) {
+      setHelperBusy(false);
+      return toast.error("Estabelecimento não encontrado");
+    }
+    const { data, error } = await supabase
+      .from("cv_helpers")
+      .insert({
+        estabelecimento_id: estabelecimentoId,
+        name: helperForm.name.trim(),
+        phone: helperForm.phone.replace(/\D/g, "") || null,
+        document: helperForm.document.trim() || null,
+        active: true,
+      })
+      .select("id,name,phone")
+      .single();
+    setHelperBusy(false);
+    if (error || !data) return toast.error(error?.message || "Erro ao criar ajudante");
+    setHelpers((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+    setForm((f) => ({ ...f, helper_id: data.id }));
+    setHelperForm({ name: "", phone: "", document: "" });
+    setHelperDialogOpen(false);
+    toast.success("Ajudante criado e selecionado");
+  };
 
 
   const availableVehicles = filtrarPorGrupo(
@@ -336,10 +375,15 @@ export default function CVVehicleExit() {
                 </div>
                 {form.has_helper && (
                   <div className="space-y-2 ml-6">
-                    <Label>Selecione o ajudante</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Selecione o ajudante</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setHelperDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-1" /> Novo ajudante
+                      </Button>
+                    </div>
                     {helpers.length === 0 ? (
                       <div className="p-3 bg-muted/50 rounded text-sm text-muted-foreground">
-                        Nenhum ajudante cadastrado. <a href="/controle-veiculos/ajudantes" className="text-primary hover:underline">Cadastrar agora</a>
+                        Nenhum ajudante cadastrado. Clique em <strong className="text-primary">Novo ajudante</strong> para adicionar.
                       </div>
                     ) : (
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -363,6 +407,39 @@ export default function CVVehicleExit() {
                     )}
                   </div>
                 )}
+
+                {/* Dialog para criar ajudante sem sair da tela */}
+                <Dialog open={helperDialogOpen} onOpenChange={setHelperDialogOpen}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Novo ajudante</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="helperName">Nome completo</Label>
+                        <Input id="helperName" value={helperForm.name} onChange={(e) => setHelperForm({ ...helperForm, name: e.target.value })}
+                          placeholder="Ex: João Silva" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="helperPhone">WhatsApp</Label>
+                        <Input id="helperPhone" inputMode="tel" value={helperForm.phone}
+                          onChange={(e) => setHelperForm({ ...helperForm, phone: maskWhatsapp(e.target.value) })}
+                          placeholder="(11) 99999-9999" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="helperDoc">CPF / Documento (opcional)</Label>
+                        <Input id="helperDoc" value={helperForm.document} onChange={(e) => setHelperForm({ ...helperForm, document: e.target.value })}
+                          placeholder="000.000.000-00" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="ghost" onClick={() => { setHelperForm({ name: "", phone: "", document: "" }); setHelperDialogOpen(false); }}>Cancelar</Button>
+                      <Button type="button" onClick={criarHelper} disabled={helperBusy || !helperForm.name.trim()}>
+                        {helperBusy ? "Salvando..." : "Salvar e selecionar"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
 
                 <div className="space-y-2">
