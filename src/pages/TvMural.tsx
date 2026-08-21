@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 import { useTvMode } from "@/lib/tvMode";
 import { useKioskMode } from "@/lib/tv/kioskMode";
-import { Loader2 } from "lucide-react";
+
 import { notificarFimDoConteudo } from "@/lib/tv/cicloConteudo";
 import { useTvWatchdog } from "@/lib/tv/watchdogRede";
 import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
