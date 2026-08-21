@@ -112,6 +112,9 @@ export default function TvDashboardVeiculos() {
     () => (searchParams.get('grupos') || '').split(',').map(s => s.trim()).filter(Boolean),
     [searchParams]
   );
+  const legendaVisivel = searchParams.get('legenda') === '1';
+
+
 
 
   const handleFocus = useCallback((id: string) => {
