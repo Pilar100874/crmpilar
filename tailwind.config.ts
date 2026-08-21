@@ -18,6 +18,18 @@ export default {
         },
         colors: {
           border: "hsl(var(--border))",
+          success: {
+            DEFAULT: "hsl(var(--success))",
+            foreground: "hsl(var(--success-foreground))",
+          },
+          warning: {
+            DEFAULT: "hsl(var(--warning))",
+            foreground: "hsl(var(--warning-foreground))",
+          },
+          critical: {
+            DEFAULT: "hsl(var(--critical))",
+            foreground: "hsl(var(--critical-foreground))",
+          },
           input: "hsl(var(--input))",
           ring: "hsl(var(--ring))",
           background: "hsl(var(--background))",
