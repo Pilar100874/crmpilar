@@ -833,7 +833,6 @@ export default function Tasks() {
             user_id: user!.id,
             reason: `Saída antecipada: ${reason}`,
             observations: earlyCheckoutDetail || null,
-            establishment_id: establishmentId,
           });
         } catch (e) {
           console.error("Error logging early departure:", e);

@@ -455,7 +455,7 @@ export default function TaskExecution() {
 
       const { error } = await supabase
         .from("op_task_executions")
-        .update(updateData)
+        .update(updateData as never)
         .eq("id", task.id);
 
       if (error) throw error;
