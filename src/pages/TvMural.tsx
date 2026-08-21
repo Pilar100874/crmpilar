@@ -214,7 +214,7 @@ export default function TvMural() {
         <video
           ref={camada === "atual" ? videoRef : undefined}
           src={item.url}
-          className="w-full h-full object-contain bg-black"
+          className="absolute inset-0 w-full h-full object-cover bg-black"
           autoPlay
           muted
           playsInline
@@ -225,7 +225,7 @@ export default function TvMural() {
         <img
           src={item.url}
           alt={item.legenda || item.nome || "Mídia do mural"}
-          className={`w-full h-full object-contain bg-black ${camada === "atual" ? "mural-kenburns-loop" : ""}`}
+          className={`absolute inset-0 w-full h-full object-cover bg-black ${camada === "atual" ? "mural-kenburns-loop" : ""}`}
         />
       )}
       {camada === "atual" && item.legenda && (
