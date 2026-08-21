@@ -113,7 +113,7 @@ export default function Productivity() {
           .select(`
             id, status, time_spent_minutes, scheduled_date, executed_by_user_id, assigned_user_id,
             pause_count, total_pause_minutes, pause_reason, observations,
-            task_templates (name, estimated_time_minutes, requires_rest_after, rest_minutes_after)
+            task_templates:op_task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after)
           `)
           .gte("scheduled_date", startStr)
           .lte("scheduled_date", endStr),

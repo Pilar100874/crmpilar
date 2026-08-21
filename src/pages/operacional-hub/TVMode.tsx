@@ -170,7 +170,7 @@ export default function TVMode() {
           .from("op_task_executions")
           .select(`
             id, status, photo_completion_url, time_spent_minutes, executed_by_user_id, assigned_user_id, task_template_id,
-            task_templates (name, estimated_time_minutes, requires_photo, sector_id, priority)
+            task_templates:op_task_templates(name, estimated_time_minutes, requires_photo, sector_id, priority)
           `)
           .eq("scheduled_date", todayStr),
         supabase.from("op_materials").select("*"),
@@ -287,7 +287,7 @@ export default function TVMode() {
 
   const exitTVMode = () => {
     document.exitFullscreen?.().catch(() => {});
-    navigate("/");
+    navigate("/operacional");
   };
 
   return (

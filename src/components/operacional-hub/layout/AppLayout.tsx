@@ -47,41 +47,41 @@ interface AppLayoutProps {
 
 // Items for admin/manager
 const adminNavItems = [
-  { icon: LayoutDashboard, label: "Painel", href: "/" },
-  { icon: UserX, label: "Ausências", href: "/absences" },
-  { icon: Camera, label: "Irregularidades", href: "/irregularities" },
-  { icon: CloudRain, label: "Condições", href: "/conditions" },
-  { icon: TrendingUp, label: "Produtividade", href: "/productivity" },
-  { icon: CalendarClock, label: "Simulação", href: "/schedule-simulation" },
-  { icon: BarChart3, label: "Previsto x Real", href: "/planned-vs-actual" },
-  { icon: Timer, label: "Ociosidade", href: "/idle-time" },
-  { icon: FileText, label: "Templates", href: "/templates" },
-  { icon: ShieldCheck, label: "Aprovações", href: "/approvals" },
-  { icon: Users, label: "Usuários", href: "/users" },
-  { icon: Building2, label: "Setores", href: "/sectors" },
-  { icon: Briefcase, label: "Funções", href: "/functions" },
-  { icon: Clock, label: "Turnos", href: "/shifts" },
-  { icon: Package, label: "Materiais", href: "/materials" },
-  { icon: Wrench, label: "Ferramentas", href: "/tools" },
-  { icon: Repeat, label: "Frequências", href: "/frequencies" },
-  { icon: AlertOctagon, label: "Incidentes", href: "/incidents" },
-  { icon: Bell, label: "Alertas", href: "/alerts" },
-  { icon: History, label: "Histórico", href: "/history" },
-  { icon: Tv, label: "Modo TV", href: "/tv" },
-  { icon: Tv, label: "TV Tarefas", href: "/tv-tasks" },
-  { icon: Shield, label: "Níveis de Acesso", href: "/access-levels" },
-  { icon: Settings, label: "Configurações", href: "/settings" },
+  { icon: LayoutDashboard, label: "Painel", href: "/operacional" },
+  { icon: UserX, label: "Ausências", href: "/operacional/absences" },
+  { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
+  { icon: CloudRain, label: "Condições", href: "/operacional/conditions" },
+  { icon: TrendingUp, label: "Produtividade", href: "/operacional/productivity" },
+  { icon: CalendarClock, label: "Simulação", href: "/operacional/schedule-simulation" },
+  { icon: BarChart3, label: "Previsto x Real", href: "/operacional/planned-vs-actual" },
+  { icon: Timer, label: "Ociosidade", href: "/operacional/idle-time" },
+  { icon: FileText, label: "Templates", href: "/operacional/templates" },
+  { icon: ShieldCheck, label: "Aprovações", href: "/operacional/approvals" },
+  { icon: Users, label: "Usuários", href: "/operacional/users" },
+  { icon: Building2, label: "Setores", href: "/operacional/sectors" },
+  { icon: Briefcase, label: "Funções", href: "/operacional/functions" },
+  { icon: Clock, label: "Turnos", href: "/operacional/shifts" },
+  { icon: Package, label: "Materiais", href: "/operacional/materials" },
+  { icon: Wrench, label: "Ferramentas", href: "/operacional/tools" },
+  { icon: Repeat, label: "Frequências", href: "/operacional/frequencies" },
+  { icon: AlertOctagon, label: "Incidentes", href: "/operacional/incidents" },
+  { icon: Bell, label: "Alertas", href: "/operacional/alerts" },
+  { icon: History, label: "Histórico", href: "/operacional/history" },
+  { icon: Tv, label: "Modo TV", href: "/operacional/tv" },
+  { icon: Tv, label: "TV Tarefas", href: "/operacional/tv-tasks" },
+  { icon: Shield, label: "Níveis de Acesso", href: "/operacional/access-levels" },
+  { icon: Settings, label: "Configurações", href: "/operacional/settings" },
 ];
 
 // Super admin exclusive items
 const superAdminNavItems = [
-  { icon: Store, label: "Estabelecimentos", href: "/establishments" },
+  { icon: Store, label: "Estabelecimentos", href: "/operacional/establishments" },
 ];
 
 // Simplified items for worker
 const workerNavItems = [
-  { icon: LayoutDashboard, label: "Minhas Tarefas", href: "/" },
-  { icon: Camera, label: "Irregularidades", href: "/irregularities" },
+  { icon: LayoutDashboard, label: "Minhas Tarefas", href: "/operacional" },
+  { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -111,14 +111,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isAdminOrManager, isSuperAdmin, roleLoading, accessLevel, accessLoading]);
 
   const badgeMap: Record<string, number> = useMemo(() => ({
-    "/approvals": badges.pendingApprovals,
-    "/tools": badges.toolsNeedRepair,
-    "/materials": badges.lowStockMaterials,
+    "/operacional/approvals": badges.pendingApprovals,
+    "/operacional/tools": badges.toolsNeedRepair,
+    "/operacional/materials": badges.lowStockMaterials,
   }), [badges]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/auth");
+    navigate("/operacional/auth");
   };
 
   return (

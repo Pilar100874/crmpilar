@@ -45,7 +45,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
-import { validateTaskCompletion, calculateImageHash } from "@/lib/antifraud";
+import { validateTaskCompletion, calculateImageHash } from "@/lib/operacional-hub/antifraud";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LocationPhotosViewer } from "@/components/operacional-hub/tasks/LocationPhotosViewer";
@@ -53,7 +53,7 @@ import { WeatherCheckDialog } from "@/components/operacional-hub/tasks/WeatherCh
 import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition";
 import { ToolCheckDialog } from "@/components/operacional-hub/tasks/ToolCheckDialog";
 import { useOfflineSync } from "@/hooks/operacional-hub/useOfflineSync";
-import { getCachedData, addToPhotoQueue, fileToBase64 } from "@/lib/offlineDb";
+import { getCachedData, addToPhotoQueue, fileToBase64 } from "@/lib/operacional-hub/offlineDb";
 
 interface ChecklistItem {
   id: string;
@@ -241,7 +241,7 @@ export default function TaskExecution() {
           pause_count,
           total_pause_minutes,
           pause_reason,
-          task_templates (
+          task_templates:op_task_templates(
             name,
             description,
             estimated_time_minutes,
@@ -254,7 +254,7 @@ export default function TaskExecution() {
             additional_assigned_user_ids,
             default_assigned_user_id,
             is_outdoor,
-            sectors (
+            sectors:op_sectors(
               name,
               color
             )
@@ -330,7 +330,7 @@ export default function TaskExecution() {
           .from("op_task_template_materials")
           .select(`
             quantity_needed,
-            materials (current_stock, name)
+            materials:op_materials(current_stock, name)
           `)
           .eq("task_template_id", data.task_template_id);
 
@@ -347,7 +347,7 @@ export default function TaskExecution() {
               description: `Tarefa pulada por falta de: ${names}`,
               variant: "destructive",
             });
-            navigate("/tasks");
+            navigate("/operacional/tasks");
             return;
           }
         }
@@ -455,7 +455,7 @@ export default function TaskExecution() {
 
       const { error } = await supabase
         .from("op_task_executions")
-        .update(updateData)
+        .update(updateData as never)
         .eq("id", task.id);
 
       if (error) throw error;
@@ -799,7 +799,7 @@ export default function TaskExecution() {
       }
 
       if (navigator.onLine) {
-        const { error } = await supabase.from("op_task_executions").update(updateData).eq("id", task.id);
+        const { error } = await supabase.from("op_task_executions").update(updateData as never).eq("id", task.id);
         if (error) throw error;
       } else {
         await queueAction("task_executions", "update", updateData, "id", task.id);
@@ -812,7 +812,7 @@ export default function TaskExecution() {
           : `Tempo: ${timeSpent} minutos${task.pauseCount > 0 ? ` (${task.pauseCount} pausa(s), ${task.totalPauseMinutes}min pausado)` : ""}`,
       });
       setDelayDialogOpen(false);
-      navigate("/tasks");
+      navigate("/operacional/tasks");
     } catch (error) {
       console.error("Error completing task:", error);
       toast({ title: "Erro", description: "Não foi possível concluir a tarefa", variant: "destructive" });
@@ -859,7 +859,7 @@ export default function TaskExecution() {
     // Get today's pending tasks time
     const { data: todayTasks } = await supabase
       .from("op_task_executions")
-      .select("id, task_template_id, task_templates(estimated_time_minutes)")
+      .select("id, task_template_id, task_templates:op_task_templates(estimated_time_minutes)")
       .eq("scheduled_date", today)
       .in("status", ["pending", "in_progress"])
       .or(`assigned_user_id.eq.${user.id},assigned_user_id.is.null`);
@@ -886,7 +886,7 @@ export default function TaskExecution() {
     // Find future tasks for this user (only pending, not yet executed today)
     const { data: futureTasks } = await supabase
       .from("op_task_executions")
-      .select("id, task_template_id, scheduled_date, task_templates(estimated_time_minutes, name)")
+      .select("id, task_template_id, scheduled_date, task_templates:op_task_templates(estimated_time_minutes, name)")
       .eq("assigned_user_id", user.id)
       .eq("status", "pending")
       .gt("scheduled_date", today)
@@ -1019,7 +1019,7 @@ export default function TaskExecution() {
       setNotDoneAudioUrl(null);
       setNotDoneReason("");
       setNotDoneDialogOpen(false);
-      navigate("/tasks");
+      navigate("/operacional/tasks");
     } catch (error) {
       console.error("Error marking task as not done:", error);
       toast({
@@ -1079,7 +1079,7 @@ export default function TaskExecution() {
               setShowToolCheck(true);
             }
           }}
-          onCancel={() => navigate("/tasks")}
+          onCancel={() => navigate("/operacional/tasks")}
         />
       </>
     );
@@ -1126,7 +1126,7 @@ export default function TaskExecution() {
               description: reason,
               variant: "destructive",
             });
-            navigate("/tasks");
+            navigate("/operacional/tasks");
           }}
         />
       </>
@@ -1138,7 +1138,7 @@ export default function TaskExecution() {
       <AppLayout>
         <div className="text-center py-16">
           <p className="text-lg text-muted-foreground">Tarefa não encontrada</p>
-          <Button onClick={() => navigate("/tasks")} className="mt-4">
+          <Button onClick={() => navigate("/operacional/tasks")} className="mt-4">
             Voltar
           </Button>
         </div>
@@ -1994,7 +1994,7 @@ export default function TaskExecution() {
             <Button
               onClick={() => {
                 setShowNoTasksDialog(false);
-                navigate("/tasks");
+                navigate("/operacional/tasks");
               }}
               className="w-full h-12 rounded-xl text-base font-bold"
             >

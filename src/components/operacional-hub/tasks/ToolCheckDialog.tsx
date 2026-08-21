@@ -50,7 +50,7 @@ export function ToolCheckDialog({ open, taskTemplateId, onAllConfirmed, onSkip }
     try {
       const { data, error } = await supabase
         .from("op_task_template_tools")
-        .select("tool_id, tools(id, name, description, is_available, needs_repair)")
+        .select("tool_id, tools:op_tools(id, name, description, is_available, needs_repair)")
         .eq("task_template_id", taskTemplateId);
 
       if (error) throw error;

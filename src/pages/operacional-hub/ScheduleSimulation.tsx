@@ -288,7 +288,7 @@ export default function ScheduleSimulation() {
     const [tasksRes, templatesRes, absencesRes, depsRes, ttToolsRes, brokenToolsRes, historicalTasksRes] = await Promise.all([
       supabase
         .from("op_task_executions")
-        .select("*, task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)")
+        .select("*, task_templates:op_task_templates(name, estimated_time_minutes, requires_rest_after, rest_minutes_after, priority, is_outdoor)")
         .or(userFilter)
         .gte("scheduled_date", startStr)
         .lte("scheduled_date", endStr)

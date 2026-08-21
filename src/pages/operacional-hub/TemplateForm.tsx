@@ -159,7 +159,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
         supabase.from("op_sectors").select("*").order("name"),
         supabase.from("op_job_functions").select("id, name, sector_id").order("name"),
         supabase.from("op_profiles").select("user_id, full_name, job_function_id").eq("is_active", true).order("full_name"),
-        supabase.from("op_task_templates").select("id, name, is_active, sectors(name, color)").order("name"),
+        supabase.from("op_task_templates").select("id, name, is_active, sectors:op_sectors(name, color)").order("name"),
         supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
         supabase.from("op_tools").select("id, name, sector_id").eq("is_available", true).order("name"),
         supabase.from("op_materials").select("id, name, unit, sector_id, current_stock").order("name"),
@@ -428,7 +428,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
       if (isDialog && onSaved) {
         onSaved();
       } else {
-        navigate("/templates");
+        navigate("/operacional/templates");
       }
     } catch (error) {
       console.error("Error saving template:", error);
@@ -454,7 +454,7 @@ export default function TemplateForm({ templateId: propTemplateId, isDialog, onS
     if (isDialog && onSaved) {
       onSaved();
     } else {
-      navigate("/templates");
+      navigate("/operacional/templates");
     }
   };
 

@@ -9,7 +9,7 @@ import {
   getPhotoQueue,
   removeFromPhotoQueue,
   base64ToBlob,
-} from "@/lib/offlineDb";
+} from "@/lib/operacional-hub/offlineDb";
 import { useToast } from "@/hooks/use-toast";
 
 export function useOnlineStatus() {

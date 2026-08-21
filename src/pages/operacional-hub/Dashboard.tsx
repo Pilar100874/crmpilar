@@ -152,7 +152,7 @@ export default function Dashboard() {
         .select(`
           full_name, 
           job_function_id,
-          job_functions (
+          job_functions:op_job_functions(
             id,
             sector_id
           )
@@ -174,12 +174,12 @@ export default function Dashboard() {
             status,
             assigned_user_id,
             task_template_id,
-            task_templates (
+            task_templates:op_task_templates(
               name,
               estimated_time_minutes,
               job_function_id,
               sector_id,
-              sectors (
+              sectors:op_sectors(
                 id,
                 name,
                 color
@@ -196,12 +196,12 @@ export default function Dashboard() {
             status,
             assigned_user_id,
             task_template_id,
-            task_templates!inner (
+            task_templates:op_task_templates!inner(
               name,
               estimated_time_minutes,
               job_function_id,
               sector_id,
-              sectors (
+              sectors:op_sectors(
                 id,
                 name,
                 color
@@ -323,11 +323,11 @@ export default function Dashboard() {
             photo_completion_url,
             time_spent_minutes,
             executed_by_user_id,
-            task_templates (
+            task_templates:op_task_templates(
               name,
               estimated_time_minutes,
               requires_photo,
-              sectors (
+              sectors:op_sectors(
                 id,
                 name,
                 color

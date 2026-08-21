@@ -299,7 +299,7 @@ export default function ReportIrregularity() {
         });
       }
 
-      navigate("/tasks");
+      navigate("/operacional/tasks");
     } catch (error) {
       console.error("Error reporting irregularity:", error);
       toast({
@@ -327,7 +327,7 @@ export default function ReportIrregularity() {
       <div className="max-w-2xl mx-auto space-y-6 pb-28">
         {/* Back button */}
         <button 
-          onClick={() => navigate("/tasks")}
+          onClick={() => navigate("/operacional/tasks")}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />

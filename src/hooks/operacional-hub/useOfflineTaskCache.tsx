@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { cacheData, getCachedData } from "@/lib/offlineDb";
+import { cacheData, getCachedData } from "@/lib/operacional-hub/offlineDb";
 
 /**
  * Caches essential task data to IndexedDB when online,

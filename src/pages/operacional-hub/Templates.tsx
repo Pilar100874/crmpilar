@@ -99,8 +99,8 @@ export default function Templates() {
           .from("op_task_templates")
           .select(`
             id, name, description, estimated_time_minutes, frequency, requires_photo, is_active, is_outdoor, priority, is_irregularity_template, required_workers, location_photos,
-            sectors (id, name, color),
-            job_functions (id, name)
+            sectors:op_sectors(id, name, color),
+            job_functions:op_job_functions(id, name)
           `)
           .order("name"),
         supabase.from("op_sectors").select("*").order("name"),
@@ -293,14 +293,14 @@ export default function Templates() {
             <Button 
               variant="outline"
               className="gap-2 h-12" 
-              onClick={() => navigate("/templates-report")}
+              onClick={() => navigate("/operacional/templates-report")}
             >
               <ClipboardList className="h-5 w-5" />
               Relatório
             </Button>
             <Button 
               className="gap-2 h-12 px-6" 
-              onClick={() => navigate("/templates/new")}
+              onClick={() => navigate("/operacional/templates/new")}
             >
               <Plus className="h-5 w-5" />
               Novo Template
@@ -412,7 +412,7 @@ export default function Templates() {
                     : "Tente ajustar os filtros de busca"}
                 </p>
                 {templates.length === 0 && (
-                  <Button onClick={() => navigate("/templates/new")}>
+                  <Button onClick={() => navigate("/operacional/templates/new")}>
                     <Plus className="h-4 w-4 mr-2" />
                     Criar Template
                   </Button>

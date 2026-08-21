@@ -172,7 +172,7 @@ export default function TemplateReport() {
     Promise.all([
       supabase
         .from("op_task_templates")
-        .select("id, name, description, frequency, priority, priority_order, estimated_time_minutes, is_active, is_outdoor, requires_photo, required_workers, location_photos, is_irregularity_template, default_assigned_user_id, additional_assigned_user_ids, sectors(id, name, color), job_functions(id, name)")
+        .select("id, name, description, frequency, priority, priority_order, estimated_time_minutes, is_active, is_outdoor, requires_photo, required_workers, location_photos, is_irregularity_template, default_assigned_user_id, additional_assigned_user_ids, sectors:op_sectors(id, name, color), job_functions:op_job_functions(id, name)")
         .eq("is_irregularity_template", false)
         .order("name"),
       supabase.from("op_task_dependencies").select("task_template_id, depends_on_template_id"),
@@ -374,7 +374,7 @@ export default function TemplateReport() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/templates")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/operacional/templates")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

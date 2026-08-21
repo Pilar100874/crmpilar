@@ -115,8 +115,8 @@ export default function Irregularities() {
           .from("op_irregularities")
           .select(`
             id, title, description, photo_url, location_description, status, created_at,
-            sectors (id, name, color),
-            task_executions!irregularities_task_execution_id_fkey (id, status, photo_after_url)
+            sectors:op_sectors(id, name, color),
+            task_executions:op_task_executions!irregularities_task_execution_id_fkey(id, status, photo_after_url)
           `)
           .order("created_at", { ascending: false }),
         supabase.from("op_sectors").select("*").order("name"),

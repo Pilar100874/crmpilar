@@ -184,6 +184,36 @@ import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
 import CVCameras from "./pages/controle-veiculos/CVCameras";
 import CVVehicleHistory from "./pages/controle-veiculos/CVVehicleHistory";
+import OpLayout from "./pages/operacional-hub/OpLayout";
+import OpTasks from "./pages/operacional-hub/Tasks";
+import OpTaskExecution from "./pages/operacional-hub/TaskExecution";
+import OpTemplates from "./pages/operacional-hub/Templates";
+import OpTemplateForm from "./pages/operacional-hub/TemplateForm";
+import OpTemplateReport from "./pages/operacional-hub/TemplateReport";
+import OpSectors from "./pages/operacional-hub/Sectors";
+import OpFunctions from "./pages/operacional-hub/Functions";
+import OpShifts from "./pages/operacional-hub/Shifts";
+import OpMaterials from "./pages/operacional-hub/Materials";
+import OpTools from "./pages/operacional-hub/Tools";
+import OpUsers from "./pages/operacional-hub/Users";
+import OpAlerts from "./pages/operacional-hub/Alerts";
+import OpSettings from "./pages/operacional-hub/Settings";
+import OpHistory from "./pages/operacional-hub/History";
+import OpIncidents from "./pages/operacional-hub/Incidents";
+import OpIrregularities from "./pages/operacional-hub/Irregularities";
+import OpConditions from "./pages/operacional-hub/Conditions";
+import OpProductivity from "./pages/operacional-hub/Productivity";
+import OpAbsences from "./pages/operacional-hub/Absences";
+import OpReportIrregularity from "./pages/operacional-hub/ReportIrregularity";
+import OpScheduleSimulation from "./pages/operacional-hub/ScheduleSimulation";
+import OpPlannedVsActual from "./pages/operacional-hub/PlannedVsActual";
+import OpFrequencies from "./pages/operacional-hub/Frequencies";
+import OpApprovals from "./pages/operacional-hub/Approvals";
+import OpIdleTimeAnalysis from "./pages/operacional-hub/IdleTimeAnalysis";
+import OpEstablishments from "./pages/operacional-hub/Establishments";
+import OpAccessLevels from "./pages/operacional-hub/AccessLevels";
+import OpTVMode from "./pages/operacional-hub/TVMode";
+import OpTVTaskTracker from "./pages/operacional-hub/TVTaskTracker";
 import CVisLayout from "./pages/controle-visitantes/CVisLayout";
 import CVisDashboard from "./pages/controle-visitantes/CVisDashboard";
 import CVisEntrada from "./pages/controle-visitantes/CVisEntrada";
@@ -674,6 +704,38 @@ const App = () => (
                 <Route path="ajudantes" element={<CVHelpers />} />
               <Route path="cameras" element={<CVCameras />} />
               <Route path="historico-imagens" element={<CVVehicleHistory />} />
+              </Route>
+              <Route path="/operacional" element={<OpLayout />}>
+                <Route index element={<OpTasks />} />
+                <Route path="tasks/:id" element={<OpTaskExecution />} />
+                <Route path="templates" element={<OpTemplates />} />
+                <Route path="templates/new" element={<OpTemplateForm />} />
+                <Route path="templates/:id" element={<OpTemplateForm />} />
+                <Route path="templates-report" element={<OpTemplateReport />} />
+                <Route path="sectors" element={<OpSectors />} />
+                <Route path="functions" element={<OpFunctions />} />
+                <Route path="shifts" element={<OpShifts />} />
+                <Route path="materials" element={<OpMaterials />} />
+                <Route path="tools" element={<OpTools />} />
+                <Route path="users" element={<OpUsers />} />
+                <Route path="alerts" element={<OpAlerts />} />
+                <Route path="settings" element={<OpSettings />} />
+                <Route path="history" element={<OpHistory />} />
+                <Route path="incidents" element={<OpIncidents />} />
+                <Route path="irregularities" element={<OpIrregularities />} />
+                <Route path="conditions" element={<OpConditions />} />
+                <Route path="productivity" element={<OpProductivity />} />
+                <Route path="absences" element={<OpAbsences />} />
+                <Route path="report-irregularity" element={<OpReportIrregularity />} />
+                <Route path="schedule-simulation" element={<OpScheduleSimulation />} />
+                <Route path="planned-vs-actual" element={<OpPlannedVsActual />} />
+                <Route path="frequencies" element={<OpFrequencies />} />
+                <Route path="approvals" element={<OpApprovals />} />
+                <Route path="idle-time" element={<OpIdleTimeAnalysis />} />
+                <Route path="establishments" element={<OpEstablishments />} />
+                <Route path="access-levels" element={<OpAccessLevels />} />
+                <Route path="tv" element={<OpTVMode />} />
+                <Route path="tv-tasks" element={<OpTVTaskTracker />} />
               </Route>
               <Route path="/controle-visitantes" element={<CVisLayout />}>
                 <Route index element={<CVisDashboard />} />

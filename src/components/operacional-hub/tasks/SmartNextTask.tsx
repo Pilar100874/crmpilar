@@ -72,9 +72,9 @@ export function SmartNextTask() {
         .from("op_task_executions")
         .select(`
           id, status, priority_score, blocked_by_condition_id,
-          task_templates (
+          task_templates:op_task_templates(
             id, name, estimated_time_minutes, is_outdoor, sector_id,
-            sectors (name, color)
+            sectors:op_sectors(name, color)
           )
         `)
         .eq("scheduled_date", today)
@@ -97,7 +97,7 @@ export function SmartNextTask() {
               .from("op_task_template_materials")
               .select(`
                 quantity_needed,
-                materials (current_stock, name)
+                materials:op_materials(current_stock, name)
               `)
               .eq("task_template_id", template?.id);
 
