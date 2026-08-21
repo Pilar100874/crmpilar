@@ -324,7 +324,7 @@ export default function CVVehicleExit() {
               <div className="space-y-4 max-w-xl">
                 <div className="mb-1 flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /><h3 className="font-semibold">Detalhes da saída</h3></div>
                 <div className="p-3 bg-muted/50 rounded text-sm space-y-1">
-                  <p><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate}</p>
+                  <p className="flex items-center gap-2"><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selectedVehicle as any)?.veiculo_id} /></p>
                   <p><strong>Motorista:</strong> {selectedDriver?.name}</p>
                   <p><strong>KM saída:</strong> {selectedVehicle?.current_km?.toLocaleString()}</p>
                 </div>
