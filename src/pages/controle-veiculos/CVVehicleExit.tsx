@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
+import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
 
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
