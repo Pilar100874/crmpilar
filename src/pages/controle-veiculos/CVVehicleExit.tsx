@@ -81,6 +81,42 @@ export default function CVVehicleExit() {
   };
   useEffect(() => { load(); }, []);
 
+  const maskWhatsapp = (v: string) => {
+    const d = (v || "").replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 2) return d.length ? `(${d}` : "";
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  };
+
+  const criarHelper = async () => {
+    if (!helperForm.name.trim()) return toast.error("Nome do ajudante é obrigatório");
+    setHelperBusy(true);
+    const estabelecimentoId = await getEstabelecimentoId();
+    if (!estabelecimentoId) {
+      setHelperBusy(false);
+      return toast.error("Estabelecimento não encontrado");
+    }
+    const { data, error } = await supabase
+      .from("cv_helpers")
+      .insert({
+        estabelecimento_id: estabelecimentoId,
+        name: helperForm.name.trim(),
+        phone: helperForm.phone.replace(/\D/g, "") || null,
+        document: helperForm.document.trim() || null,
+        active: true,
+      })
+      .select("id,name,phone")
+      .single();
+    setHelperBusy(false);
+    if (error || !data) return toast.error(error?.message || "Erro ao criar ajudante");
+    setHelpers((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+    setForm((f) => ({ ...f, helper_id: data.id }));
+    setHelperForm({ name: "", phone: "", document: "" });
+    setHelperDialogOpen(false);
+    toast.success("Ajudante criado e selecionado");
+  };
+
 
   const availableVehicles = filtrarPorGrupo(
     vehicles.filter((v) => !busyVehicleIds.has(v.id)),
