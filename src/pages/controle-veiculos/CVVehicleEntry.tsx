@@ -299,9 +299,20 @@ export default function CVVehicleEntry() {
                           <span className="font-semibold truncate">{m.vehicle?.name}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            title="Ver localização no mapa"
+                            onClick={(e) => { e.stopPropagation(); setMapaVeiculo({ id: (m.vehicle as any)?.veiculo_id ?? null, titulo: `${m.vehicle?.name ?? ""} ${m.vehicle?.plate ?? ""}`.trim() }); }}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setMapaVeiculo({ id: (m.vehicle as any)?.veiculo_id ?? null, titulo: `${m.vehicle?.name ?? ""} ${m.vehicle?.plate ?? ""}`.trim() }); } }}
+                            className="p-1 rounded hover:bg-muted text-primary cursor-pointer"
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </span>
                           <CVRastreamentoDot veiculoLogisticaId={(m.vehicle as any)?.veiculo_id} dotOnly />
                           <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
                         </div>
+
                       </div>
                       <p className="text-sm text-muted-foreground truncate"><span className="font-medium">Motorista:</span> {m.driver?.name}</p>
                       {m.has_helper && <Badge variant="outline" className="text-xs mt-2">Ajudante: {m.helper_name}</Badge>}
