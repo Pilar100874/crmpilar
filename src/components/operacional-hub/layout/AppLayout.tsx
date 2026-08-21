@@ -1,4 +1,4 @@
-import { ReactNode, useState, useMemo } from "react";
+import { ReactNode, useState, useMemo, createContext, useContext } from "react";
 import { OfflineIndicator } from "@/components/operacional-hub/OfflineIndicator";
 import { useNavBadges } from "@/hooks/operacional-hub/useNavBadges";
 import { Link, useLocation } from "react-router-dom";
@@ -134,7 +134,16 @@ const workerSection: NavSection = {
   ],
 };
 
+const AppLayoutContext = createContext(false);
+
+/** Evita layout duplicado quando páginas internas também usam <AppLayout>. */
 export function AppLayout({ children }: AppLayoutProps) {
+  const nested = useContext(AppLayoutContext);
+  if (nested) return <>{children}</>;
+  return <AppLayoutInner>{children}</AppLayoutInner>;
+}
+
+function AppLayoutInner({ children }: AppLayoutProps) {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -348,7 +357,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Conteúdo */}
         <div className="flex-1 overflow-auto p-3 lg:p-4 xl:p-6">
           <div className="lg:rounded-xl lg:border lg:border-border/60 lg:bg-card lg:shadow-sm p-0 lg:p-6">
-            {children}
+            <AppLayoutContext.Provider value={true}>{children}</AppLayoutContext.Provider>
           </div>
         </div>
       </div>
