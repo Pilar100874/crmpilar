@@ -286,17 +286,23 @@ export default function TvSignageSimulador() {
     return () => clearTimeout(t);
   }, [idx, items, paused]);
 
-  // Aviso de fim de ciclo enviado pelos players internos (apresentação/mural)
+  // Aviso de fim de ciclo enviado pelos players internos (apresentação/mural).
+  // Só aceitamos o aviso da janela do item ATIVO — o próximo item já fica pré-carregado
+  // (invisível) e também emite esse evento; se aceitássemos, a apresentação atual seria
+  // cortada no meio.
   useEffect(() => {
     const onMsg = (ev: MessageEvent) => {
       if ((ev.data as any)?.tipo !== TV_FIM_CONTEUDO) return;
       if (paused || items.length <= 1) return;
       if (!items[idx]?.aoFinal) return;
+      const ativo = iframesRef.current[idx];
+      if (ativo && ev.source && ev.source !== ativo.contentWindow) return;
       setIdx((i) => (i + 1) % items.length);
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [idx, items, paused]);
+
 
   // Auto-hide da barra
   useEffect(() => {
