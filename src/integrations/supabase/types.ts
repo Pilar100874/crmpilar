@@ -13101,6 +13101,1420 @@ export type Database = {
           },
         ]
       }
+      op_absences: {
+        Row: {
+          absence_date: string
+          created_at: string
+          establishment_id: string | null
+          id: string
+          is_planned: boolean | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          absence_date: string
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          is_planned?: boolean | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          absence_date?: string
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          is_planned?: boolean | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_absences_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_access_levels: {
+        Row: {
+          allowed_menus: string[]
+          base_role: Database["public"]["Enums"]["op_app_role"]
+          created_at: string
+          establishment_id: string | null
+          id: string
+          is_system: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_menus?: string[]
+          base_role?: Database["public"]["Enums"]["op_app_role"]
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_menus?: string[]
+          base_role?: Database["public"]["Enums"]["op_app_role"]
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_access_levels_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_alerts: {
+        Row: {
+          created_at: string
+          establishment_id: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          severity: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          severity?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          severity?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_alerts_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_daily_attendance: {
+        Row: {
+          attendance_date: string
+          checked_in_at: string | null
+          checked_out_at: string | null
+          created_at: string
+          establishment_id: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          user_id: string
+        }
+        Insert: {
+          attendance_date?: string
+          checked_in_at?: string | null
+          checked_out_at?: string | null
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          user_id: string
+        }
+        Update: {
+          attendance_date?: string
+          checked_in_at?: string | null
+          checked_out_at?: string | null
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_daily_attendance_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_establishments: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      op_frequencies: {
+        Row: {
+          created_at: string
+          description: string | null
+          establishment_id: string | null
+          id: string
+          interval_days: number | null
+          is_active: boolean
+          is_system: boolean
+          label: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          interval_days?: number | null
+          is_active?: boolean
+          is_system?: boolean
+          label: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          interval_days?: number | null
+          is_active?: boolean
+          is_system?: boolean
+          label?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_frequencies_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_function_departures: {
+        Row: {
+          created_at: string
+          departure_date: string
+          id: string
+          observations: string | null
+          reason: string
+          tasks_redistributed: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          departure_date?: string
+          id?: string
+          observations?: string | null
+          reason: string
+          tasks_redistributed?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          departure_date?: string
+          id?: string
+          observations?: string | null
+          reason?: string
+          tasks_redistributed?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      op_incidents: {
+        Row: {
+          created_at: string
+          description: string | null
+          establishment_id: string | null
+          id: string
+          reported_by_user_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          sector_id: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          reported_by_user_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          sector_id?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          reported_by_user_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          sector_id?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_incidents_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_incidents_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_irregularities: {
+        Row: {
+          assigned_user_ids: string[] | null
+          created_at: string
+          description: string | null
+          dispatch_priority: number | null
+          dispatched_at: string | null
+          dispatched_by: string | null
+          establishment_id: string | null
+          estimated_time_minutes: number | null
+          id: string
+          location_description: string | null
+          photo_url: string
+          reported_by_user_id: string | null
+          scheduled_dates: string[] | null
+          sector_id: string | null
+          status: string
+          task_execution_id: string | null
+          task_name: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_user_ids?: string[] | null
+          created_at?: string
+          description?: string | null
+          dispatch_priority?: number | null
+          dispatched_at?: string | null
+          dispatched_by?: string | null
+          establishment_id?: string | null
+          estimated_time_minutes?: number | null
+          id?: string
+          location_description?: string | null
+          photo_url: string
+          reported_by_user_id?: string | null
+          scheduled_dates?: string[] | null
+          sector_id?: string | null
+          status?: string
+          task_execution_id?: string | null
+          task_name?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_user_ids?: string[] | null
+          created_at?: string
+          description?: string | null
+          dispatch_priority?: number | null
+          dispatched_at?: string | null
+          dispatched_by?: string | null
+          establishment_id?: string | null
+          estimated_time_minutes?: number | null
+          id?: string
+          location_description?: string | null
+          photo_url?: string
+          reported_by_user_id?: string | null
+          scheduled_dates?: string[] | null
+          sector_id?: string | null
+          status?: string
+          task_execution_id?: string | null
+          task_name?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_irregularities_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_irregularities_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_irregularities_task_execution_id_fkey"
+            columns: ["task_execution_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_job_functions: {
+        Row: {
+          created_at: string
+          description: string | null
+          establishment_id: string | null
+          id: string
+          name: string
+          sector_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          name: string
+          sector_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          name?: string
+          sector_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_job_functions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_job_functions_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_material_consumption: {
+        Row: {
+          consumed_at: string
+          establishment_id: string | null
+          id: string
+          material_id: string
+          notes: string | null
+          quantity_used: number
+          task_execution_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consumed_at?: string
+          establishment_id?: string | null
+          id?: string
+          material_id: string
+          notes?: string | null
+          quantity_used: number
+          task_execution_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consumed_at?: string
+          establishment_id?: string | null
+          id?: string
+          material_id?: string
+          notes?: string | null
+          quantity_used?: number
+          task_execution_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_material_consumption_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_material_consumption_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "op_materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_material_consumption_task_execution_id_fkey"
+            columns: ["task_execution_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_material_movements: {
+        Row: {
+          created_at: string
+          establishment_id: string | null
+          id: string
+          material_id: string
+          movement_type: string
+          notes: string | null
+          quantity: number
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          material_id: string
+          movement_type: string
+          notes?: string | null
+          quantity: number
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          material_id?: string
+          movement_type?: string
+          notes?: string | null
+          quantity?: number
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_material_movements_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_material_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "op_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_materials: {
+        Row: {
+          created_at: string
+          current_stock: number | null
+          establishment_id: string | null
+          id: string
+          min_stock: number | null
+          name: string
+          sector_id: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_stock?: number | null
+          establishment_id?: string | null
+          id?: string
+          min_stock?: number | null
+          name: string
+          sector_id?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_stock?: number | null
+          establishment_id?: string | null
+          id?: string
+          min_stock?: number | null
+          name?: string
+          sector_id?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_materials_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_materials_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_operational_conditions: {
+        Row: {
+          affected_sectors: string[] | null
+          affects_outdoor_tasks: boolean | null
+          created_at: string
+          created_by_user_id: string | null
+          description: string | null
+          establishment_id: string | null
+          expected_end_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          severity: string
+          started_at: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          affected_sectors?: string[] | null
+          affects_outdoor_tasks?: boolean | null
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          establishment_id?: string | null
+          expected_end_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          severity?: string
+          started_at?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          affected_sectors?: string[] | null
+          affects_outdoor_tasks?: boolean | null
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          establishment_id?: string | null
+          expected_end_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          severity?: string
+          started_at?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_operational_conditions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_productivity_metrics: {
+        Row: {
+          average_quality_score: number | null
+          created_at: string
+          establishment_id: string | null
+          id: string
+          metric_date: string
+          on_time_percentage: number | null
+          tasks_completed: number | null
+          tasks_not_done: number | null
+          total_time_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          average_quality_score?: number | null
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          metric_date?: string
+          on_time_percentage?: number | null
+          tasks_completed?: number | null
+          tasks_not_done?: number | null
+          total_time_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          average_quality_score?: number | null
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          metric_date?: string
+          on_time_percentage?: number | null
+          tasks_completed?: number | null
+          tasks_not_done?: number | null
+          total_time_minutes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_productivity_metrics_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_profiles: {
+        Row: {
+          access_level_id: string | null
+          avatar_url: string | null
+          can_approve_irregularities: boolean
+          can_delete_incidents: boolean
+          created_at: string
+          establishment_id: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          is_on_vacation: boolean
+          job_function_id: string | null
+          login_email: string | null
+          phone: string | null
+          shift_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_level_id?: string | null
+          avatar_url?: string | null
+          can_approve_irregularities?: boolean
+          can_delete_incidents?: boolean
+          created_at?: string
+          establishment_id?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          is_on_vacation?: boolean
+          job_function_id?: string | null
+          login_email?: string | null
+          phone?: string | null
+          shift_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_level_id?: string | null
+          avatar_url?: string | null
+          can_approve_irregularities?: boolean
+          can_delete_incidents?: boolean
+          created_at?: string
+          establishment_id?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_on_vacation?: boolean
+          job_function_id?: string | null
+          login_email?: string | null
+          phone?: string | null
+          shift_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_profiles_access_level_id_fkey"
+            columns: ["access_level_id"]
+            isOneToOne: false
+            referencedRelation: "op_access_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_profiles_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_profiles_job_function_id_fkey"
+            columns: ["job_function_id"]
+            isOneToOne: false
+            referencedRelation: "op_job_functions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_profiles_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "op_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_sectors: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          establishment_id: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_sectors_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_shifts: {
+        Row: {
+          created_at: string
+          day_schedules: Json
+          end_time: string
+          establishment_id: string | null
+          id: string
+          lunch_end: string | null
+          lunch_start: string | null
+          name: string
+          start_time: string
+          work_days: number[]
+        }
+        Insert: {
+          created_at?: string
+          day_schedules?: Json
+          end_time: string
+          establishment_id?: string | null
+          id?: string
+          lunch_end?: string | null
+          lunch_start?: string | null
+          name: string
+          start_time: string
+          work_days?: number[]
+        }
+        Update: {
+          created_at?: string
+          day_schedules?: Json
+          end_time?: string
+          establishment_id?: string | null
+          id?: string
+          lunch_end?: string | null
+          lunch_start?: string | null
+          name?: string
+          start_time?: string
+          work_days?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_shifts_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_task_dependencies: {
+        Row: {
+          created_at: string
+          depends_on_template_id: string
+          id: string
+          task_template_id: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on_template_id: string
+          id?: string
+          task_template_id: string
+        }
+        Update: {
+          created_at?: string
+          depends_on_template_id?: string
+          id?: string
+          task_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_task_dependencies_depends_on_template_id_fkey"
+            columns: ["depends_on_template_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_dependencies_task_template_id_fkey"
+            columns: ["task_template_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_task_executions: {
+        Row: {
+          actual_start_time: string | null
+          assigned_user_id: string | null
+          blocked_by_condition_id: string | null
+          carried_over: boolean | null
+          checklist_progress: Json | null
+          completed_at: string | null
+          created_at: string
+          establishment_id: string | null
+          executed_by_user_id: string | null
+          expected_latitude: number | null
+          expected_longitude: number | null
+          id: string
+          irregularity_id: string | null
+          is_outdoor_task: boolean | null
+          is_suspicious: boolean | null
+          latitude: number | null
+          location_radius_meters: number | null
+          longitude: number | null
+          observations: string | null
+          original_assigned_user_id: string | null
+          pause_count: number | null
+          pause_reason: string | null
+          paused_at: string | null
+          photo_after_url: string | null
+          photo_before_url: string | null
+          photo_completion_url: string | null
+          photo_hash: string | null
+          planned_start_time: string | null
+          previous_execution_id: string | null
+          priority_score: number | null
+          quality_score: number | null
+          scheduled_date: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["op_task_status"] | null
+          suspicious_reason: string | null
+          target_sector_id: string | null
+          task_template_id: string | null
+          time_spent_minutes: number | null
+          total_pause_minutes: number | null
+          updated_at: string
+          was_redistributed: boolean | null
+        }
+        Insert: {
+          actual_start_time?: string | null
+          assigned_user_id?: string | null
+          blocked_by_condition_id?: string | null
+          carried_over?: boolean | null
+          checklist_progress?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          establishment_id?: string | null
+          executed_by_user_id?: string | null
+          expected_latitude?: number | null
+          expected_longitude?: number | null
+          id?: string
+          irregularity_id?: string | null
+          is_outdoor_task?: boolean | null
+          is_suspicious?: boolean | null
+          latitude?: number | null
+          location_radius_meters?: number | null
+          longitude?: number | null
+          observations?: string | null
+          original_assigned_user_id?: string | null
+          pause_count?: number | null
+          pause_reason?: string | null
+          paused_at?: string | null
+          photo_after_url?: string | null
+          photo_before_url?: string | null
+          photo_completion_url?: string | null
+          photo_hash?: string | null
+          planned_start_time?: string | null
+          previous_execution_id?: string | null
+          priority_score?: number | null
+          quality_score?: number | null
+          scheduled_date?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["op_task_status"] | null
+          suspicious_reason?: string | null
+          target_sector_id?: string | null
+          task_template_id?: string | null
+          time_spent_minutes?: number | null
+          total_pause_minutes?: number | null
+          updated_at?: string
+          was_redistributed?: boolean | null
+        }
+        Update: {
+          actual_start_time?: string | null
+          assigned_user_id?: string | null
+          blocked_by_condition_id?: string | null
+          carried_over?: boolean | null
+          checklist_progress?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          establishment_id?: string | null
+          executed_by_user_id?: string | null
+          expected_latitude?: number | null
+          expected_longitude?: number | null
+          id?: string
+          irregularity_id?: string | null
+          is_outdoor_task?: boolean | null
+          is_suspicious?: boolean | null
+          latitude?: number | null
+          location_radius_meters?: number | null
+          longitude?: number | null
+          observations?: string | null
+          original_assigned_user_id?: string | null
+          pause_count?: number | null
+          pause_reason?: string | null
+          paused_at?: string | null
+          photo_after_url?: string | null
+          photo_before_url?: string | null
+          photo_completion_url?: string | null
+          photo_hash?: string | null
+          planned_start_time?: string | null
+          previous_execution_id?: string | null
+          priority_score?: number | null
+          quality_score?: number | null
+          scheduled_date?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["op_task_status"] | null
+          suspicious_reason?: string | null
+          target_sector_id?: string | null
+          task_template_id?: string | null
+          time_spent_minutes?: number | null
+          total_pause_minutes?: number | null
+          updated_at?: string
+          was_redistributed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_task_executions_blocked_by_condition_id_fkey"
+            columns: ["blocked_by_condition_id"]
+            isOneToOne: false
+            referencedRelation: "op_operational_conditions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_executions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_executions_irregularity_id_fkey"
+            columns: ["irregularity_id"]
+            isOneToOne: false
+            referencedRelation: "op_irregularities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_executions_target_sector_id_fkey"
+            columns: ["target_sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_executions_task_template_id_fkey"
+            columns: ["task_template_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_task_template_materials: {
+        Row: {
+          id: string
+          material_id: string
+          quantity_needed: number | null
+          task_template_id: string
+        }
+        Insert: {
+          id?: string
+          material_id: string
+          quantity_needed?: number | null
+          task_template_id: string
+        }
+        Update: {
+          id?: string
+          material_id?: string
+          quantity_needed?: number | null
+          task_template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_task_template_materials_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "op_materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_template_materials_task_template_id_fkey"
+            columns: ["task_template_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_task_template_tools: {
+        Row: {
+          id: string
+          task_template_id: string
+          tool_id: string
+        }
+        Insert: {
+          id?: string
+          task_template_id: string
+          tool_id: string
+        }
+        Update: {
+          id?: string
+          task_template_id?: string
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_task_template_tools_task_template_id_fkey"
+            columns: ["task_template_id"]
+            isOneToOne: false
+            referencedRelation: "op_task_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_template_tools_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "op_tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_task_templates: {
+        Row: {
+          additional_assigned_user_ids: string[] | null
+          approval_status: string
+          approved_at: string | null
+          approved_by_user_id: string | null
+          checklist: Json | null
+          created_at: string
+          created_by_user_id: string | null
+          default_assigned_user_id: string | null
+          description: string | null
+          establishment_id: string | null
+          estimated_time_minutes: number | null
+          frequency: string
+          id: string
+          is_active: boolean | null
+          is_irregularity_template: boolean | null
+          is_outdoor: boolean | null
+          job_function_id: string | null
+          location_photos: string[] | null
+          min_execution_minutes: number | null
+          name: string
+          priority: number | null
+          priority_order: number | null
+          rejection_reason: string | null
+          required_materials_check: boolean | null
+          required_workers: number
+          requires_before_after_photo: boolean | null
+          requires_photo: boolean | null
+          requires_rest_after: boolean
+          rest_minutes_after: number | null
+          sector_id: string | null
+          sla_minutes: number | null
+          updated_at: string
+          work_days: number[] | null
+        }
+        Insert: {
+          additional_assigned_user_ids?: string[] | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by_user_id?: string | null
+          checklist?: Json | null
+          created_at?: string
+          created_by_user_id?: string | null
+          default_assigned_user_id?: string | null
+          description?: string | null
+          establishment_id?: string | null
+          estimated_time_minutes?: number | null
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          is_irregularity_template?: boolean | null
+          is_outdoor?: boolean | null
+          job_function_id?: string | null
+          location_photos?: string[] | null
+          min_execution_minutes?: number | null
+          name: string
+          priority?: number | null
+          priority_order?: number | null
+          rejection_reason?: string | null
+          required_materials_check?: boolean | null
+          required_workers?: number
+          requires_before_after_photo?: boolean | null
+          requires_photo?: boolean | null
+          requires_rest_after?: boolean
+          rest_minutes_after?: number | null
+          sector_id?: string | null
+          sla_minutes?: number | null
+          updated_at?: string
+          work_days?: number[] | null
+        }
+        Update: {
+          additional_assigned_user_ids?: string[] | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by_user_id?: string | null
+          checklist?: Json | null
+          created_at?: string
+          created_by_user_id?: string | null
+          default_assigned_user_id?: string | null
+          description?: string | null
+          establishment_id?: string | null
+          estimated_time_minutes?: number | null
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          is_irregularity_template?: boolean | null
+          is_outdoor?: boolean | null
+          job_function_id?: string | null
+          location_photos?: string[] | null
+          min_execution_minutes?: number | null
+          name?: string
+          priority?: number | null
+          priority_order?: number | null
+          rejection_reason?: string | null
+          required_materials_check?: boolean | null
+          required_workers?: number
+          requires_before_after_photo?: boolean | null
+          requires_photo?: boolean | null
+          requires_rest_after?: boolean
+          rest_minutes_after?: number | null
+          sector_id?: string | null
+          sla_minutes?: number | null
+          updated_at?: string
+          work_days?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_task_templates_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_templates_job_function_id_fkey"
+            columns: ["job_function_id"]
+            isOneToOne: false
+            referencedRelation: "op_job_functions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_task_templates_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_tools: {
+        Row: {
+          created_at: string
+          description: string | null
+          establishment_id: string | null
+          id: string
+          is_available: boolean
+          name: string
+          needs_repair: boolean
+          repair_notes: string | null
+          repair_reported_at: string | null
+          repair_reported_by_user_id: string | null
+          sector_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          is_available?: boolean
+          name: string
+          needs_repair?: boolean
+          repair_notes?: string | null
+          repair_reported_at?: string | null
+          repair_reported_by_user_id?: string | null
+          sector_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          is_available?: boolean
+          name?: string
+          needs_repair?: boolean
+          repair_notes?: string | null
+          repair_reported_at?: string | null
+          repair_reported_by_user_id?: string | null
+          sector_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_tools_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "op_tools_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "op_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_user_establishments: {
+        Row: {
+          created_at: string
+          establishment_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          establishment_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "op_user_establishments_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "op_establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      op_user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["op_app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["op_app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["op_app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       orcamento_conjuntos_itens: {
         Row: {
           conjunto_id: string
@@ -26678,6 +28092,61 @@ export type Database = {
           similarity: number
         }[]
       }
+      op_calculate_smart_priority: {
+        Args: { p_task_execution_id: string }
+        Returns: number
+      }
+      op_calculate_task_priority: {
+        Args: { p_task_execution_id: string }
+        Returns: number
+      }
+      op_can_view_task_execution: {
+        Args: { p_task_execution_id: string }
+        Returns: boolean
+      }
+      op_get_login_email_by_name: { Args: { p_name: string }; Returns: string }
+      op_get_login_options_by_name: {
+        Args: { p_name: string }
+        Returns: {
+          establishment_name: string
+          login_email: string
+        }[]
+      }
+      op_get_my_profile_flags: {
+        Args: never
+        Returns: {
+          access_level_id: string
+          can_approve_irregularities: boolean
+          can_delete_incidents: boolean
+        }[]
+      }
+      op_get_profile_admin_details: {
+        Args: { p_profile_id: string }
+        Returns: {
+          access_level_id: string
+          can_approve_irregularities: boolean
+          can_delete_incidents: boolean
+          login_email: string
+          phone: string
+        }[]
+      }
+      op_get_user_establishment_id: {
+        Args: { _user_id: string }
+        Returns: string
+      }
+      op_get_user_establishments: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
+      op_has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["op_app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      op_is_admin_or_manager: { Args: { _user_id: string }; Returns: boolean }
+      op_is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       ponto_aprovador_2fa_valido: {
         Args: { _user_id: string }
         Returns: boolean
@@ -26853,6 +28322,14 @@ export type Database = {
       cv_defect_status: "pending" | "in_progress" | "resolved"
       cv_movement_status: "out" | "returned"
       cv_vehicle_type: "vuc" | "truck" | "carro" | "carreta" | "outro"
+      op_app_role: "admin" | "manager" | "worker" | "super_admin"
+      op_task_frequency: "daily" | "weekly" | "monthly" | "on_demand"
+      op_task_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "delayed"
+        | "not_done"
       tipo_roteamento:
         | "round_robin"
         | "por_skill"
@@ -27016,6 +28493,15 @@ export const Constants = {
       cv_defect_status: ["pending", "in_progress", "resolved"],
       cv_movement_status: ["out", "returned"],
       cv_vehicle_type: ["vuc", "truck", "carro", "carreta", "outro"],
+      op_app_role: ["admin", "manager", "worker", "super_admin"],
+      op_task_frequency: ["daily", "weekly", "monthly", "on_demand"],
+      op_task_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "delayed",
+        "not_done",
+      ],
       tipo_roteamento: [
         "round_robin",
         "por_skill",
