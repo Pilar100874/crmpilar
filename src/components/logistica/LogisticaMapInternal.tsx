@@ -785,9 +785,14 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       });
     });
 
+    // Só considera paradas dos veículos realmente exibidos (grupos filtrados),
+    // senão o enquadramento abre demais por causa de paradas de outros veículos.
     paradasMarcadas.forEach(parada => {
+      if (parada.data_fim || parada.ativa === false) return;
+      if (!currentIds.has(parada.veiculo_id)) return;
       allPoints.push([parada.lat, parada.lng]);
     });
+
 
     // Fit bounds if enabled — centraliza todos os pontos com o maior zoom possível
     if (fitBounds && allPoints.length > 0) {
