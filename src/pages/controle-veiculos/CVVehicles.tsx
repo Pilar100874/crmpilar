@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge,
   ToggleLeft, ToggleRight, Search, Truck, Wrench, Loader2, History, CheckCircle2, X, Filter,
-  ArrowUpDown, ArrowUp, ArrowDown,
+  ArrowUpDown, ArrowUp, ArrowDown, Download,
 } from "lucide-react";
 
 import { CVPageHeader } from "./CVPageHeader";
