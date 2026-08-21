@@ -9,6 +9,24 @@ import { notificarFimDoConteudo } from "@/lib/tv/cicloConteudo";
 import { useTvWatchdog } from "@/lib/tv/watchdogRede";
 import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
 
+/** Modo de exibição da mídia na tela da TV. */
+export type MuralAjuste = "esticar" | "conter" | "preencher";
+
+export const AJUSTES_MURAL = [
+  { value: "esticar", label: "Esticar (ocupa a tela toda, pode deformar)" },
+  { value: "conter", label: "Conter (mostra tudo, pode ter bordas)" },
+  { value: "preencher", label: "Preencher (sem bordas, pode cortar)" },
+] as const;
+
+/** Classe de object-fit correspondente ao modo escolhido (padrão: esticar). */
+export function classeAjuste(ajuste?: MuralAjuste) {
+  switch (ajuste) {
+    case "conter": return "object-contain";
+    case "preencher": return "object-cover";
+    default: return "object-fill";
+  }
+}
+
 export interface MuralItem {
   id: string;
   tipo: "image" | "video";
@@ -16,7 +34,10 @@ export interface MuralItem {
   nome?: string;
   duracao?: number;
   legenda?: string;
+  /** Modo de exibição desta mídia. Padrão "esticar" para não cortar textos. */
+  ajuste?: MuralAjuste;
 }
+
 
 export interface Mural {
   id: string;
@@ -212,8 +233,9 @@ export default function TvMural() {
         <video
           ref={camada === "atual" ? videoRef : undefined}
           src={item.url}
-          /* object-fill: estica para ocupar 100% da tela, sem bordas pretas e sem cortes */
-          className="absolute inset-0 w-full h-full object-fill bg-black"
+          /* Modo de exibição por mídia (padrão: esticar) */
+          className={`absolute inset-0 w-full h-full ${classeAjuste(item.ajuste)} bg-black`}
+
           autoPlay
           muted
           playsInline
@@ -224,7 +246,7 @@ export default function TvMural() {
         <img
           src={item.url}
           alt={item.legenda || item.nome || "Mídia do mural"}
-          className="absolute inset-0 w-full h-full object-fill bg-black"
+          className={`absolute inset-0 w-full h-full ${classeAjuste(item.ajuste)} bg-black`}
         />
       )}
 
