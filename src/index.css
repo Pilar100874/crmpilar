@@ -1068,3 +1068,14 @@ html.kiosk-mode ::-webkit-scrollbar {
 /* TV Box com GPU fraca: desfoque pesado é substituído por fade simples */
 html.tv-mode .mural-in-zoomblur { animation-name: muralFadeIn; }
 html.tv-mode .mural-out-zoomblur { animation-name: muralFadeOut; }
+
+/* TV: nunca exibir o botão de play nativo/poster antes do vídeo iniciar */
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+}
