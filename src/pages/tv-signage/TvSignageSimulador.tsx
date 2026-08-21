@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTvWatchdog } from "@/lib/tv/watchdogRede";
 import { TvWatchdogAviso } from "@/components/tv/TvWatchdogAviso";
 import { useParams, useNavigate } from "react-router-dom";
@@ -272,7 +272,12 @@ export default function TvSignageSimulador() {
   }, [device?.estabelecimento_id]);
 
 
+  // Referência aos iframes montados (ativo + pré-carregado) para identificar a origem
+  // das mensagens de fim de conteúdo.
+  const iframesRef = useRef<Record<number, HTMLIFrameElement | null>>({});
+
   // Rotação da playlist
+
   useEffect(() => {
     if (paused || items.length <= 1) return;
     const cur = items[idx];
@@ -286,17 +291,23 @@ export default function TvSignageSimulador() {
     return () => clearTimeout(t);
   }, [idx, items, paused]);
 
-  // Aviso de fim de ciclo enviado pelos players internos (apresentação/mural)
+  // Aviso de fim de ciclo enviado pelos players internos (apresentação/mural).
+  // Só aceitamos o aviso da janela do item ATIVO — o próximo item já fica pré-carregado
+  // (invisível) e também emite esse evento; se aceitássemos, a apresentação atual seria
+  // cortada no meio.
   useEffect(() => {
     const onMsg = (ev: MessageEvent) => {
       if ((ev.data as any)?.tipo !== TV_FIM_CONTEUDO) return;
       if (paused || items.length <= 1) return;
       if (!items[idx]?.aoFinal) return;
+      const ativo = iframesRef.current[idx];
+      if (ativo && ev.source && ev.source !== ativo.contentWindow) return;
       setIdx((i) => (i + 1) % items.length);
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [idx, items, paused]);
+
 
   // Auto-hide da barra
   useEffect(() => {
@@ -343,7 +354,9 @@ export default function TvSignageSimulador() {
         return (
           <iframe
             key={`${i}-${reloadKey}`}
+            ref={(el) => { iframesRef.current[i] = el; }}
             src={montarUrl(item)}
+
             title={item.nome}
             className={`absolute inset-0 w-full h-full border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             allow="fullscreen; autoplay; camera; microphone; geolocation"
