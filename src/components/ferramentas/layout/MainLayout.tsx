@@ -116,6 +116,13 @@ const sectionsBase: NavSection[] = [
         description: "Transferência direta entre colaboradores",
       },
       {
+        icon: ClipboardList,
+        label: "Registros",
+        route: "/loans",
+        href: "/ferramentas/loans",
+        description: "Busca e filtros de todos os empréstimos",
+      },
+      {
         icon: AlertTriangle,
         label: "Ocorrências",
         route: "/return-issues",
