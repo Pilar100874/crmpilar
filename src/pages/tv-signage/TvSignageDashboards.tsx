@@ -328,21 +328,18 @@ export default function TvSignageDashboards() {
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
 
-              {!(edit.tipo === "tela_interna" && isApresRoute(edit.rota_interna)) ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Refresh (segundos)</Label><Input type="number" value={edit.refresh_segundos} onChange={(e) => setEdit({ ...edit, refresh_segundos: parseInt(e.target.value) || 60 })} /></div>
-                  <div><Label>Timeout (segundos)</Label><Input type="number" value={edit.timeout_segundos} onChange={(e) => setEdit({ ...edit, timeout_segundos: parseInt(e.target.value) || 30 })} /></div>
+              {edit.tipo === "tela_interna" && (isApresRoute(edit.rota_interna) || isMuralRoute(edit.rota_interna)) && (
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch checked={!!edit.cache_offline} onCheckedChange={(v) => setEdit({ ...edit, cache_offline: v })} />
+                    Cache offline
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Mantém as mídias em cache local para continuar exibindo mesmo sem internet.
+                  </p>
                 </div>
-              ) : (
-                <p className="text-[11px] text-muted-foreground">
-                  Apresentação roda em loop contínuo — refresh e timeout não se aplicam.
-                </p>
               )}
-              <div className="flex flex-wrap gap-4 pt-2">
-                <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.fullscreen} onCheckedChange={(v) => setEdit({ ...edit, fullscreen: v })} />Fullscreen</label>
-                <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.cache_offline} onCheckedChange={(v) => setEdit({ ...edit, cache_offline: v })} />Cache offline</label>
-                <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.auto_update} onCheckedChange={(v) => setEdit({ ...edit, auto_update: v })} />Auto-update</label>
-              </div>
+
             </div>
           )}
           <DialogFooter className="p-6 pt-2 border-t">
