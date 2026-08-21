@@ -66,9 +66,27 @@ export default function TvSignageDashboards() {
     if (q < 0) return [] as string[];
     return (new URLSearchParams(r.slice(q + 1)).get("grupos") || "").split(",").map((s: string) => s.trim()).filter(Boolean);
   })();
-  const updateVeicGrupos = (next: string[]) => {
-    setEdit({ ...edit, rota_interna: next.length ? `/tv/veiculos?grupos=${next.join(",")}` : "/tv/veiculos" });
+  const veicLegenda = (() => {
+    const r = edit?.rota_interna || "";
+    if (!isVeiculosRoute(r)) return false;
+    const q = r.indexOf("?");
+    if (q < 0) return false;
+    return new URLSearchParams(r.slice(q + 1)).get("legenda") === "1";
+  })();
+  const buildVeicRoute = (grupos: string[], legenda: boolean) => {
+    const sp = new URLSearchParams();
+    if (grupos.length) sp.set("grupos", grupos.join(","));
+    if (legenda) sp.set("legenda", "1");
+    const qs = sp.toString();
+    return qs ? `/tv/veiculos?${qs}` : "/tv/veiculos";
   };
+  const updateVeicGrupos = (next: string[]) => {
+    setEdit({ ...edit, rota_interna: buildVeicRoute(next, veicLegenda) });
+  };
+  const updateVeicLegenda = (v: boolean) => {
+    setEdit({ ...edit, rota_interna: buildVeicRoute(veicGrupos, v) });
+  };
+
 
   const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
   const apresId = (() => {
