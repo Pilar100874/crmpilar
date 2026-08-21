@@ -61,7 +61,7 @@ const planoVazio = {
   alert_km_antecedencia: 500, alert_days_antecedencia: 7, active: true,
 };
 
-interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null }
+interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null; logistica_grupo_id?: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
@@ -196,7 +196,7 @@ export default function CVVehicles() {
     if (error) return toast.error(error.message);
     const list = (data ?? []) as Vehicle[];
     setRows(list);
-    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id").eq("ativo", true).order("placa");
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id, logistica_grupo_id").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
     setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
 
@@ -245,7 +245,7 @@ export default function CVVehicles() {
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
       vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
-      logistica_grupo_id: lv.grupo_id ?? null,
+      logistica_grupo_id: lv.logistica_grupo_id ?? lv.grupo_id ?? null,
     }));
   };
 
