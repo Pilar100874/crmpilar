@@ -754,7 +754,7 @@ export default function TvDashboardVeiculos() {
           )}
           <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
             <p className="text-sm font-medium">
-              {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
+              {lastUpdate.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false })}
             </p>
           </div>
           {quiosque.pausadoPorFalha && (
