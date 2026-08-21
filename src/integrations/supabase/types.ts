@@ -8979,6 +8979,982 @@ export type Database = {
           },
         ]
       }
+      ferr_companies: {
+        Row: {
+          approved_until: string | null
+          cnpj: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          trial_ends_at: string | null
+          updated_at: string
+          user_limit: number
+        }
+        Insert: {
+          approved_until?: string | null
+          cnpj: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_limit?: number
+        }
+        Update: {
+          approved_until?: string | null
+          cnpj?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_limit?: number
+        }
+        Relationships: []
+      }
+      ferr_kit_tools: {
+        Row: {
+          id: string
+          is_required: boolean | null
+          kit_id: string
+          tool_id: string
+        }
+        Insert: {
+          id?: string
+          is_required?: boolean | null
+          kit_id: string
+          tool_id: string
+        }
+        Update: {
+          id?: string
+          is_required?: boolean | null
+          kit_id?: string
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_kit_tools_kit_id_fkey"
+            columns: ["kit_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_kits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_kit_tools_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_kits: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_kits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_loan_renewals: {
+        Row: {
+          approval_date: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          loan_id: string
+          new_due_date: string
+          reason: string | null
+          request_date: string
+          requested_by: string
+          status: Database["public"]["Enums"]["ferr_renewal_status"]
+        }
+        Insert: {
+          approval_date?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          loan_id: string
+          new_due_date: string
+          reason?: string | null
+          request_date?: string
+          requested_by: string
+          status?: Database["public"]["Enums"]["ferr_renewal_status"]
+        }
+        Update: {
+          approval_date?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          loan_id?: string
+          new_due_date?: string
+          reason?: string | null
+          request_date?: string
+          requested_by?: string
+          status?: Database["public"]["Enums"]["ferr_renewal_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_loan_renewals_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loan_renewals_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loan_renewals_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_loan_request_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_kit_item: boolean | null
+          request_id: string
+          tool_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_kit_item?: boolean | null
+          request_id: string
+          tool_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_kit_item?: boolean | null
+          request_id?: string
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_loan_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_loan_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loan_request_items_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_loan_requests: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          custom_due_date: string | null
+          due_days: number
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          custom_due_date?: string | null
+          due_days?: number
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          custom_due_date?: string | null
+          due_days?: number
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_loan_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loan_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loan_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loan_requests_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_loans: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          due_date: string
+          id: string
+          loan_date: string
+          notes: string | null
+          registered_by: string | null
+          return_date: string | null
+          return_photo_url: string | null
+          returned_by: string | null
+          status: Database["public"]["Enums"]["ferr_loan_status"]
+          tool_id: string
+          updated_at: string
+          user_id: string
+          warehouse_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          loan_date?: string
+          notes?: string | null
+          registered_by?: string | null
+          return_date?: string | null
+          return_photo_url?: string | null
+          returned_by?: string | null
+          status?: Database["public"]["Enums"]["ferr_loan_status"]
+          tool_id: string
+          updated_at?: string
+          user_id: string
+          warehouse_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          loan_date?: string
+          notes?: string | null
+          registered_by?: string | null
+          return_date?: string | null
+          return_photo_url?: string | null
+          returned_by?: string | null
+          status?: Database["public"]["Enums"]["ferr_loan_status"]
+          tool_id?: string
+          updated_at?: string
+          user_id?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_loans_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loans_registered_by_fkey"
+            columns: ["registered_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loans_returned_by_fkey"
+            columns: ["returned_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loans_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_loans_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_notifications: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean | null
+          loan_id: string | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          loan_id?: string | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          loan_id?: string | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_notifications_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_profiles: {
+        Row: {
+          allow_relend: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          company_id: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          is_approved: boolean | null
+          last_location_lat: number | null
+          last_location_lng: number | null
+          last_location_updated_at: string | null
+          phone: string | null
+          qr_code: string | null
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          allow_relend?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          avatar_url?: string | null
+          company_id?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          last_location_lat?: number | null
+          last_location_lng?: number | null
+          last_location_updated_at?: string | null
+          phone?: string | null
+          qr_code?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          allow_relend?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          avatar_url?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          last_location_lat?: number | null
+          last_location_lng?: number | null
+          last_location_updated_at?: string | null
+          phone?: string | null
+          qr_code?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_profiles_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_return_issues: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          discount_resolved: boolean
+          id: string
+          issue_type: Database["public"]["Enums"]["ferr_return_issue_type"]
+          loan_id: string | null
+          reported_by: string
+          requires_discount: boolean
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["ferr_issue_status"]
+          tool_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_resolved?: boolean
+          id?: string
+          issue_type: Database["public"]["Enums"]["ferr_return_issue_type"]
+          loan_id?: string | null
+          reported_by: string
+          requires_discount?: boolean
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["ferr_issue_status"]
+          tool_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_resolved?: boolean
+          id?: string
+          issue_type?: Database["public"]["Enums"]["ferr_return_issue_type"]
+          loan_id?: string | null
+          reported_by?: string
+          requires_discount?: boolean
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["ferr_issue_status"]
+          tool_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_return_issues_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_return_issues_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_return_issues_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_return_issues_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_return_issues_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_return_issues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_role_permissions: {
+        Row: {
+          can_access: boolean
+          created_at: string
+          id: string
+          role: string
+          route: string
+          updated_at: string
+        }
+        Insert: {
+          can_access?: boolean
+          created_at?: string
+          id?: string
+          role: string
+          route: string
+          updated_at?: string
+        }
+        Update: {
+          can_access?: boolean
+          created_at?: string
+          id?: string
+          role?: string
+          route?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ferr_supplies: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          current_stock: number
+          description: string | null
+          group_id: string | null
+          id: string
+          is_active: boolean
+          min_stock: number
+          name: string
+          photo_url: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          current_stock?: number
+          description?: string | null
+          group_id?: string | null
+          id?: string
+          is_active?: boolean
+          min_stock?: number
+          name: string
+          photo_url?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          current_stock?: number
+          description?: string | null
+          group_id?: string | null
+          id?: string
+          is_active?: boolean
+          min_stock?: number
+          name?: string
+          photo_url?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_supplies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_supplies_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_supply_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_supply_groups: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_supply_groups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_supply_movements: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          movement_type: string
+          notes: string | null
+          performed_by: string
+          quantity: number
+          supply_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          movement_type: string
+          notes?: string | null
+          performed_by: string
+          quantity: number
+          supply_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          performed_by?: string
+          quantity?: number
+          supply_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_supply_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_supply_movements_supply_id_fkey"
+            columns: ["supply_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_supplies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_tools: {
+        Row: {
+          allow_relend: boolean | null
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_maintenance: boolean | null
+          kit_id: string | null
+          name: string
+          photo_url: string | null
+          purchase_date: string | null
+          purchase_value: number | null
+          qr_code: string | null
+          requires_kit: boolean | null
+          requires_return_photo: boolean | null
+          serial_number: string | null
+          type: Database["public"]["Enums"]["ferr_tool_type"]
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          allow_relend?: boolean | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_maintenance?: boolean | null
+          kit_id?: string | null
+          name: string
+          photo_url?: string | null
+          purchase_date?: string | null
+          purchase_value?: number | null
+          qr_code?: string | null
+          requires_kit?: boolean | null
+          requires_return_photo?: boolean | null
+          serial_number?: string | null
+          type?: Database["public"]["Enums"]["ferr_tool_type"]
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          allow_relend?: boolean | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_maintenance?: boolean | null
+          kit_id?: string | null
+          name?: string
+          photo_url?: string | null
+          purchase_date?: string | null
+          purchase_value?: number | null
+          qr_code?: string | null
+          requires_kit?: boolean | null
+          requires_return_photo?: boolean | null
+          serial_number?: string | null
+          type?: Database["public"]["Enums"]["ferr_tool_type"]
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_tools_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_tools_kit_id_fkey"
+            columns: ["kit_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_kits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_tools_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["ferr_app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["ferr_app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["ferr_app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ferr_user_warehouses: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_user_warehouses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferr_user_warehouses_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferr_warehouses: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferr_warehouses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ferr_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ferramentas_atendimento: {
         Row: {
           aba_agenda: boolean | null
@@ -27977,6 +28953,15 @@ export type Database = {
       exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       expire_bot_response_tracking: { Args: never; Returns: number }
+      ferr_get_user_company_id: {
+        Args: { check_user_id: string }
+        Returns: string
+      }
+      ferr_is_admin: { Args: { check_user_id: string }; Returns: boolean }
+      ferr_is_almoxarifado: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
       generate_orcamento_token: { Args: never; Returns: string }
       get_auth_user_estabelecimento_id: { Args: never; Returns: string }
       get_chat_storage_stats: {
@@ -28322,6 +29307,16 @@ export type Database = {
       cv_defect_status: "pending" | "in_progress" | "resolved"
       cv_movement_status: "out" | "returned"
       cv_vehicle_type: "vuc" | "truck" | "carro" | "carreta" | "outro"
+      ferr_app_role: "admin" | "almoxarifado" | "usuario"
+      ferr_issue_status: "pendente" | "resolvido" | "descartado"
+      ferr_loan_status:
+        | "ativo"
+        | "devolvido"
+        | "vencido"
+        | "renovacao_solicitada"
+      ferr_renewal_status: "pendente" | "aprovada" | "rejeitada"
+      ferr_return_issue_type: "manutencao" | "danificada" | "perdida"
+      ferr_tool_type: "manual" | "eletrica" | "pneumatica"
       op_app_role: "admin" | "manager" | "worker" | "super_admin"
       op_task_frequency: "daily" | "weekly" | "monthly" | "on_demand"
       op_task_status:
@@ -28493,6 +29488,17 @@ export const Constants = {
       cv_defect_status: ["pending", "in_progress", "resolved"],
       cv_movement_status: ["out", "returned"],
       cv_vehicle_type: ["vuc", "truck", "carro", "carreta", "outro"],
+      ferr_app_role: ["admin", "almoxarifado", "usuario"],
+      ferr_issue_status: ["pendente", "resolvido", "descartado"],
+      ferr_loan_status: [
+        "ativo",
+        "devolvido",
+        "vencido",
+        "renovacao_solicitada",
+      ],
+      ferr_renewal_status: ["pendente", "aprovada", "rejeitada"],
+      ferr_return_issue_type: ["manutencao", "danificada", "perdida"],
+      ferr_tool_type: ["manual", "eletrica", "pneumatica"],
       op_app_role: ["admin", "manager", "worker", "super_admin"],
       op_task_frequency: ["daily", "weekly", "monthly", "on_demand"],
       op_task_status: [
