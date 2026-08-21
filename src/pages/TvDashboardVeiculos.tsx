@@ -580,7 +580,7 @@ export default function TvDashboardVeiculos() {
           ) : (
             <LazyLogisticaMap
               veiculos={veiculosComPosicao}
-              paradasMarcadas={paradasMarcadas}
+              paradasMarcadas={paradasMarcadasFiltradas}
               className="absolute inset-0"
               fitBounds={sempreVisaoGeral || !pinnedVeiculoId}
               fitBoundsPadding={fitBoundsPadding}
