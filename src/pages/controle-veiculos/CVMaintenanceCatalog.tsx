@@ -41,6 +41,7 @@ export default function CVMaintenanceCatalog() {
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [excluir, setExcluir] = useState<CatalogItem | null>(null);
+  const [tiposLogistica, setTiposLogistica] = useState<string[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -48,9 +49,18 @@ export default function CVMaintenanceCatalog() {
     catch (e: any) { toast.error(e.message); }
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    listarTiposVeiculoLogistica().then(setTiposLogistica).catch(() => {});
+  }, []);
 
-  const tipos = useMemo(() => Array.from(new Set(itens.map(i => i.tipo_veiculo))).sort(), [itens]);
+  // Tipos vêm do cadastro de Logística; itens antigos com tipos fora da lista continuam visíveis
+  const tipos = useMemo(
+    () => Array.from(new Set([...tiposLogistica, ...itens.map(i => i.tipo_veiculo)]))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [itens, tiposLogistica],
+  );
   const sistemas = useMemo(
     () => Array.from(new Set(itens.filter(i => tipo === "todos" || i.tipo_veiculo === tipo).map(i => i.sistema))).sort(),
     [itens, tipo],
@@ -225,8 +235,13 @@ export default function CVMaintenanceCatalog() {
           <DialogHeader><DialogTitle>{editing ? "Editar item da biblioteca" : "Novo item da biblioteca"}</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Tipo de veículo *</Label>
-              <Input list="cv-tipos-frota" value={form.tipo_veiculo} onChange={e => setForm({ ...form, tipo_veiculo: e.target.value })} />
-              <datalist id="cv-tipos-frota">{tipos.map(t => <option key={t} value={t} />)}</datalist>
+              <Select value={form.tipo_veiculo || ""} onValueChange={v => setForm({ ...form, tipo_veiculo: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                <SelectContent>
+                  {tipos.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">Tipos do cadastro de Veículos da Logística.</p>
             </div>
             <div><Label>Sistema</Label><Input value={form.sistema} onChange={e => setForm({ ...form, sistema: e.target.value })} placeholder="Motor, Freios..." /></div>
             <div><Label>Componente / item *</Label><Input value={form.componente} onChange={e => setForm({ ...form, componente: e.target.value })} /></div>
