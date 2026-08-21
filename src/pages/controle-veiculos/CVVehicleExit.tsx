@@ -47,6 +47,9 @@ export default function CVVehicleExit() {
   const [form, setForm] = useState({
     vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "",
   });
+  const [helperDialogOpen, setHelperDialogOpen] = useState(false);
+  const [helperForm, setHelperForm] = useState({ name: "", phone: "", document: "" });
+  const [helperBusy, setHelperBusy] = useState(false);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
