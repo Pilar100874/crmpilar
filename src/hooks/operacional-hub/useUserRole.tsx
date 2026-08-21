@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 
 type AppRole = "admin" | "manager" | "worker" | "super_admin";
 
@@ -22,17 +23,19 @@ export function useUserRole() {
           .from("op_user_roles")
           .select("role")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching user role:", error);
-          setRole("worker");
+        if (error || !data?.role) {
+          // Usuário do CRM sem papel específico no Operacional Hub:
+          // libera o menu completo (admin do CRM vira super_admin)
+          const crmAdmin = await isEstabelecimentoAdmin().catch(() => false);
+          setRole(crmAdmin ? "super_admin" : "admin");
         } else {
-          setRole(data?.role as AppRole || "worker");
+          setRole(data.role as AppRole);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
-        setRole("worker");
+        setRole("admin");
       } finally {
         setLoading(false);
       }
