@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Wrench, Settings, XCircle } from "lucide-react";
-import { ReturnIssueType } from "@/lib/supabase";
+import { ReturnIssueType } from "@/lib/ferramentas/supabase";
 
 interface ReturnIssueDialogProps {
   open: boolean;

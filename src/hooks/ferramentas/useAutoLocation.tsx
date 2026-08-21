@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/ferramentas/supabase";
 import { useAuth } from "./useAuth";
 
 /**
@@ -35,7 +35,7 @@ export function useAutoLocation() {
 
           try {
             await supabase
-              .from("profiles")
+              .from("ferr_profiles")
               .update({
                 last_location_lat: latitude,
                 last_location_lng: longitude,

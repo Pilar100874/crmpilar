@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Profile, Tool, Loan, ReturnIssueType } from "@/lib/supabase";
-import { EmptyState } from "@/components/ui/empty-state";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Profile, Tool, Loan, ReturnIssueType } from "@/lib/ferramentas/supabase";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { QRScanner } from "@/components/QRScanner";
-import { ReturnIssueDialog } from "@/components/ReturnIssueDialog";
-import { ReturnPhotoRecognition } from "@/components/ReturnPhotoRecognition";
-import { ReturnPhotoCaptureCard } from "@/components/ReturnPhotoCaptureCard";
+import { QRScanner } from "@/components/ferramentas/QRScanner";
+import { ReturnIssueDialog } from "@/components/ferramentas/ReturnIssueDialog";
+import { ReturnPhotoRecognition } from "@/components/ferramentas/ReturnPhotoRecognition";
+import { ReturnPhotoCaptureCard } from "@/components/ferramentas/ReturnPhotoCaptureCard";
 import {
   QrCode,
   Scan,
@@ -122,20 +122,20 @@ export default function ReturnLoanPage() {
   }, [canAccess]);
 
   const fetchKitTools = async () => {
-    const { data } = await supabase.from("kit_tools").select("kit_id, tool_id");
+    const { data } = await supabase.from("ferr_kit_tools").select("kit_id, tool_id");
     setKitTools(data || []);
   };
 
   const fetchUsersWithActiveLoans = async () => {
     const { data: loans } = await supabase
-      .from("loans")
+      .from("ferr_loans")
       .select("user_id")
       .in("status", ["ativo", "renovacao_solicitada"]);
 
     if (loans && loans.length > 0) {
       const userIds = [...new Set(loans.map(l => l.user_id))];
       const { data: users } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .select("*")
         .in("id", userIds)
         .order("full_name");
@@ -158,7 +158,7 @@ export default function ReturnLoanPage() {
     setIsSearching(true);
     try {
       const { data: user, error } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .select("*")
         .eq("qr_code", codeToSearch)
         .maybeSingle();
@@ -187,7 +187,7 @@ export default function ReturnLoanPage() {
 
   const loadUserLoans = async (user: Profile) => {
     const { data: loans } = await supabase
-      .from("loans")
+      .from("ferr_loans")
       .select("*, tools(*, kits(name))")
       .eq("user_id", user.id)
       .in("status", ["ativo", "renovacao_solicitada"])
@@ -454,7 +454,7 @@ export default function ReturnLoanPage() {
     if (!scannedUser) return false;
 
     const { data: users } = await supabase
-      .from("profiles")
+      .from("ferr_profiles")
       .select("*")
       .eq("qr_code", authQrCode)
       .maybeSingle();
@@ -567,7 +567,7 @@ export default function ReturnLoanPage() {
       // Prepare all loan updates in parallel
       const loanUpdatePromises = selectedLoansList.map((loan) =>
         supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({
             status: "devolvido",
             return_date: new Date().toISOString(),
@@ -604,9 +604,9 @@ export default function ReturnLoanPage() {
       // Execute all updates in parallel
       await Promise.all([
         ...loanUpdatePromises,
-        issueInserts.length > 0 ? supabase.from("return_issues").insert(issueInserts) : Promise.resolve(),
+        issueInserts.length > 0 ? supabase.from("ferr_return_issues").insert(issueInserts) : Promise.resolve(),
         maintenanceToolIds.length > 0 
-          ? supabase.from("tools").update({ is_maintenance: true }).in("id", maintenanceToolIds)
+          ? supabase.from("ferr_tools").update({ is_maintenance: true }).in("id", maintenanceToolIds)
           : Promise.resolve(),
       ]);
 
@@ -614,7 +614,7 @@ export default function ReturnLoanPage() {
       const discountIssues = loanIssues.filter(i => i.requiresDiscount);
       if (discountIssues.length > 0) {
         supabase
-          .from("user_roles")
+          .from("ferr_user_roles")
           .select("user_id")
           .eq("role", "admin")
           .then(({ data: adminRoles }) => {
@@ -630,7 +630,7 @@ export default function ReturnLoanPage() {
                   type: "warning",
                 }));
               });
-              supabase.from("notifications").insert(notifications);
+              supabase.from("ferr_notifications").insert(notifications);
             }
           });
       }

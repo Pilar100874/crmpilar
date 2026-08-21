@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Bell, X } from "lucide-react";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePushNotifications } from "@/hooks/ferramentas/usePushNotifications";
 
 export function PushNotificationPrompt() {
   const { isSupported, permission, requestPermission } = usePushNotifications();

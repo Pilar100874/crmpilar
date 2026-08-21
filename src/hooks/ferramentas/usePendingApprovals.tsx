@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/ferramentas/supabase";
 import { useAuth } from "./useAuth";
 
 export function usePendingApprovals() {
@@ -19,7 +19,7 @@ export function usePendingApprovals() {
     const fetchPendingApprovals = async () => {
       try {
         const { count, error } = await supabase
-          .from("profiles")
+          .from("ferr_profiles")
           .select("id", { count: "exact", head: true })
           .eq("is_approved", false);
 
@@ -43,7 +43,7 @@ export function usePendingApprovals() {
         {
           event: "*",
           schema: "public",
-          table: "profiles",
+          table: "ferr_profiles",
         },
         () => {
           fetchPendingApprovals();

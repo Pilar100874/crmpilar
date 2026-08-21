@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase, AppRole } from "@/lib/supabase";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase, AppRole } from "@/lib/ferramentas/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
 
 interface RolePermission {
   id: string;
@@ -21,7 +21,7 @@ export function usePermissions() {
   const fetchPermissions = async () => {
     try {
       const { data } = await supabase
-        .from("role_permissions")
+        .from("ferr_role_permissions")
         .select("*")
         .order("route");
       

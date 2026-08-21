@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase, Tool, Loan } from "@/lib/supabase";
+import { supabase, Tool, Loan } from "@/lib/ferramentas/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { CameraCapture } from "./CameraCapture";
 import { ImageCropDialog } from "./ImageCropDialog";

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { usePermissions } from "@/hooks/usePermissions";
-import { usePendingRenewals } from "@/hooks/usePendingRenewals";
-import { usePendingApprovals } from "@/hooks/usePendingApprovals";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { usePermissions } from "@/hooks/ferramentas/usePermissions";
+import { usePendingRenewals } from "@/hooks/ferramentas/usePendingRenewals";
+import { usePendingApprovals } from "@/hooks/ferramentas/usePendingApprovals";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -165,7 +165,7 @@ export function MobileNav() {
               asChild
               onClick={() => setOpen(false)}
             >
-              <Link to="/settings">
+              <Link to="/ferramentas/settings">
                 <Settings className="mr-2 h-4 w-4" />
                 Configurações
               </Link>

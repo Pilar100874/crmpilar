@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase, Profile, UserRole, AppRole, Company } from "@/lib/supabase";
+import { supabase, Profile, UserRole, AppRole, Company } from "@/lib/ferramentas/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -36,13 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsProfileLoading(true);
     try {
       const { data: profileData } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
       const { data: roleData } = await supabase
-        .from("user_roles")
+        .from("ferr_user_roles")
         .select("*")
         .eq("user_id", userId)
         .single();
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Fetch company if user has one
         if (profileData.company_id) {
           const { data: companyData } = await supabase
-            .from("companies")
+            .from("ferr_companies")
             .select("*")
             .eq("id", profileData.company_id)
             .single();

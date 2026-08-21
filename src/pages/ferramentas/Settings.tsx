@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase } from "@/lib/ferramentas/supabase";
 import { User, Key, Eye, EyeOff } from "lucide-react";
 
 export default function SettingsPage() {
@@ -35,7 +35,7 @@ export default function SettingsPage() {
 
     try {
       const { error } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .update({
           full_name: formData.full_name,
           phone: formData.phone || null,

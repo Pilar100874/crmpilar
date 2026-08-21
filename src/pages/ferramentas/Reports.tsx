@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Tool, Loan, Profile, Warehouse } from "@/lib/supabase";
-import { ImageZoom } from "@/components/ui/image-zoom";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Tool, Loan, Profile, Warehouse } from "@/lib/ferramentas/supabase";
+import { ImageZoom } from "@/components/ferramentas/ui/image-zoom";
 import { FileText, Wrench, Package, AlertTriangle, Camera, Calendar, User, Image, ArrowLeft, Filter, Download } from "lucide-react";
-import { exportToPdf, exportToolsPdfWithPhotos } from "@/lib/exportPdf";
+import { exportToPdf, exportToolsPdfWithPhotos } from "@/lib/ferramentas/exportPdf";
 import { format, isPast, isWithinInterval, startOfDay, endOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -77,12 +77,12 @@ export default function ReportsPage() {
   const fetchData = async () => {
     try {
       const [toolsRes, loansRes, warehousesRes] = await Promise.all([
-        supabase.from("tools").select("*").order("name"),
+        supabase.from("ferr_tools").select("*").order("name"),
         supabase
-          .from("loans")
+          .from("ferr_loans")
           .select("*, tools(*), profiles!loans_user_id_fkey(*), warehouses(*)")
           .order("created_at", { ascending: false }),
-        supabase.from("warehouses").select("*").order("name"),
+        supabase.from("ferr_warehouses").select("*").order("name"),
       ]);
 
       setTools((toolsRes.data as Tool[]) || []);

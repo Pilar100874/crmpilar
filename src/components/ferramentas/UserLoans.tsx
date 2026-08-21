@@ -13,8 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Loan, Tool, Kit } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Loan, Tool, Kit } from "@/lib/ferramentas/supabase";
 import {
   Wrench,
   Clock,
@@ -60,13 +60,13 @@ export function UserLoans() {
     try {
       const [loansRes, kitsRes, kitToolsRes] = await Promise.all([
         supabase
-          .from("loans")
+          .from("ferr_loans")
           .select("*, tools(*)")
           .eq("user_id", profile?.id)
           .in("status", ["ativo", "renovacao_solicitada"])
           .order("due_date", { ascending: true }),
-        supabase.from("kits").select("*"),
-        supabase.from("kit_tools").select("kit_id, tool_id"),
+        supabase.from("ferr_kits").select("*"),
+        supabase.from("ferr_kit_tools").select("kit_id, tool_id"),
       ]);
 
       setLoans((loansRes.data as LoanWithTool[]) || []);
@@ -143,7 +143,7 @@ export function UserLoans() {
       for (const loan of selectedLoans) {
         const newDueDate = addDays(new Date(loan.due_date), parseInt(renewDays));
 
-        const { error } = await supabase.from("loan_renewals").insert({
+        const { error } = await supabase.from("ferr_loan_renewals").insert({
           loan_id: loan.id,
           requested_by: profile.id,
           new_due_date: newDueDate.toISOString(),
@@ -153,7 +153,7 @@ export function UserLoans() {
         if (error) throw error;
 
         await supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({ status: "renovacao_solicitada" })
           .eq("id", loan.id);
       }

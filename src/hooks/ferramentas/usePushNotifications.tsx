@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export function usePushNotifications() {
@@ -58,7 +58,7 @@ export function usePushNotifications() {
     const checkNewNotifications = async () => {
       try {
         const { data } = await supabase
-          .from("notifications")
+          .from("ferr_notifications")
           .select("title, message, type")
           .eq("user_id", user.id)
           .eq("is_read", false)

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Notification } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Notification } from "@/lib/ferramentas/supabase";
 import { Bell, Check, Trash2, AlertTriangle, Info, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
-import { updateAppBadge } from "@/hooks/useAppBadge";
+import { updateAppBadge } from "@/hooks/ferramentas/useAppBadge";
 
 const typeIcons: Record<string, React.ElementType> = {
   warning: AlertTriangle,
@@ -38,7 +38,7 @@ export default function NotificationsPage() {
     if (!profile) return;
     try {
       const { data } = await supabase
-        .from("notifications")
+        .from("ferr_notifications")
         .select("*")
         .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      await supabase.from("ferr_notifications").update({ is_read: true }).eq("id", id);
       setNotifications((prev) => {
         const updated = prev.map((n) => (n.id === id ? { ...n, is_read: true } : n));
         // Atualiza o badge
@@ -73,7 +73,7 @@ export default function NotificationsPage() {
     if (!profile) return;
     try {
       await supabase
-        .from("notifications")
+        .from("ferr_notifications")
         .update({ is_read: true })
         .eq("user_id", profile.id)
         .eq("is_read", false);

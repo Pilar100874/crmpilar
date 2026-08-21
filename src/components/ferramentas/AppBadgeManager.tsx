@@ -1,5 +1,5 @@
-import { useAppBadge } from "@/hooks/useAppBadge";
-import { useAutoLocation } from "@/hooks/useAutoLocation";
+import { useAppBadge } from "@/hooks/ferramentas/useAppBadge";
+import { useAutoLocation } from "@/hooks/ferramentas/useAutoLocation";
 
 export function AppBadgeManager() {
   // Este hook atualiza o badge do PWA automaticamente

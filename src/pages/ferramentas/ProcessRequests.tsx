@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,9 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Profile, Tool, Warehouse } from "@/lib/supabase";
-import { QRScanner } from "@/components/QRScanner";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Profile, Tool, Warehouse } from "@/lib/ferramentas/supabase";
+import { QRScanner } from "@/components/ferramentas/QRScanner";
 import {
   Package,
   Search,
@@ -130,17 +130,17 @@ export default function ProcessRequestsPage() {
     try {
       const [requestsRes, usersRes] = await Promise.all([
         supabase
-          .from("loan_requests")
+          .from("ferr_loan_requests")
           .select("*, profiles!loan_requests_user_id_fkey(*), warehouses(*)")
           .in("status", ["pendente", "separando", "pronto"])
           .order("created_at", { ascending: false }),
-        supabase.from("profiles").select("*").order("full_name"),
+        supabase.from("ferr_profiles").select("*").order("full_name"),
       ]);
 
       const requestsWithItems = await Promise.all(
         (requestsRes.data || []).map(async (req) => {
           const { data: items } = await supabase
-            .from("loan_request_items")
+            .from("ferr_loan_request_items")
             .select("*, tools(*)")
             .eq("request_id", req.id);
           return { ...req, items: items || [] };
@@ -173,16 +173,16 @@ export default function ProcessRequestsPage() {
     
     const [activeLoansRes, kitToolsRes, issuesRes] = await Promise.all([
       supabase
-        .from("loans")
+        .from("ferr_loans")
         .select("tool_id")
         .in("tool_id", toolIds)
         .in("status", ["ativo", "vencido", "renovacao_solicitada"]),
       supabase
-        .from("kit_tools")
+        .from("ferr_kit_tools")
         .select("kit_id, tool_id")
         .in("tool_id", toolIds),
       supabase
-        .from("return_issues")
+        .from("ferr_return_issues")
         .select("tool_id")
         .in("tool_id", toolIds)
         .eq("status", "pendente"),
@@ -314,7 +314,7 @@ export default function ProcessRequestsPage() {
       );
 
       const loanPromises = (itemsToDeliver || []).map((item) =>
-        supabase.from("loans").insert({
+        supabase.from("ferr_loans").insert({
           tool_id: item.tool_id,
           user_id: selectedRequest.user_id,
           warehouse_id: selectedRequest.warehouse_id,
@@ -327,7 +327,7 @@ export default function ProcessRequestsPage() {
       await Promise.all(loanPromises);
 
       await supabase
-        .from("loan_requests")
+        .from("ferr_loan_requests")
         .update({
           status: "entregue",
           processed_by: profile?.id,
@@ -358,13 +358,13 @@ export default function ProcessRequestsPage() {
     try {
       // First delete the items related to this request
       await supabase
-        .from("loan_request_items")
+        .from("ferr_loan_request_items")
         .delete()
         .eq("request_id", requestToDelete.id);
 
       // Then delete the request itself
       const { error } = await supabase
-        .from("loan_requests")
+        .from("ferr_loan_requests")
         .delete()
         .eq("id", requestToDelete.id);
 

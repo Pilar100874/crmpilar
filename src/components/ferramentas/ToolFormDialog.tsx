@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { ImageUploadCrop } from "@/components/ImageUploadCrop";
-import { Tool, Warehouse, Kit, ToolType } from "@/lib/supabase";
+import { ImageUploadCrop } from "@/components/ferramentas/ImageUploadCrop";
+import { Tool, Warehouse, Kit, ToolType } from "@/lib/ferramentas/supabase";
 import {
   Wrench,
   Package,

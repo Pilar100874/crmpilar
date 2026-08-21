@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ImageZoom } from "@/components/ui/image-zoom";
+import { ImageZoom } from "@/components/ferramentas/ui/image-zoom";
 import {
   Select,
   SelectContent,
@@ -33,8 +33,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Tool, Warehouse, Kit, KitTool, ToolType, Profile, Loan } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Tool, Warehouse, Kit, KitTool, ToolType, Profile, Loan } from "@/lib/ferramentas/supabase";
 import {
   Wrench,
   Plus,
@@ -111,21 +111,21 @@ export default function ToolsPage() {
   const fetchData = async () => {
     try {
       const [toolsRes, warehousesRes, kitsRes, kitToolsRes, loansRes, issuesRes, pendingRequestsRes] = await Promise.all([
-        supabase.from("tools").select("*").order("name"),
-        supabase.from("warehouses").select("*").order("name"),
-        supabase.from("kits").select("*").order("name"),
-        supabase.from("kit_tools").select("*"),
+        supabase.from("ferr_tools").select("*").order("name"),
+        supabase.from("ferr_warehouses").select("*").order("name"),
+        supabase.from("ferr_kits").select("*").order("name"),
+        supabase.from("ferr_kit_tools").select("*"),
         supabase
-          .from("loans")
+          .from("ferr_loans")
           .select("*, profiles!loans_user_id_fkey(*)")
           .eq("status", "ativo"),
         supabase
-          .from("return_issues")
+          .from("ferr_return_issues")
           .select("tool_id, issue_type, description")
           .eq("status", "pendente"),
         // Buscar ferramentas com solicitações pendentes
         supabase
-          .from("loan_request_items")
+          .from("ferr_loan_request_items")
           .select("tool_id, request_id, loan_requests!inner(id, status, user_id, profiles!loan_requests_user_id_fkey(full_name))")
           .in("loan_requests.status", ["pendente", "separando", "pronto"]),
       ]);
@@ -185,7 +185,7 @@ export default function ToolsPage() {
       }
       navigate(`/tools/${tool.id}/edit`);
     } else {
-      navigate("/tools/new");
+      navigate("/ferramentas/tools/new");
     }
   };
 
@@ -207,7 +207,7 @@ export default function ToolsPage() {
 
     // Check if tool has any loan history
     const { count } = await supabase
-      .from("loans")
+      .from("ferr_loans")
       .select("*", { count: "exact", head: true })
       .eq("tool_id", tool.id);
 
@@ -223,7 +223,7 @@ export default function ToolsPage() {
       if (hasLoanHistory) {
         // Deactivate instead of delete
         const { error } = await supabase
-          .from("tools")
+          .from("ferr_tools")
           .update({ is_active: false })
           .eq("id", toolToDelete.id);
         if (error) throw error;
@@ -231,7 +231,7 @@ export default function ToolsPage() {
       } else {
         // Delete completely
         const { error } = await supabase
-          .from("tools")
+          .from("ferr_tools")
           .delete()
           .eq("id", toolToDelete.id);
         if (error) throw error;
@@ -250,7 +250,7 @@ export default function ToolsPage() {
   const handleReactivateTool = async (tool: Tool) => {
     try {
       const { error } = await supabase
-        .from("tools")
+        .from("ferr_tools")
         .update({ is_active: true })
         .eq("id", tool.id);
       if (error) throw error;

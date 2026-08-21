@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,10 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ImageUploadCrop } from "@/components/ImageUploadCrop";
+import { ImageUploadCrop } from "@/components/ferramentas/ImageUploadCrop";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Tool, Warehouse, Kit, ToolType } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Tool, Warehouse, Kit, ToolType } from "@/lib/ferramentas/supabase";
 import {
   Wrench,
   Package,
@@ -100,8 +100,8 @@ export default function ToolFormPage() {
     setIsLoading(true);
     try {
       const [warehousesRes, kitsRes] = await Promise.all([
-        supabase.from("warehouses").select("*").order("name"),
-        supabase.from("kits").select("*").order("name"),
+        supabase.from("ferr_warehouses").select("*").order("name"),
+        supabase.from("ferr_kits").select("*").order("name"),
       ]);
 
       setWarehouses((warehousesRes.data as Warehouse[]) || []);
@@ -110,8 +110,8 @@ export default function ToolFormPage() {
       // Se estiver editando, buscar dados da ferramenta
       if (id) {
         const [toolRes, kitToolsRes] = await Promise.all([
-          supabase.from("tools").select("*").eq("id", id).single(),
-          supabase.from("kit_tools").select("id").eq("tool_id", id).limit(1),
+          supabase.from("ferr_tools").select("*").eq("id", id).single(),
+          supabase.from("ferr_kit_tools").select("id").eq("tool_id", id).limit(1),
         ]);
 
         if (toolRes.error) throw toolRes.error;
@@ -183,17 +183,17 @@ export default function ToolFormPage() {
     try {
       if (isEditing && id) {
         const { error } = await supabase
-          .from("tools")
+          .from("ferr_tools")
           .update(toolData)
           .eq("id", id);
         if (error) throw error;
         toast({ title: "Ferramenta atualizada com sucesso!" });
       } else {
-        const { error } = await supabase.from("tools").insert(toolData);
+        const { error } = await supabase.from("ferr_tools").insert(toolData);
         if (error) throw error;
         toast({ title: "Ferramenta cadastrada com sucesso!" });
       }
-      navigate("/tools");
+      navigate("/ferramentas/tools");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro", description: error.message });
     } finally {
@@ -206,7 +206,7 @@ export default function ToolFormPage() {
   // Redirect se não tiver permissão
   useEffect(() => {
     if (!authLoading && !canManage) {
-      navigate("/tools");
+      navigate("/ferramentas/tools");
     }
   }, [authLoading, canManage, navigate]);
 
@@ -226,7 +226,7 @@ export default function ToolFormPage() {
         title={isEditing ? "Editar Ferramenta" : "Nova Ferramenta"}
         description={isEditing ? "Atualize os dados da ferramenta" : "Preencha os dados para cadastrar"}
         action={
-          <Button variant="outline" onClick={() => navigate("/tools")}>
+          <Button variant="outline" onClick={() => navigate("/ferramentas/tools")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
@@ -535,7 +535,7 @@ export default function ToolFormPage() {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => navigate("/tools")}
+              onClick={() => navigate("/ferramentas/tools")}
               disabled={isSubmitting}
             >
               Cancelar

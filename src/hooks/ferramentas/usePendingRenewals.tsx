@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
 
 export function usePendingRenewals() {
   const { isAdmin, isAlmoxarifado } = useAuth();
@@ -10,7 +10,7 @@ export function usePendingRenewals() {
     queryKey: ["pending-renewals-count"],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("loan_renewals")
+        .from("ferr_loan_renewals")
         .select("*", { count: "exact", head: true })
         .eq("status", "pendente");
 

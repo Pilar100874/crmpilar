@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,8 +34,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Profile, UserRole, AppRole, Warehouse } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Profile, UserRole, AppRole, Warehouse } from "@/lib/ferramentas/supabase";
 import { Users, Plus, Edit, Shield, ShieldCheck, User, Key, Warehouse as WarehouseIcon, UserCheck, Clock, Ban, RotateCcw, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -117,10 +117,10 @@ export default function UsersPage() {
   const fetchData = async () => {
     try {
       const [usersRes, warehousesRes, rolesRes, userWarehousesRes] = await Promise.all([
-        supabase.from("profiles").select("*").order("full_name"),
-        supabase.from("warehouses").select("*").order("name"),
-        supabase.from("user_roles").select("*"),
-        supabase.from("user_warehouses").select("user_id, warehouse_id"),
+        supabase.from("ferr_profiles").select("*").order("full_name"),
+        supabase.from("ferr_warehouses").select("*").order("name"),
+        supabase.from("ferr_user_roles").select("*"),
+        supabase.from("ferr_user_warehouses").select("user_id, warehouse_id"),
       ]);
 
       const usersWithRoles = (usersRes.data || []).map((user) => ({
@@ -236,7 +236,7 @@ export default function UsersPage() {
     try {
       // Update profile
       const { error: profileError } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .update({
           full_name: formData.full_name,
           phone: formData.phone || null,
@@ -248,7 +248,7 @@ export default function UsersPage() {
 
       // Update role
       const { error: roleError } = await supabase
-        .from("user_roles")
+        .from("ferr_user_roles")
         .update({ role: formData.role })
         .eq("user_id", editingUser.id);
 
@@ -256,7 +256,7 @@ export default function UsersPage() {
 
       // Update user warehouses - delete existing and insert new
       const { error: deleteError } = await supabase
-        .from("user_warehouses")
+        .from("ferr_user_warehouses")
         .delete()
         .eq("user_id", editingUser.id);
 
@@ -269,7 +269,7 @@ export default function UsersPage() {
         }));
 
         const { error: insertError } = await supabase
-          .from("user_warehouses")
+          .from("ferr_user_warehouses")
           .insert(warehouseInserts);
 
         if (insertError) throw insertError;
@@ -336,7 +336,7 @@ export default function UsersPage() {
     try {
       // Approve the user
       const { error: approveError } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .update({
           is_approved: true,
           approved_at: new Date().toISOString(),
@@ -353,7 +353,7 @@ export default function UsersPage() {
       }));
 
       const { error: warehouseError } = await supabase
-        .from("user_warehouses")
+        .from("ferr_user_warehouses")
         .insert(warehouseInserts);
 
       if (warehouseError) throw warehouseError;
@@ -372,7 +372,7 @@ export default function UsersPage() {
   const handleReactivateUser = async (user: UserWithRole) => {
     try {
       const { error } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .update({ is_active: true })
         .eq("id", user.id);
       if (error) throw error;
@@ -386,7 +386,7 @@ export default function UsersPage() {
   const handleDeactivateUser = async (user: UserWithRole) => {
     try {
       const { error } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .update({ is_active: false })
         .eq("id", user.id);
       if (error) throw error;

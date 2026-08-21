@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/ferramentas/supabase";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
 
@@ -31,7 +31,7 @@ export function useGeolocation() {
 
       try {
         await supabase
-          .from("profiles")
+          .from("ferr_profiles")
           .update({
             last_location_lat: latitude,
             last_location_lng: longitude,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Profile } from "@/lib/supabase";
+import { Profile } from "@/lib/ferramentas/supabase";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

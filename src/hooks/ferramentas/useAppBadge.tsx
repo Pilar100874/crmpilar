@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
 
 export function useAppBadge() {
   const { user } = useAuth();
@@ -12,7 +12,7 @@ export function useAppBadge() {
       if (!user) return 0;
       
       const { count, error } = await supabase
-        .from("notifications")
+        .from("ferr_notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("is_read", false);

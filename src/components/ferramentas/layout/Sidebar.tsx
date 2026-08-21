@@ -1,9 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { usePermissions } from "@/hooks/usePermissions";
-import { usePendingRenewals } from "@/hooks/usePendingRenewals";
-import { usePendingApprovals } from "@/hooks/usePendingApprovals";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { usePermissions } from "@/hooks/ferramentas/usePermissions";
+import { usePendingRenewals } from "@/hooks/ferramentas/usePendingRenewals";
+import { usePendingApprovals } from "@/hooks/ferramentas/usePendingApprovals";
 import {
   LayoutDashboard,
   Wrench,
@@ -151,7 +151,7 @@ export function Sidebar() {
             className="flex-1 justify-start rounded-xl text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             asChild
           >
-            <Link to="/settings">
+            <Link to="/ferramentas/settings">
               <Settings className="mr-2 h-4 w-4" />
               Configurações
             </Link>

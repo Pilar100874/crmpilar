@@ -3,7 +3,7 @@ import { Camera, Image, X, AlertCircle, Loader2 } from "lucide-react";
 import { CameraCapture } from "./CameraCapture";
 import { ImageCropDialog } from "./ImageCropDialog";
 import { ImageZoom } from "./ui/image-zoom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/ferramentas/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImageUploadCropProps {

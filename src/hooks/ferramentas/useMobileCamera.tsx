@@ -5,7 +5,7 @@ import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Check, X, Camera, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { CameraCapture } from "@/components/CameraCapture";
+import { CameraCapture } from "@/components/ferramentas/CameraCapture";
 
 interface UseMobileCameraOptions {
   maxSizeMB?: number;

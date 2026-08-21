@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,8 +36,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Kit, Tool, KitTool, Loan } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Kit, Tool, KitTool, Loan } from "@/lib/ferramentas/supabase";
 import { BoxesIcon, Plus, Edit, Trash2, Wrench, Ban, CheckCircle, RotateCcw, Search, AlertTriangle } from "lucide-react";
 
 export default function KitsPage() {
@@ -74,11 +74,11 @@ export default function KitsPage() {
   const fetchData = async () => {
     try {
       const [kitsRes, toolsRes, kitToolsRes, loansRes, issuesRes] = await Promise.all([
-        supabase.from("kits").select("*").order("name"),
-        supabase.from("tools").select("*").order("name"),
-        supabase.from("kit_tools").select("*"),
-        supabase.from("loans").select("*").eq("status", "ativo"),
-        supabase.from("return_issues").select("tool_id, issue_type, description").eq("status", "pendente"),
+        supabase.from("ferr_kits").select("*").order("name"),
+        supabase.from("ferr_tools").select("*").order("name"),
+        supabase.from("ferr_kit_tools").select("*"),
+        supabase.from("ferr_loans").select("*").eq("status", "ativo"),
+        supabase.from("ferr_return_issues").select("tool_id, issue_type, description").eq("status", "pendente"),
       ]);
 
       setKits((kitsRes.data as Kit[]) || []);
@@ -158,7 +158,7 @@ export default function KitsPage() {
 
       if (editingKit) {
         const { error } = await supabase
-          .from("kits")
+          .from("ferr_kits")
           .update({
             name: formData.name,
             description: formData.description || null,
@@ -168,10 +168,10 @@ export default function KitsPage() {
         kitId = editingKit.id;
 
         // Remove existing kit_tools
-        await supabase.from("kit_tools").delete().eq("kit_id", kitId);
+        await supabase.from("ferr_kit_tools").delete().eq("kit_id", kitId);
       } else {
         const { data, error } = await supabase
-          .from("kits")
+          .from("ferr_kits")
           .insert({
             name: formData.name,
             description: formData.description || null,
@@ -188,7 +188,7 @@ export default function KitsPage() {
           kit_id: kitId,
           tool_id: toolId,
         }));
-        const { error } = await supabase.from("kit_tools").insert(kitToolsData);
+        const { error } = await supabase.from("ferr_kit_tools").insert(kitToolsData);
         if (error) throw error;
       }
 
@@ -221,10 +221,10 @@ export default function KitsPage() {
     setIsDeleting(true);
     try {
       // Delete kit_tools first to free up the tools
-      await supabase.from("kit_tools").delete().eq("kit_id", kitToDelete.id);
+      await supabase.from("ferr_kit_tools").delete().eq("kit_id", kitToDelete.id);
       // Then delete the kit
       const { error } = await supabase
-        .from("kits")
+        .from("ferr_kits")
         .delete()
         .eq("id", kitToDelete.id);
       if (error) throw error;
@@ -242,7 +242,7 @@ export default function KitsPage() {
   const handleReactivateKit = async (kit: Kit) => {
     try {
       const { error } = await supabase
-        .from("kits")
+        .from("ferr_kits")
         .update({ is_active: true })
         .eq("id", kit.id);
       if (error) throw error;

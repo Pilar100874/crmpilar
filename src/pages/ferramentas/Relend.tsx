@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Profile, Tool, Loan, Kit } from "@/lib/supabase";
-import { EmptyState } from "@/components/ui/empty-state";
-import { QRScanner } from "@/components/QRScanner";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Profile, Tool, Loan, Kit } from "@/lib/ferramentas/supabase";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
+import { QRScanner } from "@/components/ferramentas/QRScanner";
 import {
   User,
   Wrench,
@@ -91,18 +91,18 @@ export default function RelendPage() {
   }, [canAccess]);
 
   const fetchKitTools = async () => {
-    const { data } = await supabase.from("kit_tools").select("kit_id, tool_id");
+    const { data } = await supabase.from("ferr_kit_tools").select("kit_id, tool_id");
     setKitTools(data || []);
   };
 
   const fetchKits = async () => {
-    const { data } = await supabase.from("kits").select("*").eq("is_active", true);
+    const { data } = await supabase.from("ferr_kits").select("*").eq("is_active", true);
     setKits((data as Kit[]) || []);
   };
 
   const fetchToolsWithIssues = async () => {
     const { data } = await supabase
-      .from("return_issues")
+      .from("ferr_return_issues")
       .select("tool_id")
       .eq("status", "pendente");
     const issueToolIds = new Set((data || []).map((item: any) => item.tool_id));
@@ -113,14 +113,14 @@ export default function RelendPage() {
     setIsLoading(true);
     try {
       const { data: loans } = await supabase
-        .from("loans")
+        .from("ferr_loans")
         .select("user_id")
         .in("status", ["ativo", "renovacao_solicitada"]);
 
       if (loans && loans.length > 0) {
         const userIds = [...new Set(loans.map((l) => l.user_id))];
         const { data: users } = await supabase
-          .from("profiles")
+          .from("ferr_profiles")
           .select("*")
           .in("id", userIds)
           .order("full_name");
@@ -137,13 +137,13 @@ export default function RelendPage() {
   };
 
   const fetchAllUsers = async () => {
-    const { data } = await supabase.from("profiles").select("*").order("full_name");
+    const { data } = await supabase.from("ferr_profiles").select("*").order("full_name");
     setAllUsers((data as Profile[]) || []);
   };
 
   const fetchUserLoans = async (userId: string) => {
     const { data } = await supabase
-      .from("loans")
+      .from("ferr_loans")
       .select("*, tools(*)")
       .eq("user_id", userId)
       .in("status", ["ativo", "renovacao_solicitada"])
@@ -265,7 +265,7 @@ export default function RelendPage() {
     if (!newBorrower) return false;
 
     const { data: users } = await supabase
-      .from("profiles")
+      .from("ferr_profiles")
       .select("*")
       .eq("qr_code", authQrCode)
       .maybeSingle();
@@ -342,7 +342,7 @@ export default function RelendPage() {
       // Mark original loans as returned
       const returnPromises = selectedLoansList.map((loan) =>
         supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({
             status: "devolvido",
             return_date: new Date().toISOString(),
@@ -367,14 +367,14 @@ export default function RelendPage() {
       const [, , insertResult] = await Promise.all([
         // Delete pending renewal requests (non-blocking)
         supabase
-          .from("loan_renewals")
+          .from("ferr_loan_renewals")
           .delete()
           .in("loan_id", selectedLoanIds)
           .eq("status", "pendente"),
         // Update original loans
         Promise.all(returnPromises),
         // Insert new loans
-        supabase.from("loans").insert(newLoans),
+        supabase.from("ferr_loans").insert(newLoans),
       ]);
 
       if (insertResult.error) throw insertResult.error;

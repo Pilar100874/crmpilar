@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Warehouse } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Warehouse } from "@/lib/ferramentas/supabase";
 import { Warehouse as WarehouseIcon, Plus, Edit, Trash2, MapPin, Ban, RotateCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -69,7 +69,7 @@ export default function WarehousesPage() {
 
   const fetchData = async () => {
     try {
-      const { data } = await supabase.from("warehouses").select("*").order("name");
+      const { data } = await supabase.from("ferr_warehouses").select("*").order("name");
       setWarehouses((data as Warehouse[]) || []);
     } catch (error) {
       console.error("Error fetching warehouses:", error);
@@ -108,13 +108,13 @@ export default function WarehousesPage() {
     try {
       if (editingWarehouse) {
         const { error } = await supabase
-          .from("warehouses")
+          .from("ferr_warehouses")
           .update(warehouseData)
           .eq("id", editingWarehouse.id);
         if (error) throw error;
         toast({ title: "Almoxarifado atualizado com sucesso!" });
       } else {
-        const { error } = await supabase.from("warehouses").insert(warehouseData);
+        const { error } = await supabase.from("ferr_warehouses").insert(warehouseData);
         if (error) throw error;
         toast({ title: "Almoxarifado cadastrado com sucesso!" });
       }
@@ -132,8 +132,8 @@ export default function WarehousesPage() {
 
     // Check if warehouse has tools or users associated
     const [toolsRes, usersRes] = await Promise.all([
-      supabase.from("tools").select("*", { count: "exact", head: true }).eq("warehouse_id", warehouse.id),
-      supabase.from("user_warehouses").select("*", { count: "exact", head: true }).eq("warehouse_id", warehouse.id),
+      supabase.from("ferr_tools").select("*", { count: "exact", head: true }).eq("warehouse_id", warehouse.id),
+      supabase.from("ferr_user_warehouses").select("*", { count: "exact", head: true }).eq("warehouse_id", warehouse.id),
     ]);
     
     const hasAssoc = ((toolsRes.count || 0) + (usersRes.count || 0)) > 0;
@@ -149,7 +149,7 @@ export default function WarehousesPage() {
       if (hasAssociations) {
         // Deactivate instead of delete
         const { error } = await supabase
-          .from("warehouses")
+          .from("ferr_warehouses")
           .update({ is_active: false })
           .eq("id", warehouseToDelete.id);
         if (error) throw error;
@@ -157,7 +157,7 @@ export default function WarehousesPage() {
       } else {
         // Delete permanently
         const { error } = await supabase
-          .from("warehouses")
+          .from("ferr_warehouses")
           .delete()
           .eq("id", warehouseToDelete.id);
         if (error) throw error;
@@ -176,7 +176,7 @@ export default function WarehousesPage() {
   const handleReactivate = async (warehouse: Warehouse) => {
     try {
       const { error } = await supabase
-        .from("warehouses")
+        .from("ferr_warehouses")
         .update({ is_active: true })
         .eq("id", warehouse.id);
       if (error) throw error;

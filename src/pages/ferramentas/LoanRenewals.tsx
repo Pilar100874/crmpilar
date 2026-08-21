@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,8 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Profile, Tool, Loan, Kit } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Profile, Tool, Loan, Kit } from "@/lib/ferramentas/supabase";
 import { 
   CalendarClock, 
   Check, 
@@ -84,8 +84,8 @@ export default function LoanRenewalsPage() {
 
   const fetchKitsAndTools = async () => {
     const [kitsRes, kitToolsRes] = await Promise.all([
-      supabase.from("kits").select("*"),
-      supabase.from("kit_tools").select("kit_id, tool_id"),
+      supabase.from("ferr_kits").select("*"),
+      supabase.from("ferr_kit_tools").select("kit_id, tool_id"),
     ]);
     setKits((kitsRes.data as Kit[]) || []);
     setKitTools(kitToolsRes.data || []);
@@ -94,7 +94,7 @@ export default function LoanRenewalsPage() {
   const fetchRenewals = async () => {
     try {
       const { data, error } = await supabase
-        .from("loan_renewals")
+        .from("ferr_loan_renewals")
         .select(`
           *,
           loans!inner(*, tools(*), profiles!loans_user_id_fkey(*)),
@@ -120,7 +120,7 @@ export default function LoanRenewalsPage() {
 
     // Buscar todas as ferramentas do mesmo kit
     const { data: kitTools } = await supabase
-      .from("kit_tools")
+      .from("ferr_kit_tools")
       .select("tool_id")
       .eq("kit_id", tool.kit_id);
 
@@ -154,7 +154,7 @@ export default function LoanRenewalsPage() {
       // Atualizar todas as solicitações de renovação do kit
       for (const renewal of kitRenewals) {
         const { error: renewalError } = await supabase
-          .from("loan_renewals")
+          .from("ferr_loan_renewals")
           .update({
             status: "aprovada",
             approved_by: profile.id,
@@ -166,7 +166,7 @@ export default function LoanRenewalsPage() {
 
         // Atualizar a data de vencimento do empréstimo
         const { error: loanError } = await supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({
             due_date: renewal.new_due_date,
             status: "ativo",
@@ -177,7 +177,7 @@ export default function LoanRenewalsPage() {
       }
 
       // Criar notificação para o usuário
-      await supabase.from("notifications").insert({
+      await supabase.from("ferr_notifications").insert({
         user_id: selectedRenewal.requested_by,
         loan_id: selectedRenewal.loan_id,
         title: "Prorrogação Aprovada",
@@ -213,7 +213,7 @@ export default function LoanRenewalsPage() {
       // Atualizar todas as solicitações de renovação do kit
       for (const renewal of kitRenewals) {
         const { error: renewalError } = await supabase
-          .from("loan_renewals")
+          .from("ferr_loan_renewals")
           .update({
             status: "rejeitada",
             approved_by: profile.id,
@@ -225,7 +225,7 @@ export default function LoanRenewalsPage() {
 
         // Voltar status do empréstimo para ativo
         const { error: loanError } = await supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({ status: "ativo" })
           .eq("id", renewal.loan_id);
 
@@ -233,7 +233,7 @@ export default function LoanRenewalsPage() {
       }
 
       // Criar notificação para o usuário
-      await supabase.from("notifications").insert({
+      await supabase.from("ferr_notifications").insert({
         user_id: selectedRenewal.requested_by,
         loan_id: selectedRenewal.loan_id,
         title: "Prorrogação Recusada",
@@ -382,7 +382,7 @@ export default function LoanRenewalsPage() {
     try {
       for (const renewal of selectedGroupRenewals) {
         await supabase
-          .from("loan_renewals")
+          .from("ferr_loan_renewals")
           .update({
             status: "aprovada",
             approved_by: profile.id,
@@ -391,7 +391,7 @@ export default function LoanRenewalsPage() {
           .eq("id", renewal.id);
 
         await supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({
             due_date: renewal.new_due_date,
             status: "ativo",
@@ -400,7 +400,7 @@ export default function LoanRenewalsPage() {
       }
 
       // Notificação
-      await supabase.from("notifications").insert({
+      await supabase.from("ferr_notifications").insert({
         user_id: selectedGroupRenewals[0].requested_by,
         loan_id: selectedGroupRenewals[0].loan_id,
         title: "Prorrogação Aprovada",
@@ -433,7 +433,7 @@ export default function LoanRenewalsPage() {
     try {
       for (const renewal of selectedGroupRenewals) {
         await supabase
-          .from("loan_renewals")
+          .from("ferr_loan_renewals")
           .update({
             status: "rejeitada",
             approved_by: profile.id,
@@ -442,12 +442,12 @@ export default function LoanRenewalsPage() {
           .eq("id", renewal.id);
 
         await supabase
-          .from("loans")
+          .from("ferr_loans")
           .update({ status: "ativo" })
           .eq("id", renewal.loan_id);
       }
 
-      await supabase.from("notifications").insert({
+      await supabase.from("ferr_notifications").insert({
         user_id: selectedGroupRenewals[0].requested_by,
         loan_id: selectedGroupRenewals[0].loan_id,
         title: "Prorrogação Recusada",

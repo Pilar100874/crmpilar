@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuth } from "@/hooks/useAuth";
-import { useGeolocation } from "@/hooks/useGeolocation";
-import { supabase, Profile } from "@/lib/supabase";
-import { UserLocationMap } from "@/components/map/UserLocationMap";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { useGeolocation } from "@/hooks/ferramentas/useGeolocation";
+import { supabase, Profile } from "@/lib/ferramentas/supabase";
+import { UserLocationMap } from "@/components/ferramentas/map/UserLocationMap";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -58,7 +58,7 @@ export default function TrackingPage() {
     setIsLoadingUsers(true);
     try {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("ferr_profiles")
         .select("*")
         .not("last_location_lat", "is", null)
         .order("last_location_updated_at", { ascending: false });

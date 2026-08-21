@@ -1,11 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
 import { Navigate } from "react-router-dom";
 import { Wrench, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
+import { PushNotificationPrompt } from "@/components/ferramentas/PushNotificationPrompt";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -26,7 +26,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/ferramentas/auth" replace />;
   }
 
   // Block unapproved users (except admins)

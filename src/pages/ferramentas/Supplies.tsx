@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { useAuth } from "@/hooks/useAuth";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 // Use typed-safe wrapper for tables not yet in generated types
@@ -19,11 +19,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Search, Package, FolderOpen, ArrowDownCircle, ArrowUpCircle, FileText, AlertTriangle, Pencil, Trash2, ChevronsUpDown, Check } from "lucide-react";
-import { ImageUploadCrop } from "@/components/ImageUploadCrop";
-import { ImageZoom } from "@/components/ui/image-zoom";
+import { ImageUploadCrop } from "@/components/ferramentas/ImageUploadCrop";
+import { ImageZoom } from "@/components/ferramentas/ui/image-zoom";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -103,18 +103,18 @@ export default function Supplies() {
   };
 
   const fetchGroups = async () => {
-    const { data } = await db.from("supply_groups").select("*").order("name");
+    const { data } = await db.from("ferr_supply_groups").select("*").order("name");
     if (data) setGroups(data as SupplyGroup[]);
   };
 
   const fetchSupplies = async () => {
-    const { data } = await db.from("supplies").select("*").order("name");
+    const { data } = await db.from("ferr_supplies").select("*").order("name");
     if (data) setSupplies(data as Supply[]);
   };
 
   const fetchMovements = async () => {
     const { data } = await db
-      .from("supply_movements")
+      .from("ferr_supply_movements")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(200);
@@ -124,8 +124,8 @@ export default function Supplies() {
       const performerIds = [...new Set(data.map((m: any) => m.performed_by))] as string[];
       
       const [suppliesRes, profilesRes] = await Promise.all([
-        db.from("supplies").select("id, name, photo_url").in("id", supplyIds),
-        supabase.from("profiles").select("id, full_name").in("id", performerIds as string[]),
+        db.from("ferr_supplies").select("id, name, photo_url").in("id", supplyIds),
+        supabase.from("ferr_profiles").select("id, full_name").in("id", performerIds as string[]),
       ]);
 
       const supplyMap = Object.fromEntries((suppliesRes.data || []).map((s: any) => [s.id, { name: s.name, photo_url: s.photo_url }]));
@@ -158,11 +158,11 @@ export default function Supplies() {
     if (!groupForm.name.trim()) return toast({ title: "Nome obrigatório", variant: "destructive" });
     
     if (editingGroup) {
-      const { error } = await db.from("supply_groups").update({ name: groupForm.name, description: groupForm.description || null }).eq("id", editingGroup.id);
+      const { error } = await db.from("ferr_supply_groups").update({ name: groupForm.name, description: groupForm.description || null }).eq("id", editingGroup.id);
       if (error) return toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" });
       toast({ title: "Grupo atualizado" });
     } else {
-      const { error } = await db.from("supply_groups").insert({ name: groupForm.name, description: groupForm.description || null, company_id: profile?.company_id });
+      const { error } = await db.from("ferr_supply_groups").insert({ name: groupForm.name, description: groupForm.description || null, company_id: profile?.company_id });
       if (error) return toast({ title: "Erro ao criar", description: error.message, variant: "destructive" });
       toast({ title: "Grupo criado" });
     }
@@ -173,7 +173,7 @@ export default function Supplies() {
   const deleteGroup = async (id: string) => {
     const hasSupplies = supplies.some((s) => s.group_id === id);
     if (hasSupplies) return toast({ title: "Grupo possui insumos vinculados", description: "Remova ou mova os insumos antes de excluir o grupo.", variant: "destructive" });
-    const { error } = await db.from("supply_groups").delete().eq("id", id);
+    const { error } = await db.from("ferr_supply_groups").delete().eq("id", id);
     if (error) return toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
     toast({ title: "Grupo excluído" });
     fetchGroups();
@@ -205,11 +205,11 @@ export default function Supplies() {
     };
 
     if (editingSupply) {
-      const { error } = await db.from("supplies").update(payload).eq("id", editingSupply.id);
+      const { error } = await db.from("ferr_supplies").update(payload).eq("id", editingSupply.id);
       if (error) return toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" });
       toast({ title: "Insumo atualizado" });
     } else {
-      const { error } = await db.from("supplies").insert(payload);
+      const { error } = await db.from("ferr_supplies").insert(payload);
       if (error) return toast({ title: "Erro ao criar", description: error.message, variant: "destructive" });
       toast({ title: "Insumo cadastrado" });
     }
@@ -223,18 +223,18 @@ export default function Supplies() {
       return toast({ title: "Insumo possui estoque", description: "Zere o estoque antes de excluir.", variant: "destructive" });
     }
     // Check movements from DB (not just local state limited to 200)
-    const { count } = await db.from("supply_movements").select("id", { count: "exact", head: true }).eq("supply_id", id);
+    const { count } = await db.from("ferr_supply_movements").select("id", { count: "exact", head: true }).eq("supply_id", id);
     if (count && count > 0) {
       return toast({ title: "Insumo possui movimentações", description: "Não é possível excluir insumo com histórico de movimentação.", variant: "destructive" });
     }
-    const { error } = await db.from("supplies").delete().eq("id", id);
+    const { error } = await db.from("ferr_supplies").delete().eq("id", id);
     if (error) return toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
     toast({ title: "Insumo excluído" });
     fetchSupplies();
   };
 
   const deleteMovement = async (id: string) => {
-    const { error } = await db.from("supply_movements").delete().eq("id", id);
+    const { error } = await db.from("ferr_supply_movements").delete().eq("id", id);
     if (error) return toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
     toast({ title: "Movimentação excluída" });
     fetchAll();
@@ -266,7 +266,7 @@ export default function Supplies() {
       }
     }
 
-    const { error } = await db.from("supply_movements").insert({
+    const { error } = await db.from("ferr_supply_movements").insert({
       supply_id: movementForm.supply_id,
       movement_type: movementForm.movement_type,
       quantity: qty,

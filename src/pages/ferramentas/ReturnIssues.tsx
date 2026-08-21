@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -24,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, ReturnIssue, Profile, Tool } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, ReturnIssue, Profile, Tool } from "@/lib/ferramentas/supabase";
 import {
   AlertTriangle,
   CheckCircle,
@@ -66,7 +66,7 @@ export default function ReturnIssuesPage() {
   const fetchIssues = async () => {
     try {
       const { data, error } = await supabase
-        .from("return_issues")
+        .from("ferr_return_issues")
         .select(`
           *,
           profiles!return_issues_user_id_fkey(*),
@@ -90,7 +90,7 @@ export default function ReturnIssuesPage() {
     setIsSubmitting(true);
     try {
       const { error } = await supabase
-        .from("return_issues")
+        .from("ferr_return_issues")
         .update({
           status: action,
           discount_resolved: action === "resolvido",
@@ -105,7 +105,7 @@ export default function ReturnIssuesPage() {
       // Se a ocorrência for "danificada" ou "perdida" e foi resolvida, desativar a ferramenta
       if (action === "resolvido" && (selectedIssue.issue_type === "danificada" || selectedIssue.issue_type === "perdida")) {
         const { error: toolError } = await supabase
-          .from("tools")
+          .from("ferr_tools")
           .update({ is_active: false })
           .eq("id", selectedIssue.tool_id);
         
@@ -124,7 +124,7 @@ export default function ReturnIssuesPage() {
         notificationMessage += ` A ferramenta foi desativada do sistema.`;
       }
 
-      await supabase.from("notifications").insert({
+      await supabase.from("ferr_notifications").insert({
         user_id: selectedIssue.user_id,
         title: action === "resolvido" 
           ? "Ocorrência Resolvida" 

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
+import { EmptyState } from "@/components/ferramentas/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, AppRole } from "@/lib/supabase";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, AppRole } from "@/lib/ferramentas/supabase";
 import { 
   Shield, 
   ShieldCheck, 
@@ -82,7 +82,7 @@ export default function PermissionsPage() {
   const fetchPermissions = async () => {
     try {
       const { data } = await supabase
-        .from("role_permissions")
+        .from("ferr_role_permissions")
         .select("*")
         .order("route");
       
@@ -97,7 +97,7 @@ export default function PermissionsPage() {
   const togglePermission = async (permissionId: string, currentValue: boolean) => {
     try {
       const { error } = await supabase
-        .from("role_permissions")
+        .from("ferr_role_permissions")
         .update({ can_access: !currentValue })
         .eq("id", permissionId);
 

@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, Tool } from "@/lib/supabase";
+import { supabase, Tool } from "@/lib/ferramentas/supabase";
 import {
   Lightbulb,
   Camera,
@@ -74,14 +74,14 @@ export default function ToolAssistantPage() {
     const fetchToolsAndLoans = async () => {
       // Buscar ferramentas ativas
       const { data: toolsData } = await supabase
-        .from("tools")
+        .from("ferr_tools")
         .select("*")
         .eq("is_active", true);
       setAllTools(toolsData || []);
 
       // Buscar empréstimos ativos para saber quais ferramentas estão emprestadas
       const { data: loansData } = await supabase
-        .from("loans")
+        .from("ferr_loans")
         .select(`
           tool_id,
           profiles:user_id (full_name)
@@ -210,7 +210,7 @@ export default function ToolAssistantPage() {
 
     // Navegar para a tela de solicitação com as ferramentas pré-selecionadas
     // Inclui flag para pular etapa 1 e usar usuário logado
-    navigate("/request-tools", {
+    navigate("/ferramentas/request-tools", {
       state: {
         preselectedToolIds: toolIds,
         preselectedKitIds: kitIds,

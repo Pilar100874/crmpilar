@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PageHeader } from "@/components/ui/page-header";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { PageHeader } from "@/components/ferramentas/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,12 +19,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Tool, Warehouse, Kit, Profile, ToolType } from "@/lib/supabase";
-import { QRScanner } from "@/components/QRScanner";
-import { ToolPhotoRecognition } from "@/components/ToolPhotoRecognition";
-import { ImageZoom } from "@/components/ui/image-zoom";
-import { KitGalleryZoom } from "@/components/ui/kit-gallery-zoom";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Tool, Warehouse, Kit, Profile, ToolType } from "@/lib/ferramentas/supabase";
+import { QRScanner } from "@/components/ferramentas/QRScanner";
+import { ToolPhotoRecognition } from "@/components/ferramentas/ToolPhotoRecognition";
+import { ImageZoom } from "@/components/ferramentas/ui/image-zoom";
+import { KitGalleryZoom } from "@/components/ferramentas/ui/kit-gallery-zoom";
 import {
   Wrench,
   Plus,
@@ -179,22 +179,22 @@ export default function RequestToolsPage() {
     
     try {
       const [toolsRes, warehousesRes, kitsRes, kitToolsRes, loansRes, userWarehousesRes, usersRes, pendingRequestsRes, issuesRes] = await Promise.all([
-        supabase.from("tools").select("*").eq("is_active", true).order("name"),
-        supabase.from("warehouses").select("*").order("name"),
-        supabase.from("kits").select("*").order("name"),
-        supabase.from("kit_tools").select("kit_id, tool_id"),
-        supabase.from("loans").select("tool_id, due_date, user_id, profiles!loans_user_id_fkey(full_name)").in("status", ["ativo", "vencido", "renovacao_solicitada"]),
-        supabase.from("user_warehouses").select("warehouse_id").eq("user_id", profile.id),
+        supabase.from("ferr_tools").select("*").eq("is_active", true).order("name"),
+        supabase.from("ferr_warehouses").select("*").order("name"),
+        supabase.from("ferr_kits").select("*").order("name"),
+        supabase.from("ferr_kit_tools").select("kit_id, tool_id"),
+        supabase.from("ferr_loans").select("tool_id, due_date, user_id, profiles!loans_user_id_fkey(full_name)").in("status", ["ativo", "vencido", "renovacao_solicitada"]),
+        supabase.from("ferr_user_warehouses").select("warehouse_id").eq("user_id", profile.id),
         (isAdmin || isAlmoxarifado) 
-          ? supabase.from("profiles").select("*").order("full_name")
+          ? supabase.from("ferr_profiles").select("*").order("full_name")
           : Promise.resolve({ data: [] as Profile[], error: null }),
         supabase
-          .from("loan_request_items")
+          .from("ferr_loan_request_items")
           .select("tool_id, request_id, loan_requests!inner(id, status, user_id, profiles!loan_requests_user_id_fkey(full_name))")
           .in("loan_requests.status", ["pendente", "separando", "pronto"]),
         // Buscar ferramentas com ocorrências pendentes (manutenção, danificada, perdida)
         supabase
-          .from("return_issues")
+          .from("ferr_return_issues")
           .select("tool_id")
           .eq("status", "pendente"),
       ]);
@@ -561,7 +561,7 @@ export default function RequestToolsPage() {
           : addDays(new Date(), parseInt(dueDays));
 
         const loanPromises = selectedTools.map((st) =>
-          supabase.from("loans").insert({
+          supabase.from("ferr_loans").insert({
             tool_id: st.tool.id,
             user_id: targetUserId,
             warehouse_id: warehouseId || warehouses[0]?.id,
@@ -580,7 +580,7 @@ export default function RequestToolsPage() {
       } else {
         // Cria solicitação normal (para si mesmo OU usuário não está presente)
         const { data: request, error: requestError } = await supabase
-          .from("loan_requests")
+          .from("ferr_loan_requests")
           .insert({
             user_id: targetUserId,
             warehouse_id: warehouseId,
@@ -601,7 +601,7 @@ export default function RequestToolsPage() {
         }));
 
         const { error: itemsError } = await supabase
-          .from("loan_request_items")
+          .from("ferr_loan_request_items")
           .insert(items);
 
         if (itemsError) throw itemsError;
@@ -619,7 +619,7 @@ export default function RequestToolsPage() {
         });
       }
 
-      navigate("/");
+      navigate("/ferramentas");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro", description: error.message });
     } finally {
@@ -2127,7 +2127,7 @@ export default function RequestToolsPage() {
             variant="outline"
             onClick={() => {
               if (currentStep === 1) {
-                navigate("/");
+                navigate("/ferramentas");
               } else {
                 setCurrentStep(currentStep - 1);
               }

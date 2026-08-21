@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase, Tool, Loan, Profile } from "@/lib/supabase";
-import { QRCodeDisplay } from "@/components/QRCodeDisplay";
-import { UserLoans } from "@/components/UserLoans";
+import { MainLayout } from "@/components/ferramentas/layout/MainLayout";
+import { useAuth } from "@/hooks/ferramentas/useAuth";
+import { supabase, Tool, Loan, Profile } from "@/lib/ferramentas/supabase";
+import { QRCodeDisplay } from "@/components/ferramentas/QRCodeDisplay";
+import { UserLoans } from "@/components/ferramentas/UserLoans";
 import {
   Wrench,
   Package,
@@ -92,7 +92,7 @@ export default function Dashboard() {
 
   const checkOverdueNotifications = async () => {
     try {
-      await supabase.rpc('create_overdue_notifications');
+      await supabase.rpc("ferr_create_overdue_notifications");
     } catch (error) {
       console.error("Error checking overdue notifications:", error);
     }
@@ -100,13 +100,13 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const { data: tools } = await supabase.from("tools").select("*");
+      const { data: tools } = await supabase.from("ferr_tools").select("*");
       const { data: allLoans } = await supabase
-        .from("loans")
+        .from("ferr_loans")
         .select("*, tools(*), profiles!loans_user_id_fkey(*)")
         .eq("status", "ativo");
 
-      const { data: users } = await supabase.from("profiles").select("id");
+      const { data: users } = await supabase.from("ferr_profiles").select("id");
 
       const totalTools = tools?.length || 0;
       const maintenanceTools = tools?.filter((t) => t.is_maintenance).length || 0;
@@ -141,9 +141,9 @@ export default function Dashboard() {
         case "total":
         case "available":
         case "maintenance": {
-          const { data } = await supabase.from("tools").select("*").order("name");
+          const { data } = await supabase.from("ferr_tools").select("*").order("name");
           if (type === "available") {
-            const { data: activeLoans } = await supabase.from("loans").select("tool_id").eq("status", "ativo");
+            const { data: activeLoans } = await supabase.from("ferr_loans").select("tool_id").eq("status", "ativo");
             const loanedIds = activeLoans?.map(l => l.tool_id) || [];
             setDetailData((data || []).filter(t => !t.is_maintenance && !loanedIds.includes(t.id)));
           } else if (type === "maintenance") {
@@ -156,7 +156,7 @@ export default function Dashboard() {
         case "loaned":
         case "overdue": {
           const { data } = await supabase
-            .from("loans")
+            .from("ferr_loans")
             .select("*, tools(*), profiles!loans_user_id_fkey(*)")
             .eq("status", "ativo")
             .order("due_date", { ascending: true });
@@ -169,7 +169,7 @@ export default function Dashboard() {
           break;
         }
         case "users": {
-          const { data } = await supabase.from("profiles").select("*").order("full_name");
+          const { data } = await supabase.from("ferr_profiles").select("*").order("full_name");
           setDetailData(data || []);
           break;
         }
@@ -198,7 +198,7 @@ export default function Dashboard() {
         type: "warning",
       }));
 
-      const { error } = await supabase.from("notifications").insert(notifications);
+      const { error } = await supabase.from("ferr_notifications").insert(notifications);
       if (error) throw error;
 
       toast({ title: `${notifications.length} notificação(ões) enviada(s) com sucesso!` });
@@ -268,7 +268,7 @@ export default function Dashboard() {
           {/* Quick Actions - Grid on Mobile, Flex on Desktop */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Button asChild size="default" className="gap-2 rounded-xl shadow-sm">
-              <Link to="/request-tools">
+              <Link to="/ferramentas/request-tools">
                 <ShoppingCart className="h-4 w-4" />
                 <span>Solicitar</span>
               </Link>
@@ -276,19 +276,19 @@ export default function Dashboard() {
             {isStaff && (
               <>
                 <Button asChild variant="outline" size="default" className="gap-2 rounded-xl">
-                  <Link to="/process-requests">
+                  <Link to="/ferramentas/process-requests">
                     <ClipboardList className="h-4 w-4" />
                     <span>Processar</span>
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="default" className="gap-2 rounded-xl">
-                  <Link to="/loan/relend">
+                  <Link to="/ferramentas/loan/relend">
                     <Repeat className="h-4 w-4" />
                     <span>Reempréstimo</span>
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="default" className="gap-2 rounded-xl">
-                  <Link to="/loan/return">
+                  <Link to="/ferramentas/loan/return">
                     <PackageCheck className="h-4 w-4" />
                     <span>Devolução</span>
                   </Link>
