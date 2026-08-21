@@ -2,14 +2,13 @@ import { ReactNode, useState, useMemo } from "react";
 import { OfflineIndicator } from "@/components/operacional-hub/OfflineIndicator";
 import { useNavBadges } from "@/hooks/operacional-hub/useNavBadges";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  ClipboardList, 
-  Users, 
-  Package, 
-  Settings, 
-  Menu,
-  X,
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  Settings,
+  PanelLeft,
+  PanelLeftClose,
   Building2,
   Clock,
   Briefcase,
@@ -30,7 +29,8 @@ import {
   ShieldCheck,
   Timer,
   Store,
-  Shield
+  Shield,
+  LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,52 +40,102 @@ import { useNavigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
 import { useEstablishment } from "@/hooks/operacional-hub/useEstablishment";
 import { useAccessLevel } from "@/hooks/operacional-hub/useAccessLevel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
-// Items for admin/manager
-const adminNavItems = [
-  { icon: LayoutDashboard, label: "Painel", href: "/operacional" },
-  { icon: UserX, label: "Ausências", href: "/operacional/absences" },
-  { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
-  { icon: CloudRain, label: "Condições", href: "/operacional/conditions" },
-  { icon: TrendingUp, label: "Produtividade", href: "/operacional/productivity" },
-  { icon: CalendarClock, label: "Simulação", href: "/operacional/schedule-simulation" },
-  { icon: BarChart3, label: "Previsto x Real", href: "/operacional/planned-vs-actual" },
-  { icon: Timer, label: "Ociosidade", href: "/operacional/idle-time" },
-  { icon: FileText, label: "Templates", href: "/operacional/templates" },
-  { icon: ShieldCheck, label: "Aprovações", href: "/operacional/approvals" },
-  { icon: Users, label: "Usuários", href: "/operacional/users" },
-  { icon: Building2, label: "Setores", href: "/operacional/sectors" },
-  { icon: Briefcase, label: "Funções", href: "/operacional/functions" },
-  { icon: Clock, label: "Turnos", href: "/operacional/shifts" },
-  { icon: Package, label: "Materiais", href: "/operacional/materials" },
-  { icon: Wrench, label: "Ferramentas", href: "/operacional/tools" },
-  { icon: Repeat, label: "Frequências", href: "/operacional/frequencies" },
-  { icon: AlertOctagon, label: "Incidentes", href: "/operacional/incidents" },
-  { icon: Bell, label: "Alertas", href: "/operacional/alerts" },
-  { icon: History, label: "Histórico", href: "/operacional/history" },
-  { icon: Tv, label: "Modo TV", href: "/operacional/tv" },
-  { icon: Tv, label: "TV Tarefas", href: "/operacional/tv-tasks" },
-  { icon: Shield, label: "Níveis de Acesso", href: "/operacional/access-levels" },
-  { icon: Settings, label: "Configurações", href: "/operacional/settings" },
+interface NavItem {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+}
+
+interface NavSection {
+  id: string;
+  title: string;
+  items: NavItem[];
+}
+
+// Seções (admin/gestor) — mesmo padrão de agrupamento do hub de Listas
+const adminSections: NavSection[] = [
+  {
+    id: "operacao",
+    title: "Operação",
+    items: [
+      { icon: LayoutDashboard, label: "Painel", href: "/operacional" },
+      { icon: UserX, label: "Ausências", href: "/operacional/absences" },
+      { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
+      { icon: CloudRain, label: "Condições", href: "/operacional/conditions" },
+      { icon: AlertOctagon, label: "Incidentes", href: "/operacional/incidents" },
+      { icon: ShieldCheck, label: "Aprovações", href: "/operacional/approvals" },
+    ],
+  },
+  {
+    id: "analises",
+    title: "Análises",
+    items: [
+      { icon: TrendingUp, label: "Produtividade", href: "/operacional/productivity" },
+      { icon: CalendarClock, label: "Simulação", href: "/operacional/schedule-simulation" },
+      { icon: BarChart3, label: "Previsto x Real", href: "/operacional/planned-vs-actual" },
+      { icon: Timer, label: "Ociosidade", href: "/operacional/idle-time" },
+      { icon: History, label: "Histórico", href: "/operacional/history" },
+    ],
+  },
+  {
+    id: "cadastros",
+    title: "Cadastros",
+    items: [
+      { icon: FileText, label: "Templates", href: "/operacional/templates" },
+      { icon: Users, label: "Usuários", href: "/operacional/users" },
+      { icon: Building2, label: "Setores", href: "/operacional/sectors" },
+      { icon: Briefcase, label: "Funções", href: "/operacional/functions" },
+      { icon: Clock, label: "Turnos", href: "/operacional/shifts" },
+      { icon: Package, label: "Materiais", href: "/operacional/materials" },
+      { icon: Wrench, label: "Ferramentas", href: "/operacional/tools" },
+      { icon: Repeat, label: "Frequências", href: "/operacional/frequencies" },
+    ],
+  },
+  {
+    id: "exibicao",
+    title: "Exibição & Configurações",
+    items: [
+      { icon: Tv, label: "Modo TV", href: "/operacional/tv" },
+      { icon: Tv, label: "TV Tarefas", href: "/operacional/tv-tasks" },
+      { icon: Bell, label: "Alertas", href: "/operacional/alerts" },
+      { icon: Shield, label: "Níveis de Acesso", href: "/operacional/access-levels" },
+      { icon: Settings, label: "Configurações", href: "/operacional/settings" },
+    ],
+  },
 ];
 
-// Super admin exclusive items
-const superAdminNavItems = [
-  { icon: Store, label: "Estabelecimentos", href: "/operacional/establishments" },
-];
+const superAdminSection: NavSection = {
+  id: "super",
+  title: "Administração",
+  items: [{ icon: Store, label: "Estabelecimentos", href: "/operacional/establishments" }],
+};
 
-// Simplified items for worker
-const workerNavItems = [
-  { icon: LayoutDashboard, label: "Minhas Tarefas", href: "/operacional" },
-  { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
-];
+const workerSection: NavSection = {
+  id: "minhas",
+  title: "Minhas Atividades",
+  items: [
+    { icon: LayoutDashboard, label: "Minhas Tarefas", href: "/operacional" },
+    { icon: Camera, label: "Irregularidades", href: "/operacional/irregularities" },
+  ],
+};
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdminOrManager, isSuperAdmin, loading: roleLoading } = useUserRole();
@@ -93,136 +143,215 @@ export function AppLayout({ children }: AppLayoutProps) {
   const badges = useNavBadges();
   const { accessLevel, loading: accessLoading } = useAccessLevel();
 
-  const navItems = useMemo(() => {
-    if (roleLoading || accessLoading) return []; // Wait for role and access level to load
+  const sections: NavSection[] = useMemo(() => {
+    if (roleLoading || accessLoading) return [];
 
-    // If user has an access level assigned, filter menus by allowed_menus
+    const base = isSuperAdmin ? [superAdminSection, ...adminSections] : adminSections;
+
     if (accessLevel && accessLevel.allowed_menus && accessLevel.allowed_menus.length > 0) {
-      const allItems = isSuperAdmin
-        ? [...superAdminNavItems, ...adminNavItems]
-        : adminNavItems;
-      return allItems.filter((item) => accessLevel.allowed_menus.includes(item.href));
+      return base
+        .map((s) => ({
+          ...s,
+          items: s.items.filter((i) => accessLevel.allowed_menus.includes(i.href)),
+        }))
+        .filter((s) => s.items.length > 0);
     }
 
-    // Fallback to role-based menu if no access level
-    if (!isAdminOrManager) return workerNavItems;
-    if (isSuperAdmin) return [...superAdminNavItems, ...adminNavItems];
-    return adminNavItems;
+    if (!isAdminOrManager) return [workerSection];
+    return base;
   }, [isAdminOrManager, isSuperAdmin, roleLoading, accessLevel, accessLoading]);
 
-  const badgeMap: Record<string, number> = useMemo(() => ({
-    "/operacional/approvals": badges.pendingApprovals,
-    "/operacional/tools": badges.toolsNeedRepair,
-    "/operacional/materials": badges.lowStockMaterials,
-  }), [badges]);
+  const allItems = useMemo(() => sections.flatMap((s) => s.items), [sections]);
+
+  const currentItem = useMemo(() => {
+    const exact = allItems.find((i) => i.href === location.pathname);
+    if (exact) return exact;
+    const partial = [...allItems]
+      .filter((i) => i.href !== "/operacional" && location.pathname.startsWith(i.href))
+      .sort((a, b) => b.href.length - a.href.length)[0];
+    return partial || allItems[0];
+  }, [allItems, location.pathname]);
+
+  const currentSection = useMemo(
+    () => sections.find((s) => s.items.some((i) => i.href === currentItem?.href)),
+    [sections, currentItem]
+  );
+
+  const badgeMap: Record<string, number> = useMemo(
+    () => ({
+      "/operacional/approvals": badges.pendingApprovals,
+      "/operacional/tools": badges.toolsNeedRepair,
+      "/operacional/materials": badges.lowStockMaterials,
+    }),
+    [badges]
+  );
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/operacional/auth");
   };
 
+  const CurrentIcon = currentItem?.icon || LayoutDashboard;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-full flex flex-col bg-muted/20">
       <OfflineIndicator />
-      {/* Mobile header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-primary flex items-center justify-between px-4">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 hover:bg-primary-foreground/10 rounded-lg transition-colors text-primary-foreground"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
-        <h1 className="text-lg font-semibold text-primary-foreground">Pilar</h1>
-        <div className="w-10" />
-      </header>
 
-      {/* Sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed top-0 left-0 z-50 h-full w-72 bg-sidebar transition-transform duration-300 lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-6 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <img src="/icon-192.png" alt="Pilar" className="h-10 w-10 rounded-xl" />
-              <div>
-                <span className="font-bold text-sidebar-foreground text-lg">Pilar</span>
-                <p className="text-xs text-sidebar-foreground/60 truncate max-w-[140px]">
-                  {establishmentName || (isAdminOrManager ? "Controle Operacional" : "Colaborador")}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 hover:bg-sidebar-accent rounded-lg text-sidebar-foreground"
-            >
-              <X className="h-5 w-5" />
-            </button>
+      {/* Header com gradiente (padrão Listas) */}
+      <div className="border-b bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+            <LayoutDashboard className="h-5 w-5" />
           </div>
-
-          {/* Establishment Selector for super_admin */}
-          <div className="pt-4">
-            <EstablishmentSelector />
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              const badgeCount = badgeMap[item.href] || 0;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="flex-1">{item.label}</span>
-                  {badgeCount > 0 && (
-                    <span className="min-w-5 h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
-                      {badgeCount > 99 ? "99+" : badgeCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Logout */}
-          <div className="p-4 border-t border-sidebar-border">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground py-3"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5" />
-              Sair
-            </Button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">Operacional Hub</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm truncate">
+              {establishmentName || "Controle operacional, tarefas e equipes"}
+            </p>
           </div>
         </div>
-      </aside>
+      </div>
 
-      {/* Main content */}
-      <main className="lg:pl-72 pt-14 lg:pt-0 min-h-screen">
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</div>
-      </main>
+      <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+        {/* Mobile & Tablet: Select agrupado */}
+        <div className="lg:hidden border-b bg-card/60 backdrop-blur p-3 sticky top-0 z-10 space-y-2">
+          <EstablishmentSelector />
+          <Select value={currentItem?.href} onValueChange={(v) => navigate(v)}>
+            <SelectTrigger className="w-full bg-background h-11">
+              <SelectValue>
+                <div className="flex items-center gap-2 min-w-0">
+                  <CurrentIcon className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">{currentItem?.label}</span>
+                  {currentSection && (
+                    <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground shrink-0 hidden sm:inline">
+                      {currentSection.title}
+                    </span>
+                  )}
+                </div>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-popover max-h-[70vh]">
+              {sections.map((section) => (
+                <SelectGroup key={section.id}>
+                  <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {section.title}
+                  </SelectLabel>
+                  {section.items.map((item) => (
+                    <SelectItem key={item.href} value={item.href}>
+                      <div className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4 text-muted-foreground" />
+                        <span>{item.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop: Sidebar com seções */}
+        <aside
+          className={cn(
+            "hub-menu hidden lg:flex lg:flex-col lg:overflow-y-auto lg:shrink-0 border-r bg-card transition-all duration-300",
+            isMenuCollapsed ? "lg:w-14" : "lg:w-64"
+          )}
+        >
+          <div className="flex items-center justify-end p-2 border-b">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+              className="h-8 w-8"
+              title={isMenuCollapsed ? "Expandir menu" : "Recolher menu"}
+            >
+              {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {!isMenuCollapsed && (
+            <div className="p-2 border-b">
+              <EstablishmentSelector />
+            </div>
+          )}
+
+          <TooltipProvider delayDuration={0}>
+            <nav className="flex-1 p-2 space-y-4">
+              {sections.map((section) => (
+                <div key={section.id} className="space-y-1">
+                  {!isMenuCollapsed && (
+                    <div className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {section.title}
+                    </div>
+                  )}
+                  {isMenuCollapsed && <div className="mx-2 my-1 border-t border-border/60" aria-hidden />}
+                  {section.items.map((item) => {
+                    const isActive = currentItem?.href === item.href;
+                    const badgeCount = badgeMap[item.href] || 0;
+                    const link = (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        className={cn(
+                          "group relative flex items-center gap-3 w-full rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+                          isActive
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          isMenuCollapsed && "justify-center px-0"
+                        )}
+                      >
+                        {isActive && !isMenuCollapsed && (
+                          <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-primary" />
+                        )}
+                        <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "opacity-70")} />
+                        {!isMenuCollapsed && <span className="truncate flex-1">{item.label}</span>}
+                        {badgeCount > 0 && !isMenuCollapsed && (
+                          <span className="min-w-5 h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                    if (isMenuCollapsed) {
+                      return (
+                        <Tooltip key={item.href}>
+                          <TooltipTrigger asChild>{link}</TooltipTrigger>
+                          <TooltipContent side="right" className="font-medium">
+                            {item.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+                    return link;
+                  })}
+                </div>
+              ))}
+            </nav>
+          </TooltipProvider>
+
+          <div className="p-2 border-t">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full gap-3 text-muted-foreground hover:text-foreground",
+                isMenuCollapsed ? "justify-center px-0" : "justify-start"
+              )}
+              onClick={handleLogout}
+              title="Sair"
+            >
+              <LogOut className="h-4 w-4" />
+              {!isMenuCollapsed && "Sair"}
+            </Button>
+          </div>
+        </aside>
+
+        {/* Conteúdo */}
+        <div className="flex-1 overflow-auto p-3 lg:p-4 xl:p-6">
+          <div className="lg:rounded-xl lg:border lg:border-border/60 lg:bg-card lg:shadow-sm p-0 lg:p-6">
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
