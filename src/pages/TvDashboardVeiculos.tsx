@@ -588,7 +588,7 @@ export default function TvDashboardVeiculos() {
         </div>
 
         {/* Legenda de cores por status */}
-        <div className="px-2 py-1 border-b border-white/10 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+        <div className="px-2 py-1 border-b border-white/10 flex flex-wrap items-center gap-x-2 gap-y-0.5 bg-black/25">
           {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((k) => (
             <span key={k} className="flex items-center gap-1 text-[9px] text-white/70 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusConfig[k].hex }} />
