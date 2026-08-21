@@ -83,7 +83,7 @@ export default function TvDashboardVeiculos() {
   const isMobile = useIsMobile();
   const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
-  const [legendaVisivel, setLegendaVisivel] = useState(false);
+  
   useFullscreen(true);
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
