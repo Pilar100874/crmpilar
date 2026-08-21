@@ -229,7 +229,7 @@ export default function CVVehicles() {
       current_km: v.current_km, oil_change_interval: v.oil_change_interval,
       last_oil_change_km: v.last_oil_change_km, active: v.active,
       veiculo_id: (v as any).veiculo_id ?? null,
-      fleet_type: (v as any).fleet_type ?? "",
+      fleet_type: (logVeiculos.find(l => l.id === (v as any).veiculo_id)?.tipo_veiculo || "").trim() || (v as any).fleet_type || "",
       logistica_grupo_id: (v as any).logistica_grupo_id ?? null,
     });
 
@@ -245,6 +245,7 @@ export default function CVVehicles() {
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
       vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
+      fleet_type: (lv.tipo_veiculo || "").trim() || f.fleet_type,
       logistica_grupo_id: lv.logistica_grupo_id ?? lv.grupo_id ?? null,
     }));
   };
@@ -588,15 +589,13 @@ export default function CVVehicles() {
 
             <div>
               <Label>Tipo de frota (roteiro de manutenção preventiva)</Label>
-              <Select value={form.fleet_type || "__none__"} onValueChange={v => setForm({ ...form, fleet_type: v === "__none__" ? "" : v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione o tipo de frota" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Sem roteiro padrão</SelectItem>
-                  {tiposFrota.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Input
+                value={form.fleet_type || "Sem roteiro padrão"}
+                readOnly
+                className="bg-muted"
+              />
               <p className="text-xs text-muted-foreground mt-1">
-                Define quais itens da Biblioteca de Manutenção serão aplicados a este veículo.
+                Preenchido automaticamente pelo tipo do veículo no cadastro de Logística. Define quais itens da Biblioteca de Manutenção serão aplicados.
               </p>
             </div>
 
