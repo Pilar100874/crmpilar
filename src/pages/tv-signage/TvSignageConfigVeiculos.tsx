@@ -64,13 +64,27 @@ export default function TvSignageConfigVeiculos() {
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
+              <p className="font-medium">Sempre mostrar todos os veículos</p>
+              <p className="text-sm text-muted-foreground">
+                A TV mantém todos os veículos filtrados enquadrados no maior zoom possível, sem dar foco em um veículo.
+              </p>
+            </div>
+            <Switch
+              checked={config.sempre_visao_geral}
+              onCheckedChange={v => setConfig(prev => ({ ...prev, sempre_visao_geral: v }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
               <p className="font-medium">Ciclo automático ativo</p>
               <p className="text-sm text-muted-foreground">
-                Alterna sozinho entre visão geral e foco em cada veículo.
+                Alterna sozinho entre visão geral e foco em cada veículo (desativado quando "sempre mostrar todos" está ligado).
               </p>
             </div>
             <Switch
               checked={config.autonomo_ativo}
+              disabled={config.sempre_visao_geral}
               onCheckedChange={v => setConfig(prev => ({ ...prev, autonomo_ativo: v }))}
             />
           </div>

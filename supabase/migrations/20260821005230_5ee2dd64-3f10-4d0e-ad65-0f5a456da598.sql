@@ -1,0 +1,1 @@
+ALTER TABLE public.tv_veiculos_config ADD COLUMN IF NOT EXISTS sempre_visao_geral boolean NOT NULL DEFAULT true;

@@ -24027,6 +24027,7 @@ export type Database = {
           pausa_falha_segundos: number
           pausa_interacao_segundos: number
           quiosque_ativo: boolean
+          sempre_visao_geral: boolean
           trilha_minutos: number
           updated_at: string
         }
@@ -24040,6 +24041,7 @@ export type Database = {
           pausa_falha_segundos?: number
           pausa_interacao_segundos?: number
           quiosque_ativo?: boolean
+          sempre_visao_geral?: boolean
           trilha_minutos?: number
           updated_at?: string
         }
@@ -24053,6 +24055,7 @@ export type Database = {
           pausa_falha_segundos?: number
           pausa_interacao_segundos?: number
           quiosque_ativo?: boolean
+          sempre_visao_geral?: boolean
           trilha_minutos?: number
           updated_at?: string
         }
