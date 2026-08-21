@@ -10,12 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
   LogIn, Car, Clock, AlertTriangle, CheckCircle, Save, X, ChevronLeft, ChevronRight,
-  Camera, Tags, AlertCircle, MessageSquare,
+  Camera, Tags, AlertCircle, MessageSquare, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
+import { CVMapaVeiculoDialog } from "@/components/cv/CVMapaVeiculoDialog";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
@@ -46,6 +47,7 @@ export default function CVVehicleEntry() {
     inspected_all_sides: false,
   });
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const [mapaVeiculo, setMapaVeiculo] = useState<{ id: string | null; titulo: string } | null>(null);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const load = async () => {
@@ -461,6 +463,12 @@ export default function CVVehicleEntry() {
         </div>
       </Card>
 
+      <CVMapaVeiculoDialog
+        open={!!mapaVeiculo}
+        onOpenChange={(v) => !v && setMapaVeiculo(null)}
+        veiculoLogisticaId={mapaVeiculo?.id}
+        titulo={mapaVeiculo?.titulo}
+      />
     </div>
 
   );
