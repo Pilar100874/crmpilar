@@ -22,6 +22,8 @@ import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { carregarAlertasManutencao, type AlertaManutencao, type MaintenancePlan, type PlanoTipo } from "@/lib/cv/manutencao";
 import { listarTiposFrota, sincronizarRoteiro, listarCatalogo, adicionarItensRoteiro, ORIGENS_ROTEIRO, nomeItem, type CatalogItem } from "@/lib/cv/catalogo";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, filtrarPorGrupo, CV_GRUPO_ALL } from "@/lib/cv/grupoFilter";
 
 
 const TYPES: { value: VehicleType; label: string }[] = [
@@ -49,6 +51,7 @@ const empty = {
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
   veiculo_id: null as string | null,
   fleet_type: "" as string,
+  logistica_grupo_id: null as string | null,
 };
 
 
@@ -58,7 +61,7 @@ const planoVazio = {
   alert_km_antecedencia: 500, alert_days_antecedencia: 7, active: true,
 };
 
-interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null }
+interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
@@ -67,6 +70,7 @@ export default function CVVehicles() {
   const [sincronizando, setSincronizando] = useState(false);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const [q, setQ] = useState("");
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const [sortBy, setSortBy] = useState<"name" | "last_maintenance" | "km">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -192,7 +196,7 @@ export default function CVVehicles() {
     if (error) return toast.error(error.message);
     const list = (data ?? []) as Vehicle[];
     setRows(list);
-    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo").eq("ativo", true).order("placa");
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
     setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
 
@@ -226,6 +230,7 @@ export default function CVVehicles() {
       last_oil_change_km: v.last_oil_change_km, active: v.active,
       veiculo_id: (v as any).veiculo_id ?? null,
       fleet_type: (v as any).fleet_type ?? "",
+      logistica_grupo_id: (v as any).logistica_grupo_id ?? null,
     });
 
     setEditing(v.id); setOpen(true);
@@ -240,6 +245,7 @@ export default function CVVehicles() {
       plate: lv.placa,
       name: (lv.descricao || lv.placa).toUpperCase(),
       vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
+      logistica_grupo_id: lv.grupo_id ?? f.logistica_grupo_id ?? null,
     }));
   };
 
@@ -256,6 +262,7 @@ export default function CVVehicles() {
       next_oil_change_km: last_oil_change_km + oil_change_interval,
       plate: String(form.plate).toUpperCase(),
       fleet_type: form.fleet_type || null,
+      logistica_grupo_id: form.logistica_grupo_id || null,
 
     };
 
@@ -402,7 +409,8 @@ export default function CVVehicles() {
     recarregarPlanos(); load();
   };
 
-  const filtered = rows.filter(v =>
+  const porGrupo = filtrarPorGrupo(rows, grupoId, (v: any) => v.logistica_grupo_id);
+  const filtered = porGrupo.filter(v =>
     !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
   );
 
@@ -456,6 +464,7 @@ export default function CVVehicles() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar nome ou placa..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
         </div>
+        <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} />
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Ordenar por</span>
           <Select value={sortBy} onValueChange={v => setSortBy(v as any)}>
@@ -564,6 +573,23 @@ export default function CVVehicles() {
                 <Input value={TYPES.find(t => t.value === form.vehicle_type)?.label ?? ""} readOnly className="bg-muted" />
               </div>
             </div>
+            <div>
+              <Label>Grupo (unidade / filial)</Label>
+              <Select
+                value={form.logistica_grupo_id ?? "__none__"}
+                onValueChange={v => setForm({ ...form, logistica_grupo_id: v === "__none__" ? null : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem grupo</SelectItem>
+                  {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Sugerido automaticamente pelo grupo do veículo na Logística. Usado para filtrar as telas do Controle de Veículos.
+              </p>
+            </div>
+
             <div>
               <Label>Tipo de frota (roteiro de manutenção preventiva)</Label>
               <Select value={form.fleet_type || "__none__"} onValueChange={v => setForm({ ...form, fleet_type: v === "__none__" ? "" : v })}>

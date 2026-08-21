@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Users, User, IdCard, Search, ToggleLeft, ToggleRight, MessageCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, User, IdCard, Search, ToggleLeft, ToggleRight, MessageCircle, Layers } from "lucide-react";
 
 const maskWhatsapp = (v: string) => {
   const d = (v || "").replace(/\D/g, "").slice(0, 11);
@@ -17,14 +17,18 @@ const maskWhatsapp = (v: string) => {
   if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CVPageHeader } from "./CVPageHeader";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
 import type { Driver } from "@/types/vehicle";
 
-const empty = { name: "", license: "", phone: "", active: true };
+const empty = { name: "", license: "", phone: "", active: true, logistica_grupo_id: null as string | null };
 
 export default function CVDrivers() {
   const [rows, setRows] = useState<Driver[]>([]);
   const [q, setQ] = useState("");
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
@@ -61,7 +65,7 @@ export default function CVDrivers() {
     load();
   };
 
-  const filtered = rows.filter(d =>
+  const filtered = filtrarPorGrupo(rows, grupoId, (d: any) => d.logistica_grupo_id).filter(d =>
     !q || d.name.toLowerCase().includes(q.toLowerCase()) || d.license.toLowerCase().includes(q.toLowerCase())
   );
 
@@ -81,9 +85,12 @@ export default function CVDrivers() {
         }
       />
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar nome ou CNH..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar nome ou CNH..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
+        </div>
+        <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} />
       </div>
 
       {filtered.length === 0 ? (
@@ -116,10 +123,14 @@ export default function CVDrivers() {
                     <MessageCircle className="h-4 w-4 text-emerald-500" />
                     <span className="truncate">{d.phone || "—"}</span>
                   </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Layers className="h-4 w-4" />
+                    <span className="truncate">{grupos.find(g => g.id === (d as any).logistica_grupo_id)?.nome || "Sem grupo"}</span>
+                  </div>
                 </div>
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                    setForm({ name: d.name, license: d.license, phone: d.phone ?? "", active: d.active });
+                    setForm({ name: d.name, license: d.license, phone: d.phone ?? "", active: d.active, logistica_grupo_id: (d as any).logistica_grupo_id ?? null });
                     setEditing(d.id); setOpen(true);
                   }}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(d)}>
@@ -140,6 +151,19 @@ export default function CVDrivers() {
             <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>CNH</Label><Input value={form.license} onChange={e => setForm({ ...form, license: e.target.value })} /></div>
             <div><Label>WhatsApp</Label><Input inputMode="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={e => setForm({ ...form, phone: maskWhatsapp(e.target.value) })} /></div>
+            <div>
+              <Label>Grupo (unidade / filial)</Label>
+              <Select
+                value={form.logistica_grupo_id ?? "__none__"}
+                onValueChange={v => setForm({ ...form, logistica_grupo_id: v === "__none__" ? null : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem grupo</SelectItem>
+                  {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
               <Label>Ativo</Label>

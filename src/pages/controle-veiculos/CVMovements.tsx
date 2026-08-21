@@ -11,6 +11,8 @@ import {
   List, Search, Filter, Car, LogIn, LogOut, Clock, User, Users, AlertTriangle, CheckCircle, CalendarIcon,
 } from "lucide-react";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
+import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
+import { useCvGrupoFilter, CV_GRUPO_ALL } from "@/lib/cv/grupoFilter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,7 @@ export default function CVMovements() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date>(new Date());
+  const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   useEffect(() => {
     (async () => {
@@ -32,7 +35,7 @@ export default function CVMovements() {
 
       const { data } = await supabase
         .from("cv_vehicle_movements")
-        .select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name)")
+        .select("*, vehicle:cv_vehicles(name, plate, logistica_grupo_id), driver:cv_drivers(name)")
         .gte("exit_time", start.toISOString())
         .lte("exit_time", end.toISOString())
         .order("exit_time", { ascending: false })
@@ -50,7 +53,8 @@ export default function CVMovements() {
       (m.vehicle?.plate || "").toLowerCase().includes(s) ||
       (m.driver?.name || "").toLowerCase().includes(s);
     const matchesStatus = statusFilter === "all" || m.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesGrupo = grupoId === CV_GRUPO_ALL || m.vehicle?.logistica_grupo_id === grupoId;
+    return matchesSearch && matchesStatus && matchesGrupo;
   });
 
   return (
@@ -62,9 +66,9 @@ export default function CVMovements() {
       />
 
       <div className="grid gap-2 sm:gap-3 grid-cols-3">
-        <CVKpiCard label="Total" value={movements.length} icon={List} tone="primary" />
-        <CVKpiCard label="Em Trânsito" value={movements.filter((m) => m.status === "out").length} icon={LogOut} tone="warning" />
-        <CVKpiCard label="Retornados" value={movements.filter((m) => m.status === "returned").length} icon={LogIn} tone="success" />
+        <CVKpiCard label="Total" value={filtered.length} icon={List} tone="primary" />
+        <CVKpiCard label="Em Trânsito" value={filtered.filter((m) => m.status === "out").length} icon={LogOut} tone="warning" />
+        <CVKpiCard label="Retornados" value={filtered.filter((m) => m.status === "returned").length} icon={LogIn} tone="success" />
       </div>
 
       <Card>
@@ -75,7 +79,7 @@ export default function CVMovements() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Data</label>
               <Popover>
@@ -113,6 +117,10 @@ export default function CVMovements() {
                   className="pl-9"
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Grupo</label>
+              <CVGrupoFilter value={grupoId} onChange={setGrupoId} grupos={grupos} className="w-full" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Status</label>
