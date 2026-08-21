@@ -103,7 +103,7 @@ export default function Dashboard() {
       const { data: tools } = await supabase.from("ferr_tools").select("*");
       const { data: allLoans } = await supabase
         .from("ferr_loans")
-        .select("*, tools:ferr_tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*)")
+        .select("*, tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*)")
         .eq("status", "ativo");
 
       const { data: users } = await supabase.from("ferr_profiles").select("id");
@@ -157,7 +157,7 @@ export default function Dashboard() {
         case "overdue": {
           const { data } = await supabase
             .from("ferr_loans")
-            .select("*, tools:ferr_tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*)")
+            .select("*, tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*)")
             .eq("status", "ativo")
             .order("due_date", { ascending: true });
           

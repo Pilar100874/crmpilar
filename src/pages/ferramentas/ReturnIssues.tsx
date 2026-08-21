@@ -70,7 +70,7 @@ export default function ReturnIssuesPage() {
         .select(`
           *,
           profiles!return_issues_user_id_fkey(*),
-          tools:ferr_tools:ferr_tools(*),
+          tools:ferr_tools(*),
           reporter:profiles!return_issues_reported_by_fkey(*)
         `)
         .order("created_at", { ascending: false });

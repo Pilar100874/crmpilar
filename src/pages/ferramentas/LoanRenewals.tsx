@@ -97,7 +97,7 @@ export default function LoanRenewalsPage() {
         .from("ferr_loan_renewals")
         .select(`
           *,
-          loans:ferr_loans!inner(*, tools:ferr_tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*)),
+          loans:ferr_loans!inner(*, tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*)),
           requester:ferr_profiles!ferr_loan_renewals_requested_by_fkey(*)
         `)
         .order("request_date", { ascending: false });

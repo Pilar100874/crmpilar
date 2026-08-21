@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/ferramentas/supabase";
 import { useAuth } from "./useAuth";
-import { useToast } from "./use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface GeolocationState {
   latitude: number | null;
