@@ -144,7 +144,7 @@ export default function RelendPage() {
   const fetchUserLoans = async (userId: string) => {
     const { data } = await supabase
       .from("ferr_loans")
-      .select("*, tools(*)")
+      .select("*, tools:ferr_tools(*)")
       .eq("user_id", userId)
       .in("status", ["ativo", "renovacao_solicitada"])
       .order("due_date", { ascending: true });

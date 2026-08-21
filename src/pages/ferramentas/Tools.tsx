@@ -117,7 +117,7 @@ export default function ToolsPage() {
         supabase.from("ferr_kit_tools").select("*"),
         supabase
           .from("ferr_loans")
-          .select("*, profiles!loans_user_id_fkey(*)")
+          .select("*, profiles:ferr_profiles!ferr_loans_user_id_fkey(*)")
           .eq("status", "ativo"),
         supabase
           .from("ferr_return_issues")

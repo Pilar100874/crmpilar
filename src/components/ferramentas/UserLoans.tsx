@@ -61,7 +61,7 @@ export function UserLoans() {
       const [loansRes, kitsRes, kitToolsRes] = await Promise.all([
         supabase
           .from("ferr_loans")
-          .select("*, tools(*)")
+          .select("*, tools:ferr_tools(*)")
           .eq("user_id", profile?.id)
           .in("status", ["ativo", "renovacao_solicitada"])
           .order("due_date", { ascending: true }),

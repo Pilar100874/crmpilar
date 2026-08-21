@@ -80,7 +80,7 @@ export default function ReportsPage() {
         supabase.from("ferr_tools").select("*").order("name"),
         supabase
           .from("ferr_loans")
-          .select("*, tools(*), profiles!loans_user_id_fkey(*), warehouses(*)")
+          .select("*, tools:ferr_tools:ferr_tools(*), profiles:ferr_profiles!ferr_loans_user_id_fkey(*), warehouses:ferr_warehouses(*)")
           .order("created_at", { ascending: false }),
         supabase.from("ferr_warehouses").select("*").order("name"),
       ]);

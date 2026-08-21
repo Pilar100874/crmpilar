@@ -188,7 +188,7 @@ export default function ReturnLoanPage() {
   const loadUserLoans = async (user: Profile) => {
     const { data: loans } = await supabase
       .from("ferr_loans")
-      .select("*, tools(*, kits(name))")
+      .select("*, tools:ferr_tools(*, kits:ferr_kits(name))")
       .eq("user_id", user.id)
       .in("status", ["ativo", "renovacao_solicitada"])
       .order("due_date", { ascending: true });
