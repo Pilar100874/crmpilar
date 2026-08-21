@@ -278,10 +278,11 @@ export default function TvSignageSimulador() {
     const cur = items[idx];
     if (!cur) return;
     // Modo "ao final do conteúdo": aguarda o aviso do player interno.
-    // Mantém um limite de segurança para telas que nunca sinalizam.
-    const segundos = cur.aoFinal ? Math.max(60, cur.duracao || 0) * 30 : cur.duracao;
-    if (!segundos) return;
-    const t = setTimeout(() => setIdx((i) => (i + 1) % items.length), segundos * 1000);
+    // Nada de temporizador aqui — cortar no meio da apresentação é justamente o que
+    // esse modo evita.
+    if (cur.aoFinal) return;
+    if (!cur.duracao) return;
+    const t = setTimeout(() => setIdx((i) => (i + 1) % items.length), cur.duracao * 1000);
     return () => clearTimeout(t);
   }, [idx, items, paused]);
 
@@ -297,14 +298,6 @@ export default function TvSignageSimulador() {
     return () => window.removeEventListener("message", onMsg);
   }, [idx, items, paused]);
 
-  // Refresh do dashboard atual
-  useEffect(() => {
-    const cur = items[idx];
-    if (!cur?.refresh) return;
-    const t = setInterval(() => setReloadKey((k) => k + 1), cur.refresh * 1000);
-    return () => clearInterval(t);
-  }, [idx, items]);
-
   // Auto-hide da barra
   useEffect(() => {
     if (!showBar) return;
@@ -313,20 +306,23 @@ export default function TvSignageSimulador() {
   }, [showBar, idx]);
 
   const cur = items[idx];
+  const proxIdx = items.length > 1 ? (idx + 1) % items.length : -1;
 
-  // Watchdog: reconexão e retomada automática do ciclo da playlist
+  // Watchdog: reconexão e retomada automática do ciclo da playlist.
+  // Em itens "ao final do conteúdo" o ciclo pode demorar muito (apresentação longa),
+  // então o avanço por inatividade fica praticamente desativado.
   const watchdog = useTvWatchdog({
-    segundosSemProgresso: 300,
+    segundosSemProgresso: cur?.aoFinal ? 24 * 60 * 60 : 300,
     segundosSemRede: 20,
     ativo: !paused,
     aoRecuperar: () => {
       setReloadKey((k) => k + 1);
-      if (items.length > 1) setIdx((i) => (i + 1) % items.length);
+      if (items.length > 1 && !items[idx]?.aoFinal) setIdx((i) => (i + 1) % items.length);
     },
   });
   useEffect(() => { watchdog.marcarProgresso(); }, [idx, reloadKey, watchdog.marcarProgresso]);
 
-  const url = useMemo(() => cur ? `${cur.url}${cur.url.includes("?") ? "&" : "?"}_r=${reloadKey}` : "", [cur, reloadKey]);
+  const montarUrl = (item: Item) => `${item.url}${item.url.includes("?") ? "&" : "?"}_r=${reloadKey}`;
 
   return (
     <div className="fixed inset-0 bg-black z-[9999]" onMouseMove={() => setShowBar(true)}>
@@ -339,15 +335,22 @@ export default function TvSignageSimulador() {
           <Button variant="secondary" onClick={() => navigate(-1)}>Voltar</Button>
         </div>
       )}
-      {cur && (
-        <iframe
-          key={url}
-          src={url}
-          title={cur.nome}
-          className="w-full h-full border-0"
-          allow="fullscreen; autoplay; camera; microphone; geolocation"
-        />
-      )}
+      {/* Transição fluida: o próximo item já fica pré-carregado (invisível) e a troca
+          é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro. */}
+      {items.map((item, i) => {
+        if (i !== idx && i !== proxIdx) return null;
+        const ativo = i === idx;
+        return (
+          <iframe
+            key={`${i}-${reloadKey}`}
+            src={montarUrl(item)}
+            title={item.nome}
+            className={`absolute inset-0 w-full h-full border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
+            allow="fullscreen; autoplay; camera; microphone; geolocation"
+          />
+        );
+      })}
+
       {(showBar || !cur) && device && (
         <div className="absolute top-0 left-0 right-0 bg-black/70 backdrop-blur text-white px-4 py-2 flex items-center gap-3 text-sm">
           <Monitor className="w-4 h-4" />
