@@ -202,10 +202,12 @@ export default function TvMural() {
 
   // Vídeo travado: avança por segurança
   useEffect(() => {
+    setVideoTocando(false);
     if (!atual || atual.tipo !== "video") return;
     const limite = window.setTimeout(() => avancar(), 15 * 60 * 1000);
     return () => window.clearTimeout(limite);
   }, [atual, indice, avancar]);
+
 
   const estiloDuracao = useMemo(
     () => ({ ["--mural-dur" as any]: `${duracaoTransicao}ms` }) as React.CSSProperties,
