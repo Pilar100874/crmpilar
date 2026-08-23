@@ -804,6 +804,16 @@ const App = () => (
                 <Route path="ocorrencias" element={<LivroOcorrencias />} />
                 <Route path="encomendas" element={<LivroEncomendas />} />
               </Route>
+              <Route path="/portaria" element={<PortariaLayout />}>
+                <Route index element={<PortariaDashboard />} />
+                <Route path="acessos" element={<PortariaAcessos />} />
+                <Route path="pessoas" element={<PortariaPessoas />} />
+                <Route path="visitantes" element={<PortariaVisitantes />} />
+                <Route path="historico" element={<PortariaHistorico />} />
+                <Route path="dispositivos" element={<PortariaDispositivos />} />
+                <Route path="interfone" element={<PortariaInterfone />} />
+                <Route path="configuracoes" element={<PortariaConfiguracoes />} />
+              </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasAoVivo />} />
                 <Route path="ao-vivo" element={<CamerasAoVivo />} />
