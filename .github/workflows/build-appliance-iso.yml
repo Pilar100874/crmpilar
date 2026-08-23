@@ -1,0 +1,72 @@
+name: Build Coletor Pilar Appliance ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag opcional para release versionada (ex: appliance-v1.9.0)'
+        required: false
+        default: ''
+  push:
+    branches: [main]
+    paths:
+      - 'appliance/**'
+      - '.github/workflows/build-appliance-iso.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-iso:
+    name: Gerar ISO (Debian 12 amd64)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar dependências
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorriso isolinux syslinux-common cpio curl
+
+      - name: Tornar build-iso.sh executável
+        run: chmod +x appliance/build-iso.sh appliance/scripts/*.sh || true
+
+      - name: Compilar ISO
+        run: sudo -E appliance/build-iso.sh
+        env:
+          COLETOR_URL: https://github.com/${{ github.repository }}/releases/latest/download/ColetorPilar-Linux.AppImage
+
+      - name: Listar saída
+        run: ls -lh appliance/out/
+
+      - name: Upload ISO como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coletor-pilar-appliance-iso
+          path: appliance/out/coletor-pilar-appliance-amd64.iso
+          if-no-files-found: error
+
+      - name: Publicar Release rolling (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: appliance-latest
+          name: Coletor Pilar Appliance (latest)
+          files: appliance/out/coletor-pilar-appliance-amd64.iso
+          make_latest: "false"
+          body: |
+            ISO bootável mais recente do Coletor Pilar Appliance (inclui o módulo de Portaria).
+            Grave com: sudo dd if=coletor-pilar-appliance-amd64.iso of=/dev/sdX bs=4M status=progress conv=fsync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Criar Release versionada (se tag informada)
+        if: github.event.inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          name: Coletor Pilar Appliance ${{ github.event.inputs.release_tag }}
+          files: appliance/out/coletor-pilar-appliance-amd64.iso
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
