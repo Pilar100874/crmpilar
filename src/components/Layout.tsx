@@ -202,6 +202,7 @@ export const menuItems: MenuItem[] = [
   { id: "Pilar Ferramentas", title: "Pilar Ferramentas", url: "/ferramentas", icon: LucideIcons.Wrench },
   { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
   { id: "Livro de Ocorrência", title: "Livro de Ocorrência", url: "/livro-ocorrencia", icon: LucideIcons.BookOpen },
+  { id: "Portaria", title: "Portaria", url: "/portaria", icon: LucideIcons.ShieldCheck },
   { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
   {
     id: "Editores",
