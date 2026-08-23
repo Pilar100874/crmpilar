@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, X, Loader2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { opSignedUrl } from "@/lib/operacional-hub/storage";
 
 interface LocationPhotosUploadProps {
   photos: string[];
@@ -50,11 +51,7 @@ export function LocationPhotosUpload({
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("task-location-photos")
-          .getPublicUrl(fileName);
-
-        uploadedUrls.push(publicUrl);
+        uploadedUrls.push(await opSignedUrl("task-location-photos", fileName));
       }
 
       onChange([...photos, ...uploadedUrls]);

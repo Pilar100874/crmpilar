@@ -20,10 +20,10 @@ Deno.serve(async (req) => {
     for (const dias of JANELAS) {
       const alvo = new Date(hoje.getTime() + dias * 86400000).toISOString().slice(0, 10);
       const { data: lancamentos } = await supabase
-        .from('ponto_banco_horas_lancamentos')
-        .select('id,funcionario_id,saldo_minutos,validade')
+        .from('ponto_banco_horas_saldos')
+        .select('id,funcionario_id,saldo_minutos,data_expiracao')
         .gt('saldo_minutos', 0)
-        .eq('validade', alvo);
+        .eq('data_expiracao', alvo);
 
       for (const l of lancamentos ?? []) {
         const horas = (l.saldo_minutos / 60).toFixed(1);

@@ -11,6 +11,7 @@ import {
   base64ToBlob,
 } from "@/lib/operacional-hub/offlineDb";
 import { useToast } from "@/hooks/use-toast";
+import { opSignedUrl } from "@/lib/operacional-hub/storage";
 
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -61,9 +62,7 @@ export function useOfflineSync() {
           .upload(photo.fileName, blob);
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from(photo.bucket)
-          .getPublicUrl(photo.fileName);
+        const publicUrl = await opSignedUrl(photo.bucket, photo.fileName);
 
         // Update the task execution with the photo URL
         const { error: updateError } = await (supabase as any)

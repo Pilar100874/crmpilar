@@ -67,6 +67,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { useOfflineTaskCache } from "@/hooks/operacional-hub/useOfflineTaskCache";
 import { useOnlineStatus } from "@/hooks/operacional-hub/useOfflineSync";
+import { opSignedUrl } from "@/lib/operacional-hub/storage";
 
 type TaskStatus = "pending" | "in_progress" | "completed" | "delayed" | "not_done" | "blocked" | "blocked_weather";
 
@@ -903,8 +904,7 @@ export default function Tasks() {
         const fileName = `adhoc/${user!.id}/${Date.now()}.jpg`;
         const { error: upErr } = await supabase.storage.from("task-photos").upload(fileName, adHocPhoto);
         if (!upErr) {
-          const { data: { publicUrl } } = supabase.storage.from("task-photos").getPublicUrl(fileName);
-          photoUrl = publicUrl;
+          photoUrl = await opSignedUrl("task-photos", fileName);
         }
       }
 
