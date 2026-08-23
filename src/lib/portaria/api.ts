@@ -39,14 +39,19 @@ export function usePortariaPerfil(): PortariaPerfil {
     };
   }, []);
 
+  // Usuário interno do CRM sem papel específico na Portaria: tratado como gestor
+  // (a autorização real é revalidada no backend).
+  const semPapel = !!userId && roles.length === 0 && !carregando;
+
   return {
     userId,
     roles,
     isSuperAdmin: roles.includes("super_admin"),
-    isGestor: roles.some((r) => r === "super_admin" || r === "admin"),
-    isStaff: roles.some((r) => r === "super_admin" || r === "admin" || r === "porteiro"),
+    isGestor: semPapel || roles.some((r) => r === "super_admin" || r === "admin"),
+    isStaff: semPapel || roles.some((r) => r === "super_admin" || r === "admin" || r === "porteiro"),
     carregando,
   };
+
 }
 
 export interface RespostaComando {
