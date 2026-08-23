@@ -113,7 +113,18 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/controle-visitantes", titulo: "Controle de Visitantes", aliases: ["visitantes"] },
 
   // ============ Menu Principal - Livro de Ocorrência ============
-  { path: "/livro-ocorrencia", titulo: "Livro de Ocorrência", aliases: ["portaria", "livro portaria", "encomendas portaria"] },
+  { path: "/livro-ocorrencia", titulo: "Livro de Ocorrência", aliases: ["livro portaria", "encomendas portaria"] },
+
+  // ============ Menu Principal - Portaria (controle de acesso) ============
+  { path: "/portaria", titulo: "Portaria", aliases: ["portaria", "controle de acesso", "abrir portao", "abrir porta"] },
+  { path: "/portaria/acessos", titulo: "Portaria - Acessos", aliases: ["acessos portaria", "abrir portao remoto"] },
+  { path: "/portaria/pessoas", titulo: "Portaria - Pessoas", aliases: ["moradores portaria", "pessoas portaria"] },
+  { path: "/portaria/visitantes", titulo: "Portaria - Visitantes", aliases: ["visitantes portaria"] },
+  { path: "/portaria/historico", titulo: "Portaria - Histórico", aliases: ["historico de acessos", "logs portaria"] },
+  { path: "/portaria/dispositivos", titulo: "Portaria - Dispositivos", aliases: ["shelly", "idface", "dispositivos portaria"] },
+  { path: "/portaria/interfone", titulo: "Portaria - Interfone", aliases: ["interfone"] },
+  { path: "/portaria/configuracoes", titulo: "Portaria - Configurações", aliases: ["configuracoes portaria", "pontos de acesso"] },
+
 
   // ============ Menu Principal - Câmeras ============
   { path: "/cameras", titulo: "Câmeras", aliases: ["cameras do sistema", "central de cameras"] },
