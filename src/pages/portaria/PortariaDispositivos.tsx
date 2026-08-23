@@ -75,7 +75,7 @@ export default function PortariaDispositivos() {
       pulso_ms: form.pulso_ms != null ? Number(form.pulso_ms) : 1000,
       firmware: form.firmware || null,
       habilitado: form.habilitado ?? true,
-      config: form.config ?? {},
+      config: (form.config ?? {}) as never,
     };
     let id = form.id;
     if (id) {
