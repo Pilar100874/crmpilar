@@ -21491,6 +21491,42 @@ export type Database = {
           },
         ]
       }
+      port_coletores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          ip_local: string | null
+          nome: string
+          token: string
+          ultima_comunicacao: string | null
+          updated_at: string
+          versao: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          ip_local?: string | null
+          nome: string
+          token?: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+          versao?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          ip_local?: string | null
+          nome?: string
+          token?: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+          versao?: string | null
+        }
+        Relationships: []
+      }
       port_device_credentials: {
         Row: {
           device_id: string
@@ -21523,6 +21559,76 @@ export type Database = {
           },
         ]
       }
+      port_device_jobs: {
+        Row: {
+          access_point_id: string | null
+          coletor_id: string | null
+          comando: string
+          created_at: string
+          device_id: string | null
+          erro: string | null
+          executado_em: string | null
+          id: string
+          parametros: Json
+          resultado: Json | null
+          solicitado_por: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_point_id?: string | null
+          coletor_id?: string | null
+          comando: string
+          created_at?: string
+          device_id?: string | null
+          erro?: string | null
+          executado_em?: string | null
+          id?: string
+          parametros?: Json
+          resultado?: Json | null
+          solicitado_por?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_point_id?: string | null
+          coletor_id?: string | null
+          comando?: string
+          created_at?: string
+          device_id?: string | null
+          erro?: string | null
+          executado_em?: string | null
+          id?: string
+          parametros?: Json
+          resultado?: Json | null
+          solicitado_por?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_device_jobs_access_point_id_fkey"
+            columns: ["access_point_id"]
+            isOneToOne: false
+            referencedRelation: "port_access_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_device_jobs_coletor_id_fkey"
+            columns: ["coletor_id"]
+            isOneToOne: false
+            referencedRelation: "port_coletores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_device_jobs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       port_devices: {
         Row: {
           canal_rele: number
@@ -21543,6 +21649,7 @@ export type Database = {
           tipo: string
           ultima_comunicacao: string | null
           updated_at: string
+          via_coletor: boolean
         }
         Insert: {
           canal_rele?: number
@@ -21563,6 +21670,7 @@ export type Database = {
           tipo?: string
           ultima_comunicacao?: string | null
           updated_at?: string
+          via_coletor?: boolean
         }
         Update: {
           canal_rele?: number
@@ -21583,6 +21691,7 @@ export type Database = {
           tipo?: string
           ultima_comunicacao?: string | null
           updated_at?: string
+          via_coletor?: boolean
         }
         Relationships: []
       }
