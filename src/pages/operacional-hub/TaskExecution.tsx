@@ -54,6 +54,7 @@ import { useWeatherCondition } from "@/hooks/operacional-hub/useWeatherCondition
 import { ToolCheckDialog } from "@/components/operacional-hub/tasks/ToolCheckDialog";
 import { useOfflineSync } from "@/hooks/operacional-hub/useOfflineSync";
 import { getCachedData, addToPhotoQueue, fileToBase64 } from "@/lib/operacional-hub/offlineDb";
+import { opSignedUrl } from "@/lib/operacional-hub/storage";
 
 interface ChecklistItem {
   id: string;
@@ -654,10 +655,7 @@ export default function TaskExecution() {
           .from("irregularity-photos")
           .upload(fileName, irregularityPhotoFile);
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage
-          .from("irregularity-photos")
-          .getPublicUrl(fileName);
-        photoUrl = publicUrl;
+        photoUrl = await opSignedUrl("irregularity-photos", fileName);
       }
 
       const { error } = await supabase.from("op_irregularities").insert([{
@@ -763,8 +761,7 @@ export default function TaskExecution() {
         const fileName = `${task.id}/${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage.from("task-photos").upload(fileName, photoFile);
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from("task-photos").getPublicUrl(fileName);
-        photoUrl = publicUrl;
+        photoUrl = await opSignedUrl("task-photos", fileName);
       } else if (photoFile && !navigator.onLine) {
         // Queue photo for later upload
         const base64 = await fileToBase64(photoFile);
@@ -960,8 +957,7 @@ export default function TaskExecution() {
           .from("task-photos")
           .upload(fileName, notDoneAudioBlob, { contentType: "audio/webm" });
         if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("task-photos").getPublicUrl(fileName);
-          audioUrl = urlData.publicUrl;
+          audioUrl = await opSignedUrl("task-photos", fileName);
         }
       }
 

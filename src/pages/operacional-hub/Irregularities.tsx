@@ -48,6 +48,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { useNavigate } from "react-router-dom";
+import { opSignedUrl } from "@/lib/operacional-hub/storage";
 
 interface Irregularity {
   id: string;
@@ -193,10 +194,7 @@ export default function Irregularities() {
           .from("irregularity-photos")
           .upload(fileName, photoFile);
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage
-          .from("irregularity-photos")
-          .getPublicUrl(fileName);
-        photoUrl = publicUrl;
+        photoUrl = await opSignedUrl("irregularity-photos", fileName);
       }
 
       const { error } = await supabase
@@ -273,9 +271,7 @@ export default function Irregularities() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("irregularity-photos")
-        .getPublicUrl(fileName);
+      const publicUrl = await opSignedUrl("irregularity-photos", fileName);
 
       // Create irregularity
       const { error } = await supabase.from("op_irregularities").insert([{

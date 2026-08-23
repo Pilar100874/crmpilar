@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/operacional-hub/useAuth";
 import { useUserRole } from "@/hooks/operacional-hub/useUserRole";
+import { opSignedUrl } from "@/lib/operacional-hub/storage";
 
 interface IrregularityTemplate {
   id: string;
@@ -180,11 +181,7 @@ export default function ReportIrregularity() {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("irregularity-photos")
-          .getPublicUrl(fileName);
-        
-        photoUrl = publicUrl;
+        photoUrl = await opSignedUrl("irregularity-photos", fileName);
       }
 
       const today = new Date().toISOString().split("T")[0];
