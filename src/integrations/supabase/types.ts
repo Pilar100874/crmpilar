@@ -21367,6 +21367,522 @@ export type Database = {
           },
         ]
       }
+      port_access_events: {
+        Row: {
+          access_point_id: string | null
+          auth_user_id: string | null
+          created_at: string
+          detalhes: Json
+          device_id: string | null
+          id: string
+          ip_origem: string | null
+          mensagem: string | null
+          origem: string | null
+          person_id: string | null
+          resultado: string
+          tipo: string
+          visitor_id: string | null
+        }
+        Insert: {
+          access_point_id?: string | null
+          auth_user_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          device_id?: string | null
+          id?: string
+          ip_origem?: string | null
+          mensagem?: string | null
+          origem?: string | null
+          person_id?: string | null
+          resultado?: string
+          tipo: string
+          visitor_id?: string | null
+        }
+        Update: {
+          access_point_id?: string | null
+          auth_user_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          device_id?: string | null
+          id?: string
+          ip_origem?: string | null
+          mensagem?: string | null
+          origem?: string | null
+          person_id?: string | null
+          resultado?: string
+          tipo?: string
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_access_events_access_point_id_fkey"
+            columns: ["access_point_id"]
+            isOneToOne: false
+            referencedRelation: "port_access_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_access_events_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_access_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "port_people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_access_events_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "port_visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      port_access_points: {
+        Row: {
+          acao: string | null
+          ativo: boolean
+          confirmar_abertura: boolean
+          created_at: string
+          device_id: string | null
+          id: string
+          nome: string
+          ordem: number
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          acao?: string | null
+          ativo?: boolean
+          confirmar_abertura?: boolean
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          acao?: string | null
+          ativo?: boolean
+          confirmar_abertura?: boolean
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_access_points_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      port_device_credentials: {
+        Row: {
+          device_id: string
+          senha: string | null
+          token: string | null
+          updated_at: string
+          usuario: string | null
+        }
+        Insert: {
+          device_id: string
+          senha?: string | null
+          token?: string | null
+          updated_at?: string
+          usuario?: string | null
+        }
+        Update: {
+          device_id?: string
+          senha?: string | null
+          token?: string | null
+          updated_at?: string
+          usuario?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_device_credentials_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      port_devices: {
+        Row: {
+          canal_rele: number
+          config: Json
+          created_at: string
+          device_id: string | null
+          endpoint: string | null
+          firmware: string | null
+          habilitado: boolean
+          id: string
+          ip: string | null
+          localizacao: string | null
+          modelo: string | null
+          nome: string
+          porta: number | null
+          pulso_ms: number
+          status: string
+          tipo: string
+          ultima_comunicacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          canal_rele?: number
+          config?: Json
+          created_at?: string
+          device_id?: string | null
+          endpoint?: string | null
+          firmware?: string | null
+          habilitado?: boolean
+          id?: string
+          ip?: string | null
+          localizacao?: string | null
+          modelo?: string | null
+          nome: string
+          porta?: number | null
+          pulso_ms?: number
+          status?: string
+          tipo?: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canal_rele?: number
+          config?: Json
+          created_at?: string
+          device_id?: string | null
+          endpoint?: string | null
+          firmware?: string | null
+          habilitado?: boolean
+          id?: string
+          ip?: string | null
+          localizacao?: string | null
+          modelo?: string | null
+          nome?: string
+          porta?: number | null
+          pulso_ms?: number
+          status?: string
+          tipo?: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      port_people: {
+        Row: {
+          ativo: boolean
+          auth_user_id: string | null
+          controlid_user_id: string | null
+          created_at: string
+          dias_semana: number[]
+          documento: string | null
+          email: string | null
+          face_status: string
+          foto_url: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          permitir_facial: boolean
+          permitir_remoto: boolean
+          sync_erro: string | null
+          telefone: string | null
+          tipo: string
+          unidade: string | null
+          updated_at: string
+          valido_ate: string | null
+          valido_de: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          auth_user_id?: string | null
+          controlid_user_id?: string | null
+          created_at?: string
+          dias_semana?: number[]
+          documento?: string | null
+          email?: string | null
+          face_status?: string
+          foto_url?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          permitir_facial?: boolean
+          permitir_remoto?: boolean
+          sync_erro?: string | null
+          telefone?: string | null
+          tipo?: string
+          unidade?: string | null
+          updated_at?: string
+          valido_ate?: string | null
+          valido_de?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          auth_user_id?: string | null
+          controlid_user_id?: string | null
+          created_at?: string
+          dias_semana?: number[]
+          documento?: string | null
+          email?: string | null
+          face_status?: string
+          foto_url?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          permitir_facial?: boolean
+          permitir_remoto?: boolean
+          sync_erro?: string | null
+          telefone?: string | null
+          tipo?: string
+          unidade?: string | null
+          updated_at?: string
+          valido_ate?: string | null
+          valido_de?: string | null
+        }
+        Relationships: []
+      }
+      port_person_permissions: {
+        Row: {
+          access_point_id: string
+          created_at: string
+          id: string
+          person_id: string
+        }
+        Insert: {
+          access_point_id: string
+          created_at?: string
+          id?: string
+          person_id: string
+        }
+        Update: {
+          access_point_id?: string
+          created_at?: string
+          id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_person_permissions_access_point_id_fkey"
+            columns: ["access_point_id"]
+            isOneToOne: false
+            referencedRelation: "port_access_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_person_permissions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "port_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      port_remote_commands: {
+        Row: {
+          access_point_id: string | null
+          comando: string
+          created_at: string
+          device_id: string | null
+          erro: string | null
+          id: string
+          ip_origem: string | null
+          latencia_ms: number | null
+          nonce: string | null
+          resultado: string
+          solicitado_por: string | null
+        }
+        Insert: {
+          access_point_id?: string | null
+          comando?: string
+          created_at?: string
+          device_id?: string | null
+          erro?: string | null
+          id?: string
+          ip_origem?: string | null
+          latencia_ms?: number | null
+          nonce?: string | null
+          resultado?: string
+          solicitado_por?: string | null
+        }
+        Update: {
+          access_point_id?: string | null
+          comando?: string
+          created_at?: string
+          device_id?: string | null
+          erro?: string | null
+          id?: string
+          ip_origem?: string | null
+          latencia_ms?: number | null
+          nonce?: string | null
+          resultado?: string
+          solicitado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_remote_commands_access_point_id_fkey"
+            columns: ["access_point_id"]
+            isOneToOne: false
+            referencedRelation: "port_access_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_remote_commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      port_settings: {
+        Row: {
+          chave: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          chave: string
+          updated_at?: string
+          valor?: Json
+        }
+        Update: {
+          chave?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
+      port_user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["port_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["port_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["port_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      port_visitors: {
+        Row: {
+          access_point_id: string | null
+          codigo: string | null
+          controlid_user_id: string | null
+          created_at: string
+          criado_por: string | null
+          documento: string | null
+          face_status: string
+          fim: string | null
+          foto_url: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          inicio: string
+          nome: string
+          observacoes: string | null
+          status: string
+          telefone: string | null
+          tipo_autorizacao: string
+          unidade: string | null
+          updated_at: string
+          visitado_person_id: string | null
+        }
+        Insert: {
+          access_point_id?: string | null
+          codigo?: string | null
+          controlid_user_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          documento?: string | null
+          face_status?: string
+          fim?: string | null
+          foto_url?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          inicio?: string
+          nome: string
+          observacoes?: string | null
+          status?: string
+          telefone?: string | null
+          tipo_autorizacao?: string
+          unidade?: string | null
+          updated_at?: string
+          visitado_person_id?: string | null
+        }
+        Update: {
+          access_point_id?: string | null
+          codigo?: string | null
+          controlid_user_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          documento?: string | null
+          face_status?: string
+          fim?: string | null
+          foto_url?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          inicio?: string
+          nome?: string
+          observacoes?: string | null
+          status?: string
+          telefone?: string | null
+          tipo_autorizacao?: string
+          unidade?: string | null
+          updated_at?: string
+          visitado_person_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "port_visitors_access_point_id_fkey"
+            columns: ["access_point_id"]
+            isOneToOne: false
+            referencedRelation: "port_access_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_visitors_visitado_person_id_fkey"
+            columns: ["visitado_person_id"]
+            isOneToOne: false
+            referencedRelation: "port_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_artigos: {
         Row: {
           ajudou: number | null
@@ -29270,6 +29786,15 @@ export type Database = {
       }
       ponto_user_empresa_ids: { Args: never; Returns: string[] }
       ponto_user_funcionario_ids: { Args: never; Returns: string[] }
+      port_has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["port_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      port_is_gestor: { Args: { _user_id: string }; Returns: boolean }
+      port_is_staff: { Args: { _user_id: string }; Returns: boolean }
       ritmo_humano_consumir: {
         Args: { p_est: string; p_sessao?: string }
         Returns: number
@@ -29326,6 +29851,7 @@ export type Database = {
         | "completed"
         | "delayed"
         | "not_done"
+      port_role: "super_admin" | "admin" | "porteiro" | "morador"
       tipo_roteamento:
         | "round_robin"
         | "por_skill"
@@ -29509,6 +30035,7 @@ export const Constants = {
         "delayed",
         "not_done",
       ],
+      port_role: ["super_admin", "admin", "porteiro", "morador"],
       tipo_roteamento: [
         "round_robin",
         "por_skill",
