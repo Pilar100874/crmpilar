@@ -256,6 +256,8 @@ import PortariaHistorico from "./pages/portaria/PortariaHistorico";
 import PortariaDispositivos from "./pages/portaria/PortariaDispositivos";
 import PortariaConfiguracoes from "./pages/portaria/PortariaConfiguracoes";
 import PortariaInterfone from "./pages/portaria/PortariaInterfone";
+import PortariaPermissoes from "./pages/portaria/PortariaPermissoes";
+
 import CamerasLayout from "./pages/cameras/CamerasLayout";
 import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
@@ -812,7 +814,9 @@ const App = () => (
                 <Route path="historico" element={<PortariaHistorico />} />
                 <Route path="dispositivos" element={<PortariaDispositivos />} />
                 <Route path="interfone" element={<PortariaInterfone />} />
+                <Route path="permissoes" element={<PortariaPermissoes />} />
                 <Route path="configuracoes" element={<PortariaConfiguracoes />} />
+
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasAoVivo />} />

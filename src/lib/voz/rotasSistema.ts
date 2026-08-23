@@ -123,7 +123,9 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/portaria/historico", titulo: "Portaria - Histórico", aliases: ["historico de acessos", "logs portaria"] },
   { path: "/portaria/dispositivos", titulo: "Portaria - Dispositivos", aliases: ["shelly", "idface", "dispositivos portaria"] },
   { path: "/portaria/interfone", titulo: "Portaria - Interfone", aliases: ["interfone"] },
+  { path: "/portaria/permissoes", titulo: "Portaria - Permissões", aliases: ["permissoes portaria", "gestor portaria", "papeis portaria"] },
   { path: "/portaria/configuracoes", titulo: "Portaria - Configurações", aliases: ["configuracoes portaria", "pontos de acesso"] },
+
 
 
   // ============ Menu Principal - Câmeras ============
