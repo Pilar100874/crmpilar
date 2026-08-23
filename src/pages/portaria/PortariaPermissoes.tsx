@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ShieldCheck, Search } from "lucide-react";
-import type { PortRole } from "@/lib/portaria/api";
+import { notificarPapeisPortariaAlterados, type PortRole } from "@/lib/portaria/api";
 
 interface UsuarioLinha {
   id: string;
@@ -100,7 +100,9 @@ export default function PortariaPermissoes() {
       return;
     }
     setLinhas((atual) => atual.map((l) => (l.id === linha.id ? { ...l, papel } : l)));
+    notificarPapeisPortariaAlterados();
     toast({ title: "Permissão atualizada", description: linha.nome ?? linha.email ?? "Usuário" });
+
   };
 
   return (
