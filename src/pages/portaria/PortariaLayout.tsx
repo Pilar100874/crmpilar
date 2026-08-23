@@ -31,7 +31,9 @@ const navItems: NavItem[] = [
   { to: "/portaria/historico", label: "Histórico", icon: History },
   { to: "/portaria/dispositivos", label: "Dispositivos", icon: Cpu, gestor: true },
   { to: "/portaria/interfone", label: "Interfone", icon: PhoneCall },
+  { to: "/portaria/permissoes", label: "Permissões", icon: ShieldCheck, gestor: true },
   { to: "/portaria/configuracoes", label: "Configurações", icon: Settings, gestor: true },
+
 ];
 
 const bottomNav = navItems.slice(0, 5);
