@@ -4,6 +4,7 @@ import { z } from "npm:zod@3";
 import { adminClient, autenticar, ipOrigem } from "../_shared/portaria/auth.ts";
 import { shellyPulso } from "../_shared/portaria/shelly.ts";
 import { ControlIDService } from "../_shared/portaria/controlid.ts";
+import { executarViaColetor } from "../_shared/portaria/coletor.ts";
 
 const BodySchema = z.object({
   access_point_id: z.string().uuid(),
@@ -149,7 +150,18 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   let resultado: { ok: boolean; mensagem?: string; detalhes?: unknown };
-  if (device.tipo === "idface") {
+  if (device.via_coletor) {
+    // Dispositivo em rede local: o Coletor Pilar executa o comando na LAN.
+    const canalColetor = ponto.acao != null && ponto.acao !== "" ? Number(ponto.acao) : (device.canal_rele as number);
+    const r = await executarViaColetor(admin, {
+      device_id: deviceId,
+      access_point_id,
+      comando: "abrir",
+      parametros: { canal: canalColetor, porta: Number(ponto.acao || 1) || 1 },
+      solicitado_por: ctx.userId,
+    });
+    resultado = { ok: r.ok, mensagem: r.mensagem, detalhes: r.dados };
+  } else if (device.tipo === "idface") {
     const servico = new ControlIDService(device as never, cred ?? {});
     const porta = Number(ponto.acao || 1) || 1;
     const r = await servico.openDoor(porta);

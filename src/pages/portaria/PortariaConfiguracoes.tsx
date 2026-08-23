@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { comandoControlId, usePortariaPerfil, type PortRole } from "@/lib/portaria/api";
+import PortariaColetores from "@/components/portaria/PortariaColetores";
 
 type Ponto = {
   id: string;
@@ -143,6 +144,7 @@ export default function PortariaConfiguracoes() {
           <TabsTrigger value="acessos">Pontos de acesso</TabsTrigger>
           <TabsTrigger value="perfis">Perfis e permissões</TabsTrigger>
           <TabsTrigger value="facial">Facial / iDFace</TabsTrigger>
+          <TabsTrigger value="coletores">Coletores (rede local)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="acessos" className="space-y-3 pt-4">
@@ -176,6 +178,10 @@ export default function PortariaConfiguracoes() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="coletores" className="space-y-4 pt-4">
+          <PortariaColetores />
         </TabsContent>
 
         <TabsContent value="perfis" className="space-y-4 pt-4">

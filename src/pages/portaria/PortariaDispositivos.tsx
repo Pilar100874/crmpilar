@@ -26,13 +26,14 @@ type Dispositivo = {
   pulso_ms: number | null;
   firmware: string | null;
   habilitado: boolean | null;
+  via_coletor: boolean | null;
   status: string | null;
   ultima_comunicacao: string | null;
   config: Record<string, unknown> | null;
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true,
+  nome: "", tipo: "shelly", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
 };
 
@@ -75,6 +76,7 @@ export default function PortariaDispositivos() {
       pulso_ms: form.pulso_ms != null ? Number(form.pulso_ms) : 1000,
       firmware: form.firmware || null,
       habilitado: form.habilitado ?? true,
+      via_coletor: form.via_coletor ?? false,
       config: (form.config ?? {}) as never,
     };
     let id = form.id;
@@ -155,6 +157,7 @@ export default function PortariaDispositivos() {
                       <span className="capitalize text-muted-foreground">{d.status ?? "offline"}</span>
                     </span>
                     <Badge variant={d.habilitado ? "default" : "secondary"}>{d.habilitado ? "Habilitado" : "Desabilitado"}</Badge>
+                    {d.via_coletor && <Badge variant="outline">Via Coletor local</Badge>}
                     {d.ultima_comunicacao && (
                       <span className="text-[11px] text-muted-foreground">{new Date(d.ultima_comunicacao).toLocaleString("pt-BR")}</span>
                     )}
@@ -229,6 +232,19 @@ export default function PortariaDispositivos() {
                 )}
               </>
             )}
+
+            <div className="sm:col-span-2 rounded-md border px-3 py-2">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label className="text-sm">Acessar pela rede local (Coletor Pilar)</Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Ative quando o IP for interno (ex.: 192.168.x.x). O comando é executado pelo Coletor Pilar instalado na rede,
+                    sem precisar abrir portas no roteador.
+                  </p>
+                </div>
+                <Switch checked={form.via_coletor ?? false} onCheckedChange={(v) => setForm({ ...form, via_coletor: v })} />
+              </div>
+            </div>
 
             <div className="flex items-center justify-between rounded-md border px-3 py-2 sm:col-span-2">
               <Label className="text-sm">Habilitado</Label>

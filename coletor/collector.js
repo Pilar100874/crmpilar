@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
 const { verificarCameras, listarCameras } = require('./cameras');
+const { pollPortariaOnce, ESTADO: PORTARIA_STATE } = require('./portaria');
 // Carregamento preguiçoso do módulo de streaming (werift). Se a dependência
 // estiver quebrada no pacote instalado, o app NÃO deve travar na abertura —
 // apenas o streaming ao vivo das câmeras fica indisponível.
@@ -31,6 +32,7 @@ const STATE = {
   running: false,          // legado — indica se algum coletor está ativo
   pontoEnabled: true,
   camerasEnabled: true,
+  portariaEnabled: false,
   lastSync: null,
   lastSyncCameras: null,
   totalSent: 0,
@@ -46,6 +48,7 @@ const STATE = {
 const lastNSRByEquip = {};
 let timerPonto = null;
 let timerCameras = null;
+let timerPortaria = null;
 
 function loadConfig() {
   let saved = {};
@@ -61,6 +64,8 @@ function loadConfig() {
     anonKey: saved.anonKey || DEFAULT_ANON_KEY,
     pontoEnabled: saved.pontoEnabled !== false,
     camerasEnabled: saved.camerasEnabled !== false,
+    portariaEnabled: saved.portariaEnabled === true,
+    portariaToken: saved.portariaToken || null,
     filialId: saved.filialId || null,
     filialNome: saved.filialNome || null,
     videoHeight: clamp(saved.videoHeight, 240, 1080, 480),
@@ -287,6 +292,32 @@ function stopCameras() {
   if (webrtcHub) { webrtcHub.stop(); webrtcHub = null; }
 }
 
+async function pollPortaria() {
+  const cfg = loadConfig();
+  const st = await pollPortariaOnce(cfg);
+  STATE.portaria = { ...st, ativo: true };
+}
+function startPortaria() {
+  if (timerPortaria) return;
+  const cfg = loadConfig();
+  if (!cfg.portariaToken) {
+    console.log('[portaria] chave do coletor não configurada');
+    return;
+  }
+  saveConfig({ portariaEnabled: true });
+  STATE.portariaEnabled = true;
+  STATE.running = true;
+  pollPortaria();
+  timerPortaria = setInterval(pollPortaria, 3_000);
+}
+function stopPortaria() {
+  saveConfig({ portariaEnabled: false });
+  STATE.portariaEnabled = false;
+  if (timerPortaria) clearInterval(timerPortaria);
+  timerPortaria = null;
+  STATE.running = !!timerPonto || !!timerCameras;
+}
+
 // Compatibilidade retro
 function startCollector() {
   const cfg = loadConfig();
@@ -297,11 +328,13 @@ function startCollector() {
   }
   if (cfg.pontoEnabled) startPonto();
   if (cfg.camerasEnabled) startCameras();
+  if (cfg.portariaEnabled) startPortaria();
   return STATE;
 }
 function stopCollector() {
   stopPonto();
   stopCameras();
+  stopPortaria();
   return STATE;
 }
 function getStatus() {
@@ -309,6 +342,8 @@ function getStatus() {
     ...STATE,
     pontoRunning: !!timerPonto,
     camerasRunning: !!timerCameras,
+    portariaRunning: !!timerPortaria,
+    portaria: PORTARIA_STATE,
     config: loadConfig(),
   };
 }
@@ -316,6 +351,7 @@ async function pollNow() {
   const tasks = [];
   if (timerPonto) tasks.push(pollOnce());
   if (timerCameras) tasks.push(pollCamerasOnce());
+  if (timerPortaria) tasks.push(pollPortaria());
   await Promise.all(tasks);
   return getStatus();
 }
@@ -331,5 +367,6 @@ function clearDiagnostics() {
 
 module.exports = {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras, listarFiliais, clearDiagnostics,
+  startPonto, stopPonto, startCameras, stopCameras, startPortaria, stopPortaria,
+  listarFiliais, clearDiagnostics,
 };
