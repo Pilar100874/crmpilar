@@ -187,6 +187,15 @@ ipcMain.handle('collector:startPonto', () => { startPonto(); return getStatus();
 ipcMain.handle('collector:stopPonto', () => { stopPonto(); return getStatus(); });
 ipcMain.handle('collector:startCameras', () => { startCameras(); return getStatus(); });
 ipcMain.handle('collector:stopCameras', () => { stopCameras(); return getStatus(); });
+ipcMain.handle('collector:startPortaria', () => { try { startPortaria(); } catch(e) { console.error(e); } return getStatus(); });
+ipcMain.handle('collector:stopPortaria', () => { try { stopPortaria(); } catch(e) { console.error(e); } return getStatus(); });
+ipcMain.handle('collector:setPortariaToken', (_evt, token) => {
+  saveConfig({ portariaToken: (token || '').trim() || null });
+  try { stopPortaria(); } catch {}
+  const cfg = loadConfig();
+  if (cfg.portariaToken) { try { startPortaria(); } catch {} }
+  return getStatus();
+});
 ipcMain.handle('updater:check', () => checarAtualizacao());
 ipcMain.handle('updater:install', async (evt, downloadUrl) => {
   return await baixarEInstalar(downloadUrl, (pct) => {
