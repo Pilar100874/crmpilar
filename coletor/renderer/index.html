@@ -371,6 +371,20 @@
             </div>
           </details>
         </div>
+        <div class="module">
+          <div class="module-head">
+            <div class="t"><span class="ico" style="width:28px;height:28px;border-radius:8px;background:#E0F2FE;color:#0369A1;display:inline-flex;align-items:center;justify-content:center;">🚪</span> Coletor de Portaria</div>
+            <label class="switch"><input type="checkbox" id="togglePortaria" onchange="togglePortaria(this.checked)"><span class="track"></span></label>
+          </div>
+          <div class="status-line" id="portariaStatus">—</div>
+          <div class="meta">Executa na rede local os comandos de abrir portão/porta (Shelly e Control iD) enviados pelo CRM.</div>
+          <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+            <input id="portariaToken" placeholder="Chave do coletor (CRM → Portaria → Configurações)"
+              style="flex:1; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; font-size:12px;">
+            <button class="btn" style="background:var(--brand); color:#fff; padding:6px 12px; font-size:13px;" onclick="salvarPortariaToken()">Salvar</button>
+          </div>
+          <div id="portariaInfo" class="meta" style="margin-top:6px;"></div>
+        </div>
       </div>
 
       <!-- Equipamentos -->
@@ -541,6 +555,13 @@
   <script>
     async function togglePonto(v){ if(v) await window.coletor.startPonto(); else await window.coletor.stopPonto(); refresh(); }
     async function toggleCameras(v){ if(v) await window.coletor.startCameras(); else await window.coletor.stopCameras(); refresh(); }
+    async function togglePortaria(v){ if(v) await window.coletor.startPortaria(); else await window.coletor.stopPortaria(); refresh(); }
+    async function salvarPortariaToken(){
+      const t = document.getElementById('portariaToken').value;
+      await window.coletor.setPortariaToken(t);
+      alert(t.trim() ? 'Chave salva. O coletor de portaria foi iniciado.' : 'Chave removida.');
+      refresh();
+    }
     async function refreshNow(){ await window.coletor.pollNow(); refresh(); }
     async function limparColetor(){
       if (!confirm('Limpar logs e mensagens de erro exibidas neste coletor?')) return;
@@ -565,6 +586,16 @@
 
       document.getElementById('togglePonto').checked   = !!s.pontoRunning;
       document.getElementById('toggleCameras').checked = !!s.camerasRunning;
+      document.getElementById('togglePortaria').checked = !!s.portariaRunning;
+      const tokenEl = document.getElementById('portariaToken');
+      if (document.activeElement !== tokenEl) tokenEl.value = s.config?.portariaToken || '';
+      document.getElementById('portariaStatus').innerHTML = s.portariaRunning
+        ? '<span class="pill pill-on">Rodando</span>'
+        : '<span class="pill pill-off">Parado</span>';
+      const pt = s.portaria || {};
+      document.getElementById('portariaInfo').textContent =
+        `${(pt.dispositivos || []).length} dispositivo(s) local(is) · ${pt.executados || 0} comando(s) executado(s)` +
+        (pt.ultimoErro ? ` · último erro: ${pt.ultimoErro}` : '');
 
       document.getElementById('pontoStatus').innerHTML = s.pontoRunning
         ? '<span class="pill pill-on">Rodando</span>'

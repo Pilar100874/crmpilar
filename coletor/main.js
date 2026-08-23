@@ -3,7 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras, listarFiliais, clearDiagnostics,
+  startPonto, stopPonto, startCameras, stopCameras, startPortaria, stopPortaria,
+  listarFiliais, clearDiagnostics,
 } = require('./collector');
 const { listarCameras } = require('./cameras');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
