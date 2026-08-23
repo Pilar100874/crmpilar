@@ -812,7 +812,9 @@ const App = () => (
                 <Route path="historico" element={<PortariaHistorico />} />
                 <Route path="dispositivos" element={<PortariaDispositivos />} />
                 <Route path="interfone" element={<PortariaInterfone />} />
+                <Route path="permissoes" element={<PortariaPermissoes />} />
                 <Route path="configuracoes" element={<PortariaConfiguracoes />} />
+
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasAoVivo />} />
