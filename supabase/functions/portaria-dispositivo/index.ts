@@ -4,6 +4,7 @@ import { z } from "npm:zod@3";
 import { adminClient, autenticar } from "../_shared/portaria/auth.ts";
 import { shellyStatus, shellyPulso } from "../_shared/portaria/shelly.ts";
 import { ControlIDService } from "../_shared/portaria/controlid.ts";
+import { executarViaColetor } from "../_shared/portaria/coletor.ts";
 
 const BodySchema = z.object({
   acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste"]),
@@ -61,7 +62,15 @@ Deno.serve(async (req) => {
   let mensagem: string | undefined;
   let dados: unknown;
 
-  if (device.tipo === "idface") {
+  if (device.via_coletor) {
+    const r = await executarViaColetor(admin, {
+      device_id,
+      comando: acao === "pulso_teste" ? "abrir" : "status",
+      parametros: { canal: device.canal_rele ?? 0, porta: 1 },
+      solicitado_por: ctx.userId,
+    });
+    ok = r.ok; mensagem = r.mensagem; dados = r.dados;
+  } else if (device.tipo === "idface") {
     const servico = new ControlIDService(device as never, cred ?? {});
     const r = acao === "pulso_teste" ? await servico.openDoor(1) : await servico.getDeviceStatus();
     ok = r.ok; mensagem = r.mensagem; dados = r.dados;
