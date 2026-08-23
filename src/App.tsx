@@ -247,6 +247,15 @@ import LivroLayout from "./pages/livro-ocorrencia/LivroLayout";
 import LivroDashboard from "./pages/livro-ocorrencia/LivroDashboard";
 import LivroOcorrencias from "./pages/livro-ocorrencia/LivroOcorrencias";
 import LivroEncomendas from "./pages/livro-ocorrencia/LivroEncomendas";
+import PortariaLayout from "./pages/portaria/PortariaLayout";
+import PortariaDashboard from "./pages/portaria/PortariaDashboard";
+import PortariaAcessos from "./pages/portaria/PortariaAcessos";
+import PortariaPessoas from "./pages/portaria/PortariaPessoas";
+import PortariaVisitantes from "./pages/portaria/PortariaVisitantes";
+import PortariaHistorico from "./pages/portaria/PortariaHistorico";
+import PortariaDispositivos from "./pages/portaria/PortariaDispositivos";
+import PortariaConfiguracoes from "./pages/portaria/PortariaConfiguracoes";
+import PortariaInterfone from "./pages/portaria/PortariaInterfone";
 import CamerasLayout from "./pages/cameras/CamerasLayout";
 import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
@@ -794,6 +803,16 @@ const App = () => (
                 <Route index element={<LivroDashboard />} />
                 <Route path="ocorrencias" element={<LivroOcorrencias />} />
                 <Route path="encomendas" element={<LivroEncomendas />} />
+              </Route>
+              <Route path="/portaria" element={<PortariaLayout />}>
+                <Route index element={<PortariaDashboard />} />
+                <Route path="acessos" element={<PortariaAcessos />} />
+                <Route path="pessoas" element={<PortariaPessoas />} />
+                <Route path="visitantes" element={<PortariaVisitantes />} />
+                <Route path="historico" element={<PortariaHistorico />} />
+                <Route path="dispositivos" element={<PortariaDispositivos />} />
+                <Route path="interfone" element={<PortariaInterfone />} />
+                <Route path="configuracoes" element={<PortariaConfiguracoes />} />
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasAoVivo />} />
