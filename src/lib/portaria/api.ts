@@ -12,6 +12,13 @@ export interface PortariaPerfil {
   carregando: boolean;
 }
 
+const ouvintesPapeis = new Set<() => void>();
+
+/** Notifica todas as telas que os papéis da Portaria mudaram (sem recarregar a página). */
+export function notificarPapeisPortariaAlterados() {
+  ouvintesPapeis.forEach((fn) => fn());
+}
+
 /** Papéis da portaria do usuário logado (a autorização real é revalidada no backend). */
 export function usePortariaPerfil(): PortariaPerfil {
   const [userId, setUserId] = useState<string | null>(null);
@@ -20,7 +27,7 @@ export function usePortariaPerfil(): PortariaPerfil {
 
   useEffect(() => {
     let ativo = true;
-    (async () => {
+    const carregar = async () => {
       const { data } = await supabase.auth.getUser();
       const uid = data.user?.id ?? null;
       if (!ativo) return;
@@ -31,13 +38,19 @@ export function usePortariaPerfil(): PortariaPerfil {
           .select("role")
           .eq("user_id", uid);
         if (ativo) setRoles((papeis ?? []).map((p) => p.role as PortRole));
+      } else if (ativo) {
+        setRoles([]);
       }
       if (ativo) setCarregando(false);
-    })();
+    };
+    carregar();
+    ouvintesPapeis.add(carregar);
     return () => {
       ativo = false;
+      ouvintesPapeis.delete(carregar);
     };
   }, []);
+
 
   // Usuário interno do CRM sem papel específico na Portaria: tratado como gestor
   // (a autorização real é revalidada no backend).
