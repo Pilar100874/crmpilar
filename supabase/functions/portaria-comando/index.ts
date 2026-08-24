@@ -117,14 +117,18 @@ Deno.serve(async (req) => {
     if (!pessoa.permitir_remoto) return await negar("Usuário sem permissão de abertura remota.");
 
     const agora = new Date();
-    const hoje = agora.toISOString().slice(0, 10);
+    // Data e dia da semana no fuso de São Paulo (evita virar o dia após 21h BRT).
+    const hoje = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(agora);
     if (pessoa.valido_de && hoje < pessoa.valido_de) return await negar("Autorização ainda não iniciada.");
     if (pessoa.valido_ate && hoje > pessoa.valido_ate) return await negar("Autorização expirada.");
 
-    const diaSemana = Number(
-      new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", weekday: "short" })
-        .format(agora) === "Sun" ? 0 : agora.getUTCDay(),
-    );
+    const nomeDia = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo", weekday: "short",
+    }).format(agora);
+    const diaSemana = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(nomeDia);
     const dias = (pessoa.dias_semana as number[]) ?? [];
     if (dias.length && !dias.includes(diaSemana)) return await negar("Fora dos dias permitidos.");
 
