@@ -3,10 +3,10 @@
   "tag": "android-tv-signage-latest",
   "asset": "app-release.apk",
   "url": "https://github.com/Pilar100874/crmpilar/releases/download/android-tv-signage-latest/app-release.apk",
-  "sha256": "826b19f6bff67b1850e036457d58aa4115a194800e3628f391afa23dac06cf4b",
-  "size": 26816594,
-  "versionCode": 55,
-  "versionName": "1.5.37",
-  "updated_at": "2026-08-24T12:00:28Z",
-  "commit": "b027d13a0e3dfab33fc4f7a06057637528e17b35"
+  "sha256": "8948bfbe6f20788021511cfaab3b2e784694aa4905b8b84cb373b66259267f5d",
+  "size": 26816089,
+  "versionCode": 56,
+  "versionName": "1.5.38",
+  "updated_at": "2026-08-24T12:09:25Z",
+  "commit": "a2bee0f04dd59a7e57502b7884a41dbb4a4c8354"
 }
