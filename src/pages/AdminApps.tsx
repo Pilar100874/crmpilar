@@ -6,13 +6,17 @@ import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
-import coletorLinuxAsset from "../../public/coletor/ColetorPilar-Linux.AppImage.asset.json";
-import applianceIsoAsset from "../../public/coletor/coletor-pilar-appliance-amd64.iso.asset.json";
 
+// Sempre a build mais recente publicada pelos workflows do GitHub Actions.
+const COLETOR_LINUX_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Linux.AppImage";
+const APPLIANCE_ISO_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
 const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
+
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
