@@ -1,4 +1,4 @@
-import { corsHeaders, json, serviceClient, sha256Hex, signDeviceJwt } from "../_shared/tv-auth.ts";
+import { corsHeaders, json, serviceClient, signDeviceJwt } from "../_shared/tv-auth.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
