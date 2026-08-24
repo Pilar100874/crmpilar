@@ -13,7 +13,7 @@ const items = [
   { to: "/tv-signage/workflows", icon: Zap, label: "Workflows" },
   { to: "/tv-signage/eventos", icon: Activity, label: "Eventos" },
   { to: "/tv-signage/config-veiculos", icon: Crosshair, label: "TV Veículos" },
-  { to: "/tv-signage/api", icon: Code2, label: "API / Integração" },
+  { to: "/tv-signage/api", icon: Download, label: "Download" },
 ];
 
 export default function TvSignageLayout() {
