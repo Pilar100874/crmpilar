@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       device_id: device.id,
       estabelecimento_id: device.estabelecimento_id,
       session_jwt: jwt,
-      expires_in: 60 * 60 * 24 * 7,
+      expires_in: 60 * 60 * 24 * 365,
     });
   } catch (e) {
     return json({ error: String(e) }, 500);
