@@ -46,7 +46,9 @@ function b64u(obj: unknown): string {
   return btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export async function signDeviceJwt(deviceId: string, estabelecimentoId: string, ttlSeconds = 60 * 60 * 24 * 7) {
+// TTL longo (1 ano): dispositivos de sinalização ficam dias desligados e não
+// devem perder o pareamento por expiração de sessão.
+export async function signDeviceJwt(deviceId: string, estabelecimentoId: string, ttlSeconds = 60 * 60 * 24 * 365) {
   const header = { alg: "HS256", typ: "JWT" };
   const now = Math.floor(Date.now() / 1000);
   const payload = { sub: deviceId, est: estabelecimentoId, iat: now, exp: now + ttlSeconds };
