@@ -80,6 +80,7 @@ class PairingActivity : AppCompatActivity() {
                         val deviceId = json.getString("device_id")
                         val estabelecimentoId = json.optString("estabelecimento_id", null)
                         DeviceStore.saveSession(this@PairingActivity, jwt, deviceId, estabelecimentoId)
+                        DeviceStore.saveCredentials(this@PairingActivity, codigo, token)
                         startActivity(Intent(this@PairingActivity, SignageActivity::class.java))
                         finish()
                     } else {

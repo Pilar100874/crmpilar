@@ -700,8 +700,50 @@ class SignageActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleUnauthorized() {
+    private var reauthEmAndamento = false
 
+    private fun handleUnauthorized() {
+        // Antes de desparear, tenta renovar a sessão sozinho com as credenciais
+        // guardadas no pareamento (JWT expirado enquanto a TV ficou desligada).
+        val codigo = DeviceStore.pairCodigo(this)
+        val pairToken = DeviceStore.pairToken(this)
+        if (!codigo.isNullOrEmpty() && !pairToken.isNullOrEmpty() && !reauthEmAndamento) {
+            reauthEmAndamento = true
+            CoroutineScope(Dispatchers.IO).launch {
+                var ok = false
+                try {
+                    val body = org.json.JSONObject()
+                        .put("codigo", codigo).put("token", pairToken).toString()
+                    val (code, resp) = ApiClient.post("tv-device-auth", body)
+                    if (code in 200..299) {
+                        val j = JSONObject(resp)
+                        DeviceStore.saveSession(
+                            this@SignageActivity,
+                            j.getString("session_jwt"),
+                            j.getString("device_id"),
+                            j.optString("estabelecimento_id", null),
+                        )
+                        ok = true
+                    }
+                } catch (_: Exception) {}
+                withContext(Dispatchers.Main) {
+                    reauthEmAndamento = false
+                    if (ok) {
+                        // Os loops que receberam 401 foram encerrados: religa tudo.
+                        heartbeatJob?.cancel(); commandsJob?.cancel()
+                        startHeartbeat(); startCommandsPolling()
+                        loadConfig()
+                    } else {
+                        desparear()
+                    }
+                }
+            }
+            return
+        }
+        desparear()
+    }
+
+    private fun desparear() {
         stopKioskMode()
         DeviceStore.clear(this)
         startActivity(Intent(this, PairingActivity::class.java))

@@ -9,6 +9,8 @@ object DeviceStore {
     private const val K_DEVICE_ID = "device_id"
     private const val K_ESTABELECIMENTO_ID = "estabelecimento_id"
     private const val K_EXIT_PASSWORD = "exit_password"
+    private const val K_PAIR_CODIGO = "pair_codigo"
+    private const val K_PAIR_TOKEN = "pair_token"
     private const val DEFAULT_EXIT_PASSWORD = "pilar2468"
 
     private fun prefs(ctx: Context): SharedPreferences =
@@ -21,6 +23,18 @@ object DeviceStore {
             .putString(K_ESTABELECIMENTO_ID, estabelecimentoId)
             .apply()
     }
+
+    // Guarda as credenciais de pareamento para renovar a sessão sozinho
+    // (evita pedir token novamente quando o JWT expira com a TV desligada).
+    fun saveCredentials(ctx: Context, codigo: String, token: String) {
+        prefs(ctx).edit()
+            .putString(K_PAIR_CODIGO, codigo)
+            .putString(K_PAIR_TOKEN, token)
+            .apply()
+    }
+
+    fun pairCodigo(ctx: Context): String? = prefs(ctx).getString(K_PAIR_CODIGO, null)
+    fun pairToken(ctx: Context): String? = prefs(ctx).getString(K_PAIR_TOKEN, null)
 
     fun token(ctx: Context): String? = prefs(ctx).getString(K_TOKEN, null)
     fun deviceId(ctx: Context): String? = prefs(ctx).getString(K_DEVICE_ID, null)
