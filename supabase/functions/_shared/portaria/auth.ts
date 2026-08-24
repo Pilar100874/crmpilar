@@ -38,11 +38,26 @@ export async function autenticar(req: Request): Promise<Contexto | null> {
     .eq("user_id", data.user.id);
 
   const roles = (papeis ?? []).map((p) => p.role as PortRole);
+
+  // Usuário interno do CRM sem papel específico na portaria é tratado como gestor,
+  // igual ao frontend (usePortariaPerfil), para não mostrar menus sem permissão real.
+  let semPapelInterno = false;
+  if (roles.length === 0) {
+    const { data: interno } = await admin
+      .from("usuarios")
+      .select("id")
+      .eq("auth_user_id", data.user.id)
+      .eq("ativo", true)
+      .maybeSingle();
+    semPapelInterno = !!interno;
+  }
+
   return {
     userId: data.user.id,
     roles,
-    isGestor: roles.some((r) => r === "super_admin" || r === "admin"),
-    isStaff: roles.some((r) => r === "super_admin" || r === "admin" || r === "porteiro"),
+    isGestor: semPapelInterno || roles.some((r) => r === "super_admin" || r === "admin"),
+    isStaff:
+      semPapelInterno || roles.some((r) => r === "super_admin" || r === "admin" || r === "porteiro"),
   };
 }
 
