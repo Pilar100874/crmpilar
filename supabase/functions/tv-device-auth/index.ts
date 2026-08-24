@@ -3,24 +3,19 @@ import { corsHeaders, json, serviceClient, sha256Hex, signDeviceJwt } from "../_
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { codigo, token } = await req.json();
+    const { codigo } = await req.json();
     if (!codigo) return json({ error: "codigo obrigatório" }, 400);
 
     const sb = serviceClient();
     const { data: device, error } = await sb
       .from("tv_devices")
-      .select("id, estabelecimento_id, token_hash, bloqueado")
+      .select("id, estabelecimento_id, bloqueado")
       .eq("codigo", String(codigo).toUpperCase())
       .maybeSingle();
 
     if (error || !device) return json({ error: "dispositivo não encontrado" }, 404);
     if (device.bloqueado) return json({ error: "dispositivo bloqueado" }, 403);
 
-    // Token é opcional (pareamento apenas por código). Se enviado, precisa bater.
-    if (token) {
-      const hash = await sha256Hex(String(token));
-      if (hash !== device.token_hash) return json({ error: "token inválido" }, 401);
-    }
 
     const jwt = await signDeviceJwt(device.id, device.estabelecimento_id);
     await sb.from("tv_devices").update({
