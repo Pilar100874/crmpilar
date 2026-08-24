@@ -729,6 +729,9 @@ class SignageActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     reauthEmAndamento = false
                     if (ok) {
+                        // Os loops que receberam 401 foram encerrados: religa tudo.
+                        heartbeatJob?.cancel(); commandsJob?.cancel()
+                        startHeartbeat(); startCommandsPolling()
                         loadConfig()
                     } else {
                         desparear()
