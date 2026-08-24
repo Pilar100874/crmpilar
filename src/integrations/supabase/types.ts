@@ -29610,6 +29610,13 @@ export type Database = {
           usuario_sip: string
         }[]
       }
+      get_published_page: {
+        Args: { p_slug: string }
+        Returns: {
+          config: Json
+          sections: Json
+        }[]
+      }
       get_user_conversation_ids: {
         Args: { _auth_uid: string }
         Returns: string[]

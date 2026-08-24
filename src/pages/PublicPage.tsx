@@ -11,12 +11,8 @@ const PublicPage: React.FC = () => {
   useEffect(() => {
     if (!slug) return;
     (async () => {
-      const { data, error } = await supabase
-        .from('published_pages')
-        .select('sections, config, publicado')
-        .eq('slug', slug)
-        .eq('publicado', true)
-        .maybeSingle();
+      const { data: rows, error } = await (supabase as any).rpc('get_published_page', { p_slug: slug });
+      const data = Array.isArray(rows) ? rows[0] : rows;
 
       if (!data || error) {
         setNotFound(true);
