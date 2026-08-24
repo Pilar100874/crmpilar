@@ -24,8 +24,8 @@ import java.util.concurrent.Executors
 
 /**
  * Lê o QR Code de pareamento exibido no painel Pilar (TV Signage → Dispositivos → Novo).
- * O payload esperado é um JSON: { "codigo": "...", "token": "...", "api_url": "..." }.
- * Retorna via Intent.putExtra("codigo" | "token") para a PairingActivity, que faz o auth automaticamente.
+ * O payload esperado é um JSON: { "codigo": "...", "api_url": "..." }.
+ * Retorna via Intent.putExtra("codigo") para a PairingActivity, que faz o auth automaticamente.
  */
 class QrScanActivity : AppCompatActivity() {
     private lateinit var b: ActivityQrScanBinding
@@ -111,11 +111,9 @@ class QrScanActivity : AppCompatActivity() {
         return try {
             val json = org.json.JSONObject(raw)
             val codigo = json.optString("codigo").trim()
-            val token = json.optString("token").trim()
-            if (codigo.isEmpty() || token.isEmpty()) return false
+            if (codigo.isEmpty()) return false
             val data = Intent().apply {
                 putExtra("codigo", codigo)
-                putExtra("token", token)
                 putExtra("api_url", json.optString("api_url"))
             }
             runOnUiThread {

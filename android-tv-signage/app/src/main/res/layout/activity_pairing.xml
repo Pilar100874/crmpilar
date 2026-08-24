@@ -142,20 +142,7 @@
                 android:layout_marginTop="16dp"
                 android:importantForAutofill="no" />
 
-            <EditText
-                android:id="@+id/inputToken"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/pair_token_hint"
-                android:textColorHint="#64748B"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:padding="16dp"
-                android:background="@drawable/bg_input"
-                android:inputType="text"
-                android:layout_marginTop="12dp"
-                android:importantForAutofill="no" />
-
+            
             <Button
                 android:id="@+id/btnPair"
                 android:layout_width="match_parent"

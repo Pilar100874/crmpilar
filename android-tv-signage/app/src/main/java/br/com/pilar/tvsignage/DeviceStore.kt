@@ -26,11 +26,8 @@ object DeviceStore {
 
     // Guarda as credenciais de pareamento para renovar a sessão sozinho
     // (evita pedir token novamente quando o JWT expira com a TV desligada).
-    fun saveCredentials(ctx: Context, codigo: String, token: String) {
-        prefs(ctx).edit()
-            .putString(K_PAIR_CODIGO, codigo)
-            .putString(K_PAIR_TOKEN, token)
-            .apply()
+    fun saveCredentials(ctx: Context, codigo: String) {
+        prefs(ctx).edit().putString(K_PAIR_CODIGO, codigo).apply()
     }
 
     fun pairCodigo(ctx: Context): String? = prefs(ctx).getString(K_PAIR_CODIGO, null)
