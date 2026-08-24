@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, KeyRound, Wifi, WifiOff, AlertTriangle, PlayCircle, Monitor, MapPin, Layers, Clock, Tv, Activity } from "lucide-react";
+import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, Wifi, WifiOff, AlertTriangle, PlayCircle, Monitor, MapPin, Layers, Clock, Tv, Activity } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -107,15 +107,6 @@ export default function TvSignageDispositivos() {
     }
   };
 
-  const reemitirToken = async (device: any) => {
-    const token = gerarToken();
-    const token_hash = await sha256Hex(token);
-    const { error } = await supabase.from("tv_devices").update({ token_hash }).eq("id", device.id);
-    if (error) return toast.error(error.message);
-    setPairing({ codigo: device.codigo });
-    toast.success("Novo token gerado");
-  };
-
   const excluir = async (id: string) => {
     const { error } = await supabase.from("tv_devices").delete().eq("id", id);
     if (error) return toast.error(error.message);
@@ -179,7 +170,6 @@ export default function TvSignageDispositivos() {
         await enviarComando(d.id, d.bloqueado ? "desbloquear" : "bloquear");
         carregar();
       }}>{d.bloqueado ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}</Button>
-      <Button variant="ghost" size="icon" title="Reemitir token" onClick={() => reemitirToken(d)}><KeyRound className="w-4 h-4" /></Button>
       <Button variant="ghost" size="icon" title="Ver QR Code" onClick={() => setPairing({ codigo: d.codigo })}><QrCode className="w-4 h-4" /></Button>
       <Button variant="ghost" size="icon" title="Editar" onClick={() => setEdit(d)}><Pencil className="w-4 h-4" /></Button>
       <DeleteConfirmTrigger
