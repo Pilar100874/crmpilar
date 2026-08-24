@@ -6,13 +6,17 @@ import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
-import coletorLinuxAsset from "../../public/coletor/ColetorPilar-Linux.AppImage.asset.json";
-import applianceIsoAsset from "../../public/coletor/coletor-pilar-appliance-amd64.iso.asset.json";
 
+// Sempre a build mais recente publicada pelos workflows do GitHub Actions.
+const COLETOR_LINUX_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Linux.AppImage";
+const APPLIANCE_ISO_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
 const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
+
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -275,7 +279,7 @@ export default function AdminApps() {
               <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Linux.AppImage</span>
             </div>
             <Button
-              onClick={() => baixar("ColetorPilar-Linux.AppImage", coletorLinuxAsset.url)}
+              onClick={() => baixar("ColetorPilar-Linux.AppImage", COLETOR_LINUX_URL)}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-amber-500 hover:bg-amber-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar AppImage
@@ -291,7 +295,7 @@ export default function AdminApps() {
             </div>
             <Button
               variant="outline"
-              onClick={() => baixar("coletor-pilar-appliance-amd64.iso", applianceIsoAsset.url)}
+              onClick={() => baixar("coletor-pilar-appliance-amd64.iso", APPLIANCE_ISO_URL)}
               className="w-full flex-shrink-0 rounded-xl sm:w-auto"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar ISO
