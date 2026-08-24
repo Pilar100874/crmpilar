@@ -279,7 +279,7 @@ export default function AdminApps() {
               <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Linux.AppImage</span>
             </div>
             <Button
-              onClick={() => baixar("ColetorPilar-Linux.AppImage", coletorLinuxAsset.url)}
+              onClick={() => baixar("ColetorPilar-Linux.AppImage", COLETOR_LINUX_URL)}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-amber-500 hover:bg-amber-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar AppImage
@@ -295,7 +295,7 @@ export default function AdminApps() {
             </div>
             <Button
               variant="outline"
-              onClick={() => baixar("coletor-pilar-appliance-amd64.iso", applianceIsoAsset.url)}
+              onClick={() => baixar("coletor-pilar-appliance-amd64.iso", APPLIANCE_ISO_URL)}
               className="w-full flex-shrink-0 rounded-xl sm:w-auto"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar ISO
