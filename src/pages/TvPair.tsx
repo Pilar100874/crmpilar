@@ -10,7 +10,6 @@ import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSigna
 export default function TvPair() {
   const [params] = useSearchParams();
   const codigo = params.get("codigo") || "";
-  const token = params.get("token") || "";
   const api_url = params.get("api") || window.location.origin;
   const [apkUrl, setApkUrl] = useState<string>("");
 
@@ -20,11 +19,11 @@ export default function TvPair() {
 
   const isAndroid = useMemo(() => /android/i.test(navigator.userAgent), []);
   const payload = useMemo(
-    () => JSON.stringify({ codigo, token, api_url }),
-    [codigo, token, api_url],
+    () => JSON.stringify({ codigo, api_url }),
+    [codigo, api_url],
   );
 
-  const valid = codigo && token;
+  const valid = !!codigo;
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
@@ -91,10 +90,6 @@ export default function TvPair() {
                   <div>
                     <span className="text-muted-foreground">Código: </span>
                     <code className="bg-muted px-2 py-0.5 rounded">{codigo}</code>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Token: </span>
-                    <code className="bg-muted px-2 py-0.5 rounded text-xs break-all">{token}</code>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg">
