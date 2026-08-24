@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Code2, Zap, Crosshair, Images } from "lucide-react";
+import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Download, Zap, Crosshair, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
