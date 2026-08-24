@@ -94,7 +94,7 @@ export default function PortariaColetores() {
           cadastro do dispositivo. Assim o CRM envia o comando e o Coletor abre o portão localmente — sem abrir portas no roteador.
         </p>
         <Button variant="outline" size="sm" className="mt-2" asChild>
-          <a href="/coletor/ColetorPilar-Setup.msi" download>
+          <a href="https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe">
             <Download className="h-4 w-4 mr-2" />Baixar Coletor Pilar (Windows)
           </a>
         </Button>
