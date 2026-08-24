@@ -22,12 +22,10 @@ class PairingActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val codigo = result.data?.getStringExtra("codigo")?.trim()?.uppercase().orEmpty()
-            val token = result.data?.getStringExtra("token")?.trim().orEmpty()
-            if (codigo.isNotEmpty() && token.isNotEmpty()) {
+            if (codigo.isNotEmpty()) {
                 b.inputCodigo.setText(codigo)
-                b.inputToken.setText(token)
                 b.txtStatus.text = "QR Code lido — conectando..."
-                pair(codigo, token)
+                pair(codigo)
             } else {
                 Toast.makeText(this, R.string.qr_invalid, Toast.LENGTH_LONG).show()
             }
@@ -56,22 +54,21 @@ class PairingActivity : AppCompatActivity() {
 
         b.btnPair.setOnClickListener {
             val codigo = b.inputCodigo.text.toString().trim().uppercase()
-            val token = b.inputToken.text.toString().trim()
-            if (codigo.isEmpty() || token.isEmpty()) {
-                Toast.makeText(this, "Preencha código e token", Toast.LENGTH_SHORT).show()
+            if (codigo.isEmpty()) {
+                Toast.makeText(this, "Preencha o código", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            pair(codigo, token)
+            pair(codigo)
         }
     }
 
-    private fun pair(codigo: String, token: String) {
+    private fun pair(codigo: String) {
         b.btnPair.isEnabled = false
         b.btnScanQr.isEnabled = false
         b.txtStatus.text = "Conectando..."
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val body = JSONObject().put("codigo", codigo).put("token", token).toString()
+                val body = JSONObject().put("codigo", codigo).toString()
                 val (code, resp) = ApiClient.post("tv-device-auth", body)
                 withContext(Dispatchers.Main) {
                     if (code in 200..299) {
@@ -80,7 +77,7 @@ class PairingActivity : AppCompatActivity() {
                         val deviceId = json.getString("device_id")
                         val estabelecimentoId = json.optString("estabelecimento_id", null)
                         DeviceStore.saveSession(this@PairingActivity, jwt, deviceId, estabelecimentoId)
-                        DeviceStore.saveCredentials(this@PairingActivity, codigo, token)
+                        DeviceStore.saveCredentials(this@PairingActivity, codigo)
                         startActivity(Intent(this@PairingActivity, SignageActivity::class.java))
                         finish()
                     } else {

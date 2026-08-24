@@ -706,14 +706,12 @@ class SignageActivity : AppCompatActivity() {
         // Antes de desparear, tenta renovar a sessão sozinho com as credenciais
         // guardadas no pareamento (JWT expirado enquanto a TV ficou desligada).
         val codigo = DeviceStore.pairCodigo(this)
-        val pairToken = DeviceStore.pairToken(this)
-        if (!codigo.isNullOrEmpty() && !pairToken.isNullOrEmpty() && !reauthEmAndamento) {
+        if (!codigo.isNullOrEmpty() && !reauthEmAndamento) {
             reauthEmAndamento = true
             CoroutineScope(Dispatchers.IO).launch {
                 var ok = false
                 try {
-                    val body = org.json.JSONObject()
-                        .put("codigo", codigo).put("token", pairToken).toString()
+                    val body = org.json.JSONObject().put("codigo", codigo).toString()
                     val (code, resp) = ApiClient.post("tv-device-auth", body)
                     if (code in 200..299) {
                         val j = JSONObject(resp)

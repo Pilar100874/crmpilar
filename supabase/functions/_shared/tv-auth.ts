@@ -46,12 +46,13 @@ function b64u(obj: unknown): string {
   return btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// TTL longo (1 ano): dispositivos de sinalização ficam dias desligados e não
-// devem perder o pareamento por expiração de sessão.
-export async function signDeviceJwt(deviceId: string, estabelecimentoId: string, ttlSeconds = 60 * 60 * 24 * 365) {
+// Sessão de dispositivo NÃO expira: TVs ficam dias/semanas desligadas e não
+// podem perder o pareamento. Revogação é feita bloqueando/excluindo o device.
+export async function signDeviceJwt(deviceId: string, estabelecimentoId: string, ttlSeconds = 0) {
   const header = { alg: "HS256", typ: "JWT" };
   const now = Math.floor(Date.now() / 1000);
-  const payload = { sub: deviceId, est: estabelecimentoId, iat: now, exp: now + ttlSeconds };
+  const payload: Record<string, unknown> = { sub: deviceId, est: estabelecimentoId, iat: now };
+  if (ttlSeconds > 0) payload.exp = now + ttlSeconds;
   const data = `${b64u(header)}.${b64u(payload)}`;
   const sig = await hmacSha256(data);
   return `${data}.${sig}`;

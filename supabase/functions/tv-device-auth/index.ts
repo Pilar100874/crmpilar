@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const { codigo, token } = await req.json();
-    if (!codigo || !token) return json({ error: "codigo e token obrigatórios" }, 400);
+    if (!codigo) return json({ error: "codigo obrigatório" }, 400);
 
     const sb = serviceClient();
     const { data: device, error } = await sb
@@ -16,8 +16,11 @@ Deno.serve(async (req) => {
     if (error || !device) return json({ error: "dispositivo não encontrado" }, 404);
     if (device.bloqueado) return json({ error: "dispositivo bloqueado" }, 403);
 
-    const hash = await sha256Hex(String(token));
-    if (hash !== device.token_hash) return json({ error: "token inválido" }, 401);
+    // Token é opcional (pareamento apenas por código). Se enviado, precisa bater.
+    if (token) {
+      const hash = await sha256Hex(String(token));
+      if (hash !== device.token_hash) return json({ error: "token inválido" }, 401);
+    }
 
     const jwt = await signDeviceJwt(device.id, device.estabelecimento_id);
     await sb.from("tv_devices").update({
@@ -30,7 +33,7 @@ Deno.serve(async (req) => {
       device_id: device.id,
       estabelecimento_id: device.estabelecimento_id,
       session_jwt: jwt,
-      expires_in: 60 * 60 * 24 * 365,
+      expires_in: 0,
     });
   } catch (e) {
     return json({ error: String(e) }, 500);

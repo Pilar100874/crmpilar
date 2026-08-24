@@ -28,7 +28,7 @@ export default function TvSignageDispositivos() {
   const [statusFiltro, setStatusFiltro] = useState<string>("todos");
   const [grupoFiltro, setGrupoFiltro] = useState<string>("todos");
   const [edit, setEdit] = useState<any | null>(null);
-  const [pairing, setPairing] = useState<{ codigo: string; token: string } | null>(null);
+  const [pairing, setPairing] = useState<{ codigo: string } | null>(null);
   const [comandoDialog, setComandoDialog] = useState<{ deviceId: string; open: boolean }>({ deviceId: "", open: false });
 
   const carregar = async () => {
@@ -102,7 +102,7 @@ export default function TvSignageDispositivos() {
       if (error) return toast.error(error.message);
       toast.success("Dispositivo cadastrado");
       setEdit(null);
-      setPairing({ codigo, token });
+      setPairing({ codigo });
       carregar();
     }
   };
@@ -112,7 +112,7 @@ export default function TvSignageDispositivos() {
     const token_hash = await sha256Hex(token);
     const { error } = await supabase.from("tv_devices").update({ token_hash }).eq("id", device.id);
     if (error) return toast.error(error.message);
-    setPairing({ codigo: device.codigo, token });
+    setPairing({ codigo: device.codigo });
     toast.success("Novo token gerado");
   };
 
@@ -180,7 +180,7 @@ export default function TvSignageDispositivos() {
         carregar();
       }}>{d.bloqueado ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}</Button>
       <Button variant="ghost" size="icon" title="Reemitir token" onClick={() => reemitirToken(d)}><KeyRound className="w-4 h-4" /></Button>
-      <Button variant="ghost" size="icon" title="Ver QR Code" onClick={() => setPairing({ codigo: d.codigo, token: "(reemita para ver o token)" })}><QrCode className="w-4 h-4" /></Button>
+      <Button variant="ghost" size="icon" title="Ver QR Code" onClick={() => setPairing({ codigo: d.codigo })}><QrCode className="w-4 h-4" /></Button>
       <Button variant="ghost" size="icon" title="Editar" onClick={() => setEdit(d)}><Pencil className="w-4 h-4" /></Button>
       <DeleteConfirmTrigger
         onConfirm={() => excluir(d.id)}
@@ -385,8 +385,8 @@ export default function TvSignageDispositivos() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Pareamento do dispositivo</DialogTitle></DialogHeader>
           {pairing && (() => {
-            const pairUrl = `${window.location.origin}/tv-pair?codigo=${encodeURIComponent(pairing.codigo)}&token=${encodeURIComponent(pairing.token)}&api=${encodeURIComponent(window.location.origin)}`;
-            const appPayload = JSON.stringify({ codigo: pairing.codigo, token: pairing.token, api_url: window.location.origin });
+            const pairUrl = `${window.location.origin}/tv-pair?codigo=${encodeURIComponent(pairing.codigo)}&api=${encodeURIComponent(window.location.origin)}`;
+            const appPayload = JSON.stringify({ codigo: pairing.codigo, api_url: window.location.origin });
             return (
               <Tabs defaultValue="universal" className="space-y-4">
                 <TabsList className="grid grid-cols-2 w-full">
@@ -412,8 +412,7 @@ export default function TvSignageDispositivos() {
                 </TabsContent>
                 <div className="space-y-2 text-sm">
                   <div><span className="text-muted-foreground">Código: </span><code className="bg-muted px-2 py-0.5 rounded">{pairing.codigo}</code></div>
-                  <div><span className="text-muted-foreground">Token: </span><code className="bg-muted px-2 py-0.5 rounded text-xs break-all">{pairing.token}</code></div>
-                  <p className="text-xs text-orange-500 mt-2">⚠️ Este token só é exibido uma vez. Guarde ou fotografe o QR agora. Se perder, reemita.</p>
+                  <p className="text-xs text-muted-foreground mt-2">No app, informe apenas este código (ou leia o QR). Não é necessário token.</p>
                 </div>
               </Tabs>
             );
