@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { LogIn, Truck, User, FileText, CheckCircle, ChevronRight, Camera, Plus, Search } from "lucide-react";
+import { LogIn, Truck, User, FileText, CheckCircle, ChevronRight, Camera, Plus, Search, ScanLine, PackageCheck, PackageOpen } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
@@ -37,16 +37,21 @@ export default function TranspEntrada() {
   const [buscaM, setBuscaM] = useState("");
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [sucesso, setSucesso] = useState<any>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const [form, setForm] = useState({
     transportadora_id: "",
     veiculo_id: "",
     motorista_id: "",
+    tipo_operacao: "entrega" as "entrega" | "coleta",
+    nfe_chave: "",
     ajudante_nome: "",
     documento: "",
     motivo: "",
     entrada_obs: "",
   });
+
+  const nfeInfo = useMemo(() => (form.nfe_chave ? parseChaveNfe(form.nfe_chave) : null), [form.nfe_chave]);
 
   const [novoVeiculo, setNovoVeiculo] = useState<{ open: boolean; placa: string; descricao: string; tipo_veiculo: string }>({
     open: false, placa: "", descricao: "", tipo_veiculo: "",
