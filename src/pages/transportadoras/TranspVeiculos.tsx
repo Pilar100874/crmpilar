@@ -17,19 +17,23 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   TIPOS_VEICULO_TRANSP, listarTransportadoras, maskPlaca, nomeTransportadora,
+  SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspVeiculo,
 } from "@/lib/transportadoras/dados";
+import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
-const empty = { transportadora_id: "", placa: "", descricao: "", tipo_veiculo: "", observacoes: "", ativo: true };
+const empty = { transportadora_id: SEM_TRANSPORTADORA, placa: "", descricao: "", tipo_veiculo: "", observacoes: "", ativo: true };
 
 export default function TranspVeiculos() {
   const [rows, setRows] = useState<TranspVeiculo[]>([]);
   const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspVeiculo | null>(null);
+
 
   const load = async () => {
     const [emp, { data, error }] = await Promise.all([
