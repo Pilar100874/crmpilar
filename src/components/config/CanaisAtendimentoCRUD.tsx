@@ -31,6 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CanalGuiaPassoAPasso } from "@/components/config/CanalGuiaPassoAPasso";
+
 
 interface CanaisAtendimentoCRUDProps {
   estabelecimentoId?: string;
