@@ -124,6 +124,11 @@ serve(async (req) => {
       tarefas.push(tarefa);
     }
 
+    const pendentes = Promise.allSettled(tarefas);
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) rt.waitUntil(pendentes);
+    else await pendentes;
+
     return new Response(
       JSON.stringify({ ok: true, disparados: disparados.length, ids: disparados }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
