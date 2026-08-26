@@ -20,8 +20,9 @@ import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCaptu
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
   TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, maskPlaca, maskWhatsapp,
-  nomeTransportadora, type TranspEmpresa, type TranspMotorista, type TranspVeiculo,
+  nomeTransportadora, SEM_TRANSPORTADORA, idTransportadora, type TranspEmpresa, type TranspMotorista, type TranspVeiculo,
 } from "@/lib/transportadoras/dados";
+import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
 const STEPS = ["Transportadora", "Veículo", "Motorista", "Detalhes", "Fotos"] as const;
 
@@ -38,6 +39,7 @@ export default function TranspEntrada() {
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [sucesso, setSucesso] = useState<any>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [novaEmpresa, setNovaEmpresa] = useState(false);
 
   const [form, setForm] = useState({
     transportadora_id: "",
@@ -75,12 +77,12 @@ export default function TranspEntrada() {
   useEffect(() => { load(); }, []);
 
   const veiculosFiltrados = useMemo(() => veiculos.filter((v) =>
-    (!form.transportadora_id || v.transportadora_id === form.transportadora_id) &&
+    (!idTransportadora(form.transportadora_id) || v.transportadora_id === form.transportadora_id) &&
     (!buscaV || `${v.placa} ${v.descricao ?? ""}`.toLowerCase().includes(buscaV.toLowerCase()))
   ), [veiculos, form.transportadora_id, buscaV]);
 
   const motoristasFiltrados = useMemo(() => motoristas.filter((m) =>
-    (!form.transportadora_id || m.transportadora_id === form.transportadora_id) &&
+    (!idTransportadora(form.transportadora_id) || m.transportadora_id === form.transportadora_id) &&
     (!buscaM || `${m.nome} ${m.cpf ?? ""}`.toLowerCase().includes(buscaM.toLowerCase()))
   ), [motoristas, form.transportadora_id, buscaM]);
 
@@ -106,7 +108,7 @@ export default function TranspEntrada() {
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const { data, error } = await supabase.from("transp_veiculos").insert({
       estabelecimento_id: estId,
-      transportadora_id: form.transportadora_id || null,
+      transportadora_id: idTransportadora(form.transportadora_id),
       placa,
       descricao: novoVeiculo.descricao.toUpperCase() || null,
       tipo_veiculo: novoVeiculo.tipo_veiculo || null,
@@ -125,7 +127,7 @@ export default function TranspEntrada() {
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const { data, error } = await supabase.from("transp_motoristas").insert({
       estabelecimento_id: estId,
-      transportadora_id: form.transportadora_id || null,
+      transportadora_id: idTransportadora(form.transportadora_id),
       nome: novoMotorista.nome.trim().toUpperCase(),
       cpf: novoMotorista.cpf || null,
       cnh: novoMotorista.cnh || null,
@@ -148,7 +150,7 @@ export default function TranspEntrada() {
 
     const { data: mv, error } = await supabase.from("transp_movimentos").insert({
       estabelecimento_id: estId,
-      transportadora_id: form.transportadora_id || null,
+      transportadora_id: idTransportadora(form.transportadora_id),
       veiculo_id: form.veiculo_id || null,
       motorista_id: form.motorista_id || null,
       placa: veiculoSel?.placa ?? null,
@@ -224,6 +226,12 @@ export default function TranspEntrada() {
         </DialogContent>
       </Dialog>
 
+      <NovaTransportadoraDialog
+        open={novaEmpresa}
+        onOpenChange={setNovaEmpresa}
+        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f) => ({ ...f, transportadora_id: e.id, veiculo_id: "", motorista_id: "" })); }}
+      />
+
       <div className="space-y-4">
         <CVPageHeader icon={LogIn} title="Registrar Entrada" subtitle="Entrada de veículos de transportadoras" />
 
@@ -253,13 +261,24 @@ export default function TranspEntrada() {
           <CardContent className="p-4 sm:p-6 min-h-[340px] space-y-4">
             {step === 0 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione a transportadora</h3></div>
-                {empresas.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Nenhuma transportadora cadastrada. Cadastre em Listas → Transportadoras.
-                  </p>
-                ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                  <div className="flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione a transportadora</h3></div>
+                  <Button size="sm" variant="outline" onClick={() => setNovaEmpresa(true)}>
+                    <Plus className="h-4 w-4 mr-1" />Nova transportadora
+                  </Button>
+                </div>
+                {(
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <button type="button"
+                      onClick={() => setForm({ ...form, transportadora_id: SEM_TRANSPORTADORA, veiculo_id: "", motorista_id: "" })}
+                      className={`text-left p-4 rounded-lg border-2 border-dashed transition-all hover:shadow-md ${form.transportadora_id === SEM_TRANSPORTADORA ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <Truck className={`h-5 w-5 ${form.transportadora_id === SEM_TRANSPORTADORA ? "text-primary" : "text-muted-foreground"}`} />
+                        {form.transportadora_id === SEM_TRANSPORTADORA && <CheckCircle className="h-5 w-5 text-primary" />}
+                      </div>
+                      <p className="font-semibold truncate">Avulsa (sem cadastro)</p>
+                      <p className="text-xs text-muted-foreground">Registrar sem vincular transportadora</p>
+                    </button>
                     {empresas.map((e) => {
                       const active = form.transportadora_id === e.id;
                       return (

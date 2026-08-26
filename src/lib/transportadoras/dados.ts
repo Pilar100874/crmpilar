@@ -88,3 +88,34 @@ export async function listarTransportadoras(): Promise<TranspEmpresa[]> {
 
 export const nomeTransportadora = (e?: TranspEmpresa | null) =>
   e ? (e.nome_fantasia || e.nome || "—") : "—";
+
+/** Valor sentinela usado quando a movimentação é avulsa (sem transportadora cadastrada). */
+export const SEM_TRANSPORTADORA = "avulsa";
+
+/** Converte o valor do formulário em um id real (ou null quando avulsa). */
+export const idTransportadora = (v?: string | null) =>
+  !v || v === SEM_TRANSPORTADORA ? null : v;
+
+/** Cria rapidamente uma transportadora no CRM (empresas com tipo_cliente = transportadora). */
+export async function criarTransportadora(nome: string): Promise<TranspEmpresa> {
+  const nomeUp = (nome || "").trim().toUpperCase();
+  if (!nomeUp) throw new Error("Informe o nome da transportadora");
+
+  const { getEstabelecimentoId } = await import("@/lib/estabelecimento");
+  const estId = await getEstabelecimentoId();
+
+  const { data, error } = await supabase
+    .from("empresas")
+    .insert({
+      nome: nomeUp,
+      nome_fantasia: nomeUp,
+      tipo_cliente: "transportadora",
+      ativo: true,
+      ...(estId ? { estabelecimento_id: estId } : {}),
+    } as any)
+    .select("id, nome, nome_fantasia")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Erro ao criar transportadora");
+  return data as TranspEmpresa;
+}

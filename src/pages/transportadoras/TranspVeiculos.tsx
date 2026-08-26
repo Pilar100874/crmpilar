@@ -17,19 +17,23 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   TIPOS_VEICULO_TRANSP, listarTransportadoras, maskPlaca, nomeTransportadora,
+  SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspVeiculo,
 } from "@/lib/transportadoras/dados";
+import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
-const empty = { transportadora_id: "", placa: "", descricao: "", tipo_veiculo: "", observacoes: "", ativo: true };
+const empty = { transportadora_id: SEM_TRANSPORTADORA, placa: "", descricao: "", tipo_veiculo: "", observacoes: "", ativo: true };
 
 export default function TranspVeiculos() {
   const [rows, setRows] = useState<TranspVeiculo[]>([]);
   const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspVeiculo | null>(null);
+
 
   const load = async () => {
     const [emp, { data, error }] = await Promise.all([
@@ -45,7 +49,7 @@ export default function TranspVeiculos() {
   const save = async () => {
     if (!form.placa) return toast.error("Placa obrigatória");
     const payload = {
-      transportadora_id: form.transportadora_id || null,
+      transportadora_id: idTransportadora(form.transportadora_id),
       placa: maskPlaca(form.placa),
       descricao: form.descricao?.toUpperCase() || null,
       tipo_veiculo: form.tipo_veiculo || null,
@@ -121,7 +125,7 @@ export default function TranspVeiculos() {
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
-                      transportadora_id: v.transportadora_id ?? "", placa: v.placa, descricao: v.descricao ?? "",
+                      transportadora_id: v.transportadora_id ?? SEM_TRANSPORTADORA, placa: v.placa, descricao: v.descricao ?? "",
                       tipo_veiculo: v.tipo_veiculo ?? "", observacoes: v.observacoes ?? "", ativo: v.ativo,
                     });
                     setEditing(v.id); setOpen(true);
@@ -142,10 +146,16 @@ export default function TranspVeiculos() {
           <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Veículo</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Transportadora</Label>
+              <div className="flex items-center justify-between">
+                <Label>Transportadora</Label>
+                <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={() => setNovaEmpresa(true)}>
+                  <Plus className="h-3.5 w-3.5 mr-1" />Nova
+                </Button>
+              </div>
               <Select value={form.transportadora_id} onValueChange={(v) => setForm({ ...form, transportadora_id: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent className="bg-popover">
+                  <SelectItem value={SEM_TRANSPORTADORA}>Sem transportadora (avulso)</SelectItem>
                   {empresas.map((e) => <SelectItem key={e.id} value={e.id}>{nomeTransportadora(e)}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -170,6 +180,12 @@ export default function TranspVeiculos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NovaTransportadoraDialog
+        open={novaEmpresa}
+        onOpenChange={setNovaEmpresa}
+        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f: any) => ({ ...f, transportadora_id: e.id })); }}
+      />
 
       <DeleteConfirmDialog
         open={!!excluir}
