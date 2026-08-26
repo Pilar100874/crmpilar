@@ -726,17 +726,24 @@ const App = () => (
                 <Route path="saida" element={<CVVehicleExit />} />
                 <Route path="entrada" element={<CVVehicleEntry />} />
                 <Route path="movimentacoes" element={<CVMovements />} />
-                <Route path="defeitos" element={<Navigate to="/controle-veiculos/paradas" replace />} />
-                <Route path="tipos-defeito" element={<CVDefectTypes />} />
-                <Route path="manutencao" element={<CVMaintenance />} />
-                <Route path="paradas" element={<CVParadas />} />
-                <Route path="biblioteca-manutencao" element={<CVMaintenanceCatalog />} />
+                <Route path="defeitos" element={<Navigate to="/manutencao" replace />} />
+                <Route path="tipos-defeito" element={<Navigate to="/manutencao/tipos-defeito" replace />} />
+                <Route path="manutencao" element={<Navigate to="/manutencao/analise" replace />} />
+                <Route path="paradas" element={<Navigate to="/manutencao" replace />} />
+                <Route path="biblioteca-manutencao" element={<Navigate to="/manutencao/biblioteca" replace />} />
 
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
               <Route path="cameras" element={<CVCameras />} />
               <Route path="historico-imagens" element={<CVVehicleHistory />} />
               </Route>
+              <Route path="/manutencao" element={<ManutencaoLayout />}>
+                <Route index element={<CVParadas />} />
+                <Route path="analise" element={<CVMaintenance />} />
+                <Route path="biblioteca" element={<CVMaintenanceCatalog />} />
+                <Route path="tipos-defeito" element={<CVDefectTypes />} />
+              </Route>
+
               <Route path="/operacional" element={<OpLayout />}>
                 <Route index element={<OpTasks />} />
                 <Route path="tasks/:id" element={<OpTaskExecution />} />
