@@ -1709,6 +1709,26 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
+        <CanalGuiaPassoAPasso
+          titulo="Como obter os dados do Instagram Direct"
+          descricao="Os dados vêm do Meta for Developers, usando a conta profissional do Instagram vinculada a uma Página do Facebook."
+          passos={[
+            { titulo: "Transforme o perfil em Comercial/Criador", descricao: "No app do Instagram: Configurações → Tipo de conta e ferramentas → Mudar para conta profissional." },
+            { titulo: "Vincule o Instagram a uma Página do Facebook", descricao: "Em Configurações do Instagram → Central de Contas, conecte o perfil à Página do Facebook da empresa (obrigatório para a API)." },
+            { titulo: "Crie/abra o app no Meta for Developers", descricao: "Crie um app do tipo Empresa e adicione os produtos 'Instagram' e 'Login do Facebook'.", link: { label: "Meta for Developers", url: "https://developers.facebook.com/apps/" } },
+            { titulo: "Gere o Access Token", descricao: "Em Ferramentas → Explorador da API do Graph, selecione seu app e a Página, e autorize os escopos instagram_basic, instagram_manage_messages, pages_manage_metadata e pages_show_list. Troque por um token de longa duração." },
+            { titulo: "Descubra o Instagram Business Account ID", descricao: "No Explorador da API do Graph, chame GET /me/accounts para achar o page-id e depois GET /{page-id}?fields=instagram_business_account — o campo 'id' retornado é o seu Instagram Business Account ID." },
+            { titulo: "Ative as mensagens", descricao: "No Instagram: Configurações → Mensagens → Controles de mensagens → ative 'Permitir acesso a mensagens' para apps conectados. Depois salve aqui e ative um bot com o canal Instagram." },
+          ]}
+          campos={[
+            { campo: "Instagram Business Account ID", onde: "Retorno de GET /{page-id}?fields=instagram_business_account no Explorador da API do Graph.", exemplo: "17841400000000000" },
+            { campo: "Access Token", onde: "Token de longa duração da Página gerado no Explorador da API do Graph com os escopos de mensagens do Instagram.", exemplo: "IGQVJ... / EAAG..." },
+          ]}
+          docUrl="https://developers.facebook.com/docs/messenger-platform/instagram"
+          docLabel="Documentação Instagram Messaging"
+        />
+
+
         <div className="space-y-2">
           <Label htmlFor="ig-account">Instagram Business Account ID *</Label>
           <Input
