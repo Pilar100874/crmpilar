@@ -26710,11 +26710,14 @@ export type Database = {
           motivo: string | null
           motorista_id: string | null
           motorista_nome: string | null
+          nfe_chave: string | null
+          nfe_dados: Json | null
           placa: string | null
           saida_obs: string | null
           saida_por: string | null
           saida_time: string | null
           status: string
+          tipo_operacao: string
           transportadora_id: string | null
           updated_at: string
           veiculo_id: string | null
@@ -26731,11 +26734,14 @@ export type Database = {
           motivo?: string | null
           motorista_id?: string | null
           motorista_nome?: string | null
+          nfe_chave?: string | null
+          nfe_dados?: Json | null
           placa?: string | null
           saida_obs?: string | null
           saida_por?: string | null
           saida_time?: string | null
           status?: string
+          tipo_operacao?: string
           transportadora_id?: string | null
           updated_at?: string
           veiculo_id?: string | null
@@ -26752,11 +26758,14 @@ export type Database = {
           motivo?: string | null
           motorista_id?: string | null
           motorista_nome?: string | null
+          nfe_chave?: string | null
+          nfe_dados?: Json | null
           placa?: string | null
           saida_obs?: string | null
           saida_por?: string | null
           saida_time?: string | null
           status?: string
+          tipo_operacao?: string
           transportadora_id?: string | null
           updated_at?: string
           veiculo_id?: string | null
