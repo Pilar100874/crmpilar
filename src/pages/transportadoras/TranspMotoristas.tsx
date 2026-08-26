@@ -17,16 +17,19 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   listarTransportadoras, maskWhatsapp, nomeTransportadora,
+  SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspMotorista,
 } from "@/lib/transportadoras/dados";
+import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
-const empty = { transportadora_id: "", nome: "", cpf: "", cnh: "", whatsapp: "", observacoes: "", ativo: true };
+const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", cnh: "", whatsapp: "", observacoes: "", ativo: true };
 
 export default function TranspMotoristas() {
   const [rows, setRows] = useState<TranspMotorista[]>([]);
   const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspMotorista | null>(null);
@@ -45,7 +48,7 @@ export default function TranspMotoristas() {
   const save = async () => {
     if (!form.nome) return toast.error("Nome obrigatório");
     const payload = {
-      transportadora_id: form.transportadora_id || null,
+      transportadora_id: idTransportadora(form.transportadora_id),
       nome: form.nome.toUpperCase(),
       cpf: form.cpf || null,
       cnh: form.cnh || null,
@@ -125,7 +128,7 @@ export default function TranspMotoristas() {
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
-                      transportadora_id: m.transportadora_id ?? "", nome: m.nome, cpf: m.cpf ?? "",
+                      transportadora_id: m.transportadora_id ?? SEM_TRANSPORTADORA, nome: m.nome, cpf: m.cpf ?? "",
                       cnh: m.cnh ?? "", whatsapp: m.whatsapp ?? "", observacoes: m.observacoes ?? "", ativo: m.ativo,
                     });
                     setEditing(m.id); setOpen(true);
@@ -146,10 +149,16 @@ export default function TranspMotoristas() {
           <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Motorista</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Transportadora</Label>
+              <div className="flex items-center justify-between">
+                <Label>Transportadora</Label>
+                <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={() => setNovaEmpresa(true)}>
+                  <Plus className="h-3.5 w-3.5 mr-1" />Nova
+                </Button>
+              </div>
               <Select value={form.transportadora_id} onValueChange={(v) => setForm({ ...form, transportadora_id: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent className="bg-popover">
+                  <SelectItem value={SEM_TRANSPORTADORA}>Sem transportadora (avulso)</SelectItem>
                   {empresas.map((e) => <SelectItem key={e.id} value={e.id}>{nomeTransportadora(e)}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -166,6 +175,12 @@ export default function TranspMotoristas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NovaTransportadoraDialog
+        open={novaEmpresa}
+        onOpenChange={setNovaEmpresa}
+        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f: any) => ({ ...f, transportadora_id: e.id })); }}
+      />
 
       <DeleteConfirmDialog
         open={!!excluir}
