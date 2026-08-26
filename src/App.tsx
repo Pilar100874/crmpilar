@@ -751,6 +751,16 @@ const App = () => (
                 <Route path="tipos-defeito" element={<CVDefectTypes />} />
               </Route>
 
+              <Route path="/transportadoras" element={<TranspLayout />}>
+                <Route index element={<TranspEntrada />} />
+                <Route path="saida" element={<TranspSaida />} />
+                <Route path="movimentos" element={<TranspMovimentos />} />
+                <Route path="veiculos" element={<TranspVeiculos />} />
+                <Route path="motoristas" element={<TranspMotoristas />} />
+              </Route>
+
+
+
               <Route path="/operacional" element={<OpLayout />}>
                 <Route index element={<OpTasks />} />
                 <Route path="tasks/:id" element={<OpTaskExecution />} />
