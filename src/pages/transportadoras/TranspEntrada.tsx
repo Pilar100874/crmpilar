@@ -191,7 +191,7 @@ export default function TranspEntrada() {
       fotos: photos.length,
     });
     toast.success("Entrada registrada!");
-    setForm({ transportadora_id: "", veiculo_id: "", motorista_id: "", ajudante_nome: "", documento: "", motivo: "", entrada_obs: "" });
+    setForm({ transportadora_id: "", veiculo_id: "", motorista_id: "", tipo_operacao: "entrega", nfe_chave: "", ajudante_nome: "", documento: "", motivo: "", entrada_obs: "" });
     setPhotos([]);
     setStep(0);
     load();
