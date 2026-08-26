@@ -2111,6 +2111,24 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           <CardDescription>Configure o widget de chat para seu site</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <CanalGuiaPassoAPasso
+          titulo="Como configurar o WebChat"
+          descricao="O WebChat não exige credenciais externas: você personaliza o widget aqui e cola o script no seu site."
+          passos={[
+            { titulo: "Defina título e mensagem", descricao: "Preencha o Título do Widget (aparece no cabeçalho do chat) e a Mensagem de Boas-vindas exibida ao abrir a conversa." },
+            { titulo: "Escolha cor e posição", descricao: "A Cor do Widget aceita o hexadecimal da identidade da sua marca (ex.: #10B981). A Posição define se o balão fica no canto direito ou esquerdo." },
+            { titulo: "Salve a configuração", descricao: "Clique em Salvar Configuração para gerar o script com os parâmetros escolhidos." },
+            { titulo: "Instale no site", descricao: "Copie o código de incorporação e cole antes do fechamento da tag </body> em todas as páginas do seu site. Em WordPress use um plugin de scripts no rodapé; em Shopify use Tema → Editar código → theme.liquid." },
+            { titulo: "Vincule um bot (opcional)", descricao: "Em Criar Bot, ative um fluxo marcando o canal WebChat — a vinculação é automática e o bot passa a responder o widget." },
+          ]}
+          campos={[
+            { campo: "Título do Widget", onde: "Texto livre — nome que o visitante vê no topo do chat.", exemplo: "Atendimento" },
+            { campo: "Cor do Widget", onde: "Hexadecimal da cor principal da sua marca.", exemplo: "#10B981" },
+            { campo: "Mensagem de Boas-vindas", onde: "Primeira mensagem automática enviada ao abrir o chat.", exemplo: "Olá! Como posso ajudar?" },
+            { campo: "Posição do Widget", onde: "Canto da tela em que o balão será exibido (direita ou esquerda)." },
+          ]}
+        />
+
         {activeBots.length > 0 ? (
           <Alert className="bg-green-50 border-green-200">
             <Power className="h-4 w-4 text-green-600" />
