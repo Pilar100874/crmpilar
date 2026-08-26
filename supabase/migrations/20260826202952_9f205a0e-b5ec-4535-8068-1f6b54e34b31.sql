@@ -1,0 +1,17 @@
+REVOKE EXECUTE ON FUNCTION public.ferr_create_overdue_notifications() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ferr_create_overdue_notifications() TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.ferr_get_user_company_id(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ferr_get_user_company_id(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.ferr_is_admin(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ferr_is_admin(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.ferr_is_almoxarifado(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ferr_is_almoxarifado(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.ferr_update_supply_stock() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.op_calculate_task_priority(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.op_calculate_task_priority(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.port_has_role(uuid, port_role) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.port_has_role(uuid, port_role) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.port_is_gestor(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.port_is_gestor(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.port_is_staff(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.port_is_staff(uuid) TO authenticated, service_role;
