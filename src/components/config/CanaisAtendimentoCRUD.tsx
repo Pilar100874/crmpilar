@@ -921,6 +921,27 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
   return (
     <div className="space-y-6">
+      <CanalGuiaPassoAPasso
+        titulo="Como configurar o WhatsApp via Evolution API"
+        descricao="Aqui você conecta um número comum de WhatsApp por QR Code, através de um servidor Evolution API."
+        passos={[
+          { titulo: "Tenha um servidor Evolution API", descricao: "Use um servidor próprio (Docker/VPS) ou um provedor que hospede a Evolution API v2. Anote a URL pública, ex.: https://evolution.suaempresa.com.br", link: { label: "Documentação Evolution API", url: "https://doc.evolution-api.com/" } },
+          { titulo: "Copie a apikey global", descricao: "É a variável AUTHENTICATION_API_KEY definida no arquivo .env / docker-compose do servidor Evolution. Se usa provedor, ela aparece no painel do serviço." },
+          { titulo: "Configure o servidor", descricao: "Clique em 'Configurar Servidor', cole o Endpoint e a apikey, escolha o modo (Produção ou Sandbox) e use 'Testar conexão' antes de salvar." },
+          { titulo: "Confirme a URL do Webhook", descricao: "Deixe a URL de webhook padrão sugerida — é ela que entrega as mensagens recebidas ao CRM. Só altere se usar um proxy próprio." },
+          { titulo: "Crie a sessão e leia o QR Code", descricao: "Clique em 'Nova Sessão', dê um nome (ex.: comercial) e leia o QR Code no celular em WhatsApp → Aparelhos conectados → Conectar aparelho. O status muda para WORKING." },
+          { titulo: "Vincule o bot e teste", descricao: "Escolha o fluxo de bot da sessão e use o Diagnóstico de envio para enviar uma mensagem de teste e validar ponta a ponta." },
+        ]}
+        campos={[
+          { campo: "Endpoint do Servidor Evolution", onde: "URL pública onde a Evolution API está publicada (sem barra no final).", exemplo: "https://evolution.suaempresa.com.br" },
+          { campo: "apikey", onde: "Valor de AUTHENTICATION_API_KEY do servidor Evolution (ou a chave exibida no painel do provedor)." },
+          { campo: "Modo do servidor", onde: "Produção para o número oficial da empresa; Sandbox para testes." },
+          { campo: "URL do Manager", onde: "Endereço do painel web da Evolution, normalmente o endpoint + /manager.", exemplo: "https://evolution.suaempresa.com.br/manager" },
+          { campo: "URL do Webhook", onde: "Endereço do CRM que recebe as mensagens. Use o valor padrão sugerido pelo sistema." },
+          { campo: "Nome da Sessão", onde: "Nome livre para identificar o número/instância (sem espaços ou acentos).", exemplo: "comercial" },
+        ]}
+      />
+
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
           Gerencie instâncias do Evolution API para múltiplos números de WhatsApp
