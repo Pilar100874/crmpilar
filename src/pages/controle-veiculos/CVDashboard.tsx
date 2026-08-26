@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-  Car, User, LogOut, LogIn, TrendingUp, Clock, AlertTriangle,
-  RefreshCw, Wrench, Users, Tag, ListChecks, Gauge,
+  Car, User, LogOut, LogIn, TrendingUp, Clock,
+  RefreshCw, Users, ListChecks, Gauge,
 } from "lucide-react";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 
@@ -18,8 +18,6 @@ interface Stats {
   vehiclesOut: number;
   vehiclesInToday: number;
   kmToday: number;
-  needOilChange: number;
-  pendingDefects: number;
 }
 
 export default function CVDashboard() {
@@ -31,11 +29,10 @@ export default function CVDashboard() {
   const load = useCallback(async () => {
     setRefreshing(true);
     const thirtyDays = new Date(); thirtyDays.setDate(thirtyDays.getDate() - 30);
-    const [v, d, mAll, defs] = await Promise.all([
-      supabase.from("cv_vehicles").select("current_km, next_oil_change_km, active"),
+    const [v, d, mAll] = await Promise.all([
+      supabase.from("cv_vehicles").select("active"),
       supabase.from("cv_drivers").select("id", { count: "exact", head: true }).eq("active", true),
       supabase.from("cv_vehicle_movements").select("status, entry_time, entry_km, exit_km").gte("created_at", thirtyDays.toISOString()),
-      supabase.from("cv_defect_reports").select("id", { count: "exact", head: true }).neq("status", "resolved"),
     ]);
     const vehicles = (v.data ?? []) as any[];
     const movs = (mAll.data ?? []) as any[];
@@ -48,8 +45,6 @@ export default function CVDashboard() {
       kmToday: movs
         .filter(m => m.entry_time && new Date(m.entry_time).toDateString() === today)
         .reduce((s, m) => s + ((m.entry_km ?? 0) - (m.exit_km ?? 0)), 0),
-      needOilChange: vehicles.filter(x => x.current_km >= x.next_oil_change_km).length,
-      pendingDefects: defs.count ?? 0,
     });
     setLastUpdate(new Date());
     setRefreshing(false);
@@ -67,7 +62,7 @@ export default function CVDashboard() {
       <div className="space-y-4">
         <Skeleton className="h-24 w-full" />
         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
       </div>
     );
@@ -79,8 +74,6 @@ export default function CVDashboard() {
     { label: "Em Trânsito", value: stats.vehiclesOut, sub: "Fora da base", icon: LogOut, tone: "warning" },
     { label: "Retornaram Hoje", value: stats.vehiclesInToday, sub: "Entradas do dia", icon: LogIn, tone: "success" },
     { label: "KM Rodados Hoje", value: stats.kmToday.toLocaleString(), sub: "Quilômetros percorridos", icon: Gauge, tone: "info" },
-    { label: "Trocas de Óleo", value: stats.needOilChange, sub: "Vencidas ou próximas", icon: AlertTriangle, tone: "destructive" },
-    { label: "Defeitos Pendentes", value: stats.pendingDefects, sub: "Aguardando resolução", icon: Wrench, tone: "warning" },
   ];
 
   return (
@@ -143,22 +136,16 @@ export default function CVDashboard() {
         <Card className="overflow-hidden">
           <CardHeader className="bg-muted/40">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Wrench className="h-4 w-4 text-primary" />
-              Gestão
+              <Users className="h-4 w-4 text-primary" />
+              Cadastros
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground mb-3">Cadastros e análises operacionais.</p>
+            <p className="text-sm text-muted-foreground mb-3">Gerencie veículos, motoristas e movimentações.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/veiculos")}><Car className="h-4 w-4 mr-1" />Veículos</Button>
               <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/motoristas")}><Users className="h-4 w-4 mr-1" />Motoristas</Button>
-              <Button variant="outline" className="h-10 justify-start relative" onClick={() => navigate("/manutencao")}>
-                <AlertTriangle className="h-4 w-4 mr-1" />Defeitos
-                {stats.pendingDefects > 0 && <Badge variant="destructive" className="ml-auto h-5 px-1.5">{stats.pendingDefects}</Badge>}
-              </Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/manutencao/analise")}><Wrench className="h-4 w-4 mr-1" />Análises</Button>
               <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/movimentacoes")}><ListChecks className="h-4 w-4 mr-1" />Movim.</Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/manutencao/tipos-defeito")}><Tag className="h-4 w-4 mr-1" />Tipos</Button>
             </div>
           </CardContent>
         </Card>
