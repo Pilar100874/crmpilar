@@ -1599,6 +1599,28 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             </Alert>
           )}
 
+        <CanalGuiaPassoAPasso
+          titulo="Como obter os dados do Facebook Messenger"
+          descricao="Todos os dados são gerados no app criado no Meta for Developers, vinculado à Página da sua empresa."
+          passos={[
+            { titulo: "Tenha uma Página do Facebook", descricao: "Use a Página oficial da empresa (não perfil pessoal). Você precisa ser Administrador dela." },
+            { titulo: "Crie o app no Meta for Developers", descricao: "Acesse Meus Apps → Criar app → tipo 'Empresa' e adicione o produto 'Messenger'.", link: { label: "Meta for Developers", url: "https://developers.facebook.com/apps/" } },
+            { titulo: "Conecte a Página ao app", descricao: "Em Messenger → Configurações da API do Messenger, clique em 'Adicionar ou remover Páginas' e selecione a Página da empresa." },
+            { titulo: "Gere o Page Access Token", descricao: "Ainda em Configurações da API do Messenger, clique em 'Gerar token' na linha da Página. Copie o token completo (começa com EAA...)." },
+            { titulo: "Copie o Page ID", descricao: "Na Página do Facebook: Sobre → Transparência da página → Identificação da Página. Ou no próprio painel do Messenger, ao lado do nome da Página." },
+            { titulo: "Pegue o App Secret", descricao: "Em Configurações do app → Básico → Chave Secreta do App → Mostrar. Use-a para validar a assinatura dos webhooks." },
+            { titulo: "Salve e ative o bot", descricao: "Salve a configuração aqui e, em Criar Bot, ative um fluxo com o canal Facebook selecionado." },
+          ]}
+          campos={[
+            { campo: "Page ID", onde: "Página do Facebook → Sobre → Transparência da página → Identificação da Página.", exemplo: "123456789012345" },
+            { campo: "Page Access Token", onde: "Meta for Developers → Messenger → Configurações da API → botão 'Gerar token' da Página.", exemplo: "EAAxxxxxxxxxx" },
+            { campo: "App Secret", onde: "Meta for Developers → Configurações → Básico → Chave Secreta do App.", exemplo: "a1b2c3d4e5f6..." },
+          ]}
+          docUrl="https://developers.facebook.com/docs/messenger-platform/getting-started"
+          docLabel="Documentação Messenger Platform"
+        />
+
+
         <div className="space-y-2">
           <Label htmlFor="fb-page-id">Page ID *</Label>
           <Input
