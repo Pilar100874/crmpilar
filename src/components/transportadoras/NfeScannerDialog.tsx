@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { ScanLine, Camera, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { extrairChaveNfe, chaveValida } from "@/lib/transportadoras/nfe";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface Props {
   open: boolean;
