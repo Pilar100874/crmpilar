@@ -293,53 +293,28 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Como Configurar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 text-sm">
-            <div>
-              <h3 className="font-semibold mb-1">1. Crie uma Conta Meta Business</h3>
-              <p className="text-muted-foreground">
-                Acesse business.facebook.com e crie uma conta de negócios
-              </p>
-            </div>
+      <CanalGuiaPassoAPasso
+        titulo="Como obter os dados da API Oficial do WhatsApp"
+        descricao="Passo a passo para conseguir o Token, o Phone Number ID e o Business Account ID no Meta."
+        defaultOpen
+        passos={[
+          { titulo: "Crie a conta Meta Business", descricao: "Acesse o Gerenciador de Negócios da Meta e crie/valide a conta da sua empresa.", link: { label: "business.facebook.com", url: "https://business.facebook.com" } },
+          { titulo: "Crie o app e adicione o WhatsApp", descricao: "Em Meta for Developers → Meus Apps → Criar app (tipo Empresa) e adicione o produto 'WhatsApp'.", link: { label: "Meta for Developers", url: "https://developers.facebook.com/apps/" } },
+          { titulo: "Cadastre o número", descricao: "Em WhatsApp → Configuração da API, adicione e verifique o número que fará os atendimentos (ele não pode estar ativo no app WhatsApp comum)." },
+          { titulo: "Copie Phone Number ID e Business Account ID", descricao: "Na mesma tela de Configuração da API, os dois IDs aparecem logo abaixo do seletor 'De' (número remetente). Copie e cole nos campos acima." },
+          { titulo: "Gere um token permanente", descricao: "Em business.facebook.com → Configurações do negócio → Usuários → Usuários do sistema, crie um usuário do sistema Administrador, atribua o app e gere um token com as permissões whatsapp_business_messaging e whatsapp_business_management. Esse token não expira." },
+          { titulo: "Configure o Webhook", descricao: "Em WhatsApp → Configuração → Webhooks, cole a URL do webhook exibida acima, informe o token de verificação e assine o evento 'messages'." },
+          { titulo: "Salve e ative o bot", descricao: "Salve as credenciais aqui e, em Criar Bot, ative um fluxo com o canal WhatsApp selecionado." },
+        ]}
+        campos={[
+          { campo: "WhatsApp Business Token", onde: "Token do usuário do sistema gerado no Gerenciador de Negócios (permanente). O token temporário da tela de teste expira em 24h.", exemplo: "EAAxxxxxxxxxx..." },
+          { campo: "Phone Number ID", onde: "Meta for Developers → WhatsApp → Configuração da API, abaixo do número remetente.", exemplo: "123456789012345" },
+          { campo: "Business Account ID", onde: "Mesma tela de Configuração da API (WhatsApp Business Account ID) ou em Configurações do negócio → Contas do WhatsApp.", exemplo: "123456789012345" },
+        ]}
+        docUrl="https://developers.facebook.com/docs/whatsapp/cloud-api"
+        docLabel="Documentação WhatsApp Cloud API"
+      />
 
-            <div>
-              <h3 className="font-semibold mb-1">2. Configure WhatsApp Business</h3>
-              <p className="text-muted-foreground">
-                No Meta Business, adicione WhatsApp Business e configure seu número
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-1">3. Gere Token de Acesso</h3>
-              <p className="text-muted-foreground">
-                Em Configurações do App, gere um token de acesso permanente
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-1">4. Configure Webhook</h3>
-              <p className="text-muted-foreground">
-                Use a URL de webhook acima nas configurações do WhatsApp Business
-              </p>
-            </div>
-
-            <Button variant="outline" className="w-full" asChild>
-              <a
-                href="https://developers.facebook.com/docs/whatsapp/cloud-api"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Documentação WhatsApp Business API
-              </a>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
