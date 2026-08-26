@@ -1808,7 +1808,24 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
-        <div className="space-y-2">
+        <CanalGuiaPassoAPasso
+          titulo="Como obter o Bot Token do Telegram"
+          descricao="Todo o processo é feito dentro do próprio Telegram, com o @BotFather."
+          passos={[
+            { titulo: "Abra o @BotFather", descricao: "No Telegram, pesquise por @BotFather (perfil oficial com selo azul) e inicie a conversa com /start.", link: { label: "Abrir @BotFather", url: "https://t.me/BotFather" } },
+            { titulo: "Crie o bot", descricao: "Envie /newbot e informe o nome de exibição do bot e, em seguida, um username único terminado em 'bot' (ex.: pilar_atendimento_bot)." },
+            { titulo: "Copie o token", descricao: "O BotFather responde com 'Use this token to access the HTTP API'. Copie a sequência completa e cole no campo Bot Token abaixo." },
+            { titulo: "Ajuste a privacidade (opcional)", descricao: "Para o bot ler mensagens em grupos, envie /setprivacy, escolha o bot e selecione Disable." },
+            { titulo: "Salve e vincule o bot", descricao: "Clique em Salvar Configuração. Depois, em Criar Bot, ative um fluxo com o canal Telegram selecionado." },
+          ]}
+          campos={[
+            { campo: "Bot Token", onde: "Gerado pelo @BotFather ao criar o bot. Se perder, envie /mybots → seu bot → API Token.", exemplo: "123456789:AAF-xxxxxxxxxxxxxxxxxxxxxxxxxxx" },
+          ]}
+          docUrl="https://core.telegram.org/bots/features#botfather"
+          docLabel="Documentação oficial do Telegram Bots"
+        />
+
+
           <Label htmlFor="tg-token">Bot Token *</Label>
           <Input
             id="tg-token"
