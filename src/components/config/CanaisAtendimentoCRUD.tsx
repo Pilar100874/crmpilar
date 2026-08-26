@@ -1825,6 +1825,7 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           docLabel="Documentação oficial do Telegram Bots"
         />
 
+        <div className="space-y-2">
 
           <Label htmlFor="tg-token">Bot Token *</Label>
           <Input
