@@ -492,7 +492,17 @@ export default function TranspEntrada() {
       <NfeScannerDialog
         open={scannerOpen}
         onOpenChange={setScannerOpen}
-        onDetected={(chave) => setForm((f) => ({ ...f, nfe_chave: chave }))}
+        onDetected={(chave) => {
+          const info = parseChaveNfe(chave);
+          setForm((f) => ({
+            ...f,
+            nfe_chave: chave,
+            tipo_operacao: "entrega",
+            documento: f.documento || (info ? `NF-E ${info.numero}` : f.documento),
+            motivo: f.motivo || (info ? `ENTREGA NF-E ${info.numero} / SÉRIE ${info.serie} — EMITENTE ${info.cnpj_emitente}` : f.motivo),
+          }));
+          toast.success(info ? `NF-e nº ${info.numero} capturada` : "Chave da NF-e capturada");
+        }}
       />
 
     </>
