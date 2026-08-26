@@ -83,6 +83,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Operacional Hub", label: "Operacional Hub (Tarefas, Materiais, Equipes)", category: "Principal" },
   { id: "Pilar Ferramentas", label: "Pilar Ferramentas (Almoxarifado)", category: "Principal" },
   { id: "Manutenção", label: "Manutenção (Frota: manutenções, defeitos, biblioteca)", category: "Principal" },
+  { id: "Transportadoras", label: "Transportadoras (entrada/saída de veículos de terceiros)", category: "Principal" },
 
   // Livro de Ocorrência
   { id: "Livro de Ocorrência", label: "Livro de Ocorrência (Portaria + Encomendas)", category: "Portaria" },
