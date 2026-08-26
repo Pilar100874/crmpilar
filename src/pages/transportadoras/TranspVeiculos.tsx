@@ -49,7 +49,7 @@ export default function TranspVeiculos() {
   const save = async () => {
     if (!form.placa) return toast.error("Placa obrigatória");
     const payload = {
-      transportadora_id: form.transportadora_id || null,
+      transportadora_id: idTransportadora(form.transportadora_id),
       placa: maskPlaca(form.placa),
       descricao: form.descricao?.toUpperCase() || null,
       tipo_veiculo: form.tipo_veiculo || null,
