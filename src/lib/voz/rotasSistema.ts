@@ -14,6 +14,11 @@ export interface RotaSistema {
 
 export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Pilar Ferramentas ============
+  { path: "/transportadoras", titulo: "Transportadoras", aliases: ["transportadoras", "entrada de transportadora", "portaria de transportadoras"] },
+  { path: "/transportadoras/saida", titulo: "Saída de Transportadoras", aliases: ["saida de transportadora", "registrar saida transportadora"] },
+  { path: "/transportadoras/movimentos", titulo: "Movimentos de Transportadoras", aliases: ["movimentos de transportadoras", "historico de transportadoras"] },
+  { path: "/transportadoras/veiculos", titulo: "Veículos de Transportadoras", aliases: ["veiculos de transportadoras", "caminhoes de terceiros"] },
+  { path: "/transportadoras/motoristas", titulo: "Motoristas de Transportadoras", aliases: ["motoristas de transportadoras", "motoristas de terceiros"] },
   { path: "/ferramentas", titulo: "Pilar Ferramentas", aliases: ["ferramentas", "controle de ferramentas", "almoxarifado de ferramentas"] },
   { path: "/ferramentas/tools", titulo: "Cadastro de Ferramentas", aliases: ["cadastro de ferramentas", "lista de ferramentas"] },
   { path: "/ferramentas/loans", titulo: "Registros de Empréstimos", aliases: ["registros de ferramentas", "registros de emprestimos", "historico de emprestimos"] },

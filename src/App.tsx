@@ -170,6 +170,12 @@ import PontoNotificacoesEntregabilidade from "./pages/ponto/PontoNotificacoesEnt
 import PontoManual from "./pages/ponto/PontoManual";
 import CVLayout from "./pages/controle-veiculos/CVLayout";
 import ManutencaoLayout from "./pages/manutencao/ManutencaoLayout";
+import TranspLayout from "./pages/transportadoras/TranspLayout";
+import TranspEntrada from "./pages/transportadoras/TranspEntrada";
+import TranspSaida from "./pages/transportadoras/TranspSaida";
+import TranspMovimentos from "./pages/transportadoras/TranspMovimentos";
+import TranspVeiculos from "./pages/transportadoras/TranspVeiculos";
+import TranspMotoristas from "./pages/transportadoras/TranspMotoristas";
 import CVDashboard from "./pages/controle-veiculos/CVDashboard";
 import CVVehicles from "./pages/controle-veiculos/CVVehicles";
 import CVDrivers from "./pages/controle-veiculos/CVDrivers";
@@ -744,6 +750,16 @@ const App = () => (
                 <Route path="biblioteca" element={<CVMaintenanceCatalog />} />
                 <Route path="tipos-defeito" element={<CVDefectTypes />} />
               </Route>
+
+              <Route path="/transportadoras" element={<TranspLayout />}>
+                <Route index element={<TranspEntrada />} />
+                <Route path="saida" element={<TranspSaida />} />
+                <Route path="movimentos" element={<TranspMovimentos />} />
+                <Route path="veiculos" element={<TranspVeiculos />} />
+                <Route path="motoristas" element={<TranspMotoristas />} />
+              </Route>
+
+
 
               <Route path="/operacional" element={<OpLayout />}>
                 <Route index element={<OpTasks />} />

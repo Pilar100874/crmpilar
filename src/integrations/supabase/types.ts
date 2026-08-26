@@ -26600,6 +26600,247 @@ export type Database = {
           },
         ]
       }
+      transp_motoristas: {
+        Row: {
+          ativo: boolean
+          cnh: string | null
+          cpf: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          observacoes: string | null
+          transportadora_id: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cnh?: string | null
+          cpf?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          transportadora_id?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cnh?: string | null
+          cpf?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          transportadora_id?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transp_motoristas_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transp_movimento_fotos: {
+        Row: {
+          angle_key: string | null
+          angle_label: string | null
+          caption: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_extra: boolean
+          movimento_id: string
+          photo_url: string
+          stage: string
+        }
+        Insert: {
+          angle_key?: string | null
+          angle_label?: string | null
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_extra?: boolean
+          movimento_id: string
+          photo_url: string
+          stage: string
+        }
+        Update: {
+          angle_key?: string | null
+          angle_label?: string | null
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_extra?: boolean
+          movimento_id?: string
+          photo_url?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transp_movimento_fotos_movimento_id_fkey"
+            columns: ["movimento_id"]
+            isOneToOne: false
+            referencedRelation: "transp_movimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transp_movimentos: {
+        Row: {
+          ajudante_nome: string | null
+          created_at: string
+          documento: string | null
+          entrada_obs: string | null
+          entrada_por: string | null
+          entrada_time: string
+          estabelecimento_id: string
+          id: string
+          motivo: string | null
+          motorista_id: string | null
+          motorista_nome: string | null
+          nfe_chave: string | null
+          nfe_dados: Json | null
+          placa: string | null
+          saida_obs: string | null
+          saida_por: string | null
+          saida_time: string | null
+          status: string
+          tipo_operacao: string
+          transportadora_id: string | null
+          updated_at: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          ajudante_nome?: string | null
+          created_at?: string
+          documento?: string | null
+          entrada_obs?: string | null
+          entrada_por?: string | null
+          entrada_time?: string
+          estabelecimento_id: string
+          id?: string
+          motivo?: string | null
+          motorista_id?: string | null
+          motorista_nome?: string | null
+          nfe_chave?: string | null
+          nfe_dados?: Json | null
+          placa?: string | null
+          saida_obs?: string | null
+          saida_por?: string | null
+          saida_time?: string | null
+          status?: string
+          tipo_operacao?: string
+          transportadora_id?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          ajudante_nome?: string | null
+          created_at?: string
+          documento?: string | null
+          entrada_obs?: string | null
+          entrada_por?: string | null
+          entrada_time?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string | null
+          motorista_id?: string | null
+          motorista_nome?: string | null
+          nfe_chave?: string | null
+          nfe_dados?: Json | null
+          placa?: string | null
+          saida_obs?: string | null
+          saida_por?: string | null
+          saida_time?: string | null
+          status?: string
+          tipo_operacao?: string
+          transportadora_id?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transp_movimentos_motorista_id_fkey"
+            columns: ["motorista_id"]
+            isOneToOne: false
+            referencedRelation: "transp_motoristas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_movimentos_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_movimentos_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "transp_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transp_veiculos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          observacoes: string | null
+          placa: string
+          tipo_veiculo: string | null
+          transportadora_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          observacoes?: string | null
+          placa: string
+          tipo_veiculo?: string | null
+          transportadora_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          observacoes?: string | null
+          placa?: string
+          tipo_veiculo?: string | null
+          transportadora_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transp_veiculos_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_commands: {
         Row: {
           confirmado_em: string | null
