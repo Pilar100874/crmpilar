@@ -31,6 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CanalGuiaPassoAPasso } from "@/components/config/CanalGuiaPassoAPasso";
+
 
 interface CanaisAtendimentoCRUDProps {
   estabelecimentoId?: string;
@@ -293,53 +295,28 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Como Configurar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 text-sm">
-            <div>
-              <h3 className="font-semibold mb-1">1. Crie uma Conta Meta Business</h3>
-              <p className="text-muted-foreground">
-                Acesse business.facebook.com e crie uma conta de negócios
-              </p>
-            </div>
+      <CanalGuiaPassoAPasso
+        titulo="Como obter os dados da API Oficial do WhatsApp"
+        descricao="Passo a passo para conseguir o Token, o Phone Number ID e o Business Account ID no Meta."
+        defaultOpen
+        passos={[
+          { titulo: "Crie a conta Meta Business", descricao: "Acesse o Gerenciador de Negócios da Meta e crie/valide a conta da sua empresa.", link: { label: "business.facebook.com", url: "https://business.facebook.com" } },
+          { titulo: "Crie o app e adicione o WhatsApp", descricao: "Em Meta for Developers → Meus Apps → Criar app (tipo Empresa) e adicione o produto 'WhatsApp'.", link: { label: "Meta for Developers", url: "https://developers.facebook.com/apps/" } },
+          { titulo: "Cadastre o número", descricao: "Em WhatsApp → Configuração da API, adicione e verifique o número que fará os atendimentos (ele não pode estar ativo no app WhatsApp comum)." },
+          { titulo: "Copie Phone Number ID e Business Account ID", descricao: "Na mesma tela de Configuração da API, os dois IDs aparecem logo abaixo do seletor 'De' (número remetente). Copie e cole nos campos acima." },
+          { titulo: "Gere um token permanente", descricao: "Em business.facebook.com → Configurações do negócio → Usuários → Usuários do sistema, crie um usuário do sistema Administrador, atribua o app e gere um token com as permissões whatsapp_business_messaging e whatsapp_business_management. Esse token não expira." },
+          { titulo: "Configure o Webhook", descricao: "Em WhatsApp → Configuração → Webhooks, cole a URL do webhook exibida acima, informe o token de verificação e assine o evento 'messages'." },
+          { titulo: "Salve e ative o bot", descricao: "Salve as credenciais aqui e, em Criar Bot, ative um fluxo com o canal WhatsApp selecionado." },
+        ]}
+        campos={[
+          { campo: "WhatsApp Business Token", onde: "Token do usuário do sistema gerado no Gerenciador de Negócios (permanente). O token temporário da tela de teste expira em 24h.", exemplo: "EAAxxxxxxxxxx..." },
+          { campo: "Phone Number ID", onde: "Meta for Developers → WhatsApp → Configuração da API, abaixo do número remetente.", exemplo: "123456789012345" },
+          { campo: "Business Account ID", onde: "Mesma tela de Configuração da API (WhatsApp Business Account ID) ou em Configurações do negócio → Contas do WhatsApp.", exemplo: "123456789012345" },
+        ]}
+        docUrl="https://developers.facebook.com/docs/whatsapp/cloud-api"
+        docLabel="Documentação WhatsApp Cloud API"
+      />
 
-            <div>
-              <h3 className="font-semibold mb-1">2. Configure WhatsApp Business</h3>
-              <p className="text-muted-foreground">
-                No Meta Business, adicione WhatsApp Business e configure seu número
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-1">3. Gere Token de Acesso</h3>
-              <p className="text-muted-foreground">
-                Em Configurações do App, gere um token de acesso permanente
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-1">4. Configure Webhook</h3>
-              <p className="text-muted-foreground">
-                Use a URL de webhook acima nas configurações do WhatsApp Business
-              </p>
-            </div>
-
-            <Button variant="outline" className="w-full" asChild>
-              <a
-                href="https://developers.facebook.com/docs/whatsapp/cloud-api"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Documentação WhatsApp Business API
-              </a>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -921,6 +898,27 @@ function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: str
 
   return (
     <div className="space-y-6">
+      <CanalGuiaPassoAPasso
+        titulo="Como configurar o WhatsApp via Evolution API"
+        descricao="Aqui você conecta um número comum de WhatsApp por QR Code, através de um servidor Evolution API."
+        passos={[
+          { titulo: "Tenha um servidor Evolution API", descricao: "Use um servidor próprio (Docker/VPS) ou um provedor que hospede a Evolution API v2. Anote a URL pública, ex.: https://evolution.suaempresa.com.br", link: { label: "Documentação Evolution API", url: "https://doc.evolution-api.com/" } },
+          { titulo: "Copie a apikey global", descricao: "É a variável AUTHENTICATION_API_KEY definida no arquivo .env / docker-compose do servidor Evolution. Se usa provedor, ela aparece no painel do serviço." },
+          { titulo: "Configure o servidor", descricao: "Clique em 'Configurar Servidor', cole o Endpoint e a apikey, escolha o modo (Produção ou Sandbox) e use 'Testar conexão' antes de salvar." },
+          { titulo: "Confirme a URL do Webhook", descricao: "Deixe a URL de webhook padrão sugerida — é ela que entrega as mensagens recebidas ao CRM. Só altere se usar um proxy próprio." },
+          { titulo: "Crie a sessão e leia o QR Code", descricao: "Clique em 'Nova Sessão', dê um nome (ex.: comercial) e leia o QR Code no celular em WhatsApp → Aparelhos conectados → Conectar aparelho. O status muda para WORKING." },
+          { titulo: "Vincule o bot e teste", descricao: "Escolha o fluxo de bot da sessão e use o Diagnóstico de envio para enviar uma mensagem de teste e validar ponta a ponta." },
+        ]}
+        campos={[
+          { campo: "Endpoint do Servidor Evolution", onde: "URL pública onde a Evolution API está publicada (sem barra no final).", exemplo: "https://evolution.suaempresa.com.br" },
+          { campo: "apikey", onde: "Valor de AUTHENTICATION_API_KEY do servidor Evolution (ou a chave exibida no painel do provedor)." },
+          { campo: "Modo do servidor", onde: "Produção para o número oficial da empresa; Sandbox para testes." },
+          { campo: "URL do Manager", onde: "Endereço do painel web da Evolution, normalmente o endpoint + /manager.", exemplo: "https://evolution.suaempresa.com.br/manager" },
+          { campo: "URL do Webhook", onde: "Endereço do CRM que recebe as mensagens. Use o valor padrão sugerido pelo sistema." },
+          { campo: "Nome da Sessão", onde: "Nome livre para identificar o número/instância (sem espaços ou acentos).", exemplo: "comercial" },
+        ]}
+      />
+
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
           Gerencie instâncias do Evolution API para múltiplos números de WhatsApp
@@ -1599,6 +1597,28 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             </Alert>
           )}
 
+        <CanalGuiaPassoAPasso
+          titulo="Como obter os dados do Facebook Messenger"
+          descricao="Todos os dados são gerados no app criado no Meta for Developers, vinculado à Página da sua empresa."
+          passos={[
+            { titulo: "Tenha uma Página do Facebook", descricao: "Use a Página oficial da empresa (não perfil pessoal). Você precisa ser Administrador dela." },
+            { titulo: "Crie o app no Meta for Developers", descricao: "Acesse Meus Apps → Criar app → tipo 'Empresa' e adicione o produto 'Messenger'.", link: { label: "Meta for Developers", url: "https://developers.facebook.com/apps/" } },
+            { titulo: "Conecte a Página ao app", descricao: "Em Messenger → Configurações da API do Messenger, clique em 'Adicionar ou remover Páginas' e selecione a Página da empresa." },
+            { titulo: "Gere o Page Access Token", descricao: "Ainda em Configurações da API do Messenger, clique em 'Gerar token' na linha da Página. Copie o token completo (começa com EAA...)." },
+            { titulo: "Copie o Page ID", descricao: "Na Página do Facebook: Sobre → Transparência da página → Identificação da Página. Ou no próprio painel do Messenger, ao lado do nome da Página." },
+            { titulo: "Pegue o App Secret", descricao: "Em Configurações do app → Básico → Chave Secreta do App → Mostrar. Use-a para validar a assinatura dos webhooks." },
+            { titulo: "Salve e ative o bot", descricao: "Salve a configuração aqui e, em Criar Bot, ative um fluxo com o canal Facebook selecionado." },
+          ]}
+          campos={[
+            { campo: "Page ID", onde: "Página do Facebook → Sobre → Transparência da página → Identificação da Página.", exemplo: "123456789012345" },
+            { campo: "Page Access Token", onde: "Meta for Developers → Messenger → Configurações da API → botão 'Gerar token' da Página.", exemplo: "EAAxxxxxxxxxx" },
+            { campo: "App Secret", onde: "Meta for Developers → Configurações → Básico → Chave Secreta do App.", exemplo: "a1b2c3d4e5f6..." },
+          ]}
+          docUrl="https://developers.facebook.com/docs/messenger-platform/getting-started"
+          docLabel="Documentação Messenger Platform"
+        />
+
+
         <div className="space-y-2">
           <Label htmlFor="fb-page-id">Page ID *</Label>
           <Input
@@ -1709,6 +1729,26 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
+        <CanalGuiaPassoAPasso
+          titulo="Como obter os dados do Instagram Direct"
+          descricao="Os dados vêm do Meta for Developers, usando a conta profissional do Instagram vinculada a uma Página do Facebook."
+          passos={[
+            { titulo: "Transforme o perfil em Comercial/Criador", descricao: "No app do Instagram: Configurações → Tipo de conta e ferramentas → Mudar para conta profissional." },
+            { titulo: "Vincule o Instagram a uma Página do Facebook", descricao: "Em Configurações do Instagram → Central de Contas, conecte o perfil à Página do Facebook da empresa (obrigatório para a API)." },
+            { titulo: "Crie/abra o app no Meta for Developers", descricao: "Crie um app do tipo Empresa e adicione os produtos 'Instagram' e 'Login do Facebook'.", link: { label: "Meta for Developers", url: "https://developers.facebook.com/apps/" } },
+            { titulo: "Gere o Access Token", descricao: "Em Ferramentas → Explorador da API do Graph, selecione seu app e a Página, e autorize os escopos instagram_basic, instagram_manage_messages, pages_manage_metadata e pages_show_list. Troque por um token de longa duração." },
+            { titulo: "Descubra o Instagram Business Account ID", descricao: "No Explorador da API do Graph, chame GET /me/accounts para achar o page-id e depois GET /{page-id}?fields=instagram_business_account — o campo 'id' retornado é o seu Instagram Business Account ID." },
+            { titulo: "Ative as mensagens", descricao: "No Instagram: Configurações → Mensagens → Controles de mensagens → ative 'Permitir acesso a mensagens' para apps conectados. Depois salve aqui e ative um bot com o canal Instagram." },
+          ]}
+          campos={[
+            { campo: "Instagram Business Account ID", onde: "Retorno de GET /{page-id}?fields=instagram_business_account no Explorador da API do Graph.", exemplo: "17841400000000000" },
+            { campo: "Access Token", onde: "Token de longa duração da Página gerado no Explorador da API do Graph com os escopos de mensagens do Instagram.", exemplo: "IGQVJ... / EAAG..." },
+          ]}
+          docUrl="https://developers.facebook.com/docs/messenger-platform/instagram"
+          docLabel="Documentação Instagram Messaging"
+        />
+
+
         <div className="space-y-2">
           <Label htmlFor="ig-account">Instagram Business Account ID *</Label>
           <Input
@@ -1808,7 +1848,25 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
+        <CanalGuiaPassoAPasso
+          titulo="Como obter o Bot Token do Telegram"
+          descricao="Todo o processo é feito dentro do próprio Telegram, com o @BotFather."
+          passos={[
+            { titulo: "Abra o @BotFather", descricao: "No Telegram, pesquise por @BotFather (perfil oficial com selo azul) e inicie a conversa com /start.", link: { label: "Abrir @BotFather", url: "https://t.me/BotFather" } },
+            { titulo: "Crie o bot", descricao: "Envie /newbot e informe o nome de exibição do bot e, em seguida, um username único terminado em 'bot' (ex.: pilar_atendimento_bot)." },
+            { titulo: "Copie o token", descricao: "O BotFather responde com 'Use this token to access the HTTP API'. Copie a sequência completa e cole no campo Bot Token abaixo." },
+            { titulo: "Ajuste a privacidade (opcional)", descricao: "Para o bot ler mensagens em grupos, envie /setprivacy, escolha o bot e selecione Disable." },
+            { titulo: "Salve e vincule o bot", descricao: "Clique em Salvar Configuração. Depois, em Criar Bot, ative um fluxo com o canal Telegram selecionado." },
+          ]}
+          campos={[
+            { campo: "Bot Token", onde: "Gerado pelo @BotFather ao criar o bot. Se perder, envie /mybots → seu bot → API Token.", exemplo: "123456789:AAF-xxxxxxxxxxxxxxxxxxxxxxxxxxx" },
+          ]}
+          docUrl="https://core.telegram.org/bots/features#botfather"
+          docLabel="Documentação oficial do Telegram Bots"
+        />
+
         <div className="space-y-2">
+
           <Label htmlFor="tg-token">Bot Token *</Label>
           <Input
             id="tg-token"
@@ -2111,6 +2169,24 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           <CardDescription>Configure o widget de chat para seu site</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <CanalGuiaPassoAPasso
+          titulo="Como configurar o WebChat"
+          descricao="O WebChat não exige credenciais externas: você personaliza o widget aqui e cola o script no seu site."
+          passos={[
+            { titulo: "Defina título e mensagem", descricao: "Preencha o Título do Widget (aparece no cabeçalho do chat) e a Mensagem de Boas-vindas exibida ao abrir a conversa." },
+            { titulo: "Escolha cor e posição", descricao: "A Cor do Widget aceita o hexadecimal da identidade da sua marca (ex.: #10B981). A Posição define se o balão fica no canto direito ou esquerdo." },
+            { titulo: "Salve a configuração", descricao: "Clique em Salvar Configuração para gerar o script com os parâmetros escolhidos." },
+            { titulo: "Instale no site", descricao: "Copie o código de incorporação e cole antes do fechamento da tag </body> em todas as páginas do seu site. Em WordPress use um plugin de scripts no rodapé; em Shopify use Tema → Editar código → theme.liquid." },
+            { titulo: "Vincule um bot (opcional)", descricao: "Em Criar Bot, ative um fluxo marcando o canal WebChat — a vinculação é automática e o bot passa a responder o widget." },
+          ]}
+          campos={[
+            { campo: "Título do Widget", onde: "Texto livre — nome que o visitante vê no topo do chat.", exemplo: "Atendimento" },
+            { campo: "Cor do Widget", onde: "Hexadecimal da cor principal da sua marca.", exemplo: "#10B981" },
+            { campo: "Mensagem de Boas-vindas", onde: "Primeira mensagem automática enviada ao abrir o chat.", exemplo: "Olá! Como posso ajudar?" },
+            { campo: "Posição do Widget", onde: "Canto da tela em que o balão será exibido (direita ou esquerda)." },
+          ]}
+        />
+
         {activeBots.length > 0 ? (
           <Alert className="bg-green-50 border-green-200">
             <Power className="h-4 w-4 text-green-600" />
