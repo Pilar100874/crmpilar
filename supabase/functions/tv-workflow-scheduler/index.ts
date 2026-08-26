@@ -65,6 +65,7 @@ serve(async (req) => {
     };
 
     const disparados: string[] = [];
+    const tarefas: Promise<unknown>[] = [];
     const naoDisparados: Array<{ id: string; motivo: string }> = [];
 
     for (const wf of wfs || []) {
