@@ -71,6 +71,7 @@ export const PROGRAMAS_DISPONIVEIS: ProgramaDisponivel[] = [
   { path: "/logistica-monitoramento", label: "Logística - Monitoramento", categoria: "Logística" },
   { path: "/logistica-dashboard", label: "Logística - Dashboard", categoria: "Logística" },
   { path: "/controle-veiculos", label: "Controle de Veículos", categoria: "Logística" },
+  { path: "/manutencao", label: "Manutenção", categoria: "Logística" },
 
   // Ponto
   { path: "/ponto/dashboard", label: "Ponto - Dashboard RH", categoria: "Ponto" },
