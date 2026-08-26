@@ -366,7 +366,7 @@ Deno.serve(async (req) => {
       .limit(25);
     if (error) return json({ error: error.message }, 500);
 
-    const resultados = [];
+    const agendadas: string[] = [];
     for (const rotina of rotinas ?? []) {
       // Marca a próxima execução antes de rodar para evitar disparo duplicado.
       let proxima: string | null = null;
@@ -376,10 +376,25 @@ Deno.serve(async (req) => {
         proxima = null;
       }
       await db.from("aip_rotinas").update({ proxima_execucao: proxima }).eq("id", rotina.id);
-      resultados.push(await dispararRotina(db, rotina, "agendada"));
+      agendadas.push(rotina.id);
     }
 
-    return json({ processadas: resultados.length, resultados });
+    // As rotinas rodam em segundo plano: o handler responde imediatamente para
+    // não estourar o tempo limite do worker (que resultava em HTTP 502 no cron).
+    const trabalho = (async () => {
+      for (const rotina of rotinas ?? []) {
+        try {
+          await dispararRotina(db, rotina, "agendada");
+        } catch (e) {
+          console.error("rotina falhou em background", rotina.id, (e as Error).message);
+        }
+      }
+    })();
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) rt.waitUntil(trabalho);
+    else await trabalho;
+
+    return json({ processadas: agendadas.length, rotinas: agendadas, modo: "background" });
   } catch (e) {
     console.error("aip-rotinas-scheduler", e);
     return json({ error: (e as Error).message }, 500);
