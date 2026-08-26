@@ -51,15 +51,11 @@ const navItems: NavItem[] = [
   { to: "/controle-veiculos/entrada", label: "Registrar Entrada", icon: LogIn, group: "principal" },
   { to: "/controle-veiculos/movimentacoes", label: "Movimentações", icon: ListChecks, group: "principal" },
   { to: "/controle-veiculos/historico-imagens", label: "Histórico de Imagens", icon: History, group: "principal" },
-  { to: "/controle-veiculos/paradas", label: "Manutenções & Defeitos", icon: ClipboardCheck, group: "principal" },
-  { to: "/controle-veiculos/manutencao", label: "Análise de Manutenção", icon: Wrench, group: "principal" },
-  { to: "/controle-veiculos/biblioteca-manutencao", label: "Biblioteca de Manutenção", icon: BookOpen, group: "config" },
   { to: "/controle-veiculos/veiculos", label: "Veículos", icon: Truck, group: "config" },
 
   { to: "/controle-veiculos/motoristas", label: "Motoristas", icon: Users, group: "config" },
   { to: "/controle-veiculos/ajudantes", label: "Ajudantes", icon: Users, group: "config" },
 
-  { to: "/controle-veiculos/tipos-defeito", label: "Tipos de Defeito", icon: Tag, group: "config" },
   { to: "/controle-veiculos/vistoria-config", label: "Config. Vistoria", icon: Camera, group: "config" },
 ];
 

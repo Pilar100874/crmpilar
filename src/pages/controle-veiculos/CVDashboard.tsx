@@ -152,13 +152,13 @@ export default function CVDashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/veiculos")}><Car className="h-4 w-4 mr-1" />Veículos</Button>
               <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/motoristas")}><Users className="h-4 w-4 mr-1" />Motoristas</Button>
-              <Button variant="outline" className="h-10 justify-start relative" onClick={() => navigate("/controle-veiculos/paradas")}>
+              <Button variant="outline" className="h-10 justify-start relative" onClick={() => navigate("/manutencao")}>
                 <AlertTriangle className="h-4 w-4 mr-1" />Defeitos
                 {stats.pendingDefects > 0 && <Badge variant="destructive" className="ml-auto h-5 px-1.5">{stats.pendingDefects}</Badge>}
               </Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/manutencao")}><Wrench className="h-4 w-4 mr-1" />Análises</Button>
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/manutencao/analise")}><Wrench className="h-4 w-4 mr-1" />Análises</Button>
               <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/movimentacoes")}><ListChecks className="h-4 w-4 mr-1" />Movim.</Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/tipos-defeito")}><Tag className="h-4 w-4 mr-1" />Tipos</Button>
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/manutencao/tipos-defeito")}><Tag className="h-4 w-4 mr-1" />Tipos</Button>
             </div>
           </CardContent>
         </Card>

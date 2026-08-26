@@ -169,6 +169,7 @@ import PontoNotificacaoBuilder from "./pages/ponto/PontoNotificacaoBuilder";
 import PontoNotificacoesEntregabilidade from "./pages/ponto/PontoNotificacoesEntregabilidade";
 import PontoManual from "./pages/ponto/PontoManual";
 import CVLayout from "./pages/controle-veiculos/CVLayout";
+import ManutencaoLayout from "./pages/manutencao/ManutencaoLayout";
 import CVDashboard from "./pages/controle-veiculos/CVDashboard";
 import CVVehicles from "./pages/controle-veiculos/CVVehicles";
 import CVDrivers from "./pages/controle-veiculos/CVDrivers";
