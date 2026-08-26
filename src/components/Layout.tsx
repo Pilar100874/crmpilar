@@ -688,7 +688,7 @@ export default function Layout({ children }: LayoutProps) {
         return isAdmin;
       }
 
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Operacional Hub", "Pilar Ferramentas", "Controle de Visitantes", "Livro de Ocorrência", "Portaria", "Câmeras", "Editores"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Manutenção", "Operacional Hub", "Pilar Ferramentas", "Controle de Visitantes", "Livro de Ocorrência", "Portaria", "Câmeras", "Editores"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }
