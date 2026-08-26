@@ -65,6 +65,7 @@ serve(async (req) => {
     };
 
     const disparados: string[] = [];
+    const tarefas: Promise<unknown>[] = [];
     const naoDisparados: Array<{ id: string; motivo: string }> = [];
 
     for (const wf of wfs || []) {
@@ -99,27 +100,35 @@ serve(async (req) => {
         continue;
       }
 
-      // Chama a dispatch (mesma origem, autenticado via service role)
+      // Carimba o disparo ANTES de chamar a dispatch (evita disparo duplicado
+      // caso o próximo minuto rode enquanto o dispatch ainda está em execução).
+      await admin
+        .from("tv_workflows")
+        .update({ ultimo_disparo_em: agora.toISOString() })
+        .eq("id", wf.id);
+      disparados.push(wf.id);
+
+      // Chama a dispatch em segundo plano (mesma origem, autenticado via service role).
+      // Aguardar aqui fazia o worker estourar o tempo limite e devolver HTTP 502 ao cron.
       const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/tv-workflow-dispatch`;
-      const resp = await fetch(url, {
+      const tarefa = fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
         },
         body: JSON.stringify({ workflow_id: wf.id, payload: { scheduled: true } }),
-      });
-      const body = await resp.json().catch(() => ({}));
-      disparados.push(wf.id);
-
-      // Atualiza o carimbo do último disparo
-      await admin
-        .from("tv_workflows")
-        .update({ ultimo_disparo_em: agora.toISOString() })
-        .eq("id", wf.id);
-
-      console.log("wf disparado", wf.id, body);
+        signal: AbortSignal.timeout(120000),
+      })
+        .then(async (resp) => console.log("wf disparado", wf.id, await resp.json().catch(() => ({}))))
+        .catch((e) => console.error("wf falhou", wf.id, String(e)));
+      tarefas.push(tarefa);
     }
+
+    const pendentes = Promise.allSettled(tarefas);
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) rt.waitUntil(pendentes);
+    else await pendentes;
 
     return new Response(
       JSON.stringify({ ok: true, disparados: disparados.length, ids: disparados }),

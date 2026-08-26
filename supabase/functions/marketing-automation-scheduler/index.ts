@@ -111,6 +111,7 @@ serve(async (req) => {
     console.log(`📅 Scheduler: ${eligible.length}/${autos?.length || 0} automações elegíveis`);
 
     const results = [];
+    const tarefas: Promise<unknown>[] = [];
     for (const a of eligible) {
       try {
         // Reivindica o slot ANTES de invocar para evitar duplo disparo
@@ -131,14 +132,26 @@ serve(async (req) => {
           console.warn(`⚠️ Slot já reivindicado para ${a.id}, pulando (evita duplo disparo)`);
           continue;
         }
-        const r = await supabase.functions.invoke("marketing-automation-execute", {
-          body: { automationId: a.id },
-        });
-        results.push({ id: a.id, name: a.name, ok: !r.error });
+        // Executa em segundo plano: aguardar o disparo completo estourava o
+        // tempo limite do worker e o cron recebia HTTP 502.
+        tarefas.push(
+          supabase.functions
+            .invoke("marketing-automation-execute", { body: { automationId: a.id } })
+            .then((r: any) => {
+              if (r?.error) console.error(`❌ Automação ${a.id} falhou:`, r.error);
+            })
+            .catch((e: unknown) => console.error(`❌ Automação ${a.id} falhou:`, String(e))),
+        );
+        results.push({ id: a.id, name: a.name, ok: true });
       } catch (e) {
         results.push({ id: a.id, name: a.name, ok: false, error: String(e) });
       }
     }
+
+    const pendentes = Promise.allSettled(tarefas);
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) rt.waitUntil(pendentes);
+    else await pendentes;
 
     return new Response(
       JSON.stringify({ success: true, executed: results.length, results }),
