@@ -413,7 +413,13 @@ export default function TranspEntrada() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="hidden"><Switch checked readOnly /></div>
+
+      <NfeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onDetected={(chave) => setForm((f) => ({ ...f, nfe_chave: chave }))}
+      />
+
     </>
   );
 }
