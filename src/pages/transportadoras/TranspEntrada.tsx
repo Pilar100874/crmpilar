@@ -348,9 +348,55 @@ export default function TranspEntrada() {
                   <p><strong>Veículo:</strong> {veiculoSel?.placa} — {veiculoSel?.descricao || "—"}</p>
                   <p><strong>Motorista:</strong> {motoristaSel?.nome}</p>
                 </div>
+
+                <div>
+                  <Label>Tipo de operação</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {([
+                      { v: "entrega", label: "Entrega", Icon: PackageCheck },
+                      { v: "coleta", label: "Coleta", Icon: PackageOpen },
+                    ] as const).map(({ v, label, Icon }) => {
+                      const active = form.tipo_operacao === v;
+                      return (
+                        <button key={v} type="button"
+                          onClick={() => setForm({ ...form, tipo_operacao: v, ...(v === "coleta" ? { nfe_chave: "" } : {}) })}
+                          className={`flex items-center justify-center gap-2 rounded-lg border-2 p-3 text-sm font-medium transition-all ${
+                            active ? "border-primary bg-primary/5" : "border-border bg-card hover:shadow-sm"
+                          }`}>
+                          <Icon className="h-4 w-4" />{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {form.tipo_operacao === "entrega" && (
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="flex items-center gap-2"><ScanLine className="h-4 w-4 text-primary" />Nota fiscal (NF-e)</Label>
+                      <Button size="sm" variant="outline" onClick={() => setScannerOpen(true)}>
+                        <ScanLine className="h-4 w-4 mr-1" />Ler código
+                      </Button>
+                    </div>
+                    {nfeInfo ? (
+                      <div className="text-xs space-y-0.5">
+                        <p className="font-medium">NF-e nº {nfeInfo.numero} · série {nfeInfo.serie}</p>
+                        <p className="text-muted-foreground">Emitente {nfeInfo.cnpj_emitente} · UF {nfeInfo.uf} · emissão {nfeInfo.emissao}</p>
+                        <p className="font-mono text-muted-foreground break-all">{formatarChave(nfeInfo.chave)}</p>
+                        {!chaveValida(nfeInfo.chave) && <p className="text-amber-600">Atenção: dígito verificador não confere.</p>}
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => setForm({ ...form, nfe_chave: "" })}>Remover</Button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Leia o código de barras ou QR Code da DANFE para capturar automaticamente os dados fiscais da nota.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div><Label>Ajudante (opcional)</Label><Input value={form.ajudante_nome} onChange={(e) => setForm({ ...form, ajudante_nome: e.target.value.toUpperCase() })} /></div>
-                <div><Label>Documento / Nota fiscal</Label><Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value.toUpperCase() })} /></div>
-                <div><Label>Motivo da visita</Label><Input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value.toUpperCase() })} placeholder="ENTREGA, COLETA..." /></div>
+                <div><Label>Documento / Pedido</Label><Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value.toUpperCase() })} /></div>
+                <div><Label>Motivo / Observação da visita</Label><Input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value.toUpperCase() })} /></div>
                 <div><Label>Observações</Label><Textarea rows={3} value={form.entrada_obs} onChange={(e) => setForm({ ...form, entrada_obs: e.target.value })} /></div>
               </div>
             )}
