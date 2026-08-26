@@ -170,6 +170,12 @@ import PontoNotificacoesEntregabilidade from "./pages/ponto/PontoNotificacoesEnt
 import PontoManual from "./pages/ponto/PontoManual";
 import CVLayout from "./pages/controle-veiculos/CVLayout";
 import ManutencaoLayout from "./pages/manutencao/ManutencaoLayout";
+import TranspLayout from "./pages/transportadoras/TranspLayout";
+import TranspEntrada from "./pages/transportadoras/TranspEntrada";
+import TranspSaida from "./pages/transportadoras/TranspSaida";
+import TranspMovimentos from "./pages/transportadoras/TranspMovimentos";
+import TranspVeiculos from "./pages/transportadoras/TranspVeiculos";
+import TranspMotoristas from "./pages/transportadoras/TranspMotoristas";
 import CVDashboard from "./pages/controle-veiculos/CVDashboard";
 import CVVehicles from "./pages/controle-veiculos/CVVehicles";
 import CVDrivers from "./pages/controle-veiculos/CVDrivers";
