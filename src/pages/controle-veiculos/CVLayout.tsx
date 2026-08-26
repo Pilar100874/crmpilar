@@ -8,15 +8,11 @@ import {
   LogIn,
   AlertTriangle,
   ListChecks,
-  Tag,
-  Wrench,
   PanelLeftClose,
   PanelLeft,
   Car,
   Camera,
   History,
-  BookOpen,
-  ClipboardCheck,
 
   LucideIcon,
 } from "lucide-react";
