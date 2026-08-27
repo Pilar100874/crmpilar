@@ -444,6 +444,51 @@ export default function LivroOcorrencias() {
         </DialogContent>
       </Dialog>
 
+      {/* Diálogo de Finalização */}
+      <Dialog open={!!finalizando} onOpenChange={(v) => !v && setFinalizando(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              Finalizar Ocorrência #{finalizando?.numero}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Quem resolveu? *</Label>
+              <Input
+                value={finalForm.resolvido_por}
+                onChange={(e) => setFinalForm({ ...finalForm, resolvido_por: e.target.value.toUpperCase() })}
+                placeholder="NOME DE QUEM RESOLVEU"
+              />
+            </div>
+            <div>
+              <Label>Data da resolução *</Label>
+              <Input
+                type="datetime-local"
+                value={finalForm.resolvido_em}
+                onChange={(e) => setFinalForm({ ...finalForm, resolvido_em: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Observação da resolução</Label>
+              <Textarea
+                rows={3}
+                value={finalForm.observacao_resolucao}
+                onChange={(e) => setFinalForm({ ...finalForm, observacao_resolucao: e.target.value })}
+                placeholder="Descreva como foi resolvido..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFinalizando(null)}>Cancelar</Button>
+            <Button onClick={finalizar} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+              <CheckCircle2 className="h-4 w-4" /> Finalizar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <DeleteConfirmDialog
         open={!!deletingId}
         onOpenChange={(o) => !o && setDeletingId(null)}
