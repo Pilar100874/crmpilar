@@ -369,12 +369,20 @@ export default function TvPortaria() {
       </header>
 
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        <Painel icon={Truck} titulo="Transportadoras" itens={transp} cor="bg-amber-500/20 text-amber-200" />
-        <Painel icon={Users} titulo="Visitantes" itens={visitantes} cor="bg-sky-500/20 text-sky-200" />
-        <Painel icon={Car} titulo="Veículos Internos" itens={veiculos} cor="bg-emerald-500/20 text-emerald-200" />
-        <Painel icon={Package} titulo="Encomendas" itens={encomendas} cor="bg-violet-500/20 text-violet-200" />
-        <Painel icon={AlertTriangle} titulo="Ocorrências" itens={ocorrencias} cor="bg-rose-500/20 text-rose-200" />
+        <Painel icon={Truck} titulo="Transportadoras" itens={transp} cor="bg-amber-500/20 text-amber-200" onSelecionar={setSelecionado} />
+        <Painel icon={Users} titulo="Visitantes" itens={visitantes} cor="bg-sky-500/20 text-sky-200" onSelecionar={setSelecionado} />
+        <Painel icon={Car} titulo="Veículos Internos" itens={veiculos} cor="bg-emerald-500/20 text-emerald-200" onSelecionar={setSelecionado} />
+        <Painel icon={Package} titulo="Encomendas" itens={encomendas} cor="bg-violet-500/20 text-violet-200" onSelecionar={setSelecionado} />
+        <Painel icon={AlertTriangle} titulo="Ocorrências" itens={ocorrencias} cor="bg-rose-500/20 text-rose-200" onSelecionar={setSelecionado} />
       </div>
+
+      {selecionado && (
+        <PainelDetalhes
+          item={selecionado}
+          onFechar={() => setSelecionado(null)}
+          onAbrirModulo={(rota) => navigate(rota)}
+        />
+      )}
 
       <SaidaOcultaOverlay progresso={progressoSaida} />
       <TvNotificationBarAuto />
