@@ -238,21 +238,18 @@ export function WhatsAppConfigCRUD() {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div>
-          <CardTitle>Números de WhatsApp</CardTitle>
-          <CardDescription>
-            Cadastre quantos números quiser, escolhendo o provedor de cada um (Evolution ou WhatsApp Cloud API).
-            Vincule cada bot a um número específico na tela de criação de bots.
-          </CardDescription>
-        </div>
-        <Button onClick={openNew} className="flex-shrink-0">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          Cadastre quantos números quiser, escolhendo o provedor de cada um (Evolution ou WhatsApp Cloud API).
+          Vincule cada bot a um número específico na tela de criação de bots.
+        </p>
+        <Button onClick={openNew} className="w-full sm:w-auto flex-shrink-0">
           <Plus className="h-4 w-4 mr-2" />
           Novo número
         </Button>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div>
         {loading ? (
           <div className="flex items-center justify-center py-8 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin mr-2" /> Carregando...
