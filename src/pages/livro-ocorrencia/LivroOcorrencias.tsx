@@ -198,6 +198,8 @@ export default function LivroOcorrencias() {
     if (dataDe && new Date(o.data_hora) < new Date(`${dataDe}T00:00:00`)) return false;
     if (dataAte && new Date(o.data_hora) > new Date(`${dataAte}T23:59:59`)) return false;
     if (!search) return true;
+    const s = search.toLowerCase();
+    return [o.descricao, o.tipo, o.local, o.responsavel, o.envolvidos, String(o.numero)]
       .some((f) => (f || "").toLowerCase().includes(s));
   });
 
