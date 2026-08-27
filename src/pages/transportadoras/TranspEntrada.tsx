@@ -69,13 +69,17 @@ export default function TranspEntrada() {
 
   const load = async () => {
     setLoading(true);
-    const [emp, st, v, m, mov] = await Promise.all([
+    const [emp, st, v, m, mov, cfg] = await Promise.all([
       listarTransportadoras(),
       listarSetores(),
       supabase.from("transp_veiculos").select("*").eq("ativo", true).order("placa"),
       supabase.from("transp_motoristas").select("*").eq("ativo", true).order("nome"),
       supabase.from("transp_movimentos").select("veiculo_id").neq("status", "saiu"),
+      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
+    const cfgAngles = ((cfg.data as any)?.entry_photos ?? []) as PhotoAngle[];
+    setAngles(cfgAngles.length ? cfgAngles : TRANSP_ANGLES);
+    setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
     setEmpresas(emp);
     setSetores(st);
     setVeiculos((v.data ?? []) as any);
