@@ -195,9 +195,10 @@ export default function Config() {
       case "grupos-acesso":
         return <GruposAcessoCRUD />;
       case "cadastro-usuarios":
-        return <UsuariosCRUD />;
+        return <UsuariosCRUD estabelecimentoId={searchParams.get("estab") ?? undefined} />;
       case "segmentos":
         return <SegmentosCRUD />;
+
       default:
         return null;
     }
