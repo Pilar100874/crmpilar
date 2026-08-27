@@ -70,6 +70,8 @@ export default function LivroOcorrencias() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("todas");
+  const [dataDe, setDataDe] = useState("");
+  const [dataAte, setDataAte] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Ocorrencia> | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
