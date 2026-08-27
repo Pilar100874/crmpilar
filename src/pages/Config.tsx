@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,6 +82,15 @@ export default function Config() {
   
   const [activeSection, setActiveSection] = useState<string | null>(secaoParam);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("estabelecimentos")
+      .select("id, nome")
+      .order("nome")
+      .then(({ data }) => setEstabelecimentos(((data ?? []) as any[]).map((e) => ({ id: e.id, nome: e.nome }))));
+  }, []);
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
