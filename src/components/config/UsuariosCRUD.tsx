@@ -870,6 +870,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(usuario)} className="h-8 w-8" aria-label={`Excluir ${usuario.nome}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
   </>;
 
+  if (formOpen) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 border-b pb-3">
+          <Button type="button" variant="ghost" size="icon" onClick={resetForm} className="rounded-full shrink-0" aria-label="Voltar">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2 min-w-0">
+            <Users className="h-5 w-5 text-primary shrink-0" />
+            <h4 className="font-semibold truncate">{editingId ? `Editar usuário${nome ? `: ${nome}` : ""}` : "Novo usuário"}</h4>
+          </div>
+        </div>
+        {renderForm()}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
