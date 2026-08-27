@@ -210,7 +210,7 @@ function renderTreeToMenuItems(base: MenuItem[], roots: CustomNode[]): any[] {
         }
       } else {
         const icon = (n.iconName && IconsMap[n.iconName]) || LucideIcons.Folder;
-        out.push({ id: n.id, title: n.title, icon, subItems: nodeToItems(n.children) });
+        out.push({ id: n.id, title: migrateTitle(n.title), icon, subItems: nodeToItems(n.children) });
       }
     }
     return out;
@@ -285,6 +285,17 @@ export function initialFromBase(base: MenuItem[]): MenuCustomization {
   return { version: 1, roots };
 }
 
+// Migração de títulos de containers renomeados no sistema —
+// a customização salva guarda o título antigo, então traduzimos aqui.
+const RENAMED_CONTAINER_TITLES: Record<string, string> = {
+  "Atendimento Portaria": "Portaria",
+};
+
+function migrateTitle(title: string | undefined): string | undefined {
+  if (!title) return title;
+  return RENAMED_CONTAINER_TITLES[title] ?? title;
+}
+
 export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
   const custom = loadCustomization();
   if (!custom) return base;
@@ -346,7 +357,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
       const only = subItems[0];
       result.push({
         id: only.id,
-        title: root.title || only.title,
+        title: migrateTitle(root.title) || only.title,
         url: only.url,
         icon: root.iconName && IconsMap[root.iconName] ? IconsMap[root.iconName] : only.icon,
         ...(only.system ? { system: only.system } : {}),
@@ -354,7 +365,7 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
     } else {
       result.push({
         id: baseId || root.id,
-        title: root.title,
+        title: migrateTitle(root.title),
         icon,
         subItems,
       });
