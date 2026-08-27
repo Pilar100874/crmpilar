@@ -230,6 +230,7 @@ export default function Config() {
     }
     if (section.id === "cadastro-estabelecimentos") {
       const estabSel = searchParams.get("estab");
+      const isEstabSection = activeSection === "cadastro-estabelecimentos";
       return (
         <div key={section.id} className="space-y-0.5">
           {button}
@@ -238,43 +239,51 @@ export default function Config() {
               onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id }); }}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                active && !estabSel && "text-foreground bg-muted/60 font-medium"
+                isEstabSection && !estabSel && "text-foreground bg-muted/60 font-medium"
               )}
             >
               <Plus className="h-3 w-3 shrink-0 opacity-70" />
               <span className="truncate">Cadastro de Estabelecimento</span>
             </button>
-            {estabelecimentos.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id, estab: e.id }); }}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                  active && estabSel === e.id && "text-foreground bg-muted/60 font-medium"
-                )}
-              >
-                <Store className="h-3 w-3 shrink-0 opacity-70" />
-                <span className="truncate">{e.nome}</span>
-              </button>
-            ))}
-            <div className="my-1 border-t border-border/40" />
-            {EMPRESA_SUBMENUS.map((sub) => (
-              <button
-                key={sub.id}
-                onClick={() => handleSectionClick(sub.id)}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                  activeSection === sub.id && "text-foreground bg-muted/60 font-medium"
-                )}
-              >
-                <sub.icon className="h-3 w-3 shrink-0 opacity-70" />
-                <span className="truncate">{sub.title}</span>
-              </button>
-            ))}
+            {estabelecimentos.map((e) => {
+              const expanded = estabSel === e.id;
+              return (
+                <div key={e.id} className="space-y-0.5">
+                  <button
+                    onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id, estab: e.id }); }}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                      isEstabSection && expanded && "text-foreground bg-muted/60 font-medium"
+                    )}
+                  >
+                    <Store className="h-3 w-3 shrink-0 opacity-70" />
+                    <span className="truncate">{e.nome}</span>
+                  </button>
+                  {expanded && (
+                    <div className="ml-4 space-y-0.5 border-l border-border/40 pl-2">
+                      {EMPRESA_SUBMENUS.map((sub) => (
+                        <button
+                          key={sub.id}
+                          onClick={() => { setActiveSection(sub.id); setSearchParams({ secao: sub.id, estab: e.id }); }}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                            activeSection === sub.id && "text-foreground bg-muted/60 font-medium"
+                          )}
+                        >
+                          <sub.icon className="h-3 w-3 shrink-0 opacity-70" />
+                          <span className="truncate">{sub.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       );
     }
+
     return button;
   };
 
