@@ -33,7 +33,8 @@ interface Ocorrencia {
 }
 
 
-const TIPOS = ["Segurança", "Acesso Indevido", "Furto/Roubo", "Briga/Agressão", "Acidente", "Falha Técnica", "Emergência Médica", "Incêndio", "Manutenção", "Outros"];
+const TIPOS = ["Segurança", "Funcionário", "Acesso Indevido", "Furto/Roubo", "Briga/Agressão", "Acidente", "Falha Técnica", "Emergência Médica", "Incêndio", "Manutenção", "Outros"];
+const SIM_NAO = [{ v: "sim", label: "Sim" }, { v: "nao", label: "Não" }];
 const GRAVIDADES = [
   { v: "baixa", label: "Baixa", cls: "bg-green-500/10 text-green-600 border-green-500/30" },
   { v: "media", label: "Média", cls: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30" },
