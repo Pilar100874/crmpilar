@@ -60,7 +60,6 @@ export default function TranspSaida() {
   };
   useEffect(() => { load(); }, []);
 
-  const empNome = (id: string | null) => nomeTransportadora(empresas.find((e) => e.id === id));
   const coleta = (sel?.tipo_operacao ?? "entrega") === "coleta";
   const liberado = sel?.status === "liberado";
   const nfeInfo = useMemo(() => (nfeSaida ? parseChaveNfe(nfeSaida) : null), [nfeSaida]);
