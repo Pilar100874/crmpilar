@@ -1,3 +1,4 @@
+import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
