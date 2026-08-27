@@ -285,6 +285,17 @@ export function initialFromBase(base: MenuItem[]): MenuCustomization {
   return { version: 1, roots };
 }
 
+// Migração de títulos de containers renomeados no sistema —
+// a customização salva guarda o título antigo, então traduzimos aqui.
+const RENAMED_CONTAINER_TITLES: Record<string, string> = {
+  "Atendimento Portaria": "Portaria",
+};
+
+function migrateTitle(title: string | undefined): string | undefined {
+  if (!title) return title;
+  return RENAMED_CONTAINER_TITLES[title] ?? title;
+}
+
 export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
   const custom = loadCustomization();
   if (!custom) return base;
