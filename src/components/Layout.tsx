@@ -195,7 +195,14 @@ export const menuItems: MenuItem[] = [
   { id: "Email", title: "E-mail", url: "/email", icon: Mail },
   { id: "Desenho", title: "Marketing", url: "/marketing", icon: Target },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
-  { id: "Controle de Ponto", title: "Controle de Ponto", url: "/ponto", icon: Clock },
+  {
+    id: "DP",
+    title: "DP",
+    icon: LucideIcons.Users,
+    subItems: [
+      { id: "Controle de Ponto", title: "Controle de Ponto", url: "/ponto", icon: Clock },
+    ],
+  },
 
   {
     id: "Atendimento Portaria",

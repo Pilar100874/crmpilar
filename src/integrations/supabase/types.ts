@@ -12176,6 +12176,33 @@ export type Database = {
         }
         Relationships: []
       }
+      livro_palavras_chave: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          observacao: string | null
+          palavra: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          palavra: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          palavra?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       logistica_automacao_estado: {
         Row: {
           chave: string
