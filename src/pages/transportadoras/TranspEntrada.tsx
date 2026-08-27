@@ -328,10 +328,10 @@ export default function TranspEntrada() {
             {step === 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2"><PackageCheck className="h-5 w-5 text-primary" /><h3 className="font-semibold">O veículo veio para quê?</h3></div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   {OPERACOES.map((op) => {
                     const active = form.tipo_operacao === op.value;
-                    const Icon = op.value === "entrega" ? PackageCheck : PackageOpen;
+                    const Icon = op.value === "coleta" ? PackageOpen : PackageCheck;
                     return (
                       <button key={op.value} type="button"
                         onClick={() => setForm({ ...form, tipo_operacao: op.value as any })}
