@@ -380,18 +380,22 @@ export default function LivroOcorrencias() {
                   </div>
                 </>
               )}
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Local</Label>
+                  <Input value={editing.local || ""} onChange={(e) => setEditing({ ...editing, local: e.target.value })} placeholder="Ex: Portaria principal, garagem, bloco A..." />
+                </div>
+              )}
               <div className="sm:col-span-2">
-                <Label>Local</Label>
-                <Input value={editing.local || ""} onChange={(e) => setEditing({ ...editing, local: e.target.value })} placeholder="Ex: Portaria principal, garagem, bloco A..." />
+                <Label>{isFunc ? "Motivo *" : "Descrição *"}</Label>
+                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder={isFunc ? "Descreva o motivo da ocorrência com o funcionário..." : "Relate a ocorrência em detalhes..."} />
               </div>
-              <div className="sm:col-span-2">
-                <Label>{editing.tipo === "Funcionário" ? "Motivo *" : "Descrição *"}</Label>
-                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder={editing.tipo === "Funcionário" ? "Descreva o motivo da ocorrência com o funcionário..." : "Relate a ocorrência em detalhes..."} />
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Envolvidos</Label>
-                <Textarea rows={2} value={editing.envolvidos || ""} onChange={(e) => setEditing({ ...editing, envolvidos: e.target.value })} placeholder="Nomes, cargos, veículos, etc." />
-              </div>
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Envolvidos</Label>
+                  <Textarea rows={2} value={editing.envolvidos || ""} onChange={(e) => setEditing({ ...editing, envolvidos: e.target.value })} placeholder="Nomes, cargos, veículos, etc." />
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <Label>Ação Tomada</Label>
                 <Textarea rows={2} value={editing.acao_tomada || ""} onChange={(e) => setEditing({ ...editing, acao_tomada: e.target.value })} placeholder="Descreva a ação/procedimento realizado" />
