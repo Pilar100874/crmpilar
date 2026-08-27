@@ -79,6 +79,42 @@ const CONFIG_SECTIONS: ConfigSection[] = [
   },
 ];
 
+// Sub-itens do menu Estabelecimento (empresa)
+const EMPRESA_SUBMENUS: ConfigSection[] = [
+  {
+    id: "cadastro-unidades",
+    title: "Unidades",
+    description: "Filiais e departamentos",
+    icon: Building2,
+    bgColor: "bg-amber-500/10",
+    iconColor: "text-amber-500",
+  },
+  {
+    id: "grupos-acesso",
+    title: "Grupos de Acesso",
+    description: "Perfis de permissão",
+    icon: FolderTree,
+    bgColor: "bg-orange-500/10",
+    iconColor: "text-orange-500",
+  },
+  {
+    id: "cadastro-usuarios",
+    title: "Usuários",
+    description: "Gerenciar usuários",
+    icon: UserCog,
+    bgColor: "bg-emerald-500/10",
+    iconColor: "text-emerald-500",
+  },
+  {
+    id: "segmentos",
+    title: "Segmentos",
+    description: "Agrupamento de clientes",
+    icon: Tag,
+    bgColor: "bg-teal-500/10",
+    iconColor: "text-teal-500",
+  },
+];
+
 export default function Config() {
   const navigate = useNavigate();
   const { openSubmenu } = useLayout();
