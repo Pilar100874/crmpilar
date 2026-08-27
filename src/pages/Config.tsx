@@ -339,8 +339,8 @@ export default function Config() {
             <Select
               value={
                 activeSection
-                  ? searchParams.get("estab") && EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
-                    ? `${activeSection}|${searchParams.get("estab")}`
+                  ? EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
+                    ? `${activeSection}|${searchParams.get("estab") ?? estabelecimentos[0]?.id ?? ""}`
                     : activeSection
                   : CONFIG_SECTIONS[0].id
               }
