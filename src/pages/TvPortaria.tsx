@@ -196,60 +196,137 @@ export default function TvPortaria() {
   const [ocorrencias, setOcorrencias] = useState<Item[]>([]);
   const [atualizado, setAtualizado] = useState(new Date());
   const [relogio, setRelogio] = useState(new Date());
+  const [selecionado, setSelecionado] = useState<Item | null>(null);
 
   const carregar = useCallback(async () => {
     const [t, v, cv, enc, oc] = await Promise.all([
       supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20),
       supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").eq("status", "entered").order("entry_date", { ascending: false }).limit(20),
-      supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name)").eq("status", "out").order("exit_time", { ascending: false }).limit(20),
+      supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20),
       supabase.from("livro_encomendas").select("*").eq("status", "aguardando_retirada").order("data_recebimento", { ascending: false }).limit(20),
       supabase.from("livro_ocorrencias").select("*").in("status", ["aberta", "em_andamento"]).order("data_hora", { ascending: false }).limit(20),
     ]);
 
     setTransp(((t.data ?? []) as any[]).map((m) => ({
       id: m.id,
+      painel: "Transportadoras",
       titulo: `${m.placa || "—"} • ${labelOperacaoCurto(m.tipo_operacao)}`,
       subtitulo: m.motorista_nome || null,
       desde: m.entrada_time,
       status: m.status === "liberado" ? "Liberado" : "No pátio",
       tom: m.status === "liberado" ? "emerald" : "amber",
+      atualizadoEm: m.updated_at || m.liberacao_time || m.entrada_time,
+      detalhes: [
+        { rotulo: "Placa", valor: m.placa },
+        { rotulo: "Tipo de veículo", valor: m.tipo_veiculo },
+        { rotulo: "Operação", valor: labelOperacaoCurto(m.tipo_operacao) },
+        { rotulo: "Motorista", valor: m.motorista_nome },
+        { rotulo: "CPF do motorista", valor: m.motorista_cpf },
+        { rotulo: "NF-e", valor: m.nfe_chave ? `…${String(m.nfe_chave).slice(-12)}` : null },
+        { rotulo: "Setor destino", valor: m.setor_nome },
+        { rotulo: "Observações", valor: m.observacoes },
+      ],
+      historico: [
+        { rotulo: "Entrada", valor: dataHora(m.entrada_time) },
+        { rotulo: "Liberação", valor: dataHora(m.liberacao_time) },
+      ],
+      rota: "/transportadoras/movimentos",
     })));
 
     setVisitantes(((v.data ?? []) as any[]).map((r) => ({
       id: r.id,
+      painel: "Visitantes",
       titulo: r.visitor?.name || "Visitante",
       subtitulo: [r.visitor?.company, r.contact_person_name && `→ ${r.contact_person_name}`, r.vehicle_plate]
         .filter(Boolean).join(" • ") || null,
       desde: r.entry_date,
       status: "Dentro",
       tom: "sky",
+      atualizadoEm: r.updated_at || r.entry_date,
+      detalhes: [
+        { rotulo: "Empresa", valor: r.visitor?.company },
+        { rotulo: "Pessoa de contato", valor: r.contact_person_name },
+        { rotulo: "Motivo da visita", valor: r.visit_reason },
+        { rotulo: "Placa do veículo", valor: r.vehicle_plate },
+        { rotulo: "Crachá", valor: r.badge_number },
+      ],
+      historico: [
+        { rotulo: "Entrada", valor: dataHora(r.entry_date) },
+        { rotulo: "Saída", valor: dataHora(r.exit_date) },
+      ],
+      rota: "/controle-visitantes/movimentacoes",
     })));
 
     setVeiculos(((cv.data ?? []) as any[]).map((m) => ({
       id: m.id,
+      painel: "Veículos Internos",
       titulo: [m.vehicle?.name, m.vehicle?.plate].filter(Boolean).join(" • ") || "Veículo",
       subtitulo: [m.driver?.name, m.helper_name && `+ ${m.helper_name}`].filter(Boolean).join(" ") || null,
       desde: m.exit_time,
       status: "Em rota",
       tom: "amber",
+      atualizadoEm: m.updated_at || m.exit_time,
+      detalhes: [
+        { rotulo: "Veículo", valor: m.vehicle?.name },
+        { rotulo: "Placa", valor: m.vehicle?.plate },
+        { rotulo: "Motorista", valor: m.driver?.name },
+        { rotulo: "WhatsApp do motorista", valor: m.driver?.phone },
+        { rotulo: "Ajudante", valor: m.helper_name },
+        { rotulo: "KM na saída", valor: m.exit_km != null ? String(m.exit_km) : null },
+        { rotulo: "Destino / motivo", valor: m.destination || m.reason },
+      ],
+      historico: [
+        { rotulo: "Saída", valor: dataHora(m.exit_time) },
+        { rotulo: "Retorno", valor: dataHora(m.return_time) },
+      ],
+      rota: "/controle-veiculos/movimentacoes",
     })));
 
     setEncomendas(((enc.data ?? []) as any[]).map((e) => ({
       id: e.id,
+      painel: "Encomendas",
       titulo: e.destinatario || "Encomenda",
       subtitulo: [e.transportadora, e.codigo_rastreio].filter(Boolean).join(" • ") || null,
       desde: e.data_recebimento,
       status: "Aguardando retirada",
       tom: "amber",
+      atualizadoEm: e.updated_at || e.data_recebimento,
+      detalhes: [
+        { rotulo: "Destinatário", valor: e.destinatario },
+        { rotulo: "Transportadora", valor: e.transportadora },
+        { rotulo: "Código de rastreio", valor: e.codigo_rastreio },
+        { rotulo: "Tipo", valor: e.tipo },
+        { rotulo: "Recebido por", valor: e.recebido_por },
+        { rotulo: "Observações", valor: e.observacoes },
+      ],
+      historico: [
+        { rotulo: "Recebimento", valor: dataHora(e.data_recebimento) },
+        { rotulo: "Retirada", valor: dataHora(e.data_retirada) },
+      ],
+      rota: "/livro-ocorrencia/encomendas",
     })));
 
     setOcorrencias(((oc.data ?? []) as any[]).map((o) => ({
       id: o.id,
+      painel: "Ocorrências",
       titulo: `#${o.numero} ${o.tipo}`,
       subtitulo: [o.local, o.responsavel].filter(Boolean).join(" • ") || null,
       desde: o.data_hora,
       status: o.status === "aberta" ? "Aberta" : "Em andamento",
       tom: o.gravidade === "critica" || o.gravidade === "alta" ? "rose" : "slate",
+      atualizadoEm: o.updated_at || o.data_hora,
+      detalhes: [
+        { rotulo: "Tipo", valor: o.tipo },
+        { rotulo: "Gravidade", valor: o.gravidade },
+        { rotulo: "Local", valor: o.local },
+        { rotulo: "Responsável", valor: o.responsavel },
+        { rotulo: "Descrição", valor: o.descricao },
+      ],
+      historico: [
+        { rotulo: "Abertura", valor: dataHora(o.data_hora) },
+        { rotulo: "Encerramento", valor: dataHora(o.data_encerramento) },
+      ],
+      rota: "/livro-ocorrencia/ocorrencias",
     })));
 
     setAtualizado(new Date());
