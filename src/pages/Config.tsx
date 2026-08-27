@@ -340,6 +340,14 @@ export default function Config() {
                     </div>
                   </SelectItem>
                 ))}
+                {EMPRESA_SUBMENUS.map((section) => (
+                  <SelectItem key={section.id} value={section.id}>
+                    <div className="flex items-center gap-2">
+                      <section.icon className="h-4 w-4" />
+                      <span>Estabelecimento → {section.title}</span>
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
