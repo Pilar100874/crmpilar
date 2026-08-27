@@ -147,6 +147,7 @@ export default function TranspMovimentos() {
                   <th className="px-3 py-2 font-medium">Motorista</th>
                   <th className="px-3 py-2 font-medium">Transportadora</th>
                   <th className="px-3 py-2 font-medium">Operação</th>
+                  <th className="px-3 py-2 font-medium">Porteiro</th>
                   <th className="px-3 py-2 font-medium">Status</th>
                   <th className="px-3 py-2 font-medium text-right">Ações</th>
                 </tr>
@@ -160,6 +161,10 @@ export default function TranspMovimentos() {
                     <td className="px-3 py-2">{r.motorista_nome || "-"}{r.ajudante_nome ? ` + ${r.ajudante_nome}` : ""}</td>
                     <td className="px-3 py-2">{empNome(r.transportadora_id)}</td>
                     <td className="px-3 py-2">{tipoBadge(r)}</td>
+                    <td className="px-3 py-2 text-xs">
+                      <div>Entrada: {r.porteiro_entrada_nome || "-"}</div>
+                      {r.saida_time && <div className="text-muted-foreground">Saída: {r.porteiro_saida_nome || "-"}</div>}
+                    </td>
                     <td className="px-3 py-2">
                       {r.status === "dentro"
                         ? <Badge className="bg-amber-500/15 text-amber-600 border-0">No pátio</Badge>
@@ -193,8 +198,8 @@ export default function TranspMovimentos() {
                         : <Badge variant="secondary">Finalizado</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" />{r.motorista_nome || "—"}{r.ajudante_nome ? ` + ${r.ajudante_nome}` : ""}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />Entrada: {new Date(r.entrada_time).toLocaleString("pt-BR")}</p>
-                    {r.saida_time && <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />Saída: {new Date(r.saida_time).toLocaleString("pt-BR")}</p>}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />Entrada: {new Date(r.entrada_time).toLocaleString("pt-BR")}{r.porteiro_entrada_nome ? ` · por ${r.porteiro_entrada_nome}` : ""}</p>
+                    {r.saida_time && <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />Saída: {new Date(r.saida_time).toLocaleString("pt-BR")}{r.porteiro_saida_nome ? ` · por ${r.porteiro_saida_nome}` : ""}</p>}
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       {tipoBadge(r)}
                       {r.motivo && <Badge variant="outline" className="text-[10px]">{r.motivo}</Badge>}
