@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import {
-  listarSetores, listarTransportadoras, maskWhatsapp, nomeTransportadora, linkAvisoSetor,
+  listarSetores, listarTransportadoras, maskWhatsapp, nomeTransportadora, linkAvisoSetor, labelOperacao,
   type TranspEmpresa, type TranspSetor,
 } from "@/lib/transportadoras/dados";
 
