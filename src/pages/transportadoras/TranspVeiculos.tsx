@@ -156,12 +156,6 @@ export default function TranspVeiculos() {
         </DialogContent>
       </Dialog>
 
-      <NovaTransportadoraDialog
-        open={novaEmpresa}
-        onOpenChange={setNovaEmpresa}
-        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f: any) => ({ ...f, transportadora_id: e.id })); }}
-      />
-
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
