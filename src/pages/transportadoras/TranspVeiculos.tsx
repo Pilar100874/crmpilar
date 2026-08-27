@@ -161,7 +161,7 @@ export default function TranspVeiculos() {
               </Select>
             </div>
             <div><Label>Placa</Label><Input value={form.placa} onChange={(e) => setForm({ ...form, placa: maskPlaca(e.target.value) })} /></div>
-            <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value.toUpperCase() })} /></div>
+            
             <div>
               <Label>Tipo</Label>
               <Select value={form.tipo_veiculo} onValueChange={(v) => setForm({ ...form, tipo_veiculo: v })}>
