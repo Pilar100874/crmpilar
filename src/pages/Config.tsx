@@ -196,6 +196,9 @@ export default function Config() {
           onToggle={handleToggleConfirmationMessages}
         />;
       case "cadastro-estabelecimentos":
+        if (estabParam) {
+          return <EstabelecimentoPainel estabelecimentoId={estabParam} estabelecimentos={estabelecimentos} onSubmenuClick={handleSectionClick} />;
+        }
         return <EstabelecimentosCRUD />;
       case "recuperar-senha":
         return <WhatsAppConfigCRUD />;
