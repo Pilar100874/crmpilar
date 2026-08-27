@@ -176,6 +176,39 @@ export default function Config() {
         </Tooltip>
       );
     }
+    if (section.id === "cadastro-estabelecimentos") {
+      const estabSel = searchParams.get("estab");
+      return (
+        <div key={section.id} className="space-y-0.5">
+          {button}
+          <div className="ml-7 space-y-0.5 border-l border-border/60 pl-2">
+            <button
+              onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id }); }}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                active && !estabSel && "text-foreground bg-muted/60 font-medium"
+              )}
+            >
+              <Plus className="h-3 w-3 shrink-0 opacity-70" />
+              <span className="truncate">Cadastro de Estabelecimento</span>
+            </button>
+            {estabelecimentos.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id, estab: e.id }); }}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                  active && estabSel === e.id && "text-foreground bg-muted/60 font-medium"
+                )}
+              >
+                <Store className="h-3 w-3 shrink-0 opacity-70" />
+                <span className="truncate">{e.nome}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
     return button;
   };
 
