@@ -93,7 +93,7 @@ export default function PortariaLayout() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-2xl font-bold truncate">Portaria</h1>
+            <h1 className="text-lg sm:text-2xl font-bold truncate">Interfone</h1>
             <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 hidden sm:block">
               Configuração do interfone
             </p>
