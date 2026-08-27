@@ -81,7 +81,44 @@ const EMPRESA_SUBMENUS: ConfigSection[] = [
     bgColor: "bg-teal-500/10",
     iconColor: "text-teal-500",
   },
+  // Comunicação
+  {
+    id: "recuperar-senha",
+    title: "Recuperação de Senha",
+    description: "Configure envio de códigos via WhatsApp",
+    icon: ShieldCheck,
+    bgColor: "bg-purple-500/10",
+    iconColor: "text-purple-500",
+  },
+  {
+    id: "email-config",
+    title: "Email Config",
+    description: "Configure servidor externo e OAuth",
+    icon: Mail,
+    bgColor: "bg-cyan-500/10",
+    iconColor: "text-cyan-500",
+  },
+  // Sistema
+  {
+    id: "notificacoes-sistema",
+    title: "Notificações do Sistema",
+    description: "Configure mensagens de confirmação e alertas",
+    icon: Bell,
+    bgColor: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+  },
+  {
+    id: "visual-sistema",
+    title: "Visual do Sistema",
+    description: "Splash screen, vídeo de fundo e aparência",
+    icon: Paintbrush,
+    bgColor: "bg-pink-500/10",
+    iconColor: "text-pink-500",
+  },
 ];
+
+// Seções globais (não específicas de um estabelecimento) dentro do sub-menu
+const GLOBAL_SUBMENU_IDS = ["recuperar-senha", "email-config", "notificacoes-sistema", "visual-sistema"];
 
 export default function Config() {
   const navigate = useNavigate();
