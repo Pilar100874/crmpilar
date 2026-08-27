@@ -411,42 +411,47 @@ export default function LivroOcorrencias() {
                   {editing.observacao_resolucao && <div className="text-muted-foreground">{editing.observacao_resolucao}</div>}
                 </div>
               )}
-              <div className="sm:col-span-2">
-                <Label>Foto (opcional)</Label>
-                <input
-                  ref={fotoInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFoto(f); }}
-                />
-                {editing.anexos?.foto_url ? (
-                  <div className="relative inline-block mt-1">
-                    <img src={editing.anexos.foto_url} alt="Foto da ocorrência" className="max-h-48 rounded border" />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-6 w-6"
-                      onClick={() => setEditing({ ...editing, anexos: { ...(editing.anexos || {}), foto_url: null } })}
-                    >
-                      <X className="h-3 w-3" />
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Foto (opcional)</Label>
+                  <input
+                    ref={fotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFoto(f); }}
+                  />
+                  {editing.anexos?.foto_url ? (
+                    <div className="relative inline-block mt-1">
+                      <img src={editing.anexos.foto_url} alt="Foto da ocorrência" className="max-h-48 rounded border" />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setEditing({ ...editing, anexos: { ...(editing.anexos || {}), foto_url: null } })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto} className="gap-2">
+                      <Camera className="h-4 w-4" /> {uploadingFoto ? "Enviando..." : "Tirar / Anexar foto"}
                     </Button>
-                  </div>
-                ) : (
-                  <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto} className="gap-2">
-                    <Camera className="h-4 w-4" /> {uploadingFoto ? "Enviando..." : "Tirar / Anexar foto"}
-                  </Button>
-                )}
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Observações</Label>
-                <Textarea rows={2} value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} />
-              </div>
+                  )}
+                </div>
+              )}
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Observações</Label>
+                  <Textarea rows={2} value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} />
+                </div>
+              )}
 
             </div>
-          )}
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
