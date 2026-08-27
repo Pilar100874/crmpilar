@@ -172,6 +172,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Menu Principal - TV ============
   { path: "/tv/vendas", titulo: "TV Vendas", aliases: ["tv de vendas", "dashboard tv vendas"] },
   { path: "/tv/veiculos", titulo: "TV Veículos", aliases: ["tv de veiculos", "dashboard tv veiculos"] },
+  { path: "/tv/portaria", titulo: "TV Portaria", aliases: ["tv da portaria", "painel da portaria"] },
   { path: "/tv/cameras", titulo: "TV Câmeras", aliases: ["tv de cameras", "mosaico de cameras"] },
   { path: "/tv-signage", titulo: "Gerenciador de Telas Remotas", aliases: ["telas remotas", "tv signage", "gerenciador de telas"] },
 
