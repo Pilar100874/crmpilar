@@ -15,6 +15,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
+import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
+import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
+import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
+import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import { Building2, FolderTree, UserCog, Tag } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
