@@ -42,9 +42,8 @@ export default function TranspVeiculos() {
     if (!normalizePlaca(form.placa)) return toast.error("Placa obrigatória");
     if (!form.tipo_veiculo) return toast.error("Tipo de veículo obrigatório");
     const payload = {
-      transportadora_id: idTransportadora(form.transportadora_id),
+      transportadora_id: null,
       placa: maskPlaca(form.placa),
-      descricao: form.descricao?.toUpperCase() || null,
       tipo_veiculo: form.tipo_veiculo,
       observacoes: form.observacoes || null,
       ativo: form.ativo,
