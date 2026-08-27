@@ -5,6 +5,7 @@ import {
   CustomNode,
   extractPrograms,
   fetchRemoteCustomization,
+  getEffectiveMainCustomization,
   initialAdminFooterTree,
   initialFromBase,
   initialUserFooterTree,
@@ -81,7 +82,7 @@ function collectIds(roots: CustomNode[], out: Set<string>) {
 
 export default function MenuCustomizacao() {
   const [mainRoots, setMainRoots] = useState<CustomNode[]>(
-    () => (loadCustomization()?.roots) || initialFromBase(menuItems).roots
+    () => getEffectiveMainCustomization(menuItems).roots
   );
   const [adminRoots, setAdminRoots] = useState<CustomNode[]>(
     () => (loadCustomization()?.adminRoots) || initialAdminFooterTree()
@@ -111,7 +112,7 @@ export default function MenuCustomizacao() {
       setCheckingAdmin(false);
       const remote = await fetchRemoteCustomization();
       if (remote) {
-        setMainRoots(remote.roots);
+        setMainRoots(getEffectiveMainCustomization(menuItems, remote).roots);
         setAdminRoots(remote.adminRoots ?? initialAdminFooterTree());
         setUserRoots(remote.userFooterRoots ?? initialUserFooterTree());
         setSystemRoots(remote.systemFooterRoots ?? initialSystemFooterTree());
@@ -166,32 +167,6 @@ export default function MenuCustomizacao() {
     () => Array.from(programs.values()).filter((p) => !placedIds.has(p.id)),
     [placedIds, programs]
   );
-
-  // Sincroniza automaticamente novos programas do sistema que ainda não estão
-  // na árvore do menu principal (evita "faltar itens" após atualizações).
-  useEffect(() => {
-    const faltantes = unplaced.filter((p) => !p.system && !p.footerAdmin && !p.footerUser);
-    if (faltantes.length === 0) return;
-    setMainRoots((prev) => {
-      const roots = cloneTree(prev);
-      for (const p of faltantes) {
-        const alvo = p.originContainerId
-          ? (roots.find(
-              (n) =>
-                n.kind === "container" &&
-                (n.id === `c-${p.originContainerId}` ||
-                  n.id === p.originContainerId ||
-                  n.title === p.originContainerTitle)
-            ) as any)
-          : null;
-        if (alvo && alvo.kind === "container") alvo.children.push({ kind: "program", programId: p.id });
-        else roots.push({ kind: "program", programId: p.id });
-      }
-      return roots;
-    });
-  }, [unplaced]);
-
-
 
   const filteredUnplaced = useMemo(() => {
     const q = poolSearch.trim().toLowerCase();
