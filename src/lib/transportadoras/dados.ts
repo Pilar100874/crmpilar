@@ -236,7 +236,7 @@ export const labelOperacao = (v?: string | null) =>
 
 /** Link do WhatsApp para avisar o setor sobre a chegada do veículo. */
 export function linkAvisoSetor(setor: TranspSetor, texto: string) {
-  const fone = (setor.whatsapp || "").replace(/\D/g, "");
+  const fone = (setor.numeros?.[0]?.numero || setor.whatsapp || "").replace(/\D/g, "");
   const num = fone.length <= 11 ? `55${fone}` : fone;
   return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
 }
