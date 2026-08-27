@@ -17,7 +17,7 @@ import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
 import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
-import { TRANSP_ANGLES, listarTransportadoras, nomeTransportadora, type TranspEmpresa } from "@/lib/transportadoras/dados";
+import { TRANSP_ANGLES } from "@/lib/transportadoras/dados";
 
 type StepKey = "veiculo" | "nfe" | "fotos" | "confirmacao";
 
@@ -30,7 +30,7 @@ const STEP_LABELS: Record<StepKey, string> = {
 
 export default function TranspSaida() {
   const [movs, setMovs] = useState<any[]>([]);
-  const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
+  
   const [sel, setSel] = useState<any | null>(null);
   const [obs, setObs] = useState("");
   const [nfeSaida, setNfeSaida] = useState("");
@@ -46,21 +46,18 @@ export default function TranspSaida() {
 
   const load = async () => {
     setLoading(true);
-    const [emp, m, cfg] = await Promise.all([
-      listarTransportadoras(),
+    const [m, cfg] = await Promise.all([
       supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }),
       supabase.from("transp_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     const cfgAngles = ((cfg.data as any)?.exit_photos ?? []) as PhotoAngle[];
     setAngles(cfgAngles.length ? cfgAngles : TRANSP_ANGLES);
     setPhotosRequired((cfg.data as any)?.exit_photos_required ?? true);
-    setEmpresas(emp);
     setMovs((m.data ?? []) as any[]);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
-  const empNome = (id: string | null) => nomeTransportadora(empresas.find((e) => e.id === id));
   const coleta = (sel?.tipo_operacao ?? "entrega") === "coleta";
   const liberado = sel?.status === "liberado";
   const nfeInfo = useMemo(() => (nfeSaida ? parseChaveNfe(nfeSaida) : null), [nfeSaida]);
@@ -227,7 +224,7 @@ export default function TranspSaida() {
                             <Badge variant="outline" className="font-mono text-xs">{m.placa || "—"}</Badge>
                             {active && <CheckCircle className="h-5 w-5 text-primary" />}
                           </div>
-                          <p className="font-semibold truncate">{empNome(m.transportadora_id)}</p>
+                          
                           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><User className="h-3 w-3" />{m.motorista_nome || "—"}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(m.entrada_time).toLocaleString("pt-BR")}</p>
                           <div className="flex flex-wrap gap-1 mt-2">
@@ -294,7 +291,7 @@ export default function TranspSaida() {
                   )}
                   <div className="rounded-lg border divide-y text-sm">
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Placa</span><b className="font-mono">{sel.placa || "—"}</b></div>
-                    <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Transportadora</span><b>{empNome(sel.transportadora_id)}</b></div>
+                    
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Motorista</span><b>{sel.motorista_nome || "—"}</b></div>
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Operação</span><b>{coleta ? "Coleta" : "Entrega"}</b></div>
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Entrada</span><b>{new Date(sel.entrada_time).toLocaleString("pt-BR")}</b></div>
