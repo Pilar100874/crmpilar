@@ -842,11 +842,20 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   };
 
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
-  const filteredUsuarios = usuarios.filter((usuario) =>
-    [usuario.nome, usuario.email, usuario.whatsapp, usuario.unidades?.nome, usuario.grupos_acesso?.nome]
+  const filteredUsuarios = usuarios.filter((usuario) => {
+    const matchesSearch = [usuario.nome, usuario.email, usuario.whatsapp, usuario.unidades?.nome, usuario.grupos_acesso?.nome]
       .filter(Boolean)
-      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(normalizedSearch))
-  );
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
+
+    const matchesPerfil = perfilFiltro === "todos" ||
+      (perfilFiltro === "admin" && usuario.is_admin) ||
+      (perfilFiltro === "atendente" && usuario.is_atendente) ||
+      (perfilFiltro === "porteiro" && usuario.is_porteiro) ||
+      (perfilFiltro === "gerente" && usuario.tipo === "gerente") ||
+      (perfilFiltro === "padrao" && usuario.tipo === "padrao" && !usuario.is_admin && !usuario.is_atendente && !usuario.is_porteiro);
+
+    return matchesSearch && matchesPerfil;
+  });
 
   const userBadges = (usuario: Usuario) => <div className="flex flex-wrap gap-1">
     {usuario.is_admin && <span className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">Admin</span>}
