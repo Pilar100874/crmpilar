@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import EmailConfig from "@/pages/EmailConfig";
+import SystemVisualConfig from "@/pages/SystemVisualConfig";
 import { Building2, FolderTree, UserCog, Tag } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
@@ -121,7 +123,6 @@ const EMPRESA_SUBMENUS: ConfigSection[] = [
 const GLOBAL_SUBMENU_IDS = ["recuperar-senha", "email-config", "notificacoes-sistema", "visual-sistema"];
 
 export default function Config() {
-  const navigate = useNavigate();
   const { openSubmenu } = useLayout();
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
@@ -148,14 +149,6 @@ export default function Config() {
   }, [secaoParam]);
 
   const handleSectionClick = (sectionId: string) => {
-    if (sectionId === "email-config") {
-      navigate("/email-config");
-      return;
-    }
-    if (sectionId === "visual-sistema") {
-      navigate("/config/visual");
-      return;
-    }
     setActiveSection(sectionId);
     setSearchParams({ secao: sectionId });
   };
@@ -204,6 +197,10 @@ export default function Config() {
         return <UsuariosCRUD estabelecimentoId={searchParams.get("estab") ?? undefined} />;
       case "segmentos":
         return <SegmentosCRUD />;
+      case "email-config":
+        return <EmailConfig embedded />;
+      case "visual-sistema":
+        return <SystemVisualConfig embedded />;
 
       default:
         return null;

@@ -13,7 +13,7 @@ import { toast } from "@/lib/toast-config";
 
 type EmailMode = "external" | "oauth";
 
-export default function EmailConfig() {
+export default function EmailConfig({ embedded = false }: { embedded?: boolean }) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [emailMode, setEmailMode] = useState<EmailMode>("external");
   const [loading, setLoading] = useState(true);
@@ -187,7 +187,7 @@ export default function EmailConfig() {
   }
 
   return (
-    <div className="container max-w-4xl py-8 space-y-6">
+    <div className={embedded ? "space-y-6" : "container max-w-4xl py-8 space-y-6"}>
       {/* Mode Selector */}
       <Card>
         <CardHeader>

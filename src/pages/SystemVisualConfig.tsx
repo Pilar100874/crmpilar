@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 
-export default function SystemVisualConfig() {
+export default function SystemVisualConfig({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -247,19 +247,21 @@ export default function SystemVisualConfig() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/config")}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Paintbrush className="h-6 w-6" />
-            Visual do Sistema
-          </h1>
-          <p className="text-sm text-muted-foreground">Configure a aparência visual do sistema</p>
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6 max-w-4xl mx-auto"}>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/config")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Paintbrush className="h-6 w-6" />
+              Visual do Sistema
+            </h1>
+            <p className="text-sm text-muted-foreground">Configure a aparência visual do sistema</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Seletor de dispositivo alvo — as três seções abaixo salvam a configuração para o dispositivo escolhido */}
       <Card>
