@@ -350,22 +350,11 @@ export default function TranspEntrada() {
                   </Button>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input className="pl-9" placeholder="Buscar placa..." value={buscaV} onChange={(e) => setBuscaV(e.target.value)} />
-                  </div>
-                  <div className="flex gap-2">
-                    <Select value={form.transportadora_id} onValueChange={(v) => setForm({ ...form, transportadora_id: v })}>
-                      <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Transportadora" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={SEM_TRANSPORTADORA}>Avulsa (sem transportadora)</SelectItem>
-                        {empresas.map((e) => <SelectItem key={e.id} value={e.id}>{nomeTransportadora(e)}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Button size="icon" variant="outline" onClick={() => setNovaEmpresa(true)}><Plus className="h-4 w-4" /></Button>
-                  </div>
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Buscar placa..." value={buscaV} onChange={(e) => setBuscaV(e.target.value)} />
                 </div>
+
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {veiculosFiltrados.map((v) => {
