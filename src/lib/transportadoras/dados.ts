@@ -28,22 +28,37 @@ export interface TranspVeiculo {
   ativo: boolean;
 }
 
+export interface TranspSetor {
+  id: string;
+  nome: string;
+  whatsapp: string | null;
+  observacoes: string | null;
+  ativo: boolean;
+}
+
 export interface TranspMovimento {
   id: string;
   transportadora_id: string | null;
   veiculo_id: string | null;
   motorista_id: string | null;
+  setor_id: string | null;
   placa: string | null;
   motorista_nome: string | null;
   ajudante_nome: string | null;
   documento: string | null;
   motivo: string | null;
+  tipo_operacao: string | null;
+  nfe_chave: string | null;
+  saida_nfe_chave: string | null;
   entrada_time: string;
   entrada_obs: string | null;
+  liberado_time: string | null;
+  liberado_obs: string | null;
   saida_time: string | null;
   saida_obs: string | null;
   status: string;
 }
+
 
 /** Ângulos de foto usados na entrada e saída (nenhum comparativo/validação de avaria). */
 export const TRANSP_ANGLES: PhotoAngle[] = [
