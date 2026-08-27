@@ -243,7 +243,7 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><h3 className="text-lg font-semibold">Segmentos</h3><p className="text-sm text-muted-foreground">{segmentos.length} {segmentos.length === 1 ? "segmento cadastrado" : "segmentos cadastrados"}</p></div>
+        <p className="text-sm text-muted-foreground">{segmentos.length} {segmentos.length === 1 ? "segmento cadastrado" : "segmentos cadastrados"}</p>
         <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo segmento</Button>
       </div>
       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar segmento" className="pl-9" /></div>
