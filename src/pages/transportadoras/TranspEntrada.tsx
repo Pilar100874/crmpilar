@@ -246,7 +246,13 @@ export default function TranspEntrada() {
               <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Veículo</p><p className="font-semibold font-mono">{sucesso.placa}</p></div>
               <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Motorista</p><p className="font-semibold">{sucesso.motorista}</p></div>
               <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Data/Hora</p><p className="font-semibold">{sucesso.hora}</p></div>
-              {sucesso.setor?.whatsapp && (
+              {sucesso.setor?.numeros?.length ? sucesso.setor.numeros.map((n) => (
+                <Button key={n.id} variant="outline" className="w-full" asChild>
+                  <a href={`https://wa.me/55${n.numero.replace(/\D/g, "")}?text=${encodeURIComponent(sucesso.avisoTexto)}`} target="_blank" rel="noreferrer">
+                    Avisar {n.descricao || sucesso.setor.nome} ({maskWhatsapp(n.numero)})
+                  </a>
+                </Button>
+              )) : sucesso.setor?.whatsapp && (
                 <Button variant="outline" className="w-full" asChild>
                   <a href={linkAvisoSetor(sucesso.setor, sucesso.avisoTexto)} target="_blank" rel="noreferrer">
                     Avisar setor {sucesso.setor.nome} no WhatsApp
