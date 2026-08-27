@@ -29,6 +29,12 @@ import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
+interface EstabelecimentoPainelProps {
+  estabelecimentoId: string;
+  estabelecimentos: { id: string; nome: string }[];
+  onSubmenuClick: (sectionId: string, keepEstab?: string) => void;
+}
+
 interface ConfigSection {
   id: string;
   title: string;
