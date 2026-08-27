@@ -158,6 +158,7 @@ export default function LivroOcorrencias() {
     }
     const payload: any = {
       ...editing,
+      estabelecimento_id: estabelecimentoId,
       data_hora: editing.data_hora ? new Date(editing.data_hora as string).toISOString() : new Date().toISOString(),
     };
     if (editing.tipo === "Funcionário") {
