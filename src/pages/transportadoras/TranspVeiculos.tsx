@@ -24,21 +24,15 @@ const empty = { placa: "", tipo_veiculo: "", observacoes: "", ativo: true };
 
 export default function TranspVeiculos() {
   const [rows, setRows] = useState<TranspVeiculo[]>([]);
-  const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
-  const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspVeiculo | null>(null);
 
 
   const load = async () => {
-    const [emp, { data, error }] = await Promise.all([
-      listarTransportadoras(),
-      supabase.from("transp_veiculos").select("*").order("placa"),
-    ]);
-    setEmpresas(emp);
+    const { data, error } = await supabase.from("transp_veiculos").select("*").order("placa");
     if (error) return toast.error(error.message);
     setRows((data ?? []) as any);
   };
