@@ -43,6 +43,8 @@ export default function TranspMotoristas() {
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspMotorista | null>(null);
+  const [cnhFile, setCnhFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     const [emp, { data, error }] = await Promise.all([
