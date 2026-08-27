@@ -870,7 +870,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(usuario)} className="h-8 w-8" aria-label={`Excluir ${usuario.nome}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
   </>;
 
-  if (formOpen) {
+  const renderForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4">
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3 border-b pb-3">
