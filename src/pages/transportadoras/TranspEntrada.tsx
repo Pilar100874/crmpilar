@@ -101,13 +101,13 @@ export default function TranspEntrada() {
     if (step === 0) return !!form.tipo_operacao;
     if (step === 1) return !!form.veiculo_id;
     if (step === 2) return !!form.motorista_id;
-    if (step === 3 && entrega) return !!form.nfe_chave && !!form.setor_id;
+    if (step === 3 && entrega) return !!form.setor_id;
     return true;
   };
 
   const goNext = () => {
     if (!canNext()) {
-      if (step === 3) return toast.error("Leia a NF-e e escolha o setor a ser avisado");
+      if (step === 3) return toast.error("Escolha o setor a ser avisado");
       return toast.error("Complete os campos obrigatórios");
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
