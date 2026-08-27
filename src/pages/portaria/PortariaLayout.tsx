@@ -24,17 +24,9 @@ import { usePortariaPerfil } from "@/lib/portaria/api";
 interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; gestor?: boolean; staff?: boolean }
 
 const navItems: NavItem[] = [
-  { to: "/portaria", label: "Início", icon: LayoutDashboard, end: true },
-  { to: "/portaria/acessos", label: "Acessos", icon: DoorOpen },
-  { to: "/portaria/pessoas", label: "Pessoas", icon: Users, staff: true },
-  { to: "/portaria/visitantes", label: "Visitantes", icon: UserPlus, staff: true },
-  { to: "/portaria/historico", label: "Histórico", icon: History },
-  { to: "/portaria/dispositivos", label: "Dispositivos", icon: Cpu, gestor: true },
-  { to: "/portaria/interfone", label: "Interfone", icon: PhoneCall },
-  { to: "/portaria/permissoes", label: "Permissões", icon: ShieldCheck, gestor: true },
-  { to: "/portaria/configuracoes", label: "Configurações", icon: Settings, gestor: true },
-
+  { to: "/portaria", label: "Interfone", icon: PhoneCall, end: true },
 ];
+
 
 const bottomNav = navItems.slice(0, 5);
 
