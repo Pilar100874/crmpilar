@@ -406,42 +406,11 @@ export default function Config() {
           </div>
 
           <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
-            {activeSection && activeSectionData ? (
-              renderSectionContent()
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {CONFIG_SECTIONS.map((section) => (
-                  <Card
-                    key={section.id}
-                    onClick={() => handleSectionClick(section.id)}
-                    className="group relative cursor-pointer overflow-hidden border bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-                  >
-                    <CardContent className="p-4 sm:p-5">
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={cn(
-                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/50 transition-transform group-hover:scale-110",
-                            section.bgColor
-                          )}
-                        >
-                          <section.icon className={cn("h-5 w-5", section.iconColor)} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-sm font-semibold sm:text-base">
-                            {section.title}
-                          </h3>
-                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                            {section.description}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <div className="mx-auto w-full max-w-6xl rounded-xl border bg-card p-4 shadow-sm sm:p-6">
+              {renderSectionContent()}
+            </div>
           </main>
+
         </div>
       </div>
     </div>
