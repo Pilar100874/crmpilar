@@ -138,10 +138,10 @@ const LogisticaHub: React.FC = () => {
       <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
         <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
           <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          Logística
+          Rastreamento
         </h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-          Gestão completa de frota e entregas
+          Gestão completa de frota e rastreamento de veículos
         </p>
       </div>
 
