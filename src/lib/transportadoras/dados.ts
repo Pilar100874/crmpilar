@@ -181,13 +181,14 @@ export async function criarTransportadora(nome: string): Promise<TranspEmpresa> 
 export async function listarSetores(): Promise<TranspSetor[]> {
   const { data } = await supabase
     .from("transp_setores")
-    .select("id, nome, whatsapp, observacoes, ativo")
+    .select("id, nome, whatsapp, observacoes, ativo, numeros:transp_setores_numeros(id, setor_id, numero, descricao, ativo)")
     .eq("ativo", true)
+    .eq("numeros.ativo", true)
     .order("nome");
-  return (data ?? []) as TranspSetor[];
+  return (data ?? []) as any[];
 }
 
-export async function criarSetor(nome: string, whatsapp: string): Promise<TranspSetor> {
+export async function criarSetor(nome: string, numeros: { numero: string; descricao?: string }[]): Promise<TranspSetor> {
   const nomeUp = (nome || "").trim().toUpperCase();
   if (!nomeUp) throw new Error("Informe o nome do setor");
   const { getEstabelecimentoId } = await import("@/lib/estabelecimento");
@@ -199,14 +200,29 @@ export async function criarSetor(nome: string, whatsapp: string): Promise<Transp
     .insert({
       estabelecimento_id: estId,
       nome: nomeUp,
-      whatsapp: (whatsapp || "").replace(/\D/g, "") || null,
+      whatsapp: numeros[0]?.numero.replace(/\D/g, "") || null,
       ativo: true,
     } as any)
     .select("id, nome, whatsapp, observacoes, ativo")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Erro ao criar setor");
-  return data as TranspSetor;
+
+  const setor = data as any;
+  const validos = numeros.filter((n) => n.numero.replace(/\D/g, "").length >= 10);
+  if (validos.length) {
+    const { error: numError } = await supabase.from("transp_setores_numeros").insert(
+      validos.map((n) => ({
+        setor_id: setor.id,
+        numero: n.numero.replace(/\D/g, ""),
+        descricao: (n.descricao || "").toUpperCase() || null,
+        ativo: true,
+      }))
+    );
+    if (numError) throw new Error(numError.message);
+  }
+
+  return { ...setor, numeros: validos.map((n, i) => ({ id: `tmp-${i}`, setor_id: setor.id, numero: n.numero.replace(/\D/g, ""), descricao: n.descricao || null, ativo: true })) } as TranspSetor;
 }
 
 /** Rótulos da operação: entrega = descarregamento, coleta = carregamento. */
