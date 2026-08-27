@@ -58,7 +58,7 @@ export default function TranspSaida() {
   };
   useEffect(() => { load(); }, []);
 
-  const coleta = (sel?.tipo_operacao ?? "entrega") === "coleta";
+  const coleta = temColeta(sel?.tipo_operacao ?? "entrega");
   const liberado = sel?.status === "liberado";
   const nfeInfo = useMemo(() => (nfeSaida ? parseChaveNfe(nfeSaida) : null), [nfeSaida]);
 
