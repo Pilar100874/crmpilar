@@ -111,6 +111,13 @@ export default function LivroOcorrencias() {
 
   const save = async () => {
     if (!editing?.descricao || !editing?.tipo) { toast.error("Preencha tipo e descrição"); return; }
+    if (editing.tipo === "Funcionário") {
+      const f = (editing as any).anexos?.funcionario || {};
+      if (!f.dp_ciente || !f.encarregado_ciente) {
+        toast.error("Informe se o DP e o encarregado estavam sabendo");
+        return;
+      }
+    }
     const payload: any = {
       ...editing,
       data_hora: editing.data_hora ? new Date(editing.data_hora as string).toISOString() : new Date().toISOString(),
