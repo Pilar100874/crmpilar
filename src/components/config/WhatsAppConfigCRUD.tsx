@@ -318,7 +318,7 @@ export function WhatsAppConfigCRUD() {
             ))}
           </div>
         )}
-      </CardContent>
+      </div>
 
       {/* Dialog criar/editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
