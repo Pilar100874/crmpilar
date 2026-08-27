@@ -11,7 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X, CheckCircle2 } from "lucide-react";
 import { useRef } from "react";
 
 
@@ -30,6 +30,9 @@ interface Ocorrencia {
   status: string;
   observacoes: string | null;
   anexos?: any;
+  resolvido_por?: string | null;
+  resolvido_em?: string | null;
+  observacao_resolucao?: string | null;
 }
 
 
@@ -66,9 +69,42 @@ export default function LivroOcorrencias() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Ocorrencia> | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [finalizando, setFinalizando] = useState<Ocorrencia | null>(null);
+  const [finalForm, setFinalForm] = useState({ resolvido_por: "", resolvido_em: "", observacao_resolucao: "" });
   const [params, setParams] = useSearchParams();
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const fotoInputRef = useRef<HTMLInputElement>(null);
+
+  const openFinalizar = (o: Ocorrencia) => {
+    setFinalizando(o);
+    setFinalForm({
+      resolvido_por: o.resolvido_por || "",
+      resolvido_em: o.resolvido_em ? new Date(o.resolvido_em).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+      observacao_resolucao: o.observacao_resolucao || "",
+    });
+  };
+
+  const finalizar = async () => {
+    if (!finalizando) return;
+    if (!finalForm.resolvido_por.trim()) { toast.error("Informe quem resolveu"); return; }
+    if (!finalForm.resolvido_em) { toast.error("Informe a data de resolução"); return; }
+    const { error } = await supabase.from("livro_ocorrencias" as any).update({
+      status: "resolvida",
+      resolvido_por: finalForm.resolvido_por.toUpperCase(),
+      resolvido_em: new Date(finalForm.resolvido_em).toISOString(),
+      observacao_resolucao: finalForm.observacao_resolucao || null,
+    } as any).eq("id", finalizando.id);
+    if (error) { toast.error("Erro ao finalizar"); return; }
+    toast.success("Ocorrência finalizada");
+    setFinalizando(null);
+    load();
+  };
+
+  const reabrir = async (o: Ocorrencia) => {
+    const { error } = await supabase.from("livro_ocorrencias" as any).update({ status: "aberta" } as any).eq("id", o.id);
+    if (error) toast.error("Erro ao reabrir");
+    else { toast.success("Ocorrência reaberta"); load(); }
+  };
 
   const uploadFoto = async (file: File) => {
     setUploadingFoto(true);
