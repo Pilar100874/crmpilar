@@ -1,4 +1,4 @@
-import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
+import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,6 +156,7 @@ export default function CVVehicleEntry() {
 
 
     const porteiro = await getRegistroPorteiro();
+    if (!porteiro.porteiro_id) { setBusy(false); return toast.error(MSG_SEM_PERMISSAO_PORTEIRO); }
     const { error } = await supabase.from("cv_vehicle_movements").update({
       status: "returned",
       porteiro_entrada_id: porteiro.porteiro_id,

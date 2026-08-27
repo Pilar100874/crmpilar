@@ -1,4 +1,4 @@
-import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
+import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -120,6 +120,7 @@ export default function TranspSaida() {
     const { data: { user } } = await supabase.auth.getUser();
     const saida = new Date();
     const porteiro = await getRegistroPorteiro();
+    if (!porteiro.porteiro_id) { setBusy(false); return toast.error(MSG_SEM_PERMISSAO_PORTEIRO); }
     const { error } = await supabase.from("transp_movimentos").update({
       saida_time: saida.toISOString(),
       saida_obs: obs || null,

@@ -18,6 +18,7 @@ export const USUARIO_COLUNAS_PUBLICAS = [
   "pop",
   "porta_pop",
   "usar_autenticacao",
+  "is_porteiro",
   "hora_inicial",
   "hora_final",
   "auth_user_id",

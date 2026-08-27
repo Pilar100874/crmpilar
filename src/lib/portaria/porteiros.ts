@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+/**
+ * O cadastro de porteiros vive no cadastro de usuários:
+ * um usuário é porteiro quando está marcado com o flag "Porteiro" (usuarios.is_porteiro).
+ * Apenas usuários com esse flag podem registrar movimentações da Portaria.
+ */
 export interface Porteiro {
   id: string;
-  estabelecimento_id: string;
-  user_id: string | null;
   nome: string;
-  documento: string | null;
-  telefone: string | null;
-  turno: string | null;
-  observacoes: string | null;
+  auth_user_id: string | null;
+  estabelecimento_id: string | null;
   ativo: boolean;
 }
 
@@ -18,31 +19,54 @@ export async function listarPorteiros(apenasAtivos = true): Promise<Porteiro[]> 
   const estabelecimentoId = await getEstabelecimentoId();
   if (!estabelecimentoId) return [];
   let q = supabase
-    .from("porteiros")
-    .select("*")
+    .from("usuarios")
+    .select("id, nome, auth_user_id, estabelecimento_id, ativo")
     .eq("estabelecimento_id", estabelecimentoId)
+    .eq("is_porteiro", true)
     .order("nome");
   if (apenasAtivos) q = q.eq("ativo", true);
   const { data } = await q;
-  return (data ?? []) as Porteiro[];
+  return ((data ?? []) as any[]).map((u) => ({
+    id: u.id,
+    nome: u.nome,
+    auth_user_id: u.auth_user_id ?? null,
+    estabelecimento_id: u.estabelecimento_id ?? null,
+    ativo: u.ativo !== false,
+  }));
+}
+
+/** Retorna o porteiro correspondente ao usuário logado, ou null. */
+export async function getPorteiroLogado(): Promise<Porteiro | null> {
+  const { data } = await supabase.auth.getUser();
+  const uid = data.user?.id;
+  if (!uid) return null;
+  const { data: u } = await supabase
+    .from("usuarios")
+    .select("id, nome, auth_user_id, estabelecimento_id, ativo, is_porteiro")
+    .eq("auth_user_id", uid)
+    .maybeSingle();
+  const row = u as any;
+  if (!row || !row.is_porteiro || row.ativo === false) return null;
+  return {
+    id: row.id,
+    nome: row.nome,
+    auth_user_id: row.auth_user_id ?? null,
+    estabelecimento_id: row.estabelecimento_id ?? null,
+    ativo: true,
+  };
 }
 
 export interface ContextoPorteiro {
-  /** Porteiro vinculado ao usuário logado (se houver). */
+  /** Porteiro correspondente ao usuário logado (se ele tiver o flag). */
   porteiroLogado: Porteiro | null;
-  /** Lista de porteiros ativos do estabelecimento. */
+  /** Lista de porteiros ativos do estabelecimento (apenas informativa). */
   porteiros: Porteiro[];
-  /** True quando o usuário logado é um porteiro cadastrado (nome fixo). */
+  /** True quando o usuário logado é porteiro. */
   fixo: boolean;
   carregando: boolean;
   recarregar: () => void;
 }
 
-/**
- * Contexto do porteiro para as telas da Portaria.
- * - Se o usuário logado estiver vinculado a um porteiro, o nome é fixado.
- * - Caso contrário, o usuário escolhe um dos porteiros cadastrados.
- */
 export function usePorteiroContexto(): ContextoPorteiro {
   const [porteiroLogado, setPorteiroLogado] = useState<Porteiro | null>(null);
   const [porteiros, setPorteiros] = useState<Porteiro[]>([]);
@@ -53,12 +77,10 @@ export function usePorteiroContexto(): ContextoPorteiro {
     let ativo = true;
     (async () => {
       setCarregando(true);
-      const lista = await listarPorteiros(true);
-      const { data } = await supabase.auth.getUser();
-      const uid = data.user?.id ?? null;
+      const [lista, logado] = await Promise.all([listarPorteiros(true), getPorteiroLogado()]);
       if (!ativo) return;
       setPorteiros(lista);
-      setPorteiroLogado(uid ? lista.find((p) => p.user_id === uid) ?? null : null);
+      setPorteiroLogado(logado);
       setCarregando(false);
     })();
     return () => {
@@ -75,57 +97,28 @@ export function usePorteiroContexto(): ContextoPorteiro {
   };
 }
 
-/* ------------------------------------------------------------------ */
-/* Porteiro em serviço (usado por todas as telas do grupo Portaria)     */
-/* ------------------------------------------------------------------ */
-
-const CHAVE_SERVICO = "porteiroServicoId";
-const EVENTO_SERVICO = "porteiro-servico-alterado";
-
-export function setPorteiroServico(id: string | null) {
-  if (id) localStorage.setItem(CHAVE_SERVICO, id);
-  else localStorage.removeItem(CHAVE_SERVICO);
-  window.dispatchEvent(new Event(EVENTO_SERVICO));
-}
-
-export function getPorteiroServicoId(): string | null {
-  return localStorage.getItem(CHAVE_SERVICO);
-}
-
 export interface RegistroPorteiro {
   porteiro_id: string | null;
   porteiro_nome: string | null;
 }
 
 /**
- * Identifica o porteiro que está executando o registro atual:
- * 1. Porteiro vinculado ao usuário logado (fixo).
- * 2. Porteiro escolhido na barra "Porteiro em serviço".
+ * Identifica o porteiro que está executando o registro.
+ * Somente o usuário logado com o flag "Porteiro" pode registrar movimentações.
  */
 export async function getRegistroPorteiro(): Promise<RegistroPorteiro> {
-  const lista = await listarPorteiros(true);
-  const { data } = await supabase.auth.getUser();
-  const uid = data.user?.id ?? null;
-  const logado = uid ? lista.find((p) => p.user_id === uid) : undefined;
-  const escolhido = logado ?? lista.find((p) => p.id === getPorteiroServicoId());
-  return { porteiro_id: escolhido?.id ?? null, porteiro_nome: escolhido?.nome ?? null };
+  const p = await getPorteiroLogado();
+  return { porteiro_id: p?.id ?? null, porteiro_nome: p?.nome ?? null };
 }
 
-/** Reage a mudanças na escolha do porteiro em serviço. */
-export function usePorteiroServico() {
-  const ctx = usePorteiroContexto();
-  const [servicoId, setServicoId] = useState<string | null>(getPorteiroServicoId());
+export const MSG_SEM_PERMISSAO_PORTEIRO =
+  "Apenas usuários marcados como Porteiro no cadastro de usuários podem registrar movimentações da Portaria.";
 
-  useEffect(() => {
-    const h = () => setServicoId(getPorteiroServicoId());
-    window.addEventListener(EVENTO_SERVICO, h);
-    window.addEventListener("storage", h);
-    return () => {
-      window.removeEventListener(EVENTO_SERVICO, h);
-      window.removeEventListener("storage", h);
-    };
-  }, []);
-
-  const atual = ctx.porteiroLogado ?? ctx.porteiros.find((p) => p.id === servicoId) ?? null;
-  return { ...ctx, porteiroAtual: atual, definir: setPorteiroServico };
+/**
+ * Garante que o usuário logado é porteiro. Retorna null quando não for
+ * (o chamador deve abortar a movimentação).
+ */
+export async function exigirPorteiro(): Promise<RegistroPorteiro | null> {
+  const reg = await getRegistroPorteiro();
+  return reg.porteiro_id ? reg : null;
 }

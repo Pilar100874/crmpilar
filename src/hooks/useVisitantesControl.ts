@@ -1,4 +1,4 @@
-import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
+import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type {
@@ -144,6 +144,7 @@ export function useVisitantesControl() {
     const estId = await getEstabelecimentoId();
     if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const porteiro = await getRegistroPorteiro();
+    if (!porteiro.porteiro_id) { toast.error(MSG_SEM_PERMISSAO_PORTEIRO); throw new Error("sem porteiro"); }
     const { data, error } = await supabase.from(T_AR).insert([{
       visitor_id: rec.visitorId,
       contact_person_name: rec.contactPerson,
@@ -171,6 +172,7 @@ export function useVisitantesControl() {
   const exitVisitor = async (recordId: string) => {
     const now = new Date().toISOString();
     const porteiro = await getRegistroPorteiro();
+    if (!porteiro.porteiro_id) { toast.error(MSG_SEM_PERMISSAO_PORTEIRO); throw new Error("sem porteiro"); }
     const { error } = await supabase.from(T_AR).update({
       exit_date: now,
       status: "exited",
