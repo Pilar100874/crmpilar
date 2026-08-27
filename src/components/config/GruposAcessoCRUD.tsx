@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, ChevronDown, ChevronRight, Check, X } from "lucide-react";
+import { Trash2, Edit, Plus, ChevronDown, ChevronRight, Check, X, Search, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MENU_CONFIG, getMenusByCategory, CATEGORY_ORDER, MenuConfigItem } from "@/lib/menus";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
@@ -13,6 +13,8 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface MenuPermissions {
   view: boolean;
@@ -55,6 +57,8 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   const [grupoToDelete, setGrupoToDelete] = useState<GrupoAcesso | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
   const { toast } = useToast();
 
   const menusByCategory = getMenusByCategory();
@@ -173,12 +177,14 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     setNome("");
     setMenusPermitidos({});
     setEditingId(null);
+    setFormOpen(false);
   };
 
   const handleEdit = (grupo: GrupoAcesso) => {
     setNome(grupo.nome);
     setMenusPermitidos(grupo.menus_permitidos || {});
     setEditingId(grupo.id);
+    setFormOpen(true);
   };
 
   const handleDeleteClick = (grupo: GrupoAcesso) => {
@@ -415,61 +421,35 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     return `${count} menu${count !== 1 ? 's' : ''} com acesso`;
   };
 
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
+  const filteredGrupos = grupos.filter((grupo) => grupo.nome.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
+  const actionButtons = (grupo: GrupoAcesso) => (
+    <>
+      <Button variant="ghost" size="icon" onClick={() => handleEdit(grupo)} className="h-8 w-8" aria-label={`Editar ${grupo.nome}`}>
+        <Edit className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(grupo)} className="h-8 w-8" aria-label={`Excluir ${grupo.nome}`}>
+        <Trash2 className="w-4 h-4 text-destructive" />
+      </Button>
+    </>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Lista de Grupos Cadastrados - Primeiro */}
-      <Card className="p-4">
-        <h3 className="text-base font-semibold mb-4">Grupos Cadastrados</h3>
-        <div className="space-y-2">
-          {grupos.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground text-sm">
-              Nenhum grupo cadastrado ainda
-            </div>
-          ) : (
-            grupos.map((grupo) => (
-              <Card
-                key={grupo.id}
-                className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                  editingId === grupo.id ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => handleEdit(grupo)}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm">{grupo.nome}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {Object.keys(grupo.menus_permitidos || {}).length > 0 
-                        ? formatPermissionsCompact(grupo.menus_permitidos)
-                        : "Nenhuma permissão definida"}
-                    </div>
-                  </div>
-                  <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(grupo)}
-                      className="h-8 w-8"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(grupo)}
-                      className="h-8 w-8"
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      </Card>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-lg font-semibold">Grupos de acesso</h3><p className="text-sm text-muted-foreground">{grupos.length} {grupos.length === 1 ? "grupo cadastrado" : "grupos cadastrados"}</p></div>
+        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo grupo</Button>
+      </div>
+      <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="pl-9" /></div>
+
+      {filteredGrupos.length === 0 ? <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : <>
+        <div className="md:hidden"><CadastroCardList items={filteredGrupos.map((grupo) => ({ id: grupo.id, title: grupo.nome, subtitle: formatPermissionsCompact(grupo.menus_permitidos), actions: actionButtons(grupo) }))} /></div>
+        <div className="hidden overflow-hidden rounded-lg border md:block"><Table><TableHeader><TableRow><TableHead>Grupo</TableHead><TableHead>Permissões</TableHead><TableHead className="w-24 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredGrupos.map((grupo) => <TableRow key={grupo.id}><TableCell className="font-medium">{grupo.nome}</TableCell><TableCell>{formatPermissionsCompact(grupo.menus_permitidos)}</TableCell><TableCell><div className="flex justify-end gap-1">{actionButtons(grupo)}</div></TableCell></TableRow>)}</TableBody></Table></div>
+      </>}
 
       {/* Formulário */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {formOpen && <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4">
+        <div className="flex items-center gap-2 border-b pb-3"><ShieldCheck className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</h4></div>
         {/* Nome do Grupo */}
         <Card className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
@@ -647,7 +627,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
             </div>
           </div>
         </Card>
-      </form>
+      </form>}
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
