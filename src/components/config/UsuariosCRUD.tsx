@@ -47,6 +47,7 @@ interface Usuario {
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
   estabelecimentos?: { nome: string };
+  is_porteiro?: boolean;
   is_atendente?: boolean;
   atendente_id?: string;
 }
@@ -109,6 +110,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAtendente, setIsAtendente] = useState(false);
+  const [isPorteiro, setIsPorteiro] = useState(false);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -316,6 +318,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       senha_sip: senhaSip || null,
       usuario_sip: usuarioSip || null,
       tipo: tipo || 'padrao',
+      is_porteiro: isPorteiro,
     };
 
     if (editingId) {
@@ -589,6 +592,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSegmentosSelecionados([]);
     setIsAdmin(false);
     setIsAtendente(false);
+    setIsPorteiro(false);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -617,6 +621,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
     setTipo((usuario as any).tipo || "padrao");
+    setIsPorteiro(!!(usuario as any).is_porteiro);
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -1268,6 +1273,15 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             <div className="flex items-center space-x-2">
               <Switch id="is-atendente" checked={isAtendente} onCheckedChange={setIsAtendente} />
               <Label htmlFor="is-atendente" className="cursor-pointer text-sm">Atendente</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="is-porteiro" checked={isPorteiro} onCheckedChange={setIsPorteiro} />
+              <Label htmlFor="is-porteiro" className="cursor-pointer text-sm">
+                Porteiro
+                <span className="block text-xs text-muted-foreground font-normal">
+                  Permite registrar movimentações da Portaria
+                </span>
+              </Label>
             </div>
           </div>
 
