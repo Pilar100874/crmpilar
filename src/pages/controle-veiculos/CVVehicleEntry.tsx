@@ -1,3 +1,4 @@
+import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -154,8 +155,11 @@ export default function CVVehicleEntry() {
     const estId = await getEstabelecimentoId();
 
 
+    const porteiro = await getRegistroPorteiro();
     const { error } = await supabase.from("cv_vehicle_movements").update({
       status: "returned",
+      porteiro_entrada_id: porteiro.porteiro_id,
+      porteiro_entrada_nome: porteiro.porteiro_nome,
       entry_time: new Date().toISOString(),
       entry_km: form.entry_km,
       reported_defects: form.reported_defects || null,
