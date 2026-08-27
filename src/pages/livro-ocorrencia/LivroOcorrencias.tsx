@@ -315,19 +315,23 @@ export default function LivroOcorrencias() {
           <DialogHeader>
             <DialogTitle>{editing?.id ? `Editar Ocorrência #${(editing as any).numero}` : "Nova Ocorrência"}</DialogTitle>
           </DialogHeader>
-          {editing && (
+          {editing && (() => {
+            const isFunc = editing.tipo === "Funcionário";
+            return (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Data e Hora *</Label>
                 <Input type="datetime-local" value={editing.data_hora as string} onChange={(e) => setEditing({ ...editing, data_hora: e.target.value })} />
               </div>
-              <div>
-                <Label>Turno</Label>
-                <Select value={editing.turno || ""} onValueChange={(v) => setEditing({ ...editing, turno: v })}>
-                  <SelectTrigger><SelectValue placeholder="Turno" /></SelectTrigger>
-                  <SelectContent>{TURNOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {!isFunc && (
+                <div>
+                  <Label>Turno</Label>
+                  <Select value={editing.turno || ""} onValueChange={(v) => setEditing({ ...editing, turno: v })}>
+                    <SelectTrigger><SelectValue placeholder="Turno" /></SelectTrigger>
+                    <SelectContent>{TURNOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <Label>Tipo *</Label>
                 <Select value={editing.tipo || ""} onValueChange={(v) => setEditing({ ...editing, tipo: v })}>
@@ -335,13 +339,15 @@ export default function LivroOcorrencias() {
                   <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Gravidade *</Label>
-                <Select value={editing.gravidade || "baixa"} onValueChange={(v) => setEditing({ ...editing, gravidade: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{GRAVIDADES.map((g) => <SelectItem key={g.v} value={g.v}>{g.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {!isFunc && (
+                <div>
+                  <Label>Gravidade *</Label>
+                  <Select value={editing.gravidade || "baixa"} onValueChange={(v) => setEditing({ ...editing, gravidade: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{GRAVIDADES.map((g) => <SelectItem key={g.v} value={g.v}>{g.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
               {editing.tipo === "Funcionário" && (
                 <>
                   <div className="sm:col-span-2">
