@@ -114,7 +114,14 @@ export default function TranspLiberacao() {
                 <CheckCircle className="h-4 w-4 mr-1" />Liberar {entrega ? "descarregamento" : "carregamento"}
               </Button>
             )}
-            {setor?.whatsapp && (
+            {setor?.numeros?.length ? setor.numeros.map((n) => (
+              <Button key={n.id} size="sm" variant="outline" asChild>
+                <a target="_blank" rel="noreferrer"
+                  href={`https://wa.me/55${n.numero.replace(/\D/g, "")}?text=${encodeURIComponent(`Veículo ${m.placa ?? ""} (${m.motorista_nome ?? ""}) aguardando ${entrega ? "descarregamento" : "carregamento"}.`)}`}>
+                  <MessageCircle className="h-4 w-4 mr-1" />Avisar {n.descricao || "setor"}
+                </a>
+              </Button>
+            )) : setor?.whatsapp && (
               <Button size="sm" variant="outline" asChild>
                 <a target="_blank" rel="noreferrer"
                   href={linkAvisoSetor(setor, `Veículo ${m.placa ?? ""} (${m.motorista_nome ?? ""}) aguardando ${entrega ? "descarregamento" : "carregamento"}.`)}>
