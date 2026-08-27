@@ -249,6 +249,11 @@ export default function LivroOcorrencias() {
                 <TableCell>{statusBadge(o.status)}</TableCell>
                 <TableCell className="hidden lg:table-cell">{o.responsavel || "-"}</TableCell>
                 <TableCell className="text-right whitespace-nowrap">
+                  {o.status !== "resolvida" ? (
+                    <Button variant="ghost" size="icon" title="Finalizar ocorrência" onClick={() => openFinalizar(o)}><CheckCircle2 className="h-4 w-4 text-green-600" /></Button>
+                  ) : (
+                    <Button variant="ghost" size="icon" title="Reabrir ocorrência" onClick={() => reabrir(o)}><X className="h-4 w-4 text-orange-500" /></Button>
+                  )}
                   <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
@@ -277,6 +282,11 @@ export default function LivroOcorrencias() {
                 <div className="text-xs text-muted-foreground">{new Date(o.data_hora).toLocaleString("pt-BR")} · {o.turno || "-"}</div>
               </div>
               <div className="flex shrink-0">
+                {o.status !== "resolvida" ? (
+                  <Button variant="ghost" size="icon" title="Finalizar ocorrência" onClick={() => openFinalizar(o)}><CheckCircle2 className="h-4 w-4 text-green-600" /></Button>
+                ) : (
+                  <Button variant="ghost" size="icon" title="Reabrir ocorrência" onClick={() => reabrir(o)}><X className="h-4 w-4 text-orange-500" /></Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
@@ -288,6 +298,13 @@ export default function LivroOcorrencias() {
               </div>
             )}
             <p className="text-sm line-clamp-2">{o.descricao}</p>
+            {o.status === "resolvida" && o.resolvido_por && (
+              <div className="text-xs text-muted-foreground border-t pt-2">
+                <span className="font-medium text-green-600">Resolvida por {o.resolvido_por}</span>
+                {o.resolvido_em && <> em {new Date(o.resolvido_em).toLocaleString("pt-BR")}</>}
+                {o.observacao_resolucao && <div className="mt-0.5">{o.observacao_resolucao}</div>}
+              </div>
+            )}
           </div>
         ))}
       </div>
