@@ -12117,8 +12117,11 @@ export type Database = {
           id: string
           local: string | null
           numero: number
+          observacao_resolucao: string | null
           observacoes: string | null
           registrado_por: string | null
+          resolvido_em: string | null
+          resolvido_por: string | null
           responsavel: string | null
           status: string
           tipo: string
@@ -12137,8 +12140,11 @@ export type Database = {
           id?: string
           local?: string | null
           numero?: number
+          observacao_resolucao?: string | null
           observacoes?: string | null
           registrado_por?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
           responsavel?: string | null
           status?: string
           tipo: string
@@ -12157,8 +12163,11 @@ export type Database = {
           id?: string
           local?: string | null
           numero?: number
+          observacao_resolucao?: string | null
           observacoes?: string | null
           registrado_por?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
           responsavel?: string | null
           status?: string
           tipo?: string
