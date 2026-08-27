@@ -1,39 +1,34 @@
 import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, ShieldAlert } from "lucide-react";
 import { usePorteiroContexto } from "@/lib/portaria/porteiros";
 
 interface PorteiroSelectProps {
-  /** ID do porteiro selecionado (null quando ainda não escolhido). */
+  /** ID do porteiro (usuário) responsável pelo registro. */
   value: string | null | undefined;
-  /** Recebe o id e o nome do porteiro escolhido/fixado. */
+  /** Recebe o id e o nome do porteiro identificado. */
   onChange: (porteiroId: string | null, porteiroNome: string) => void;
   label?: string;
-  /** Nome já gravado no registro (usado quando o porteiro foi excluído do cadastro). */
+  /** Nome já gravado no registro. */
   nomeGravado?: string | null;
   disabled?: boolean;
   className?: string;
 }
 
 /**
- * Identifica o porteiro que está executando o registro.
- * - Usuário logado vinculado a um porteiro: nome fixo, sem escolha.
- * - Demais usuários: seleção entre os porteiros ativos.
+ * Mostra o porteiro que está executando o registro.
+ * O porteiro é sempre o usuário logado marcado com o flag "Porteiro"
+ * no cadastro de usuários — não há seleção manual.
  */
 export function PorteiroSelect({
   value,
   onChange,
   label = "Porteiro responsável",
   nomeGravado,
-  disabled,
   className,
 }: PorteiroSelectProps) {
-  const { porteiroLogado, porteiros, fixo, carregando } = usePorteiroContexto();
+  const { porteiroLogado, fixo, carregando } = usePorteiroContexto();
 
   useEffect(() => {
     if (fixo && porteiroLogado && value !== porteiroLogado.id) {
@@ -42,51 +37,26 @@ export function PorteiroSelect({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fixo, porteiroLogado?.id]);
 
-  if (fixo && porteiroLogado) {
-    return (
-      <div className={className}>
-        <Label>{label}</Label>
+  if (carregando) return null;
+
+  return (
+    <div className={className}>
+      <Label>{label}</Label>
+      {fixo && porteiroLogado ? (
         <div className="flex items-center gap-2 mt-1 rounded-md border bg-muted/40 px-3 h-10">
           <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
           <span className="text-sm font-medium truncate">{porteiroLogado.nome}</span>
           <Badge variant="secondary" className="ml-auto shrink-0">Você</Badge>
         </div>
-      </div>
-    );
-  }
-
-  const semCadastro = !carregando && porteiros.length === 0;
-
-  return (
-    <div className={className}>
-      <Label>{label}</Label>
-      {semCadastro ? (
-        <Input
-          value={nomeGravado || ""}
-          onChange={(e) => onChange(null, e.target.value)}
-          placeholder="Nenhum porteiro cadastrado — informe o nome"
-          disabled={disabled}
-        />
       ) : (
-        <Select
-          value={value || ""}
-          onValueChange={(v) => {
-            const p = porteiros.find((x) => x.id === v);
-            onChange(v, p?.nome ?? "");
-          }}
-          disabled={disabled || carregando}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={nomeGravado || "Selecione o porteiro"} />
-          </SelectTrigger>
-          <SelectContent>
-            {porteiros.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.nome}{p.turno ? ` · ${p.turno}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 mt-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2">
+          <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
+          <span className="text-sm text-amber-700 dark:text-amber-400">
+            {nomeGravado
+              ? `Registrado por ${nomeGravado}. Seu usuário não é porteiro.`
+              : "Seu usuário não está marcado como Porteiro — não é possível registrar."}
+          </span>
+        </div>
       )}
     </div>
   );
