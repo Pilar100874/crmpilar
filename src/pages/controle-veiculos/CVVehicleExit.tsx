@@ -168,10 +168,13 @@ export default function CVVehicleExit() {
     const exitTime = new Date();
     const exitKm = selectedVehicle?.current_km ?? 0;
 
+    const porteiro = await getRegistroPorteiro();
     const { data: mv, error } = await supabase.from("cv_vehicle_movements").insert({
       vehicle_id: form.vehicle_id,
       driver_id: form.driver_id,
       security_guard_id: user?.id ?? null,
+      porteiro_saida_id: porteiro.porteiro_id,
+      porteiro_saida_nome: porteiro.porteiro_nome,
       has_helper: form.has_helper,
       helper_id: form.has_helper ? form.helper_id : null,
       helper_name: form.has_helper ? (helpers.find(h => h.id === form.helper_id)?.name ?? null) : null,
