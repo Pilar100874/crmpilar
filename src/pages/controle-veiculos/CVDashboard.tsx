@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Car, User, LogOut, LogIn, TrendingUp, Clock,
-  RefreshCw, Users, ListChecks, Gauge,
+  RefreshCw, ListChecks, Gauge,
 } from "lucide-react";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 
@@ -106,50 +106,31 @@ export default function CVDashboard() {
         {kpis.map(k => <CVKpiCard key={k.label} {...k} />)}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/40">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ListChecks className="h-4 w-4 text-primary" />
-              Movimento de Veículos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            <p className="text-sm text-muted-foreground">Registre saídas e entradas rapidamente.</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                className="h-11 bg-amber-500 hover:bg-amber-600 text-white"
-                onClick={() => navigate("/controle-veiculos/saida")}
-              >
-                <LogOut className="h-4 w-4 mr-1" /> Saída
-              </Button>
-              <Button
-                className="h-11 bg-emerald-500 hover:bg-emerald-600 text-white"
-                onClick={() => navigate("/controle-veiculos/entrada")}
-              >
-                <LogIn className="h-4 w-4 mr-1" /> Entrada
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/40">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-primary" />
-              Cadastros
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground mb-3">Gerencie veículos, motoristas e movimentações.</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/veiculos")}><Car className="h-4 w-4 mr-1" />Veículos</Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/motoristas")}><Users className="h-4 w-4 mr-1" />Motoristas</Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/movimentacoes")}><ListChecks className="h-4 w-4 mr-1" />Movim.</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/40">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ListChecks className="h-4 w-4 text-primary" />
+            Movimento de Veículos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-3">
+          <p className="text-sm text-muted-foreground">Registre saídas e entradas rapidamente.</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              className="h-11 bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => navigate("/controle-veiculos/saida")}
+            >
+              <LogOut className="h-4 w-4 mr-1" /> Saída
+            </Button>
+            <Button
+              className="h-11 bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={() => navigate("/controle-veiculos/entrada")}
+            >
+              <LogIn className="h-4 w-4 mr-1" /> Entrada
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

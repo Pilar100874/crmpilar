@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, UserCheck, Clock, LogOut, TrendingUp, RefreshCw,
-  LogIn, ListChecks, Contact, UserCog, FileText,
+  LogIn, ListChecks, FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,70 +70,48 @@ export default function CVisDashboard() {
         {kpis.map((k) => <CVKpiCard key={k.label} {...k} />)}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/40">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ListChecks className="h-4 w-4 text-primary" />
-              Operação da Portaria
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            <p className="text-sm text-muted-foreground">Ações rápidas do dia a dia.</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                className="h-11 bg-emerald-500 hover:bg-emerald-600 text-white"
-                onClick={() => navigate("/controle-visitantes/entrada")}
-              >
-                <LogIn className="h-4 w-4 mr-1" /> Entrada
-              </Button>
-              <Button
-                className="h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => navigate("/controle-visitantes/presentes")}
-              >
-                <UserCheck className="h-4 w-4 mr-1" /> Presentes
-              </Button>
-              <Button
-                variant="outline"
-                className="h-11 relative"
-                onClick={() => navigate("/controle-visitantes/autorizacoes")}
-              >
-                <Clock className="h-4 w-4 mr-1" /> Autorizações
-                {stats.pending > 0 && (
-                  <Badge variant="destructive" className="ml-auto h-5 px-1.5">{stats.pending}</Badge>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-11"
-                onClick={() => navigate("/controle-visitantes/relatorios")}
-              >
-                <FileText className="h-4 w-4 mr-1" /> Relatórios
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/40">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserCog className="h-4 w-4 text-primary" />
-              Cadastros
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground mb-3">Bases de visitantes e contatos internos.</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-visitantes/visitantes")}>
-                <UserCog className="h-4 w-4 mr-1" /> Visitantes
-              </Button>
-              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-visitantes/contatos")}>
-                <Contact className="h-4 w-4 mr-1" /> Contatos
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/40">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ListChecks className="h-4 w-4 text-primary" />
+            Operação da Portaria
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-3">
+          <p className="text-sm text-muted-foreground">Ações rápidas do dia a dia.</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              className="h-11 bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={() => navigate("/controle-visitantes/entrada")}
+            >
+              <LogIn className="h-4 w-4 mr-1" /> Entrada
+            </Button>
+            <Button
+              className="h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={() => navigate("/controle-visitantes/presentes")}
+            >
+              <UserCheck className="h-4 w-4 mr-1" /> Presentes
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 relative"
+              onClick={() => navigate("/controle-visitantes/autorizacoes")}
+            >
+              <Clock className="h-4 w-4 mr-1" /> Autorizações
+              {stats.pending > 0 && (
+                <Badge variant="destructive" className="ml-auto h-5 px-1.5">{stats.pending}</Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11"
+              onClick={() => navigate("/controle-visitantes/relatorios")}
+            >
+              <FileText className="h-4 w-4 mr-1" /> Relatórios
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
