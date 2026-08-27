@@ -418,13 +418,13 @@ export default function LivroEncomendas() {
                 <Label>Recebido por (Porteiro)</Label>
                 <Input value={editing.recebido_por || ""} onChange={(e) => setEditing({ ...editing, recebido_por: e.target.value })} />
               </div>
-              <div>
-                <Label>Status</Label>
-                <Select value={editing.status} onValueChange={(v) => setEditing({ ...editing, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {editing.status === "entregue" && (
+                <div className="sm:col-span-2 rounded-md border border-green-500/30 bg-green-500/10 p-3 text-sm space-y-1">
+                  <div className="font-medium text-green-700 dark:text-green-400 flex items-center gap-1"><PackageCheck className="h-4 w-4" /> Retirada registrada</div>
+                  <div><strong>Retirado por:</strong> {editing.retirado_por || "-"}{editing.documento_retirada ? ` · Doc: ${editing.documento_retirada}` : ""}</div>
+                  {editing.data_entrega && <div><strong>Data da retirada:</strong> {new Date(editing.data_entrega).toLocaleString("pt-BR")}</div>}
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <Label>Observações</Label>
                 <Textarea rows={2} value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} />
@@ -443,7 +443,7 @@ export default function LivroEncomendas() {
       <Dialog open={!!deliverTarget} onOpenChange={(o) => !o && setDeliverTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Registrar Entrega - #{deliverTarget?.numero}</DialogTitle>
+            <DialogTitle>Registrar Retirada - #{deliverTarget?.numero}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-3 bg-muted rounded-md text-sm">
@@ -453,11 +453,15 @@ export default function LivroEncomendas() {
             </div>
             <div>
               <Label>Retirado por *</Label>
-              <Input value={deliverData.retirado_por} onChange={(e) => setDeliverData({ ...deliverData, retirado_por: e.target.value })} placeholder="Nome completo de quem retirou" />
+              <Input value={deliverData.retirado_por} onChange={(e) => setDeliverData({ ...deliverData, retirado_por: e.target.value.toUpperCase() })} placeholder="Nome completo de quem retirou" />
             </div>
             <div>
               <Label>Documento (RG / CPF)</Label>
               <Input value={deliverData.documento_retirada} onChange={(e) => setDeliverData({ ...deliverData, documento_retirada: e.target.value })} />
+            </div>
+            <div>
+              <Label>Data da retirada *</Label>
+              <Input type="datetime-local" value={deliverData.data_entrega} onChange={(e) => setDeliverData({ ...deliverData, data_entrega: e.target.value })} />
             </div>
             <div>
               <Label>Observações</Label>
@@ -466,7 +470,7 @@ export default function LivroEncomendas() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeliverTarget(null)}>Cancelar</Button>
-            <Button onClick={confirmDeliver} className="gap-2"><PackageCheck className="h-4 w-4" /> Confirmar Entrega</Button>
+            <Button onClick={confirmDeliver} className="gap-2"><PackageCheck className="h-4 w-4" /> Confirmar Retirada</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
