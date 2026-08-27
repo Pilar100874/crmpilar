@@ -121,7 +121,7 @@ export default function Config() {
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
   
-  const [activeSection, setActiveSection] = useState<string | null>(secaoParam);
+  const [activeSection, setActiveSection] = useState<string | null>(secaoParam ?? CONFIG_SECTIONS[0].id);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
 
@@ -156,9 +156,10 @@ export default function Config() {
   };
 
   const handleBack = () => {
-    setActiveSection(null);
-    setSearchParams({});
+    setActiveSection(CONFIG_SECTIONS[0].id);
+    setSearchParams({ secao: CONFIG_SECTIONS[0].id });
   };
+
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
@@ -289,16 +290,16 @@ export default function Config() {
 
   return (
     <div className="h-full min-h-screen flex flex-col bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
-        <div className="flex items-center gap-3 px-3 py-3 sm:px-5">
+      {/* Header padrão do sistema */}
+      <header className="sticky top-0 z-40 border-b bg-gradient-to-r from-primary/10 via-primary/5 to-transparent backdrop-blur">
+        <div className="flex items-center gap-3 px-3 py-4 sm:px-6">
           <div className="hidden">
             <SubMenuHeader
               title="Configurações"
               onOpenSubmenu={() => openSubmenu("Configurações")}
             />
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
             {activeSectionData ? (
               <activeSectionData.icon className="h-5 w-5" />
             ) : (
@@ -306,23 +307,18 @@ export default function Config() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+            <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
               {activeSectionData ? activeSectionData.title : "Configurações"}
             </h1>
-            <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block">
+            <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
               {activeSectionData
                 ? activeSectionData.description
                 : "Gerencie preferências, integrações e a aparência da plataforma"}
             </p>
           </div>
-          {activeSection && (
-            <Button variant="ghost" size="sm" onClick={handleBack} className="shrink-0">
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              Voltar
-            </Button>
-          )}
         </div>
       </header>
+
 
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full flex-col lg:flex-row">
@@ -334,10 +330,9 @@ export default function Config() {
                   ? searchParams.get("estab") && EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
                     ? `${activeSection}|${searchParams.get("estab")}`
                     : activeSection
-                  : "__home__"
+                  : CONFIG_SECTIONS[0].id
               }
               onValueChange={(v) => {
-                if (v === "__home__") return handleBack();
                 const [id, estab] = v.split("|");
                 if (estab) {
                   setActiveSection(id);
@@ -351,12 +346,7 @@ export default function Config() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                <SelectItem value="__home__">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    <span>Visão geral</span>
-                  </div>
-                </SelectItem>
+
                 {CONFIG_SECTIONS.map((section) => (
                   <SelectItem key={section.id} value={section.id}>
                     <div className="flex items-center gap-2">
@@ -410,42 +400,11 @@ export default function Config() {
           </div>
 
           <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
-            {activeSection && activeSectionData ? (
-              renderSectionContent()
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {CONFIG_SECTIONS.map((section) => (
-                  <Card
-                    key={section.id}
-                    onClick={() => handleSectionClick(section.id)}
-                    className="group relative cursor-pointer overflow-hidden border bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-                  >
-                    <CardContent className="p-4 sm:p-5">
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={cn(
-                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/50 transition-transform group-hover:scale-110",
-                            section.bgColor
-                          )}
-                        >
-                          <section.icon className={cn("h-5 w-5", section.iconColor)} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-sm font-semibold sm:text-base">
-                            {section.title}
-                          </h3>
-                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                            {section.description}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <div className="mx-auto w-full max-w-6xl rounded-xl border bg-card p-4 shadow-sm sm:p-6">
+              {renderSectionContent()}
+            </div>
           </main>
+
         </div>
       </div>
     </div>
