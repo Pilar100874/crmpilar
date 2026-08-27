@@ -321,6 +321,14 @@ const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds
     ],
   },
   {
+    id: "c-DP",
+    title: "DP",
+    iconName: "Users",
+    programIds: [
+      "Controle de Ponto",
+    ],
+  },
+  {
     id: "c-TV",
     title: "TV",
     iconName: "Tv",
