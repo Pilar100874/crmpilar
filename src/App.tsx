@@ -176,6 +176,8 @@ import TranspSaida from "./pages/transportadoras/TranspSaida";
 import TranspMovimentos from "./pages/transportadoras/TranspMovimentos";
 import TranspVeiculos from "./pages/transportadoras/TranspVeiculos";
 import TranspMotoristas from "./pages/transportadoras/TranspMotoristas";
+import TranspSetores from "./pages/transportadoras/TranspSetores";
+import TranspLiberacao from "./pages/transportadoras/TranspLiberacao";
 import CVDashboard from "./pages/controle-veiculos/CVDashboard";
 import CVVehicles from "./pages/controle-veiculos/CVVehicles";
 import CVDrivers from "./pages/controle-veiculos/CVDrivers";
@@ -757,6 +759,8 @@ const App = () => (
                 <Route path="movimentos" element={<TranspMovimentos />} />
                 <Route path="veiculos" element={<TranspVeiculos />} />
                 <Route path="motoristas" element={<TranspMotoristas />} />
+                <Route path="setores" element={<TranspSetores />} />
+                <Route path="liberacao" element={<TranspLiberacao />} />
               </Route>
 
 
