@@ -330,10 +330,9 @@ export default function Config() {
                   ? searchParams.get("estab") && EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
                     ? `${activeSection}|${searchParams.get("estab")}`
                     : activeSection
-                  : "__home__"
+                  : CONFIG_SECTIONS[0].id
               }
               onValueChange={(v) => {
-                if (v === "__home__") return handleBack();
                 const [id, estab] = v.split("|");
                 if (estab) {
                   setActiveSection(id);
@@ -347,12 +346,7 @@ export default function Config() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                <SelectItem value="__home__">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    <span>Visão geral</span>
-                  </div>
-                </SelectItem>
+
                 {CONFIG_SECTIONS.map((section) => (
                   <SelectItem key={section.id} value={section.id}>
                     <div className="flex items-center gap-2">
