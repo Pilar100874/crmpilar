@@ -23,7 +23,7 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
   TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores,
-  maskPlaca, normalizePlaca, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora, linkAvisoSetor, OPERACOES,
+  maskPlaca, normalizePlaca, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora, linkAvisoSetor, OPERACOES, labelOperacao,
   SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspMotorista, type TranspVeiculo, type TranspSetor,
 } from "@/lib/transportadoras/dados";
