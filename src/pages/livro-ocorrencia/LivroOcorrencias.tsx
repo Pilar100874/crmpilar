@@ -394,13 +394,13 @@ export default function LivroOcorrencias() {
                 <Label>Responsável (Porteiro)</Label>
                 <Input value={editing.responsavel || ""} onChange={(e) => setEditing({ ...editing, responsavel: e.target.value })} />
               </div>
-              <div>
-                <Label>Status</Label>
-                <Select value={editing.status || "aberta"} onValueChange={(v) => setEditing({ ...editing, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {editing.status === "resolvida" && (
+                <div className="sm:col-span-2 border rounded-lg p-3 bg-green-500/5 space-y-1 text-sm">
+                  <div className="font-medium text-green-600 flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Ocorrência resolvida</div>
+                  <div className="text-muted-foreground">Por: {editing.resolvido_por || "-"} · Em: {editing.resolvido_em ? new Date(editing.resolvido_em).toLocaleString("pt-BR") : "-"}</div>
+                  {editing.observacao_resolucao && <div className="text-muted-foreground">{editing.observacao_resolucao}</div>}
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <Label>Foto (opcional)</Label>
                 <input
