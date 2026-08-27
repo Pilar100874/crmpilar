@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   ClipboardCheck,
+  Settings,
   PanelLeftClose,
   PanelLeft,
   LucideIcon,
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { to: "/transportadoras/veiculos", label: "Veículos", icon: Truck, group: "config" },
   { to: "/transportadoras/motoristas", label: "Motoristas", icon: Users, group: "config" },
   { to: "/transportadoras/setores", label: "Setores", icon: Building2, group: "config" },
+  { to: "/transportadoras/config-vistoria", label: "Configuração de Vistoria", icon: Settings, group: "config" },
 ];
 
 

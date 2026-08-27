@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
 import { CVMapaVeiculoDialog } from "@/components/cv/CVMapaVeiculoDialog";
@@ -32,6 +33,7 @@ export default function CVVehicleEntry() {
   const [defectTypes, setDefectTypes] = useState<any[]>([]);
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
+  const [pendentesOpen, setPendentesOpen] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const geradosRef = useRef<Set<string>>(new Set());
@@ -143,7 +145,8 @@ export default function CVVehicleEntry() {
     if (!selected) return;
     if (photosRequired && missingRequired.length > 0) {
       setStep(2);
-      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+      setPendentesOpen(true);
+      return;
     }
     if (!form.inspected_all_sides) return toast.error("Confirme a vistoria nos 4 lados");
     setBusy(true);
@@ -426,6 +429,13 @@ export default function CVVehicleEntry() {
                   )}
 
                   <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} vehicleId={selected?.vehicle_id} aiCompare />
+                  <FotosPendentesDialog
+                    open={pendentesOpen}
+                    onOpenChange={setPendentesOpen}
+                    angles={angles}
+                    capturedKeys={photos.map((p) => p.angle_key)}
+                    onIrParaFotos={() => setStep(2)}
+                  />
                 </>
               )}
             </div>

@@ -26600,6 +26600,53 @@ export type Database = {
           },
         ]
       }
+      transp_inspection_config: {
+        Row: {
+          active: boolean
+          created_at: string
+          entry_photos: Json
+          entry_photos_required: boolean
+          estabelecimento_id: string | null
+          exit_photos: Json
+          exit_photos_required: boolean
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          entry_photos?: Json
+          entry_photos_required?: boolean
+          estabelecimento_id?: string | null
+          exit_photos?: Json
+          exit_photos_required?: boolean
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          entry_photos?: Json
+          entry_photos_required?: boolean
+          estabelecimento_id?: string | null
+          exit_photos?: Json
+          exit_photos_required?: boolean
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transp_inspection_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transp_motoristas: {
         Row: {
           ativo: boolean

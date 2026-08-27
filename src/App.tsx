@@ -178,6 +178,7 @@ import TranspVeiculos from "./pages/transportadoras/TranspVeiculos";
 import TranspMotoristas from "./pages/transportadoras/TranspMotoristas";
 import TranspSetores from "./pages/transportadoras/TranspSetores";
 import TranspLiberacao from "./pages/transportadoras/TranspLiberacao";
+import TranspInspectionConfig from "./pages/transportadoras/TranspInspectionConfig";
 import CVDashboard from "./pages/controle-veiculos/CVDashboard";
 import CVVehicles from "./pages/controle-veiculos/CVVehicles";
 import CVDrivers from "./pages/controle-veiculos/CVDrivers";
@@ -761,6 +762,7 @@ const App = () => (
                 <Route path="motoristas" element={<TranspMotoristas />} />
                 <Route path="setores" element={<TranspSetores />} />
                 <Route path="liberacao" element={<TranspLiberacao />} />
+                <Route path="config-vistoria" element={<TranspInspectionConfig />} />
               </Route>
 
 

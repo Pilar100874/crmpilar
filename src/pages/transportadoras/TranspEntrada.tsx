@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
+import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
@@ -45,6 +46,7 @@ export default function TranspEntrada() {
   const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [angles, setAngles] = useState<PhotoAngle[]>(TRANSP_ANGLES);
   const [photosRequired, setPhotosRequired] = useState(true);
+  const [pendentesOpen, setPendentesOpen] = useState(false);
 
   const [form, setForm] = useState({
     tipo_operacao: "" as "" | "entrega" | "coleta",
@@ -75,7 +77,7 @@ export default function TranspEntrada() {
       supabase.from("transp_veiculos").select("*").eq("ativo", true).order("placa"),
       supabase.from("transp_motoristas").select("*").eq("ativo", true).order("nome"),
       supabase.from("transp_movimentos").select("veiculo_id").neq("status", "saiu"),
-      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
+      supabase.from("transp_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     const cfgAngles = ((cfg.data as any)?.entry_photos ?? []) as PhotoAngle[];
     setAngles(cfgAngles.length ? cfgAngles : TRANSP_ANGLES);
@@ -172,8 +174,8 @@ export default function TranspEntrada() {
 
   const salvar = async () => {
     if (photosRequired && missingRequired.length > 0) {
-      setStep(4);
-      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+      setPendentesOpen(true);
+      return;
     }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -475,6 +477,13 @@ export default function TranspEntrada() {
                   </div>
                 )}
                 <CVPhotoCapture angles={angles} stage="entry" value={photos} onChange={setPhotos} aiCompare={false} />
+                <FotosPendentesDialog
+                  open={pendentesOpen}
+                  onOpenChange={setPendentesOpen}
+                  angles={angles}
+                  capturedKeys={photos.map((p) => p.angle_key)}
+                  onIrParaFotos={() => setStep(4)}
+                />
               </div>
             )}
           </CardContent>
