@@ -156,9 +156,10 @@ export default function Config() {
   };
 
   const handleBack = () => {
-    setActiveSection(null);
-    setSearchParams({});
+    setActiveSection(CONFIG_SECTIONS[0].id);
+    setSearchParams({ secao: CONFIG_SECTIONS[0].id });
   };
+
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
