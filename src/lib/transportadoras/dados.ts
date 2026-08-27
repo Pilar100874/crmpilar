@@ -28,10 +28,19 @@ export interface TranspVeiculo {
   ativo: boolean;
 }
 
+export interface TranspSetorNumero {
+  id: string;
+  setor_id: string;
+  numero: string;
+  descricao: string | null;
+  ativo: boolean;
+}
+
 export interface TranspSetor {
   id: string;
   nome: string;
   whatsapp: string | null;
+  numeros: TranspSetorNumero[];
   observacoes: string | null;
   ativo: boolean;
 }
