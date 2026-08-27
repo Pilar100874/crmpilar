@@ -11,7 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X, CheckCircle2 } from "lucide-react";
 import { useRef } from "react";
 
 
@@ -30,6 +30,9 @@ interface Ocorrencia {
   status: string;
   observacoes: string | null;
   anexos?: any;
+  resolvido_por?: string | null;
+  resolvido_em?: string | null;
+  observacao_resolucao?: string | null;
 }
 
 
@@ -66,9 +69,42 @@ export default function LivroOcorrencias() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Ocorrencia> | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [finalizando, setFinalizando] = useState<Ocorrencia | null>(null);
+  const [finalForm, setFinalForm] = useState({ resolvido_por: "", resolvido_em: "", observacao_resolucao: "" });
   const [params, setParams] = useSearchParams();
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const fotoInputRef = useRef<HTMLInputElement>(null);
+
+  const openFinalizar = (o: Ocorrencia) => {
+    setFinalizando(o);
+    setFinalForm({
+      resolvido_por: o.resolvido_por || "",
+      resolvido_em: o.resolvido_em ? new Date(o.resolvido_em).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+      observacao_resolucao: o.observacao_resolucao || "",
+    });
+  };
+
+  const finalizar = async () => {
+    if (!finalizando) return;
+    if (!finalForm.resolvido_por.trim()) { toast.error("Informe quem resolveu"); return; }
+    if (!finalForm.resolvido_em) { toast.error("Informe a data de resolução"); return; }
+    const { error } = await supabase.from("livro_ocorrencias" as any).update({
+      status: "resolvida",
+      resolvido_por: finalForm.resolvido_por.toUpperCase(),
+      resolvido_em: new Date(finalForm.resolvido_em).toISOString(),
+      observacao_resolucao: finalForm.observacao_resolucao || null,
+    } as any).eq("id", finalizando.id);
+    if (error) { toast.error("Erro ao finalizar"); return; }
+    toast.success("Ocorrência finalizada");
+    setFinalizando(null);
+    load();
+  };
+
+  const reabrir = async (o: Ocorrencia) => {
+    const { error } = await supabase.from("livro_ocorrencias" as any).update({ status: "aberta" } as any).eq("id", o.id);
+    if (error) toast.error("Erro ao reabrir");
+    else { toast.success("Ocorrência reaberta"); load(); }
+  };
 
   const uploadFoto = async (file: File) => {
     setUploadingFoto(true);
@@ -213,6 +249,11 @@ export default function LivroOcorrencias() {
                 <TableCell>{statusBadge(o.status)}</TableCell>
                 <TableCell className="hidden lg:table-cell">{o.responsavel || "-"}</TableCell>
                 <TableCell className="text-right whitespace-nowrap">
+                  {o.status !== "resolvida" ? (
+                    <Button variant="ghost" size="icon" title="Finalizar ocorrência" onClick={() => openFinalizar(o)}><CheckCircle2 className="h-4 w-4 text-green-600" /></Button>
+                  ) : (
+                    <Button variant="ghost" size="icon" title="Reabrir ocorrência" onClick={() => reabrir(o)}><X className="h-4 w-4 text-orange-500" /></Button>
+                  )}
                   <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
@@ -241,6 +282,11 @@ export default function LivroOcorrencias() {
                 <div className="text-xs text-muted-foreground">{new Date(o.data_hora).toLocaleString("pt-BR")} · {o.turno || "-"}</div>
               </div>
               <div className="flex shrink-0">
+                {o.status !== "resolvida" ? (
+                  <Button variant="ghost" size="icon" title="Finalizar ocorrência" onClick={() => openFinalizar(o)}><CheckCircle2 className="h-4 w-4 text-green-600" /></Button>
+                ) : (
+                  <Button variant="ghost" size="icon" title="Reabrir ocorrência" onClick={() => reabrir(o)}><X className="h-4 w-4 text-orange-500" /></Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
@@ -252,6 +298,13 @@ export default function LivroOcorrencias() {
               </div>
             )}
             <p className="text-sm line-clamp-2">{o.descricao}</p>
+            {o.status === "resolvida" && o.resolvido_por && (
+              <div className="text-xs text-muted-foreground border-t pt-2">
+                <span className="font-medium text-green-600">Resolvida por {o.resolvido_por}</span>
+                {o.resolvido_em && <> em {new Date(o.resolvido_em).toLocaleString("pt-BR")}</>}
+                {o.observacao_resolucao && <div className="mt-0.5">{o.observacao_resolucao}</div>}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -341,13 +394,13 @@ export default function LivroOcorrencias() {
                 <Label>Responsável (Porteiro)</Label>
                 <Input value={editing.responsavel || ""} onChange={(e) => setEditing({ ...editing, responsavel: e.target.value })} />
               </div>
-              <div>
-                <Label>Status</Label>
-                <Select value={editing.status || "aberta"} onValueChange={(v) => setEditing({ ...editing, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {editing.status === "resolvida" && (
+                <div className="sm:col-span-2 border rounded-lg p-3 bg-green-500/5 space-y-1 text-sm">
+                  <div className="font-medium text-green-600 flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Ocorrência resolvida</div>
+                  <div className="text-muted-foreground">Por: {editing.resolvido_por || "-"} · Em: {editing.resolvido_em ? new Date(editing.resolvido_em).toLocaleString("pt-BR") : "-"}</div>
+                  {editing.observacao_resolucao && <div className="text-muted-foreground">{editing.observacao_resolucao}</div>}
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <Label>Foto (opcional)</Label>
                 <input
@@ -387,6 +440,51 @@ export default function LivroOcorrencias() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Finalização */}
+      <Dialog open={!!finalizando} onOpenChange={(v) => !v && setFinalizando(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              Finalizar Ocorrência #{finalizando?.numero}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Quem resolveu? *</Label>
+              <Input
+                value={finalForm.resolvido_por}
+                onChange={(e) => setFinalForm({ ...finalForm, resolvido_por: e.target.value.toUpperCase() })}
+                placeholder="NOME DE QUEM RESOLVEU"
+              />
+            </div>
+            <div>
+              <Label>Data da resolução *</Label>
+              <Input
+                type="datetime-local"
+                value={finalForm.resolvido_em}
+                onChange={(e) => setFinalForm({ ...finalForm, resolvido_em: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Observação da resolução</Label>
+              <Textarea
+                rows={3}
+                value={finalForm.observacao_resolucao}
+                onChange={(e) => setFinalForm({ ...finalForm, observacao_resolucao: e.target.value })}
+                placeholder="Descreva como foi resolvido..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFinalizando(null)}>Cancelar</Button>
+            <Button onClick={finalizar} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+              <CheckCircle2 className="h-4 w-4" /> Finalizar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
