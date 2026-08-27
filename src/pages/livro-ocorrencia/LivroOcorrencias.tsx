@@ -158,6 +158,14 @@ export default function LivroOcorrencias() {
       ...editing,
       data_hora: editing.data_hora ? new Date(editing.data_hora as string).toISOString() : new Date().toISOString(),
     };
+    if (editing.tipo === "Funcionário") {
+      payload.turno = null;
+      payload.local = null;
+      payload.envolvidos = null;
+      payload.observacoes = null;
+      payload.gravidade = "baixa";
+      if (payload.anexos?.foto_url) payload.anexos = { ...payload.anexos, foto_url: null };
+    }
     delete payload.numero;
     const { error } = editing.id
       ? await supabase.from("livro_ocorrencias" as any).update(payload).eq("id", editing.id)
