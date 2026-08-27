@@ -42,7 +42,8 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Email", label: "E-mail", category: "Principal" },
   { id: "Desenho", label: "Marketing", category: "Principal" },
   { id: "Relatórios", label: "Relatórios", category: "Principal" },
-  { id: "Logística", label: "Logística", category: "Principal" },
+  { id: "Logística Grupo", label: "Logística (Categoria)", category: "Logística" },
+  { id: "Logística", label: "Rastreamento (veículos, monitoramento, histórico)", category: "Logística" },
   { id: "Marketplaces", label: "Marketplaces", category: "Principal" },
   { id: "Ads", label: "Ads", category: "Principal" },
   { id: "Robô de Preços", label: "Robô de Preços", category: "Principal" },
@@ -83,7 +84,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Controle de Visitantes", label: "Controle de Visitantes (Menu)", category: "Visitantes" },
   { id: "Operacional Hub", label: "Operacional Hub (Tarefas, Materiais, Equipes)", category: "Principal" },
   { id: "Pilar Ferramentas", label: "Pilar Ferramentas (Almoxarifado)", category: "Principal" },
-  { id: "Manutenção", label: "Manutenção (Frota: manutenções, defeitos, biblioteca)", category: "Principal" },
+  { id: "Manutenção", label: "Manutenção (Frota: manutenções, defeitos, biblioteca)", category: "Logística" },
   { id: "Transportadoras", label: "Transportadoras (entrada/saída de veículos de terceiros)", category: "Principal" },
 
   // Portaria

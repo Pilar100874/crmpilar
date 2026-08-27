@@ -312,6 +312,15 @@ const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds
     ],
   },
   {
+    id: "c-Logística Grupo",
+    title: "Logística",
+    iconName: "Truck",
+    programIds: [
+      "Logística",
+      "Manutenção",
+    ],
+  },
+  {
     id: "c-TV",
     title: "TV",
     iconName: "Tv",
