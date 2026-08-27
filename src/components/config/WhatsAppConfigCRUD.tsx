@@ -530,6 +530,6 @@ export function WhatsAppConfigCRUD() {
         itemName={deleteTarget?.nome}
         isLoading={deleting}
       />
-    </Card>
+    </div>
   );
 }
