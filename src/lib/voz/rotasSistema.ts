@@ -147,7 +147,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/editores/documentos", titulo: "Documentos Gerados", aliases: ["documentos gerados"] },
 
   // ============ Menu Principal - Logística ============
-  { path: "/logistica", titulo: "Logística", aliases: ["logistica hub"] },
+  { path: "/logistica", titulo: "Rastreamento", aliases: ["logistica hub", "rastreamento"] },
   { path: "/logistica/monitoramento", titulo: "Monitoramento Logística", aliases: ["monitoramento logistico", "rastreamento de veiculos"] },
   { path: "/logistica/veiculos", titulo: "Veículos da Logística", aliases: ["veiculos logistica", "cadastro de veiculos logistica"] },
   { path: "/logistica/historico", titulo: "Histórico Logística", aliases: ["historico logistico"] },
