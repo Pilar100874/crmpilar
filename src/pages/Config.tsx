@@ -126,9 +126,11 @@ export default function Config() {
   const { openSubmenu } = useLayout();
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
-  
+  const estabParam = searchParams.get('estab');
+
   const [activeSection, setActiveSection] = useState<string | null>(secaoParam ?? CONFIG_SECTIONS[0].id);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [expandedEstabId, setExpandedEstabId] = useState<string | null>(estabParam);
   const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
 
   useEffect(() => {
@@ -148,9 +150,19 @@ export default function Config() {
     }
   }, [secaoParam]);
 
-  const handleSectionClick = (sectionId: string) => {
+  useEffect(() => {
+    if (estabParam) {
+      setExpandedEstabId(estabParam);
+    }
+  }, [estabParam]);
+
+  const handleSectionClick = (sectionId: string, keepEstab?: string | null) => {
     setActiveSection(sectionId);
-    setSearchParams({ secao: sectionId });
+    if (keepEstab) {
+      setSearchParams({ secao: sectionId, estab: keepEstab });
+    } else {
+      setSearchParams({ secao: sectionId });
+    }
   };
 
   const handleBack = () => {
