@@ -134,3 +134,51 @@ export async function criarTransportadora(nome: string): Promise<TranspEmpresa> 
   if (error || !data) throw new Error(error?.message ?? "Erro ao criar transportadora");
   return data as TranspEmpresa;
 }
+
+/** Setores internos avisados quando um veículo chega para descarregar/carregar. */
+export async function listarSetores(): Promise<TranspSetor[]> {
+  const { data } = await supabase
+    .from("transp_setores")
+    .select("id, nome, whatsapp, observacoes, ativo")
+    .eq("ativo", true)
+    .order("nome");
+  return (data ?? []) as TranspSetor[];
+}
+
+export async function criarSetor(nome: string, whatsapp: string): Promise<TranspSetor> {
+  const nomeUp = (nome || "").trim().toUpperCase();
+  if (!nomeUp) throw new Error("Informe o nome do setor");
+  const { getEstabelecimentoId } = await import("@/lib/estabelecimento");
+  const estId = await getEstabelecimentoId();
+  if (!estId) throw new Error("Estabelecimento não encontrado");
+
+  const { data, error } = await supabase
+    .from("transp_setores")
+    .insert({
+      estabelecimento_id: estId,
+      nome: nomeUp,
+      whatsapp: (whatsapp || "").replace(/\D/g, "") || null,
+      ativo: true,
+    } as any)
+    .select("id, nome, whatsapp, observacoes, ativo")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Erro ao criar setor");
+  return data as TranspSetor;
+}
+
+/** Rótulos da operação: entrega = descarregamento, coleta = carregamento. */
+export const OPERACOES = [
+  { value: "entrega", label: "Entrega (descarregamento)", desc: "O veículo traz mercadoria com NF-e" },
+  { value: "coleta", label: "Coleta (carregamento)", desc: "O veículo vem retirar mercadoria" },
+] as const;
+
+export const labelOperacao = (v?: string | null) =>
+  v === "coleta" ? "Coleta (carregamento)" : "Entrega (descarregamento)";
+
+/** Link do WhatsApp para avisar o setor sobre a chegada do veículo. */
+export function linkAvisoSetor(setor: TranspSetor, texto: string) {
+  const fone = (setor.whatsapp || "").replace(/\D/g, "");
+  const num = fone.length <= 11 ? `55${fone}` : fone;
+  return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
+}
