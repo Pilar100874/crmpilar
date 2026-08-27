@@ -112,13 +112,10 @@ export default function TranspVeiculos() {
                       : <Badge variant="secondary" className="mt-1 h-5">Inativo</Badge>}
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {nomeTransportadora(empresas.find((e) => e.id === v.transportadora_id))}
-                </p>
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
-                      transportadora_id: v.transportadora_id ?? SEM_TRANSPORTADORA, placa: v.placa, descricao: v.descricao ?? "",
+                      placa: v.placa,
                       tipo_veiculo: v.tipo_veiculo ?? "", observacoes: v.observacoes ?? "", ativo: v.ativo,
                     });
                     setEditing(v.id); setOpen(true);
