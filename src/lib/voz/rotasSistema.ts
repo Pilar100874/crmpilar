@@ -124,16 +124,16 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Menu Principal - Livro de Ocorrência ============
   { path: "/livro-ocorrencia", titulo: "Livro de Ocorrência", aliases: ["livro portaria", "encomendas portaria"] },
 
-  // ============ Menu Principal - Portaria (controle de acesso) ============
-  { path: "/portaria", titulo: "Portaria", aliases: ["portaria", "controle de acesso", "abrir portao", "abrir porta"] },
-  { path: "/portaria/acessos", titulo: "Portaria - Acessos", aliases: ["acessos portaria", "abrir portao remoto"] },
-  { path: "/portaria/pessoas", titulo: "Portaria - Pessoas", aliases: ["moradores portaria", "pessoas portaria"] },
-  { path: "/portaria/visitantes", titulo: "Portaria - Visitantes", aliases: ["visitantes portaria"] },
-  { path: "/portaria/historico", titulo: "Portaria - Histórico", aliases: ["historico de acessos", "logs portaria"] },
-  { path: "/portaria/dispositivos", titulo: "Portaria - Dispositivos", aliases: ["shelly", "idface", "dispositivos portaria"] },
-  { path: "/portaria/interfone", titulo: "Portaria - Interfone", aliases: ["interfone"] },
-  { path: "/portaria/permissoes", titulo: "Portaria - Permissões", aliases: ["permissoes portaria", "gestor portaria", "papeis portaria"] },
-  { path: "/portaria/configuracoes", titulo: "Portaria - Configurações", aliases: ["configuracoes portaria", "pontos de acesso"] },
+  // ============ Menu Principal - Interfone ============
+  { path: "/portaria", titulo: "Interfone", aliases: ["interfone", "portaria", "controle de acesso", "abrir portao", "abrir porta"] },
+  { path: "/portaria/acessos", titulo: "Interfone - Acessos", aliases: ["acessos portaria", "acessos interfone", "abrir portao remoto"] },
+  { path: "/portaria/pessoas", titulo: "Interfone - Pessoas", aliases: ["moradores portaria", "pessoas portaria", "pessoas interfone"] },
+  { path: "/portaria/visitantes", titulo: "Interfone - Visitantes", aliases: ["visitantes portaria", "visitantes interfone"] },
+  { path: "/portaria/historico", titulo: "Interfone - Histórico", aliases: ["historico de acessos", "historico interfone", "logs portaria"] },
+  { path: "/portaria/dispositivos", titulo: "Interfone - Dispositivos", aliases: ["shelly", "idface", "dispositivos portaria", "dispositivos interfone"] },
+  { path: "/portaria/interfone", titulo: "Interfone", aliases: ["interfone"] },
+  { path: "/portaria/permissoes", titulo: "Interfone - Permissões", aliases: ["permissoes portaria", "permissoes interfone", "gestor portaria", "papeis portaria"] },
+  { path: "/portaria/configuracoes", titulo: "Interfone - Configurações", aliases: ["configuracoes portaria", "configuracoes interfone", "pontos de acesso"] },
 
 
 

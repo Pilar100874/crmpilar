@@ -199,14 +199,14 @@ export const menuItems: MenuItem[] = [
 
   {
     id: "Atendimento Portaria",
-    title: "Atendimento Portaria",
+    title: "Portaria",
     icon: LucideIcons.ShieldCheck,
     subItems: [
       { id: "Transportadoras", title: "Transportadoras", url: "/transportadoras", icon: LucideIcons.Truck },
       { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
       { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
       { id: "Livro de Ocorrência", title: "Livro de Ocorrência", url: "/livro-ocorrencia", icon: LucideIcons.BookOpen },
-      { id: "Portaria", title: "Portaria", url: "/portaria", icon: LucideIcons.ShieldCheck },
+      { id: "Portaria", title: "Interfone", url: "/portaria", icon: LucideIcons.ShieldCheck },
     ],
   },
   { id: "Manutenção", title: "Manutenção", url: "/manutencao", icon: LucideIcons.Wrench },
