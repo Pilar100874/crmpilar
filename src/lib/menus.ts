@@ -58,7 +58,8 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "TV Câmeras", label: "TV Câmeras (Mosaico)", category: "TV" },
   { id: "TV Signage", label: "Gerenciador de Telas Remotas", category: "TV" },
 
-  // Controle de Ponto
+  // DP / Controle de Ponto
+  { id: "DP", label: "DP (Categoria)", category: "Ponto" },
   { id: "Controle de Ponto", label: "Controle de Ponto (Categoria)", category: "Ponto" },
   { id: "Ponto Dashboard", label: "Dashboard RH", category: "Ponto" },
   { id: "Ponto Funcionários", label: "Funcionários", category: "Ponto" },
