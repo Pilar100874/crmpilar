@@ -147,6 +147,8 @@ export default function LivroOcorrencias() {
 
   const save = async () => {
     if (!editing?.descricao || !editing?.tipo) { toast.error("Preencha tipo e descrição"); return; }
+    const estabelecimentoId = editing.id ? (editing as any).estabelecimento_id : await getEstabelecimentoId();
+    if (!estabelecimentoId) { toast.error("Estabelecimento não identificado para o usuário"); return; }
     if (editing.tipo === "Funcionário") {
       const f = (editing as any).anexos?.funcionario || {};
       if (!f.dp_ciente || !f.encarregado_ciente) {
