@@ -61,6 +61,8 @@ export default function LivroEncomendas() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("todas");
+  const [dataDe, setDataDe] = useState("");
+  const [dataAte, setDataAte] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
