@@ -413,9 +413,9 @@ export default function TranspEntrada() {
                     <div className="rounded-lg border p-4 space-y-3">
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                         <div className="flex-1">
-                          <Label>Chave da NF-e *</Label>
+                          <Label>Chave da NF-e</Label>
                           <Input value={form.nfe_chave} onChange={(e) => setForm({ ...form, nfe_chave: e.target.value.replace(/\D/g, "").slice(0, 44) })}
-                            placeholder="Leia o QR Code / código de barras" inputMode="numeric" />
+                            placeholder="Leia o QR Code / código de barras (opcional)" inputMode="numeric" />
                         </div>
                         <Button onClick={() => setScannerOpen(true)}><ScanLine className="h-4 w-4 mr-1" />Ler NF-e</Button>
                       </div>
@@ -434,7 +434,10 @@ export default function TranspEntrada() {
                           <Select value={form.setor_id} onValueChange={(v) => setForm({ ...form, setor_id: v })}>
                             <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
                             <SelectContent>
-                              {setores.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}{s.whatsapp ? ` — ${maskWhatsapp(s.whatsapp)}` : ""}</SelectItem>)}
+                              {setores.map((s) => {
+                                const nums = s.numeros?.length ? s.numeros.map((n) => maskWhatsapp(n.numero)).join(", ") : (s.whatsapp ? maskWhatsapp(s.whatsapp) : "");
+                                return <SelectItem key={s.id} value={s.id}>{s.nome}{nums ? ` — ${nums}` : ""}</SelectItem>;
+                              })}
                             </SelectContent>
                           </Select>
                         </div>
