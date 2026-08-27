@@ -209,7 +209,6 @@ export const menuItems: MenuItem[] = [
       { id: "Portaria", title: "Interfone", url: "/portaria", icon: LucideIcons.ShieldCheck },
     ],
   },
-  { id: "Manutenção", title: "Manutenção", url: "/manutencao", icon: LucideIcons.Wrench },
   { id: "Operacional Hub", title: "Operacional Hub", url: "/operacional", icon: LucideIcons.ClipboardList },
   { id: "Pilar Ferramentas", title: "Pilar Ferramentas", url: "/ferramentas", icon: LucideIcons.Wrench },
 
@@ -229,10 +228,13 @@ export const menuItems: MenuItem[] = [
 
 
   {
-    id: "Logística",
+    id: "Logística Grupo",
     title: "Logística",
     icon: LucideIcons.Truck,
-    url: "/logistica"
+    subItems: [
+      { id: "Logística", title: "Rastreamento", url: "/logistica", icon: LucideIcons.MapPin },
+      { id: "Manutenção", title: "Manutenção", url: "/manutencao", icon: LucideIcons.Wrench },
+    ],
   },
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
   { 
