@@ -296,9 +296,77 @@ function migrateTitle(title: string | undefined): string | undefined {
   return RENAMED_CONTAINER_TITLES[title] ?? title;
 }
 
+// Grupos criados depois que o usuário já salvou uma customização:
+// garantimos que existam, movendo os programas para dentro deles.
+const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds: string[] }[] = [
+  {
+    id: "c-Atendimento Portaria",
+    title: "Portaria",
+    iconName: "ShieldCheck",
+    programIds: [
+      "Transportadoras",
+      "Controle de Veículos",
+      "Controle de Visitantes",
+      "Livro de Ocorrência",
+      "Portaria",
+    ],
+  },
+];
+
+function migrateStructure(custom: MenuCustomization): MenuCustomization {
+  let roots = custom.roots;
+  let changed = false;
+
+  for (const grp of ENFORCED_GROUPS) {
+    const targets = new Set(grp.programIds);
+
+    let existing: CustomNode | null = null;
+    const findGroup = (nodes: CustomNode[]) => {
+      for (const n of nodes) {
+        if (n.kind === "container") {
+          if (n.id === grp.id || migrateTitle(n.title) === grp.title) {
+            existing = existing ?? n;
+          }
+          findGroup(n.children);
+        }
+      }
+    };
+    findGroup(roots);
+
+    // Se o grupo já existe e já contém todos os programas, nada a fazer.
+    if (existing) {
+      const inside = new Set<string>();
+      const walk = (n: CustomNode) => {
+        if (n.kind === "program") inside.add(n.programId);
+        else n.children.forEach(walk);
+      };
+      (existing as CustomNode & { kind: "container" }).children.forEach(walk);
+      if (grp.programIds.every((p) => inside.has(p))) continue;
+    }
+
+    changed = true;
+
+    // Remove os programas alvo de qualquer lugar da árvore
+    const strip = (nodes: CustomNode[]): CustomNode[] =>
+      nodes
+        .filter((n) => !(n.kind === "program" && targets.has(n.programId)))
+        .map((n) => (n.kind === "container" ? { ...n, children: strip(n.children) } : n))
+        .filter((n) => !(n.kind === "container" && n.children.length === 0 && n.id === grp.id));
+
+    roots = strip(roots);
+
+    const children: CustomNode[] = grp.programIds.map((programId) => ({ kind: "program", programId }));
+    roots = [...roots, { kind: "container", id: grp.id, title: grp.title, iconName: grp.iconName, children }];
+  }
+
+  return changed ? { ...custom, roots } : custom;
+}
+
 export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
-  const custom = loadCustomization();
-  if (!custom) return base;
+  const raw = loadCustomization();
+  if (!raw) return base;
+  const custom = migrateStructure(raw);
+
   const programs = extractPrograms(base);
   const placed = new Set<string>();
 
