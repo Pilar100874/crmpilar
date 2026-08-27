@@ -230,7 +230,7 @@ export default function TranspSaida() {
                           <div className="flex flex-wrap gap-1 mt-2">
                             <Badge variant="secondary" className="gap-1">
                               {entrega ? <PackageCheck className="h-3 w-3" /> : <PackageOpen className="h-3 w-3" />}
-                              {entrega ? "Entrega" : "Coleta"}
+                              {labelOperacaoCurto(m.tipo_operacao)}
                             </Badge>
                             <Badge variant={lib ? "default" : "outline"} className="gap-1">
                               {lib ? "Liberado" : "Aguardando liberação"}
