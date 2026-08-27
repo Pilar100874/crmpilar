@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users, ArrowLeft } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
