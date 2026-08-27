@@ -53,7 +53,14 @@ export function EstabelecimentosCRUD() {
   useEffect(() => {
     const subsecao = searchParams.get('subsecao');
     const subsubsecao = searchParams.get('subsubsecao');
-    
+    const estabParam = searchParams.get('estab');
+
+    if (estabParam && estabelecimentos.length > 0) {
+      const alvo = estabelecimentos.find((e) => e.id === estabParam);
+      if (alvo && selectedEstabelecimento?.id !== alvo.id) setSelectedEstabelecimento(alvo);
+      return;
+    }
+
     if ((subsecao || subsubsecao) && estabelecimentos.length > 0 && !selectedEstabelecimento) {
       setSelectedEstabelecimento(estabelecimentos[0]);
     }
