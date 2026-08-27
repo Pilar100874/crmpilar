@@ -121,7 +121,7 @@ export default function Config() {
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
   
-  const [activeSection, setActiveSection] = useState<string | null>(secaoParam);
+  const [activeSection, setActiveSection] = useState<string | null>(secaoParam ?? CONFIG_SECTIONS[0].id);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
 
