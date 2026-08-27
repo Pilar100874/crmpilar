@@ -225,14 +225,29 @@ export async function criarSetor(nome: string, numeros: { numero: string; descri
   return { ...setor, numeros: validos.map((n, i) => ({ id: `tmp-${i}`, setor_id: setor.id, numero: n.numero.replace(/\D/g, ""), descricao: n.descricao || null, ativo: true })) } as TranspSetor;
 }
 
-/** Rótulos da operação: entrega = descarregamento, coleta = carregamento. */
+/** Rótulos da operação: entrega = descarregamento, coleta = carregamento, ambos = os dois. */
 export const OPERACOES = [
   { value: "entrega", label: "Entrega (descarregamento)", desc: "O veículo traz mercadoria com NF-e" },
   { value: "coleta", label: "Coleta (carregamento)", desc: "O veículo vem retirar mercadoria" },
+  { value: "ambos", label: "Entrega + Coleta", desc: "Descarrega a mercadoria que trouxe e ainda carrega para levar" },
 ] as const;
 
+/** A operação envolve descarregamento (entrega da mercadoria trazida)? */
+export const temEntrega = (v?: string | null) => v === "entrega" || v === "ambos" || !v;
+/** A operação envolve carregamento (coleta de mercadoria)? */
+export const temColeta = (v?: string | null) => v === "coleta" || v === "ambos";
+
 export const labelOperacao = (v?: string | null) =>
-  v === "coleta" ? "Coleta (carregamento)" : "Entrega (descarregamento)";
+  v === "ambos"
+    ? "Entrega + Coleta"
+    : v === "coleta"
+      ? "Coleta (carregamento)"
+      : "Entrega (descarregamento)";
+
+/** Rótulo curto usado em badges. */
+export const labelOperacaoCurto = (v?: string | null) =>
+  v === "ambos" ? "Entrega + Coleta" : v === "coleta" ? "Coleta" : "Entrega";
+
 
 /** Link do WhatsApp para avisar o setor sobre a chegada do veículo. */
 export function linkAvisoSetor(setor: TranspSetor, texto: string) {

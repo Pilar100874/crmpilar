@@ -17,7 +17,7 @@ import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
 import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
-import { TRANSP_ANGLES } from "@/lib/transportadoras/dados";
+import { TRANSP_ANGLES, temColeta, labelOperacaoCurto } from "@/lib/transportadoras/dados";
 
 type StepKey = "veiculo" | "nfe" | "fotos" | "confirmacao";
 
@@ -58,7 +58,7 @@ export default function TranspSaida() {
   };
   useEffect(() => { load(); }, []);
 
-  const coleta = (sel?.tipo_operacao ?? "entrega") === "coleta";
+  const coleta = temColeta(sel?.tipo_operacao ?? "entrega");
   const liberado = sel?.status === "liberado";
   const nfeInfo = useMemo(() => (nfeSaida ? parseChaveNfe(nfeSaida) : null), [nfeSaida]);
 
@@ -215,7 +215,7 @@ export default function TranspSaida() {
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {movs.map((m) => {
                       const active = sel?.id === m.id;
-                      const entrega = (m.tipo_operacao ?? "entrega") === "entrega";
+                      const entrega = (m.tipo_operacao ?? "entrega") !== "coleta";
                       const lib = m.status === "liberado";
                       return (
                         <button key={m.id} type="button" onClick={() => selecionar(m)}
@@ -230,7 +230,7 @@ export default function TranspSaida() {
                           <div className="flex flex-wrap gap-1 mt-2">
                             <Badge variant="secondary" className="gap-1">
                               {entrega ? <PackageCheck className="h-3 w-3" /> : <PackageOpen className="h-3 w-3" />}
-                              {entrega ? "Entrega" : "Coleta"}
+                              {labelOperacaoCurto(m.tipo_operacao)}
                             </Badge>
                             <Badge variant={lib ? "default" : "outline"} className="gap-1">
                               {lib ? "Liberado" : "Aguardando liberação"}
@@ -293,7 +293,7 @@ export default function TranspSaida() {
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Placa</span><b className="font-mono">{sel.placa || "—"}</b></div>
                     
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Motorista</span><b>{sel.motorista_nome || "—"}</b></div>
-                    <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Operação</span><b>{coleta ? "Coleta" : "Entrega"}</b></div>
+                    <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Operação</span><b>{labelOperacaoCurto(sel.tipo_operacao)}</b></div>
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Entrada</span><b>{new Date(sel.entrada_time).toLocaleString("pt-BR")}</b></div>
                     {coleta && nfeInfo && (
                       <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">NF-e da carga</span><b>{nfeInfo.numero}/{nfeInfo.serie}</b></div>

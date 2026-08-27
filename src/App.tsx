@@ -363,6 +363,7 @@ import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import TvDashboardVendas from "./pages/TvDashboardVendas";
 import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
+import TvPortaria from "./pages/TvPortaria";
 import TvApresentacaoEmpresa from "./pages/TvApresentacaoEmpresa";
 import TvSignageLayout from "./pages/tv-signage/TvSignageLayout";
 import TvSignageDashboard from "./pages/tv-signage/TvSignageDashboard";
@@ -899,6 +900,7 @@ const App = () => (
             <Route path="/watch/logistica/historico" element={<WatchLogisticaHistorico />} />
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
+            <Route path="/tv/portaria" element={<TvPortaria />} />
             <Route path="/tv/cameras" element={<TvCameras />} />
             <Route path="/tv/apresentacao" element={<TvApresentacaoEmpresa />} />
             <Route path="/tv/mural" element={<TvMural />} />

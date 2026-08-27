@@ -23,7 +23,7 @@ import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/component
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
   TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores,
-  maskPlaca, normalizePlaca, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora, linkAvisoSetor, OPERACOES,
+  maskPlaca, normalizePlaca, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora, linkAvisoSetor, OPERACOES, labelOperacao,
   SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspMotorista, type TranspVeiculo, type TranspSetor,
 } from "@/lib/transportadoras/dados";
@@ -49,7 +49,7 @@ export default function TranspEntrada() {
   const [pendentesOpen, setPendentesOpen] = useState(false);
 
   const [form, setForm] = useState({
-    tipo_operacao: "" as "" | "entrega" | "coleta",
+    tipo_operacao: "" as "" | "entrega" | "coleta" | "ambos",
     transportadora_id: SEM_TRANSPORTADORA,
     veiculo_id: "",
     motorista_id: "",
@@ -58,11 +58,12 @@ export default function TranspEntrada() {
     entrada_obs: "",
   });
 
-  const entrega = form.tipo_operacao === "entrega";
+  const entrega = form.tipo_operacao === "entrega" || form.tipo_operacao === "ambos";
   const STEPS = useMemo(
     () => ["Operação", "Veículo", "Motorista", entrega ? "NF-e e setor" : "Detalhes", "Fotos"],
     [entrega],
   );
+
 
   const nfeInfo = useMemo(() => (form.nfe_chave ? parseChaveNfe(form.nfe_chave) : null), [form.nfe_chave]);
 
@@ -222,7 +223,7 @@ export default function TranspEntrada() {
 
     setBusy(false);
     setSucesso({
-      operacao: entrega ? "Entrega (descarregamento)" : "Coleta (carregamento)",
+      operacao: labelOperacao(form.tipo_operacao),
       transportadora: nomeTransportadora(empresaSel),
       placa: veiculoSel?.placa,
       motorista: motoristaSel?.nome,
@@ -327,10 +328,10 @@ export default function TranspEntrada() {
             {step === 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2"><PackageCheck className="h-5 w-5 text-primary" /><h3 className="font-semibold">O veículo veio para quê?</h3></div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   {OPERACOES.map((op) => {
                     const active = form.tipo_operacao === op.value;
-                    const Icon = op.value === "entrega" ? PackageCheck : PackageOpen;
+                    const Icon = op.value === "coleta" ? PackageOpen : PackageCheck;
                     return (
                       <button key={op.value} type="button"
                         onClick={() => setForm({ ...form, tipo_operacao: op.value as any })}
