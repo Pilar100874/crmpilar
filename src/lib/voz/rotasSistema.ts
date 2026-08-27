@@ -19,6 +19,9 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/transportadoras/movimentos", titulo: "Movimentos de Transportadoras", aliases: ["movimentos de transportadoras", "historico de transportadoras"] },
   { path: "/transportadoras/veiculos", titulo: "Veículos de Transportadoras", aliases: ["veiculos de transportadoras", "caminhoes de terceiros"] },
   { path: "/transportadoras/motoristas", titulo: "Motoristas de Transportadoras", aliases: ["motoristas de transportadoras", "motoristas de terceiros"] },
+  { path: "/transportadoras/liberacao", titulo: "Liberação de Transportadoras", aliases: ["liberacao de transportadora", "liberar carregamento", "liberar descarregamento"] },
+  { path: "/transportadoras/setores", titulo: "Setores de Transportadoras", aliases: ["setores de transportadoras", "cadastro de setores"] },
+
   { path: "/ferramentas", titulo: "Pilar Ferramentas", aliases: ["ferramentas", "controle de ferramentas", "almoxarifado de ferramentas"] },
   { path: "/ferramentas/tools", titulo: "Cadastro de Ferramentas", aliases: ["cadastro de ferramentas", "lista de ferramentas"] },
   { path: "/ferramentas/loans", titulo: "Registros de Empréstimos", aliases: ["registros de ferramentas", "registros de emprestimos", "historico de emprestimos"] },

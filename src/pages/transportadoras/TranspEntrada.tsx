@@ -1,35 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
-import { chaveValida, formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
-
+import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { LogIn, Truck, User, FileText, CheckCircle, ChevronRight, Camera, Plus, Search, ScanLine, PackageCheck, PackageOpen } from "lucide-react";
+import {
+  LogIn, Truck, User, CheckCircle, ChevronRight, ChevronLeft, Camera, Plus, Search,
+  ScanLine, PackageCheck, PackageOpen, Building2, FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
-  TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, maskPlaca, maskWhatsapp,
-  nomeTransportadora, SEM_TRANSPORTADORA, idTransportadora, type TranspEmpresa, type TranspMotorista, type TranspVeiculo,
+  TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores, criarSetor,
+  maskPlaca, maskWhatsapp, nomeTransportadora, linkAvisoSetor, OPERACOES,
+  SEM_TRANSPORTADORA, idTransportadora,
+  type TranspEmpresa, type TranspMotorista, type TranspVeiculo, type TranspSetor,
 } from "@/lib/transportadoras/dados";
 import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
-
-const STEPS = ["Transportadora", "Veículo", "Motorista", "Detalhes", "Fotos"] as const;
 
 export default function TranspEntrada() {
   const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [veiculos, setVeiculos] = useState<TranspVeiculo[]>([]);
   const [motoristas, setMotoristas] = useState<TranspMotorista[]>([]);
+  const [setores, setSetores] = useState<TranspSetor[]>([]);
   const [dentroVeiculoIds, setDentroVeiculoIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -40,12 +43,14 @@ export default function TranspEntrada() {
   const [sucesso, setSucesso] = useState<any>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [novaEmpresa, setNovaEmpresa] = useState(false);
+  const [novoSetor, setNovoSetor] = useState({ open: false, nome: "", whatsapp: "" });
 
   const [form, setForm] = useState({
-    transportadora_id: "",
+    tipo_operacao: "" as "" | "entrega" | "coleta",
+    transportadora_id: SEM_TRANSPORTADORA,
     veiculo_id: "",
     motorista_id: "",
-    tipo_operacao: "entrega" as "entrega" | "coleta",
+    setor_id: "",
     nfe_chave: "",
     ajudante_nome: "",
     documento: "",
@@ -53,22 +58,28 @@ export default function TranspEntrada() {
     entrada_obs: "",
   });
 
+  const entrega = form.tipo_operacao === "entrega";
+  const STEPS = useMemo(
+    () => ["Operação", "Veículo", "Motorista", entrega ? "NF-e e setor" : "Detalhes", "Fotos"],
+    [entrega],
+  );
+
   const nfeInfo = useMemo(() => (form.nfe_chave ? parseChaveNfe(form.nfe_chave) : null), [form.nfe_chave]);
 
-  const [novoVeiculo, setNovoVeiculo] = useState<{ open: boolean; placa: string; descricao: string; tipo_veiculo: string }>({
-    open: false, placa: "", descricao: "", tipo_veiculo: "",
-  });
+  const [novoVeiculo, setNovoVeiculo] = useState({ open: false, placa: "", descricao: "", tipo_veiculo: "" });
   const [novoMotorista, setNovoMotorista] = useState({ open: false, nome: "", cpf: "", cnh: "", whatsapp: "" });
 
   const load = async () => {
     setLoading(true);
-    const [emp, v, m, mov] = await Promise.all([
+    const [emp, st, v, m, mov] = await Promise.all([
       listarTransportadoras(),
+      listarSetores(),
       supabase.from("transp_veiculos").select("*").eq("ativo", true).order("placa"),
       supabase.from("transp_motoristas").select("*").eq("ativo", true).order("nome"),
-      supabase.from("transp_movimentos").select("veiculo_id").eq("status", "dentro"),
+      supabase.from("transp_movimentos").select("veiculo_id").neq("status", "saiu"),
     ]);
     setEmpresas(emp);
+    setSetores(st);
     setVeiculos((v.data ?? []) as any);
     setMotoristas((m.data ?? []) as any);
     setDentroVeiculoIds(new Set(((mov.data ?? []) as any[]).map((x) => x.veiculo_id).filter(Boolean)));
@@ -77,27 +88,31 @@ export default function TranspEntrada() {
   useEffect(() => { load(); }, []);
 
   const veiculosFiltrados = useMemo(() => veiculos.filter((v) =>
-    (!idTransportadora(form.transportadora_id) || v.transportadora_id === form.transportadora_id) &&
-    (!buscaV || `${v.placa} ${v.descricao ?? ""}`.toLowerCase().includes(buscaV.toLowerCase()))
-  ), [veiculos, form.transportadora_id, buscaV]);
+    !buscaV || `${v.placa} ${v.descricao ?? ""}`.toLowerCase().includes(buscaV.toLowerCase())
+  ), [veiculos, buscaV]);
 
   const motoristasFiltrados = useMemo(() => motoristas.filter((m) =>
-    (!idTransportadora(form.transportadora_id) || m.transportadora_id === form.transportadora_id) &&
-    (!buscaM || `${m.nome} ${m.cpf ?? ""}`.toLowerCase().includes(buscaM.toLowerCase()))
-  ), [motoristas, form.transportadora_id, buscaM]);
+    !buscaM || `${m.nome} ${m.cpf ?? ""} ${m.whatsapp ?? ""}`.toLowerCase().includes(buscaM.toLowerCase())
+  ), [motoristas, buscaM]);
 
   const veiculoSel = veiculos.find((v) => v.id === form.veiculo_id);
   const motoristaSel = motoristas.find((m) => m.id === form.motorista_id);
   const empresaSel = empresas.find((e) => e.id === form.transportadora_id);
+  const setorSel = setores.find((s) => s.id === form.setor_id);
 
   const canNext = () => {
-    if (step === 0) return !!form.transportadora_id;
+    if (step === 0) return !!form.tipo_operacao;
     if (step === 1) return !!form.veiculo_id;
     if (step === 2) return !!form.motorista_id;
+    if (step === 3 && entrega) return !!form.nfe_chave && !!form.setor_id;
     return true;
   };
+
   const goNext = () => {
-    if (!canNext()) return toast.error("Complete os campos obrigatórios");
+    if (!canNext()) {
+      if (step === 3) return toast.error("Leia a NF-e e escolha o setor a ser avisado");
+      return toast.error("Complete os campos obrigatórios");
+    }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
 
@@ -123,6 +138,7 @@ export default function TranspEntrada() {
 
   const criarMotorista = async () => {
     if (!novoMotorista.nome.trim()) return toast.error("Nome obrigatório");
+    if (!novoMotorista.whatsapp.replace(/\D/g, "")) return toast.error("WhatsApp / celular obrigatório");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const { data, error } = await supabase.from("transp_motoristas").insert({
@@ -141,6 +157,18 @@ export default function TranspEntrada() {
     toast.success("Motorista cadastrado e selecionado");
   };
 
+  const salvarSetor = async () => {
+    try {
+      const s = await criarSetor(novoSetor.nome, novoSetor.whatsapp);
+      setSetores((p) => [...p, s]);
+      setForm((f) => ({ ...f, setor_id: s.id }));
+      setNovoSetor({ open: false, nome: "", whatsapp: "" });
+      toast.success("Setor cadastrado e selecionado");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   const salvar = async () => {
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -153,14 +181,15 @@ export default function TranspEntrada() {
       transportadora_id: idTransportadora(form.transportadora_id),
       veiculo_id: form.veiculo_id || null,
       motorista_id: form.motorista_id || null,
+      setor_id: entrega ? (form.setor_id || null) : null,
       placa: veiculoSel?.placa ?? null,
       motorista_nome: motoristaSel?.nome ?? null,
       ajudante_nome: form.ajudante_nome.toUpperCase() || null,
       documento: form.documento.toUpperCase() || null,
       motivo: form.motivo.toUpperCase() || null,
       tipo_operacao: form.tipo_operacao,
-      nfe_chave: form.tipo_operacao === "entrega" ? (form.nfe_chave || null) : null,
-      nfe_dados: form.tipo_operacao === "entrega" && nfeInfo ? nfeInfo : null,
+      nfe_chave: entrega ? (form.nfe_chave || null) : null,
+      nfe_dados: entrega && nfeInfo ? nfeInfo : null,
       entrada_time: entrada.toISOString(),
       entrada_obs: form.entrada_obs || null,
       entrada_por: user?.id ?? null,
@@ -186,14 +215,22 @@ export default function TranspEntrada() {
 
     setBusy(false);
     setSucesso({
+      operacao: entrega ? "Entrega (descarregamento)" : "Coleta (carregamento)",
       transportadora: nomeTransportadora(empresaSel),
       placa: veiculoSel?.placa,
       motorista: motoristaSel?.nome,
       hora: entrada.toLocaleString("pt-BR"),
       fotos: photos.length,
+      setor: setorSel ?? null,
+      avisoTexto: setorSel
+        ? `Chegou veículo ${veiculoSel?.placa ?? ""} (${motoristaSel?.nome ?? ""}) para descarregamento. NF-e ${form.nfe_chave.slice(25, 34).replace(/^0+/, "")}.`
+        : "",
     });
     toast.success("Entrada registrada!");
-    setForm({ transportadora_id: "", veiculo_id: "", motorista_id: "", tipo_operacao: "entrega", nfe_chave: "", ajudante_nome: "", documento: "", motivo: "", entrada_obs: "" });
+    setForm({
+      tipo_operacao: "", transportadora_id: SEM_TRANSPORTADORA, veiculo_id: "", motorista_id: "",
+      setor_id: "", nfe_chave: "", ajudante_nome: "", documento: "", motivo: "", entrada_obs: "",
+    });
     setPhotos([]);
     setStep(0);
     load();
@@ -215,11 +252,17 @@ export default function TranspEntrada() {
           </DialogHeader>
           {sucesso && (
             <div className="space-y-2 text-center text-sm">
-              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Transportadora</p><p className="font-semibold">{sucesso.transportadora}</p></div>
+              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Operação</p><p className="font-semibold">{sucesso.operacao}</p></div>
               <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Veículo</p><p className="font-semibold font-mono">{sucesso.placa}</p></div>
               <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Motorista</p><p className="font-semibold">{sucesso.motorista}</p></div>
               <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Data/Hora</p><p className="font-semibold">{sucesso.hora}</p></div>
-              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Fotos</p><p className="font-semibold">{sucesso.fotos}</p></div>
+              {sucesso.setor?.whatsapp && (
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={linkAvisoSetor(sucesso.setor, sucesso.avisoTexto)} target="_blank" rel="noreferrer">
+                    Avisar setor {sucesso.setor.nome} no WhatsApp
+                  </a>
+                </Button>
+              )}
               <Button className="w-full" onClick={() => setSucesso(null)}>OK</Button>
             </div>
           )}
@@ -229,7 +272,22 @@ export default function TranspEntrada() {
       <NovaTransportadoraDialog
         open={novaEmpresa}
         onOpenChange={setNovaEmpresa}
-        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f) => ({ ...f, transportadora_id: e.id, veiculo_id: "", motorista_id: "" })); }}
+        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f) => ({ ...f, transportadora_id: e.id })); }}
+      />
+
+      <NfeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onDetected={(chave) => {
+          const info = parseChaveNfe(chave);
+          setForm((f) => ({
+            ...f,
+            nfe_chave: chave,
+            documento: f.documento || (info ? `NF-E ${info.numero}/${info.serie}` : f.documento),
+            motivo: f.motivo || (info ? `ENTREGA NF-E ${info.numero} - CNPJ ${info.cnpj_emitente}` : f.motivo),
+          }));
+          toast.success("NF-e lida com sucesso");
+        }}
       />
 
       <div className="space-y-4">
@@ -261,55 +319,54 @@ export default function TranspEntrada() {
           <CardContent className="p-4 sm:p-6 min-h-[340px] space-y-4">
             {step === 0 && (
               <div className="space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
-                  <div className="flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione a transportadora</h3></div>
-                  <Button size="sm" variant="outline" onClick={() => setNovaEmpresa(true)}>
-                    <Plus className="h-4 w-4 mr-1" />Nova transportadora
-                  </Button>
+                <div className="flex items-center gap-2"><PackageCheck className="h-5 w-5 text-primary" /><h3 className="font-semibold">O veículo veio para quê?</h3></div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {OPERACOES.map((op) => {
+                    const active = form.tipo_operacao === op.value;
+                    const Icon = op.value === "entrega" ? PackageCheck : PackageOpen;
+                    return (
+                      <button key={op.value} type="button"
+                        onClick={() => setForm({ ...form, tipo_operacao: op.value as any })}
+                        className={`text-left p-5 rounded-lg border-2 transition-all hover:shadow-md ${active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <Icon className={`h-6 w-6 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                          {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                        </div>
+                        <p className="font-semibold">{op.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{op.desc}</p>
+                      </button>
+                    );
+                  })}
                 </div>
-                {(
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <button type="button"
-                      onClick={() => setForm({ ...form, transportadora_id: SEM_TRANSPORTADORA, veiculo_id: "", motorista_id: "" })}
-                      className={`text-left p-4 rounded-lg border-2 border-dashed transition-all hover:shadow-md ${form.transportadora_id === SEM_TRANSPORTADORA ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <Truck className={`h-5 w-5 ${form.transportadora_id === SEM_TRANSPORTADORA ? "text-primary" : "text-muted-foreground"}`} />
-                        {form.transportadora_id === SEM_TRANSPORTADORA && <CheckCircle className="h-5 w-5 text-primary" />}
-                      </div>
-                      <p className="font-semibold truncate">Avulsa (sem cadastro)</p>
-                      <p className="text-xs text-muted-foreground">Registrar sem vincular transportadora</p>
-                    </button>
-                    {empresas.map((e) => {
-                      const active = form.transportadora_id === e.id;
-                      return (
-                        <button key={e.id} type="button"
-                          onClick={() => setForm({ ...form, transportadora_id: e.id, veiculo_id: "", motorista_id: "" })}
-                          className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"}`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <Truck className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                            {active && <CheckCircle className="h-5 w-5 text-primary" />}
-                          </div>
-                          <p className="font-semibold truncate">{nomeTransportadora(e)}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             )}
 
             {step === 1 && (
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
-                  <div className="flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo</h3></div>
+                  <div className="flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Pesquise ou cadastre o veículo</h3></div>
                   <Button size="sm" variant="outline" onClick={() => setNovoVeiculo({ ...novoVeiculo, open: true })}>
                     <Plus className="h-4 w-4 mr-1" />Novo veículo
                   </Button>
                 </div>
-                <div className="relative max-w-sm">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" placeholder="Buscar placa..." value={buscaV} onChange={(e) => setBuscaV(e.target.value)} />
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input className="pl-9" placeholder="Buscar placa..." value={buscaV} onChange={(e) => setBuscaV(e.target.value)} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={form.transportadora_id} onValueChange={(v) => setForm({ ...form, transportadora_id: v })}>
+                      <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Transportadora" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={SEM_TRANSPORTADORA}>Avulsa (sem transportadora)</SelectItem>
+                        {empresas.map((e) => <SelectItem key={e.id} value={e.id}>{nomeTransportadora(e)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button size="icon" variant="outline" onClick={() => setNovaEmpresa(true)}><Plus className="h-4 w-4" /></Button>
+                  </div>
                 </div>
+
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {veiculosFiltrados.map((v) => {
                     const active = form.veiculo_id === v.id;
@@ -319,7 +376,7 @@ export default function TranspEntrada() {
                         onClick={() => setForm({ ...form, veiculo_id: v.id })}
                         className={`text-left p-4 rounded-lg border-2 transition-all ${
                           dentro ? "opacity-50 cursor-not-allowed border-border"
-                            : active ? "border-primary bg-primary/5 shadow-md hover:shadow-md" : "border-border bg-card hover:shadow-md"
+                            : active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card hover:shadow-md"
                         }`}>
                         <div className="flex items-center justify-between mb-2">
                           <Truck className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
@@ -331,7 +388,7 @@ export default function TranspEntrada() {
                       </button>
                     );
                   })}
-                  {veiculosFiltrados.length === 0 && <p className="text-sm text-muted-foreground">Nenhum veículo. Use "Novo veículo".</p>}
+                  {veiculosFiltrados.length === 0 && <p className="text-sm text-muted-foreground">Nenhum veículo encontrado. Use "Novo veículo".</p>}
                 </div>
               </div>
             )}
@@ -339,14 +396,14 @@ export default function TranspEntrada() {
             {step === 2 && (
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
-                  <div className="flex items-center gap-2"><User className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o motorista</h3></div>
+                  <div className="flex items-center gap-2"><User className="h-5 w-5 text-primary" /><h3 className="font-semibold">Pesquise ou cadastre o motorista</h3></div>
                   <Button size="sm" variant="outline" onClick={() => setNovoMotorista({ ...novoMotorista, open: true })}>
                     <Plus className="h-4 w-4 mr-1" />Novo motorista
                   </Button>
                 </div>
                 <div className="relative max-w-sm">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" placeholder="Buscar nome ou CPF..." value={buscaM} onChange={(e) => setBuscaM(e.target.value)} />
+                  <Input className="pl-9" placeholder="Buscar nome, CPF ou WhatsApp..." value={buscaM} onChange={(e) => setBuscaM(e.target.value)} />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {motoristasFiltrados.map((m) => {
@@ -359,74 +416,63 @@ export default function TranspEntrada() {
                           {active && <CheckCircle className="h-5 w-5 text-primary" />}
                         </div>
                         <p className="font-semibold truncate">{m.nome}</p>
-                        <p className="text-xs text-muted-foreground mt-1">CNH: {m.cnh || "—"}</p>
-                        <p className="text-xs text-muted-foreground">{m.whatsapp ? maskWhatsapp(m.whatsapp) : "—"}</p>
+                        {m.cpf && <p className="text-xs text-muted-foreground">CPF {m.cpf}</p>}
+                        {m.whatsapp && <p className="text-xs text-muted-foreground">{maskWhatsapp(m.whatsapp)}</p>}
                       </button>
                     );
                   })}
-                  {motoristasFiltrados.length === 0 && <p className="text-sm text-muted-foreground">Nenhum motorista. Use "Novo motorista".</p>}
+                  {motoristasFiltrados.length === 0 && <p className="text-sm text-muted-foreground">Nenhum motorista encontrado. Use "Novo motorista".</p>}
                 </div>
               </div>
             )}
 
             {step === 3 && (
-              <div className="space-y-4 max-w-xl">
-                <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /><h3 className="font-semibold">Detalhes da entrada</h3></div>
-                <div className="p-3 bg-muted/50 rounded text-sm space-y-1">
-                  <p><strong>Transportadora:</strong> {nomeTransportadora(empresaSel)}</p>
-                  <p><strong>Veículo:</strong> {veiculoSel?.placa} — {veiculoSel?.descricao || "—"}</p>
-                  <p><strong>Motorista:</strong> {motoristaSel?.nome}</p>
-                </div>
-
-                <div>
-                  <Label>Tipo de operação</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    {([
-                      { v: "entrega", label: "Entrega", Icon: PackageCheck },
-                      { v: "coleta", label: "Coleta", Icon: PackageOpen },
-                    ] as const).map(({ v, label, Icon }) => {
-                      const active = form.tipo_operacao === v;
-                      return (
-                        <button key={v} type="button"
-                          onClick={() => setForm({ ...form, tipo_operacao: v, ...(v === "coleta" ? { nfe_chave: "" } : {}) })}
-                          className={`flex items-center justify-center gap-2 rounded-lg border-2 p-3 text-sm font-medium transition-all ${
-                            active ? "border-primary bg-primary/5" : "border-border bg-card hover:shadow-sm"
-                          }`}>
-                          <Icon className="h-4 w-4" />{label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {form.tipo_operacao === "entrega" && (
-                  <div className="rounded-lg border p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <Label className="flex items-center gap-2"><ScanLine className="h-4 w-4 text-primary" />Nota fiscal (NF-e)</Label>
-                      <Button size="sm" variant="outline" onClick={() => setScannerOpen(true)}>
-                        <ScanLine className="h-4 w-4 mr-1" />Ler código
-                      </Button>
-                    </div>
-                    {nfeInfo ? (
-                      <div className="text-xs space-y-0.5">
-                        <p className="font-medium">NF-e nº {nfeInfo.numero} · série {nfeInfo.serie}</p>
-                        <p className="text-muted-foreground">Emitente {nfeInfo.cnpj_emitente} · UF {nfeInfo.uf} · emissão {nfeInfo.emissao}</p>
-                        <p className="font-mono text-muted-foreground break-all">{formatarChave(nfeInfo.chave)}</p>
-                        {!chaveValida(nfeInfo.chave) && <p className="text-amber-600">Atenção: dígito verificador não confere.</p>}
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => setForm({ ...form, nfe_chave: "" })}>Remover</Button>
+              <div className="space-y-4">
+                {entrega && (
+                  <>
+                    <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /><h3 className="font-semibold">Nota fiscal e setor a avisar</h3></div>
+                    <div className="rounded-lg border p-4 space-y-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                        <div className="flex-1">
+                          <Label>Chave da NF-e *</Label>
+                          <Input value={form.nfe_chave} onChange={(e) => setForm({ ...form, nfe_chave: e.target.value.replace(/\D/g, "").slice(0, 44) })}
+                            placeholder="Leia o QR Code / código de barras" inputMode="numeric" />
+                        </div>
+                        <Button onClick={() => setScannerOpen(true)}><ScanLine className="h-4 w-4 mr-1" />Ler NF-e</Button>
                       </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Leia o código de barras ou QR Code da DANFE para capturar automaticamente os dados fiscais da nota.
-                      </p>
-                    )}
-                  </div>
+                      {nfeInfo && (
+                        <div className="grid gap-2 sm:grid-cols-2 text-xs bg-muted/40 rounded p-3">
+                          <p><span className="text-muted-foreground">Número/Série: </span><b>{nfeInfo.numero}/{nfeInfo.serie}</b></p>
+                          <p><span className="text-muted-foreground">Emitente: </span><b>{nfeInfo.cnpj_emitente}</b></p>
+                          <p><span className="text-muted-foreground">UF: </span><b>{nfeInfo.uf}</b></p>
+                          <p><span className="text-muted-foreground">Emissão: </span><b>{nfeInfo.emissao}</b></p>
+                          <p className="sm:col-span-2 font-mono break-all text-[10px]">{formatarChave(nfeInfo.chave)}</p>
+                        </div>
+                      )}
+                      <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                        <div className="flex-1">
+                          <Label>Setor a ser avisado *</Label>
+                          <Select value={form.setor_id} onValueChange={(v) => setForm({ ...form, setor_id: v })}>
+                            <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
+                            <SelectContent>
+                              {setores.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}{s.whatsapp ? ` — ${maskWhatsapp(s.whatsapp)}` : ""}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button variant="outline" onClick={() => setNovoSetor({ ...novoSetor, open: true })}>
+                          <Building2 className="h-4 w-4 mr-1" />Novo setor
+                        </Button>
+                      </div>
+                    </div>
+                  </>
                 )}
 
-                <div><Label>Ajudante (opcional)</Label><Input value={form.ajudante_nome} onChange={(e) => setForm({ ...form, ajudante_nome: e.target.value.toUpperCase() })} /></div>
-                <div><Label>Documento / Pedido</Label><Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value.toUpperCase() })} /></div>
-                <div><Label>Motivo / Observação da visita</Label><Input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value.toUpperCase() })} /></div>
-                <div><Label>Observações</Label><Textarea rows={3} value={form.entrada_obs} onChange={(e) => setForm({ ...form, entrada_obs: e.target.value })} /></div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div><Label>Ajudante</Label><Input value={form.ajudante_nome} onChange={(e) => setForm({ ...form, ajudante_nome: e.target.value.toUpperCase() })} /></div>
+                  <div><Label>Documento</Label><Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value.toUpperCase() })} /></div>
+                </div>
+                <div><Label>Motivo</Label><Input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value.toUpperCase() })} /></div>
+                <div><Label>Observações da entrada</Label><Textarea rows={3} value={form.entrada_obs} onChange={(e) => setForm({ ...form, entrada_obs: e.target.value })} /></div>
               </div>
             )}
 
@@ -439,30 +485,31 @@ export default function TranspEntrada() {
             )}
           </CardContent>
 
-          <div className="flex items-center justify-between gap-2 border-t p-4">
-            <Button variant="outline" onClick={() => setStep((s) => Math.max(s - 1, 0))} disabled={step === 0}>Voltar</Button>
+          <div className="flex justify-between gap-2 border-t p-4">
+            <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
+              <ChevronLeft className="h-4 w-4 mr-1" />Voltar
+            </Button>
             {step < STEPS.length - 1 ? (
-              <Button onClick={goNext}>Avançar</Button>
+              <Button onClick={goNext}>Avançar<ChevronRight className="h-4 w-4 ml-1" /></Button>
             ) : (
-              <Button onClick={salvar} disabled={busy}>{busy ? "Salvando..." : "Confirmar entrada"}</Button>
+              <Button onClick={salvar} disabled={busy}>{busy ? "Salvando..." : "Finalizar entrada"}</Button>
             )}
           </div>
         </Card>
       </div>
 
+      {/* Novo veículo */}
       <Dialog open={novoVeiculo.open} onOpenChange={(o) => setNovoVeiculo({ ...novoVeiculo, open: o })}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Novo veículo da transportadora</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Novo veículo</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Placa</Label><Input value={novoVeiculo.placa} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, placa: maskPlaca(e.target.value) })} /></div>
+            <div><Label>Placa *</Label><Input value={novoVeiculo.placa} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, placa: maskPlaca(e.target.value) })} /></div>
             <div><Label>Descrição</Label><Input value={novoVeiculo.descricao} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, descricao: e.target.value.toUpperCase() })} /></div>
             <div>
               <Label>Tipo</Label>
               <Select value={novoVeiculo.tipo_veiculo} onValueChange={(v) => setNovoVeiculo({ ...novoVeiculo, tipo_veiculo: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent className="bg-popover">
-                  {TIPOS_VEICULO_TRANSP.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
+                <SelectContent>{TIPOS_VEICULO_TRANSP.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
@@ -473,14 +520,15 @@ export default function TranspEntrada() {
         </DialogContent>
       </Dialog>
 
+      {/* Novo motorista */}
       <Dialog open={novoMotorista.open} onOpenChange={(o) => setNovoMotorista({ ...novoMotorista, open: o })}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Novo motorista da transportadora</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Novo motorista</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Nome</Label><Input value={novoMotorista.nome} onChange={(e) => setNovoMotorista({ ...novoMotorista, nome: e.target.value.toUpperCase() })} /></div>
-            <div><Label>CPF</Label><Input value={novoMotorista.cpf} onChange={(e) => setNovoMotorista({ ...novoMotorista, cpf: e.target.value })} /></div>
-            <div><Label>CNH</Label><Input value={novoMotorista.cnh} onChange={(e) => setNovoMotorista({ ...novoMotorista, cnh: e.target.value })} /></div>
-            <div><Label>WhatsApp</Label><Input value={maskWhatsapp(novoMotorista.whatsapp)} onChange={(e) => setNovoMotorista({ ...novoMotorista, whatsapp: e.target.value })} placeholder="(11) 90000-0000" /></div>
+            <div><Label>Nome *</Label><Input value={novoMotorista.nome} onChange={(e) => setNovoMotorista({ ...novoMotorista, nome: e.target.value.toUpperCase() })} /></div>
+            <div><Label>CPF</Label><Input value={novoMotorista.cpf} onChange={(e) => setNovoMotorista({ ...novoMotorista, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" /></div>
+            <div><Label>WhatsApp / celular *</Label><Input value={novoMotorista.whatsapp} onChange={(e) => setNovoMotorista({ ...novoMotorista, whatsapp: maskWhatsapp(e.target.value) })} placeholder="(11) 90000-0000" /></div>
+            <div><Label>CNH</Label><Input value={novoMotorista.cnh} onChange={(e) => setNovoMotorista({ ...novoMotorista, cnh: e.target.value.replace(/\D/g, "") })} inputMode="numeric" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNovoMotorista({ ...novoMotorista, open: false })}>Cancelar</Button>
@@ -489,22 +537,20 @@ export default function TranspEntrada() {
         </DialogContent>
       </Dialog>
 
-      <NfeScannerDialog
-        open={scannerOpen}
-        onOpenChange={setScannerOpen}
-        onDetected={(chave) => {
-          const info = parseChaveNfe(chave);
-          setForm((f) => ({
-            ...f,
-            nfe_chave: chave,
-            tipo_operacao: "entrega",
-            documento: f.documento || (info ? `NF-E ${info.numero}` : f.documento),
-            motivo: f.motivo || (info ? `ENTREGA NF-E ${info.numero} / SÉRIE ${info.serie} — EMITENTE ${info.cnpj_emitente}` : f.motivo),
-          }));
-          toast.success(info ? `NF-e nº ${info.numero} capturada` : "Chave da NF-e capturada");
-        }}
-      />
-
+      {/* Novo setor */}
+      <Dialog open={novoSetor.open} onOpenChange={(o) => setNovoSetor({ ...novoSetor, open: o })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Novo setor</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Nome *</Label><Input value={novoSetor.nome} onChange={(e) => setNovoSetor({ ...novoSetor, nome: e.target.value.toUpperCase() })} placeholder="EXPEDIÇÃO" /></div>
+            <div><Label>WhatsApp do setor</Label><Input value={novoSetor.whatsapp} onChange={(e) => setNovoSetor({ ...novoSetor, whatsapp: maskWhatsapp(e.target.value) })} placeholder="(11) 90000-0000" /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNovoSetor({ ...novoSetor, open: false })}>Cancelar</Button>
+            <Button onClick={salvarSetor}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
