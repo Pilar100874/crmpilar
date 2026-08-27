@@ -247,28 +247,35 @@ export default function Config() {
       );
     }
     if (section.id === "cadastro-estabelecimentos") {
-      const estabSel = searchParams.get("estab");
       const isEstabSection = activeSection === "cadastro-estabelecimentos";
       return (
         <div key={section.id} className="space-y-0.5">
           {button}
           <div className="ml-7 space-y-0.5 border-l border-border/60 pl-2">
             <button
-              onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id }); }}
+              onClick={() => { setExpandedEstabId(null); handleSectionClick(section.id); }}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                isEstabSection && !estabSel && "text-foreground bg-muted/60 font-medium"
+                isEstabSection && !expandedEstabId && "text-foreground bg-muted/60 font-medium"
               )}
             >
               <Plus className="h-3 w-3 shrink-0 opacity-70" />
               <span className="truncate">Cadastro de Estabelecimento</span>
             </button>
             {estabelecimentos.map((e) => {
-              const expanded = estabSel === e.id;
+              const expanded = expandedEstabId === e.id;
               return (
                 <div key={e.id} className="space-y-0.5">
                   <button
-                    onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id, estab: e.id }); }}
+                    onClick={() => {
+                      if (expanded) {
+                        setExpandedEstabId(null);
+                      } else {
+                        setExpandedEstabId(e.id);
+                      }
+                      setActiveSection(section.id);
+                      setSearchParams({ secao: section.id, estab: e.id });
+                    }}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
                       isEstabSection && expanded && "text-foreground bg-muted/60 font-medium"
@@ -284,7 +291,7 @@ export default function Config() {
                           key={sub.id}
                           onClick={() => {
                             if (GLOBAL_SUBMENU_IDS.includes(sub.id)) {
-                              handleSectionClick(sub.id);
+                              handleSectionClick(sub.id, e.id);
                               return;
                             }
                             setActiveSection(sub.id);
