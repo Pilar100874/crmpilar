@@ -25,10 +25,13 @@ interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; 
 
 const navItems: NavItem[] = [
   { to: "/portaria", label: "Interfone", icon: PhoneCall, end: true },
+  { to: "/portaria/dispositivos", label: "Dispositivos", icon: Cpu, gestor: true },
+  { to: "/portaria/configuracoes", label: "Configurações", icon: Settings, gestor: true },
 ];
 
 
 const bottomNav = navItems.slice(0, 5);
+
 
 function isItemActive(pathname: string, item: NavItem) {
   if (item.end) return pathname === item.to;
