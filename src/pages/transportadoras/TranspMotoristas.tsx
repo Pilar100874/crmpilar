@@ -63,25 +63,36 @@ export default function TranspMotoristas() {
     if (!cpfLimpo) return toast.error("CPF obrigatório");
     if (cpfLimpo.length !== 11) return toast.error("CPF deve ter 11 dígitos");
     if (!validarCpf(cpfLimpo)) return toast.error("CPF inválido");
-    const payload = {
-      transportadora_id: idTransportadora(form.transportadora_id),
-      nome: form.nome.toUpperCase(),
-      cpf: cpfLimpo,
-      cnh: null,
-      whatsapp: (form.whatsapp || "").replace(/\D/g, "") || null,
-      observacoes: form.observacoes || null,
-      ativo: form.ativo,
-    };
-    let error;
-    if (editing) {
-      ({ error } = await supabase.from("transp_motoristas").update(payload as any).eq("id", editing));
-    } else {
-      const estId = await getEstabelecimentoId();
-      if (!estId) return toast.error("Estabelecimento não encontrado");
-      ({ error } = await supabase.from("transp_motoristas").insert({ ...payload, estabelecimento_id: estId } as any));
+    if (!cnhFile && !form.cnh_foto_url) return toast.error("A foto da CNH é obrigatória");
+    setSaving(true);
+    try {
+      let cnh_foto_url: string | null = form.cnh_foto_url ?? null;
+      if (cnhFile) cnh_foto_url = await uploadCnhFoto(cnhFile);
+      const payload = {
+        transportadora_id: idTransportadora(form.transportadora_id),
+        nome: form.nome.toUpperCase(),
+        cpf: cpfLimpo,
+        cnh: null,
+        cnh_foto_url,
+        whatsapp: (form.whatsapp || "").replace(/\D/g, "") || null,
+        observacoes: form.observacoes || null,
+        ativo: form.ativo,
+      };
+      let error;
+      if (editing) {
+        ({ error } = await supabase.from("transp_motoristas").update(payload as any).eq("id", editing));
+      } else {
+        const estId = await getEstabelecimentoId();
+        if (!estId) { setSaving(false); return toast.error("Estabelecimento não encontrado"); }
+        ({ error } = await supabase.from("transp_motoristas").insert({ ...payload, estabelecimento_id: estId } as any));
+      }
+      if (error) return toast.error(error.message);
+      toast.success("Salvo"); setOpen(false); setCnhFile(null); load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao enviar foto da CNH");
+    } finally {
+      setSaving(false);
     }
-    if (error) return toast.error(error.message);
-    toast.success("Salvo"); setOpen(false); load();
   };
 
   const remove = async () => {
