@@ -6940,20 +6940,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "cv_vehicle_movements_porteiro_entrada_id_fkey"
-            columns: ["porteiro_entrada_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cv_vehicle_movements_porteiro_saida_id_fkey"
-            columns: ["porteiro_saida_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "cv_vehicle_movements_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -12131,15 +12117,7 @@ export type Database = {
           unidade?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "livro_encomendas_porteiro_id_fkey"
-            columns: ["porteiro_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       livro_ocorrencias: {
         Row: {
@@ -12214,15 +12192,7 @@ export type Database = {
           turno?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "livro_ocorrencias_porteiro_id_fkey"
-            columns: ["porteiro_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       livro_palavras_chave: {
         Row: {
@@ -22271,48 +22241,6 @@ export type Database = {
           },
         ]
       }
-      porteiros: {
-        Row: {
-          ativo: boolean
-          created_at: string
-          documento: string | null
-          estabelecimento_id: string
-          id: string
-          nome: string
-          observacoes: string | null
-          telefone: string | null
-          turno: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          ativo?: boolean
-          created_at?: string
-          documento?: string | null
-          estabelecimento_id: string
-          id?: string
-          nome: string
-          observacoes?: string | null
-          telefone?: string | null
-          turno?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          ativo?: boolean
-          created_at?: string
-          documento?: string | null
-          estabelecimento_id?: string
-          id?: string
-          nome?: string
-          observacoes?: string | null
-          telefone?: string | null
-          turno?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       produto_campos_customizados: {
         Row: {
           ativo: boolean | null
@@ -26985,20 +26913,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transp_movimentos_porteiro_entrada_id_fkey"
-            columns: ["porteiro_entrada_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transp_movimentos_porteiro_saida_id_fkey"
-            columns: ["porteiro_saida_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "transp_movimentos_setor_id_fkey"
             columns: ["setor_id"]
             isOneToOne: false
@@ -28276,6 +28190,7 @@ export type Database = {
           hora_inicial: string
           id: string
           imap: string | null
+          is_porteiro: boolean
           nome: string
           pop: string | null
           porta_imap: number | null
@@ -28310,6 +28225,7 @@ export type Database = {
           hora_inicial?: string
           id?: string
           imap?: string | null
+          is_porteiro?: boolean
           nome: string
           pop?: string | null
           porta_imap?: number | null
@@ -28344,6 +28260,7 @@ export type Database = {
           hora_inicial?: string
           id?: string
           imap?: string | null
+          is_porteiro?: boolean
           nome?: string
           pop?: string | null
           porta_imap?: number | null
@@ -28838,20 +28755,6 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vis_access_records_porteiro_entrada_id_fkey"
-            columns: ["porteiro_entrada_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vis_access_records_porteiro_saida_id_fkey"
-            columns: ["porteiro_saida_id"]
-            isOneToOne: false
-            referencedRelation: "porteiros"
             referencedColumns: ["id"]
           },
           {
