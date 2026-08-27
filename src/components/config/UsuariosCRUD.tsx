@@ -875,7 +875,22 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         <div><h3 className="text-lg font-semibold">Usuários</h3><p className="text-sm text-muted-foreground">{usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}</p></div>
         <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo usuário</Button>
       </div>
-      <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, e-mail, WhatsApp, unidade ou grupo" className="pl-9" /></div>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, e-mail, WhatsApp, unidade ou grupo" className="pl-9" /></div>
+        <Select value={perfilFiltro} onValueChange={setPerfilFiltro}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Filtrar por perfil" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os perfis</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="atendente">Atendente</SelectItem>
+            <SelectItem value="porteiro">Porteiro</SelectItem>
+            <SelectItem value="gerente">Gerente</SelectItem>
+            <SelectItem value="padrao">Padrão</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center gap-2 border-b pb-3"><Users className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar usuário" : "Novo usuário"}</h4></div>
