@@ -290,16 +290,16 @@ export default function Config() {
 
   return (
     <div className="h-full min-h-screen flex flex-col bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
-        <div className="flex items-center gap-3 px-3 py-3 sm:px-5">
+      {/* Header padrão do sistema */}
+      <header className="sticky top-0 z-40 border-b bg-gradient-to-r from-primary/10 via-primary/5 to-transparent backdrop-blur">
+        <div className="flex items-center gap-3 px-3 py-4 sm:px-6">
           <div className="hidden">
             <SubMenuHeader
               title="Configurações"
               onOpenSubmenu={() => openSubmenu("Configurações")}
             />
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
             {activeSectionData ? (
               <activeSectionData.icon className="h-5 w-5" />
             ) : (
@@ -307,23 +307,18 @@ export default function Config() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+            <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
               {activeSectionData ? activeSectionData.title : "Configurações"}
             </h1>
-            <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block">
+            <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
               {activeSectionData
                 ? activeSectionData.description
                 : "Gerencie preferências, integrações e a aparência da plataforma"}
             </p>
           </div>
-          {activeSection && (
-            <Button variant="ghost" size="sm" onClick={handleBack} className="shrink-0">
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              Voltar
-            </Button>
-          )}
         </div>
       </header>
+
 
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full flex-col lg:flex-row">
