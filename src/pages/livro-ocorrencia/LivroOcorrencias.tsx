@@ -11,6 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X, CheckCircle2 } from "lucide-react";
 import { useRef } from "react";
 
