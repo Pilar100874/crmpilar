@@ -311,6 +311,18 @@ const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds
       "Portaria",
     ],
   },
+  {
+    id: "c-TV",
+    title: "TV",
+    iconName: "Tv",
+    programIds: [
+      "TV Vendas",
+      "TV Veículos",
+      "TV Portaria",
+      "TV Câmeras",
+      "TV Signage",
+    ],
+  },
 ];
 
 function migrateStructure(custom: MenuCustomization): MenuCustomization {
