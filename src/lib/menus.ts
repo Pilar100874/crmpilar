@@ -53,6 +53,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "TV", label: "TV (Categoria)", category: "TV" },
   { id: "TV Vendas", label: "TV Vendas", category: "TV" },
   { id: "TV Veículos", label: "TV Veículos", category: "TV" },
+  { id: "TV Portaria", label: "TV Portaria", category: "TV" },
   { id: "TV Câmeras", label: "TV Câmeras (Mosaico)", category: "TV" },
   { id: "TV Signage", label: "Gerenciador de Telas Remotas", category: "TV" },
 
