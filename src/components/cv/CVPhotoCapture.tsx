@@ -307,6 +307,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
         return (
           <Card
             key={a.key}
+            id={`angle-${a.key}`}
             className={`overflow-hidden transition-all ${
               captured ? "border-success/60 bg-success/5" : a.required ? "border-warning/40" : ""
             }`}

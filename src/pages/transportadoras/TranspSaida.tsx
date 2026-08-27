@@ -30,13 +30,14 @@ export default function TranspSaida() {
   const [sucesso, setSucesso] = useState<any>(null);
   const [angles, setAngles] = useState<PhotoAngle[]>(TRANSP_ANGLES);
   const [photosRequired, setPhotosRequired] = useState(true);
+  const [pendentesOpen, setPendentesOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const [emp, m, cfg] = await Promise.all([
       listarTransportadoras(),
       supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }),
-      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
+      supabase.from("transp_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     const cfgAngles = ((cfg.data as any)?.exit_photos ?? []) as PhotoAngle[];
     setAngles(cfgAngles.length ? cfgAngles : TRANSP_ANGLES);
@@ -59,7 +60,8 @@ export default function TranspSaida() {
   const registrar = async () => {
     if (!sel) return;
     if (photosRequired && missingRequired.length > 0) {
-      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+      setPendentesOpen(true);
+      return;
     }
     if (sel.status !== "liberado") return toast.error("Veículo ainda não foi liberado na tela de Liberação");
     if (coleta && nfeSaida.length !== 44) return toast.error("Leia o QR Code / código de barras da NF-e da carga");
