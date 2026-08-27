@@ -256,6 +256,20 @@ export default function Config() {
                 <span className="truncate">{e.nome}</span>
               </button>
             ))}
+            <div className="my-1 border-t border-border/40" />
+            {EMPRESA_SUBMENUS.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => handleSectionClick(sub.id)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                  activeSection === sub.id && "text-foreground bg-muted/60 font-medium"
+                )}
+              >
+                <sub.icon className="h-3 w-3 shrink-0 opacity-70" />
+                <span className="truncate">{sub.title}</span>
+              </button>
+            ))}
           </div>
         </div>
       );
