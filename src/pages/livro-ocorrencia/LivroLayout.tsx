@@ -5,6 +5,7 @@ import {
   ShieldAlert,
   Package,
   BookOpen,
+  KeyRound,
   PanelLeftClose,
   PanelLeft,
   LucideIcon,
@@ -25,6 +26,7 @@ const navItems: NavItem[] = [
   { to: "/livro-ocorrencia", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/livro-ocorrencia/ocorrencias", label: "Ocorrências da Portaria", icon: ShieldAlert },
   { to: "/livro-ocorrencia/encomendas", label: "Encomendas / Correios", icon: Package },
+  { to: "/livro-ocorrencia/palavras-chave", label: "Palavras-Chave", icon: KeyRound },
 ];
 
 function isItemActive(pathname: string, item: NavItem) {

@@ -249,6 +249,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Sub-telas: Livro de Ocorrência ============
   { path: "/livro-ocorrencia/ocorrencias", titulo: "Ocorrências", aliases: ["ocorrencias da portaria", "livro - ocorrencias"] },
   { path: "/livro-ocorrencia/encomendas", titulo: "Encomendas", aliases: ["encomendas da portaria", "livro - encomendas"] },
+  { path: "/livro-ocorrencia/palavras-chave", titulo: "Palavras-Chave", aliases: ["palavras chave portaria", "senhas de recebimento", "livro - palavras chave"] },
 
   // ============ Sub-telas: Câmeras ============
   { path: "/cameras/ao-vivo", titulo: "Câmeras Ao Vivo", aliases: ["cameras ao vivo"] },

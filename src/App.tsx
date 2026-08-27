@@ -257,6 +257,7 @@ import LivroLayout from "./pages/livro-ocorrencia/LivroLayout";
 import LivroDashboard from "./pages/livro-ocorrencia/LivroDashboard";
 import LivroOcorrencias from "./pages/livro-ocorrencia/LivroOcorrencias";
 import LivroEncomendas from "./pages/livro-ocorrencia/LivroEncomendas";
+import LivroPalavrasChave from "./pages/livro-ocorrencia/LivroPalavrasChave";
 import PortariaLayout from "./pages/portaria/PortariaLayout";
 import PortariaDashboard from "./pages/portaria/PortariaDashboard";
 import PortariaAcessos from "./pages/portaria/PortariaAcessos";
@@ -836,6 +837,7 @@ const App = () => (
                 <Route index element={<LivroDashboard />} />
                 <Route path="ocorrencias" element={<LivroOcorrencias />} />
                 <Route path="encomendas" element={<LivroEncomendas />} />
+                <Route path="palavras-chave" element={<LivroPalavrasChave />} />
               </Route>
               <Route path="/portaria" element={<PortariaLayout />}>
                 <Route index element={<PortariaInterfone />} />
