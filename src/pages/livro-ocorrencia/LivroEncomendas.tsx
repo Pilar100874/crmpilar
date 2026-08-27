@@ -62,7 +62,7 @@ export default function LivroEncomendas() {
   const [editing, setEditing] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deliverTarget, setDeliverTarget] = useState<Encomenda | null>(null);
-  const [deliverData, setDeliverData] = useState({ retirado_por: "", documento_retirada: "", observacoes: "" });
+  const [deliverData, setDeliverData] = useState({ retirado_por: "", documento_retirada: "", observacoes: "", data_entrega: "" });
   const [params, setParams] = useSearchParams();
   const [defaultDest, setDefaultDest] = useState("");
   const [uploadingFoto, setUploadingFoto] = useState(false);
@@ -170,20 +170,37 @@ export default function LivroEncomendas() {
     setDeletingId(null);
   };
 
+  const openDeliver = (o: Encomenda) => {
+    setDeliverData({ retirado_por: "", documento_retirada: "", observacoes: "", data_entrega: new Date().toISOString().slice(0, 16) });
+    setDeliverTarget(o);
+  };
+
   const confirmDeliver = async () => {
     if (!deliverTarget) return;
     if (!deliverData.retirado_por) { toast.error("Informe quem retirou"); return; }
+    if (!deliverData.data_entrega) { toast.error("Informe a data da retirada"); return; }
     const { error } = await supabase.from("livro_encomendas" as any).update({
       status: "entregue",
-      data_entrega: new Date().toISOString(),
-      retirado_por: deliverData.retirado_por,
+      data_entrega: new Date(deliverData.data_entrega).toISOString(),
+      retirado_por: deliverData.retirado_por.toUpperCase(),
       documento_retirada: deliverData.documento_retirada || null,
       observacoes: deliverData.observacoes || deliverTarget.observacoes,
     }).eq("id", deliverTarget.id);
-    if (error) toast.error("Erro ao registrar entrega");
-    else { toast.success("Entrega registrada"); load(); }
+    if (error) toast.error("Erro ao registrar retirada");
+    else { toast.success("Retirada registrada"); load(); }
     setDeliverTarget(null);
-    setDeliverData({ retirado_por: "", documento_retirada: "", observacoes: "" });
+    setDeliverData({ retirado_por: "", documento_retirada: "", observacoes: "", data_entrega: "" });
+  };
+
+  const reopenDeliver = async (o: Encomenda) => {
+    const { error } = await supabase.from("livro_encomendas" as any).update({
+      status: "aguardando_retirada",
+      data_entrega: null,
+      retirado_por: null,
+      documento_retirada: null,
+    }).eq("id", o.id);
+    if (error) toast.error("Erro ao estornar retirada");
+    else { toast.success("Retirada estornada"); load(); }
   };
 
   const filtered = items.filter((o) => {
