@@ -837,7 +837,8 @@ const App = () => (
                 <Route path="encomendas" element={<LivroEncomendas />} />
               </Route>
               <Route path="/portaria" element={<PortariaLayout />}>
-                <Route index element={<PortariaDashboard />} />
+                <Route index element={<PortariaInterfone />} />
+                <Route path="inicio" element={<PortariaDashboard />} />
                 <Route path="acessos" element={<PortariaAcessos />} />
                 <Route path="pessoas" element={<PortariaPessoas />} />
                 <Route path="visitantes" element={<PortariaVisitantes />} />
