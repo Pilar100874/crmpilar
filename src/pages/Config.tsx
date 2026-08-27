@@ -452,11 +452,56 @@ export default function Config() {
   );
 }
 
+// ============================================
+// Painel do estabelecimento selecionado
+// ============================================
+function EstabelecimentoPainel({ estabelecimentoId, estabelecimentos, onSubmenuClick }: EstabelecimentoPainelProps) {
+  const estabelecimento = estabelecimentos.find((e) => e.id === estabelecimentoId);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 pb-4 border-b">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-500/10 text-green-500">
+          <Store className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-base font-semibold sm:text-lg">
+            {estabelecimento?.nome ?? "Estabelecimento"}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Selecione uma opção abaixo para gerenciar
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {EMPRESA_SUBMENUS.map((sub) => (
+          <button
+            key={sub.id}
+            onClick={() => onSubmenuClick(sub.id, GLOBAL_SUBMENU_IDS.includes(sub.id) ? estabelecimentoId : undefined)}
+            className={cn(
+              "flex items-start gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            )}
+          >
+            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", sub.bgColor)}>
+              <sub.icon className={cn("h-5 w-5", sub.iconColor)} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-medium">{sub.title}</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{sub.description}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 // ============================================
 // Componente de Notificações
 // ============================================
-function NotificacoesContent({ 
+function NotificacoesContent({
   showConfirmationMessages, 
   onToggle 
 }: { 
