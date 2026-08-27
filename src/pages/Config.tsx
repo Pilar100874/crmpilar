@@ -198,6 +198,10 @@ export default function Config() {
         return <UsuariosCRUD estabelecimentoId={searchParams.get("estab") ?? undefined} />;
       case "segmentos":
         return <SegmentosCRUD />;
+      case "email-config":
+        return <EmailConfig embedded />;
+      case "visual-sistema":
+        return <SystemVisualConfig embedded />;
 
       default:
         return null;
