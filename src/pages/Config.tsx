@@ -15,6 +15,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
+import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
+import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
+import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
+import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import { Building2, FolderTree, UserCog, Tag } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
@@ -71,6 +76,42 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     icon: Paintbrush,
     bgColor: "bg-pink-500/10",
     iconColor: "text-pink-500",
+  },
+];
+
+// Sub-itens do menu Estabelecimento (empresa)
+const EMPRESA_SUBMENUS: ConfigSection[] = [
+  {
+    id: "cadastro-unidades",
+    title: "Unidades",
+    description: "Filiais e departamentos",
+    icon: Building2,
+    bgColor: "bg-amber-500/10",
+    iconColor: "text-amber-500",
+  },
+  {
+    id: "grupos-acesso",
+    title: "Grupos de Acesso",
+    description: "Perfis de permissão",
+    icon: FolderTree,
+    bgColor: "bg-orange-500/10",
+    iconColor: "text-orange-500",
+  },
+  {
+    id: "cadastro-usuarios",
+    title: "Usuários",
+    description: "Gerenciar usuários",
+    icon: UserCog,
+    bgColor: "bg-emerald-500/10",
+    iconColor: "text-emerald-500",
+  },
+  {
+    id: "segmentos",
+    title: "Segmentos",
+    description: "Agrupamento de clientes",
+    icon: Tag,
+    bgColor: "bg-teal-500/10",
+    iconColor: "text-teal-500",
   },
 ];
 
@@ -131,7 +172,9 @@ export default function Config() {
     }
   };
 
-  const activeSectionData = CONFIG_SECTIONS.find(s => s.id === activeSection);
+  const activeSectionData =
+    CONFIG_SECTIONS.find(s => s.id === activeSection) ??
+    EMPRESA_SUBMENUS.find(s => s.id === activeSection);
 
   // Renderiza o conteúdo de cada seção
   const renderSectionContent = () => {
@@ -147,6 +190,14 @@ export default function Config() {
         return <WhatsAppConfigCRUD />;
       case "conteudos":
         return <ConteudosContent />;
+      case "cadastro-unidades":
+        return <UnidadesCRUD />;
+      case "grupos-acesso":
+        return <GruposAcessoCRUD />;
+      case "cadastro-usuarios":
+        return <UsuariosCRUD />;
+      case "segmentos":
+        return <SegmentosCRUD />;
       default:
         return null;
     }
@@ -203,6 +254,20 @@ export default function Config() {
               >
                 <Store className="h-3 w-3 shrink-0 opacity-70" />
                 <span className="truncate">{e.nome}</span>
+              </button>
+            ))}
+            <div className="my-1 border-t border-border/40" />
+            {EMPRESA_SUBMENUS.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => handleSectionClick(sub.id)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                  activeSection === sub.id && "text-foreground bg-muted/60 font-medium"
+                )}
+              >
+                <sub.icon className="h-3 w-3 shrink-0 opacity-70" />
+                <span className="truncate">{sub.title}</span>
               </button>
             ))}
           </div>
@@ -272,6 +337,14 @@ export default function Config() {
                     <div className="flex items-center gap-2">
                       <section.icon className="h-4 w-4" />
                       <span>{section.title}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+                {EMPRESA_SUBMENUS.map((section) => (
+                  <SelectItem key={section.id} value={section.id}>
+                    <div className="flex items-center gap-2">
+                      <section.icon className="h-4 w-4" />
+                      <span>Estabelecimento → {section.title}</span>
                     </div>
                   </SelectItem>
                 ))}
