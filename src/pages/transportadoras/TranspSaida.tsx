@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
-import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
+import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
 import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
 import { TRANSP_ANGLES, listarTransportadoras, nomeTransportadora, type TranspEmpresa } from "@/lib/transportadoras/dados";
@@ -28,13 +28,19 @@ export default function TranspSaida() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sucesso, setSucesso] = useState<any>(null);
+  const [angles, setAngles] = useState<PhotoAngle[]>(TRANSP_ANGLES);
+  const [photosRequired, setPhotosRequired] = useState(true);
 
   const load = async () => {
     setLoading(true);
-    const [emp, m] = await Promise.all([
+    const [emp, m, cfg] = await Promise.all([
       listarTransportadoras(),
       supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }),
+      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
+    const cfgAngles = ((cfg.data as any)?.exit_photos ?? []) as PhotoAngle[];
+    setAngles(cfgAngles.length ? cfgAngles : TRANSP_ANGLES);
+    setPhotosRequired((cfg.data as any)?.exit_photos_required ?? true);
     setEmpresas(emp);
     setMovs((m.data ?? []) as any[]);
     setLoading(false);
@@ -45,8 +51,16 @@ export default function TranspSaida() {
   const coleta = (sel?.tipo_operacao ?? "entrega") === "coleta";
   const nfeInfo = useMemo(() => (nfeSaida ? parseChaveNfe(nfeSaida) : null), [nfeSaida]);
 
+  const missingRequired = useMemo(
+    () => angles.filter((a) => a.required).filter((a) => !photos.some((p) => p.angle_key === a.key)),
+    [angles, photos],
+  );
+
   const registrar = async () => {
     if (!sel) return;
+    if (photosRequired && missingRequired.length > 0) {
+      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+    }
     if (sel.status !== "liberado") return toast.error("Veículo ainda não foi liberado na tela de Liberação");
     if (coleta && nfeSaida.length !== 44) return toast.error("Leia o QR Code / código de barras da NF-e da carga");
 
@@ -181,7 +195,12 @@ export default function TranspSaida() {
 
               <div className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /><h3 className="font-semibold">Fotos da saída</h3></div>
               <p className="text-xs text-muted-foreground">Registro fotográfico simples — sem comparação ou validação de avarias.</p>
-              <CVPhotoCapture angles={TRANSP_ANGLES} stage="exit" value={photos} onChange={setPhotos} aiCompare={false} />
+              {photosRequired && missingRequired.length > 0 && (
+                <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                  Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong>
+                </div>
+              )}
+              <CVPhotoCapture angles={angles} stage="exit" value={photos} onChange={setPhotos} aiCompare={false} />
               <div><Label>Observações da saída</Label><Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} /></div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setSel(null)}>Cancelar</Button>
