@@ -353,14 +353,25 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           );
       }
 
-      // Atualizar role de admin
-      await supabase
+      // Atualizar a role somente quando o valor realmente mudou.
+      // Remover e recriar uma role já existente acionava a validação de admin único.
+      const { data: adminRoleAtual, error: adminRoleCheckError } = await supabase
         .from("user_roles")
-        .delete()
+        .select("user_id")
         .eq("user_id", editingId)
-        .eq("role", "admin");
+        .eq("role", "admin")
+        .maybeSingle();
 
-      if (isAdmin) {
+      if (adminRoleCheckError) {
+        toast({
+          title: "Erro ao verificar permissão",
+          description: adminRoleCheckError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (isAdmin && !adminRoleAtual) {
         const { error: roleError } = await supabase
           .from("user_roles")
           .insert({
@@ -371,6 +382,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         if (roleError) {
           toast({
             title: "Erro ao atribuir permissão",
+            description: roleError.message,
+            variant: "destructive",
+          });
+          return;
+        }
+      } else if (!isAdmin && adminRoleAtual) {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", editingId)
+          .eq("role", "admin");
+
+        if (roleError) {
+          toast({
+            title: "Erro ao remover permissão",
             description: roleError.message,
             variant: "destructive",
           });
@@ -638,7 +664,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .select("role")
       .eq("user_id", usuario.id)
       .eq("role", "admin")
-      .single();
+      .maybeSingle();
 
     setIsAdmin(!!roleData);
 
