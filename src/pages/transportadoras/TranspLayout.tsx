@@ -37,11 +37,14 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { to: "/transportadoras", label: "Registrar Entrada", icon: LogIn, end: true, group: "principal" },
+  { to: "/transportadoras/liberacao", label: "Liberação", icon: ClipboardCheck, group: "principal" },
   { to: "/transportadoras/saida", label: "Registrar Saída", icon: LogOut, group: "principal" },
-  { to: "/transportadoras/movimentacoes", label: "Movimentações", icon: ListChecks, group: "principal" },
+  { to: "/transportadoras/movimentos", label: "Movimentações", icon: ListChecks, group: "principal" },
   { to: "/transportadoras/veiculos", label: "Veículos", icon: Truck, group: "config" },
   { to: "/transportadoras/motoristas", label: "Motoristas", icon: Users, group: "config" },
+  { to: "/transportadoras/setores", label: "Setores", icon: Building2, group: "config" },
 ];
+
 
 function isItemActive(pathname: string, item: NavItem) {
   if (item.end) return pathname === item.to;
