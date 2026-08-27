@@ -391,19 +391,45 @@ function migrateStructure(custom: MenuCustomization): MenuCustomization {
   return changed ? { ...custom, roots } : custom;
 }
 
-export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
-  const raw = loadCustomization();
-  if (!raw) return base;
-  const custom = migrateStructure(raw);
-
+/**
+ * Retorna a árvore efetivamente exibida no menu principal.
+ * Além das migrações estruturais, inclui programas novos que ainda não
+ * existiam quando a personalização foi salva. Assim, o editor e a barra
+ * lateral trabalham sempre sobre exatamente a mesma árvore.
+ */
+export function getEffectiveMainCustomization(
+  base: MenuItem[],
+  custom: MenuCustomization | null = loadCustomization()
+): MenuCustomization {
+  const source = custom ?? initialFromBase(base);
+  const migrated = migrateStructure(source);
   const programs = extractPrograms(base);
   const placed = new Set<string>();
 
-  const walkForPlaced = (node: CustomNode) => {
-    if (node.kind === "program") placed.add(node.programId);
-    else node.children.forEach(walkForPlaced);
+  const collectPlaced = (nodes: CustomNode[]) => {
+    for (const node of nodes) {
+      if (node.kind === "program") placed.add(node.programId);
+      else collectPlaced(node.children);
+    }
   };
-  custom.roots.forEach(walkForPlaced);
+  collectPlaced(migrated.roots);
+
+  const missing: CustomNode[] = [];
+  for (const [id, program] of programs) {
+    if (program.system || program.footerAdmin || placed.has(id)) continue;
+    missing.push({ kind: "program", programId: id });
+  }
+
+  if (missing.length === 0) return migrated;
+  return { ...migrated, roots: [...migrated.roots, ...missing] };
+}
+
+export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
+  const raw = loadCustomization();
+  if (!raw) return base;
+  const custom = getEffectiveMainCustomization(base, raw);
+
+  const programs = extractPrograms(base);
 
   const baseIconById = new Map<string, any>();
   for (const b of base) baseIconById.set(b.id, b.icon);
@@ -469,13 +495,6 @@ export function applyMenuCustomization(base: MenuItem[]): MenuItem[] {
     }
   }
 
-  const missing: MenuItem[] = [];
-  for (const [id, p] of programs) {
-    // Programas de sistema e do Admin (rodapé) não aparecem por padrão no menu principal — só se o admin arrastar
-    if (p.system || p.footerAdmin) continue;
-    if (!placed.has(id)) missing.push({ id, title: p.title, url: p.url, icon: p.icon });
-
-  }
-  return [...result, ...missing];
+  return result;
 
 }
