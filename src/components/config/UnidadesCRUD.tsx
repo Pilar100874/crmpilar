@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Trash2, Edit, Plus, Search, Building2 } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Unidade {
   id: string;
@@ -39,6 +41,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
   const { toast } = useToast();
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
 
@@ -225,6 +229,20 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setCidade(unidade.cidade || "");
     setUf(unidade.uf || "");
     setEditingId(unidade.id);
+    setFormOpen(true);
+  };
+
+  const resetForm = () => {
+    setNome("");
+    setCep("");
+    setLogradouro("");
+    setNumero("");
+    setComplemento("");
+    setBairro("");
+    setCidade("");
+    setUf("");
+    setEditingId(null);
+    setFormOpen(false);
   };
 
   const handleDeleteClick = (unidade: Unidade) => {
@@ -288,9 +306,46 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setUnidadeToDelete(null);
   };
 
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
+  const filteredUnidades = unidades.filter((unidade) =>
+    [unidade.nome, unidade.cidade, unidade.uf, unidade.bairro]
+      .filter(Boolean)
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(normalizedSearch))
+  );
+
+  const actionButtons = (unidade: Unidade) => (
+    <>
+      <Button variant="ghost" size="icon" onClick={() => handleEdit(unidade)} aria-label={`Editar ${unidade.nome}`}>
+        <Edit className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(unidade)} aria-label={`Excluir ${unidade.nome}`}>
+        <Trash2 className="w-4 h-4 text-destructive" />
+      </Button>
+    </>
+  );
+
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Unidades</h3>
+          <p className="text-sm text-muted-foreground">{unidades.length} {unidades.length === 1 ? "unidade cadastrada" : "unidades cadastradas"}</p>
+        </div>
+        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" /> Nova unidade
+        </Button>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, cidade, UF ou bairro" className="pl-9" />
+      </div>
+
+      {formOpen && <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4">
+        <div className="flex items-center gap-2 border-b pb-3">
+          <Building2 className="h-5 w-5 text-primary" />
+          <h4 className="font-semibold">{editingId ? "Editar unidade" : "Nova unidade"}</h4>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <Label htmlFor="unidade-nome">Nome da Filial *</Label>
@@ -414,56 +469,42 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
               type="button"
               variant="outline"
               onClick={() => {
-                setNome("");
-                setCep("");
-                setLogradouro("");
-                setNumero("");
-                setComplemento("");
-                setBairro("");
-                setCidade("");
-                setUf("");
-                setEditingId(null);
+                resetForm();
               }}
             >
               Cancelar
             </Button>
           )}
         </div>
-      </form>
+          {!editingId && <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>}
+      </form>}
 
-      <div className="space-y-2">
-        {unidades && unidades.length > 0 && unidades.map((unidade) => (
-          <div
-            key={unidade.id}
-            className="flex items-center justify-between p-3 border rounded-md"
-          >
-            <div className="flex flex-col">
-              <span className="font-medium">{unidade.nome}</span>
-              {unidade.cidade && unidade.uf && (
-                <span className="text-sm text-muted-foreground">
-                  {unidade.cidade} - {unidade.uf}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(unidade)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDeleteClick(unidade)}
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {filteredUnidades.length === 0 ? (
+        <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
+          {searchTerm ? "Nenhuma unidade encontrada para esta pesquisa." : "Nenhuma unidade cadastrada ainda."}
+        </div>
+      ) : <>
+        <div className="md:hidden">
+          <CadastroCardList items={filteredUnidades.map((unidade) => ({
+            id: unidade.id,
+            title: unidade.nome,
+            subtitle: [unidade.cidade, unidade.uf].filter(Boolean).join(" - ") || "Endereço não informado",
+            fields: [{ label: "Bairro", value: unidade.bairro || "-" }, { label: "CEP", value: unidade.cep || "-" }],
+            actions: actionButtons(unidade),
+          }))} />
+        </div>
+        <div className="hidden overflow-hidden rounded-lg border md:block">
+          <Table>
+            <TableHeader><TableRow><TableHead>Unidade</TableHead><TableHead>Localização</TableHead><TableHead>CEP</TableHead><TableHead className="w-24 text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableBody>{filteredUnidades.map((unidade) => <TableRow key={unidade.id}>
+              <TableCell className="font-medium">{unidade.nome}</TableCell>
+              <TableCell>{[unidade.cidade, unidade.uf].filter(Boolean).join(" - ") || "-"}</TableCell>
+              <TableCell>{unidade.cep || "-"}</TableCell>
+              <TableCell><div className="flex justify-end gap-1">{actionButtons(unidade)}</div></TableCell>
+            </TableRow>)}</TableBody>
+          </Table>
+        </div>
+      </>}
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}

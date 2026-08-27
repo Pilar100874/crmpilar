@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Trash2, Edit, Plus, Search, Tags } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Segmento {
   id: string;
@@ -23,6 +25,8 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [segmentoToDelete, setSegmentoToDelete] = useState<Segmento | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -160,6 +164,13 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
   const handleEdit = (segmento: Segmento) => {
     setNome(segmento.nome);
     setEditingId(segmento.id);
+    setFormOpen(true);
+  };
+
+  const resetForm = () => {
+    setNome("");
+    setEditingId(null);
+    setFormOpen(false);
   };
 
   const handleDeleteClick = (segmento: Segmento) => {
@@ -223,9 +234,23 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
     setSegmentoToDelete(null);
   };
 
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
+  const filteredSegmentos = segmentos.filter((segmento) => segmento.nome.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
+  const actionButtons = (segmento: Segmento) => <>
+    <Button variant="ghost" size="icon" onClick={() => handleEdit(segmento)} aria-label={`Editar ${segmento.nome}`}><Edit className="w-4 h-4" /></Button>
+    <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(segmento)} aria-label={`Excluir ${segmento.nome}`}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+  </>;
+
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-lg font-semibold">Segmentos</h3><p className="text-sm text-muted-foreground">{segmentos.length} {segmentos.length === 1 ? "segmento cadastrado" : "segmentos cadastrados"}</p></div>
+        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo segmento</Button>
+      </div>
+      <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar segmento" className="pl-9" /></div>
+
+      {formOpen && <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4">
+        <div className="flex items-center gap-2 border-b pb-3"><Tags className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar segmento" : "Novo segmento"}</h4></div>
         <div>
           <Label htmlFor="segmento-nome">Nome do Segmento</Label>
           <Input
@@ -243,42 +268,20 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
             type="button"
             variant="outline"
             onClick={() => {
-              setNome("");
-              setEditingId(null);
+              resetForm();
             }}
             className="ml-2"
           >
             Cancelar
           </Button>
         )}
-      </form>
+        {!editingId && <Button type="button" variant="outline" onClick={resetForm} className="ml-2">Cancelar</Button>}
+      </form>}
 
-      <div className="space-y-2">
-        {segmentos.map((segmento) => (
-          <div
-            key={segmento.id}
-            className="flex items-center justify-between p-3 border rounded-md"
-          >
-            <span>{segmento.nome}</span>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(segmento)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDeleteClick(segmento)}
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {filteredSegmentos.length === 0 ? <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum segmento encontrado para esta pesquisa." : "Nenhum segmento cadastrado ainda."}</div> : <>
+        <div className="md:hidden"><CadastroCardList items={filteredSegmentos.map((segmento) => ({ id: segmento.id, title: segmento.nome, actions: actionButtons(segmento) }))} /></div>
+        <div className="hidden overflow-hidden rounded-lg border md:block"><Table><TableHeader><TableRow><TableHead>Nome</TableHead><TableHead className="w-24 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredSegmentos.map((segmento) => <TableRow key={segmento.id}><TableCell className="font-medium">{segmento.nome}</TableCell><TableCell><div className="flex justify-end gap-1">{actionButtons(segmento)}</div></TableCell></TableRow>)}</TableBody></Table></div>
+      </>}
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
