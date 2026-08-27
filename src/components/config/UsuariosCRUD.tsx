@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -23,6 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Usuario {
   id: string;
@@ -114,6 +116,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
   
   const { toast } = useToast();
 
@@ -626,6 +630,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUsuarioSip("");
     setTipo("padrao");
     setEditingId(null);
+    setFormOpen(false);
   };
 
   const handleEdit = async (usuario: Usuario) => {
@@ -649,6 +654,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
     setEditingId(usuario.id);
+    setFormOpen(true);
 
     // Buscar segmentos do usuário
     const { data: segmentosData } = await supabase
@@ -834,9 +840,35 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     }
   };
 
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
+  const filteredUsuarios = usuarios.filter((usuario) =>
+    [usuario.nome, usuario.email, usuario.whatsapp, usuario.unidades?.nome, usuario.grupos_acesso?.nome]
+      .filter(Boolean)
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(normalizedSearch))
+  );
+
+  const userBadges = (usuario: Usuario) => <div className="flex flex-wrap gap-1">
+    {usuario.is_admin && <span className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">Admin</span>}
+    {usuario.is_atendente && <span className="rounded bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">Atendente</span>}
+    {usuario.is_porteiro && <span className="rounded bg-accent px-2 py-0.5 text-xs text-accent-foreground">Porteiro</span>}
+  </div>;
+
+  const userActions = (usuario: Usuario) => <>
+    {usuario.is_atendente && usuario.atendente_id && <Button variant="outline" size="sm" onClick={() => { setSelectedUsuarioForSkills(usuario); setSkillsDialogOpen(true); }} className="h-8 text-xs"><Award className="mr-1 h-3 w-3" /> Habilidades</Button>}
+    <Button variant="ghost" size="icon" onClick={() => handleEdit(usuario)} className="h-8 w-8" aria-label={`Editar ${usuario.nome}`}><Edit className="h-4 w-4" /></Button>
+    <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(usuario)} className="h-8 w-8" aria-label={`Excluir ${usuario.nome}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+  </>;
+
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-lg font-semibold">Usuários</h3><p className="text-sm text-muted-foreground">{usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}</p></div>
+        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo usuário</Button>
+      </div>
+      <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, e-mail, WhatsApp, unidade ou grupo" className="pl-9" /></div>
+
+      {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center gap-2 border-b pb-3"><Users className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar usuário" : "Novo usuário"}</h4></div>
         {/* Dados Básicos */}
         <Card className="p-4">
           <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Dados Básicos</h3>
@@ -1343,68 +1375,22 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </Button>
           )}
         </div>
-      </form>
+          {!editingId && <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>}
+      </form>}
 
       {/* Lista de Usuários */}
-      <Card className="p-4">
-        <h3 className="font-semibold text-base mb-4">Usuários Cadastrados</h3>
-        <div className="space-y-3">
-          {usuarios.length === 0 ? (
+      <div>
+          {filteredUsuarios.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              Nenhum usuário cadastrado ainda
+              {searchTerm ? "Nenhum usuário encontrado para esta pesquisa." : "Nenhum usuário cadastrado ainda."}
             </div>
           ) : (
-            usuarios.map((usuario) => (
-              <Card key={usuario.id} className="p-3 hover:shadow-md transition-shadow">
-                <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-semibold text-sm truncate">{usuario.nome}</span>
-                      {usuario.is_admin && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>
-                      )}
-                      {usuario.is_atendente && (
-                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded">Atendente</span>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate">{usuario.email}</div>
-                    {usuario.whatsapp && (
-                      <div className="text-xs text-muted-foreground">{usuario.whatsapp}</div>
-                    )}
-                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-1">
-                      {usuario.unidades?.nome && <span>📍 {usuario.unidades.nome}</span>}
-                      {usuario.grupos_acesso?.nome && <span>• 🔐 {usuario.grupos_acesso.nome}</span>}
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-1 flex-shrink-0">
-                    {usuario.is_atendente && usuario.atendente_id && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUsuarioForSkills(usuario);
-                          setSkillsDialogOpen(true);
-                        }}
-                        className="h-8 text-xs"
-                      >
-                        <Award className="w-3 h-3 mr-1" />
-                        Skills
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(usuario)} className="h-8 w-8">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(usuario)} className="h-8 w-8">
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))
+            <>
+              <div className="lg:hidden"><CadastroCardList items={filteredUsuarios.map((usuario) => ({ id: usuario.id, title: usuario.nome, subtitle: usuario.email, badge: userBadges(usuario), fields: [{ label: "WhatsApp", value: usuario.whatsapp || "-" }, { label: "Unidade", value: usuario.unidades?.nome || "-" }, { label: "Grupo de acesso", value: usuario.grupos_acesso?.nome || "-", full: true }], actions: userActions(usuario) }))} /></div>
+              <div className="hidden overflow-hidden rounded-lg border lg:block"><Table><TableHeader><TableRow><TableHead>Usuário</TableHead><TableHead>WhatsApp</TableHead><TableHead>Unidade</TableHead><TableHead>Grupo de acesso</TableHead><TableHead>Perfis</TableHead><TableHead className="w-36 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredUsuarios.map((usuario) => <TableRow key={usuario.id}><TableCell><div className="font-medium">{usuario.nome}</div><div className="text-xs text-muted-foreground">{usuario.email}</div></TableCell><TableCell>{usuario.whatsapp || "-"}</TableCell><TableCell>{usuario.unidades?.nome || "-"}</TableCell><TableCell>{usuario.grupos_acesso?.nome || "-"}</TableCell><TableCell>{userBadges(usuario)}</TableCell><TableCell><div className="flex justify-end gap-1">{userActions(usuario)}</div></TableCell></TableRow>)}</TableBody></Table></div>
+            </>
           )}
-        </div>
-      </Card>
+      </div>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
