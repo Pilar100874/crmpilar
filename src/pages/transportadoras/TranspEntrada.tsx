@@ -103,6 +103,11 @@ export default function TranspEntrada() {
   const empresaSel = empresas.find((e) => e.id === form.transportadora_id);
   const setorSel = setores.find((s) => s.id === form.setor_id);
 
+  const missingRequired = useMemo(
+    () => angles.filter((a) => a.required).filter((a) => !photos.some((p) => p.angle_key === a.key)),
+    [angles, photos],
+  );
+
   const canNext = () => {
     if (step === 0) return !!form.tipo_operacao;
     if (step === 1) return !!form.veiculo_id;
@@ -166,6 +171,10 @@ export default function TranspEntrada() {
   };
 
   const salvar = async () => {
+    if (photosRequired && missingRequired.length > 0) {
+      setStep(4);
+      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+    }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const estId = await getEstabelecimentoId();
