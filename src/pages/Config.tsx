@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,7 +123,6 @@ const EMPRESA_SUBMENUS: ConfigSection[] = [
 const GLOBAL_SUBMENU_IDS = ["recuperar-senha", "email-config", "notificacoes-sistema", "visual-sistema"];
 
 export default function Config() {
-  const navigate = useNavigate();
   const { openSubmenu } = useLayout();
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
