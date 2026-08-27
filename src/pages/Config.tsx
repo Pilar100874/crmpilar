@@ -19,6 +19,8 @@ import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import EmailConfig from "@/pages/EmailConfig";
+import SystemVisualConfig from "@/pages/SystemVisualConfig";
 import { Building2, FolderTree, UserCog, Tag } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
@@ -148,14 +150,6 @@ export default function Config() {
   }, [secaoParam]);
 
   const handleSectionClick = (sectionId: string) => {
-    if (sectionId === "email-config") {
-      navigate("/email-config");
-      return;
-    }
-    if (sectionId === "visual-sistema") {
-      navigate("/config/visual");
-      return;
-    }
     setActiveSection(sectionId);
     setSearchParams({ secao: sectionId });
   };
