@@ -1403,7 +1403,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><h3 className="text-lg font-semibold">Usuários</h3><p className="text-sm text-muted-foreground">{usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}</p></div>
+        <p className="text-sm text-muted-foreground">{usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}</p>
         <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo usuário</Button>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
