@@ -141,6 +141,10 @@ export default function CVVehicleEntry() {
 
   const handleSubmit = async () => {
     if (!selected) return;
+    if (photosRequired && missingRequired.length > 0) {
+      setStep(2);
+      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+    }
     if (!form.inspected_all_sides) return toast.error("Confirme a vistoria nos 4 lados");
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();

@@ -154,6 +154,10 @@ export default function CVVehicleExit() {
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
   const handleSubmit = async () => {
+    if (photosRequired && missingRequired.length > 0) {
+      setStep(3);
+      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+    }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const estId = await getEstabelecimentoId();

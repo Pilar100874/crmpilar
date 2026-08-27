@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
-import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
+import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
   TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores,
@@ -43,6 +43,8 @@ export default function TranspEntrada() {
   const [sucesso, setSucesso] = useState<any>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [novaEmpresa, setNovaEmpresa] = useState(false);
+  const [angles, setAngles] = useState<PhotoAngle[]>(TRANSP_ANGLES);
+  const [photosRequired, setPhotosRequired] = useState(true);
 
   const [form, setForm] = useState({
     tipo_operacao: "" as "" | "entrega" | "coleta",
@@ -67,13 +69,17 @@ export default function TranspEntrada() {
 
   const load = async () => {
     setLoading(true);
-    const [emp, st, v, m, mov] = await Promise.all([
+    const [emp, st, v, m, mov, cfg] = await Promise.all([
       listarTransportadoras(),
       listarSetores(),
       supabase.from("transp_veiculos").select("*").eq("ativo", true).order("placa"),
       supabase.from("transp_motoristas").select("*").eq("ativo", true).order("nome"),
       supabase.from("transp_movimentos").select("veiculo_id").neq("status", "saiu"),
+      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
+    const cfgAngles = ((cfg.data as any)?.entry_photos ?? []) as PhotoAngle[];
+    setAngles(cfgAngles.length ? cfgAngles : TRANSP_ANGLES);
+    setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
     setEmpresas(emp);
     setSetores(st);
     setVeiculos((v.data ?? []) as any);
@@ -96,6 +102,11 @@ export default function TranspEntrada() {
   const motoristaSel = motoristas.find((m) => m.id === form.motorista_id);
   const empresaSel = empresas.find((e) => e.id === form.transportadora_id);
   const setorSel = setores.find((s) => s.id === form.setor_id);
+
+  const missingRequired = useMemo(
+    () => angles.filter((a) => a.required).filter((a) => !photos.some((p) => p.angle_key === a.key)),
+    [angles, photos],
+  );
 
   const canNext = () => {
     if (step === 0) return !!form.tipo_operacao;
@@ -160,6 +171,10 @@ export default function TranspEntrada() {
   };
 
   const salvar = async () => {
+    if (photosRequired && missingRequired.length > 0) {
+      setStep(4);
+      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+    }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const estId = await getEstabelecimentoId();
@@ -453,8 +468,13 @@ export default function TranspEntrada() {
             {step === 4 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /><h3 className="font-semibold">Fotos da entrada</h3></div>
-                <p className="text-xs text-muted-foreground">Registro fotográfico simples — sem comparação ou validação de avarias.</p>
-                <CVPhotoCapture angles={TRANSP_ANGLES} stage="entry" value={photos} onChange={setPhotos} aiCompare={false} />
+                <p className="text-xs text-muted-foreground">Ângulos definidos na Configuração de Vistoria — sem comparação ou validação de avarias.</p>
+                {photosRequired && missingRequired.length > 0 && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong>
+                  </div>
+                )}
+                <CVPhotoCapture angles={angles} stage="entry" value={photos} onChange={setPhotos} aiCompare={false} />
               </div>
             )}
           </CardContent>
