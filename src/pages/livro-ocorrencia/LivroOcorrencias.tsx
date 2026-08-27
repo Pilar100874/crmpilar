@@ -289,13 +289,45 @@ export default function LivroOcorrencias() {
                   <SelectContent>{GRAVIDADES.map((g) => <SelectItem key={g.v} value={g.v}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              {editing.tipo === "Funcionário" && (
+                <>
+                  <div className="sm:col-span-2">
+                    <Label>Funcionário envolvido</Label>
+                    <Input
+                      value={(editing as any).anexos?.funcionario?.nome || ""}
+                      onChange={(e) => setEditing({ ...editing, anexos: { ...((editing as any).anexos || {}), funcionario: { ...((editing as any).anexos?.funcionario || {}), nome: e.target.value.toUpperCase() } } })}
+                      placeholder="Nome do funcionário"
+                    />
+                  </div>
+                  <div>
+                    <Label>O DP está sabendo? *</Label>
+                    <Select
+                      value={(editing as any).anexos?.funcionario?.dp_ciente || ""}
+                      onValueChange={(v) => setEditing({ ...editing, anexos: { ...((editing as any).anexos || {}), funcionario: { ...((editing as any).anexos?.funcionario || {}), dp_ciente: v } } })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{SIM_NAO.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>O encarregado estava sabendo? *</Label>
+                    <Select
+                      value={(editing as any).anexos?.funcionario?.encarregado_ciente || ""}
+                      onValueChange={(v) => setEditing({ ...editing, anexos: { ...((editing as any).anexos || {}), funcionario: { ...((editing as any).anexos?.funcionario || {}), encarregado_ciente: v } } })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{SIM_NAO.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
               <div className="sm:col-span-2">
                 <Label>Local</Label>
                 <Input value={editing.local || ""} onChange={(e) => setEditing({ ...editing, local: e.target.value })} placeholder="Ex: Portaria principal, garagem, bloco A..." />
               </div>
               <div className="sm:col-span-2">
-                <Label>Descrição *</Label>
-                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder="Relate a ocorrência em detalhes..." />
+                <Label>{editing.tipo === "Funcionário" ? "Motivo *" : "Descrição *"}</Label>
+                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder={editing.tipo === "Funcionário" ? "Descreva o motivo da ocorrência com o funcionário..." : "Relate a ocorrência em detalhes..."} />
               </div>
               <div className="sm:col-span-2">
                 <Label>Envolvidos</Label>
