@@ -52,6 +52,7 @@ interface Usuario {
   is_porteiro?: boolean;
   is_atendente?: boolean;
   atendente_id?: string;
+  tipo?: string;
 }
 
 interface Unidade {
