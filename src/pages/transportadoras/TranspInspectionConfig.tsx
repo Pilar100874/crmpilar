@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { TRANSP_ANGLES } from "@/lib/transportadoras/dados";
 
-interface Angle { key: string; label: string; required: boolean }
+type AngleSource = "device" | "ip_camera";
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null }
+interface CameraOption { id: string; nome: string }
 
 export default function TranspInspectionConfig() {
   const [id, setId] = useState<string | null>(null);
@@ -21,14 +24,23 @@ export default function TranspInspectionConfig() {
   const [exitRequired, setExitRequired] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cameras, setCameras] = useState<CameraOption[]>([]);
 
   const normalize = (list: any[]): Angle[] =>
-    (list ?? []).map((a: any) => ({ key: a.key, label: a.label, required: !!a.required }));
+    (list ?? []).map((a: any) => ({
+      key: a.key,
+      label: a.label,
+      required: !!a.required,
+      source: a.source === "ip_camera" ? "ip_camera" : "device",
+      camera_id: a.camera_id ?? null,
+    }));
 
   const load = async () => {
-    const { data } = await supabase
-      .from("transp_inspection_config")
-      .select("*").eq("active", true).order("created_at").limit(1).maybeSingle();
+    const [{ data }, { data: cams }] = await Promise.all([
+      supabase.from("transp_inspection_config").select("*").eq("active", true).order("created_at").limit(1).maybeSingle(),
+      supabase.from("cv_cameras").select("id, nome").eq("ativo", true).order("nome"),
+    ]);
+    setCameras((cams ?? []) as CameraOption[]);
     if (data) {
       setId(data.id);
       const en = normalize((data.entry_photos as any) ?? []);
@@ -44,6 +56,7 @@ export default function TranspInspectionConfig() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
 
   const slugify = (s: string) =>
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
