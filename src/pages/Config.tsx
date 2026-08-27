@@ -270,7 +270,14 @@ export default function Config() {
                       {EMPRESA_SUBMENUS.map((sub) => (
                         <button
                           key={sub.id}
-                          onClick={() => { setActiveSection(sub.id); setSearchParams({ secao: sub.id, estab: e.id }); }}
+                          onClick={() => {
+                            if (GLOBAL_SUBMENU_IDS.includes(sub.id)) {
+                              handleSectionClick(sub.id);
+                              return;
+                            }
+                            setActiveSection(sub.id);
+                            setSearchParams({ secao: sub.id, estab: e.id });
+                          }}
                           className={cn(
                             "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
                             activeSection === sub.id && "text-foreground bg-muted/60 font-medium"
@@ -339,6 +346,10 @@ export default function Config() {
               }
               onValueChange={(v) => {
                 const [id, estab] = v.split("|");
+                if (GLOBAL_SUBMENU_IDS.includes(id)) {
+                  handleSectionClick(id);
+                  return;
+                }
                 if (estab) {
                   setActiveSection(id);
                   setSearchParams({ secao: id, estab });
