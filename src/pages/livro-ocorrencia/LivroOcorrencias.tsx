@@ -33,7 +33,8 @@ interface Ocorrencia {
 }
 
 
-const TIPOS = ["Segurança", "Acesso Indevido", "Furto/Roubo", "Briga/Agressão", "Acidente", "Falha Técnica", "Emergência Médica", "Incêndio", "Manutenção", "Outros"];
+const TIPOS = ["Segurança", "Funcionário", "Acesso Indevido", "Furto/Roubo", "Briga/Agressão", "Acidente", "Falha Técnica", "Emergência Médica", "Incêndio", "Manutenção", "Outros"];
+const SIM_NAO = [{ v: "sim", label: "Sim" }, { v: "nao", label: "Não" }];
 const GRAVIDADES = [
   { v: "baixa", label: "Baixa", cls: "bg-green-500/10 text-green-600 border-green-500/30" },
   { v: "media", label: "Média", cls: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30" },
@@ -110,6 +111,13 @@ export default function LivroOcorrencias() {
 
   const save = async () => {
     if (!editing?.descricao || !editing?.tipo) { toast.error("Preencha tipo e descrição"); return; }
+    if (editing.tipo === "Funcionário") {
+      const f = (editing as any).anexos?.funcionario || {};
+      if (!f.dp_ciente || !f.encarregado_ciente) {
+        toast.error("Informe se o DP e o encarregado estavam sabendo");
+        return;
+      }
+    }
     const payload: any = {
       ...editing,
       data_hora: editing.data_hora ? new Date(editing.data_hora as string).toISOString() : new Date().toISOString(),
@@ -281,13 +289,45 @@ export default function LivroOcorrencias() {
                   <SelectContent>{GRAVIDADES.map((g) => <SelectItem key={g.v} value={g.v}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              {editing.tipo === "Funcionário" && (
+                <>
+                  <div className="sm:col-span-2">
+                    <Label>Funcionário envolvido</Label>
+                    <Input
+                      value={(editing as any).anexos?.funcionario?.nome || ""}
+                      onChange={(e) => setEditing({ ...editing, anexos: { ...((editing as any).anexos || {}), funcionario: { ...((editing as any).anexos?.funcionario || {}), nome: e.target.value.toUpperCase() } } })}
+                      placeholder="Nome do funcionário"
+                    />
+                  </div>
+                  <div>
+                    <Label>O DP está sabendo? *</Label>
+                    <Select
+                      value={(editing as any).anexos?.funcionario?.dp_ciente || ""}
+                      onValueChange={(v) => setEditing({ ...editing, anexos: { ...((editing as any).anexos || {}), funcionario: { ...((editing as any).anexos?.funcionario || {}), dp_ciente: v } } })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{SIM_NAO.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>O encarregado estava sabendo? *</Label>
+                    <Select
+                      value={(editing as any).anexos?.funcionario?.encarregado_ciente || ""}
+                      onValueChange={(v) => setEditing({ ...editing, anexos: { ...((editing as any).anexos || {}), funcionario: { ...((editing as any).anexos?.funcionario || {}), encarregado_ciente: v } } })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{SIM_NAO.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
               <div className="sm:col-span-2">
                 <Label>Local</Label>
                 <Input value={editing.local || ""} onChange={(e) => setEditing({ ...editing, local: e.target.value })} placeholder="Ex: Portaria principal, garagem, bloco A..." />
               </div>
               <div className="sm:col-span-2">
-                <Label>Descrição *</Label>
-                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder="Relate a ocorrência em detalhes..." />
+                <Label>{editing.tipo === "Funcionário" ? "Motivo *" : "Descrição *"}</Label>
+                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder={editing.tipo === "Funcionário" ? "Descreva o motivo da ocorrência com o funcionário..." : "Relate a ocorrência em detalhes..."} />
               </div>
               <div className="sm:col-span-2">
                 <Label>Envolvidos</Label>
