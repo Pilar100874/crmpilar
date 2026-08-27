@@ -254,6 +254,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "TV Vendas", title: "TV Vendas", url: "/tv/vendas", icon: FileBarChart },
       { id: "TV Veículos", title: "TV Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
+      { id: "TV Portaria", title: "TV Portaria", url: "/tv/portaria", icon: LucideIcons.ShieldCheck },
       { id: "TV Câmeras", title: "TV Câmeras", url: "/tv/cameras", icon: LucideIcons.Camera },
       { id: "TV Signage", title: "Gerenciador de Telas Remotas", url: "/tv-signage", icon: LucideIcons.MonitorPlay },
     ]
