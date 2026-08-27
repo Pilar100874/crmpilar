@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { TRANSP_ANGLES } from "@/lib/transportadoras/dados";
 
-interface Angle { key: string; label: string; required: boolean }
+type AngleSource = "device" | "ip_camera";
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null }
+interface CameraOption { id: string; nome: string }
 
 export default function TranspInspectionConfig() {
   const [id, setId] = useState<string | null>(null);
@@ -21,14 +24,23 @@ export default function TranspInspectionConfig() {
   const [exitRequired, setExitRequired] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cameras, setCameras] = useState<CameraOption[]>([]);
 
   const normalize = (list: any[]): Angle[] =>
-    (list ?? []).map((a: any) => ({ key: a.key, label: a.label, required: !!a.required }));
+    (list ?? []).map((a: any) => ({
+      key: a.key,
+      label: a.label,
+      required: !!a.required,
+      source: a.source === "ip_camera" ? "ip_camera" : "device",
+      camera_id: a.camera_id ?? null,
+    }));
 
   const load = async () => {
-    const { data } = await supabase
-      .from("transp_inspection_config")
-      .select("*").eq("active", true).order("created_at").limit(1).maybeSingle();
+    const [{ data }, { data: cams }] = await Promise.all([
+      supabase.from("transp_inspection_config").select("*").eq("active", true).order("created_at").limit(1).maybeSingle(),
+      supabase.from("cv_cameras").select("id, nome").eq("ativo", true).order("nome"),
+    ]);
+    setCameras((cams ?? []) as CameraOption[]);
     if (data) {
       setId(data.id);
       const en = normalize((data.entry_photos as any) ?? []);
@@ -44,6 +56,7 @@ export default function TranspInspectionConfig() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
 
   const slugify = (s: string) =>
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -81,30 +94,53 @@ export default function TranspInspectionConfig() {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> {titulo}</span>
-          <Button size="sm" variant="outline" onClick={() => setList([...list, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true }])}>
+          <Button size="sm" variant="outline" onClick={() => setList([...list, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null }])}>
             <Plus className="h-4 w-4 mr-1" /> Adicionar
           </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {list.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum ângulo configurado</p>}
-        {list.map((a, i) => (
-          <div key={i} className="flex flex-col sm:flex-row sm:items-end gap-2 p-3 border rounded bg-muted/30">
-            <div className="flex-1 space-y-1">
+        {list.map((a, i) => {
+          const patch = (p: Partial<Angle>) => setList(list.map((x, idx) => (idx === i ? { ...x, ...p } : x)));
+          return (
+          <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 border rounded bg-muted/30">
+            <div className="space-y-1">
               <Label className="text-xs">Nome do ângulo</Label>
               <Input
                 value={a.label}
-                onChange={(e) =>
-                  setList(list.map((x, idx) => (idx === i ? { ...x, label: e.target.value, key: slugify(e.target.value) } : x)))
-                }
+                onChange={(e) => patch({ label: e.target.value, key: slugify(e.target.value) })}
               />
             </div>
-            <div className="flex items-center justify-between gap-3 sm:pb-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Origem da imagem</Label>
+              <Select
+                value={a.source ?? "device"}
+                onValueChange={(v) => patch({ source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="device">Foto</SelectItem>
+                  <SelectItem value="ip_camera">Câmera IP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(a.source ?? "device") === "ip_camera" && (
+              <div className="space-y-1 sm:col-span-2">
+                <Label className="text-xs">Câmera</Label>
+                <Select value={a.camera_id ?? ""} onValueChange={(v) => patch({ camera_id: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cameras.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-3 sm:col-span-2 pt-1 border-t border-border/50 mt-1">
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={a.required}
-                  onCheckedChange={(v) => setList(list.map((x, idx) => (idx === i ? { ...x, required: v } : x)))}
-                />
+                <Switch checked={a.required} onCheckedChange={(v) => patch({ required: v })} />
                 <Label className="text-sm">Obrigatória</Label>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setList(list.filter((_, idx) => idx !== i))}>
@@ -112,7 +148,8 @@ export default function TranspInspectionConfig() {
               </Button>
             </div>
           </div>
-        ))}
+        );})}
+
       </CardContent>
     </Card>
   );
