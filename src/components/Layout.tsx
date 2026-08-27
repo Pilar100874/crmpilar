@@ -214,7 +214,6 @@ export const menuItems: MenuItem[] = [
       { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
       { id: "Livro de Ocorrência", title: "Livro de Ocorrência", url: "/livro-ocorrencia", icon: LucideIcons.BookOpen },
       { id: "Portaria", title: "Interfone", url: "/portaria", icon: LucideIcons.ShieldCheck },
-      { id: "Porteiros", title: "Porteiros", url: "/porteiros", icon: LucideIcons.UserCog },
     ],
   },
   { id: "Operacional Hub", title: "Operacional Hub", url: "/operacional", icon: LucideIcons.ClipboardList },
@@ -708,7 +707,7 @@ export default function Layout({ children }: LayoutProps) {
         return isAdmin;
       }
 
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Atendimento Portaria", "Controle de Veículos", "Manutenção", "Transportadoras", "Operacional Hub", "Pilar Ferramentas", "Controle de Visitantes", "Livro de Ocorrência", "Portaria", "Porteiros", "Câmeras", "Editores"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Atendimento Portaria", "Controle de Veículos", "Manutenção", "Transportadoras", "Operacional Hub", "Pilar Ferramentas", "Controle de Visitantes", "Livro de Ocorrência", "Portaria", "Câmeras", "Editores"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }
