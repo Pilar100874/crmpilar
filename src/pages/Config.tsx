@@ -329,8 +329,23 @@ export default function Config() {
           {/* Mobile/Tablet: seletor */}
           <div className="border-b bg-muted/30 p-3 lg:hidden">
             <Select
-              value={activeSection ?? "__home__"}
-              onValueChange={(v) => (v === "__home__" ? handleBack() : handleSectionClick(v))}
+              value={
+                activeSection
+                  ? searchParams.get("estab") && EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
+                    ? `${activeSection}|${searchParams.get("estab")}`
+                    : activeSection
+                  : "__home__"
+              }
+              onValueChange={(v) => {
+                if (v === "__home__") return handleBack();
+                const [id, estab] = v.split("|");
+                if (estab) {
+                  setActiveSection(id);
+                  setSearchParams({ secao: id, estab });
+                  return;
+                }
+                handleSectionClick(id);
+              }}
             >
               <SelectTrigger className="w-full bg-background">
                 <SelectValue />
@@ -350,14 +365,25 @@ export default function Config() {
                     </div>
                   </SelectItem>
                 ))}
-                {EMPRESA_SUBMENUS.map((section) => (
-                  <SelectItem key={section.id} value={section.id}>
+                {estabelecimentos.flatMap((e) => [
+                  <SelectItem key={`estab-${e.id}`} value={`cadastro-estabelecimentos|${e.id}`}>
                     <div className="flex items-center gap-2">
-                      <section.icon className="h-4 w-4" />
-                      <span>Estabelecimento → {section.title}</span>
+                      <Store className="h-4 w-4" />
+                      <span>{e.nome}</span>
                     </div>
-                  </SelectItem>
-                ))}
+                  </SelectItem>,
+                  ...EMPRESA_SUBMENUS.map((section) => (
+                    <SelectItem key={`${e.id}-${section.id}`} value={`${section.id}|${e.id}`}>
+                      <div className="flex items-center gap-2 pl-3">
+                        <section.icon className="h-4 w-4" />
+                        <span>{e.nome} → {section.title}</span>
+                      </div>
+                    </SelectItem>
+                  )),
+                ])}
+              </SelectContent>
+            </Select>
+
               </SelectContent>
             </Select>
           </div>
