@@ -11,6 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X, CheckCircle2 } from "lucide-react";
 import { useRef } from "react";
 
@@ -147,6 +148,8 @@ export default function LivroOcorrencias() {
 
   const save = async () => {
     if (!editing?.descricao || !editing?.tipo) { toast.error("Preencha tipo e descrição"); return; }
+    const estabelecimentoId = editing.id ? (editing as any).estabelecimento_id : await getEstabelecimentoId();
+    if (!estabelecimentoId) { toast.error("Estabelecimento não identificado para o usuário"); return; }
     if (editing.tipo === "Funcionário") {
       const f = (editing as any).anexos?.funcionario || {};
       if (!f.dp_ciente || !f.encarregado_ciente) {
@@ -156,6 +159,7 @@ export default function LivroOcorrencias() {
     }
     const payload: any = {
       ...editing,
+      estabelecimento_id: estabelecimentoId,
       data_hora: editing.data_hora ? new Date(editing.data_hora as string).toISOString() : new Date().toISOString(),
     };
     if (editing.tipo === "Funcionário") {
