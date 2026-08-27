@@ -448,7 +448,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
       </>}
 
       {/* Formulário */}
-      {formOpen && <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4">
+      {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center gap-2 border-b pb-3"><ShieldCheck className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</h4></div>
         {/* Nome do Grupo */}
         <Card className="p-4">

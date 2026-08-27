@@ -110,8 +110,7 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
         });
       } else {
         toast({ title: "Segmento atualizado com sucesso!" });
-        setNome("");
-        setEditingId(null);
+        resetForm();
         fetchSegmentos();
       }
     } else {
@@ -155,7 +154,7 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
         });
       } else {
         toast({ title: "Segmento criado com sucesso!" });
-        setNome("");
+        resetForm();
         fetchSegmentos();
       }
     }

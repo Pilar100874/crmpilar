@@ -154,15 +154,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
         });
       } else {
         toast({ title: "Unidade atualizada com sucesso!" });
-        setNome("");
-        setCep("");
-        setLogradouro("");
-        setNumero("");
-        setComplemento("");
-        setBairro("");
-        setCidade("");
-        setUf("");
-        setEditingId(null);
+        resetForm();
         fetchUnidades();
       }
     } else {
@@ -206,14 +198,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
         });
       } else {
         toast({ title: "Unidade criada com sucesso!" });
-        setNome("");
-        setCep("");
-        setLogradouro("");
-        setNumero("");
-        setComplemento("");
-        setBairro("");
-        setCidade("");
-        setUf("");
+        resetForm();
         fetchUnidades();
       }
     }

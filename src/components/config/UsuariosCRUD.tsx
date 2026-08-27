@@ -867,7 +867,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       </div>
       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, e-mail, WhatsApp, unidade ou grupo" className="pl-9" /></div>
 
-      {formOpen && <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4">
+      {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center gap-2 border-b pb-3"><Users className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar usuário" : "Novo usuário"}</h4></div>
         {/* Dados Básicos */}
         <Card className="p-4">
