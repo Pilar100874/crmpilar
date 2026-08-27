@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
-import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
+import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
   TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores,
@@ -43,6 +43,8 @@ export default function TranspEntrada() {
   const [sucesso, setSucesso] = useState<any>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [novaEmpresa, setNovaEmpresa] = useState(false);
+  const [angles, setAngles] = useState<PhotoAngle[]>(TRANSP_ANGLES);
+  const [photosRequired, setPhotosRequired] = useState(true);
 
   const [form, setForm] = useState({
     tipo_operacao: "" as "" | "entrega" | "coleta",
