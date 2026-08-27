@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
+import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
 import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
@@ -203,6 +204,12 @@ export default function TranspSaida() {
                 </div>
               )}
               <CVPhotoCapture angles={angles} stage="exit" value={photos} onChange={setPhotos} aiCompare={false} />
+              <FotosPendentesDialog
+                open={pendentesOpen}
+                onOpenChange={setPendentesOpen}
+                angles={angles}
+                capturedKeys={photos.map((p) => p.angle_key)}
+              />
               <div><Label>Observações da saída</Label><Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} /></div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setSel(null)}>Cancelar</Button>

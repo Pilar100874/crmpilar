@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CVRastreamentoDot } from "@/components/cv/CVRastreamentoDot";
 
@@ -38,6 +39,7 @@ export default function CVVehicleExit() {
 
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
+  const [pendentesOpen, setPendentesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -156,7 +158,8 @@ export default function CVVehicleExit() {
   const handleSubmit = async () => {
     if (photosRequired && missingRequired.length > 0) {
       setStep(3);
-      return toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+      setPendentesOpen(true);
+      return;
     }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -475,6 +478,13 @@ export default function CVVehicleExit() {
                       </div>
                     )}
                     <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} vehicleId={form.vehicle_id} aiCompare />
+                  <FotosPendentesDialog
+                    open={pendentesOpen}
+                    onOpenChange={setPendentesOpen}
+                    angles={angles}
+                    capturedKeys={photos.map((p) => p.angle_key)}
+                    onIrParaFotos={() => setStep(3)}
+                  />
                   </>
                 )}
 

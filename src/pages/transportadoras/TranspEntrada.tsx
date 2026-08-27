@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
+import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
@@ -476,6 +477,13 @@ export default function TranspEntrada() {
                   </div>
                 )}
                 <CVPhotoCapture angles={angles} stage="entry" value={photos} onChange={setPhotos} aiCompare={false} />
+                <FotosPendentesDialog
+                  open={pendentesOpen}
+                  onOpenChange={setPendentesOpen}
+                  angles={angles}
+                  capturedKeys={photos.map((p) => p.angle_key)}
+                  onIrParaFotos={() => setStep(4)}
+                />
               </div>
             )}
           </CardContent>
