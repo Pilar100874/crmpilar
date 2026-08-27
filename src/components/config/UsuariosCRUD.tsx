@@ -117,6 +117,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [perfilFiltro, setPerfilFiltro] = useState<string>("todos");
   const [formOpen, setFormOpen] = useState(false);
   
   const { toast } = useToast();
