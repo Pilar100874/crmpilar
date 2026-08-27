@@ -38,44 +38,12 @@ interface ConfigSection {
 
 const CONFIG_SECTIONS: ConfigSection[] = [
   {
-    id: "notificacoes-sistema",
-    title: "Notificações do Sistema",
-    description: "Configure mensagens de confirmação e alertas",
-    icon: Bell,
-    bgColor: "bg-blue-500/10",
-    iconColor: "text-blue-500",
-  },
-  {
     id: "cadastro-estabelecimentos",
     title: "Estabelecimento",
     description: "Gerencie seus estabelecimentos e configurações",
     icon: Store,
     bgColor: "bg-green-500/10",
     iconColor: "text-green-500",
-  },
-  {
-    id: "recuperar-senha",
-    title: "Recuperação de Senha",
-    description: "Configure envio de códigos via WhatsApp",
-    icon: ShieldCheck,
-    bgColor: "bg-purple-500/10",
-    iconColor: "text-purple-500",
-  },
-  {
-    id: "email-config",
-    title: "Email Config",
-    description: "Configure servidor externo e OAuth",
-    icon: Mail,
-    bgColor: "bg-cyan-500/10",
-    iconColor: "text-cyan-500",
-  },
-  {
-    id: "visual-sistema",
-    title: "Visual do Sistema",
-    description: "Splash screen, vídeo de fundo e aparência",
-    icon: Paintbrush,
-    bgColor: "bg-pink-500/10",
-    iconColor: "text-pink-500",
   },
 ];
 
@@ -113,7 +81,44 @@ const EMPRESA_SUBMENUS: ConfigSection[] = [
     bgColor: "bg-teal-500/10",
     iconColor: "text-teal-500",
   },
+  // Comunicação
+  {
+    id: "recuperar-senha",
+    title: "Recuperação de Senha",
+    description: "Configure envio de códigos via WhatsApp",
+    icon: ShieldCheck,
+    bgColor: "bg-purple-500/10",
+    iconColor: "text-purple-500",
+  },
+  {
+    id: "email-config",
+    title: "Email Config",
+    description: "Configure servidor externo e OAuth",
+    icon: Mail,
+    bgColor: "bg-cyan-500/10",
+    iconColor: "text-cyan-500",
+  },
+  // Sistema
+  {
+    id: "notificacoes-sistema",
+    title: "Notificações do Sistema",
+    description: "Configure mensagens de confirmação e alertas",
+    icon: Bell,
+    bgColor: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+  },
+  {
+    id: "visual-sistema",
+    title: "Visual do Sistema",
+    description: "Splash screen, vídeo de fundo e aparência",
+    icon: Paintbrush,
+    bgColor: "bg-pink-500/10",
+    iconColor: "text-pink-500",
+  },
 ];
+
+// Seções globais (não específicas de um estabelecimento) dentro do sub-menu
+const GLOBAL_SUBMENU_IDS = ["recuperar-senha", "email-config", "notificacoes-sistema", "visual-sistema"];
 
 export default function Config() {
   const navigate = useNavigate();
@@ -265,7 +270,14 @@ export default function Config() {
                       {EMPRESA_SUBMENUS.map((sub) => (
                         <button
                           key={sub.id}
-                          onClick={() => { setActiveSection(sub.id); setSearchParams({ secao: sub.id, estab: e.id }); }}
+                          onClick={() => {
+                            if (GLOBAL_SUBMENU_IDS.includes(sub.id)) {
+                              handleSectionClick(sub.id);
+                              return;
+                            }
+                            setActiveSection(sub.id);
+                            setSearchParams({ secao: sub.id, estab: e.id });
+                          }}
                           className={cn(
                             "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
                             activeSection === sub.id && "text-foreground bg-muted/60 font-medium"
@@ -327,13 +339,17 @@ export default function Config() {
             <Select
               value={
                 activeSection
-                  ? searchParams.get("estab") && EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
-                    ? `${activeSection}|${searchParams.get("estab")}`
+                  ? EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
+                    ? `${activeSection}|${searchParams.get("estab") ?? estabelecimentos[0]?.id ?? ""}`
                     : activeSection
                   : CONFIG_SECTIONS[0].id
               }
               onValueChange={(v) => {
                 const [id, estab] = v.split("|");
+                if (GLOBAL_SUBMENU_IDS.includes(id)) {
+                  handleSectionClick(id);
+                  return;
+                }
                 if (estab) {
                   setActiveSection(id);
                   setSearchParams({ secao: id, estab });
