@@ -1,3 +1,4 @@
+import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -118,10 +119,13 @@ export default function TranspSaida() {
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const saida = new Date();
+    const porteiro = await getRegistroPorteiro();
     const { error } = await supabase.from("transp_movimentos").update({
       saida_time: saida.toISOString(),
       saida_obs: obs || null,
       saida_por: user?.id ?? null,
+      porteiro_saida_id: porteiro.porteiro_id,
+      porteiro_saida_nome: porteiro.porteiro_nome,
       saida_nfe_chave: coleta ? nfeSaida : null,
       saida_nfe_dados: coleta && nfeInfo ? nfeInfo : null,
       status: "saiu",

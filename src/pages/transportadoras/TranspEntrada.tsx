@@ -1,3 +1,4 @@
+import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -183,6 +184,7 @@ export default function TranspEntrada() {
     const estId = await getEstabelecimentoId();
     if (!estId) { setBusy(false); return toast.error("Estabelecimento não encontrado"); }
     const entrada = new Date();
+    const porteiro = await getRegistroPorteiro();
 
     const { data: mv, error } = await supabase.from("transp_movimentos").insert({
       estabelecimento_id: estId,
@@ -201,6 +203,8 @@ export default function TranspEntrada() {
       entrada_time: entrada.toISOString(),
       entrada_obs: form.entrada_obs || null,
       entrada_por: user?.id ?? null,
+      porteiro_entrada_id: porteiro.porteiro_id,
+      porteiro_entrada_nome: porteiro.porteiro_nome,
       status: "dentro",
     } as any).select().single();
 

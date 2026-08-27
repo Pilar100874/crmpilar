@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PorteiroServicoBar } from "@/components/portaria/PorteiroServicoBar";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -72,6 +73,7 @@ export default function CVLayout() {
         <SoloBackButton />
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-6">
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
+            <PorteiroServicoBar className="mb-3" />
             <Outlet />
           </div>
         </main>
@@ -194,7 +196,8 @@ export default function CVLayout() {
 
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-6">
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
-              <Outlet />
+              <PorteiroServicoBar className="mb-3" />
+            <Outlet />
             </div>
           </main>
         </div>

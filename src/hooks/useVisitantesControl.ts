@@ -1,3 +1,4 @@
+import { getRegistroPorteiro } from "@/lib/portaria/porteiros";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type {
@@ -142,6 +143,7 @@ export function useVisitantesControl() {
   const createAccessRecord = async (rec: Omit<AccessRecord, "id" | "entryDate" | "status">): Promise<AccessRecord> => {
     const estId = await getEstabelecimentoId();
     if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
+    const porteiro = await getRegistroPorteiro();
     const { data, error } = await supabase.from(T_AR).insert([{
       visitor_id: rec.visitorId,
       contact_person_name: rec.contactPerson,
@@ -150,6 +152,8 @@ export function useVisitantesControl() {
       purpose: rec.purpose,
       notes: rec.notes,
       estabelecimento_id: estId,
+      porteiro_entrada_id: porteiro.porteiro_id,
+      porteiro_entrada_nome: porteiro.porteiro_nome,
     }]).select(`*, visitor:${T_VIS}(*)`).single();
     if (error) { toast.error("Erro ao registrar entrada"); throw error; }
     const nr: AccessRecord = {
@@ -166,7 +170,13 @@ export function useVisitantesControl() {
 
   const exitVisitor = async (recordId: string) => {
     const now = new Date().toISOString();
-    const { error } = await supabase.from(T_AR).update({ exit_date: now, status: "exited" }).eq("id", recordId);
+    const porteiro = await getRegistroPorteiro();
+    const { error } = await supabase.from(T_AR).update({
+      exit_date: now,
+      status: "exited",
+      porteiro_saida_id: porteiro.porteiro_id,
+      porteiro_saida_nome: porteiro.porteiro_nome,
+    } as any).eq("id", recordId);
     if (error) { toast.error("Erro ao registrar saída"); throw error; }
     setAccessRecords((p) => p.map((r) => (r.id === recordId ? { ...r, exitDate: now, status: "exited" as const } : r)));
     toast.success("Saída registrada");
