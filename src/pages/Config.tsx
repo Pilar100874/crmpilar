@@ -172,7 +172,9 @@ export default function Config() {
     }
   };
 
-  const activeSectionData = CONFIG_SECTIONS.find(s => s.id === activeSection);
+  const activeSectionData =
+    CONFIG_SECTIONS.find(s => s.id === activeSection) ??
+    EMPRESA_SUBMENUS.find(s => s.id === activeSection);
 
   // Renderiza o conteúdo de cada seção
   const renderSectionContent = () => {
