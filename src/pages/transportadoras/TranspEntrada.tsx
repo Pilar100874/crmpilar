@@ -468,8 +468,13 @@ export default function TranspEntrada() {
             {step === 4 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /><h3 className="font-semibold">Fotos da entrada</h3></div>
-                <p className="text-xs text-muted-foreground">Registro fotográfico simples — sem comparação ou validação de avarias.</p>
-                <CVPhotoCapture angles={TRANSP_ANGLES} stage="entry" value={photos} onChange={setPhotos} aiCompare={false} />
+                <p className="text-xs text-muted-foreground">Ângulos definidos na Configuração de Vistoria — sem comparação ou validação de avarias.</p>
+                {photosRequired && missingRequired.length > 0 && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong>
+                  </div>
+                )}
+                <CVPhotoCapture angles={angles} stage="entry" value={photos} onChange={setPhotos} aiCompare={false} />
               </div>
             )}
           </CardContent>
