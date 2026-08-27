@@ -16,7 +16,7 @@ import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
-  TIPOS_VEICULO_TRANSP, listarTransportadoras, maskPlaca, nomeTransportadora,
+  TIPOS_VEICULO_TRANSP, listarTransportadoras, maskPlaca, normalizePlaca, nomeTransportadora,
   SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspVeiculo,
 } from "@/lib/transportadoras/dados";
@@ -47,12 +47,13 @@ export default function TranspVeiculos() {
   useEffect(() => { load(); }, []);
 
   const save = async () => {
-    if (!form.placa) return toast.error("Placa obrigatória");
+    if (!normalizePlaca(form.placa)) return toast.error("Placa obrigatória");
+    if (!form.tipo_veiculo) return toast.error("Tipo de veículo obrigatório");
     const payload = {
       transportadora_id: idTransportadora(form.transportadora_id),
       placa: maskPlaca(form.placa),
       descricao: form.descricao?.toUpperCase() || null,
-      tipo_veiculo: form.tipo_veiculo || null,
+      tipo_veiculo: form.tipo_veiculo,
       observacoes: form.observacoes || null,
       ativo: form.ativo,
     };
@@ -81,8 +82,9 @@ export default function TranspVeiculos() {
     load();
   };
 
+  const qNorm = normalizePlaca(q);
   const filtered = rows.filter((v) =>
-    !q || `${v.placa} ${v.descricao ?? ""}`.toLowerCase().includes(q.toLowerCase()));
+    !qNorm || normalizePlaca(v.placa).includes(qNorm) || (v.descricao ?? "").toLowerCase().includes(q.toLowerCase()));
 
   return (
     <div className="space-y-4">
@@ -95,7 +97,7 @@ export default function TranspVeiculos() {
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar placa ou descrição..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input className="pl-9" placeholder="Buscar placa..." value={q} onChange={(e) => setQ(maskPlaca(e.target.value))} />
       </div>
 
       {filtered.length === 0 ? (
@@ -112,8 +114,8 @@ export default function TranspVeiculos() {
                     <Truck className="h-5 w-5 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <Badge variant="outline" className="font-mono text-xs">{v.placa}</Badge>
-                    <p className="text-sm mt-1 truncate">{v.descricao || v.tipo_veiculo || "—"}</p>
+                    <Badge variant="outline" className="font-mono text-xs">{maskPlaca(v.placa)}</Badge>
+                    <p className="text-sm mt-1 truncate">{v.tipo_veiculo || "—"}</p>
                     {v.ativo
                       ? <Badge className="mt-1 h-5 bg-emerald-500/15 text-emerald-600 border-0">Ativo</Badge>
                       : <Badge variant="secondary" className="mt-1 h-5">Inativo</Badge>}
@@ -160,10 +162,10 @@ export default function TranspVeiculos() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Placa</Label><Input value={form.placa} onChange={(e) => setForm({ ...form, placa: maskPlaca(e.target.value) })} /></div>
-            
+            <div><Label>Placa *</Label><Input value={form.placa} onChange={(e) => setForm({ ...form, placa: maskPlaca(e.target.value) })} maxLength={8} /></div>
+
             <div>
-              <Label>Tipo</Label>
+              <Label>Tipo *</Label>
               <Select value={form.tipo_veiculo} onValueChange={(v) => setForm({ ...form, tipo_veiculo: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent className="bg-popover">

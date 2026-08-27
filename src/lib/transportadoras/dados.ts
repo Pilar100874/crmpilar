@@ -28,10 +28,19 @@ export interface TranspVeiculo {
   ativo: boolean;
 }
 
+export interface TranspSetorNumero {
+  id: string;
+  setor_id: string;
+  numero: string;
+  descricao: string | null;
+  ativo: boolean;
+}
+
 export interface TranspSetor {
   id: string;
   nome: string;
   whatsapp: string | null;
+  numeros: TranspSetorNumero[];
   observacoes: string | null;
   ativo: boolean;
 }
@@ -88,8 +97,41 @@ export const maskWhatsapp = (v: string) => {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
 
-export const maskPlaca = (v: string) =>
+export const maskCpf = (v: string) => {
+  const d = (v || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+};
+
+export const validarCpf = (v: string) => {
+  const d = (v || "").replace(/\D/g, "");
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false;
+
+  const calc = (factor: number) => {
+    let total = 0;
+    for (let i = 0; i < factor - 1; i++) total += parseInt(d[i], 10) * (factor - i);
+    const rest = (total * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+
+  const d1 = calc(10);
+  if (d1 !== parseInt(d[9], 10)) return false;
+  const d2 = calc(11);
+  return d2 === parseInt(d[10], 10);
+};
+
+export const normalizePlaca = (v: string) =>
   (v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
+
+export const maskPlaca = (v: string) => {
+  const raw = normalizePlaca(v);
+  if (raw.length <= 3) return raw;
+  if (raw.length <= 7) return `${raw.slice(0, 3)}-${raw.slice(3)}`;
+  return `${raw.slice(0, 3)}-${raw.slice(3, 7)}`;
+};
 
 /** Transportadoras cadastradas no CRM (empresas com tipo_cliente = transportadora). */
 export async function listarTransportadoras(): Promise<TranspEmpresa[]> {
@@ -139,13 +181,14 @@ export async function criarTransportadora(nome: string): Promise<TranspEmpresa> 
 export async function listarSetores(): Promise<TranspSetor[]> {
   const { data } = await supabase
     .from("transp_setores")
-    .select("id, nome, whatsapp, observacoes, ativo")
+    .select("id, nome, whatsapp, observacoes, ativo, numeros:transp_setores_numeros(id, setor_id, numero, descricao, ativo)")
     .eq("ativo", true)
+    .eq("numeros.ativo", true)
     .order("nome");
-  return (data ?? []) as TranspSetor[];
+  return (data ?? []) as any[];
 }
 
-export async function criarSetor(nome: string, whatsapp: string): Promise<TranspSetor> {
+export async function criarSetor(nome: string, numeros: { numero: string; descricao?: string }[]): Promise<TranspSetor> {
   const nomeUp = (nome || "").trim().toUpperCase();
   if (!nomeUp) throw new Error("Informe o nome do setor");
   const { getEstabelecimentoId } = await import("@/lib/estabelecimento");
@@ -157,14 +200,29 @@ export async function criarSetor(nome: string, whatsapp: string): Promise<Transp
     .insert({
       estabelecimento_id: estId,
       nome: nomeUp,
-      whatsapp: (whatsapp || "").replace(/\D/g, "") || null,
+      whatsapp: numeros[0]?.numero.replace(/\D/g, "") || null,
       ativo: true,
     } as any)
     .select("id, nome, whatsapp, observacoes, ativo")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Erro ao criar setor");
-  return data as TranspSetor;
+
+  const setor = data as any;
+  const validos = numeros.filter((n) => n.numero.replace(/\D/g, "").length >= 10);
+  if (validos.length) {
+    const { error: numError } = await supabase.from("transp_setores_numeros").insert(
+      validos.map((n) => ({
+        setor_id: setor.id,
+        numero: n.numero.replace(/\D/g, ""),
+        descricao: (n.descricao || "").toUpperCase() || null,
+        ativo: true,
+      }))
+    );
+    if (numError) throw new Error(numError.message);
+  }
+
+  return { ...setor, numeros: validos.map((n, i) => ({ id: `tmp-${i}`, setor_id: setor.id, numero: n.numero.replace(/\D/g, ""), descricao: n.descricao || null, ativo: true })) } as TranspSetor;
 }
 
 /** Rótulos da operação: entrega = descarregamento, coleta = carregamento. */
@@ -178,7 +236,7 @@ export const labelOperacao = (v?: string | null) =>
 
 /** Link do WhatsApp para avisar o setor sobre a chegada do veículo. */
 export function linkAvisoSetor(setor: TranspSetor, texto: string) {
-  const fone = (setor.whatsapp || "").replace(/\D/g, "");
+  const fone = (setor.numeros?.[0]?.numero || setor.whatsapp || "").replace(/\D/g, "");
   const num = fone.length <= 11 ? `55${fone}` : fone;
   return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
 }
