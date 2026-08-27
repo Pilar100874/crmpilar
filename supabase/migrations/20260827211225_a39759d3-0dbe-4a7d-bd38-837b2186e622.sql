@@ -1,0 +1,1 @@
+ALTER TABLE public.transp_motoristas ADD COLUMN IF NOT EXISTS cnh_foto_url TEXT;

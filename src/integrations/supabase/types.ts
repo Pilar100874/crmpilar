@@ -26705,6 +26705,7 @@ export type Database = {
         Row: {
           ativo: boolean
           cnh: string | null
+          cnh_foto_url: string | null
           cpf: string | null
           created_at: string
           estabelecimento_id: string
@@ -26718,6 +26719,7 @@ export type Database = {
         Insert: {
           ativo?: boolean
           cnh?: string | null
+          cnh_foto_url?: string | null
           cpf?: string | null
           created_at?: string
           estabelecimento_id: string
@@ -26731,6 +26733,7 @@ export type Database = {
         Update: {
           ativo?: boolean
           cnh?: string | null
+          cnh_foto_url?: string | null
           cpf?: string | null
           created_at?: string
           estabelecimento_id?: string

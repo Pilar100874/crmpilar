@@ -13,6 +13,7 @@ export interface TranspMotorista {
   nome: string;
   cpf: string | null;
   cnh: string | null;
+  cnh_foto_url: string | null;
   whatsapp: string | null;
   observacoes: string | null;
   ativo: boolean;

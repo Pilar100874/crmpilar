@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Users, Search, ToggleLeft, ToggleRight, IdCard, Phone, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Search, ToggleLeft, ToggleRight, IdCard, Phone, User, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -22,7 +22,17 @@ import {
 } from "@/lib/transportadoras/dados";
 import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
-const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true };
+const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true, cnh_foto_url: null as string | null };
+
+const CNH_BUCKET = "cv-vehicle-photos";
+
+async function uploadCnhFoto(file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `cnh/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(CNH_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(error.message);
+  return path;
+}
 
 export default function TranspMotoristas() {
   const [rows, setRows] = useState<TranspMotorista[]>([]);
@@ -33,6 +43,8 @@ export default function TranspMotoristas() {
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspMotorista | null>(null);
+  const [cnhFile, setCnhFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     const [emp, { data, error }] = await Promise.all([
@@ -51,25 +63,36 @@ export default function TranspMotoristas() {
     if (!cpfLimpo) return toast.error("CPF obrigatório");
     if (cpfLimpo.length !== 11) return toast.error("CPF deve ter 11 dígitos");
     if (!validarCpf(cpfLimpo)) return toast.error("CPF inválido");
-    const payload = {
-      transportadora_id: idTransportadora(form.transportadora_id),
-      nome: form.nome.toUpperCase(),
-      cpf: cpfLimpo,
-      cnh: null,
-      whatsapp: (form.whatsapp || "").replace(/\D/g, "") || null,
-      observacoes: form.observacoes || null,
-      ativo: form.ativo,
-    };
-    let error;
-    if (editing) {
-      ({ error } = await supabase.from("transp_motoristas").update(payload as any).eq("id", editing));
-    } else {
-      const estId = await getEstabelecimentoId();
-      if (!estId) return toast.error("Estabelecimento não encontrado");
-      ({ error } = await supabase.from("transp_motoristas").insert({ ...payload, estabelecimento_id: estId } as any));
+    if (!cnhFile && !form.cnh_foto_url) return toast.error("A foto da CNH é obrigatória");
+    setSaving(true);
+    try {
+      let cnh_foto_url: string | null = form.cnh_foto_url ?? null;
+      if (cnhFile) cnh_foto_url = await uploadCnhFoto(cnhFile);
+      const payload = {
+        transportadora_id: idTransportadora(form.transportadora_id),
+        nome: form.nome.toUpperCase(),
+        cpf: cpfLimpo,
+        cnh: null,
+        cnh_foto_url,
+        whatsapp: (form.whatsapp || "").replace(/\D/g, "") || null,
+        observacoes: form.observacoes || null,
+        ativo: form.ativo,
+      };
+      let error;
+      if (editing) {
+        ({ error } = await supabase.from("transp_motoristas").update(payload as any).eq("id", editing));
+      } else {
+        const estId = await getEstabelecimentoId();
+        if (!estId) { setSaving(false); return toast.error("Estabelecimento não encontrado"); }
+        ({ error } = await supabase.from("transp_motoristas").insert({ ...payload, estabelecimento_id: estId } as any));
+      }
+      if (error) return toast.error(error.message);
+      toast.success("Salvo"); setOpen(false); setCnhFile(null); load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao enviar foto da CNH");
+    } finally {
+      setSaving(false);
     }
-    if (error) return toast.error(error.message);
-    toast.success("Salvo"); setOpen(false); load();
   };
 
   const remove = async () => {
@@ -94,7 +117,7 @@ export default function TranspMotoristas() {
         icon={Users}
         title="Motoristas de Transportadoras"
         subtitle={`${rows.length} cadastrados • ${rows.filter((r) => r.ativo).length} ativos`}
-        actions={<Button onClick={() => { setForm(empty); setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-1" />Novo Motorista</Button>}
+        actions={<Button onClick={() => { setForm(empty); setCnhFile(null); setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-1" />Novo Motorista</Button>}
       />
 
       <div className="relative max-w-md">
@@ -117,9 +140,14 @@ export default function TranspMotoristas() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold truncate">{m.nome}</p>
-                    {m.ativo
-                      ? <Badge className="mt-1 h-5 bg-emerald-500/15 text-emerald-600 border-0">Ativo</Badge>
-                      : <Badge variant="secondary" className="mt-1 h-5">Inativo</Badge>}
+                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                      {m.ativo
+                        ? <Badge className="h-5 bg-emerald-500/15 text-emerald-600 border-0">Ativo</Badge>
+                        : <Badge variant="secondary" className="h-5">Inativo</Badge>}
+                      {(m as any).cnh_foto_url
+                        ? <Badge className="h-5 bg-sky-500/15 text-sky-600 border-0">CNH ✓</Badge>
+                        : <Badge variant="outline" className="h-5 text-amber-600 border-amber-400/60">Sem foto CNH</Badge>}
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-1.5 text-sm">
@@ -134,7 +162,9 @@ export default function TranspMotoristas() {
                     setForm({
                       transportadora_id: m.transportadora_id ?? SEM_TRANSPORTADORA, nome: m.nome, cpf: m.cpf ?? "",
                       whatsapp: m.whatsapp ?? "", observacoes: m.observacoes ?? "", ativo: m.ativo,
+                      cnh_foto_url: (m as any).cnh_foto_url ?? null,
                     });
+                    setCnhFile(null);
                     setEditing(m.id); setOpen(true);
                   }}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(m)}>
@@ -170,11 +200,34 @@ export default function TranspMotoristas() {
             <div><Label>Nome *</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })} /></div>
             <div><Label>CPF *</Label><Input value={maskCpf(form.cpf)} onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" placeholder="000.000.000-00" /></div>
             <div><Label>WhatsApp *</Label><Input value={maskWhatsapp(form.whatsapp)} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="(11) 90000-0000" /></div>
+            <div>
+              <Label>Foto da CNH *</Label>
+              <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-border bg-muted/40 px-3 py-4 text-sm text-muted-foreground hover:bg-muted/60 transition-colors">
+                {cnhFile || form.cnh_foto_url ? <ImageIcon className="h-5 w-5 text-primary" /> : <Camera className="h-5 w-5" />}
+                <span className="truncate">
+                  {cnhFile ? cnhFile.name : form.cnh_foto_url ? "Foto da CNH anexada — toque para trocar" : "Toque para anexar a foto da CNH"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (f && !f.type.startsWith("image/")) return toast.error("Envie uma imagem da CNH");
+                    setCnhFile(f);
+                  }}
+                />
+              </label>
+              {cnhFile && (
+                <img src={URL.createObjectURL(cnhFile)} alt="Prévia da CNH" className="mt-2 h-28 w-full rounded-md object-cover border" />
+              )}
+            </div>
             <div className="flex items-center gap-2"><Switch checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} /><Label>Ativo</Label></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={save}>Salvar</Button>
+            <Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
