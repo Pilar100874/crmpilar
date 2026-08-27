@@ -293,7 +293,7 @@ export default function TranspSaida() {
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Placa</span><b className="font-mono">{sel.placa || "—"}</b></div>
                     
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Motorista</span><b>{sel.motorista_nome || "—"}</b></div>
-                    <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Operação</span><b>{coleta ? "Coleta" : "Entrega"}</b></div>
+                    <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Operação</span><b>{labelOperacaoCurto(sel.tipo_operacao)}</b></div>
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Entrada</span><b>{new Date(sel.entrada_time).toLocaleString("pt-BR")}</b></div>
                     {coleta && nfeInfo && (
                       <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">NF-e da carga</span><b>{nfeInfo.numero}/{nfeInfo.serie}</b></div>
