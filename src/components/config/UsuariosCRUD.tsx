@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users, ArrowLeft } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -870,31 +870,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(usuario)} className="h-8 w-8" aria-label={`Excluir ${usuario.nome}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
   </>;
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><h3 className="text-lg font-semibold">Usuários</h3><p className="text-sm text-muted-foreground">{usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}</p></div>
-        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo usuário</Button>
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, e-mail, WhatsApp, unidade ou grupo" className="pl-9" /></div>
-        <Select value={perfilFiltro} onValueChange={setPerfilFiltro}>
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue placeholder="Filtrar por perfil" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os perfis</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="atendente">Atendente</SelectItem>
-            <SelectItem value="porteiro">Porteiro</SelectItem>
-            <SelectItem value="gerente">Gerente</SelectItem>
-            <SelectItem value="padrao">Padrão</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-3"><Users className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar usuário" : "Novo usuário"}</h4></div>
+  const renderForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-center gap-2 border-b pb-3"><Users className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar usuário" : "Novo usuário"}</h4></div>
         {/* Dados Básicos */}
         <Card className="p-4">
           <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Dados Básicos</h3>
@@ -1402,7 +1380,49 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           )}
         </div>
           {!editingId && <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>}
-      </form>}
+    </form>
+  );
+
+  if (formOpen) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 border-b pb-3">
+          <Button type="button" variant="ghost" size="icon" onClick={resetForm} className="rounded-full shrink-0" aria-label="Voltar">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2 min-w-0">
+            <Users className="h-5 w-5 text-primary shrink-0" />
+            <h4 className="font-semibold truncate">{editingId ? `Editar usuário${nome ? `: ${nome}` : ""}` : "Novo usuário"}</h4>
+          </div>
+        </div>
+        {renderForm()}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-lg font-semibold">Usuários</h3><p className="text-sm text-muted-foreground">{usuarios.length} {usuarios.length === 1 ? "usuário cadastrado" : "usuários cadastrados"}</p></div>
+        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo usuário</Button>
+      </div>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome, e-mail, WhatsApp, unidade ou grupo" className="pl-9" /></div>
+        <Select value={perfilFiltro} onValueChange={setPerfilFiltro}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Filtrar por perfil" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os perfis</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="atendente">Atendente</SelectItem>
+            <SelectItem value="porteiro">Porteiro</SelectItem>
+            <SelectItem value="gerente">Gerente</SelectItem>
+            <SelectItem value="padrao">Padrão</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
 
       {/* Lista de Usuários */}
       <div>
