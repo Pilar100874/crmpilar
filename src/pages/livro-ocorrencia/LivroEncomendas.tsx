@@ -11,7 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, Package, PackageCheck, Camera, X, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, PackageCheck, Camera, X, Sparkles, Undo2 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 
@@ -282,8 +282,13 @@ export default function LivroEncomendas() {
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   {o.status === "aguardando_retirada" && (
-                    <Button variant="ghost" size="icon" title="Registrar entrega" onClick={() => setDeliverTarget(o)}>
+                    <Button variant="ghost" size="icon" title="Registrar retirada" onClick={() => openDeliver(o)}>
                       <PackageCheck className="h-4 w-4 text-green-600" />
+                    </Button>
+                  )}
+                  {o.status === "entregue" && (
+                    <Button variant="ghost" size="icon" title="Estornar retirada" onClick={() => reopenDeliver(o)}>
+                      <Undo2 className="h-4 w-4 text-orange-500" />
                     </Button>
                   )}
                   <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
@@ -314,8 +319,13 @@ export default function LivroEncomendas() {
               </div>
               <div className="flex shrink-0">
                 {o.status === "aguardando_retirada" && (
-                  <Button variant="ghost" size="icon" title="Registrar entrega" onClick={() => setDeliverTarget(o)}>
+                  <Button variant="ghost" size="icon" title="Registrar retirada" onClick={() => openDeliver(o)}>
                     <PackageCheck className="h-4 w-4 text-green-600" />
+                  </Button>
+                )}
+                {o.status === "entregue" && (
+                  <Button variant="ghost" size="icon" title="Estornar retirada" onClick={() => reopenDeliver(o)}>
+                    <Undo2 className="h-4 w-4 text-orange-500" />
                   </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
