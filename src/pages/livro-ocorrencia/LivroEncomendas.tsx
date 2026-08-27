@@ -245,6 +245,15 @@ export default function LivroEncomendas() {
             {STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">De</Label>
+          <Input type="date" className="w-[150px]" value={dataDe} onChange={(e) => setDataDe(e.target.value)} />
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Até</Label>
+          <Input type="date" className="w-[150px]" value={dataAte} onChange={(e) => setDataAte(e.target.value)} />
+          {(dataDe || dataAte) && (
+            <Button variant="ghost" size="icon" title="Limpar datas" onClick={() => { setDataDe(""); setDataAte(""); }}><X className="h-4 w-4" /></Button>
+          )}
+        </div>
       </div>
 
       {/* Tabela (md+) */}
