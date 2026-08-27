@@ -106,7 +106,7 @@ export default function PortariaLayout() {
 
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:flex-row">
-          <div className="hidden">
+          <div className="lg:hidden p-3 border-b">
             <Select value={current?.to} onValueChange={(v) => navigate(v)}>
               <SelectTrigger className="w-full bg-background">
                 <SelectValue>
@@ -132,7 +132,7 @@ export default function PortariaLayout() {
             </Select>
           </div>
 
-          <div className={`hub-menu hidden lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 lg:border-r transition-all duration-300 ${isMenuCollapsed ? "lg:w-16" : "lg:w-64"}`}>
+          <div className={`hub-menu hidden lg:flex lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 lg:border-r transition-all duration-300 ${isMenuCollapsed ? "lg:w-16" : "lg:w-64"}`}>
             <Button variant="ghost" size="sm" onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} className="mb-2 self-end">
               {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
@@ -148,7 +148,7 @@ export default function PortariaLayout() {
       </div>
 
       {/* Menu inferior (celular) */}
-      <nav className="hidden fixed bottom-0 inset-x-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <nav className="hidden lg:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="grid" style={{ gridTemplateColumns: `repeat(${itensRodape.length}, minmax(0, 1fr))` }}>
           {itensRodape.map((item) => {
             const Icon = item.icon;
