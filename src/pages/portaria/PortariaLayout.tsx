@@ -95,7 +95,7 @@ export default function PortariaLayout() {
           <div className="min-w-0">
             <h1 className="text-lg sm:text-2xl font-bold truncate">Portaria</h1>
             <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 hidden sm:block">
-              Controle de acesso · Portões, portas e reconhecimento facial
+              Configuração do interfone
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function PortariaLayout() {
 
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:flex-row">
-          <div className="lg:hidden border-b bg-muted/30 p-3">
+          <div className="hidden">
             <Select value={current?.to} onValueChange={(v) => navigate(v)}>
               <SelectTrigger className="w-full bg-background">
                 <SelectValue>
@@ -129,14 +129,14 @@ export default function PortariaLayout() {
             </Select>
           </div>
 
-          <div className={`hub-menu hidden lg:flex lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 lg:border-r transition-all duration-300 ${isMenuCollapsed ? "lg:w-16" : "lg:w-64"}`}>
+          <div className={`hub-menu hidden lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 lg:border-r transition-all duration-300 ${isMenuCollapsed ? "lg:w-16" : "lg:w-64"}`}>
             <Button variant="ghost" size="sm" onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} className="mb-2 self-end">
               {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
             <TooltipProvider delayDuration={0}>{itens.map(renderMenuButton)}</TooltipProvider>
           </div>
 
-          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-20 lg:pb-6">
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
               <Outlet />
             </div>
@@ -145,7 +145,7 @@ export default function PortariaLayout() {
       </div>
 
       {/* Menu inferior (celular) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <nav className="hidden fixed bottom-0 inset-x-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="grid" style={{ gridTemplateColumns: `repeat(${itensRodape.length}, minmax(0, 1fr))` }}>
           {itensRodape.map((item) => {
             const Icon = item.icon;
