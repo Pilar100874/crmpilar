@@ -85,12 +85,12 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Manutenção", label: "Manutenção (Frota: manutenções, defeitos, biblioteca)", category: "Principal" },
   { id: "Transportadoras", label: "Transportadoras (entrada/saída de veículos de terceiros)", category: "Principal" },
 
-  // Atendimento Portaria
-  { id: "Atendimento Portaria", label: "Atendimento Portaria (Categoria)", category: "Portaria" },
+  // Portaria
+  { id: "Atendimento Portaria", label: "Portaria (Categoria)", category: "Portaria" },
 
   // Livro de Ocorrência
   { id: "Livro de Ocorrência", label: "Livro de Ocorrência (Portaria + Encomendas)", category: "Portaria" },
-  { id: "Portaria", label: "Portaria (Interfone)", category: "Portaria" },
+  { id: "Portaria", label: "Interfone", category: "Portaria" },
 
   // Editores
   { id: "Editores", label: "Editores (Categoria)", category: "Editores" },
