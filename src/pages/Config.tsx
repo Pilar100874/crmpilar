@@ -190,6 +190,14 @@ export default function Config() {
         return <WhatsAppConfigCRUD />;
       case "conteudos":
         return <ConteudosContent />;
+      case "cadastro-unidades":
+        return <UnidadesCRUD />;
+      case "grupos-acesso":
+        return <GruposAcessoCRUD />;
+      case "cadastro-usuarios":
+        return <UsuariosCRUD />;
+      case "segmentos":
+        return <SegmentosCRUD />;
       default:
         return null;
     }
