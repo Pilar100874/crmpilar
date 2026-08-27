@@ -70,6 +70,8 @@ export default function LivroOcorrencias() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("todas");
+  const [dataDe, setDataDe] = useState("");
+  const [dataAte, setDataAte] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Ocorrencia> | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -193,6 +195,8 @@ export default function LivroOcorrencias() {
 
   const filtered = items.filter((o) => {
     if (statusFilter !== "todas" && o.status !== statusFilter) return false;
+    if (dataDe && new Date(o.data_hora) < new Date(`${dataDe}T00:00:00`)) return false;
+    if (dataAte && new Date(o.data_hora) > new Date(`${dataAte}T23:59:59`)) return false;
     if (!search) return true;
     const s = search.toLowerCase();
     return [o.descricao, o.tipo, o.local, o.responsavel, o.envolvidos, String(o.numero)]
@@ -230,6 +234,15 @@ export default function LivroOcorrencias() {
             {STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">De</Label>
+          <Input type="date" className="w-[150px]" value={dataDe} onChange={(e) => setDataDe(e.target.value)} />
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Até</Label>
+          <Input type="date" className="w-[150px]" value={dataAte} onChange={(e) => setDataAte(e.target.value)} />
+          {(dataDe || dataAte) && (
+            <Button variant="ghost" size="icon" title="Limpar datas" onClick={() => { setDataDe(""); setDataAte(""); }}><X className="h-4 w-4" /></Button>
+          )}
+        </div>
       </div>
 
       {/* Tabela (md+) */}
