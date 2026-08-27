@@ -78,7 +78,8 @@ export default function TranspLiberacao() {
   };
 
   const Cartao = ({ m }: { m: any }) => {
-    const entrega = (m.tipo_operacao ?? "entrega") === "entrega";
+    const entrega = (m.tipo_operacao ?? "entrega") !== "coleta";
+    const ambos = m.tipo_operacao === "ambos";
     const setor = setorDe(m.setor_id);
     const fone = whatsMotorista(m);
     const espera = Math.round((Date.now() - new Date(m.entrada_time).getTime()) / 60000);
@@ -89,7 +90,7 @@ export default function TranspLiberacao() {
             <Badge variant="outline" className="font-mono">{m.placa || "—"}</Badge>
             <Badge variant={m.status === "liberado" ? "default" : "secondary"} className="gap-1">
               {entrega ? <PackageCheck className="h-3 w-3" /> : <PackageOpen className="h-3 w-3" />}
-              {entrega ? "Descarregamento" : "Carregamento"}
+              {ambos ? "Descarga + Carga" : entrega ? "Descarregamento" : "Carregamento"}
             </Badge>
           </div>
           <p className="font-semibold truncate">{empNome(m.transportadora_id)}</p>
