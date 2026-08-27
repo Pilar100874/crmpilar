@@ -17,7 +17,7 @@ import { FotosPendentesDialog } from "@/components/cv/FotosPendentesDialog";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
 import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
-import { TRANSP_ANGLES } from "@/lib/transportadoras/dados";
+import { TRANSP_ANGLES, temColeta, labelOperacaoCurto } from "@/lib/transportadoras/dados";
 
 type StepKey = "veiculo" | "nfe" | "fotos" | "confirmacao";
 
