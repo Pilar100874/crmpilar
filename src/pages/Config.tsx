@@ -478,7 +478,7 @@ function EstabelecimentoPainel({ estabelecimentoId, estabelecimentos, onSubmenuC
         {EMPRESA_SUBMENUS.map((sub) => (
           <button
             key={sub.id}
-            onClick={() => onSubmenuClick(sub.id, GLOBAL_SUBMENU_IDS.includes(sub.id) ? estabelecimentoId : undefined)}
+            onClick={() => onSubmenuClick(sub.id, estabelecimentoId)}
             className={cn(
               "flex items-start gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
             )}
