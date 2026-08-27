@@ -32,6 +32,7 @@ export default function PortariaHistorico() {
   const [devices, setDevices] = useState<Record<string, string>>({});
   const [pontos, setPontos] = useState<Record<string, string>>({});
   const [pessoas, setPessoas] = useState<Record<string, string>>({});
+  const [operadores, setOperadores] = useState<Record<string, string>>({});
   const [carregando, setCarregando] = useState(true);
   const [filtros, setFiltros] = useState({ de: "", ate: "", tipo: "todos", resultado: "todos", device: "todos" });
 
@@ -49,17 +50,19 @@ export default function PortariaHistorico() {
     if (filtros.resultado !== "todos") query = query.eq("resultado", filtros.resultado);
     if (filtros.device !== "todos") query = query.eq("device_id", filtros.device);
 
-    const [{ data }, { data: d }, { data: p }, { data: pe }] = await Promise.all([
+    const [{ data }, { data: d }, { data: p }, { data: pe }, { data: us }] = await Promise.all([
       query,
       supabase.from("port_devices").select("id, nome"),
       supabase.from("port_access_points").select("id, nome"),
       supabase.from("port_people").select("id, nome"),
+      supabase.from("usuarios").select("auth_user_id, nome"),
     ]);
 
     setEventos((data ?? []) as Evento[]);
     setDevices(Object.fromEntries((d ?? []).map((x) => [x.id, x.nome])));
     setPontos(Object.fromEntries((p ?? []).map((x) => [x.id, x.nome])));
     setPessoas(Object.fromEntries((pe ?? []).map((x) => [x.id, x.nome])));
+    setOperadores(Object.fromEntries(((us ?? []) as any[]).filter((u) => u.auth_user_id).map((u) => [u.auth_user_id, u.nome])));
     setCarregando(false);
   }, [filtros]);
 
@@ -136,6 +139,9 @@ export default function PortariaHistorico() {
                   {new Date(e.created_at).toLocaleString("pt-BR")} · {pontos[e.access_point_id ?? ""] ?? devices[e.device_id ?? ""] ?? "-"}
                 </p>
                 {e.person_id && <p className="text-xs">{pessoas[e.person_id]}</p>}
+                {e.auth_user_id && operadores[e.auth_user_id] && (
+                  <p className="text-xs text-muted-foreground mt-1">Porteiro: {operadores[e.auth_user_id]}</p>
+                )}
                 {e.mensagem && <p className="text-xs text-destructive mt-1">{e.mensagem}</p>}
               </div>
             ))}
@@ -151,6 +157,7 @@ export default function PortariaHistorico() {
                   <th className="px-3 py-2 font-medium">Acesso</th>
                   <th className="px-3 py-2 font-medium">Dispositivo</th>
                   <th className="px-3 py-2 font-medium">Pessoa</th>
+                  <th className="px-3 py-2 font-medium">Porteiro</th>
                   <th className="px-3 py-2 font-medium">Origem</th>
                   <th className="px-3 py-2 font-medium">Resultado</th>
                 </tr>
@@ -163,6 +170,7 @@ export default function PortariaHistorico() {
                     <td className="px-3 py-2">{pontos[e.access_point_id ?? ""] ?? "-"}</td>
                     <td className="px-3 py-2">{devices[e.device_id ?? ""] ?? "-"}</td>
                     <td className="px-3 py-2">{pessoas[e.person_id ?? ""] ?? "-"}</td>
+                    <td className="px-3 py-2">{operadores[e.auth_user_id ?? ""] ?? "-"}</td>
                     <td className="px-3 py-2">{e.origem ?? "-"}</td>
                     <td className="px-3 py-2">
                       <span className="flex items-center gap-1.5">{icone(e.resultado)}<span className="capitalize">{e.resultado ?? "-"}</span></span>
