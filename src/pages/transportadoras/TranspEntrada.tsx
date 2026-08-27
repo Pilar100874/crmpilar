@@ -223,7 +223,7 @@ export default function TranspEntrada() {
 
     setBusy(false);
     setSucesso({
-      operacao: entrega ? "Entrega (descarregamento)" : "Coleta (carregamento)",
+      operacao: labelOperacao(form.tipo_operacao),
       transportadora: nomeTransportadora(empresaSel),
       placa: veiculoSel?.placa,
       motorista: motoristaSel?.nome,
