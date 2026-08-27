@@ -94,6 +94,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   // Livro de Ocorrência
   { id: "Livro de Ocorrência", label: "Livro de Ocorrência (Portaria + Encomendas)", category: "Portaria" },
   { id: "Portaria", label: "Interfone", category: "Portaria" },
+  { id: "Porteiros", label: "Cadastro de Porteiros", category: "Portaria" },
 
   // Editores
   { id: "Editores", label: "Editores (Categoria)", category: "Editores" },

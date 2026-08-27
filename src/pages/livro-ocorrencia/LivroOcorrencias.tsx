@@ -16,6 +16,8 @@ import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X, CheckCircle2 } fr
 import { useRef } from "react";
 
 
+import { PorteiroSelect } from "@/components/portaria/PorteiroSelect";
+
 interface Ocorrencia {
   id: string;
   numero: number;
@@ -28,6 +30,7 @@ interface Ocorrencia {
   envolvidos: string | null;
   acao_tomada: string | null;
   responsavel: string | null;
+  porteiro_id?: string | null;
   status: string;
   observacoes: string | null;
   anexos?: any;
@@ -413,8 +416,12 @@ export default function LivroOcorrencias() {
                 <Textarea rows={2} value={editing.acao_tomada || ""} onChange={(e) => setEditing({ ...editing, acao_tomada: e.target.value })} placeholder="Descreva a ação/procedimento realizado" />
               </div>
               <div>
-                <Label>Responsável (Porteiro)</Label>
-                <Input value={editing.responsavel || ""} onChange={(e) => setEditing({ ...editing, responsavel: e.target.value })} />
+                <PorteiroSelect
+                  label="Responsável (Porteiro)"
+                  value={editing.porteiro_id}
+                  nomeGravado={editing.responsavel}
+                  onChange={(id, nome) => setEditing({ ...editing, porteiro_id: id, responsavel: nome })}
+                />
               </div>
               {editing.status === "resolvida" && (
                 <div className="sm:col-span-2 border rounded-lg p-3 bg-green-500/5 space-y-1 text-sm">

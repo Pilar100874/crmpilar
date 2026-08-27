@@ -6852,6 +6852,10 @@ export type Database = {
           id: string
           inspected_all_sides: boolean
           inspected_by: string | null
+          porteiro_entrada_id: string | null
+          porteiro_entrada_nome: string | null
+          porteiro_saida_id: string | null
+          porteiro_saida_nome: string | null
           reported_defects: string | null
           resolved_at: string | null
           security_guard_id: string | null
@@ -6875,6 +6879,10 @@ export type Database = {
           id?: string
           inspected_all_sides?: boolean
           inspected_by?: string | null
+          porteiro_entrada_id?: string | null
+          porteiro_entrada_nome?: string | null
+          porteiro_saida_id?: string | null
+          porteiro_saida_nome?: string | null
           reported_defects?: string | null
           resolved_at?: string | null
           security_guard_id?: string | null
@@ -6898,6 +6906,10 @@ export type Database = {
           id?: string
           inspected_all_sides?: boolean
           inspected_by?: string | null
+          porteiro_entrada_id?: string | null
+          porteiro_entrada_nome?: string | null
+          porteiro_saida_id?: string | null
+          porteiro_saida_nome?: string | null
           reported_defects?: string | null
           resolved_at?: string | null
           security_guard_id?: string | null
@@ -6925,6 +6937,20 @@ export type Database = {
             columns: ["helper_id"]
             isOneToOne: false
             referencedRelation: "cv_helpers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicle_movements_porteiro_entrada_id_fkey"
+            columns: ["porteiro_entrada_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicle_movements_porteiro_saida_id_fkey"
+            columns: ["porteiro_saida_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
             referencedColumns: ["id"]
           },
           {
@@ -12039,6 +12065,7 @@ export type Database = {
           numero: number
           observacoes: string | null
           peso: number | null
+          porteiro_id: string | null
           quantidade_volumes: number | null
           recebido_por: string | null
           registrado_por: string | null
@@ -12065,6 +12092,7 @@ export type Database = {
           numero?: number
           observacoes?: string | null
           peso?: number | null
+          porteiro_id?: string | null
           quantidade_volumes?: number | null
           recebido_por?: string | null
           registrado_por?: string | null
@@ -12091,6 +12119,7 @@ export type Database = {
           numero?: number
           observacoes?: string | null
           peso?: number | null
+          porteiro_id?: string | null
           quantidade_volumes?: number | null
           recebido_por?: string | null
           registrado_por?: string | null
@@ -12102,7 +12131,15 @@ export type Database = {
           unidade?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "livro_encomendas_porteiro_id_fkey"
+            columns: ["porteiro_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       livro_ocorrencias: {
         Row: {
@@ -12119,6 +12156,7 @@ export type Database = {
           numero: number
           observacao_resolucao: string | null
           observacoes: string | null
+          porteiro_id: string | null
           registrado_por: string | null
           resolvido_em: string | null
           resolvido_por: string | null
@@ -12142,6 +12180,7 @@ export type Database = {
           numero?: number
           observacao_resolucao?: string | null
           observacoes?: string | null
+          porteiro_id?: string | null
           registrado_por?: string | null
           resolvido_em?: string | null
           resolvido_por?: string | null
@@ -12165,6 +12204,7 @@ export type Database = {
           numero?: number
           observacao_resolucao?: string | null
           observacoes?: string | null
+          porteiro_id?: string | null
           registrado_por?: string | null
           resolvido_em?: string | null
           resolvido_por?: string | null
@@ -12174,7 +12214,15 @@ export type Database = {
           turno?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "livro_ocorrencias_porteiro_id_fkey"
+            columns: ["porteiro_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       livro_palavras_chave: {
         Row: {
@@ -22223,6 +22271,48 @@ export type Database = {
           },
         ]
       }
+      porteiros: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          documento: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          turno: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          documento?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          turno?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          documento?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          turno?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       produto_campos_customizados: {
         Row: {
           ativo: boolean | null
@@ -26799,6 +26889,10 @@ export type Database = {
           nfe_chave: string | null
           nfe_dados: Json | null
           placa: string | null
+          porteiro_entrada_id: string | null
+          porteiro_entrada_nome: string | null
+          porteiro_saida_id: string | null
+          porteiro_saida_nome: string | null
           saida_nfe_chave: string | null
           saida_nfe_dados: Json | null
           saida_obs: string | null
@@ -26830,6 +26924,10 @@ export type Database = {
           nfe_chave?: string | null
           nfe_dados?: Json | null
           placa?: string | null
+          porteiro_entrada_id?: string | null
+          porteiro_entrada_nome?: string | null
+          porteiro_saida_id?: string | null
+          porteiro_saida_nome?: string | null
           saida_nfe_chave?: string | null
           saida_nfe_dados?: Json | null
           saida_obs?: string | null
@@ -26861,6 +26959,10 @@ export type Database = {
           nfe_chave?: string | null
           nfe_dados?: Json | null
           placa?: string | null
+          porteiro_entrada_id?: string | null
+          porteiro_entrada_nome?: string | null
+          porteiro_saida_id?: string | null
+          porteiro_saida_nome?: string | null
           saida_nfe_chave?: string | null
           saida_nfe_dados?: Json | null
           saida_obs?: string | null
@@ -26880,6 +26982,20 @@ export type Database = {
             columns: ["motorista_id"]
             isOneToOne: false
             referencedRelation: "transp_motoristas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_movimentos_porteiro_entrada_id_fkey"
+            columns: ["porteiro_entrada_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_movimentos_porteiro_saida_id_fkey"
+            columns: ["porteiro_saida_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
             referencedColumns: ["id"]
           },
           {
@@ -28666,6 +28782,10 @@ export type Database = {
           exit_date: string | null
           id: string
           notes: string | null
+          porteiro_entrada_id: string | null
+          porteiro_entrada_nome: string | null
+          porteiro_saida_id: string | null
+          porteiro_saida_nome: string | null
           purpose: string | null
           status: string
           vehicle_plate: string | null
@@ -28679,6 +28799,10 @@ export type Database = {
           exit_date?: string | null
           id?: string
           notes?: string | null
+          porteiro_entrada_id?: string | null
+          porteiro_entrada_nome?: string | null
+          porteiro_saida_id?: string | null
+          porteiro_saida_nome?: string | null
           purpose?: string | null
           status?: string
           vehicle_plate?: string | null
@@ -28692,6 +28816,10 @@ export type Database = {
           exit_date?: string | null
           id?: string
           notes?: string | null
+          porteiro_entrada_id?: string | null
+          porteiro_entrada_nome?: string | null
+          porteiro_saida_id?: string | null
+          porteiro_saida_nome?: string | null
           purpose?: string | null
           status?: string
           vehicle_plate?: string | null
@@ -28710,6 +28838,20 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_access_records_porteiro_entrada_id_fkey"
+            columns: ["porteiro_entrada_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_access_records_porteiro_saida_id_fkey"
+            columns: ["porteiro_saida_id"]
+            isOneToOne: false
+            referencedRelation: "porteiros"
             referencedColumns: ["id"]
           },
           {

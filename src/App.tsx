@@ -262,6 +262,7 @@ import PortariaLayout from "./pages/portaria/PortariaLayout";
 import PortariaDashboard from "./pages/portaria/PortariaDashboard";
 import PortariaAcessos from "./pages/portaria/PortariaAcessos";
 import PortariaPessoas from "./pages/portaria/PortariaPessoas";
+import PorteirosCRUD from "./pages/portaria/PorteirosCRUD";
 import PortariaVisitantes from "./pages/portaria/PortariaVisitantes";
 import PortariaHistorico from "./pages/portaria/PortariaHistorico";
 import PortariaDispositivos from "./pages/portaria/PortariaDispositivos";
@@ -625,6 +626,7 @@ const App = () => (
               <Route path="/contagem/resultado/:id" element={<ResultadoContagem />} />
               <Route path="/contagem/detalhe/:id" element={<ResultadoContagem />} />
               
+              <Route path="/porteiros" element={<PorteirosCRUD />} />
               <Route path="/avisos" element={<Avisos />} />
               <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
               <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />

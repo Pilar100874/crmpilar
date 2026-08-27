@@ -15,6 +15,8 @@ import { Plus, Pencil, Trash2, Search, Package, PackageCheck, Camera, X, Sparkle
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 
+import { PorteiroSelect } from "@/components/portaria/PorteiroSelect";
+
 interface Encomenda {
   id: string;
   numero: number;
@@ -29,6 +31,7 @@ interface Encomenda {
   quantidade_volumes: number | null;
   peso: number | null;
   recebido_por: string | null;
+  porteiro_id?: string | null;
   status: string;
   data_entrega: string | null;
   retirado_por: string | null;
@@ -415,8 +418,12 @@ export default function LivroEncomendas() {
                 <Textarea rows={2} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} />
               </div>
               <div>
-                <Label>Recebido por (Porteiro)</Label>
-                <Input value={editing.recebido_por || ""} onChange={(e) => setEditing({ ...editing, recebido_por: e.target.value })} />
+                <PorteiroSelect
+                  label="Recebido por (Porteiro)"
+                  value={editing.porteiro_id}
+                  nomeGravado={editing.recebido_por}
+                  onChange={(id, nome) => setEditing({ ...editing, porteiro_id: id, recebido_por: nome })}
+                />
               </div>
               {editing.status === "entregue" && (
                 <div className="sm:col-span-2 rounded-md border border-green-500/30 bg-green-500/10 p-3 text-sm space-y-1">
