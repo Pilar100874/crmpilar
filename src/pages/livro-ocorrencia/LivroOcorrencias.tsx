@@ -158,6 +158,14 @@ export default function LivroOcorrencias() {
       ...editing,
       data_hora: editing.data_hora ? new Date(editing.data_hora as string).toISOString() : new Date().toISOString(),
     };
+    if (editing.tipo === "Funcionário") {
+      payload.turno = null;
+      payload.local = null;
+      payload.envolvidos = null;
+      payload.observacoes = null;
+      payload.gravidade = "baixa";
+      if (payload.anexos?.foto_url) payload.anexos = { ...payload.anexos, foto_url: null };
+    }
     delete payload.numero;
     const { error } = editing.id
       ? await supabase.from("livro_ocorrencias" as any).update(payload).eq("id", editing.id)
@@ -315,19 +323,23 @@ export default function LivroOcorrencias() {
           <DialogHeader>
             <DialogTitle>{editing?.id ? `Editar Ocorrência #${(editing as any).numero}` : "Nova Ocorrência"}</DialogTitle>
           </DialogHeader>
-          {editing && (
+          {editing && (() => {
+            const isFunc = editing.tipo === "Funcionário";
+            return (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Data e Hora *</Label>
                 <Input type="datetime-local" value={editing.data_hora as string} onChange={(e) => setEditing({ ...editing, data_hora: e.target.value })} />
               </div>
-              <div>
-                <Label>Turno</Label>
-                <Select value={editing.turno || ""} onValueChange={(v) => setEditing({ ...editing, turno: v })}>
-                  <SelectTrigger><SelectValue placeholder="Turno" /></SelectTrigger>
-                  <SelectContent>{TURNOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {!isFunc && (
+                <div>
+                  <Label>Turno</Label>
+                  <Select value={editing.turno || ""} onValueChange={(v) => setEditing({ ...editing, turno: v })}>
+                    <SelectTrigger><SelectValue placeholder="Turno" /></SelectTrigger>
+                    <SelectContent>{TURNOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <Label>Tipo *</Label>
                 <Select value={editing.tipo || ""} onValueChange={(v) => setEditing({ ...editing, tipo: v })}>
@@ -335,13 +347,15 @@ export default function LivroOcorrencias() {
                   <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Gravidade *</Label>
-                <Select value={editing.gravidade || "baixa"} onValueChange={(v) => setEditing({ ...editing, gravidade: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{GRAVIDADES.map((g) => <SelectItem key={g.v} value={g.v}>{g.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {!isFunc && (
+                <div>
+                  <Label>Gravidade *</Label>
+                  <Select value={editing.gravidade || "baixa"} onValueChange={(v) => setEditing({ ...editing, gravidade: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{GRAVIDADES.map((g) => <SelectItem key={g.v} value={g.v}>{g.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
               {editing.tipo === "Funcionário" && (
                 <>
                   <div className="sm:col-span-2">
@@ -374,18 +388,22 @@ export default function LivroOcorrencias() {
                   </div>
                 </>
               )}
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Local</Label>
+                  <Input value={editing.local || ""} onChange={(e) => setEditing({ ...editing, local: e.target.value })} placeholder="Ex: Portaria principal, garagem, bloco A..." />
+                </div>
+              )}
               <div className="sm:col-span-2">
-                <Label>Local</Label>
-                <Input value={editing.local || ""} onChange={(e) => setEditing({ ...editing, local: e.target.value })} placeholder="Ex: Portaria principal, garagem, bloco A..." />
+                <Label>{isFunc ? "Motivo *" : "Descrição *"}</Label>
+                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder={isFunc ? "Descreva o motivo da ocorrência com o funcionário..." : "Relate a ocorrência em detalhes..."} />
               </div>
-              <div className="sm:col-span-2">
-                <Label>{editing.tipo === "Funcionário" ? "Motivo *" : "Descrição *"}</Label>
-                <Textarea rows={4} value={editing.descricao || ""} onChange={(e) => setEditing({ ...editing, descricao: e.target.value })} placeholder={editing.tipo === "Funcionário" ? "Descreva o motivo da ocorrência com o funcionário..." : "Relate a ocorrência em detalhes..."} />
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Envolvidos</Label>
-                <Textarea rows={2} value={editing.envolvidos || ""} onChange={(e) => setEditing({ ...editing, envolvidos: e.target.value })} placeholder="Nomes, cargos, veículos, etc." />
-              </div>
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Envolvidos</Label>
+                  <Textarea rows={2} value={editing.envolvidos || ""} onChange={(e) => setEditing({ ...editing, envolvidos: e.target.value })} placeholder="Nomes, cargos, veículos, etc." />
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <Label>Ação Tomada</Label>
                 <Textarea rows={2} value={editing.acao_tomada || ""} onChange={(e) => setEditing({ ...editing, acao_tomada: e.target.value })} placeholder="Descreva a ação/procedimento realizado" />
@@ -401,42 +419,47 @@ export default function LivroOcorrencias() {
                   {editing.observacao_resolucao && <div className="text-muted-foreground">{editing.observacao_resolucao}</div>}
                 </div>
               )}
-              <div className="sm:col-span-2">
-                <Label>Foto (opcional)</Label>
-                <input
-                  ref={fotoInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFoto(f); }}
-                />
-                {editing.anexos?.foto_url ? (
-                  <div className="relative inline-block mt-1">
-                    <img src={editing.anexos.foto_url} alt="Foto da ocorrência" className="max-h-48 rounded border" />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-6 w-6"
-                      onClick={() => setEditing({ ...editing, anexos: { ...(editing.anexos || {}), foto_url: null } })}
-                    >
-                      <X className="h-3 w-3" />
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Foto (opcional)</Label>
+                  <input
+                    ref={fotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFoto(f); }}
+                  />
+                  {editing.anexos?.foto_url ? (
+                    <div className="relative inline-block mt-1">
+                      <img src={editing.anexos.foto_url} alt="Foto da ocorrência" className="max-h-48 rounded border" />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setEditing({ ...editing, anexos: { ...(editing.anexos || {}), foto_url: null } })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto} className="gap-2">
+                      <Camera className="h-4 w-4" /> {uploadingFoto ? "Enviando..." : "Tirar / Anexar foto"}
                     </Button>
-                  </div>
-                ) : (
-                  <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto} className="gap-2">
-                    <Camera className="h-4 w-4" /> {uploadingFoto ? "Enviando..." : "Tirar / Anexar foto"}
-                  </Button>
-                )}
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Observações</Label>
-                <Textarea rows={2} value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} />
-              </div>
+                  )}
+                </div>
+              )}
+              {!isFunc && (
+                <div className="sm:col-span-2">
+                  <Label>Observações</Label>
+                  <Textarea rows={2} value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} />
+                </div>
+              )}
 
             </div>
-          )}
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
