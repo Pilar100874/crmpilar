@@ -9,8 +9,11 @@ import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { Button } from "@/components/ui/button";
 import {
   Truck, Users, Car, Package, AlertTriangle, ArrowLeft, RefreshCw, Clock, ShieldCheck,
+  X, ExternalLink, Info,
 } from "lucide-react";
 import { labelOperacaoCurto } from "@/lib/transportadoras/dados";
+
+type DetalheCampo = { rotulo: string; valor?: string | null };
 
 type Item = {
   id: string;
@@ -19,6 +22,11 @@ type Item = {
   desde?: string | null;
   status: string;
   tom: "amber" | "emerald" | "sky" | "rose" | "slate";
+  painel: string;
+  detalhes: DetalheCampo[];
+  historico: DetalheCampo[];
+  atualizadoEm?: string | null;
+  rota?: string | null;
 };
 
 const TONS: Record<Item["tom"], string> = {
