@@ -226,7 +226,7 @@ export default function TranspSaida() {
                             <Badge variant="outline" className="font-mono text-xs">{m.placa || "—"}</Badge>
                             {active && <CheckCircle className="h-5 w-5 text-primary" />}
                           </div>
-                          <p className="font-semibold truncate">{empNome(m.transportadora_id)}</p>
+                          
                           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><User className="h-3 w-3" />{m.motorista_nome || "—"}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(m.entrada_time).toLocaleString("pt-BR")}</p>
                           <div className="flex flex-wrap gap-1 mt-2">
@@ -293,7 +293,7 @@ export default function TranspSaida() {
                   )}
                   <div className="rounded-lg border divide-y text-sm">
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Placa</span><b className="font-mono">{sel.placa || "—"}</b></div>
-                    <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Transportadora</span><b>{empNome(sel.transportadora_id)}</b></div>
+                    
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Motorista</span><b>{sel.motorista_nome || "—"}</b></div>
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Operação</span><b>{coleta ? "Coleta" : "Entrega"}</b></div>
                     <div className="p-3 flex justify-between gap-2"><span className="text-muted-foreground">Entrada</span><b>{new Date(sel.entrada_time).toLocaleString("pt-BR")}</b></div>
