@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LogOut, Truck, User, Camera, CheckCircle, Clock, PackageCheck, PackageOpen } from "lucide-react";
+import {
+  LogOut, Truck, User, Camera, CheckCircle, Clock, PackageCheck, PackageOpen, ScanLine, AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
+import { NfeScannerDialog } from "@/components/transportadoras/NfeScannerDialog";
+import { formatarChave, parseChaveNfe } from "@/lib/transportadoras/nfe";
 import { TRANSP_ANGLES, listarTransportadoras, nomeTransportadora, type TranspEmpresa } from "@/lib/transportadoras/dados";
 
 export default function TranspSaida() {
@@ -17,6 +22,8 @@ export default function TranspSaida() {
   const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [sel, setSel] = useState<any | null>(null);
   const [obs, setObs] = useState("");
+  const [nfeSaida, setNfeSaida] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -26,7 +33,7 @@ export default function TranspSaida() {
     setLoading(true);
     const [emp, m] = await Promise.all([
       listarTransportadoras(),
-      supabase.from("transp_movimentos").select("*").eq("status", "dentro").order("entrada_time", { ascending: false }),
+      supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }),
     ]);
     setEmpresas(emp);
     setMovs((m.data ?? []) as any[]);
@@ -35,9 +42,14 @@ export default function TranspSaida() {
   useEffect(() => { load(); }, []);
 
   const empNome = (id: string | null) => nomeTransportadora(empresas.find((e) => e.id === id));
+  const coleta = (sel?.tipo_operacao ?? "entrega") === "coleta";
+  const nfeInfo = useMemo(() => (nfeSaida ? parseChaveNfe(nfeSaida) : null), [nfeSaida]);
 
   const registrar = async () => {
     if (!sel) return;
+    if (sel.status !== "liberado") return toast.error("Veículo ainda não foi liberado na tela de Liberação");
+    if (coleta && nfeSaida.length !== 44) return toast.error("Leia o QR Code / código de barras da NF-e da carga");
+
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const saida = new Date();
@@ -45,6 +57,8 @@ export default function TranspSaida() {
       saida_time: saida.toISOString(),
       saida_obs: obs || null,
       saida_por: user?.id ?? null,
+      saida_nfe_chave: coleta ? nfeSaida : null,
+      saida_nfe_dados: coleta && nfeInfo ? nfeInfo : null,
       status: "saiu",
     } as any).eq("id", sel.id);
     if (error) { setBusy(false); return toast.error(error.message); }
@@ -65,14 +79,9 @@ export default function TranspSaida() {
     }
 
     setBusy(false);
-    setSucesso({
-      placa: sel.placa,
-      motorista: sel.motorista_nome,
-      hora: saida.toLocaleString("pt-BR"),
-      fotos: photos.length,
-    });
+    setSucesso({ placa: sel.placa, motorista: sel.motorista_nome, hora: saida.toLocaleString("pt-BR"), fotos: photos.length });
     toast.success("Saída registrada!");
-    setSel(null); setObs(""); setPhotos([]);
+    setSel(null); setObs(""); setPhotos([]); setNfeSaida("");
     load();
   };
 
@@ -97,6 +106,8 @@ export default function TranspSaida() {
         </DialogContent>
       </Dialog>
 
+      <NfeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onDetected={(c) => { setNfeSaida(c); toast.success("NF-e da carga lida"); }} />
+
       <div className="space-y-4">
         <CVPageHeader icon={LogOut} title="Registrar Saída" subtitle="Libere a saída dos veículos que estão no pátio" />
 
@@ -110,8 +121,9 @@ export default function TranspSaida() {
             {movs.map((m) => {
               const active = sel?.id === m.id;
               const entrega = (m.tipo_operacao ?? "entrega") === "entrega";
+              const liberado = m.status === "liberado";
               return (
-                <button key={m.id} type="button" onClick={() => { setSel(m); setPhotos([]); setObs(""); }}
+                <button key={m.id} type="button" onClick={() => { setSel(m); setPhotos([]); setObs(""); setNfeSaida(""); }}
                   className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"}`}>
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="outline" className="font-mono text-xs">{m.placa || "—"}</Badge>
@@ -120,10 +132,15 @@ export default function TranspSaida() {
                   <p className="font-semibold truncate">{empNome(m.transportadora_id)}</p>
                   <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><User className="h-3 w-3" />{m.motorista_nome || "—"}</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(m.entrada_time).toLocaleString("pt-BR")}</p>
-                  <Badge variant="secondary" className="mt-2 gap-1">
-                    {entrega ? <PackageCheck className="h-3 w-3" /> : <PackageOpen className="h-3 w-3" />}
-                    {entrega ? "Entrega" : "Coleta"}
-                  </Badge>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <Badge variant="secondary" className="gap-1">
+                      {entrega ? <PackageCheck className="h-3 w-3" /> : <PackageOpen className="h-3 w-3" />}
+                      {entrega ? "Entrega" : "Coleta"}
+                    </Badge>
+                    <Badge variant={liberado ? "default" : "outline"} className="gap-1">
+                      {liberado ? "Liberado" : "Aguardando liberação"}
+                    </Badge>
+                  </div>
                   {m.nfe_chave && <p className="text-[10px] font-mono text-muted-foreground mt-1 break-all">NF-e {String(m.nfe_chave).slice(25, 34).replace(/^0+/, "")}</p>}
                 </button>
               );
@@ -134,6 +151,34 @@ export default function TranspSaida() {
         {sel && (
           <Card className="max-w-4xl">
             <CardContent className="p-4 sm:p-6 space-y-4">
+              {sel.status !== "liberado" && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                  <p>Este veículo ainda não foi liberado. Faça a liberação na tela "Liberação" antes de registrar a saída.</p>
+                </div>
+              )}
+
+              {coleta && (
+                <div className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center gap-2"><ScanLine className="h-5 w-5 text-primary" /><h3 className="font-semibold">NF-e da carga (coleta)</h3></div>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                    <div className="flex-1">
+                      <Label>Chave da NF-e *</Label>
+                      <Input value={nfeSaida} onChange={(e) => setNfeSaida(e.target.value.replace(/\D/g, "").slice(0, 44))}
+                        placeholder="Leia o QR Code / código de barras" inputMode="numeric" />
+                    </div>
+                    <Button onClick={() => setScannerOpen(true)}><ScanLine className="h-4 w-4 mr-1" />Ler NF-e</Button>
+                  </div>
+                  {nfeInfo && (
+                    <div className="grid gap-2 sm:grid-cols-2 text-xs bg-muted/40 rounded p-3">
+                      <p><span className="text-muted-foreground">Número/Série: </span><b>{nfeInfo.numero}/{nfeInfo.serie}</b></p>
+                      <p><span className="text-muted-foreground">Emitente: </span><b>{nfeInfo.cnpj_emitente}</b></p>
+                      <p className="sm:col-span-2 font-mono break-all text-[10px]">{formatarChave(nfeInfo.chave)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /><h3 className="font-semibold">Fotos da saída</h3></div>
               <p className="text-xs text-muted-foreground">Registro fotográfico simples — sem comparação ou validação de avarias.</p>
               <CVPhotoCapture angles={TRANSP_ANGLES} stage="exit" value={photos} onChange={setPhotos} aiCompare={false} />
