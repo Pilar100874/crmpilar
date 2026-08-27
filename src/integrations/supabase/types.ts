@@ -26855,6 +26855,44 @@ export type Database = {
         }
         Relationships: []
       }
+      transp_setores_numeros: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          numero: string
+          setor_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          numero: string
+          setor_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          numero?: string
+          setor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transp_setores_numeros_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "transp_setores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transp_veiculos: {
         Row: {
           ativo: boolean
