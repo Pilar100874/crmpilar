@@ -26707,15 +26707,22 @@ export type Database = {
           entrada_time: string
           estabelecimento_id: string
           id: string
+          liberado_obs: string | null
+          liberado_por: string | null
+          liberado_time: string | null
           motivo: string | null
           motorista_id: string | null
           motorista_nome: string | null
           nfe_chave: string | null
           nfe_dados: Json | null
           placa: string | null
+          saida_nfe_chave: string | null
+          saida_nfe_dados: Json | null
           saida_obs: string | null
           saida_por: string | null
           saida_time: string | null
+          setor_avisado_at: string | null
+          setor_id: string | null
           status: string
           tipo_operacao: string
           transportadora_id: string | null
@@ -26731,15 +26738,22 @@ export type Database = {
           entrada_time?: string
           estabelecimento_id: string
           id?: string
+          liberado_obs?: string | null
+          liberado_por?: string | null
+          liberado_time?: string | null
           motivo?: string | null
           motorista_id?: string | null
           motorista_nome?: string | null
           nfe_chave?: string | null
           nfe_dados?: Json | null
           placa?: string | null
+          saida_nfe_chave?: string | null
+          saida_nfe_dados?: Json | null
           saida_obs?: string | null
           saida_por?: string | null
           saida_time?: string | null
+          setor_avisado_at?: string | null
+          setor_id?: string | null
           status?: string
           tipo_operacao?: string
           transportadora_id?: string | null
@@ -26755,15 +26769,22 @@ export type Database = {
           entrada_time?: string
           estabelecimento_id?: string
           id?: string
+          liberado_obs?: string | null
+          liberado_por?: string | null
+          liberado_time?: string | null
           motivo?: string | null
           motorista_id?: string | null
           motorista_nome?: string | null
           nfe_chave?: string | null
           nfe_dados?: Json | null
           placa?: string | null
+          saida_nfe_chave?: string | null
+          saida_nfe_dados?: Json | null
           saida_obs?: string | null
           saida_por?: string | null
           saida_time?: string | null
+          setor_avisado_at?: string | null
+          setor_id?: string | null
           status?: string
           tipo_operacao?: string
           transportadora_id?: string | null
@@ -26776,6 +26797,13 @@ export type Database = {
             columns: ["motorista_id"]
             isOneToOne: false
             referencedRelation: "transp_motoristas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_movimentos_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "transp_setores"
             referencedColumns: ["id"]
           },
           {
@@ -26793,6 +26821,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transp_setores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          observacoes: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
       }
       transp_veiculos: {
         Row: {
