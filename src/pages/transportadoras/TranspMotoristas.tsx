@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Users, Search, ToggleLeft, ToggleRight, IdCard, Phone, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Search, ToggleLeft, ToggleRight, IdCard, Phone, User, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -22,7 +22,17 @@ import {
 } from "@/lib/transportadoras/dados";
 import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
-const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true };
+const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true, cnh_foto_url: null as string | null };
+
+const CNH_BUCKET = "cv-vehicle-photos";
+
+async function uploadCnhFoto(file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `cnh/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(CNH_BUCKET).upload(path, file, { upsert: false });
+  if (error) throw new Error(error.message);
+  return path;
+}
 
 export default function TranspMotoristas() {
   const [rows, setRows] = useState<TranspMotorista[]>([]);
