@@ -210,6 +210,8 @@ export default function LivroEncomendas() {
 
   const filtered = items.filter((o) => {
     if (statusFilter !== "todas" && o.status !== statusFilter) return false;
+    if (dataDe && new Date(o.data_recebimento) < new Date(`${dataDe}T00:00:00`)) return false;
+    if (dataAte && new Date(o.data_recebimento) > new Date(`${dataAte}T23:59:59`)) return false;
     if (!search) return true;
     const s = search.toLowerCase();
     return [o.destinatario, o.remetente, o.transportadora, o.codigo_rastreio, o.unidade, String(o.numero)]
