@@ -493,7 +493,7 @@ export default function TranspEntrada() {
           <DialogHeader><DialogTitle>Novo veículo</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Placa *</Label><Input value={novoVeiculo.placa} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, placa: maskPlaca(e.target.value) })} /></div>
-            <div><Label>Descrição</Label><Input value={novoVeiculo.descricao} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, descricao: e.target.value.toUpperCase() })} /></div>
+            
             <div>
               <Label>Tipo</Label>
               <Select value={novoVeiculo.tipo_veiculo} onValueChange={(v) => setNovoVeiculo({ ...novoVeiculo, tipo_veiculo: v })}>
