@@ -383,9 +383,6 @@ export default function Config() {
                 ])}
               </SelectContent>
             </Select>
-
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Desktop: menu lateral */}
