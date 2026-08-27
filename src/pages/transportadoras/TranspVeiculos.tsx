@@ -135,21 +135,6 @@ export default function TranspVeiculos() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Veículo</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between">
-                <Label>Transportadora</Label>
-                <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={() => setNovaEmpresa(true)}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />Nova
-                </Button>
-              </div>
-              <Select value={form.transportadora_id} onValueChange={(v) => setForm({ ...form, transportadora_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value={SEM_TRANSPORTADORA}>Sem transportadora (avulso)</SelectItem>
-                  {empresas.map((e) => <SelectItem key={e.id} value={e.id}>{nomeTransportadora(e)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <div><Label>Placa *</Label><Input value={form.placa} onChange={(e) => setForm({ ...form, placa: maskPlaca(e.target.value) })} maxLength={8} /></div>
 
             <div>
