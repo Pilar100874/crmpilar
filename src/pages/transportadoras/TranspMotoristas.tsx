@@ -16,13 +16,13 @@ import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
-  listarTransportadoras, maskWhatsapp, nomeTransportadora,
+  listarTransportadoras, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora,
   SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspMotorista,
 } from "@/lib/transportadoras/dados";
 import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
 
-const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", cnh: "", whatsapp: "", observacoes: "", ativo: true };
+const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true };
 
 export default function TranspMotoristas() {
   const [rows, setRows] = useState<TranspMotorista[]>([]);
@@ -47,11 +47,15 @@ export default function TranspMotoristas() {
 
   const save = async () => {
     if (!form.nome) return toast.error("Nome obrigatório");
+    const cpfLimpo = (form.cpf || "").replace(/\D/g, "");
+    if (!cpfLimpo) return toast.error("CPF obrigatório");
+    if (cpfLimpo.length !== 11) return toast.error("CPF deve ter 11 dígitos");
+    if (!validarCpf(cpfLimpo)) return toast.error("CPF inválido");
     const payload = {
       transportadora_id: idTransportadora(form.transportadora_id),
       nome: form.nome.toUpperCase(),
-      cpf: form.cpf || null,
-      cnh: form.cnh || null,
+      cpf: cpfLimpo,
+      cnh: null,
       whatsapp: (form.whatsapp || "").replace(/\D/g, "") || null,
       observacoes: form.observacoes || null,
       ativo: form.ativo,
@@ -82,7 +86,7 @@ export default function TranspMotoristas() {
   };
 
   const filtered = rows.filter((m) =>
-    !q || `${m.nome} ${m.cpf ?? ""} ${m.cnh ?? ""}`.toLowerCase().includes(q.toLowerCase()));
+    !q || `${m.nome} ${m.cpf ?? ""}`.toLowerCase().includes(q.toLowerCase()));
 
   return (
     <div className="space-y-4">
@@ -95,7 +99,7 @@ export default function TranspMotoristas() {
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar nome, CPF ou CNH..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input className="pl-9" placeholder="Buscar nome ou CPF..." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       {filtered.length === 0 ? (
@@ -119,7 +123,7 @@ export default function TranspMotoristas() {
                   </div>
                 </div>
                 <div className="space-y-1.5 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground"><IdCard className="h-4 w-4" /><span className="font-mono truncate">{m.cnh || m.cpf || "—"}</span></div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><IdCard className="h-4 w-4" /><span className="font-mono truncate">{m.cpf ? maskCpf(m.cpf) : "—"}</span></div>
                   <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /><span className="truncate">{m.whatsapp ? maskWhatsapp(m.whatsapp) : "—"}</span></div>
                 </div>
                 <p className="text-xs text-muted-foreground truncate">
@@ -129,7 +133,7 @@ export default function TranspMotoristas() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
                       transportadora_id: m.transportadora_id ?? SEM_TRANSPORTADORA, nome: m.nome, cpf: m.cpf ?? "",
-                      cnh: m.cnh ?? "", whatsapp: m.whatsapp ?? "", observacoes: m.observacoes ?? "", ativo: m.ativo,
+                      whatsapp: m.whatsapp ?? "", observacoes: m.observacoes ?? "", ativo: m.ativo,
                     });
                     setEditing(m.id); setOpen(true);
                   }}><Pencil className="h-4 w-4" /></Button>
@@ -163,10 +167,9 @@ export default function TranspMotoristas() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Nome</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })} /></div>
-            <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} /></div>
-            <div><Label>CNH</Label><Input value={form.cnh} onChange={(e) => setForm({ ...form, cnh: e.target.value })} /></div>
-            <div><Label>WhatsApp</Label><Input value={maskWhatsapp(form.whatsapp)} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="(11) 90000-0000" /></div>
+            <div><Label>Nome *</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })} /></div>
+            <div><Label>CPF *</Label><Input value={maskCpf(form.cpf)} onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" placeholder="000.000.000-00" /></div>
+            <div><Label>WhatsApp *</Label><Input value={maskWhatsapp(form.whatsapp)} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="(11) 90000-0000" /></div>
             <div className="flex items-center gap-2"><Switch checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} /><Label>Ativo</Label></div>
           </div>
           <DialogFooter>

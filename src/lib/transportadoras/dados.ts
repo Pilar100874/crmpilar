@@ -88,8 +88,41 @@ export const maskWhatsapp = (v: string) => {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
 
-export const maskPlaca = (v: string) =>
+export const maskCpf = (v: string) => {
+  const d = (v || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+};
+
+export const validarCpf = (v: string) => {
+  const d = (v || "").replace(/\D/g, "");
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false;
+
+  const calc = (factor: number) => {
+    let total = 0;
+    for (let i = 0; i < factor - 1; i++) total += parseInt(d[i], 10) * (factor - i);
+    const rest = (total * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+
+  const d1 = calc(10);
+  if (d1 !== parseInt(d[9], 10)) return false;
+  const d2 = calc(11);
+  return d2 === parseInt(d[10], 10);
+};
+
+export const normalizePlaca = (v: string) =>
   (v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
+
+export const maskPlaca = (v: string) => {
+  const raw = normalizePlaca(v);
+  if (raw.length <= 3) return raw;
+  if (raw.length <= 7) return `${raw.slice(0, 3)}-${raw.slice(3)}`;
+  return `${raw.slice(0, 3)}-${raw.slice(3, 7)}`;
+};
 
 /** Transportadoras cadastradas no CRM (empresas com tipo_cliente = transportadora). */
 export async function listarTransportadoras(): Promise<TranspEmpresa[]> {

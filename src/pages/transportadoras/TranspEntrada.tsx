@@ -14,15 +14,15 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   LogIn, Truck, User, CheckCircle, ChevronRight, ChevronLeft, Camera, Plus, Search,
-  ScanLine, PackageCheck, PackageOpen, Building2, FileText,
+  ScanLine, PackageCheck, PackageOpen, FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto } from "@/components/cv/CVPhotoCapture";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import {
-  TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores, criarSetor,
-  maskPlaca, maskWhatsapp, nomeTransportadora, linkAvisoSetor, OPERACOES,
+  TRANSP_ANGLES, TIPOS_VEICULO_TRANSP, listarTransportadoras, listarSetores,
+  maskPlaca, normalizePlaca, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora, linkAvisoSetor, OPERACOES,
   SEM_TRANSPORTADORA, idTransportadora,
   type TranspEmpresa, type TranspMotorista, type TranspVeiculo, type TranspSetor,
 } from "@/lib/transportadoras/dados";
@@ -43,7 +43,6 @@ export default function TranspEntrada() {
   const [sucesso, setSucesso] = useState<any>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [novaEmpresa, setNovaEmpresa] = useState(false);
-  const [novoSetor, setNovoSetor] = useState({ open: false, nome: "", whatsapp: "" });
 
   const [form, setForm] = useState({
     tipo_operacao: "" as "" | "entrega" | "coleta",
@@ -52,9 +51,6 @@ export default function TranspEntrada() {
     motorista_id: "",
     setor_id: "",
     nfe_chave: "",
-    ajudante_nome: "",
-    documento: "",
-    motivo: "",
     entrada_obs: "",
   });
 
@@ -67,7 +63,7 @@ export default function TranspEntrada() {
   const nfeInfo = useMemo(() => (form.nfe_chave ? parseChaveNfe(form.nfe_chave) : null), [form.nfe_chave]);
 
   const [novoVeiculo, setNovoVeiculo] = useState({ open: false, placa: "", descricao: "", tipo_veiculo: "" });
-  const [novoMotorista, setNovoMotorista] = useState({ open: false, nome: "", cpf: "", cnh: "", whatsapp: "" });
+  const [novoMotorista, setNovoMotorista] = useState({ open: false, nome: "", cpf: "", whatsapp: "" });
 
   const load = async () => {
     setLoading(true);
@@ -87,9 +83,10 @@ export default function TranspEntrada() {
   };
   useEffect(() => { load(); }, []);
 
+  const buscaVNorm = normalizePlaca(buscaV);
   const veiculosFiltrados = useMemo(() => veiculos.filter((v) =>
-    !buscaV || `${v.placa} ${v.descricao ?? ""}`.toLowerCase().includes(buscaV.toLowerCase())
-  ), [veiculos, buscaV]);
+    !buscaVNorm || normalizePlaca(v.placa).includes(buscaVNorm) || (v.descricao ?? "").toLowerCase().includes(buscaV.toLowerCase())
+  ), [veiculos, buscaV, buscaVNorm]);
 
   const motoristasFiltrados = useMemo(() => motoristas.filter((m) =>
     !buscaM || `${m.nome} ${m.cpf ?? ""} ${m.whatsapp ?? ""}`.toLowerCase().includes(buscaM.toLowerCase())
@@ -118,7 +115,8 @@ export default function TranspEntrada() {
 
   const criarVeiculo = async () => {
     const placa = maskPlaca(novoVeiculo.placa);
-    if (!placa) return toast.error("Placa obrigatória");
+    if (!normalizePlaca(placa)) return toast.error("Placa obrigatória");
+    if (!novoVeiculo.tipo_veiculo) return toast.error("Tipo de veículo obrigatório");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const { data, error } = await supabase.from("transp_veiculos").insert({
@@ -126,7 +124,7 @@ export default function TranspEntrada() {
       transportadora_id: idTransportadora(form.transportadora_id),
       placa,
       descricao: novoVeiculo.descricao.toUpperCase() || null,
-      tipo_veiculo: novoVeiculo.tipo_veiculo || null,
+      tipo_veiculo: novoVeiculo.tipo_veiculo,
       ativo: true,
     } as any).select().single();
     if (error || !data) return toast.error(error?.message ?? "Erro ao criar veículo");
@@ -138,6 +136,10 @@ export default function TranspEntrada() {
 
   const criarMotorista = async () => {
     if (!novoMotorista.nome.trim()) return toast.error("Nome obrigatório");
+    const cpfLimpo = novoMotorista.cpf.replace(/\D/g, "");
+    if (!cpfLimpo) return toast.error("CPF obrigatório");
+    if (cpfLimpo.length !== 11) return toast.error("CPF deve ter 11 dígitos");
+    if (!validarCpf(cpfLimpo)) return toast.error("CPF inválido");
     if (!novoMotorista.whatsapp.replace(/\D/g, "")) return toast.error("WhatsApp / celular obrigatório");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
@@ -145,28 +147,16 @@ export default function TranspEntrada() {
       estabelecimento_id: estId,
       transportadora_id: idTransportadora(form.transportadora_id),
       nome: novoMotorista.nome.trim().toUpperCase(),
-      cpf: novoMotorista.cpf || null,
-      cnh: novoMotorista.cnh || null,
+      cpf: novoMotorista.cpf.replace(/\D/g, ""),
+      cnh: null,
       whatsapp: novoMotorista.whatsapp.replace(/\D/g, "") || null,
       ativo: true,
     } as any).select().single();
     if (error || !data) return toast.error(error?.message ?? "Erro ao criar motorista");
     setMotoristas((p) => [...p, data as any]);
     setForm((f) => ({ ...f, motorista_id: (data as any).id }));
-    setNovoMotorista({ open: false, nome: "", cpf: "", cnh: "", whatsapp: "" });
+    setNovoMotorista({ open: false, nome: "", cpf: "", whatsapp: "" });
     toast.success("Motorista cadastrado e selecionado");
-  };
-
-  const salvarSetor = async () => {
-    try {
-      const s = await criarSetor(novoSetor.nome, novoSetor.whatsapp);
-      setSetores((p) => [...p, s]);
-      setForm((f) => ({ ...f, setor_id: s.id }));
-      setNovoSetor({ open: false, nome: "", whatsapp: "" });
-      toast.success("Setor cadastrado e selecionado");
-    } catch (e: any) {
-      toast.error(e.message);
-    }
   };
 
   const salvar = async () => {
@@ -184,9 +174,9 @@ export default function TranspEntrada() {
       setor_id: entrega ? (form.setor_id || null) : null,
       placa: veiculoSel?.placa ?? null,
       motorista_nome: motoristaSel?.nome ?? null,
-      ajudante_nome: form.ajudante_nome.toUpperCase() || null,
-      documento: form.documento.toUpperCase() || null,
-      motivo: form.motivo.toUpperCase() || null,
+      ajudante_nome: null,
+      documento: null,
+      motivo: null,
       tipo_operacao: form.tipo_operacao,
       nfe_chave: entrega ? (form.nfe_chave || null) : null,
       nfe_dados: entrega && nfeInfo ? nfeInfo : null,
@@ -229,7 +219,7 @@ export default function TranspEntrada() {
     toast.success("Entrada registrada!");
     setForm({
       tipo_operacao: "", transportadora_id: SEM_TRANSPORTADORA, veiculo_id: "", motorista_id: "",
-      setor_id: "", nfe_chave: "", ajudante_nome: "", documento: "", motivo: "", entrada_obs: "",
+      setor_id: "", nfe_chave: "", entrada_obs: "",
     });
     setPhotos([]);
     setStep(0);
@@ -352,7 +342,7 @@ export default function TranspEntrada() {
 
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" placeholder="Buscar placa..." value={buscaV} onChange={(e) => setBuscaV(e.target.value)} />
+                  <Input className="pl-9" placeholder="Buscar placa..." value={buscaV} onChange={(e) => setBuscaV(maskPlaca(e.target.value))} maxLength={8} />
                 </div>
 
 
@@ -371,8 +361,8 @@ export default function TranspEntrada() {
                           <Truck className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
                           {active && <CheckCircle className="h-5 w-5 text-primary" />}
                         </div>
-                        <Badge variant="outline" className="font-mono text-xs">{v.placa}</Badge>
-                        <p className="text-sm mt-1 truncate">{v.descricao || v.tipo_veiculo || "—"}</p>
+                        <Badge variant="outline" className="font-mono text-xs">{maskPlaca(v.placa)}</Badge>
+                        <p className="text-sm mt-1 truncate">{v.tipo_veiculo || "—"}</p>
                         {dentro && <p className="text-[11px] text-amber-600 mt-1">Já está dentro</p>}
                       </button>
                     );
@@ -448,20 +438,12 @@ export default function TranspEntrada() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <Button variant="outline" onClick={() => setNovoSetor({ ...novoSetor, open: true })}>
-                          <Building2 className="h-4 w-4 mr-1" />Novo setor
-                        </Button>
                       </div>
                     </div>
                   </>
                 )}
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div><Label>Ajudante</Label><Input value={form.ajudante_nome} onChange={(e) => setForm({ ...form, ajudante_nome: e.target.value.toUpperCase() })} /></div>
-                  <div><Label>Documento</Label><Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value.toUpperCase() })} /></div>
-                </div>
-                <div><Label>Motivo</Label><Input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value.toUpperCase() })} /></div>
-                <div><Label>Observações da entrada</Label><Textarea rows={3} value={form.entrada_obs} onChange={(e) => setForm({ ...form, entrada_obs: e.target.value })} /></div>
+                <div><Label>Observações da entrada</Label><Textarea rows={4} value={form.entrada_obs} onChange={(e) => setForm({ ...form, entrada_obs: e.target.value })} /></div>
               </div>
             )}
 
@@ -492,10 +474,10 @@ export default function TranspEntrada() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Novo veículo</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Placa *</Label><Input value={novoVeiculo.placa} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, placa: maskPlaca(e.target.value) })} /></div>
-            
+            <div><Label>Placa *</Label><Input value={novoVeiculo.placa} onChange={(e) => setNovoVeiculo({ ...novoVeiculo, placa: maskPlaca(e.target.value) })} maxLength={8} /></div>
+
             <div>
-              <Label>Tipo</Label>
+              <Label>Tipo *</Label>
               <Select value={novoVeiculo.tipo_veiculo} onValueChange={(v) => setNovoVeiculo({ ...novoVeiculo, tipo_veiculo: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>{TIPOS_VEICULO_TRANSP.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
@@ -515,9 +497,8 @@ export default function TranspEntrada() {
           <DialogHeader><DialogTitle>Novo motorista</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Nome *</Label><Input value={novoMotorista.nome} onChange={(e) => setNovoMotorista({ ...novoMotorista, nome: e.target.value.toUpperCase() })} /></div>
-            <div><Label>CPF</Label><Input value={novoMotorista.cpf} onChange={(e) => setNovoMotorista({ ...novoMotorista, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" /></div>
+            <div><Label>CPF *</Label><Input value={maskCpf(novoMotorista.cpf)} onChange={(e) => setNovoMotorista({ ...novoMotorista, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" placeholder="000.000.000-00" /></div>
             <div><Label>WhatsApp / celular *</Label><Input value={novoMotorista.whatsapp} onChange={(e) => setNovoMotorista({ ...novoMotorista, whatsapp: maskWhatsapp(e.target.value) })} placeholder="(11) 90000-0000" /></div>
-            <div><Label>CNH</Label><Input value={novoMotorista.cnh} onChange={(e) => setNovoMotorista({ ...novoMotorista, cnh: e.target.value.replace(/\D/g, "") })} inputMode="numeric" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNovoMotorista({ ...novoMotorista, open: false })}>Cancelar</Button>
@@ -526,20 +507,6 @@ export default function TranspEntrada() {
         </DialogContent>
       </Dialog>
 
-      {/* Novo setor */}
-      <Dialog open={novoSetor.open} onOpenChange={(o) => setNovoSetor({ ...novoSetor, open: o })}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Novo setor</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Nome *</Label><Input value={novoSetor.nome} onChange={(e) => setNovoSetor({ ...novoSetor, nome: e.target.value.toUpperCase() })} placeholder="EXPEDIÇÃO" /></div>
-            <div><Label>WhatsApp do setor</Label><Input value={novoSetor.whatsapp} onChange={(e) => setNovoSetor({ ...novoSetor, whatsapp: maskWhatsapp(e.target.value) })} placeholder="(11) 90000-0000" /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNovoSetor({ ...novoSetor, open: false })}>Cancelar</Button>
-            <Button onClick={salvarSetor}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
