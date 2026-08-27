@@ -48,9 +48,14 @@ const decorrido = (v?: string | null) => {
   return `${h}h${String(min % 60).padStart(2, "0")}`;
 };
 
+const dataHora = (v?: string | null) =>
+  v
+    ? new Date(v).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+    : null;
+
 function Painel({
-  icon: Icon, titulo, itens, cor,
-}: { icon: any; titulo: string; itens: Item[]; cor: string }) {
+  icon: Icon, titulo, itens, cor, onSelecionar,
+}: { icon: any; titulo: string; itens: Item[]; cor: string; onSelecionar: (i: Item) => void }) {
   return (
     <section className="flex min-h-0 flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
       <header className={`flex items-center justify-between gap-2 px-4 py-2.5 ${cor}`}>
@@ -65,7 +70,12 @@ function Painel({
           <p className="p-6 text-center text-sm text-white/40">Nada em andamento</p>
         ) : (
           itens.slice(0, 8).map((i) => (
-            <div key={i.id} className="flex items-center gap-3 px-4 py-2.5">
+            <button
+              key={i.id}
+              type="button"
+              onClick={() => onSelecionar(i)}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/10 focus:bg-white/10 focus:outline-none"
+            >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-semibold text-white">{i.titulo}</p>
                 {i.subtitulo && <p className="truncate text-xs text-white/50">{i.subtitulo}</p>}
@@ -79,11 +89,94 @@ function Painel({
               <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TONS[i.tom]}`}>
                 {i.status}
               </span>
-            </div>
+            </button>
           ))
         )}
       </div>
     </section>
+  );
+}
+
+function LinhaDetalhe({ rotulo, valor }: DetalheCampo) {
+  if (!valor) return null;
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-white/5 py-2 last:border-0">
+      <span className="shrink-0 text-sm text-white/50">{rotulo}</span>
+      <span className="text-right text-sm font-medium text-white">{valor}</span>
+    </div>
+  );
+}
+
+function PainelDetalhes({ item, onFechar, onAbrirModulo }: {
+  item: Item;
+  onFechar: () => void;
+  onAbrirModulo: (rota: string) => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onFechar}
+    >
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wider text-white/40">{item.painel}</p>
+            <h3 className="truncate text-xl font-bold text-white">{item.titulo}</h3>
+            {item.subtitulo && <p className="truncate text-sm text-white/60">{item.subtitulo}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={onFechar}
+            className="rounded-full p-2 text-white/60 hover:bg-white/10 hover:text-white"
+            aria-label="Fechar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </header>
+
+        <div className="max-h-[60vh] overflow-y-auto px-5 py-4">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-3 py-1 text-sm font-semibold ${TONS[item.tom]}`}>
+              {item.status}
+            </span>
+            {item.atualizadoEm && (
+              <span className="flex items-center gap-1 text-xs text-white/50">
+                <Info className="h-3.5 w-3.5" />
+                Última atualização: {dataHora(item.atualizadoEm)}
+              </span>
+            )}
+          </div>
+
+          {item.detalhes.length > 0 && (
+            <div className="mb-4 rounded-xl bg-white/5 px-4 py-1">
+              {item.detalhes.map((d) => <LinhaDetalhe key={d.rotulo} {...d} />)}
+            </div>
+          )}
+
+          {item.historico.length > 0 && (
+            <>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Histórico</p>
+              <div className="rounded-xl bg-white/5 px-4 py-1">
+                {item.historico.map((h) => <LinhaDetalhe key={h.rotulo} {...h} />)}
+              </div>
+            </>
+          )}
+        </div>
+
+        <footer className="flex items-center justify-end gap-2 border-t border-white/10 px-5 py-3">
+          {item.rota && (
+            <Button size="sm" onClick={() => onAbrirModulo(item.rota!)}>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Abrir no módulo
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={onFechar}>Fechar</Button>
+        </footer>
+      </div>
+    </div>
   );
 }
 
