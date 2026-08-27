@@ -49,7 +49,7 @@ export default function TranspEntrada() {
   const [pendentesOpen, setPendentesOpen] = useState(false);
 
   const [form, setForm] = useState({
-    tipo_operacao: "" as "" | "entrega" | "coleta",
+    tipo_operacao: "" as "" | "entrega" | "coleta" | "ambos",
     transportadora_id: SEM_TRANSPORTADORA,
     veiculo_id: "",
     motorista_id: "",
@@ -58,11 +58,12 @@ export default function TranspEntrada() {
     entrada_obs: "",
   });
 
-  const entrega = form.tipo_operacao === "entrega";
+  const entrega = form.tipo_operacao === "entrega" || form.tipo_operacao === "ambos";
   const STEPS = useMemo(
     () => ["Operação", "Veículo", "Motorista", entrega ? "NF-e e setor" : "Detalhes", "Fotos"],
     [entrega],
   );
+
 
   const nfeInfo = useMemo(() => (form.nfe_chave ? parseChaveNfe(form.nfe_chave) : null), [form.nfe_chave]);
 
