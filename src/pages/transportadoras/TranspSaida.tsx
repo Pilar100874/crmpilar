@@ -215,7 +215,7 @@ export default function TranspSaida() {
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {movs.map((m) => {
                       const active = sel?.id === m.id;
-                      const entrega = (m.tipo_operacao ?? "entrega") === "entrega";
+                      const entrega = (m.tipo_operacao ?? "entrega") !== "coleta";
                       const lib = m.status === "liberado";
                       return (
                         <button key={m.id} type="button" onClick={() => selecionar(m)}
