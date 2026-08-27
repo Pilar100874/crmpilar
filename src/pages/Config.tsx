@@ -29,6 +29,12 @@ import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
+interface EstabelecimentoPainelProps {
+  estabelecimentoId: string;
+  estabelecimentos: { id: string; nome: string }[];
+  onSubmenuClick: (sectionId: string, keepEstab?: string) => void;
+}
+
 interface ConfigSection {
   id: string;
   title: string;
@@ -126,9 +132,11 @@ export default function Config() {
   const { openSubmenu } = useLayout();
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
-  
+  const estabParam = searchParams.get('estab');
+
   const [activeSection, setActiveSection] = useState<string | null>(secaoParam ?? CONFIG_SECTIONS[0].id);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [expandedEstabId, setExpandedEstabId] = useState<string | null>(estabParam);
   const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
 
   useEffect(() => {
@@ -148,9 +156,19 @@ export default function Config() {
     }
   }, [secaoParam]);
 
-  const handleSectionClick = (sectionId: string) => {
+  useEffect(() => {
+    if (estabParam) {
+      setExpandedEstabId(estabParam);
+    }
+  }, [estabParam]);
+
+  const handleSectionClick = (sectionId: string, keepEstab?: string | null) => {
     setActiveSection(sectionId);
-    setSearchParams({ secao: sectionId });
+    if (keepEstab) {
+      setSearchParams({ secao: sectionId, estab: keepEstab });
+    } else {
+      setSearchParams({ secao: sectionId });
+    }
   };
 
   const handleBack = () => {
@@ -184,6 +202,9 @@ export default function Config() {
           onToggle={handleToggleConfirmationMessages}
         />;
       case "cadastro-estabelecimentos":
+        if (estabParam) {
+          return <EstabelecimentoPainel estabelecimentoId={estabParam} estabelecimentos={estabelecimentos} onSubmenuClick={handleSectionClick} />;
+        }
         return <EstabelecimentosCRUD />;
       case "recuperar-senha":
         return <WhatsAppConfigCRUD />;
@@ -232,28 +253,35 @@ export default function Config() {
       );
     }
     if (section.id === "cadastro-estabelecimentos") {
-      const estabSel = searchParams.get("estab");
       const isEstabSection = activeSection === "cadastro-estabelecimentos";
       return (
         <div key={section.id} className="space-y-0.5">
           {button}
           <div className="ml-7 space-y-0.5 border-l border-border/60 pl-2">
             <button
-              onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id }); }}
+              onClick={() => { setExpandedEstabId(null); handleSectionClick(section.id); }}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                isEstabSection && !estabSel && "text-foreground bg-muted/60 font-medium"
+                isEstabSection && !expandedEstabId && "text-foreground bg-muted/60 font-medium"
               )}
             >
               <Plus className="h-3 w-3 shrink-0 opacity-70" />
               <span className="truncate">Cadastro de Estabelecimento</span>
             </button>
             {estabelecimentos.map((e) => {
-              const expanded = estabSel === e.id;
+              const expanded = expandedEstabId === e.id;
               return (
                 <div key={e.id} className="space-y-0.5">
                   <button
-                    onClick={() => { setActiveSection(section.id); setSearchParams({ secao: section.id, estab: e.id }); }}
+                    onClick={() => {
+                      if (expanded) {
+                        setExpandedEstabId(null);
+                      } else {
+                        setExpandedEstabId(e.id);
+                      }
+                      setActiveSection(section.id);
+                      setSearchParams({ secao: section.id, estab: e.id });
+                    }}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60",
                       isEstabSection && expanded && "text-foreground bg-muted/60 font-medium"
@@ -269,7 +297,7 @@ export default function Config() {
                           key={sub.id}
                           onClick={() => {
                             if (GLOBAL_SUBMENU_IDS.includes(sub.id)) {
-                              handleSectionClick(sub.id);
+                              handleSectionClick(sub.id, e.id);
                               return;
                             }
                             setActiveSection(sub.id);
@@ -424,11 +452,56 @@ export default function Config() {
   );
 }
 
+// ============================================
+// Painel do estabelecimento selecionado
+// ============================================
+function EstabelecimentoPainel({ estabelecimentoId, estabelecimentos, onSubmenuClick }: EstabelecimentoPainelProps) {
+  const estabelecimento = estabelecimentos.find((e) => e.id === estabelecimentoId);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 pb-4 border-b">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-500/10 text-green-500">
+          <Store className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-base font-semibold sm:text-lg">
+            {estabelecimento?.nome ?? "Estabelecimento"}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Selecione uma opção abaixo para gerenciar
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {EMPRESA_SUBMENUS.map((sub) => (
+          <button
+            key={sub.id}
+            onClick={() => onSubmenuClick(sub.id, estabelecimentoId)}
+            className={cn(
+              "flex items-start gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            )}
+          >
+            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", sub.bgColor)}>
+              <sub.icon className={cn("h-5 w-5", sub.iconColor)} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-medium">{sub.title}</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{sub.description}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 // ============================================
 // Componente de Notificações
 // ============================================
-function NotificacoesContent({ 
+function NotificacoesContent({
   showConfirmationMessages, 
   onToggle 
 }: { 
