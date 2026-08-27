@@ -872,6 +872,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-center gap-2 border-b pb-3"><Users className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar usuário" : "Novo usuário"}</h4></div>
+__FORM_BODY__
+    </form>
+  );
+
+  if (formOpen) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3 border-b pb-3">
