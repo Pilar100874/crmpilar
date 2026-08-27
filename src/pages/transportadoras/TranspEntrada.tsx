@@ -275,13 +275,7 @@ export default function TranspEntrada() {
         open={scannerOpen}
         onOpenChange={setScannerOpen}
         onDetected={(chave) => {
-          const info = parseChaveNfe(chave);
-          setForm((f) => ({
-            ...f,
-            nfe_chave: chave,
-            documento: f.documento || (info ? `NF-E ${info.numero}/${info.serie}` : f.documento),
-            motivo: f.motivo || (info ? `ENTREGA NF-E ${info.numero} - CNPJ ${info.cnpj_emitente}` : f.motivo),
-          }));
+          setForm((f) => ({ ...f, nfe_chave: chave }));
           toast.success("NF-e lida com sucesso");
         }}
       />
