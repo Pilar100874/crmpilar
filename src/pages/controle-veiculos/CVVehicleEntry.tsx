@@ -1,5 +1,6 @@
 import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,8 @@ export default function CVVehicleEntry() {
   const [mapaVeiculo, setMapaVeiculo] = useState<{ id: string | null; titulo: string } | null>(null);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
+  const [params, setParams] = useSearchParams();
+
   const load = async () => {
     setLoading(true);
     const [m, dt, cfg] = await Promise.all([
@@ -70,6 +73,15 @@ export default function CVVehicleEntry() {
     setAngles(((cfg.data?.entry_photos as any) ?? []) as PhotoAngle[]);
     setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
     setLoading(false);
+    // Deep-link (ex.: vindo da TV Portaria): já abre a entrada do movimento indicado
+    const alvo = params.get("movimento");
+    if (alvo) {
+      const mov = (m.data ?? []).find((x: any) => x.id === alvo);
+      if (mov) { setSelected(mov); setStep(1); }
+      else toast.error("Movimento não encontrado ou o veículo já retornou");
+      params.delete("movimento");
+      setParams(params, { replace: true });
+    }
   };
   useEffect(() => { load(); }, []);
 
