@@ -7,22 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Users, Search, ToggleLeft, ToggleRight, IdCard, Phone, User, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import {
-  listarTransportadoras, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora,
-  SEM_TRANSPORTADORA, idTransportadora,
-  type TranspEmpresa, type TranspMotorista,
-} from "@/lib/transportadoras/dados";
-import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
+import { maskWhatsapp, maskCpf, validarCpf, type TranspMotorista } from "@/lib/transportadoras/dados";
 
-const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true, cnh_foto_url: null as string | null };
+const empty = { nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true, cnh_foto_url: null as string | null };
 
 const CNH_BUCKET = "cv-vehicle-photos";
 
@@ -36,10 +28,8 @@ async function uploadCnhFoto(file: File): Promise<string> {
 
 export default function TranspMotoristas() {
   const [rows, setRows] = useState<TranspMotorista[]>([]);
-  const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
-  const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspMotorista | null>(null);
@@ -47,11 +37,7 @@ export default function TranspMotoristas() {
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    const [emp, { data, error }] = await Promise.all([
-      listarTransportadoras(),
-      supabase.from("transp_motoristas").select("*").order("nome"),
-    ]);
-    setEmpresas(emp);
+    const { data, error } = await supabase.from("transp_motoristas").select("*").order("nome");
     if (error) return toast.error(error.message);
     setRows((data ?? []) as any);
   };
@@ -69,7 +55,7 @@ export default function TranspMotoristas() {
       let cnh_foto_url: string | null = form.cnh_foto_url ?? null;
       if (cnhFile) cnh_foto_url = await uploadCnhFoto(cnhFile);
       const payload = {
-        transportadora_id: idTransportadora(form.transportadora_id),
+        transportadora_id: null,
         nome: form.nome.toUpperCase(),
         cpf: cpfLimpo,
         cnh: null,
@@ -154,13 +140,10 @@ export default function TranspMotoristas() {
                   <div className="flex items-center gap-2 text-muted-foreground"><IdCard className="h-4 w-4" /><span className="font-mono truncate">{m.cpf ? maskCpf(m.cpf) : "—"}</span></div>
                   <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /><span className="truncate">{m.whatsapp ? maskWhatsapp(m.whatsapp) : "—"}</span></div>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {nomeTransportadora(empresas.find((e) => e.id === m.transportadora_id))}
-                </p>
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
-                      transportadora_id: m.transportadora_id ?? SEM_TRANSPORTADORA, nome: m.nome, cpf: m.cpf ?? "",
+                      nome: m.nome, cpf: m.cpf ?? "",
                       whatsapp: m.whatsapp ?? "", observacoes: m.observacoes ?? "", ativo: m.ativo,
                       cnh_foto_url: (m as any).cnh_foto_url ?? null,
                     });
@@ -182,21 +165,6 @@ export default function TranspMotoristas() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Motorista</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between">
-                <Label>Transportadora</Label>
-                <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={() => setNovaEmpresa(true)}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />Nova
-                </Button>
-              </div>
-              <Select value={form.transportadora_id} onValueChange={(v) => setForm({ ...form, transportadora_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value={SEM_TRANSPORTADORA}>Sem transportadora (avulso)</SelectItem>
-                  {empresas.map((e) => <SelectItem key={e.id} value={e.id}>{nomeTransportadora(e)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <div><Label>Nome *</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })} /></div>
             <div><Label>CPF *</Label><Input value={maskCpf(form.cpf)} onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" placeholder="000.000.000-00" /></div>
             <div><Label>WhatsApp *</Label><Input value={maskWhatsapp(form.whatsapp)} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="(11) 90000-0000" /></div>
@@ -231,12 +199,6 @@ export default function TranspMotoristas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <NovaTransportadoraDialog
-        open={novaEmpresa}
-        onOpenChange={setNovaEmpresa}
-        onCreated={(e) => { setEmpresas((p) => [...p, e]); setForm((f: any) => ({ ...f, transportadora_id: e.id })); }}
-      />
 
       <DeleteConfirmDialog
         open={!!excluir}
