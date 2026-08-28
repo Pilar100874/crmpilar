@@ -48,6 +48,16 @@ export default function TranspEntrada() {
   const [angles, setAngles] = useState<PhotoAngle[]>(TRANSP_ANGLES);
   const [photosRequired, setPhotosRequired] = useState(true);
   const [pendentesOpen, setPendentesOpen] = useState(false);
+  const [cnhFileM, setCnhFileM] = useState<File | null>(null);
+
+  async function uploadCnhFoto(file: File): Promise<string> {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `cnh/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("cv-vehicle-photos").upload(path, file, { upsert: false });
+    if (error) throw new Error(error.message);
+    return path;
+  }
+
 
   const [form, setForm] = useState({
     tipo_operacao: "" as "" | "entrega" | "coleta" | "ambos",
