@@ -7,22 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Users, Search, ToggleLeft, ToggleRight, IdCard, Phone, User, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import {
-  listarTransportadoras, maskWhatsapp, maskCpf, validarCpf, nomeTransportadora,
-  SEM_TRANSPORTADORA, idTransportadora,
-  type TranspEmpresa, type TranspMotorista,
-} from "@/lib/transportadoras/dados";
-import { NovaTransportadoraDialog } from "@/components/transportadoras/NovaTransportadoraDialog";
+import { maskWhatsapp, maskCpf, validarCpf, type TranspMotorista } from "@/lib/transportadoras/dados";
 
-const empty = { transportadora_id: SEM_TRANSPORTADORA, nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true, cnh_foto_url: null as string | null };
+const empty = { nome: "", cpf: "", whatsapp: "", observacoes: "", ativo: true, cnh_foto_url: null as string | null };
 
 const CNH_BUCKET = "cv-vehicle-photos";
 
