@@ -166,14 +166,22 @@ export default function TranspEntrada() {
     if (cpfLimpo.length !== 11) return toast.error("CPF deve ter 11 dígitos");
     if (!validarCpf(cpfLimpo)) return toast.error("CPF inválido");
     if (!novoMotorista.whatsapp.replace(/\D/g, "")) return toast.error("WhatsApp / celular obrigatório");
+    if (!cnhFileM) return toast.error("A foto da CNH é obrigatória");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
+    let cnh_foto_url: string;
+    try {
+      cnh_foto_url = await uploadCnhFoto(cnhFileM);
+    } catch (e: any) {
+      return toast.error(e?.message ?? "Erro ao enviar foto da CNH");
+    }
     const { data, error } = await supabase.from("transp_motoristas").insert({
       estabelecimento_id: estId,
       transportadora_id: idTransportadora(form.transportadora_id),
       nome: novoMotorista.nome.trim().toUpperCase(),
       cpf: novoMotorista.cpf.replace(/\D/g, ""),
       cnh: null,
+      cnh_foto_url,
       whatsapp: novoMotorista.whatsapp.replace(/\D/g, "") || null,
       ativo: true,
     } as any).select().single();
@@ -181,6 +189,7 @@ export default function TranspEntrada() {
     setMotoristas((p) => [...p, data as any]);
     setForm((f) => ({ ...f, motorista_id: (data as any).id }));
     setNovoMotorista({ open: false, nome: "", cpf: "", whatsapp: "" });
+    setCnhFileM(null);
     toast.success("Motorista cadastrado e selecionado");
   };
 
