@@ -28,10 +28,8 @@ async function uploadCnhFoto(file: File): Promise<string> {
 
 export default function TranspMotoristas() {
   const [rows, setRows] = useState<TranspMotorista[]>([]);
-  const [empresas, setEmpresas] = useState<TranspEmpresa[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
-  const [novaEmpresa, setNovaEmpresa] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [excluir, setExcluir] = useState<TranspMotorista | null>(null);
@@ -39,11 +37,7 @@ export default function TranspMotoristas() {
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    const [emp, { data, error }] = await Promise.all([
-      listarTransportadoras(),
-      supabase.from("transp_motoristas").select("*").order("nome"),
-    ]);
-    setEmpresas(emp);
+    const { data, error } = await supabase.from("transp_motoristas").select("*").order("nome");
     if (error) return toast.error(error.message);
     setRows((data ?? []) as any);
   };
