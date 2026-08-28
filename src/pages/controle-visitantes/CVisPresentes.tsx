@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { LogOut, Clock, Car, Building2, User, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
 import { useVisitantesControl } from "@/hooks/useVisitantesControl";
+import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -26,6 +29,20 @@ function timeInside(entryDate: string) {
 export default function CVisPresentes() {
   const { getActiveVisitors, exitVisitor } = useVisitantesControl();
   const list = getActiveVisitors();
+  const [params, setParams] = useSearchParams();
+  const [saidaAlvo, setSaidaAlvo] = useState<any | null>(null);
+
+  // Deep-link (ex.: vindo da TV Portaria): abre direto a confirmação de saída
+  useEffect(() => {
+    const alvo = params.get("saida");
+    if (!alvo || list.length === 0) return;
+    const rec = list.find((r: any) => r.id === alvo);
+    params.delete("saida");
+    setParams(params, { replace: true });
+    if (rec) setSaidaAlvo(rec);
+    else toast.error("Visitante não encontrado ou já saiu");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, list]);
 
   return (
     <div className="space-y-5">
@@ -110,6 +127,24 @@ export default function CVisPresentes() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!saidaAlvo} onOpenChange={(o) => { if (!o) setSaidaAlvo(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Saída</AlertDialogTitle>
+            <AlertDialogDescription>Registrar saída de <strong>{saidaAlvo?.visitor?.name}</strong>?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (saidaAlvo) exitVisitor(saidaAlvo.id); setSaidaAlvo(null); }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Confirmar Saída
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -230,7 +230,7 @@ export default function TvPortaria() {
         { rotulo: "Entrada", valor: dataHora(m.entrada_time) },
         { rotulo: "Liberação", valor: dataHora(m.liberacao_time) },
       ],
-      rota: "/transportadoras/movimentos",
+      rota: `/transportadoras/saida?movimento=${m.id}`,
     })));
 
     setVisitantes(((v.data ?? []) as any[]).map((r) => ({
@@ -254,7 +254,7 @@ export default function TvPortaria() {
         { rotulo: "Entrada", valor: dataHora(r.entry_date) },
         { rotulo: "Saída", valor: dataHora(r.exit_date) },
       ],
-      rota: "/controle-visitantes/movimentacoes",
+      rota: `/controle-visitantes/presentes?saida=${r.id}`,
     })));
 
     setVeiculos(((cv.data ?? []) as any[]).map((m) => ({
@@ -279,7 +279,7 @@ export default function TvPortaria() {
         { rotulo: "Saída", valor: dataHora(m.exit_time) },
         { rotulo: "Retorno", valor: dataHora(m.return_time) },
       ],
-      rota: "/controle-veiculos/movimentacoes",
+      rota: `/controle-veiculos/entrada?movimento=${m.id}`,
     })));
 
     setEncomendas(((enc.data ?? []) as any[]).map((e) => ({
@@ -303,7 +303,7 @@ export default function TvPortaria() {
         { rotulo: "Recebimento", valor: dataHora(e.data_recebimento) },
         { rotulo: "Retirada", valor: dataHora(e.data_retirada) },
       ],
-      rota: "/livro-ocorrencia/encomendas",
+      rota: `/livro-ocorrencia/encomendas?retirar=${e.id}`,
     })));
 
     setOcorrencias(((oc.data ?? []) as any[]).map((o) => ({
@@ -326,7 +326,7 @@ export default function TvPortaria() {
         { rotulo: "Abertura", valor: dataHora(o.data_hora) },
         { rotulo: "Encerramento", valor: dataHora(o.data_encerramento) },
       ],
-      rota: "/livro-ocorrencia/ocorrencias",
+      rota: `/livro-ocorrencia/ocorrencias?finalizar=${o.id}`,
     })));
 
     setAtualizado(new Date());

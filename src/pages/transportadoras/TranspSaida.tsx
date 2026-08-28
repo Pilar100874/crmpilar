@@ -1,5 +1,6 @@
 import { getRegistroPorteiro, MSG_SEM_PERMISSAO_PORTEIRO } from "@/lib/portaria/porteiros";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ export default function TranspSaida() {
   const [pendentesOpen, setPendentesOpen] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
 
+  const [params, setParams] = useSearchParams();
+
   const load = async () => {
     setLoading(true);
     const [m, cfg] = await Promise.all([
@@ -56,6 +59,15 @@ export default function TranspSaida() {
     setPhotosRequired((cfg.data as any)?.exit_photos_required ?? true);
     setMovs((m.data ?? []) as any[]);
     setLoading(false);
+    // Deep-link (ex.: vindo da TV Portaria): já abre a saída do movimento indicado
+    const alvo = params.get("movimento");
+    if (alvo) {
+      const mov = (m.data ?? []).find((x: any) => x.id === alvo);
+      if (mov) selecionar(mov);
+      else toast.error("Movimento não encontrado ou já finalizado");
+      params.delete("movimento");
+      setParams(params, { replace: true });
+    }
   };
   useEffect(() => { load(); }, []);
 

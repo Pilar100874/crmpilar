@@ -145,6 +145,18 @@ export default function LivroOcorrencias() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
+  // Deep-link (ex.: vindo da TV Portaria): abre direto o diálogo de finalização
+  useEffect(() => {
+    const alvo = params.get("finalizar");
+    if (!alvo || items.length === 0) return;
+    const oc = items.find((i: Ocorrencia) => i.id === alvo);
+    params.delete("finalizar");
+    setParams(params, { replace: true });
+    if (oc && oc.status !== "resolvida") openFinalizar(oc);
+    else toast.error(oc ? "Esta ocorrência já foi finalizada" : "Ocorrência não encontrada");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, params]);
+
   const openNew = () => { setEditing({ ...empty }); setDialogOpen(true); };
   const openEdit = (o: Ocorrencia) => {
     setEditing({ ...o, data_hora: new Date(o.data_hora).toISOString().slice(0, 16) });
