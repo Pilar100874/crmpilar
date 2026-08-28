@@ -98,6 +98,18 @@ export default function LivroEncomendas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
+  // Deep-link (ex.: vindo da TV Portaria): abre direto o diálogo de retirada
+  useEffect(() => {
+    const alvo = params.get("retirar");
+    if (!alvo || items.length === 0) return;
+    const enc = items.find((i) => i.id === alvo);
+    params.delete("retirar");
+    setParams(params, { replace: true });
+    if (enc && enc.status === "aguardando_retirada") openDeliver(enc);
+    else toast.error(enc ? "Esta encomenda já foi retirada" : "Encomenda não encontrada");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, params]);
+
   const openNew = () => { setEditing({ ...empty, destinatario: defaultDest }); setDialogOpen(true); };
   const openEdit = (o: Encomenda) => {
     setEditing({ ...o, data_recebimento: new Date(o.data_recebimento).toISOString().slice(0, 16) });
