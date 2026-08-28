@@ -15,7 +15,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   LogIn, Truck, User, CheckCircle, ChevronRight, ChevronLeft, Camera, Plus, Search,
-  ScanLine, PackageCheck, PackageOpen, FileText,
+  ScanLine, PackageCheck, PackageOpen, FileText, ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "@/pages/controle-veiculos/CVPageHeader";
@@ -556,9 +556,30 @@ export default function TranspEntrada() {
             <div><Label>Nome *</Label><Input value={novoMotorista.nome} onChange={(e) => setNovoMotorista({ ...novoMotorista, nome: e.target.value.toUpperCase() })} /></div>
             <div><Label>CPF *</Label><Input value={maskCpf(novoMotorista.cpf)} onChange={(e) => setNovoMotorista({ ...novoMotorista, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })} inputMode="numeric" placeholder="000.000.000-00" /></div>
             <div><Label>WhatsApp / celular *</Label><Input value={novoMotorista.whatsapp} onChange={(e) => setNovoMotorista({ ...novoMotorista, whatsapp: maskWhatsapp(e.target.value) })} placeholder="(11) 90000-0000" /></div>
+            <div>
+              <Label>Foto da CNH *</Label>
+              <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-border bg-muted/40 px-3 py-4 text-sm text-muted-foreground hover:bg-muted/60 transition-colors">
+                {cnhFileM ? <ImageIcon className="h-5 w-5 text-primary" /> : <Camera className="h-5 w-5" />}
+                <span className="truncate">{cnhFileM ? cnhFileM.name : "Toque para anexar a foto da CNH"}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (f && !f.type.startsWith("image/")) return toast.error("Envie uma imagem da CNH");
+                    setCnhFileM(f);
+                  }}
+                />
+              </label>
+              {cnhFileM && (
+                <img src={URL.createObjectURL(cnhFileM)} alt="Prévia da CNH" className="mt-2 h-28 w-full rounded-md object-cover border" />
+              )}
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNovoMotorista({ ...novoMotorista, open: false })}>Cancelar</Button>
+            <Button variant="outline" onClick={() => { setNovoMotorista({ ...novoMotorista, open: false }); setCnhFileM(null); }}>Cancelar</Button>
             <Button onClick={criarMotorista}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
