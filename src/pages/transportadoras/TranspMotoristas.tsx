@@ -143,7 +143,7 @@ export default function TranspMotoristas() {
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
-                      transportadora_id: m.transportadora_id ?? SEM_TRANSPORTADORA, nome: m.nome, cpf: m.cpf ?? "",
+                      nome: m.nome, cpf: m.cpf ?? "",
                       whatsapp: m.whatsapp ?? "", observacoes: m.observacoes ?? "", ativo: m.ativo,
                       cnh_foto_url: (m as any).cnh_foto_url ?? null,
                     });
