@@ -69,7 +69,7 @@ export default function TranspMotoristas() {
       let cnh_foto_url: string | null = form.cnh_foto_url ?? null;
       if (cnhFile) cnh_foto_url = await uploadCnhFoto(cnhFile);
       const payload = {
-        transportadora_id: idTransportadora(form.transportadora_id),
+        transportadora_id: null,
         nome: form.nome.toUpperCase(),
         cpf: cpfLimpo,
         cnh: null,
@@ -154,9 +154,6 @@ export default function TranspMotoristas() {
                   <div className="flex items-center gap-2 text-muted-foreground"><IdCard className="h-4 w-4" /><span className="font-mono truncate">{m.cpf ? maskCpf(m.cpf) : "—"}</span></div>
                   <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /><span className="truncate">{m.whatsapp ? maskWhatsapp(m.whatsapp) : "—"}</span></div>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {nomeTransportadora(empresas.find((e) => e.id === m.transportadora_id))}
-                </p>
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                     setForm({
