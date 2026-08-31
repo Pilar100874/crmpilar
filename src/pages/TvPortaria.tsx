@@ -289,12 +289,13 @@ export default function TvPortaria() {
       .catch(() => setFrota([]));
 
     const [t, v, cv, enc, oc] = await Promise.all([
-      supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20),
-      supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").in("status", ["entered", "inside"]).is("exit_date", null).order("entry_date", { ascending: false }).limit(20),
-      supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20),
-      supabase.from("livro_encomendas").select("*").not("status", "in", '("retirada","entregue","cancelada")').order("data_recebimento", { ascending: false }).limit(20),
-      supabase.from("livro_ocorrencias").select("*").not("status", "in", '("finalizada","resolvida","cancelada")').order("data_hora", { ascending: false }).limit(20),
+      filtrar(supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20)),
+      filtrar(supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").in("status", ["entered", "inside"]).is("exit_date", null).order("entry_date", { ascending: false }).limit(20)),
+      filtrar(supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20)),
+      filtrar(supabase.from("livro_encomendas").select("*").not("status", "in", '("retirada","entregue","cancelada")').order("data_recebimento", { ascending: false }).limit(20)),
+      filtrar(supabase.from("livro_ocorrencias").select("*").not("status", "in", '("finalizada","resolvida","cancelada")').order("data_hora", { ascending: false }).limit(20)),
     ]);
+
 
     setTransp(((t.data ?? []) as any[]).map((m) => ({
       id: m.id,
