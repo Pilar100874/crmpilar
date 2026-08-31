@@ -63,7 +63,17 @@ interface Unidade {
 interface GrupoAcesso {
   id: string;
   nome: string;
+  perfil?: string;
 }
+
+const PERFIL_LABEL: Record<string, string> = {
+  padrao: "Padrão",
+  admin: "Administrador",
+  atendente: "Atendente",
+  porteiro: "Porteiro",
+  gerente: "Gerente",
+};
+
 
 interface Segmento {
   id: string;
@@ -123,9 +133,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   
   const { toast } = useToast();
 
+  // O grupo de acesso é a única fonte das permissões (admin/atendente/porteiro/gerente)
+  const perfilGrupo: string =
+    (grupos.find((g: any) => g.id === grupoAcessoId) as any)?.perfil || "padrao";
+
+  useEffect(() => {
+    setIsAdmin(perfilGrupo === "admin");
+    setIsAtendente(perfilGrupo === "atendente");
+    setIsPorteiro(perfilGrupo === "porteiro");
+    setTipo(perfilGrupo === "gerente" ? "gerente" : "padrao");
+  }, [perfilGrupo]);
+
   useEffect(() => {
     fetchData();
   }, [estabelecimentoId]);
+
 
   const fetchData = async () => {
     await Promise.all([
@@ -244,14 +266,33 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim() || !email.trim() || !horaInicial || !horaFinal) {
+    if (!nome.trim() || !telefone.trim() || !horaInicial || !horaFinal) {
       toast({
         title: "Campos obrigatórios",
-        description: "Nome, email e jornada de trabalho são obrigatórios",
+        description: "Nome, WhatsApp e jornada de trabalho são obrigatórios",
         variant: "destructive",
       });
       return;
     }
+
+    if (!validateWhatsApp(telefone)) {
+      toast({
+        title: "WhatsApp inválido",
+        description: "Informe um número de WhatsApp válido com DDD",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (email.trim() && !validateEmail(email)) {
+      toast({
+        title: "E-mail inválido",
+        description: "Corrija o e-mail informado ou deixe o campo em branco",
+        variant: "destructive",
+      });
+      return;
+    }
+
 
     if (!unidadeId) {
       toast({
@@ -306,8 +347,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
     const usuarioData = {
       nome,
-      email,
-      whatsapp: telefone || null,
+      email: email.trim() || null,
+      whatsapp: telefone,
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
       estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
@@ -888,8 +929,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
             
             <div>
+              <Label htmlFor="usuario-telefone">WhatsApp *</Label>
+              <MaskedInput
+                id="usuario-telefone"
+                mask={maskWhatsApp}
+                value={telefone}
+                onValueChange={setTelefone}
+                placeholder="+55 (XX) XXXXX-XXXX"
+                invalid={!!telefone && !validateWhatsApp(telefone)}
+              />
+              {telefone && !validateWhatsApp(telefone) && (
+                <p className="text-xs text-destructive mt-1">WhatsApp inválido (formato: +55 (XX) XXXXX-XXXX)</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="usuario-email" className="flex flex-col sm:flex-row sm:items-center gap-1">
-                <span>Email *</span>
+                <span>Email (opcional)</span>
                 <span className="text-xs text-muted-foreground font-normal">
                   (Gmail, Hotmail configurados automaticamente)
                 </span>
@@ -907,20 +963,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               )}
             </div>
 
-            <div>
-              <Label htmlFor="usuario-telefone">WhatsApp</Label>
-              <MaskedInput
-                id="usuario-telefone"
-                mask={maskWhatsApp}
-                value={telefone}
-                onValueChange={setTelefone}
-                placeholder="+55 (XX) XXXXX-XXXX"
-                invalid={!!telefone && !validateWhatsApp(telefone)}
-              />
-              {telefone && !validateWhatsApp(telefone) && (
-                <p className="text-xs text-destructive mt-1">WhatsApp inválido (formato: +55 (XX) XXXXX-XXXX)</p>
-              )}
-            </div>
 
             <div>
               <Label htmlFor="usuario-senha">Senha {!editingId && "*"}</Label>
@@ -960,17 +1002,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
 
             <div>
-              <Label htmlFor="usuario-tipo">Tipo *</Label>
-              <Select value={tipo} onValueChange={setTipo}>
-                <SelectTrigger id="usuario-tipo">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="padrao">Padrão</SelectItem>
-                  <SelectItem value="gerente">Gerente</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Perfil (definido pelo grupo de acesso)</Label>
+              <Input value={PERFIL_LABEL[perfilGrupo]} readOnly disabled />
             </div>
+
           </div>
         </Card>
 
@@ -1323,29 +1358,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
         </Card>
 
-        {/* Permissões e Segmentos */}
+        {/* Segmentos */}
         <Card className="p-4">
-          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Permissões</h3>
-          
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center space-x-2">
-              <Switch id="is-admin" checked={isAdmin} onCheckedChange={setIsAdmin} />
-              <Label htmlFor="is-admin" className="cursor-pointer text-sm">Admin</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="is-atendente" checked={isAtendente} onCheckedChange={setIsAtendente} />
-              <Label htmlFor="is-atendente" className="cursor-pointer text-sm">Atendente</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="is-porteiro" checked={isPorteiro} onCheckedChange={setIsPorteiro} />
-              <Label htmlFor="is-porteiro" className="cursor-pointer text-sm">
-                Porteiro
-                <span className="block text-xs text-muted-foreground font-normal">
-                  Permite registrar movimentações da Portaria
-                </span>
-              </Label>
-            </div>
-          </div>
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Segmentos</h3>
+
 
           {segmentos.length > 0 && (
             <div>

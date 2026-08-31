@@ -107,11 +107,16 @@ export default function TvDashboardVeiculos() {
   useEffect(() => { localStorage.setItem('logistica:trilhaMinutos', String(trilhaMinutos)); }, [trilhaMinutos]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
   const [searchParams] = useSearchParams();
-  // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
+  // Unidades fixadas pelo dashboard remoto (?unidades=id1,id2; ?grupos= mantido por compatibilidade)
   const gruposFixos = useMemo(
-    () => (searchParams.get('grupos') || '').split(',').map(s => s.trim()).filter(Boolean),
+    () =>
+      (searchParams.get('unidades') || searchParams.get('grupos') || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
     [searchParams]
   );
+
   const legendaVisivel = searchParams.get('legenda') === '1';
 
 
@@ -647,8 +652,8 @@ export default function TvDashboardVeiculos() {
               {gruposFixos.length > 0 ? (
                 <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl text-sm font-medium" data-tv-hide>
                   {gruposFixos.length === 1
-                    ? unidades.find(u => u.id === gruposFixos[0])?.nome || 'Grupo'
-                    : `${gruposFixos.length} grupos`}
+                    ? unidades.find(u => u.id === gruposFixos[0])?.nome || 'Unidade'
+                    : `${gruposFixos.length} unidades`}
                 </div>
               ) : (
                 <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl" data-tv-hide>

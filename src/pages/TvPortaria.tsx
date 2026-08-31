@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import { labelOperacaoCurto } from "@/lib/transportadoras/dados";
 import { carregarFrotaPosicao, rotuloStatusFrota } from "@/lib/portaria/frotaRastreador";
+import { GrupoFilterSelect } from "@/components/logistica/GrupoFilterSelect";
+import { GRUPO_ALL, UnidadeOpt } from "@/lib/logistica/grupoFilter";
+
+const UNIDADE_KEY = "tv-portaria-unidade-v1";
 
 type DetalheCampo = { rotulo: string; valor?: string | null };
 
@@ -202,9 +206,58 @@ export default function TvPortaria() {
   const [atualizado, setAtualizado] = useState(new Date());
   const [relogio, setRelogio] = useState(new Date());
   const [selecionado, setSelecionado] = useState<Item | null>(null);
+  const [unidades, setUnidades] = useState<UnidadeOpt[]>([]);
+  const [unidadeFiltro, setUnidadeFiltro] = useState<string>(() => {
+    try {
+      return localStorage.getItem(UNIDADE_KEY) || GRUPO_ALL;
+    } catch {
+      return GRUPO_ALL;
+    }
+  });
+
+  // Sem escolha salva, começa pela unidade do usuário logado
+  useEffect(() => {
+    if (!unidadeIdAtual) return;
+    let salvo: string | null = null;
+    try {
+      salvo = localStorage.getItem(UNIDADE_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (!salvo) setUnidadeFiltro(unidadeIdAtual);
+  }, [unidadeIdAtual]);
+
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const { data } = await supabase.from("unidades").select("id, nome").order("nome");
+      if (!cancelado) setUnidades((data || []) as UnidadeOpt[]);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  const trocarUnidade = (v: string) => {
+    setUnidadeFiltro(v);
+    try {
+      localStorage.setItem(UNIDADE_KEY, v);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const unidadeSelecionada = unidadeFiltro && unidadeFiltro !== GRUPO_ALL ? unidadeFiltro : null;
+  const rotuloUnidade = unidadeSelecionada
+    ? unidades.find((u) => u.id === unidadeSelecionada)?.nome || unidadeNome
+    : "Todas as unidades";
 
   const carregar = useCallback(async () => {
-    carregarFrotaPosicao(unidadeIdAtual)
+    const filtrar = <T,>(q: T): T =>
+      (unidadeSelecionada ? (q as any).eq("unidade_id", unidadeSelecionada) : q) as T;
+
+    carregarFrotaPosicao(unidadeSelecionada)
+
       .then((lista) =>
         setFrota(
           lista
@@ -236,12 +289,13 @@ export default function TvPortaria() {
       .catch(() => setFrota([]));
 
     const [t, v, cv, enc, oc] = await Promise.all([
-      supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20),
-      supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").in("status", ["entered", "inside"]).is("exit_date", null).order("entry_date", { ascending: false }).limit(20),
-      supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20),
-      supabase.from("livro_encomendas").select("*").not("status", "in", '("retirada","entregue","cancelada")').order("data_recebimento", { ascending: false }).limit(20),
-      supabase.from("livro_ocorrencias").select("*").not("status", "in", '("finalizada","resolvida","cancelada")').order("data_hora", { ascending: false }).limit(20),
+      filtrar(supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20)),
+      filtrar(supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").in("status", ["entered", "inside"]).is("exit_date", null).order("entry_date", { ascending: false }).limit(20)),
+      filtrar(supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20)),
+      filtrar(supabase.from("livro_encomendas").select("*").not("status", "in", '("retirada","entregue","cancelada")').order("data_recebimento", { ascending: false }).limit(20)),
+      filtrar(supabase.from("livro_ocorrencias").select("*").not("status", "in", '("finalizada","resolvida","cancelada")').order("data_hora", { ascending: false }).limit(20)),
     ]);
+
 
     setTransp(((t.data ?? []) as any[]).map((m) => ({
       id: m.id,
@@ -366,7 +420,7 @@ export default function TvPortaria() {
     })));
 
     setAtualizado(new Date());
-  }, [unidadeIdAtual]);
+  }, [unidadeSelecionada]);
 
   useEffect(() => {
     carregar();
@@ -390,12 +444,21 @@ export default function TvPortaria() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold sm:text-3xl">TV Portaria</h1>
-              {unidadeNome && (
+              {rotuloUnidade && (
                 <span className="rounded-md bg-primary/20 px-2 py-1 text-base font-semibold text-primary sm:text-lg">
-                  {unidadeNome}
+                  {rotuloUnidade}
                 </span>
               )}
+              <div className="[&_button]:border-white/20 [&_button]:bg-white/10 [&_button]:text-white">
+                <GrupoFilterSelect
+                  value={unidadeFiltro}
+                  onChange={trocarUnidade}
+                  unidades={unidades}
+                  size="sm"
+                />
+              </div>
             </div>
+
             <p className="text-sm text-white/50">
               {total} registros em andamento • atualizado {hora(atualizado.toISOString())}
             </p>
