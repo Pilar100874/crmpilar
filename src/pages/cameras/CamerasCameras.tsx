@@ -479,7 +479,7 @@ export default function CamerasCameras() {
                 <SelectItem value="none">Sem unidade</SelectItem>
                 {filiais.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
-                    {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
+                    {f.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -679,7 +679,7 @@ export default function CamerasCameras() {
                   <SelectItem value="none">Sem unidade (todas)</SelectItem>
                   {filiais.map((f) => (
                     <SelectItem key={f.id} value={f.id}>
-                      {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
+                      {f.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
