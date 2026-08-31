@@ -152,7 +152,7 @@ export default function CVDrivers() {
             <div><Label>CNH</Label><Input value={form.license} onChange={e => setForm({ ...form, license: e.target.value })} /></div>
             <div><Label>WhatsApp</Label><Input inputMode="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={e => setForm({ ...form, phone: maskWhatsapp(e.target.value) })} /></div>
             <div>
-              <Label>Grupo (unidade / filial)</Label>
+              <Label>Unidade / Filial</Label>
               <Select
                 value={form.unidade_id ?? "__none__"}
                 onValueChange={v => setForm({ ...form, unidade_id: v === "__none__" ? null : v })}

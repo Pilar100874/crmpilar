@@ -530,7 +530,7 @@ export default function CVVehicles() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Grupo</Label>
+              <Label>Unidade</Label>
               <Select value={impGrupo} onValueChange={setImpGrupo}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -681,7 +681,7 @@ export default function CVVehicles() {
               </div>
             </div>
             <div>
-              <Label>Grupo (unidade / filial)</Label>
+              <Label>Unidade / Filial</Label>
               <Input
                 value={grupos.find(g => g.id === form.unidade_id)?.nome ?? "Sem grupo"}
                 readOnly

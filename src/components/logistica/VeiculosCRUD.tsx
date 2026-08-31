@@ -879,7 +879,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Descrição</TableHead>
               <TableHead>Motorista</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Grupo</TableHead>
+              <TableHead>Unidade</TableHead>
               <TableHead>Rastreador</TableHead>
               <TableHead>Telefone (SIM)</TableHead>
               <TableHead>Ignição</TableHead>
@@ -1043,7 +1043,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 )}
                 {unidadeNomeById[(veiculo as any).unidade_id] && (
                   <div className="min-w-0 col-span-2">
-                    <span className="text-muted-foreground">Grupo: </span>
+                    <span className="text-muted-foreground">Unidade: </span>
                     <span>{unidadeNomeById[(veiculo as any).unidade_id]}</span>
                   </div>
                 )}
@@ -1148,7 +1148,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </div>
 
               <div>
-                <Label>Grupo</Label>
+                <Label>Unidade</Label>
                 <Select
                   value={formData.unidade_id || '__none__'}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, unidade_id: value === '__none__' ? '' : value }))}
