@@ -99,7 +99,6 @@ import WebChat from "./pages/WebChat";
 import PontoLayout from "./pages/ponto/PontoLayout";
 import PontoDashboard from "./pages/ponto/PontoDashboard";
 import PontoEmpresas from "./pages/ponto/PontoEmpresas";
-import PontoFiliais from "./pages/ponto/PontoFiliais";
 import PontoDepartamentos from "./pages/ponto/PontoDepartamentos";
 import PontoCargos from "./pages/ponto/PontoCargos";
 import PontoEquipes from "./pages/ponto/PontoEquipes";
@@ -673,7 +672,7 @@ const App = () => (
               <Route path="/ponto" element={<PontoLayout />}>
                 <Route index element={<PontoDashboard />} />
                 <Route path="empresas" element={<PontoEmpresas />} />
-                <Route path="filiais" element={<PontoFiliais />} />
+                <Route path="filiais" element={<Navigate to="/config?secao=cadastro-unidades" replace />} />
                 <Route path="departamentos" element={<PontoDepartamentos />} />
                 <Route path="cargos" element={<PontoCargos />} />
                 <Route path="equipes" element={<PontoEquipes />} />
