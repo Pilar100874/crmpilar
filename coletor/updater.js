@@ -132,7 +132,10 @@ async function instalarLinux(downloadUrl, onProgress) {
     if (downloadUrl) env.COLETOR_URL = downloadUrl;
     const usarSudo = typeof process.getuid === 'function' && process.getuid() !== 0;
     const cmd = usarSudo ? 'sudo' : updateSh;
-    const args = usarSudo ? ['-n', updateSh] : [];
+    // A URL vai como argumento: o sudo limpa variáveis de ambiente (env_reset),
+    // então COLETOR_URL sozinho não chegava ao script.
+    const extra = downloadUrl ? [downloadUrl] : [];
+    const args = usarSudo ? ['-n', updateSh, ...extra] : extra;
     spawn(cmd, args, { detached: true, stdio: 'ignore', env }).unref();
     if (onProgress) onProgress(100);
     setTimeout(() => { app.isQuitting = true; app.quit(); }, 1500);

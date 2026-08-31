@@ -6,7 +6,10 @@ import { adminClient } from "../_shared/portaria/auth.ts";
 
 const BodySchema = z.object({
   token: z.string().min(10).max(200).optional(),
-  acao: z.enum(["handshake", "jobs", "resultado"]),
+  device_key: z.string().min(8).max(120).optional(),
+  hostname: z.string().max(120).optional(),
+  unidade_nome: z.string().max(160).optional(),
+  acao: z.enum(["handshake", "jobs", "resultado", "provisionar"]),
   versao: z.string().max(40).optional(),
   ip_local: z.string().max(60).optional(),
   unidade_id: z.string().uuid().nullable().optional(),
@@ -31,15 +34,65 @@ Deno.serve(async (req) => {
   const body = parsed.data;
 
   const token = (req.headers.get("x-coletor-token") || body.token || "").trim();
-  if (!token) return responder(401, { error: "Chave do coletor ausente." });
+  const deviceKey = (req.headers.get("x-coletor-device") || body.device_key || "").trim();
+  if (!token && !deviceKey) return responder(401, { error: "Coletor não identificado." });
 
   const admin = adminClient();
-  const { data: coletor } = await admin
-    .from("port_coletores")
-    .select("id, ativo")
-    .eq("token", token)
-    .maybeSingle();
-  if (!coletor || !coletor.ativo) return responder(401, { error: "Chave do coletor inválida." });
+
+  // Auto-registro: o Coletor instalado se identifica pela chave do equipamento
+  // (gerada localmente) e recebe/renova seu registro — sem digitar nada.
+  let coletor: { id: string; ativo: boolean; token?: string } | null = null;
+  if (token) {
+    const { data } = await admin
+      .from("port_coletores")
+      .select("id, ativo, token")
+      .eq("token", token)
+      .maybeSingle();
+    coletor = data as typeof coletor;
+  }
+  if (!coletor && deviceKey) {
+    const { data } = await admin
+      .from("port_coletores")
+      .select("id, ativo, token")
+      .eq("device_key", deviceKey)
+      .maybeSingle();
+    coletor = data as typeof coletor;
+    if (!coletor) {
+      const nome = body.hostname?.trim()
+        || `Coletor ${body.unidade_nome?.trim() || deviceKey.slice(0, 8)}`;
+      const { data: novo, error: erroNovo } = await admin
+        .from("port_coletores")
+        .insert({
+          nome,
+          device_key: deviceKey,
+          unidade_id: body.unidade_id ?? null,
+          ativo: true,
+          versao: body.versao ?? null,
+          ip_local: body.ip_local ?? null,
+        })
+        .select("id, ativo, token")
+        .maybeSingle();
+      if (erroNovo || !novo) return responder(500, { error: "Não foi possível registrar o coletor." });
+      coletor = novo as typeof coletor;
+    } else if (body.unidade_id) {
+      await admin.from("port_coletores").update({ unidade_id: body.unidade_id }).eq("id", coletor.id);
+    }
+  }
+  if (!coletor) return responder(401, { error: "Chave do coletor inválida." });
+  if (!coletor.ativo) return responder(401, { error: "Coletor desativado." });
+
+  if (body.acao === "provisionar") {
+    await admin
+      .from("port_coletores")
+      .update({
+        ultima_comunicacao: new Date().toISOString(),
+        versao: body.versao ?? undefined,
+        ip_local: body.ip_local ?? undefined,
+        unidade_id: body.unidade_id ?? undefined,
+      })
+      .eq("id", coletor.id);
+    return responder(200, { ok: true, coletor_id: coletor.id, token: coletor.token });
+  }
 
   await admin
     .from("port_coletores")

@@ -9,21 +9,9 @@ const { app } = require('electron');
 const { loadConfig } = require('./collector');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
 
-const KEY_PATH = path.join(os.homedir(), '.coletor-device-key');
+const { deviceKey } = require('./deviceKey');
 let timer = null;
 let ultimoStatus = { registrado: false, ultimoContato: null, erro: null };
-
-function deviceKey() {
-  try {
-    if (fs.existsSync(KEY_PATH)) {
-      const k = fs.readFileSync(KEY_PATH, 'utf-8').trim();
-      if (k) return k;
-    }
-  } catch {}
-  const nova = crypto.randomUUID();
-  try { fs.writeFileSync(KEY_PATH, nova, { mode: 0o600 }); } catch {}
-  return nova;
-}
 
 async function chamar(corpo) {
   const cfg = loadConfig();

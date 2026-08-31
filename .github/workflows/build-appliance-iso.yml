@@ -34,8 +34,6 @@ jobs:
 
       - name: Compilar ISO
         run: sudo -E appliance/build-iso.sh
-        env:
-          COLETOR_URL: https://github.com/${{ github.repository }}/releases/latest/download/ColetorPilar-Linux.AppImage
 
       - name: Listar saída
         run: ls -lh appliance/out/

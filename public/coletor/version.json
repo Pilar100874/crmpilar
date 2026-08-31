@@ -1,6 +1,6 @@
 {
-  "version": "1.9.3",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.3/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.3/ColetorPilar-Linux.AppImage",
-  "notas": "1.9.3: câmeras, relógio de ponto e portaria filtram pela unidade selecionada; atualização remota pelo CRM e pelo próprio aplicativo."
+  "version": "1.9.4",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.4/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.4/ColetorPilar-Linux.AppImage",
+  "notas": "1.9.4: atualização remota corrigida (versão nova é realmente instalada), configurações preservadas na atualização e portaria sem chave manual."
 }

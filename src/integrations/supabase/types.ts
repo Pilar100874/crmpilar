@@ -21694,33 +21694,39 @@ export type Database = {
         Row: {
           ativo: boolean
           created_at: string
+          device_key: string | null
           id: string
           ip_local: string | null
           nome: string
           token: string
           ultima_comunicacao: string | null
+          unidade_id: string | null
           updated_at: string
           versao: string | null
         }
         Insert: {
           ativo?: boolean
           created_at?: string
+          device_key?: string | null
           id?: string
           ip_local?: string | null
           nome: string
           token?: string
           ultima_comunicacao?: string | null
+          unidade_id?: string | null
           updated_at?: string
           versao?: string | null
         }
         Update: {
           ativo?: boolean
           created_at?: string
+          device_key?: string | null
           id?: string
           ip_local?: string | null
           nome?: string
           token?: string
           ultima_comunicacao?: string | null
+          unidade_id?: string | null
           updated_at?: string
           versao?: string | null
         }
