@@ -87,14 +87,14 @@ export default function TvSignageDashboards() {
   };
 
 
-  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
+  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit?.rota_interna ?? "") : { grupos: [], cameras: [], unidade: "" };
   const apresId = (() => {
     const r = edit?.rota_interna || "";
     const q = r.indexOf("?");
     if (q < 0) return "";
     return new URLSearchParams(r.slice(q + 1)).get("id") || "";
   })();
-  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; rotate: number }>) => {
+  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; unidade: string }>) => {
     const merged = { ...camsCfg, ...patch };
     setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
   };
