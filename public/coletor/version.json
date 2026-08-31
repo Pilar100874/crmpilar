@@ -1,6 +1,6 @@
 {
-  "version": "1.9.4",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.4/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.4/ColetorPilar-Linux.AppImage",
-  "notas": "1.9.4: atualização remota corrigida (versão nova é realmente instalada), configurações preservadas na atualização e portaria sem chave manual."
+  "version": "1.9.5",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.5/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.5/ColetorPilar-Linux.AppImage",
+  "notas": "1.9.5: a atualização preserva exatamente as opções habilitadas (unidade, ponto, câmeras, portaria) — configuração é mesclada e restaurada automaticamente."
 }

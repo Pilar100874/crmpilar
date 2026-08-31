@@ -1,4 +1,4 @@
-COLETOR_APPLIANCE_VERSION=1.9.4
-BUILD_REQUESTED=2026-08-31T20:50Z
-INCLUDES=coletor-desktop,portaria(shelly,control-id,filtro-unidade),rtsp-snapshot,ponto,cameras(filtro-unidade),atualizacao-remota
-NOTAS=Coletor 1.9.4 - atualizacao remota corrigida (instala mesmo a versao nova), mantem as configuracoes e portaria sem chave manual. Rebuild para publicar ISO 1.9.4 no appliance-latest.
+COLETOR_APPLIANCE_VERSION=1.9.5
+BUILD_REQUESTED=2026-08-31T21:05Z
+INCLUDES=coletor-desktop,portaria(shelly,control-id,filtro-unidade),rtsp-snapshot,ponto,cameras(filtro-unidade),atualizacao-remota,config-preservada
+NOTAS=Coletor 1.9.5 - atualizacao mantem todas as opcoes habilitadas (unidade, ponto, cameras, portaria) via merge das copias de configuracao.
