@@ -299,11 +299,6 @@ async function pollPortaria() {
 }
 function startPortaria() {
   if (timerPortaria) return;
-  const cfg = loadConfig();
-  if (!cfg.portariaToken) {
-    console.log('[portaria] chave do coletor não configurada');
-    return;
-  }
   saveConfig({ portariaEnabled: true });
   STATE.portariaEnabled = true;
   STATE.running = true;

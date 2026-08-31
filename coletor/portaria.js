@@ -4,6 +4,8 @@
 const http = require('http');
 const https = require('https');
 const { login, logout, resolverProtocolo } = require('./controlid');
+const os = require('os');
+const { deviceKey } = require('./deviceKey');
 
 function endpointFn(cfg) {
   return `${cfg.url}/functions/v1/portaria-coletor`;
@@ -15,10 +17,11 @@ async function chamar(cfg, corpo) {
     headers: {
       'Content-Type': 'application/json',
       'x-coletor-token': cfg.portariaToken || '',
+      'x-coletor-device': deviceKey(),
       apikey: cfg.anonKey,
       Authorization: `Bearer ${cfg.anonKey}`,
     },
-    body: JSON.stringify(corpo),
+    body: JSON.stringify({ device_key: deviceKey(), ...corpo }),
   });
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) throw new Error(json.error ? JSON.stringify(json.error) : `HTTP ${resp.status}`);
@@ -150,8 +153,31 @@ const ESTADO = {
   ultimoErro: null,
 };
 
+// Registra o equipamento na Portaria sem exigir digitação de chave.
+async function garantirRegistro(cfg) {
+  if (cfg.portariaToken) return cfg.portariaToken;
+  const resp = await chamar(cfg, {
+    acao: 'provisionar',
+    hostname: os.hostname(),
+    versao: cfg.versao || null,
+    unidade_id: cfg.filialId || null,
+    unidade_nome: cfg.filialNome || null,
+  });
+  const token = resp.token || null;
+  if (token) {
+    try { require('./collector').saveConfig({ portariaToken: token }); } catch {}
+    cfg.portariaToken = token;
+  }
+  return token;
+}
+
 async function pollPortariaOnce(cfg) {
-  if (!cfg.portariaToken) return ESTADO;
+  try {
+    await garantirRegistro(cfg);
+  } catch (e) {
+    ESTADO.ultimoErro = e.message;
+    return ESTADO;
+  }
   try {
     const unidadeId = cfg.filialId || null;
     const handshake = await chamar(cfg, { acao: 'handshake', versao: cfg.versao || null, unidade_id: unidadeId });
@@ -183,4 +209,4 @@ async function pollPortariaOnce(cfg) {
   return ESTADO;
 }
 
-module.exports = { pollPortariaOnce, ESTADO };
+module.exports = { pollPortariaOnce, garantirRegistro, ESTADO };
