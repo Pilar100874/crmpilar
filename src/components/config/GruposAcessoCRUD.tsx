@@ -487,6 +487,22 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
                 required
               />
             </div>
+            <div className="sm:w-56">
+              <Label htmlFor="grupo-perfil" className="text-sm font-medium">Perfil *</Label>
+              <Select value={perfil} onValueChange={setPerfil}>
+                <SelectTrigger id="grupo-perfil" className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PERFIS_GRUPO.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Define as permissões especiais do usuário (admin, atendente, porteiro, gerente).
+              </p>
+            </div>
             <div className="flex gap-2">
               <Button type="submit" size="sm">
                 {editingId ? "Salvar" : <><Plus className="w-4 h-4 mr-1" /> Criar</>}
