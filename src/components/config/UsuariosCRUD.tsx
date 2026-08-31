@@ -123,9 +123,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   
   const { toast } = useToast();
 
+  // O grupo de acesso é a única fonte das permissões (admin/atendente/porteiro/gerente)
+  const perfilGrupo: string =
+    (grupos.find((g: any) => g.id === grupoAcessoId) as any)?.perfil || "padrao";
+
+  useEffect(() => {
+    setIsAdmin(perfilGrupo === "admin");
+    setIsAtendente(perfilGrupo === "atendente");
+    setIsPorteiro(perfilGrupo === "porteiro");
+    setTipo(perfilGrupo === "gerente" ? "gerente" : "padrao");
+  }, [perfilGrupo]);
+
   useEffect(() => {
     fetchData();
   }, [estabelecimentoId]);
+
 
   const fetchData = async () => {
     await Promise.all([
