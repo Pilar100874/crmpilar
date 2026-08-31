@@ -16,4 +16,4 @@
 - [x] Posição real da frota (rastreador) no painel da portaria e na TV Portaria: na estrada / no pátio / sem sinal, com motorista e WhatsApp
 
 - [x] Cadastro de usuário: WhatsApp obrigatório, e-mail opcional
-- [ ] Unificar permissões no Grupo de acesso: criar grupos Porteiro e Gerente, remover flags de permissões e campo Tipo, ajustar usos no sistema
+- [x] Unificar permissões no Grupo de acesso: criar grupos Porteiro e Gerente, remover flags de permissões e campo Tipo, ajustar usos no sistema
