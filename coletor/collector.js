@@ -28,6 +28,20 @@ const DEFAULT_URL = process.env.PONTO_SUPABASE_URL || 'https://ioxugupvxlcdweldo
 const DEFAULT_ANON_KEY = process.env.PONTO_SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 const CONFIG_PATH = path.join(require('os').homedir(), '.ponto-coletor.json');
+// Cópia de segurança no appliance: sobrevive a qualquer troca de usuário/HOME
+// numa atualização, para não perder unidade, câmeras ligadas, portaria etc.
+const CONFIG_BACKUP = '/opt/coletor/config/ponto-coletor.json';
+
+function lerArquivoConfig() {
+  for (const p of [CONFIG_PATH, CONFIG_BACKUP]) {
+    try {
+      const txt = fs.readFileSync(p, 'utf-8');
+      const obj = JSON.parse(txt);
+      if (obj && typeof obj === 'object') return obj;
+    } catch {}
+  }
+  return {};
+}
 const STATE = {
   running: false,          // legado — indica se algum coletor está ativo
   pontoEnabled: true,
@@ -51,8 +65,7 @@ let timerCameras = null;
 let timerPortaria = null;
 
 function loadConfig() {
-  let saved = {};
-  try { saved = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')); } catch {}
+  const saved = lerArquivoConfig();
   // Vídeo (WebRTC ao vivo) — permite ajustar resolução/fps/bitrate pelo painel.
   const clamp = (v, min, max, def) => {
     const n = Number(v);
@@ -75,7 +88,13 @@ function loadConfig() {
 }
 function saveConfig(cfg) {
   const cur = loadConfig();
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify({ ...cur, ...cfg }, null, 2));
+  const conteudo = JSON.stringify({ ...cur, ...cfg }, null, 2);
+  fs.writeFileSync(CONFIG_PATH, conteudo);
+  // Espelha a configuração (best-effort) para sobreviver a atualizações
+  try {
+    fs.mkdirSync(path.dirname(CONFIG_BACKUP), { recursive: true });
+    fs.writeFileSync(CONFIG_BACKUP, conteudo);
+  } catch {}
 }
 
 async function listarFiliais() {
