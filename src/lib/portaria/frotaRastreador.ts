@@ -93,6 +93,10 @@ export async function carregarFrotaPosicao(unidadeId?: string | null): Promise<F
 
   const agora = Date.now();
 
+  const todasUnidades = ((unid.data ?? []) as any[]).filter(
+    (u) => u.latitude != null && u.longitude != null,
+  );
+
   return veiculos.map((v) => {
     const p = ultima.get(v.id);
     const u = v.unidade_id ? unidades.get(v.unidade_id) : null;
@@ -104,11 +108,21 @@ export async function carregarFrotaPosicao(unidadeId?: string | null): Promise<F
       dist = distanciaKm(Number(p.lat), Number(p.lng), Number(u.latitude), Number(u.longitude));
     }
 
+    // Pátio = perto da própria unidade OU de qualquer outra unidade da empresa.
+    let distQualquer: number | null = null;
+    if (p) {
+      for (const un of todasUnidades) {
+        const d = distanciaKm(Number(p.lat), Number(p.lng), Number(un.latitude), Number(un.longitude));
+        if (distQualquer == null || d < distQualquer) distQualquer = d;
+      }
+    }
+
     let status: StatusFrota;
     if (!p || idadeMin > MIN_OFFLINE) status = "offline";
-    else if (dist != null && dist <= RAIO_PATIO_KM) status = "patio";
+    else if (distQualquer != null && distQualquer <= RAIO_PATIO_KM) status = "patio";
     else if (vel > VEL_MOVIMENTO) status = "estrada";
-    else status = dist == null ? "patio" : "parado";
+    else status = distQualquer == null ? "patio" : "parado";
+
 
     const cvv = cvPorVeiculo.get(v.id);
     const mov = cvv ? movPorCv.get(cvv.id) : null;
