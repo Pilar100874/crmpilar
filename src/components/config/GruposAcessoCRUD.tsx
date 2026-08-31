@@ -178,6 +178,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
 
   const resetForm = () => {
     setNome("");
+    setPerfil("padrao");
     setMenusPermitidos({});
     setEditingId(null);
     setFormOpen(false);
@@ -185,10 +186,12 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
 
   const handleEdit = (grupo: GrupoAcesso) => {
     setNome(grupo.nome);
+    setPerfil(grupo.perfil || "padrao");
     setMenusPermitidos(grupo.menus_permitidos || {});
     setEditingId(grupo.id);
     setFormOpen(true);
   };
+
 
   const handleDeleteClick = (grupo: GrupoAcesso) => {
     setGrupoToDelete(grupo);
