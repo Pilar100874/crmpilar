@@ -84,7 +84,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         tracker_model_id: globalTrackerId || null,
         apn_operadora: op?.apn || null,
         tipo_chip: 'm2m',
-        logistica_grupo_id: globalGrupoId || null,
+        unidade_id: globalGrupoId || null,
       } as any)
       .select('id')
       .single();
@@ -220,7 +220,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Grupo (aplicado a todos)</Label>
+              <Label className="text-xs">Unidade (aplicada a todos)</Label>
               <Select value={globalGrupoId || '__none__'} onValueChange={v => setGlobalGrupoId(v === '__none__' ? '' : v)}>
                 <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
                 <SelectContent>

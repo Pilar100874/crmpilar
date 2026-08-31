@@ -124,12 +124,12 @@ export default function CVVehicleExit() {
   const availableVehicles = filtrarPorGrupo(
     vehicles.filter((v) => !busyVehicleIds.has(v.id)),
     grupoId,
-    (v: any) => v.logistica_grupo_id,
+    (v: any) => v.unidade_id,
   );
   const availableDrivers = filtrarPorGrupo(
     drivers.filter((d) => !busyDriverIds.has(d.id)),
     grupoId,
-    (d: any) => d.logistica_grupo_id,
+    (d: any) => d.unidade_id,
   );
   const selectedVehicle = vehicles.find((v) => v.id === form.vehicle_id);
   const selectedDriver = drivers.find((d) => d.id === form.driver_id);

@@ -214,6 +214,7 @@ export const menuItems: MenuItem[] = [
       { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
       { id: "Livro de Ocorrência", title: "Livro de Ocorrência", url: "/livro-ocorrencia", icon: LucideIcons.BookOpen },
       { id: "Portaria", title: "Interfone", url: "/portaria", icon: LucideIcons.ShieldCheck },
+      { id: "Portaria Relatorio Unidades", title: "Relatório por Unidade", url: "/portaria/relatorio-unidades", icon: LucideIcons.BarChart3 },
     ],
   },
   { id: "Operacional Hub", title: "Operacional Hub", url: "/operacional", icon: LucideIcons.ClipboardList },

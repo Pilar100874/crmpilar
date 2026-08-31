@@ -51,7 +51,7 @@ const empty = {
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
   veiculo_id: null as string | null,
   fleet_type: "" as string,
-  logistica_grupo_id: null as string | null,
+  unidade_id: null as string | null,
 };
 
 
@@ -61,7 +61,7 @@ const planoVazio = {
   alert_km_antecedencia: 500, alert_days_antecedencia: 7, active: true,
 };
 
-interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null; logistica_grupo_id?: string | null }
+interface LogVeic { id: string; placa: string; descricao: string | null; tipo_veiculo: string | null; grupo_id: string | null; unidade_id?: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
@@ -202,7 +202,7 @@ export default function CVVehicles() {
     if (error) return toast.error(error.message);
     const list = (data ?? []) as Vehicle[];
     setRows(list);
-    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id, logistica_grupo_id").eq("ativo", true).order("placa");
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao, tipo_veiculo, grupo_id, unidade_id").eq("ativo", true).order("placa");
     setLogVeiculos((vs ?? []) as LogVeic[]);
     setAlertas(await carregarAlertasManutencao(list.map(v => ({ id: v.id, current_km: v.current_km }))));
 
@@ -236,7 +236,7 @@ export default function CVVehicles() {
       last_oil_change_km: v.last_oil_change_km, active: v.active,
       veiculo_id: (v as any).veiculo_id ?? null,
       fleet_type: (logVeiculos.find(l => l.id === (v as any).veiculo_id)?.tipo_veiculo || "").trim() || (v as any).fleet_type || "",
-      logistica_grupo_id: (v as any).logistica_grupo_id ?? null,
+      unidade_id: (v as any).unidade_id ?? null,
     });
 
     setEditing(v.id); setOpen(true);
@@ -252,7 +252,7 @@ export default function CVVehicles() {
       name: (lv.descricao || lv.placa).toUpperCase(),
       vehicle_type: mapTipo(lv.tipo_veiculo) ?? f.vehicle_type,
       fleet_type: (lv.tipo_veiculo || "").trim() || f.fleet_type,
-      logistica_grupo_id: lv.logistica_grupo_id ?? lv.grupo_id ?? null,
+      unidade_id: lv.unidade_id ?? lv.grupo_id ?? null,
     }));
   };
 
@@ -269,7 +269,7 @@ export default function CVVehicles() {
       next_oil_change_km: last_oil_change_km + oil_change_interval,
       plate: String(form.plate).toUpperCase(),
       fleet_type: form.fleet_type || null,
-      logistica_grupo_id: form.logistica_grupo_id || null,
+      unidade_id: form.unidade_id || null,
 
     };
 
@@ -302,7 +302,7 @@ export default function CVVehicles() {
     setImpOpen(true);
   };
 
-  const grupoDoLog = (lv: LogVeic) => lv.logistica_grupo_id ?? lv.grupo_id ?? null;
+  const grupoDoLog = (lv: LogVeic) => lv.unidade_id ?? lv.grupo_id ?? null;
 
   const pendentesImportacao = logVeiculos.filter(lv => {
     const jaExiste = rows.some(r => (r as any).veiculo_id === lv.id);
@@ -326,7 +326,7 @@ export default function CVVehicles() {
         name: String(lv.descricao || lv.placa || "").toUpperCase(),
         vehicle_type: mapTipo(lv.tipo_veiculo) ?? "outro",
         fleet_type: (lv.tipo_veiculo || "").trim() || null,
-        logistica_grupo_id: grupoDoLog(lv),
+        unidade_id: grupoDoLog(lv),
         current_km: 0,
         oil_change_interval: 10000,
         last_oil_change_km: 0,
@@ -468,7 +468,7 @@ export default function CVVehicles() {
     recarregarPlanos(); load();
   };
 
-  const porGrupo = filtrarPorGrupo(rows, grupoId, (v: any) => v.logistica_grupo_id);
+  const porGrupo = filtrarPorGrupo(rows, grupoId, (v: any) => v.unidade_id);
   const filtered = porGrupo.filter(v =>
     !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
   );
@@ -530,11 +530,11 @@ export default function CVVehicles() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Grupo</Label>
+              <Label>Unidade</Label>
               <Select value={impGrupo} onValueChange={setImpGrupo}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={CV_GRUPO_ALL}>Todos os grupos</SelectItem>
+                  <SelectItem value={CV_GRUPO_ALL}>Todas as unidades</SelectItem>
                   {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -681,9 +681,9 @@ export default function CVVehicles() {
               </div>
             </div>
             <div>
-              <Label>Grupo (unidade / filial)</Label>
+              <Label>Unidade / Filial</Label>
               <Input
-                value={grupos.find(g => g.id === form.logistica_grupo_id)?.nome ?? "Sem grupo"}
+                value={grupos.find(g => g.id === form.unidade_id)?.nome ?? "Sem grupo"}
                 readOnly
                 className="bg-muted"
               />

@@ -39,9 +39,8 @@ export function useCvGrupoFilter() {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
-        .from('logistica_grupos')
+        .from('unidades')
         .select('id, nome')
-        .eq('ativo', true)
         .order('nome');
       if (!cancelled) setGrupos((data || []) as GrupoOpt[]);
     })();

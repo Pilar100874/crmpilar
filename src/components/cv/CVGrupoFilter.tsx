@@ -16,11 +16,11 @@ export const CVGrupoFilter: React.FC<Props> = ({ value, onChange, grupos, classN
     <SelectTrigger className={className ?? 'w-full sm:w-[220px]'}>
       <div className="flex items-center gap-2 truncate">
         <Layers className="h-3.5 w-3.5 shrink-0 opacity-70" />
-        <SelectValue placeholder="Grupo" />
+        <SelectValue placeholder="Unidade" />
       </div>
     </SelectTrigger>
     <SelectContent className="z-[1001] bg-popover">
-      <SelectItem value={CV_GRUPO_ALL}>Todos os grupos</SelectItem>
+      <SelectItem value={CV_GRUPO_ALL}>Todas as unidades</SelectItem>
       {grupos.map(g => (
         <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
       ))}

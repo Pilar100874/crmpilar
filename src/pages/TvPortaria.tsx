@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { supabase } from "@/integrations/supabase/client";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
@@ -181,6 +182,7 @@ function PainelDetalhes({ item, onFechar, onAbrirModulo }: {
 }
 
 export default function TvPortaria() {
+  const { unidadeNome } = useUnidadeAtual();
   const navigate = useNavigate();
   const modoTv = useTvMode();
   useAutoReload({ minutosPadrao: 0 });
@@ -349,7 +351,14 @@ export default function TvPortaria() {
             <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">TV Portaria</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold sm:text-3xl">TV Portaria</h1>
+              {unidadeNome && (
+                <span className="rounded-md bg-primary/20 px-2 py-1 text-base font-semibold text-primary sm:text-lg">
+                  {unidadeNome}
+                </span>
+              )}
+            </div>
             <p className="text-sm text-white/50">
               {total} registros em andamento • atualizado {hora(atualizado.toISOString())}
             </p>

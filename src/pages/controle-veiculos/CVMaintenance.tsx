@@ -44,7 +44,7 @@ export default function CVMaintenance() {
 
   // Veículos visíveis conforme o grupo (unidade/filial) selecionado
   const vehicles = useMemo(
-    () => filtrarPorGrupo(allVehicles, grupoId, (v: any) => v.logistica_grupo_id),
+    () => filtrarPorGrupo(allVehicles, grupoId, (v: any) => v.unidade_id),
     [allVehicles, grupoId],
   );
   const vehicleIds = useMemo(() => new Set(vehicles.map(v => v.id)), [vehicles]);

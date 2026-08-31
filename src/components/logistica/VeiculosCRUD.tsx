@@ -148,7 +148,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     tipo_veiculo: '',
     limite_velocidade: '',
 
-    logistica_grupo_id: '',
+    unidade_id: '',
     traccar_device_id: '',
     dispositivo_id: '',
     tracker_model_id: '',
@@ -340,7 +340,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: veiculo.tipo_veiculo || '',
         limite_velocidade: (veiculo as any).limite_velocidade != null ? String((veiculo as any).limite_velocidade) : '',
 
-        logistica_grupo_id: (veiculo as any).logistica_grupo_id || '',
+        unidade_id: (veiculo as any).unidade_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
         tracker_model_id: (veiculo as any).tracker_model_id || '',
@@ -362,7 +362,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: '',
         limite_velocidade: '',
 
-        logistica_grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
+        unidade_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
         dispositivo_id: '',
         tracker_model_id: '',
@@ -416,7 +416,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             tipo_veiculo: formData.tipo_veiculo || null,
             limite_velocidade: formData.limite_velocidade ? Number(formData.limite_velocidade) : null,
 
-            logistica_grupo_id: formData.logistica_grupo_id || null,
+            unidade_id: formData.unidade_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
@@ -434,7 +434,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             tipo_veiculo: formData.tipo_veiculo || null,
             limite_velocidade: formData.limite_velocidade ? Number(formData.limite_velocidade) : null,
 
-            logistica_grupo_id: formData.logistica_grupo_id || null,
+            unidade_id: formData.unidade_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
@@ -879,7 +879,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Descrição</TableHead>
               <TableHead>Motorista</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Grupo</TableHead>
+              <TableHead>Unidade</TableHead>
               <TableHead>Rastreador</TableHead>
               <TableHead>Telefone (SIM)</TableHead>
               <TableHead>Ignição</TableHead>
@@ -896,7 +896,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
-                <TableCell>{unidadeNomeById[(veiculo as any).logistica_grupo_id] || '-'}</TableCell>
+                <TableCell>{unidadeNomeById[(veiculo as any).unidade_id] || '-'}</TableCell>
                 <TableCell>
                   {model ? (
                     <div className="flex flex-col gap-1">
@@ -1041,10 +1041,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                     <span>{veiculo.tipo_veiculo}</span>
                   </div>
                 )}
-                {unidadeNomeById[(veiculo as any).logistica_grupo_id] && (
+                {unidadeNomeById[(veiculo as any).unidade_id] && (
                   <div className="min-w-0 col-span-2">
-                    <span className="text-muted-foreground">Grupo: </span>
-                    <span>{unidadeNomeById[(veiculo as any).logistica_grupo_id]}</span>
+                    <span className="text-muted-foreground">Unidade: </span>
+                    <span>{unidadeNomeById[(veiculo as any).unidade_id]}</span>
                   </div>
                 )}
               </div>
@@ -1148,10 +1148,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </div>
 
               <div>
-                <Label>Grupo</Label>
+                <Label>Unidade</Label>
                 <Select
-                  value={formData.logistica_grupo_id || '__none__'}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, logistica_grupo_id: value === '__none__' ? '' : value }))}
+                  value={formData.unidade_id || '__none__'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, unidade_id: value === '__none__' ? '' : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a unidade" />

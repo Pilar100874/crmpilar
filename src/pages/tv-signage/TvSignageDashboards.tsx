@@ -30,7 +30,7 @@ export default function TvSignageDashboards() {
     supabase.from("cameras_grupos").select("id,nome,cor").eq("ativo", true).order("nome").then(({ data }) => setGrupos(data || []));
     supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
-    supabase.from("logistica_grupos").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setGruposVeiculos(data || []));
+    supabase.from("unidades").select("id,nome").order("nome").then(({ data }) => setGruposVeiculos(data || []));
     supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
   }, []);
 

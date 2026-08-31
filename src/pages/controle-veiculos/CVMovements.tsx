@@ -35,7 +35,7 @@ export default function CVMovements() {
 
       const { data } = await supabase
         .from("cv_vehicle_movements")
-        .select("*, vehicle:cv_vehicles(name, plate, logistica_grupo_id), driver:cv_drivers(name)")
+        .select("*, vehicle:cv_vehicles(name, plate, unidade_id), driver:cv_drivers(name)")
         .gte("exit_time", start.toISOString())
         .lte("exit_time", end.toISOString())
         .order("exit_time", { ascending: false })
@@ -53,7 +53,7 @@ export default function CVMovements() {
       (m.vehicle?.plate || "").toLowerCase().includes(s) ||
       (m.driver?.name || "").toLowerCase().includes(s);
     const matchesStatus = statusFilter === "all" || m.status === statusFilter;
-    const matchesGrupo = grupoId === CV_GRUPO_ALL || m.vehicle?.logistica_grupo_id === grupoId;
+    const matchesGrupo = grupoId === CV_GRUPO_ALL || m.vehicle?.unidade_id === grupoId;
     return matchesSearch && matchesStatus && matchesGrupo;
   });
 

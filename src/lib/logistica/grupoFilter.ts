@@ -25,14 +25,14 @@ export function saveGrupo(value: string) {
   }
 }
 
-export function filterByGrupo<T extends { logistica_grupo_id?: string | null; grupo_id?: string | null }>(
+export function filterByGrupo<T extends { unidade_id?: string | null; grupo_id?: string | null }>(
   list: T[],
   grupoId: string
 ): T[] {
   if (!grupoId || grupoId === GRUPO_ALL) return list;
   return list.filter(v => {
     const anyV = v as any;
-    return anyV.logistica_grupo_id === grupoId || anyV.grupo_id === grupoId;
+    return anyV.unidade_id === grupoId || anyV.grupo_id === grupoId;
   });
 }
 
@@ -44,9 +44,8 @@ export function useGrupoFilter(_estabelecimentoId?: string | null) {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
-        .from('logistica_grupos')
+        .from('unidades')
         .select('id, nome')
-        .eq('ativo', true)
         .order('nome');
       if (!cancelled) setUnidades((data || []) as UnidadeOpt[]);
     })();

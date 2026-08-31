@@ -18,11 +18,11 @@ export const GrupoFilterSelect: React.FC<Props> = ({ value, onChange, unidades, 
         <SelectTrigger className={size === 'sm' ? 'h-8 text-xs min-w-[140px]' : 'min-w-[180px]'}>
           <div className="flex items-center gap-2 truncate">
             <Layers className="h-3.5 w-3.5 shrink-0 opacity-70" />
-            <SelectValue placeholder="Grupo" />
+            <SelectValue placeholder="Unidade" />
           </div>
         </SelectTrigger>
         <SelectContent className="z-[1001]">
-          <SelectItem value={GRUPO_ALL}>Todos os grupos</SelectItem>
+          <SelectItem value={GRUPO_ALL}>Todas as unidades</SelectItem>
           {unidades.map(u => (
             <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
           ))}

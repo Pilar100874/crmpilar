@@ -23,7 +23,7 @@ import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
 import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
 import type { Driver } from "@/types/vehicle";
 
-const empty = { name: "", license: "", phone: "", active: true, logistica_grupo_id: null as string | null };
+const empty = { name: "", license: "", phone: "", active: true, unidade_id: null as string | null };
 
 export default function CVDrivers() {
   const [rows, setRows] = useState<Driver[]>([]);
@@ -65,7 +65,7 @@ export default function CVDrivers() {
     load();
   };
 
-  const filtered = filtrarPorGrupo(rows, grupoId, (d: any) => d.logistica_grupo_id).filter(d =>
+  const filtered = filtrarPorGrupo(rows, grupoId, (d: any) => d.unidade_id).filter(d =>
     !q || d.name.toLowerCase().includes(q.toLowerCase()) || d.license.toLowerCase().includes(q.toLowerCase())
   );
 
@@ -125,12 +125,12 @@ export default function CVDrivers() {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Layers className="h-4 w-4" />
-                    <span className="truncate">{grupos.find(g => g.id === (d as any).logistica_grupo_id)?.nome || "Sem grupo"}</span>
+                    <span className="truncate">{grupos.find(g => g.id === (d as any).unidade_id)?.nome || "Sem grupo"}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                    setForm({ name: d.name, license: d.license, phone: d.phone ?? "", active: d.active, logistica_grupo_id: (d as any).logistica_grupo_id ?? null });
+                    setForm({ name: d.name, license: d.license, phone: d.phone ?? "", active: d.active, unidade_id: (d as any).unidade_id ?? null });
                     setEditing(d.id); setOpen(true);
                   }}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(d)}>
@@ -152,10 +152,10 @@ export default function CVDrivers() {
             <div><Label>CNH</Label><Input value={form.license} onChange={e => setForm({ ...form, license: e.target.value })} /></div>
             <div><Label>WhatsApp</Label><Input inputMode="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={e => setForm({ ...form, phone: maskWhatsapp(e.target.value) })} /></div>
             <div>
-              <Label>Grupo (unidade / filial)</Label>
+              <Label>Unidade / Filial</Label>
               <Select
-                value={form.logistica_grupo_id ?? "__none__"}
-                onValueChange={v => setForm({ ...form, logistica_grupo_id: v === "__none__" ? null : v })}
+                value={form.unidade_id ?? "__none__"}
+                onValueChange={v => setForm({ ...form, unidade_id: v === "__none__" ? null : v })}
               >
                 <SelectTrigger><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
                 <SelectContent>

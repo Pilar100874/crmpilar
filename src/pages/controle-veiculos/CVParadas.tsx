@@ -101,7 +101,7 @@ export default function CVParadas() {
       const okTexto = !q || texto.includes(q.toLowerCase());
       const okPrio = filtro === "todas" || p.prioridade === filtro;
       const okTipo = filtroTipo === "todos" || p.itens.length > 0;
-      const okGrupo = grupoId === CV_GRUPO_ALL || p.vehicle.logistica_grupo_id === grupoId;
+      const okGrupo = grupoId === CV_GRUPO_ALL || p.vehicle.unidade_id === grupoId;
       return okTexto && okPrio && okTipo && okGrupo;
     }), [paradas, q, filtro, filtroTipo, grupoId]);
 

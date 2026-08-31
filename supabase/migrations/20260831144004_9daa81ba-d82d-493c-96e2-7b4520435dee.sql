@@ -1,0 +1,2 @@
+ALTER TABLE public.veiculos ADD COLUMN IF NOT EXISTS unidade_id uuid REFERENCES public.unidades(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_veiculos_unidade_id ON public.veiculos(unidade_id);

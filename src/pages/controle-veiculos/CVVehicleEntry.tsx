@@ -60,7 +60,7 @@ export default function CVVehicleEntry() {
     setLoading(true);
     const [m, dt, cfg] = await Promise.all([
       supabase.from("cv_vehicle_movements")
-        .select("*, vehicle:cv_vehicles(id, name, plate, current_km, logistica_grupo_id, veiculo_id), driver:cv_drivers(*)")
+        .select("*, vehicle:cv_vehicles(id, name, plate, current_km, unidade_id, veiculo_id), driver:cv_drivers(*)")
         .eq("status", "out").order("exit_time", { ascending: false }),
       supabase.from("cv_defect_types").select("*").neq("category", "bodywork").order("name"),
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
@@ -85,7 +85,7 @@ export default function CVVehicleEntry() {
   };
   useEffect(() => { load(); }, []);
 
-  const movesFiltrados = filtrarPorGrupo(openMoves, grupoId, (m: any) => m.vehicle?.logistica_grupo_id);
+  const movesFiltrados = filtrarPorGrupo(openMoves, grupoId, (m: any) => m.vehicle?.unidade_id);
 
   // Recalcula os alertas do veículo selecionado usando a KM informada na entrada
   const recalcSelected = async (km: number) => {
