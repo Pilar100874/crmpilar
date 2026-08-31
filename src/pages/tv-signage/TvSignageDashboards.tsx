@@ -37,7 +37,7 @@ export default function TvSignageDashboards() {
 
   // Deriva query params atuais quando a rota é /tv/cameras
     const parseCamsCfg = (rota: string | null | undefined) => {
-    const cfg = { grupos: [] as string[], cameras: [] as string[], unidade: "" };
+    const cfg = { grupos: [] as string[], cameras: [] as string[], unidade: "", rotate: 0 };
     if (!rota) return cfg;
     const qIdx = rota.indexOf("?");
     if (qIdx < 0) return cfg;
@@ -94,7 +94,7 @@ export default function TvSignageDashboards() {
     if (q < 0) return "";
     return new URLSearchParams(r.slice(q + 1)).get("id") || "";
   })();
-  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; unidade: string }>) => {
+  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; unidade: string; rotate: number }>) => {
     const merged = { ...camsCfg, ...patch };
     setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
   };
