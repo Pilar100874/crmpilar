@@ -8,7 +8,15 @@ OUT="${OUT:-$HERE/out}"
 WORK="${WORK:-$HERE/.work}"
 # ISO Debian 12 oficial — já inclui firmware non-free (Wi-Fi Intel/Realtek/Broadcom)
 DEBIAN_ISO_URL="${DEBIAN_ISO_URL:-https://cdimage.debian.org/cdimage/archive/12.11.0/amd64/iso-cd/debian-12.11.0-amd64-netinst.iso}"
+VERSION_URL="${VERSION_URL:-https://crmpilar.lovable.app/coletor/version.json}"
+# Sempre a versão publicada no version.json (o "latest" do GitHub pode apontar
+# para outro release e acabava gravando uma ISO com versão antiga).
+if [ -z "${COLETOR_URL:-}" ]; then
+  COLETOR_URL=$(curl -fsSL "$VERSION_URL?t=$(date +%s)" 2>/dev/null \
+    | grep -o '"downloadUrlLinux"[^,}]*' | cut -d'"' -f4 || true)
+fi
 COLETOR_URL="${COLETOR_URL:-https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Linux.AppImage}"
+echo "==> Coletor: $COLETOR_URL"
 
 need() { command -v "$1" >/dev/null || { echo "faltando: $1 (apt install $2)"; exit 1; }; }
 need xorriso xorriso
