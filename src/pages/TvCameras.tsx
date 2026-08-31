@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getTvDeviceToken, callTvDeviceFunction } from "@/lib/tvDeviceClient";
 
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
+import { GrupoFilterSelect } from "@/components/logistica/GrupoFilterSelect";
+import { GRUPO_ALL, UnidadeOpt } from "@/lib/logistica/grupoFilter";
 import {
   Loader2,
   Camera as CameraIcon,
@@ -67,6 +69,7 @@ function SortableCameraRow({ id, index, nome }: { id: string; index: number; nom
 
 const PAGE_SIZE = 16;
 const ORDER_KEY = "tv-cameras-order-v1";
+const UNIDADE_KEY = "tv-cameras-unidade-v1";
 
 export default function TvCameras() {
   const modoTv = useTvMode();
@@ -83,11 +86,44 @@ export default function TvCameras() {
   const gruposIds = useMemo(() => gruposParam.split(",").map((s) => s.trim()).filter(Boolean), [gruposParam]);
   const camerasIds = useMemo(() => camerasParam.split(",").map((s) => s.trim()).filter(Boolean), [camerasParam]);
 
+  const unidadeParam = searchParams.get("unidade") || "";
+
   const [cams, setCams] = useState<any[] | null>(null);
   const [pageIdx, setPageIdx] = useState(0);
   const [zoomed, setZoomed] = useState<any | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [draftOrder, setDraftOrder] = useState<any[] | null>(null);
+  const [unidades, setUnidades] = useState<UnidadeOpt[]>([]);
+  const [unidadeId, setUnidadeId] = useState<string>(() => {
+    if (unidadeParam) return unidadeParam;
+    try {
+      return localStorage.getItem(UNIDADE_KEY) || GRUPO_ALL;
+    } catch {
+      return GRUPO_ALL;
+    }
+  });
+
+  const trocarUnidade = (v: string) => {
+    setUnidadeId(v);
+    setPageIdx(0);
+    try {
+      localStorage.setItem(UNIDADE_KEY, v);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const { data } = await supabase.from("unidades").select("id, nome").order("nome");
+      if (!cancelado) setUnidades((data || []) as UnidadeOpt[]);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
 
   useEffect(() => {
     let cancelado = false;
@@ -178,12 +214,21 @@ export default function TvCameras() {
 
 
 
-  const pages = useMemo(() => {
+  // Filtro por unidade (filial) escolhido na própria TV
+  const camsFiltradas = useMemo(() => {
     const list = cams ?? [];
+    if (!unidadeId || unidadeId === GRUPO_ALL) return list;
+    return list.filter((c: any) => c.filial_id === unidadeId);
+  }, [cams, unidadeId]);
+
+  const pages = useMemo(() => {
+    const list = camsFiltradas;
     const chunks: any[][] = [];
     for (let i = 0; i < list.length; i += PAGE_SIZE) chunks.push(list.slice(i, i + PAGE_SIZE));
     return chunks.length ? chunks : [[]];
-  }, [cams]);
+  }, [camsFiltradas]);
+
+
 
   // Avanço manual: sem rotação automática por tempo.
   const nextPage = () => setPageIdx((i) => (pages.length ? (i + 1) % pages.length : 0));
@@ -204,7 +249,7 @@ export default function TvCameras() {
 
 
   const openMenu = () => {
-    setDraftOrder([...(cams ?? [])]);
+    setDraftOrder([...camsFiltradas]);
     setMenuOpen(true);
   };
 
@@ -244,15 +289,20 @@ export default function TvCameras() {
 
   const saveOrder = () => {
     if (draftOrder) {
-      setCams(draftOrder);
+      // Mantém as câmeras de outras unidades na lista completa
+      const idsOrdenados = new Set(draftOrder.map((c) => c.id));
+      const restantes = (cams ?? []).filter((c: any) => !idsOrdenados.has(c.id));
+      const completa = [...draftOrder, ...restantes];
+      setCams(completa);
       setPageIdx(0);
       try {
-        localStorage.setItem(ORDER_KEY, JSON.stringify(draftOrder.map((c) => c.id)));
+        localStorage.setItem(ORDER_KEY, JSON.stringify(completa.map((c) => c.id)));
       } catch {}
     }
     setMenuOpen(false);
     setDraftOrder(null);
   };
+
 
   const cancelOrder = () => {
     setMenuOpen(false);
@@ -371,6 +421,9 @@ export default function TvCameras() {
 
       {!zoomed && (
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end max-w-[calc(100%-1rem)]">
+          <div className="rounded-md bg-black/60 backdrop-blur-sm shadow-lg [&_button]:text-white [&_button]:border-white/20">
+            <GrupoFilterSelect value={unidadeId} onChange={trocarUnidade} unidades={unidades} size="sm" />
+          </div>
           {pages.length > 1 && (
             <>
               <button

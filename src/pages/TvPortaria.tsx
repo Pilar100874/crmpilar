@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import { labelOperacaoCurto } from "@/lib/transportadoras/dados";
 import { carregarFrotaPosicao, rotuloStatusFrota } from "@/lib/portaria/frotaRastreador";
+import { GrupoFilterSelect } from "@/components/logistica/GrupoFilterSelect";
+import { GRUPO_ALL, UnidadeOpt } from "@/lib/logistica/grupoFilter";
+
+const UNIDADE_KEY = "tv-portaria-unidade-v1";
 
 type DetalheCampo = { rotulo: string; valor?: string | null };
 
@@ -202,9 +206,58 @@ export default function TvPortaria() {
   const [atualizado, setAtualizado] = useState(new Date());
   const [relogio, setRelogio] = useState(new Date());
   const [selecionado, setSelecionado] = useState<Item | null>(null);
+  const [unidades, setUnidades] = useState<UnidadeOpt[]>([]);
+  const [unidadeFiltro, setUnidadeFiltro] = useState<string>(() => {
+    try {
+      return localStorage.getItem(UNIDADE_KEY) || GRUPO_ALL;
+    } catch {
+      return GRUPO_ALL;
+    }
+  });
+
+  // Sem escolha salva, começa pela unidade do usuário logado
+  useEffect(() => {
+    if (!unidadeIdAtual) return;
+    let salvo: string | null = null;
+    try {
+      salvo = localStorage.getItem(UNIDADE_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (!salvo) setUnidadeFiltro(unidadeIdAtual);
+  }, [unidadeIdAtual]);
+
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const { data } = await supabase.from("unidades").select("id, nome").order("nome");
+      if (!cancelado) setUnidades((data || []) as UnidadeOpt[]);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  const trocarUnidade = (v: string) => {
+    setUnidadeFiltro(v);
+    try {
+      localStorage.setItem(UNIDADE_KEY, v);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const unidadeSelecionada = unidadeFiltro && unidadeFiltro !== GRUPO_ALL ? unidadeFiltro : null;
+  const rotuloUnidade = unidadeSelecionada
+    ? unidades.find((u) => u.id === unidadeSelecionada)?.nome || unidadeNome
+    : "Todas as unidades";
 
   const carregar = useCallback(async () => {
-    carregarFrotaPosicao(unidadeIdAtual)
+    const filtrar = <T,>(q: T): T =>
+      (unidadeSelecionada ? (q as any).eq("unidade_id", unidadeSelecionada) : q) as T;
+
+    carregarFrotaPosicao(unidadeSelecionada)
+
       .then((lista) =>
         setFrota(
           lista

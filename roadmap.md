@@ -14,3 +14,5 @@
 - [x] Limpar frota/transportadoras fictícias para painel e TV Portaria refletirem rota/pátio reais
 - [x] Atualização remota do Coletor (botão no CRM) + botão na tela do app (Windows/Linux/ISO)
 - [x] Posição real da frota (rastreador) no painel da portaria e na TV Portaria: na estrada / no pátio / sem sinal, com motorista e WhatsApp
+
+- [ ] Cadastro de usuário: WhatsApp obrigatório, e-mail opcional
