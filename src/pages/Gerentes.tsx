@@ -66,9 +66,9 @@ export default function Gerentes() {
     if (!estabelecimentoId) return;
     const { data, error } = await supabase
       .from("usuarios")
-      .select("id, nome, email, whatsapp")
+      .select("id, nome, email, whatsapp, grupos_acesso!inner(perfil)")
       .eq("estabelecimento_id", estabelecimentoId)
-      .eq("tipo", "gerente")
+      .eq("grupos_acesso.perfil", "gerente")
       .order("nome");
     if (error) {
       toast.error("Erro ao carregar gerentes: " + error.message);
@@ -268,7 +268,7 @@ export default function Gerentes() {
 
   const filtrados = gerentes.filter(g => {
     const q = searchTerm.toLowerCase();
-    return !q || g.nome.toLowerCase().includes(q) || g.email.toLowerCase().includes(q);
+    return !q || g.nome.toLowerCase().includes(q) || (g.email || "").toLowerCase().includes(q);
   });
 
   const idsVend = new Set(vinculosVendedores.map(v => v.vendedor_empresa_id));
@@ -486,7 +486,7 @@ export default function Gerentes() {
             <CardContent className="p-3 sm:p-4 flex items-start gap-3">
               <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Esta tela mostra apenas usuários com tipo <strong>Gerente</strong>. Para criar ou editar o cadastro,
+                Esta tela mostra apenas usuários cujo <strong>Grupo de Acesso</strong> tem perfil <strong>Gerente</strong>. Para criar ou editar o cadastro,
                 acesse <strong>Configurações → Usuários</strong>.
               </p>
             </CardContent>
