@@ -28,20 +28,35 @@ const DEFAULT_URL = process.env.PONTO_SUPABASE_URL || 'https://ioxugupvxlcdweldo
 const DEFAULT_ANON_KEY = process.env.PONTO_SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 const CONFIG_PATH = path.join(require('os').homedir(), '.ponto-coletor.json');
-// Cópia de segurança no appliance: sobrevive a qualquer troca de usuário/HOME
+// Cópias de segurança no appliance: sobrevivem a qualquer troca de usuário/HOME
 // numa atualização, para não perder unidade, câmeras ligadas, portaria etc.
 const CONFIG_BACKUP = '/opt/coletor/config/ponto-coletor.json';
+const CONFIG_BACKUP_BAK = '/opt/coletor/config/ponto-coletor.json.bak';
+const CONFIG_HOME_PADRAO = '/home/pilar/.ponto-coletor.json';
 
-function lerArquivoConfig() {
-  for (const p of [CONFIG_PATH, CONFIG_BACKUP]) {
-    try {
-      const txt = fs.readFileSync(p, 'utf-8');
-      const obj = JSON.parse(txt);
-      if (obj && typeof obj === 'object') return obj;
-    } catch {}
-  }
-  return {};
+function lerArquivo(p) {
+  try {
+    const obj = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    if (obj && typeof obj === 'object') {
+      const mtime = fs.statSync(p).mtimeMs || 0;
+      return { obj, mtime };
+    }
+  } catch {}
+  return null;
 }
+
+// Lê TODOS os locais possíveis e mescla, dando prioridade ao arquivo mais
+// recente. Assim, se a atualização criar um arquivo novo/vazio ou mudar o HOME,
+// as opções já habilitadas (ponto, câmeras, portaria, unidade) não se perdem.
+function lerArquivoConfig() {
+  const encontrados = [CONFIG_PATH, CONFIG_HOME_PADRAO, CONFIG_BACKUP, CONFIG_BACKUP_BAK]
+    .map(lerArquivo)
+    .filter(Boolean)
+    .sort((a, b) => a.mtime - b.mtime); // mais antigo primeiro; mais novo sobrescreve
+  if (!encontrados.length) return {};
+  return encontrados.reduce((acc, f) => ({ ...acc, ...f.obj }), {});
+}
+
 const STATE = {
   running: false,          // legado — indica se algum coletor está ativo
   pontoEnabled: true,
