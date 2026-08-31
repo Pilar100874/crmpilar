@@ -66,9 +66,9 @@ export default function Gerentes() {
     if (!estabelecimentoId) return;
     const { data, error } = await supabase
       .from("usuarios")
-      .select("id, nome, email, whatsapp")
+      .select("id, nome, email, whatsapp, grupos_acesso!inner(perfil)")
       .eq("estabelecimento_id", estabelecimentoId)
-      .eq("tipo", "gerente")
+      .eq("grupos_acesso.perfil", "gerente")
       .order("nome");
     if (error) {
       toast.error("Erro ao carregar gerentes: " + error.message);
