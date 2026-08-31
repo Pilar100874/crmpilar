@@ -158,11 +158,15 @@ function createTray() {
   ]));
 }
 
+const { startRemoto, stopRemoto, statusRemoto } = require('./remoto');
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
   startCollector();
+  try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
 });
+
 
 app.on('window-all-closed', (e) => e.preventDefault());
 
@@ -171,6 +175,8 @@ app.on('window-all-closed', (e) => e.preventDefault());
 // realmente termina — para timers do poll, hub WebRTC e libera o tray.
 function shutdownEverything() {
   try { stopCollector(); } catch {}
+  try { stopRemoto(); } catch {}
+
   try { if (tray) { tray.destroy(); tray = null; } } catch {}
 }
 app.on('before-quit', () => { app.isQuitting = true; shutdownEverything(); });
@@ -204,6 +210,8 @@ ipcMain.handle('updater:install', async (evt, downloadUrl) => {
   });
 });
 ipcMain.handle('app:version', () => app.getVersion());
+ipcMain.handle('remoto:status', () => { try { return statusRemoto(); } catch { return null; } });
+
 ipcMain.handle('app:openLogsFolder', () => { try { shell.openPath(path.join(app.getPath('userData'), 'logs')); return true; } catch { return false; } });
 ipcMain.handle('app:openDevTools', () => { try { if (win) { win.show(); win.webContents.openDevTools({ mode: 'detach' }); } return true; } catch { return false; } });
 ipcMain.handle('collector:clear', () => {

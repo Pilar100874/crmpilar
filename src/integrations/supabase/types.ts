@@ -5232,6 +5232,75 @@ export type Database = {
           },
         ]
       }
+      coletor_dispositivos: {
+        Row: {
+          comando: string | null
+          comando_resultado: string | null
+          comando_solicitado_em: string | null
+          comando_status: string
+          created_at: string
+          device_key: string
+          estabelecimento_id: string | null
+          hostname: string | null
+          id: string
+          plataforma: string | null
+          ultimo_contato: string
+          unidade_id: string | null
+          unidade_nome: string | null
+          updated_at: string
+          versao: string | null
+        }
+        Insert: {
+          comando?: string | null
+          comando_resultado?: string | null
+          comando_solicitado_em?: string | null
+          comando_status?: string
+          created_at?: string
+          device_key: string
+          estabelecimento_id?: string | null
+          hostname?: string | null
+          id?: string
+          plataforma?: string | null
+          ultimo_contato?: string
+          unidade_id?: string | null
+          unidade_nome?: string | null
+          updated_at?: string
+          versao?: string | null
+        }
+        Update: {
+          comando?: string | null
+          comando_resultado?: string | null
+          comando_solicitado_em?: string | null
+          comando_status?: string
+          created_at?: string
+          device_key?: string
+          estabelecimento_id?: string | null
+          hostname?: string | null
+          id?: string
+          plataforma?: string | null
+          ultimo_contato?: string
+          unidade_id?: string | null
+          unidade_nome?: string | null
+          updated_at?: string
+          versao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coletor_dispositivos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coletor_dispositivos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       combustiveis_precos: {
         Row: {
           created_at: string

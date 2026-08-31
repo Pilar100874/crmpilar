@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('coletor', {
   appVersion: () => ipcRenderer.invoke('app:version'),
   checarAtualizacao: () => ipcRenderer.invoke('updater:check'),
   instalarAtualizacao: (url) => ipcRenderer.invoke('updater:install', url),
+  statusRemoto: () => ipcRenderer.invoke('remoto:status'),
+
   onUpdateProgress: (cb) => ipcRenderer.on('updater:progress', (_e, pct) => cb(pct)),
   listarFiliais: () => ipcRenderer.invoke('collector:listarFiliais'),
   setFilial: (id, nome) => ipcRenderer.invoke('collector:setFilial', id, nome),

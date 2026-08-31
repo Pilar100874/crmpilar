@@ -1,4 +1,4 @@
-COLETOR_APPLIANCE_VERSION=1.9.2
+COLETOR_APPLIANCE_VERSION=1.9.3
 BUILD_REQUESTED=2026-08-31
-INCLUDES=coletor-desktop,portaria(shelly,control-id,filtro-unidade),rtsp-snapshot,ponto,cameras(filtro-unidade)
-NOTAS=Coletor 1.9.2 - cameras, ponto e portaria filtrados pela unidade selecionada no painel do Coletor.
+INCLUDES=coletor-desktop,portaria(shelly,control-id,filtro-unidade),rtsp-snapshot,ponto,cameras(filtro-unidade),atualizacao-remota
+NOTAS=Coletor 1.9.3 - atualizacao remota pelo CRM e pelo proprio app; cameras, ponto e portaria filtrados pela unidade.
