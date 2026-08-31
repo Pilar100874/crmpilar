@@ -325,8 +325,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
     const usuarioData = {
       nome,
-      email,
-      whatsapp: telefone || null,
+      email: email.trim() || null,
+      whatsapp: telefone,
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
       estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
