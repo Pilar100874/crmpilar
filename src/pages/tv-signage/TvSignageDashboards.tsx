@@ -58,6 +58,15 @@ export default function TvSignageDashboards() {
   const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
   const isVeiculosRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/veiculos";
   const isMuralRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/mural";
+  const isPortariaRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/portaria";
+  const portariaUnidade = (() => {
+    const r = edit?.rota_interna || "";
+    if (!isPortariaRoute(r)) return "";
+    const q = r.indexOf("?");
+    if (q < 0) return "";
+    return new URLSearchParams(r.slice(q + 1)).get("unidade") || "";
+  })();
+
   const veicGrupos = (() => {
     const r = edit?.rota_interna || "";
     if (!isVeiculosRoute(r)) return [] as string[];
