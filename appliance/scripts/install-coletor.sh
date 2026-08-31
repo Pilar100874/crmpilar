@@ -108,8 +108,14 @@ fi
 
 # ── Backup das configurações (nunca se perdem numa atualização) ─────────
 CFG_HOME="/home/$USER_APP_DEF/.ponto-coletor.json"
-mkdir -p /opt/coletor/config
-[ -f "$CFG_HOME" ] && cp -f "$CFG_HOME" /opt/coletor/config/ponto-coletor.json.bak
+CFG_DIR=/opt/coletor/config
+mkdir -p "$CFG_DIR"
+# Guarda a cópia mais recente entre HOME e os espelhos
+NEWEST=$(ls -t "$CFG_HOME" "$CFG_DIR/ponto-coletor.json" "$CFG_DIR/ponto-coletor.json.bak" 2>/dev/null | head -n1 || true)
+if [ -n "$NEWEST" ]; then
+  cp -f "$NEWEST" "$CFG_DIR/ponto-coletor.json"
+  cp -f "$NEWEST" "$CFG_DIR/ponto-coletor.json.bak"
+fi
 
 TMP=$(mktemp /tmp/ColetorPilar-XXXXXX.AppImage)
 echo "baixando $URL"
