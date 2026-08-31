@@ -1,6 +1,8 @@
 import { PhoneCall, PhoneOff, MicOff, Video, DoorOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Building2 } from "lucide-react";
+import { useUnidadeAtual } from "@/lib/unidadeAtual";
 
 /**
  * Tela de interfone (SIP/WebRTC do iDFace Max).
@@ -8,11 +10,18 @@ import { Badge } from "@/components/ui/badge";
  * para receber o fluxo quando o IntercomService for conectado.
  */
 export default function PortariaInterfone() {
+  const { unidadeNome } = useUnidadeAtual();
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
         <h2 className="text-xl font-bold">Interfone</h2>
         <Badge variant="secondary">Integração pendente</Badge>
+        {unidadeNome && (
+          <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-sm font-semibold text-primary">
+            <Building2 className="h-4 w-4" />
+            {unidadeNome}
+          </span>
+        )}
       </div>
       <p className="text-sm text-muted-foreground">
         O iDFace Max possui SIP. A chamada de vídeo será entregue via servidor SIP/WebRTC.
