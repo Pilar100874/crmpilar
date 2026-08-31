@@ -26,8 +26,22 @@ interface MenuPermissions {
 interface GrupoAcesso {
   id: string;
   nome: string;
+  perfil?: string;
   menus_permitidos: Record<string, MenuPermissions>;
 }
+
+export const PERFIS_GRUPO = [
+  { value: 'padrao', label: 'Padrão' },
+  { value: 'admin', label: 'Administrador' },
+  { value: 'atendente', label: 'Atendente' },
+  { value: 'porteiro', label: 'Porteiro' },
+  { value: 'gerente', label: 'Gerente' },
+] as const;
+
+const PERFIL_LABEL: Record<string, string> = Object.fromEntries(
+  PERFIS_GRUPO.map((p) => [p.value, p.label])
+);
+
 
 interface GruposAcessoCRUDProps {
   estabelecimentoId?: string;
