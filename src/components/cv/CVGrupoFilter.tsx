@@ -16,7 +16,7 @@ export const CVGrupoFilter: React.FC<Props> = ({ value, onChange, grupos, classN
     <SelectTrigger className={className ?? 'w-full sm:w-[220px]'}>
       <div className="flex items-center gap-2 truncate">
         <Layers className="h-3.5 w-3.5 shrink-0 opacity-70" />
-        <SelectValue placeholder="Grupo" />
+        <SelectValue placeholder="Unidade" />
       </div>
     </SelectTrigger>
     <SelectContent className="z-[1001] bg-popover">
