@@ -28401,7 +28401,7 @@ export type Database = {
           ativo: boolean
           auth_user_id: string | null
           created_at: string | null
-          email: string
+          email: string | null
           estabelecimento_id: string | null
           grupo_acesso_id: string | null
           hora_final: string
@@ -28436,7 +28436,7 @@ export type Database = {
           ativo?: boolean
           auth_user_id?: string | null
           created_at?: string | null
-          email: string
+          email?: string | null
           estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
           hora_final?: string
@@ -28471,7 +28471,7 @@ export type Database = {
           ativo?: boolean
           auth_user_id?: string | null
           created_at?: string | null
-          email?: string
+          email?: string | null
           estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
           hora_final?: string
