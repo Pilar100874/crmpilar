@@ -9,11 +9,13 @@ const BodySchema = z.object({
   acao: z.enum(["handshake", "jobs", "resultado"]),
   versao: z.string().max(40).optional(),
   ip_local: z.string().max(60).optional(),
+  unidade_id: z.string().uuid().nullable().optional(),
   job_id: z.string().uuid().optional(),
   ok: z.boolean().optional(),
   mensagem: z.string().max(500).optional(),
   dados: z.unknown().optional(),
   limite: z.number().int().min(1).max(20).optional(),
+
 });
 
 const JSON_HEADERS = { ...corsHeaders, "Content-Type": "application/json" };
