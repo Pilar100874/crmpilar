@@ -20,7 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2, Car, Loader2, Package, RefreshCw, Truck, Users, FileWarning } from "lucide-react";
+import { Building2, Car, Loader2, Package, RefreshCw, Truck, Users, FileWarning, Radio } from "lucide-react";
+import { usePortariaRealtime } from "@/lib/portaria/realtime";
 
 type StatusFiltro = "todos" | "abertos" | "concluidos";
 
@@ -182,6 +183,10 @@ export default function PortariaRelatorioUnidades() {
     carregar();
   }, [carregar]);
 
+  // Sincronização automática: qualquer entrada/saída/ocorrência registrada
+  // na portaria recarrega o relatório sem precisar atualizar a tela.
+  usePortariaRealtime(carregar);
+
   const totais = useMemo(
     () =>
       linhas.reduce((acc, l) => {
@@ -248,6 +253,10 @@ export default function PortariaRelatorioUnidades() {
         <Badge variant="secondary" className="gap-1">
           <Building2 className="h-3 w-3" />
           {unidadeId === "todas" ? "Todas as unidades" : nomeUnidade(unidadeId)}
+        </Badge>
+        <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-600/40">
+          <Radio className="h-3 w-3" />
+          Sincronização automática
         </Badge>
       </div>
 

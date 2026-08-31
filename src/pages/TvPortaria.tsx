@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
+import { usePortariaRealtime } from "@/lib/portaria/realtime";
 import { supabase } from "@/integrations/supabase/client";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
@@ -340,6 +341,9 @@ export default function TvPortaria() {
     const c = setInterval(() => setRelogio(new Date()), 30000);
     return () => { clearInterval(i); clearInterval(c); };
   }, [carregar]);
+
+  // Atualiza instantaneamente quando o porteiro registra algo em qualquer módulo
+  usePortariaRealtime(carregar);
 
   const total = transp.length + visitantes.length + veiculos.length + encomendas.length + ocorrencias.length;
 
