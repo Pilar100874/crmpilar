@@ -907,8 +907,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
             
             <div>
+              <Label htmlFor="usuario-telefone">WhatsApp *</Label>
+              <MaskedInput
+                id="usuario-telefone"
+                mask={maskWhatsApp}
+                value={telefone}
+                onValueChange={setTelefone}
+                placeholder="+55 (XX) XXXXX-XXXX"
+                invalid={!!telefone && !validateWhatsApp(telefone)}
+              />
+              {telefone && !validateWhatsApp(telefone) && (
+                <p className="text-xs text-destructive mt-1">WhatsApp inválido (formato: +55 (XX) XXXXX-XXXX)</p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="usuario-email" className="flex flex-col sm:flex-row sm:items-center gap-1">
-                <span>Email *</span>
+                <span>Email (opcional)</span>
                 <span className="text-xs text-muted-foreground font-normal">
                   (Gmail, Hotmail configurados automaticamente)
                 </span>
@@ -926,20 +941,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               )}
             </div>
 
-            <div>
-              <Label htmlFor="usuario-telefone">WhatsApp</Label>
-              <MaskedInput
-                id="usuario-telefone"
-                mask={maskWhatsApp}
-                value={telefone}
-                onValueChange={setTelefone}
-                placeholder="+55 (XX) XXXXX-XXXX"
-                invalid={!!telefone && !validateWhatsApp(telefone)}
-              />
-              {telefone && !validateWhatsApp(telefone) && (
-                <p className="text-xs text-destructive mt-1">WhatsApp inválido (formato: +55 (XX) XXXXX-XXXX)</p>
-              )}
-            </div>
 
             <div>
               <Label htmlFor="usuario-senha">Senha {!editingId && "*"}</Label>
