@@ -486,7 +486,7 @@ export default function Gerentes() {
             <CardContent className="p-3 sm:p-4 flex items-start gap-3">
               <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Esta tela mostra apenas usuários com tipo <strong>Gerente</strong>. Para criar ou editar o cadastro,
+                Esta tela mostra apenas usuários cujo <strong>Grupo de Acesso</strong> tem perfil <strong>Gerente</strong>. Para criar ou editar o cadastro,
                 acesse <strong>Configurações → Usuários</strong>.
               </p>
             </CardContent>
