@@ -14,7 +14,7 @@ import {
   X, ExternalLink, Info, Navigation,
 } from "lucide-react";
 import { labelOperacaoCurto } from "@/lib/transportadoras/dados";
-import { carregarFrotaPosicao, rotuloStatusFrota } from "@/lib/portaria/frotaRastreador";
+
 import { GrupoFilterSelect } from "@/components/logistica/GrupoFilterSelect";
 import { GRUPO_ALL, UnidadeOpt } from "@/lib/logistica/grupoFilter";
 
@@ -202,7 +202,7 @@ export default function TvPortaria() {
   const [veiculos, setVeiculos] = useState<Item[]>([]);
   const [encomendas, setEncomendas] = useState<Item[]>([]);
   const [ocorrencias, setOcorrencias] = useState<Item[]>([]);
-  const [frota, setFrota] = useState<Item[]>([]);
+  
   const [atualizado, setAtualizado] = useState(new Date());
   const [relogio, setRelogio] = useState(new Date());
   const [selecionado, setSelecionado] = useState<Item | null>(null);
@@ -265,38 +265,6 @@ export default function TvPortaria() {
   const carregar = useCallback(async () => {
     const filtrar = <T,>(q: T): T =>
       (unidadeSelecionada ? (q as any).eq("unidade_id", unidadeSelecionada) : q) as T;
-
-    carregarFrotaPosicao(unidadeSelecionada)
-
-      .then((lista) =>
-        setFrota(
-          lista
-            .filter((f) => f.status !== "patio")
-            .sort((a, b) => a.status.localeCompare(b.status) || a.placa.localeCompare(b.placa))
-            .map((f) => ({
-              id: f.veiculoId,
-              painel: "Frota (rastreador)",
-              titulo: [f.placa, f.descricao].filter(Boolean).join(" • "),
-              subtitulo: [f.motorista, f.whatsapp].filter(Boolean).join(" • ") || null,
-              desde: f.dataHora,
-              status: rotuloStatusFrota[f.status],
-              tom: f.status === "estrada" ? "sky" : f.status === "parado" ? "amber" : "slate",
-              atualizadoEm: f.dataHora,
-              detalhes: [
-                { rotulo: "Placa", valor: f.placa },
-                { rotulo: "Veículo", valor: f.descricao },
-                { rotulo: "Unidade", valor: f.unidadeNome },
-                { rotulo: "Motorista", valor: f.motorista },
-                { rotulo: "WhatsApp do motorista", valor: f.whatsapp },
-                { rotulo: "Velocidade", valor: `${f.velocidade} km/h` },
-                { rotulo: "Distância da unidade", valor: f.distanciaKm != null ? `${f.distanciaKm.toFixed(1)} km` : null },
-              ],
-              historico: [{ rotulo: "Última posição", valor: dataHora(f.dataHora) }],
-              rota: "/rastreamento/monitoramento",
-            } as Item)),
-        ),
-      )
-      .catch(() => setFrota([]));
 
     const [t, v, cv, enc, oc] = await Promise.all([
       filtrar(supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20)),
