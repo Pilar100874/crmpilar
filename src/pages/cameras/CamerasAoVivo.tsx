@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Radio, Building2, Layers, Loader2, Camera as CameraIcon } from "lucide-react";
@@ -33,7 +34,12 @@ export default function CamerasAoVivo() {
     const loadAll = async () => {
       const [g, f, c] = await Promise.all([
         supabase.from("cameras_grupos").select("id,nome").eq("ativo", true).order("nome"),
-        supabase.from("unidades").select("id,nome").order("nome"),
+        (async () => {
+          const estab = await getEstabelecimentoId();
+          let q = supabase.from("unidades").select("id,nome").order("nome");
+          if (estab) q = q.eq("estabelecimento_id", estab);
+          return await q;
+        })(),
         supabase.from("cv_cameras").select("id,nome,filial_id,grupo_id,ativo,tem_ptz,tem_audio").eq("ativo", true).order("nome"),
       ]);
       setGrupos(g.data ?? []);
