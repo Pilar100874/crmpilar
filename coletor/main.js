@@ -175,6 +175,8 @@ app.on('window-all-closed', (e) => e.preventDefault());
 // realmente termina — para timers do poll, hub WebRTC e libera o tray.
 function shutdownEverything() {
   try { stopCollector(); } catch {}
+  try { stopRemoto(); } catch {}
+
   try { if (tray) { tray.destroy(); tray = null; } } catch {}
 }
 app.on('before-quit', () => { app.isQuitting = true; shutdownEverything(); });
