@@ -1343,29 +1343,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
         </Card>
 
-        {/* Permissões e Segmentos */}
+        {/* Segmentos */}
         <Card className="p-4">
-          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Permissões</h3>
-          
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center space-x-2">
-              <Switch id="is-admin" checked={isAdmin} onCheckedChange={setIsAdmin} />
-              <Label htmlFor="is-admin" className="cursor-pointer text-sm">Admin</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="is-atendente" checked={isAtendente} onCheckedChange={setIsAtendente} />
-              <Label htmlFor="is-atendente" className="cursor-pointer text-sm">Atendente</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="is-porteiro" checked={isPorteiro} onCheckedChange={setIsPorteiro} />
-              <Label htmlFor="is-porteiro" className="cursor-pointer text-sm">
-                Porteiro
-                <span className="block text-xs text-muted-foreground font-normal">
-                  Permite registrar movimentações da Portaria
-                </span>
-              </Label>
-            </div>
-          </div>
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Segmentos</h3>
+
 
           {segmentos.length > 0 && (
             <div>
