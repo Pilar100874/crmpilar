@@ -216,7 +216,7 @@ export default function TvSignageDashboards() {
                         >
                           <SelectTrigger className="mt-1"><SelectValue placeholder="Todas as unidades" /></SelectTrigger>
                           <SelectContent>
-                            {unidades.map((u) => (
+                            {gruposVeiculos.map((u) => (
                               <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
                             ))}
                           </SelectContent>
