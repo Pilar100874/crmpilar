@@ -374,7 +374,7 @@ export default function TvDashboardVeiculos() {
   const veiculosFiltrados = useMemo(() => {
     const base = gruposFixos.length
       ? veiculos.filter(v => {
-          const gid = (v as any).logistica_grupo_id || (v as any).grupo_id;
+          const gid = (v as any).unidade_id || (v as any).grupo_id;
           return gid && gruposFixos.includes(gid);
         })
       : filterByGrupo(veiculos, grupoId);

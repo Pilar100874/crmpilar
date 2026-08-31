@@ -31,7 +31,7 @@ export const LogisticaGruposCRUD: React.FC<Props> = ({ estabelecimentoId }) => {
 
   const fetchGrupos = async () => {
     const { data, error } = await supabase
-      .from('logistica_grupos')
+      .from('unidades')
       .select('*')
       .order('nome');
     if (error) {
@@ -82,8 +82,8 @@ export const LogisticaGruposCRUD: React.FC<Props> = ({ estabelecimentoId }) => {
         estabelecimento_id: estabelecimentoId,
       };
       const { error } = editing
-        ? await supabase.from('logistica_grupos').update(payload).eq('id', editing.id)
-        : await supabase.from('logistica_grupos').insert(payload);
+        ? await supabase.from('unidades').update(payload).eq('id', editing.id)
+        : await supabase.from('unidades').insert(payload);
       if (error) {
         toast.error('Erro ao salvar grupo');
         return;
@@ -98,7 +98,7 @@ export const LogisticaGruposCRUD: React.FC<Props> = ({ estabelecimentoId }) => {
 
   const remove = async (g: Grupo) => {
     if (!confirm(`Excluir o grupo "${g.nome}"?`)) return;
-    const { error } = await supabase.from('logistica_grupos').delete().eq('id', g.id);
+    const { error } = await supabase.from('unidades').delete().eq('id', g.id);
     if (error) {
       toast.error('Erro ao excluir');
       return;
