@@ -87,7 +87,7 @@ export default function TvSignageDashboards() {
   };
 
 
-  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit?.rota_interna ?? "") : { grupos: [], cameras: [], unidade: "" };
+  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit?.rota_interna ?? "") : { grupos: [] as string[], cameras: [] as string[], unidade: "", rotate: 0 };
   const apresId = (() => {
     const r = edit?.rota_interna || "";
     const q = r.indexOf("?");
