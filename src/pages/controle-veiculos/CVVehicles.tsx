@@ -469,8 +469,10 @@ export default function CVVehicles() {
   };
 
   const porGrupo = filtrarPorGrupo(rows, grupoId, (v: any) => v.unidade_id);
+  const [somenteComAlertas, setSomenteComAlertas] = useState(false);
   const filtered = porGrupo.filter(v =>
-    !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
+    (!q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase()))
+    && (!somenteComAlertas || (alertas[v.id]?.length ?? 0) > 0)
   );
 
   const sortedFiltered = [...filtered].sort((a, b) => {

@@ -36,8 +36,22 @@ export default function TvSignageDashboards() {
 
 
   // Deriva query params atuais quando a rota é /tv/cameras
-  const parseCamsCfg = (rota: string | null | undefined) => {
-    const cfg = { grupos: [] as string[], cameras: [] as string[], rotate: 0 };
+    const parseCamsCfg = (rota: string | null | undefined) => {
+    const cfg = { grupos: [] as string[], cameras: [] as string[], unidade: "" };
+    if (!rota) return cfg;
+    const qIdx = rota.indexOf("?");
+    if (qIdx < 0) return cfg;
+    const sp = new URLSearchParams(rota.slice(qIdx + 1));
+    cfg.grupos = (sp.get("grupos") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    cfg.cameras = (sp.get("cameras") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    cfg.unidade = sp.get("unidade") || "";
+    return cfg;
+  };
+  if (cfg.unidade) {
+    sp.set("unidade", cfg.unidade);
+  }
+  return cfg;
+
     if (!rota) return cfg;
     const qIdx = rota.indexOf("?");
     if (qIdx < 0) return cfg;
@@ -47,11 +61,10 @@ export default function TvSignageDashboards() {
     cfg.rotate = parseInt(sp.get("rotate") || "0") || 0;
     return cfg;
   };
-  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; rotate: number }) => {
+  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; unidade?: string }) => {
     const sp = new URLSearchParams();
     if (cfg.cameras.length) sp.set("cameras", cfg.cameras.join(","));
-    else if (cfg.grupos.length) sp.set("grupos", cfg.grupos.join(","));
-    if (cfg.rotate > 0) sp.set("rotate", String(cfg.rotate));
+    if (cfg.unidade) sp.set("unidade", cfg.unidade);
     const qs = sp.toString();
     return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
   };
