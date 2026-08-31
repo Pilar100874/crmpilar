@@ -19,8 +19,12 @@ import {
   RefreshCw,
   Truck,
   Users,
+  Navigation,
+  ParkingSquare,
+  WifiOff,
 } from "lucide-react";
 import { usePortariaRealtime } from "@/lib/portaria/realtime";
+import { carregarFrotaPosicao, rotuloStatusFrota, type FrotaPosicao } from "@/lib/portaria/frotaRastreador";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import UnidadeAtualBadge from "@/components/UnidadeAtualBadge";
 
@@ -59,11 +63,14 @@ export default function PortariaPainel() {
   const [carregando, setCarregando] = useState(true);
   const [pendencias, setPendencias] = useState<Registro[]>([]);
   const [movimentos, setMovimentos] = useState<Registro[]>([]);
+  const [frota, setFrota] = useState<FrotaPosicao[]>([]);
   const [atualizado, setAtualizado] = useState<Date>(new Date());
 
   const carregar = useCallback(async () => {
     setCarregando(true);
     const de = inicioDoDia();
+
+    carregarFrotaPosicao(unidadeId).then(setFrota).catch(() => setFrota([]));
 
     const [mov, transp, visitas, ocor, enc] = await Promise.all([
       supabase
@@ -214,13 +221,15 @@ export default function PortariaPainel() {
 
   const cards = useMemo(
     () => [
+      { icon: Navigation, label: "Frota na estrada", valor: frota.filter((f) => f.status === "estrada").length, cor: "text-sky-500 bg-sky-500/10" },
+      { icon: ParkingSquare, label: "Frota no pátio", valor: frota.filter((f) => f.status === "patio").length, cor: "text-emerald-500 bg-emerald-500/10" },
       { icon: Car, label: "Veículos em rota", valor: contar("veiculo"), cor: "text-sky-500 bg-sky-500/10" },
       { icon: Truck, label: "Transportadoras no pátio", valor: contar("transportadora"), cor: "text-amber-500 bg-amber-500/10" },
       { icon: Users, label: "Visitantes presentes", valor: contar("visitante"), cor: "text-emerald-500 bg-emerald-500/10" },
       { icon: FileWarning, label: "Ocorrências abertas", valor: contar("ocorrencia"), cor: "text-rose-500 bg-rose-500/10" },
       { icon: Package, label: "Encomendas aguardando", valor: contar("encomenda"), cor: "text-violet-500 bg-violet-500/10" },
     ],
-    [pendencias],
+    [pendencias, frota],
   );
 
   const entradas = movimentos.filter((m) => m.tipo === "entrada");
@@ -271,7 +280,7 @@ export default function PortariaPainel() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
         {cards.map((c) => (
           <Card key={c.label}>
             <CardContent className="flex items-center gap-3 p-4">
@@ -328,6 +337,63 @@ export default function PortariaPainel() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            Frota pelo rastreador
+            <Badge variant="secondary">{frota.length}</Badge>
+            <span className="text-xs font-normal text-muted-foreground">
+              posição real de cada veículo e do motorista
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {frota.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">Nenhum veículo com rastreador nesta unidade</p>
+          ) : (
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {[...frota]
+                .sort((a, b) => a.status.localeCompare(b.status) || a.placa.localeCompare(b.placa))
+                .map((f) => (
+                  <div key={f.veiculoId} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {f.placa}
+                        {f.descricao ? ` · ${f.descricao}` : ""}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {f.motorista ? `Motorista: ${f.motorista}` : "Sem motorista vinculado"}
+                        {f.whatsapp ? ` · ${f.whatsapp}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <Badge
+                        variant="outline"
+                        className={
+                          f.status === "estrada"
+                            ? "border-sky-600/40 text-sky-600"
+                            : f.status === "patio"
+                              ? "border-emerald-600/40 text-emerald-600"
+                              : f.status === "parado"
+                                ? "border-amber-600/40 text-amber-600"
+                                : "border-muted-foreground/30 text-muted-foreground"
+                        }
+                      >
+                        {f.status === "offline" && <WifiOff className="mr-1 h-3 w-3" />}
+                        {rotuloStatusFrota[f.status]}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground">
+                        {f.status === "estrada" ? `${f.velocidade} km/h · ` : ""}
+                        {f.dataHora ? `há ${decorrido(f.dataHora)}` : "sem posição"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
