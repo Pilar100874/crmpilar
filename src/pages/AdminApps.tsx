@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
+
 
 // Sempre a build mais recente publicada pelos workflows do GitHub Actions.
 const COLETOR_LINUX_URL =
