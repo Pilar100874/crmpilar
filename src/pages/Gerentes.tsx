@@ -268,7 +268,7 @@ export default function Gerentes() {
 
   const filtrados = gerentes.filter(g => {
     const q = searchTerm.toLowerCase();
-    return !q || g.nome.toLowerCase().includes(q) || g.email.toLowerCase().includes(q);
+    return !q || g.nome.toLowerCase().includes(q) || (g.email || "").toLowerCase().includes(q);
   });
 
   const idsVend = new Set(vinculosVendedores.map(v => v.vendedor_empresa_id));
