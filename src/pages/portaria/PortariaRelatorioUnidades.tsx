@@ -254,6 +254,10 @@ export default function PortariaRelatorioUnidades() {
           <Building2 className="h-3 w-3" />
           {unidadeId === "todas" ? "Todas as unidades" : nomeUnidade(unidadeId)}
         </Badge>
+        <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-600/40">
+          <Radio className="h-3 w-3" />
+          Sincronização automática
+        </Badge>
       </div>
 
       <Card>
