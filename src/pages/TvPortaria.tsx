@@ -341,6 +341,9 @@ export default function TvPortaria() {
     return () => { clearInterval(i); clearInterval(c); };
   }, [carregar]);
 
+  // Atualiza instantaneamente quando o porteiro registra algo em qualquer módulo
+  usePortariaRealtime(carregar);
+
   const total = transp.length + visitantes.length + veiculos.length + encomendas.length + ocorrencias.length;
 
   return (
