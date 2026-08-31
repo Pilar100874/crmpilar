@@ -420,7 +420,7 @@ export default function TvPortaria() {
     })));
 
     setAtualizado(new Date());
-  }, [unidadeIdAtual]);
+  }, [unidadeSelecionada]);
 
   useEffect(() => {
     carregar();
