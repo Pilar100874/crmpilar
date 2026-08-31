@@ -32,7 +32,7 @@ const empty = { nome: "", cbo: "", descricao: "", salario_base: "", filial_id: "
 export default function PontoCargos() {
   const { empresaId } = usePontoEmpresa();
   const [items, setItems] = useState<Item[]>([]);
-  const [filiais, setFiliais] = useState<{ id: string; nome: string }[]>([]);
+  const [filiais, setUnidades] = useState<{ id: string; nome: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [form, setForm] = useState(empty);
@@ -45,7 +45,7 @@ export default function PontoCargos() {
     setItems((data as any) || []);
     const { data: f } = await supabase
       .from("unidades").select("id, nome").order("nome");
-    setFiliais((f as any) || []);
+    setUnidades((f as any) || []);
   };
   useEffect(() => { load(); }, [empresaId]);
 
@@ -165,13 +165,13 @@ export default function PontoCargos() {
             </div>
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
             <div>
-              <Label>Filial</Label>
+              <Label>Unidade</Label>
               <Select
                 value={form.filial_id || "_none"}
                 onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
                 disabled={form.compartilhado || form.global}
               >
-                <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as unidades" : "Selecione..."} /></SelectTrigger>
                 <SelectContent>
                   {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                 </SelectContent>

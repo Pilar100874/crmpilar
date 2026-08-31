@@ -70,7 +70,7 @@ const FORM_INICIAL = {
 export default function PontoEquipamentos() {
   const { empresaId } = usePontoEmpresa();
   const [items, setItems] = useState<any[]>([]);
-  const [filiais, setFiliais] = useState<any[]>([]);
+  const [filiais, setUnidades] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<any>(null);
@@ -153,7 +153,7 @@ export default function PontoEquipamentos() {
       .from("unidades")
       .select("id, nome")
       .order("nome");
-    setFiliais(fs || []);
+    setUnidades(fs || []);
   };
   useEffect(() => { load(); }, [empresaId]);
 

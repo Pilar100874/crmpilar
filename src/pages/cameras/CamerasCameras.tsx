@@ -115,7 +115,7 @@ export default function CamerasCameras() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const [liveCam, setLiveCam] = useState<{ id: string; nome: string; filial_id: string | null; tem_ptz?: boolean; tem_audio?: boolean } | null>(null);
-  const [filiais, setFiliais] = useState<any[]>([]);
+  const [filiais, setUnidades] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [snapshots, setSnapshots] = useState<Record<string, string>>({});
@@ -192,7 +192,7 @@ export default function CamerasCameras() {
     ]);
     setRows(cams ?? []);
     setGrupos(grps ?? []);
-    setFiliais(fils ?? []);
+    setUnidades(fils ?? []);
     if (coletor) {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
@@ -457,10 +457,10 @@ export default function CamerasCameras() {
               }
             >
               <SelectTrigger className="h-8 w-[200px]">
-                <SelectValue placeholder="Mover para filial..." />
+                <SelectValue placeholder="Mover para unidade..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sem filial</SelectItem>
+                <SelectItem value="none">Sem unidade</SelectItem>
                 {filiais.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
                     {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
@@ -653,14 +653,14 @@ export default function CamerasCameras() {
               </Select>
             </div>
             <div className="sm:col-span-2 space-y-1">
-              <Label>Filial</Label>
+              <Label>Unidade</Label>
               <Select
                 value={editing.filial_id ?? "none"}
                 onValueChange={(v) => setEditing({ ...editing, filial_id: v === "none" ? null : v })}
               >
-                <SelectTrigger><SelectValue placeholder="Selecione a filial" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sem filial (todas)</SelectItem>
+                  <SelectItem value="none">Sem unidade (todas)</SelectItem>
                   {filiais.map((f) => (
                     <SelectItem key={f.id} value={f.id}>
                       {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
@@ -669,7 +669,7 @@ export default function CamerasCameras() {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Define qual Coletor Desktop irá acessar essa câmera. Necessário quando há IPs iguais em filiais diferentes.
+                Define qual Coletor Desktop irá acessar essa câmera. Necessário quando há IPs iguais em unidades diferentes.
               </p>
             </div>
             <div className="space-y-1">

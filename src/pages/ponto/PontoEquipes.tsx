@@ -33,7 +33,7 @@ const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departam
 export default function PontoEquipes() {
   const { empresaId } = usePontoEmpresa();
   const [items, setItems] = useState<Equipe[]>([]);
-  const [filiais, setFiliais] = useState<{ id: string; nome: string }[]>([]);
+  const [filiais, setUnidades] = useState<{ id: string; nome: string }[]>([]);
   const [departamentos, setDepartamentos] = useState<{ id: string; nome: string }[]>([]);
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [open, setOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function PontoEquipes() {
       supabase.from("ponto_departamentos").select("id, nome").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome"),
       supabase.from("ponto_funcionarios").select("id, nome").eq("empresa_id", empresaId).order("nome"),
     ]);
-    setFiliais((f.data as any) || []);
+    setUnidades((f.data as any) || []);
     setDepartamentos((d.data as any) || []);
     setFuncionarios((fu.data as any) || []);
   };
@@ -194,13 +194,13 @@ export default function PontoEquipes() {
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Filial</Label>
+                <Label>Unidade</Label>
                 <Select
                   value={form.filial_id || "_none"}
                   onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
                   disabled={form.compartilhado || form.global}
                 >
-                  <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as unidades" : "Selecione..."} /></SelectTrigger>
                   <SelectContent>
                     {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                   </SelectContent>

@@ -113,7 +113,7 @@ const TIPO_DOC = ["RG", "CNH", "CTPS", "Título de Eleitor", "Reservista", "Pass
 export default function PontoFuncionarios() {
   const { empresaId } = usePontoEmpresa();
   const [items, setItems] = useState<Func[]>([]);
-  const [filiais, setFiliais] = useState<any[]>([]);
+  const [filiais, setUnidades] = useState<any[]>([]);
   const [escalas, setEscalas] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
@@ -148,7 +148,7 @@ export default function PontoFuncionarios() {
       sb.from("ponto_export_layouts").select("id, descricao, software").eq("empresa_id", empresaId).eq("ativo", true).order("descricao"),
     ]);
     setItems((r1.data as any) || []);
-    setFiliais(r2.data || []);
+    setUnidades(r2.data || []);
     setEscalas(r3.data || []);
     setDepartamentos(rDep.data || []);
     setCargos(rCar.data || []);
@@ -622,7 +622,7 @@ export default function PontoFuncionarios() {
                 </Select>
               </div>
               <div>
-                <Label>Filial</Label>
+                <Label>Unidade</Label>
                 <Select value={f.filial_id || undefined} onValueChange={(v) => setF({ ...f, filial_id: v })}>
                   <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                   <SelectContent>{filiais.map((x) => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}</SelectContent>

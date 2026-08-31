@@ -12,7 +12,7 @@ const ROTATE_MS = 15000;
 
 export default function PontoQrCodeTotem() {
   const { empresaId } = usePontoEmpresa();
-  const [filiais, setFiliais] = useState<any[]>([]);
+  const [filiais, setUnidades] = useState<any[]>([]);
   const [filialId, setFilialId] = useState<string>("");
   const [qr, setQr] = useState<string>("");
   const [token, setToken] = useState<string>("");
@@ -22,7 +22,7 @@ export default function PontoQrCodeTotem() {
     if (!empresaId) return;
     supabase.from("unidades").select("id, nome").order("nome")
       .then(({ data }) => {
-        setFiliais(data || []);
+        setUnidades(data || []);
         if (data?.[0] && !filialId) setFilialId(data[0].id);
       });
   }, [empresaId]);
@@ -69,7 +69,7 @@ export default function PontoQrCodeTotem() {
         <div className="flex items-center gap-2">
           <div className="w-64">
             <Select value={filialId} onValueChange={setFilialId}>
-              <SelectTrigger><SelectValue placeholder="Selecione a filial" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger>
               <SelectContent>
                 {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
               </SelectContent>
