@@ -204,9 +204,9 @@ export default function TvPortaria() {
   const carregar = useCallback(async () => {
     const [t, v, cv, enc, oc] = await Promise.all([
       supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20),
-      supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").eq("status", "entered").order("entry_date", { ascending: false }).limit(20),
+      supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").in("status", ["entered", "inside"]).is("exit_date", null).order("entry_date", { ascending: false }).limit(20),
       supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20),
-      supabase.from("livro_encomendas").select("*").eq("status", "aguardando_retirada").order("data_recebimento", { ascending: false }).limit(20),
+      supabase.from("livro_encomendas").select("*").not("status", "in", '("retirada","entregue","cancelada")').order("created_at", { ascending: false }).limit(20),
       supabase.from("livro_ocorrencias").select("*").in("status", ["aberta", "em_andamento"]).order("data_hora", { ascending: false }).limit(20),
     ]);
 
@@ -249,9 +249,9 @@ export default function TvPortaria() {
       detalhes: [
         { rotulo: "Empresa", valor: r.visitor?.company },
         { rotulo: "Pessoa de contato", valor: r.contact_person_name },
-        { rotulo: "Motivo da visita", valor: r.visit_reason },
+        { rotulo: "Motivo da visita", valor: r.purpose },
         { rotulo: "Placa do veículo", valor: r.vehicle_plate },
-        { rotulo: "Crachá", valor: r.badge_number },
+        { rotulo: "Observações", valor: r.notes },
       ],
       historico: [
         { rotulo: "Entrada", valor: dataHora(r.entry_date) },
