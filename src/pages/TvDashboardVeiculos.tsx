@@ -107,11 +107,16 @@ export default function TvDashboardVeiculos() {
   useEffect(() => { localStorage.setItem('logistica:trilhaMinutos', String(trilhaMinutos)); }, [trilhaMinutos]);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter();
   const [searchParams] = useSearchParams();
-  // Grupos fixados pelo dashboard remoto (?grupos=id1,id2)
+  // Unidades fixadas pelo dashboard remoto (?unidades=id1,id2; ?grupos= mantido por compatibilidade)
   const gruposFixos = useMemo(
-    () => (searchParams.get('grupos') || '').split(',').map(s => s.trim()).filter(Boolean),
+    () =>
+      (searchParams.get('unidades') || searchParams.get('grupos') || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
     [searchParams]
   );
+
   const legendaVisivel = searchParams.get('legenda') === '1';
 
 
