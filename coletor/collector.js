@@ -109,8 +109,21 @@ function saveConfig(cfg) {
   try {
     fs.mkdirSync(path.dirname(CONFIG_BACKUP), { recursive: true });
     fs.writeFileSync(CONFIG_BACKUP, conteudo);
+    fs.writeFileSync(CONFIG_BACKUP_BAK, conteudo);
   } catch {}
 }
+
+// Ao abrir o app (inclusive logo após uma atualização) grava de volta a
+// configuração mesclada em todos os locais: se algum arquivo tiver sumido ou
+// voltado ao padrão, as opções habilitadas são restauradas automaticamente.
+function restaurarConfig() {
+  try {
+    const merged = lerArquivoConfig();
+    if (merged && Object.keys(merged).length) saveConfig({});
+  } catch {}
+}
+restaurarConfig();
+
 
 async function listarFiliais() {
   const cfg = loadConfig();
