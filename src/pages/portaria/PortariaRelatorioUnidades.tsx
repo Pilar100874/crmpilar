@@ -20,7 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2, Car, Loader2, Package, RefreshCw, Truck, Users, FileWarning } from "lucide-react";
+import { Building2, Car, Loader2, Package, RefreshCw, Truck, Users, FileWarning, Radio } from "lucide-react";
+import { usePortariaRealtime } from "@/lib/portaria/realtime";
 
 type StatusFiltro = "todos" | "abertos" | "concluidos";
 
