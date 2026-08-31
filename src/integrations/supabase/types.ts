@@ -6425,6 +6425,7 @@ export type Database = {
           logistica_grupo_id: string | null
           name: string
           phone: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -6436,6 +6437,7 @@ export type Database = {
           logistica_grupo_id?: string | null
           name: string
           phone?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -6447,6 +6449,7 @@ export type Database = {
           logistica_grupo_id?: string | null
           name?: string
           phone?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -6464,6 +6467,13 @@ export type Database = {
             referencedRelation: "logistica_grupos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cv_drivers_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
         ]
       }
       cv_helpers: {
@@ -6475,6 +6485,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -6485,6 +6496,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -6495,9 +6507,18 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cv_helpers_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cv_inspection_config: {
         Row: {
@@ -6860,6 +6881,7 @@ export type Database = {
           resolved_at: string | null
           security_guard_id: string | null
           status: Database["public"]["Enums"]["cv_movement_status"]
+          unidade_id: string | null
           updated_at: string
           vehicle_id: string
         }
@@ -6887,6 +6909,7 @@ export type Database = {
           resolved_at?: string | null
           security_guard_id?: string | null
           status?: Database["public"]["Enums"]["cv_movement_status"]
+          unidade_id?: string | null
           updated_at?: string
           vehicle_id: string
         }
@@ -6914,6 +6937,7 @@ export type Database = {
           resolved_at?: string | null
           security_guard_id?: string | null
           status?: Database["public"]["Enums"]["cv_movement_status"]
+          unidade_id?: string | null
           updated_at?: string
           vehicle_id?: string
         }
@@ -6940,6 +6964,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cv_vehicle_movements_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cv_vehicle_movements_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -6962,6 +6993,7 @@ export type Database = {
           next_oil_change_km: number
           oil_change_interval: number
           plate: string
+          unidade_id: string | null
           updated_at: string
           vehicle_type: Database["public"]["Enums"]["cv_vehicle_type"]
           veiculo_id: string | null
@@ -6979,6 +7011,7 @@ export type Database = {
           next_oil_change_km?: number
           oil_change_interval?: number
           plate: string
+          unidade_id?: string | null
           updated_at?: string
           vehicle_type?: Database["public"]["Enums"]["cv_vehicle_type"]
           veiculo_id?: string | null
@@ -6996,6 +7029,7 @@ export type Database = {
           next_oil_change_km?: number
           oil_change_interval?: number
           plate?: string
+          unidade_id?: string | null
           updated_at?: string
           vehicle_type?: Database["public"]["Enums"]["cv_vehicle_type"]
           veiculo_id?: string | null
@@ -7013,6 +7047,13 @@ export type Database = {
             columns: ["logistica_grupo_id"]
             isOneToOne: false
             referencedRelation: "logistica_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicles_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
           {
@@ -12061,6 +12102,7 @@ export type Database = {
           tipo_encomenda: string | null
           transportadora: string | null
           unidade: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -12088,6 +12130,7 @@ export type Database = {
           tipo_encomenda?: string | null
           transportadora?: string | null
           unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -12115,9 +12158,18 @@ export type Database = {
           tipo_encomenda?: string | null
           transportadora?: string | null
           unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "livro_encomendas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       livro_ocorrencias: {
         Row: {
@@ -12142,6 +12194,7 @@ export type Database = {
           status: string
           tipo: string
           turno: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -12166,6 +12219,7 @@ export type Database = {
           status?: string
           tipo: string
           turno?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -12190,9 +12244,18 @@ export type Database = {
           status?: string
           tipo?: string
           turno?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "livro_ocorrencias_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       livro_palavras_chave: {
         Row: {
@@ -21509,6 +21572,7 @@ export type Database = {
           nome: string
           ordem: number
           tipo: string
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -21521,6 +21585,7 @@ export type Database = {
           nome: string
           ordem?: number
           tipo?: string
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -21533,6 +21598,7 @@ export type Database = {
           nome?: string
           ordem?: number
           tipo?: string
+          unidade_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -21541,6 +21607,13 @@ export type Database = {
             columns: ["device_id"]
             isOneToOne: false
             referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_access_points_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -21702,6 +21775,7 @@ export type Database = {
           status: string
           tipo: string
           ultima_comunicacao: string | null
+          unidade_id: string | null
           updated_at: string
           via_coletor: boolean
         }
@@ -21723,6 +21797,7 @@ export type Database = {
           status?: string
           tipo?: string
           ultima_comunicacao?: string | null
+          unidade_id?: string | null
           updated_at?: string
           via_coletor?: boolean
         }
@@ -21744,10 +21819,19 @@ export type Database = {
           status?: string
           tipo?: string
           ultima_comunicacao?: string | null
+          unidade_id?: string | null
           updated_at?: string
           via_coletor?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "port_devices_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       port_people: {
         Row: {
@@ -21771,6 +21855,7 @@ export type Database = {
           telefone: string | null
           tipo: string
           unidade: string | null
+          unidade_id: string | null
           updated_at: string
           valido_ate: string | null
           valido_de: string | null
@@ -21796,6 +21881,7 @@ export type Database = {
           telefone?: string | null
           tipo?: string
           unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
           valido_ate?: string | null
           valido_de?: string | null
@@ -21821,11 +21907,20 @@ export type Database = {
           telefone?: string | null
           tipo?: string
           unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
           valido_ate?: string | null
           valido_de?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "port_people_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       port_person_permissions: {
         Row: {
@@ -21980,6 +22075,7 @@ export type Database = {
           telefone: string | null
           tipo_autorizacao: string
           unidade: string | null
+          unidade_id: string | null
           updated_at: string
           visitado_person_id: string | null
         }
@@ -22003,6 +22099,7 @@ export type Database = {
           telefone?: string | null
           tipo_autorizacao?: string
           unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
           visitado_person_id?: string | null
         }
@@ -22026,6 +22123,7 @@ export type Database = {
           telefone?: string | null
           tipo_autorizacao?: string
           unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
           visitado_person_id?: string | null
         }
@@ -22035,6 +22133,13 @@ export type Database = {
             columns: ["access_point_id"]
             isOneToOne: false
             referencedRelation: "port_access_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "port_visitors_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
           {
@@ -26713,6 +26818,7 @@ export type Database = {
           nome: string
           observacoes: string | null
           transportadora_id: string | null
+          unidade_id: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -26727,6 +26833,7 @@ export type Database = {
           nome: string
           observacoes?: string | null
           transportadora_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -26741,6 +26848,7 @@ export type Database = {
           nome?: string
           observacoes?: string | null
           transportadora_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -26750,6 +26858,13 @@ export type Database = {
             columns: ["transportadora_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_motoristas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -26834,6 +26949,7 @@ export type Database = {
           status: string
           tipo_operacao: string
           transportadora_id: string | null
+          unidade_id: string | null
           updated_at: string
           veiculo_id: string | null
         }
@@ -26869,6 +26985,7 @@ export type Database = {
           status?: string
           tipo_operacao?: string
           transportadora_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
           veiculo_id?: string | null
         }
@@ -26904,6 +27021,7 @@ export type Database = {
           status?: string
           tipo_operacao?: string
           transportadora_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
           veiculo_id?: string | null
         }
@@ -26930,6 +27048,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transp_movimentos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transp_movimentos_veiculo_id_fkey"
             columns: ["veiculo_id"]
             isOneToOne: false
@@ -26946,6 +27071,7 @@ export type Database = {
           id: string
           nome: string
           observacoes: string | null
+          unidade_id: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -26956,6 +27082,7 @@ export type Database = {
           id?: string
           nome: string
           observacoes?: string | null
+          unidade_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -26966,10 +27093,19 @@ export type Database = {
           id?: string
           nome?: string
           observacoes?: string | null
+          unidade_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transp_setores_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transp_setores_numeros: {
         Row: {
@@ -27020,6 +27156,7 @@ export type Database = {
           placa: string
           tipo_veiculo: string | null
           transportadora_id: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -27032,6 +27169,7 @@ export type Database = {
           placa: string
           tipo_veiculo?: string | null
           transportadora_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -27044,6 +27182,7 @@ export type Database = {
           placa?: string
           tipo_veiculo?: string | null
           transportadora_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -27052,6 +27191,13 @@ export type Database = {
             columns: ["transportadora_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transp_veiculos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -30067,6 +30213,7 @@ export type Database = {
       }
       get_current_usuario_id: { Args: never; Returns: string }
       get_current_usuario_id_safe: { Args: never; Returns: string }
+      get_minha_unidade_id: { Args: never; Returns: string }
       get_minhas_credenciais: {
         Args: never
         Returns: {
@@ -30236,6 +30383,7 @@ export type Database = {
       }
       op_is_admin_or_manager: { Args: { _user_id: string }; Returns: boolean }
       op_is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      pode_acessar_unidade: { Args: { _unidade_id: string }; Returns: boolean }
       ponto_aprovador_2fa_valido: {
         Args: { _user_id: string }
         Returns: boolean
