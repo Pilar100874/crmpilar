@@ -410,7 +410,7 @@ export default function TvPortaria() {
   // Atualiza instantaneamente quando o porteiro registra algo em qualquer módulo
   usePortariaRealtime(carregar);
 
-  const total = frota.length + transp.length + visitantes.length + veiculos.length + encomendas.length + ocorrencias.length;
+  const total = transp.length + visitantes.length + veiculos.length + encomendas.length + ocorrencias.length;
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 text-white">
@@ -460,7 +460,7 @@ export default function TvPortaria() {
         <Painel icon={Users} titulo="Visitantes" itens={visitantes} cor="bg-sky-500/20 text-sky-200" onSelecionar={setSelecionado} />
         <Painel icon={Car} titulo="Veículos Internos" itens={veiculos} cor="bg-emerald-500/20 text-emerald-200" onSelecionar={setSelecionado} />
         <Painel icon={Package} titulo="Encomendas" itens={encomendas} cor="bg-violet-500/20 text-violet-200" onSelecionar={setSelecionado} />
-        <Painel icon={Navigation} titulo="Frota (rastreador)" itens={frota} cor="bg-sky-500/20 text-sky-200" onSelecionar={setSelecionado} />
+        
         <Painel icon={AlertTriangle} titulo="Ocorrências" itens={ocorrencias} cor="bg-rose-500/20 text-rose-200" onSelecionar={setSelecionado} />
       </div>
 
