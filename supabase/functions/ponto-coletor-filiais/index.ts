@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
     const { data, error } = await sb
-      .from("ponto_filiais")
+      .from("unidades")
       .select("id, nome, cidade, uf")
       .eq("ativo", true)
       .order("nome");

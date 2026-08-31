@@ -453,7 +453,7 @@ export default function CamerasCameras() {
             </Select>
             <Select
               onValueChange={(v) =>
-                bulkUpdate({ filial_id: v === "none" ? null : v }, "Filial atualizada")
+                bulkUpdate({ filial_id: v === "none" ? null : v }, "Unidade atualizada")
               }
             >
               <SelectTrigger className="h-8 w-[200px]">
