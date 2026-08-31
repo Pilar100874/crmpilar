@@ -444,12 +444,21 @@ export default function TvPortaria() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold sm:text-3xl">TV Portaria</h1>
-              {unidadeNome && (
+              {rotuloUnidade && (
                 <span className="rounded-md bg-primary/20 px-2 py-1 text-base font-semibold text-primary sm:text-lg">
-                  {unidadeNome}
+                  {rotuloUnidade}
                 </span>
               )}
+              <div className="[&_button]:border-white/20 [&_button]:bg-white/10 [&_button]:text-white">
+                <GrupoFilterSelect
+                  value={unidadeFiltro}
+                  onChange={trocarUnidade}
+                  unidades={unidades}
+                  size="sm"
+                />
+              </div>
             </div>
+
             <p className="text-sm text-white/50">
               {total} registros em andamento • atualizado {hora(atualizado.toISOString())}
             </p>
