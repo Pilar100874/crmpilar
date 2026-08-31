@@ -1001,10 +1001,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div>
-              <Label>Perfil (definido pelo grupo de acesso)</Label>
-              <Input value={PERFIL_LABEL[perfilGrupo]} readOnly disabled />
-            </div>
+
+
 
           </div>
         </Card>
