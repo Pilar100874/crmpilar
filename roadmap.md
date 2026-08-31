@@ -9,3 +9,4 @@
 - [ ] Tela "Portaria por Unidade": pendências (veículos em rota, transportadoras no pátio, visitantes presentes, ocorrências abertas)
 - [ ] Painel único da portaria (unidade, pendências, entradas/saídas, ocorrências)
 - [ ] Trocar dados de exemplo do portão/TV Portaria por dados reais
+- [ ] Câmeras: seletor de unidade trazendo cadastros antigos (usar tabela unidades)
