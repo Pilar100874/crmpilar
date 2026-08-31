@@ -204,10 +204,10 @@ export default function TvPortaria() {
   const carregar = useCallback(async () => {
     const [t, v, cv, enc, oc] = await Promise.all([
       supabase.from("transp_movimentos").select("*").neq("status", "saiu").order("entrada_time", { ascending: false }).limit(20),
-      supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").eq("status", "entered").order("entry_date", { ascending: false }).limit(20),
+      supabase.from("vis_access_records").select("*, visitor:vis_visitors(name, company)").in("status", ["entered", "inside"]).is("exit_date", null).order("entry_date", { ascending: false }).limit(20),
       supabase.from("cv_vehicle_movements").select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name, phone)").eq("status", "out").order("exit_time", { ascending: false }).limit(20),
-      supabase.from("livro_encomendas").select("*").eq("status", "aguardando_retirada").order("data_recebimento", { ascending: false }).limit(20),
-      supabase.from("livro_ocorrencias").select("*").in("status", ["aberta", "em_andamento"]).order("data_hora", { ascending: false }).limit(20),
+      supabase.from("livro_encomendas").select("*").not("status", "in", '("retirada","entregue","cancelada")').order("data_recebimento", { ascending: false }).limit(20),
+      supabase.from("livro_ocorrencias").select("*").not("status", "in", '("finalizada","resolvida","cancelada")').order("data_hora", { ascending: false }).limit(20),
     ]);
 
     setTransp(((t.data ?? []) as any[]).map((m) => ({
@@ -218,20 +218,20 @@ export default function TvPortaria() {
       desde: m.entrada_time,
       status: m.status === "liberado" ? "Liberado" : "No pátio",
       tom: m.status === "liberado" ? "emerald" : "amber",
-      atualizadoEm: m.updated_at || m.liberacao_time || m.entrada_time,
+      atualizadoEm: m.updated_at || m.liberado_time || m.entrada_time,
       detalhes: [
         { rotulo: "Placa", valor: m.placa },
-        { rotulo: "Tipo de veículo", valor: m.tipo_veiculo },
+        { rotulo: "Motivo", valor: m.motivo },
         { rotulo: "Operação", valor: labelOperacaoCurto(m.tipo_operacao) },
         { rotulo: "Motorista", valor: m.motorista_nome },
-        { rotulo: "CPF do motorista", valor: m.motorista_cpf },
+        { rotulo: "Ajudante", valor: m.ajudante_nome },
         { rotulo: "NF-e", valor: m.nfe_chave ? `…${String(m.nfe_chave).slice(-12)}` : null },
-        { rotulo: "Setor destino", valor: m.setor_nome },
-        { rotulo: "Observações", valor: m.observacoes },
+        
+        { rotulo: "Observações", valor: m.entrada_obs },
       ],
       historico: [
         { rotulo: "Entrada", valor: dataHora(m.entrada_time) },
-        { rotulo: "Liberação", valor: dataHora(m.liberacao_time) },
+        { rotulo: "Liberação", valor: dataHora(m.liberado_time) },
       ],
       rota: `/transportadoras/saida?movimento=${m.id}`,
     })));
@@ -249,9 +249,9 @@ export default function TvPortaria() {
       detalhes: [
         { rotulo: "Empresa", valor: r.visitor?.company },
         { rotulo: "Pessoa de contato", valor: r.contact_person_name },
-        { rotulo: "Motivo da visita", valor: r.visit_reason },
+        { rotulo: "Motivo da visita", valor: r.purpose },
         { rotulo: "Placa do veículo", valor: r.vehicle_plate },
-        { rotulo: "Crachá", valor: r.badge_number },
+        { rotulo: "Observações", valor: r.notes },
       ],
       historico: [
         { rotulo: "Entrada", valor: dataHora(r.entry_date) },

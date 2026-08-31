@@ -188,7 +188,12 @@ export default function CamerasCameras() {
       supabase.from("cv_cameras").select("*").order("nome"),
       supabase.from("cv_coletor_config").select("*").maybeSingle(),
       supabase.from("cameras_grupos").select("*").order("ordem").order("nome"),
-      supabase.from("unidades").select("id,nome,cidade,uf").order("nome"),
+      (async () => {
+        const estab = await getEstabelecimentoId();
+        let q = supabase.from("unidades").select("id,nome,cidade,uf").order("nome");
+        if (estab) q = q.eq("estabelecimento_id", estab);
+        return await q;
+      })(),
     ]);
     setRows(cams ?? []);
     setGrupos(grps ?? []);
