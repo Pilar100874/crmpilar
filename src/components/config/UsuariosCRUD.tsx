@@ -63,7 +63,17 @@ interface Unidade {
 interface GrupoAcesso {
   id: string;
   nome: string;
+  perfil?: string;
 }
+
+const PERFIL_LABEL: Record<string, string> = {
+  padrao: "Padrão",
+  admin: "Administrador",
+  atendente: "Atendente",
+  porteiro: "Porteiro",
+  gerente: "Gerente",
+};
+
 
 interface Segmento {
   id: string;
