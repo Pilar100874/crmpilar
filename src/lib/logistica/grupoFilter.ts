@@ -46,7 +46,6 @@ export function useGrupoFilter(_estabelecimentoId?: string | null) {
       const { data } = await supabase
         .from('unidades')
         .select('id, nome')
-        .eq('ativo', true)
         .order('nome');
       if (!cancelled) setUnidades((data || []) as UnidadeOpt[]);
     })();

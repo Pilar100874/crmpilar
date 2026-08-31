@@ -41,7 +41,6 @@ export function useCvGrupoFilter() {
       const { data } = await supabase
         .from('unidades')
         .select('id, nome')
-        .eq('ativo', true)
         .order('nome');
       if (!cancelled) setGrupos((data || []) as GrupoOpt[]);
     })();
