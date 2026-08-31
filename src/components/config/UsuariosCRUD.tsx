@@ -980,17 +980,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
 
             <div>
-              <Label htmlFor="usuario-tipo">Tipo *</Label>
-              <Select value={tipo} onValueChange={setTipo}>
-                <SelectTrigger id="usuario-tipo">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="padrao">Padrão</SelectItem>
-                  <SelectItem value="gerente">Gerente</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Perfil (definido pelo grupo de acesso)</Label>
+              <Input value={PERFIL_LABEL[perfilGrupo]} readOnly disabled />
             </div>
+
           </div>
         </Card>
 
