@@ -244,14 +244,33 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim() || !email.trim() || !horaInicial || !horaFinal) {
+    if (!nome.trim() || !telefone.trim() || !horaInicial || !horaFinal) {
       toast({
         title: "Campos obrigatórios",
-        description: "Nome, email e jornada de trabalho são obrigatórios",
+        description: "Nome, WhatsApp e jornada de trabalho são obrigatórios",
         variant: "destructive",
       });
       return;
     }
+
+    if (!validateWhatsApp(telefone)) {
+      toast({
+        title: "WhatsApp inválido",
+        description: "Informe um número de WhatsApp válido com DDD",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (email.trim() && !validateEmail(email)) {
+      toast({
+        title: "E-mail inválido",
+        description: "Corrija o e-mail informado ou deixe o campo em branco",
+        variant: "destructive",
+      });
+      return;
+    }
+
 
     if (!unidadeId) {
       toast({
