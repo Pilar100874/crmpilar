@@ -13,3 +13,4 @@
 - [x] Coletor/ISO 1.9.2 com filtro por unidade (câmeras, ponto, portaria) — build no GitHub Actions
 - [x] Limpar frota/transportadoras fictícias para painel e TV Portaria refletirem rota/pátio reais
 - [x] Atualização remota do Coletor (botão no CRM) + botão na tela do app (Windows/Linux/ISO)
+- [x] Posição real da frota (rastreador) no painel da portaria e na TV Portaria: na estrada / no pátio / sem sinal, com motorista e WhatsApp
