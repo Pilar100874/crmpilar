@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
+import { usePortariaRealtime } from "@/lib/portaria/realtime";
 import { supabase } from "@/integrations/supabase/client";
 import { useTvMode } from "@/lib/tvMode";
 import { useAutoReload } from "@/lib/tvAutoReload";
