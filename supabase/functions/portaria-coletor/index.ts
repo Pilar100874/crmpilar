@@ -9,11 +9,13 @@ const BodySchema = z.object({
   acao: z.enum(["handshake", "jobs", "resultado"]),
   versao: z.string().max(40).optional(),
   ip_local: z.string().max(60).optional(),
+  unidade_id: z.string().uuid().nullable().optional(),
   job_id: z.string().uuid().optional(),
   ok: z.boolean().optional(),
   mensagem: z.string().max(500).optional(),
   dados: z.unknown().optional(),
   limite: z.number().int().min(1).max(20).optional(),
+
 });
 
 const JSON_HEADERS = { ...corsHeaders, "Content-Type": "application/json" };
@@ -48,21 +50,40 @@ Deno.serve(async (req) => {
     })
     .eq("id", coletor.id);
 
+  const unidadeId = body.unidade_id ?? null;
+
   if (body.acao === "handshake") {
-    const { data: dispositivos } = await admin
+    let devQ = admin
       .from("port_devices")
-      .select("id, nome, tipo, ip, porta, endpoint, canal_rele, pulso_ms, config, via_coletor, habilitado")
+      .select("id, nome, tipo, ip, porta, endpoint, canal_rele, pulso_ms, config, via_coletor, habilitado, unidade_id")
       .eq("via_coletor", true)
       .eq("habilitado", true);
+    // Cada Coletor atende somente a unidade em que está instalado.
+    if (unidadeId) devQ = devQ.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
+    const { data: dispositivos } = await devQ;
     return responder(200, { ok: true, coletor_id: coletor.id, dispositivos: dispositivos ?? [] });
   }
 
   if (body.acao === "jobs") {
     const limite = body.limite ?? 5;
-    const { data: pendentes } = await admin
+
+    // Restringe os jobs aos dispositivos da unidade do Coletor
+    let idsDaUnidade: string[] | null = null;
+    if (unidadeId) {
+      const { data: devs } = await admin
+        .from("port_devices")
+        .select("id")
+        .or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
+      idsDaUnidade = (devs ?? []).map((d) => d.id as string);
+      if (idsDaUnidade.length === 0) return responder(200, { ok: true, jobs: [] });
+    }
+
+    let jobQ = admin
       .from("port_device_jobs")
       .select("id, device_id, access_point_id, comando, parametros")
-      .eq("status", "pendente")
+      .eq("status", "pendente");
+    if (idsDaUnidade) jobQ = jobQ.in("device_id", idsDaUnidade);
+    const { data: pendentes } = await jobQ
       .order("created_at", { ascending: true })
       .limit(limite);
 
@@ -92,6 +113,7 @@ Deno.serve(async (req) => {
     }
     return responder(200, { ok: true, jobs });
   }
+
 
   // acao === "resultado"
   if (!body.job_id) return responder(400, { error: "job_id obrigatório." });

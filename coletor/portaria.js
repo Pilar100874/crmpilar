@@ -153,9 +153,10 @@ const ESTADO = {
 async function pollPortariaOnce(cfg) {
   if (!cfg.portariaToken) return ESTADO;
   try {
-    const handshake = await chamar(cfg, { acao: 'handshake', versao: cfg.versao || null });
+    const unidadeId = cfg.filialId || null;
+    const handshake = await chamar(cfg, { acao: 'handshake', versao: cfg.versao || null, unidade_id: unidadeId });
     ESTADO.dispositivos = handshake.dispositivos || [];
-    const { jobs } = await chamar(cfg, { acao: 'jobs', limite: 5 });
+    const { jobs } = await chamar(cfg, { acao: 'jobs', limite: 5, unidade_id: unidadeId });
     for (const job of jobs || []) {
       let ok = true;
       let mensagem = '';
