@@ -129,6 +129,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/portaria/acessos", titulo: "Interfone - Acessos", aliases: ["acessos portaria", "acessos interfone", "abrir portao remoto"] },
   { path: "/portaria/pessoas", titulo: "Interfone - Pessoas", aliases: ["moradores portaria", "pessoas portaria", "pessoas interfone"] },
   { path: "/portaria/visitantes", titulo: "Interfone - Visitantes", aliases: ["visitantes portaria", "visitantes interfone"] },
+  { path: "/portaria/relatorio-unidades", titulo: "Portaria - Relatório por Unidade", aliases: ["relatorio por unidade", "relatorio portaria", "relatorio unidades"] },
   { path: "/portaria/historico", titulo: "Interfone - Histórico", aliases: ["historico de acessos", "historico interfone", "logs portaria"] },
   { path: "/portaria/dispositivos", titulo: "Interfone - Dispositivos", aliases: ["shelly", "idface", "dispositivos portaria", "dispositivos interfone"] },
   { path: "/portaria/interfone", titulo: "Interfone", aliases: ["interfone"] },
