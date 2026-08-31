@@ -6187,17 +6187,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "cv_cameras_filial_id_fkey"
-            columns: ["filial_id"]
-            isOneToOne: false
-            referencedRelation: "ponto_filiais"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "cv_cameras_grupo_id_fkey"
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "cameras_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_cameras_unidade_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
           {
@@ -17351,10 +17351,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_afd_importacoes_filial_id_fkey"
+            foreignKeyName: "ponto_afd_importacoes_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -18280,10 +18280,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_cargos_filial_id_fkey"
+            foreignKeyName: "ponto_cargos_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -18712,10 +18712,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_departamentos_filial_id_fkey"
+            foreignKeyName: "ponto_departamentos_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -18937,10 +18937,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_equipamentos_filial_id_fkey"
+            foreignKeyName: "ponto_equipamentos_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -19047,13 +19047,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_equipes_filial_id_fkey"
-            columns: ["filial_id"]
-            isOneToOne: false
-            referencedRelation: "ponto_filiais"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "ponto_equipes_lider_funcionario_id_fkey"
             columns: ["lider_funcionario_id"]
             isOneToOne: false
@@ -19065,6 +19058,13 @@ export type Database = {
             columns: ["lider_funcionario_id"]
             isOneToOne: false
             referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_equipes_unidade_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -20156,13 +20156,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ponto_funcionario_vinculos_filial_id_fkey"
-            columns: ["filial_id"]
-            isOneToOne: false
-            referencedRelation: "ponto_filiais"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "ponto_funcionario_vinculos_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
@@ -20181,6 +20174,13 @@ export type Database = {
             columns: ["ponto_empresa_id"]
             isOneToOne: false
             referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_vinculos_unidade_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -20429,17 +20429,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_funcionarios_filial_id_fkey"
-            columns: ["filial_id"]
-            isOneToOne: false
-            referencedRelation: "ponto_filiais"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "ponto_funcionarios_layout_exportacao_id_fkey"
             columns: ["layout_exportacao_id"]
             isOneToOne: false
             referencedRelation: "ponto_export_layouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionarios_unidade_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -20490,10 +20490,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_geofences_filial_id_fkey"
+            foreignKeyName: "ponto_geofences_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -20979,10 +20979,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_permissoes_filial_id_fkey"
+            foreignKeyName: "ponto_permissoes_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -21138,10 +21138,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ponto_redes_autorizadas_filial_id_fkey"
+            foreignKeyName: "ponto_redes_autorizadas_unidade_fkey"
             columns: ["filial_id"]
             isOneToOne: false
-            referencedRelation: "ponto_filiais"
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
