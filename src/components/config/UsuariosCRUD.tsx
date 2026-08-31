@@ -303,6 +303,16 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       return;
     }
 
+    if (!grupoAcessoId) {
+      toast({
+        title: "Grupo de acesso obrigatório",
+        description: "Selecione o grupo de acesso do usuário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+
     if (!estabelecimentoId) {
       toast({
         title: "Estabelecimento obrigatório",
