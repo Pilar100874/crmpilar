@@ -22,7 +22,7 @@ const SEM_GRUPO = "__sem_grupo__";
 
 export default function CamerasAoVivo() {
   const [grupos, setGrupos] = useState<any[]>([]);
-  const [filiais, setFiliais] = useState<any[]>([]);
+  const [filiais, setUnidades] = useState<any[]>([]);
   const [cams, setCams] = useState<Cam[] | null>(null);
   const [grupoId, setGrupoId] = useState<string>("all");
   const [filialId, setFilialId] = useState<string>("all");
@@ -33,11 +33,11 @@ export default function CamerasAoVivo() {
     const loadAll = async () => {
       const [g, f, c] = await Promise.all([
         supabase.from("cameras_grupos").select("id,nome").eq("ativo", true).order("nome"),
-        supabase.from("ponto_filiais").select("id,nome").eq("ativo", true).order("nome"),
+        supabase.from("unidades").select("id,nome").order("nome"),
         supabase.from("cv_cameras").select("id,nome,filial_id,grupo_id,ativo,tem_ptz,tem_audio").eq("ativo", true).order("nome"),
       ]);
       setGrupos(g.data ?? []);
-      setFiliais(f.data ?? []);
+      setUnidades(f.data ?? []);
       setCams((c.data ?? []) as Cam[]);
     };
     void loadAll();
@@ -106,7 +106,7 @@ export default function CamerasAoVivo() {
             <div>
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Câmeras ao vivo</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Streaming WebRTC via Coletor Desktop · agrupadas por filial e setor
+                Streaming WebRTC via Coletor Desktop · agrupadas por unidade e setor
               </p>
             </div>
           </div>
@@ -125,13 +125,13 @@ export default function CamerasAoVivo() {
       {/* Filtros */}
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1">
-          <Label className="text-xs">Filial</Label>
+          <Label className="text-xs">Unidade</Label>
           <Select value={filialId} onValueChange={setFilialId}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
               {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
-              <SelectItem value={SEM_FILIAL}>Sem filial</SelectItem>
+              <SelectItem value={SEM_FILIAL}>Sem unidade</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -175,7 +175,7 @@ export default function CamerasAoVivo() {
 
       <div className="space-y-6">
         {Array.from(grouped.entries()).map(([fk, setores]) => {
-          const filialNome = fk === SEM_FILIAL ? "Sem filial" : filialMap[fk] ?? "Filial";
+          const filialNome = fk === SEM_FILIAL ? "Sem unidade" : filialMap[fk] ?? "Unidade";
           const totalNaFilial = Array.from(setores.values()).reduce((n, arr) => n + arr.length, 0);
           return (
             <section key={fk} className="space-y-3">

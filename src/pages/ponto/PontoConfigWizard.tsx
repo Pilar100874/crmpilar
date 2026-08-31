@@ -77,11 +77,11 @@ const STEPS: Step[] = [
   },
   {
     id: "filiais",
-    title: "Filiais da Empresa",
-    description: "Cadastre as filiais (unidades) vinculadas à empresa. Pule este passo se a empresa não possui filiais.",
+    title: "Unidades da Empresa",
+    description: "Cadastre as unidades no cadastro único de Unidades (Configurações). Pule se a empresa possui apenas uma unidade.",
     icon: Building2,
-    url: "/ponto/filiais",
-    ctaLabel: "Abrir cadastro de filiais",
+    url: "/config?secao=cadastro-unidades",
+    ctaLabel: "Abrir cadastro de unidades",
     whyItMatters:
       "Se a empresa tem mais de uma unidade, cadastre cada uma como filial. Empresas com apenas um endereço podem pular este passo — os funcionários e equipamentos ficam vinculados diretamente à empresa.",
     checklist: [
@@ -93,9 +93,8 @@ const STEPS: Step[] = [
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
       const { count } = await supabase
-        .from("ponto_filiais")
-        .select("id", { count: "exact", head: true })
-        .eq("empresa_id", empresaId);
+        .from("unidades")
+        .select("id", { count: "exact", head: true });
       return (count ?? 0) > 0;
     },
   },

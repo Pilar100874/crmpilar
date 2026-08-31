@@ -99,7 +99,6 @@ import WebChat from "./pages/WebChat";
 import PontoLayout from "./pages/ponto/PontoLayout";
 import PontoDashboard from "./pages/ponto/PontoDashboard";
 import PontoEmpresas from "./pages/ponto/PontoEmpresas";
-import PontoFiliais from "./pages/ponto/PontoFiliais";
 import PontoDepartamentos from "./pages/ponto/PontoDepartamentos";
 import PontoCargos from "./pages/ponto/PontoCargos";
 import PontoEquipes from "./pages/ponto/PontoEquipes";
@@ -264,6 +263,7 @@ import PortariaAcessos from "./pages/portaria/PortariaAcessos";
 import PortariaPessoas from "./pages/portaria/PortariaPessoas";
 import PortariaVisitantes from "./pages/portaria/PortariaVisitantes";
 import PortariaHistorico from "./pages/portaria/PortariaHistorico";
+import PortariaPendencias from "./pages/portaria/PortariaPendencias";
 import PortariaRelatorioUnidades from "./pages/portaria/PortariaRelatorioUnidades";
 import PortariaDispositivos from "./pages/portaria/PortariaDispositivos";
 import PortariaConfiguracoes from "./pages/portaria/PortariaConfiguracoes";
@@ -673,7 +673,7 @@ const App = () => (
               <Route path="/ponto" element={<PontoLayout />}>
                 <Route index element={<PontoDashboard />} />
                 <Route path="empresas" element={<PontoEmpresas />} />
-                <Route path="filiais" element={<PontoFiliais />} />
+                <Route path="filiais" element={<Navigate to="/config?secao=cadastro-unidades" replace />} />
                 <Route path="departamentos" element={<PontoDepartamentos />} />
                 <Route path="cargos" element={<PontoCargos />} />
                 <Route path="equipes" element={<PontoEquipes />} />
@@ -847,6 +847,7 @@ const App = () => (
                 <Route path="pessoas" element={<PortariaPessoas />} />
                 <Route path="visitantes" element={<PortariaVisitantes />} />
                 <Route path="historico" element={<PortariaHistorico />} />
+                <Route path="pendencias" element={<PortariaPendencias />} />
                 <Route path="relatorio-unidades" element={<PortariaRelatorioUnidades />} />
                 <Route path="dispositivos" element={<PortariaDispositivos />} />
                 <Route path="interfone" element={<PortariaInterfone />} />

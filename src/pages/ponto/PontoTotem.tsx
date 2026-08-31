@@ -1,5 +1,5 @@
 // Modo Totem: tela cheia para tablet/quiosque em parede.
-// Mostra QR code rotativo grande + relógio + nome da filial. Sem menus.
+// Mostra QR code rotativo grande + relógio + nome da unidade. Sem menus.
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useSearchParams } from "react-router-dom";
@@ -68,7 +68,7 @@ export default function PontoTotem() {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Modo Totem</h1>
           <p className="text-muted-foreground">
-            Acesse <code>/ponto/totem?filial=ID_DA_FILIAL</code>
+            Acesse <code>/ponto/totem?filial=ID_DA_UNIDADE</code>
           </p>
         </div>
       </div>

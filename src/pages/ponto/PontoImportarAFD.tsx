@@ -16,7 +16,7 @@ export default function PontoImportarAFD() {
   const [formato, setFormato] = useState("rep-c");
   const [filialId, setFilialId] = useState<string>("");
   const [equipamentoId, setEquipamentoId] = useState<string>("");
-  const [filiais, setFiliais] = useState<any[]>([]);
+  const [filiais, setUnidades] = useState<any[]>([]);
   const [equipamentos, setEquipamentos] = useState<any[]>([]);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -25,12 +25,12 @@ export default function PontoImportarAFD() {
   const carregar = async () => {
     if (!empresaId) return;
     const [f, eq, h] = await Promise.all([
-      supabase.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
+      supabase.from("unidades").select("id, nome").order("nome"),
       supabase.from("ponto_equipamentos").select("id, modelo, numero_serie").eq("empresa_id", empresaId),
       supabase.from("ponto_afd_importacoes").select("*").eq("empresa_id", empresaId)
         .order("created_at", { ascending: false }).limit(20),
     ]);
-    setFiliais(f.data || []);
+    setUnidades(f.data || []);
     setEquipamentos(eq.data || []);
     setHistorico(h.data || []);
   };
@@ -99,9 +99,9 @@ export default function PontoImportarAFD() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Filial (opcional)</Label>
+              <Label>Unidade (opcional)</Label>
               <Select value={filialId} onValueChange={setFilialId}>
-                <SelectTrigger><SelectValue placeholder="Sem filial específica" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Sem unidade específica" /></SelectTrigger>
                 <SelectContent>
                   {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                 </SelectContent>

@@ -47,8 +47,8 @@ const SECOES: Secao[] = [
         dica: "Se você tem mais de uma empresa, cadastre cada CNPJ separadamente.",
       },
       {
-        titulo: "Cadastrar filiais (se houver)",
-        link: "/ponto/filiais",
+        titulo: "Cadastrar unidades (se houver)",
+        link: "/config?secao=cadastro-unidades",
         descricao: "Filiais herdam o CNPJ-raiz mas têm endereço próprio.",
         campos: [
           { nome: "CNPJ filial", explica: "Mesma raiz da matriz, com ordem diferente (ex.: 0002, 0003).", obrigatorio: true },

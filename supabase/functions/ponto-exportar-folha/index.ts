@@ -138,10 +138,9 @@ Deno.serve(async (req) => {
     const { data: empresa } = await supabase.from("ponto_empresas")
       .select("codigo_dominio, razao_social").eq("id", empresa_id).maybeSingle();
     const codEmpresa = (empresa?.codigo_dominio || "").trim();
-    const { data: filiais } = await supabase.from("ponto_filiais")
-      .select("id, codigo_dominio, nome").eq("empresa_id", empresa_id);
+    const { data: filiais } = await supabase.from("unidades").select("id, nome");
     const filMap = new Map<string, string>(
-      (filiais || []).map((fl: any) => [fl.id, (fl.codigo_dominio || codEmpresa || "").trim()])
+      (filiais || []).map((fl: any) => [fl.id, (codEmpresa || "").trim()])
     );
 
     // ============ MODO CONSOLIDADO ============

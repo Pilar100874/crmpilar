@@ -39,7 +39,7 @@ const SECTIONS = [
   { key: "localizacao", label: "Envio de localização" },
   { key: "equipe", label: "Equipe" },
   { key: "departamento", label: "Departamento" },
-  { key: "filial", label: "Filial" },
+  { key: "filial", label: "Unidade" },
   { key: "registro_offline", label: "Registro de ponto offline" },
   { key: "tipo_registro", label: "Tipo de registro de ponto" },
   { key: "escala", label: "Turno (escala)" },
@@ -261,7 +261,7 @@ export default function PontoFuncionariosLoteDialog({
             )}
 
             {section === "filial" && (
-              <div><Label>Filial *</Label>
+              <div><Label>Unidade *</Label>
                 <Select value={val.filial_id || ""} onValueChange={(v) => setVal({ ...val, filial_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>{filiais.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>

@@ -72,7 +72,7 @@ const items: Item[] = [
 
   // Cadastros
   { category: "Cadastros", title: "Empresas", description: "Cadastro das empresas (matrizes) do controle de ponto", url: "/ponto/empresas", icon: Building2 },
-  { category: "Cadastros", title: "Filiais", description: "Unidades vinculadas à empresa (endereço, GPS, raio)", url: "/ponto/filiais", icon: Building2 },
+  { category: "Cadastros", title: "Unidades", description: "Unidades (filiais) do sistema — cadastro único em Configurações", url: "/config?secao=cadastro-unidades", icon: Building2 },
   { category: "Cadastros", title: "Funcionários", description: "Cadastro de funcionários, jornadas e vínculos", url: "/ponto/funcionarios", icon: Users },
   { category: "Cadastros", title: "Departamentos", description: "Setores e centros de custo por empresa ou filial", url: "/ponto/departamentos", icon: Network },
   { category: "Cadastros", title: "Cargos", description: "Posições funcionais com CBO e salário base", url: "/ponto/cargos", icon: Briefcase },
