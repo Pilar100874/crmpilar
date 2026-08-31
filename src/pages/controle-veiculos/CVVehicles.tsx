@@ -534,7 +534,7 @@ export default function CVVehicles() {
               <Select value={impGrupo} onValueChange={setImpGrupo}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={CV_GRUPO_ALL}>Todos os grupos</SelectItem>
+                  <SelectItem value={CV_GRUPO_ALL}>Todas as unidades</SelectItem>
                   {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
                 </SelectContent>
               </Select>

@@ -22,7 +22,7 @@ export const GrupoFilterSelect: React.FC<Props> = ({ value, onChange, unidades, 
           </div>
         </SelectTrigger>
         <SelectContent className="z-[1001]">
-          <SelectItem value={GRUPO_ALL}>Todos os grupos</SelectItem>
+          <SelectItem value={GRUPO_ALL}>Todas as unidades</SelectItem>
           {unidades.map(u => (
             <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
           ))}
