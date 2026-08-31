@@ -224,14 +224,25 @@ export default function CamerasCameras() {
     };
   }, []);
 
+  const refreshUnidades = async () => {
+    const estab = await getEstabelecimentoId();
+    let q = supabase.from("unidades").select("id,nome,cidade,uf").order("nome");
+    if (estab) q = q.eq("estabelecimento_id", estab);
+    const { data } = await q;
+    setUnidades(data ?? []);
+  };
+
   const openNew = () => {
     setEditing({ ...emptyCam, grupo_id: filtroGrupo !== "all" ? filtroGrupo : null });
     setDialogOpen(true);
+    refreshUnidades();
   };
   const openEdit = (r: any) => {
     setEditing({ ...emptyCam, ...r });
     setDialogOpen(true);
+    refreshUnidades();
   };
+
 
   const slugify = (s: string) =>
     (s || "camera").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
