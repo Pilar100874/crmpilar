@@ -1065,7 +1065,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
 
             <div>
-              <Label htmlFor="usuario-grupo">Grupo de Acesso</Label>
+              <Label htmlFor="usuario-grupo">Grupo de Acesso *</Label>
               <Select value={grupoAcessoId} onValueChange={setGrupoAcessoId}>
                 <SelectTrigger id="usuario-grupo">
                   <SelectValue placeholder="Selecione o grupo" />
