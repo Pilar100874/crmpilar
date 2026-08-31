@@ -11,7 +11,7 @@ import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { Button } from "@/components/ui/button";
 import {
   Truck, Users, Car, Package, AlertTriangle, ArrowLeft, RefreshCw, Clock, ShieldCheck,
-  X, ExternalLink, Info, Navigation,
+  X, ExternalLink, Info,
 } from "lucide-react";
 import { labelOperacaoCurto } from "@/lib/transportadoras/dados";
 
