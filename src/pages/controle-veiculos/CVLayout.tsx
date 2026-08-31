@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/tooltip";
 import { isSoloMode } from "@/components/OpenInNewTabButton";
 import SoloBackButton from "@/components/SoloBackButton";
+import UnidadeAtualBadge from "@/components/UnidadeAtualBadge";
 
 interface NavItem {
   to: string;
@@ -120,7 +121,7 @@ export default function CVLayout() {
         <div className="flex items-center gap-2">
           <Car className="h-5 w-5 text-primary shrink-0" />
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-2xl font-bold truncate">Controle de Veículos</h1>
+            <div className="flex flex-wrap items-center gap-2"><h1 className="text-lg sm:text-2xl font-bold truncate">Controle de Veículos</h1><UnidadeAtualBadge /></div>
             <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 hidden sm:block">
               Frota · Saídas · Entradas · Manutenção
             </p>
