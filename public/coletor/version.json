@@ -1,5 +1,6 @@
 {
   "version": "1.9.2",
   "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.2/ColetorPilar-Setup.exe",
-  "notas": "1.8.9: melhora o mosaico ao vivo com múltiplas câmeras, compartilhando a sinalização WebRTC, escalonando o início dos streams e reduzindo a disputa de CPU do FFmpeg."
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.2/ColetorPilar-Linux.AppImage",
+  "notas": "1.9.2: câmeras, relógio de ponto e portaria filtram pela unidade selecionada; atualização remota pelo CRM e pelo próprio aplicativo."
 }
