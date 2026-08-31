@@ -58,6 +58,15 @@ export default function TvSignageDashboards() {
   const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
   const isVeiculosRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/veiculos";
   const isMuralRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/mural";
+  const isPortariaRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/portaria";
+  const portariaUnidade = (() => {
+    const r = edit?.rota_interna || "";
+    if (!isPortariaRoute(r)) return "";
+    const q = r.indexOf("?");
+    if (q < 0) return "";
+    return new URLSearchParams(r.slice(q + 1)).get("unidade") || "";
+  })();
+
   const veicGrupos = (() => {
     const r = edit?.rota_interna || "";
     if (!isVeiculosRoute(r)) return [] as string[];
@@ -288,7 +297,28 @@ export default function TvSignageDashboards() {
                       </div>
                     </div>
                   )}
+                  {isPortariaRoute(edit.rota_interna) && (
+                    <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                      <Label className="text-xs">Unidade exibida (opcional)</Label>
+                      <Select
+                        value={portariaUnidade || "__all__"}
+                        onValueChange={(v) =>
+                          setEdit({ ...edit, rota_interna: v === "__all__" ? "/tv/portaria" : `/tv/portaria?unidade=${v}` })
+                        }
+                      >
+                        <SelectTrigger><SelectValue placeholder="Todas as unidades" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__all__">Todas as unidades</SelectItem>
+                          {gruposVeiculos.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[11px] text-muted-foreground">
+                        Se nada for escolhido, a TV mostra todas as unidades.
+                      </p>
+                    </div>
+                  )}
                   {isApresRoute(edit.rota_interna) && (
+
                     <div className="space-y-2 rounded-md border p-3 bg-muted/30">
                       <Label className="text-xs">Apresentação a exibir</Label>
                       <Select

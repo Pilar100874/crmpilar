@@ -207,7 +207,15 @@ export default function TvPortaria() {
   const [relogio, setRelogio] = useState(new Date());
   const [selecionado, setSelecionado] = useState<Item | null>(null);
   const [unidades, setUnidades] = useState<UnidadeOpt[]>([]);
+  const unidadeUrl = (() => {
+    try {
+      return new URLSearchParams(window.location.search).get("unidade") || "";
+    } catch {
+      return "";
+    }
+  })();
   const [unidadeFiltro, setUnidadeFiltro] = useState<string>(() => {
+    if (unidadeUrl) return unidadeUrl;
     try {
       return localStorage.getItem(UNIDADE_KEY) || GRUPO_ALL;
     } catch {
@@ -217,6 +225,7 @@ export default function TvPortaria() {
 
   // Sem escolha salva, começa pela unidade do usuário logado
   useEffect(() => {
+    if (unidadeUrl) return;
     if (!unidadeIdAtual) return;
     let salvo: string | null = null;
     try {
@@ -225,7 +234,8 @@ export default function TvPortaria() {
       /* ignore */
     }
     if (!salvo) setUnidadeFiltro(unidadeIdAtual);
-  }, [unidadeIdAtual]);
+  }, [unidadeIdAtual, unidadeUrl]);
+
 
   useEffect(() => {
     let cancelado = false;
