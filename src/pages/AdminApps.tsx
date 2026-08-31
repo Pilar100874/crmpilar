@@ -327,6 +327,9 @@ export default function AdminApps() {
         </div>
       </Card>
 
+      <ColetorRemotoCard />
+
     </div>
+
   );
 }
