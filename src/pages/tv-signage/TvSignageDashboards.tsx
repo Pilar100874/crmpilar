@@ -209,6 +209,20 @@ export default function TvSignageDashboards() {
                     <div className="space-y-3 rounded-md border p-3 bg-muted/30">
                       <div className="text-xs font-medium">Configuração do mosaico de câmeras</div>
                       <div>
+                        <Label className="text-xs">Unidade (opcional)</Label>
+                        <Select
+                          value={camsCfg.unidade || ""}
+                          onValueChange={(v) => updateCamsCfg({ unidade: v })}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue placeholder="Todas as unidades" /></SelectTrigger>
+                          <SelectContent>
+                            {unidades.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
                         <Label className="text-xs">Grupos de câmeras (opcional)</Label>
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Selecione um ou mais grupos. Se nada for escolhido, todas as câmeras ativas serão exibidas.
