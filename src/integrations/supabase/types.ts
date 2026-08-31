@@ -28864,6 +28864,7 @@ export type Database = {
           porteiro_saida_nome: string | null
           purpose: string | null
           status: string
+          unidade_id: string | null
           vehicle_plate: string | null
           visitor_id: string
         }
@@ -28881,6 +28882,7 @@ export type Database = {
           porteiro_saida_nome?: string | null
           purpose?: string | null
           status?: string
+          unidade_id?: string | null
           vehicle_plate?: string | null
           visitor_id: string
         }
@@ -28898,6 +28900,7 @@ export type Database = {
           porteiro_saida_nome?: string | null
           purpose?: string | null
           status?: string
+          unidade_id?: string | null
           vehicle_plate?: string | null
           visitor_id?: string
         }
@@ -28914,6 +28917,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_access_records_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
           {
@@ -29041,6 +29051,7 @@ export type Database = {
           name: string
           phone: string | null
           photo: string | null
+          unidade_id: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -29054,6 +29065,7 @@ export type Database = {
           name: string
           phone?: string | null
           photo?: string | null
+          unidade_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -29067,6 +29079,7 @@ export type Database = {
           name?: string
           phone?: string | null
           photo?: string | null
+          unidade_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -29076,6 +29089,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_visitors_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
