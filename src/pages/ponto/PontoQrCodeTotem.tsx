@@ -20,7 +20,7 @@ export default function PontoQrCodeTotem() {
 
   useEffect(() => {
     if (!empresaId) return;
-    supabase.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId)
+    supabase.from("unidades").select("id, nome").order("nome")
       .then(({ data }) => {
         setFiliais(data || []);
         if (data?.[0] && !filialId) setFilialId(data[0].id);

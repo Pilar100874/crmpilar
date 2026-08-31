@@ -93,9 +93,8 @@ const STEPS: Step[] = [
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
       const { count } = await supabase
-        .from("ponto_filiais")
-        .select("id", { count: "exact", head: true })
-        .eq("empresa_id", empresaId);
+        .from("unidades")
+        .select("id", { count: "exact", head: true });
       return (count ?? 0) > 0;
     },
   },

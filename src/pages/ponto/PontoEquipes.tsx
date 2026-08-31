@@ -50,7 +50,7 @@ export default function PontoEquipes() {
       .from("ponto_equipes").select("*").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome");
     setItems((data as any) || []);
     const [f, d, fu] = await Promise.all([
-      supabase.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId).order("nome"),
+      supabase.from("unidades").select("id, nome").order("nome"),
       supabase.from("ponto_departamentos").select("id, nome").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome"),
       supabase.from("ponto_funcionarios").select("id, nome").eq("empresa_id", empresaId).order("nome"),
     ]);

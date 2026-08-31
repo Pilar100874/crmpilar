@@ -33,7 +33,7 @@ export default function CamerasAoVivo() {
     const loadAll = async () => {
       const [g, f, c] = await Promise.all([
         supabase.from("cameras_grupos").select("id,nome").eq("ativo", true).order("nome"),
-        supabase.from("ponto_filiais").select("id,nome").eq("ativo", true).order("nome"),
+        supabase.from("unidades").select("id,nome").order("nome"),
         supabase.from("cv_cameras").select("id,nome,filial_id,grupo_id,ativo,tem_ptz,tem_audio").eq("ativo", true).order("nome"),
       ]);
       setGrupos(g.data ?? []);

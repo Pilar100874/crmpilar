@@ -150,9 +150,8 @@ export default function PontoEquipamentos() {
       .order("nome");
     setItems(data || []);
     const { data: fs } = await supabase
-      .from("ponto_filiais")
+      .from("unidades")
       .select("id, nome")
-      .eq("empresa_id", empresaId)
       .order("nome");
     setFiliais(fs || []);
   };

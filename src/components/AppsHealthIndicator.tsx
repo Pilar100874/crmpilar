@@ -38,7 +38,7 @@ function aggregate(states: State[]): State {
 
 async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[]; tvs: TvDeviceHealth[]; pollers: PollerHealth[] }> {
   const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }, { data: tvRaw }, { data: pollersRaw }] = await Promise.all([
-    supabase.from("ponto_filiais").select("id, nome").order("nome", { ascending: true }),
+    supabase.from("unidades").select("id, nome").order("nome", { ascending: true }),
     supabase
       .from("ponto_equipamentos")
       .select("filial_id, ultima_sync")

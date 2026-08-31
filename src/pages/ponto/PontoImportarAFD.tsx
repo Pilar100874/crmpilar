@@ -25,7 +25,7 @@ export default function PontoImportarAFD() {
   const carregar = async () => {
     if (!empresaId) return;
     const [f, eq, h] = await Promise.all([
-      supabase.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
+      supabase.from("unidades").select("id, nome").order("nome"),
       supabase.from("ponto_equipamentos").select("id, modelo, numero_serie").eq("empresa_id", empresaId),
       supabase.from("ponto_afd_importacoes").select("*").eq("empresa_id", empresaId)
         .order("created_at", { ascending: false }).limit(20),

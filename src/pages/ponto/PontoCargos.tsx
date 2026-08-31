@@ -44,7 +44,7 @@ export default function PontoCargos() {
       .from("ponto_cargos").select("*").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome");
     setItems((data as any) || []);
     const { data: f } = await supabase
-      .from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId).order("nome");
+      .from("unidades").select("id, nome").order("nome");
     setFiliais((f as any) || []);
   };
   useEffect(() => { load(); }, [empresaId]);

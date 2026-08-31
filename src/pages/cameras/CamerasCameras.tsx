@@ -188,7 +188,7 @@ export default function CamerasCameras() {
       supabase.from("cv_cameras").select("*").order("nome"),
       supabase.from("cv_coletor_config").select("*").maybeSingle(),
       supabase.from("cameras_grupos").select("*").order("ordem").order("nome"),
-      supabase.from("ponto_filiais").select("id,nome,cidade,uf").eq("ativo", true).order("nome"),
+      supabase.from("unidades").select("id,nome,cidade,uf").order("nome"),
     ]);
     setRows(cams ?? []);
     setGrupos(grps ?? []);

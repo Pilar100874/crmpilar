@@ -140,7 +140,7 @@ export default function PontoFuncionarios() {
     const filtro = `empresa_id.eq.${empresaId},global.eq.true`;
     const [r1, r2, r3, rDep, rCar, rEqu, rLay] = await Promise.all([
       sb.from("ponto_funcionarios").select("*").eq("empresa_id", empresaId).order("nome"),
-      sb.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
+      sb.from("unidades").select("id, nome").order("nome"),
       sb.from("ponto_escalas").select("id, nome").eq("empresa_id", empresaId),
       sb.from("ponto_departamentos").select("id, nome").or(filtro).order("nome"),
       sb.from("ponto_cargos").select("id, nome, cbo").or(filtro).order("nome"),
