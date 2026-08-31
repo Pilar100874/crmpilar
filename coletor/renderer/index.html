@@ -259,28 +259,28 @@
 
       <!-- Filial obrigatória -->
       <div class="card banner" id="filialCard" style="display:none;">
-        <div class="card-title"><span class="ico amber">🏢</span> Selecione a filial deste computador</div>
+        <div class="card-title"><span class="ico amber">🏢</span> Selecione a unidade deste computador</div>
         <p class="muted" style="margin:0 0 10px">
-          Cada filial precisa ser vinculada aqui — assim o coletor só acessa relógios e câmeras daquela filial,
+          Cada unidade precisa ser vinculada aqui — assim o coletor só acessa relógios e câmeras daquela unidade,
           mesmo quando IPs internos se repetem em outras lojas.
         </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <select id="filialSelect" class="filial-select"><option value="">— carregando —</option></select>
-          <button class="btn success" onclick="salvarFilial()">Confirmar filial</button>
+          <button class="btn success" onclick="salvarFilial()">Confirmar unidade</button>
         </div>
       </div>
 
-      <!-- Filial ativa -->
+      <!-- Unidade ativa -->
       <div class="card filial-info-card" id="filialInfo" style="display:none;">
         <div class="filial-info-row">
           <div class="filial-main">
             <span class="ico" style="width:32px;height:32px;border-radius:10px;background:var(--info-bg);color:var(--info);display:inline-flex;align-items:center;justify-content:center;">🏢</span>
             <div style="min-width:0;">
-              <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Filial ativa</div>
+              <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Unidade ativa</div>
               <div class="filial-name" id="filialAtualNome">—</div>
             </div>
           </div>
-          <button class="btn ghost" onclick="trocarFilial()">Trocar filial</button>
+          <button class="btn ghost" onclick="trocarFilial()">Trocar unidade</button>
         </div>
       </div>
 
@@ -321,7 +321,7 @@
             <label class="switch"><input type="checkbox" id="togglePonto" onchange="togglePonto(this.checked)"><span class="track"></span></label>
           </div>
           <div class="status-line" id="pontoStatus">—</div>
-          <div class="meta">Sincroniza batidas dos relógios da filial a cada ciclo.</div>
+          <div class="meta">Sincroniza batidas dos relógios da unidade a cada ciclo.</div>
         </div>
         <div class="module">
           <div class="module-head">
@@ -488,7 +488,7 @@
           </div>
           <div style="padding:20px 22px;">
             <div id="discoverStep1">
-              <div id="discFilialInfo" style="padding:10px 12px; background:#F1F5F9; border-radius:8px; font-size:13px; color:var(--text-2); margin-bottom:14px;">🏢 Carregando filial…</div>
+              <div id="discFilialInfo" style="padding:10px 12px; background:#F1F5F9; border-radius:8px; font-size:13px; color:var(--text-2); margin-bottom:14px;">🏢 Carregando unidade…</div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
                 <div style="grid-column:1/-1;">
                   <label style="font-size:12px; color:var(--text-2); font-weight:600;">Fabricantes a procurar</label>
@@ -688,7 +688,7 @@
     }
 
     async function trocarFilial(){
-      if (!confirm('Trocar a filial deste computador? Os coletores serão reiniciados.')) return;
+      if (!confirm('Trocar a unidade deste computador? Os coletores serão reiniciados.')) return;
       await window.coletor.setFilial(null, null); await carregarFiliais(); refresh();
     }
 
