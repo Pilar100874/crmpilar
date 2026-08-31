@@ -20,7 +20,7 @@ export const CVGrupoFilter: React.FC<Props> = ({ value, onChange, grupos, classN
       </div>
     </SelectTrigger>
     <SelectContent className="z-[1001] bg-popover">
-      <SelectItem value={CV_GRUPO_ALL}>Todos os grupos</SelectItem>
+      <SelectItem value={CV_GRUPO_ALL}>Todas as unidades</SelectItem>
       {grupos.map(g => (
         <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
       ))}
