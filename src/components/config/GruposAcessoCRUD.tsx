@@ -65,6 +65,7 @@ const PERMISSION_LABELS_SHORT: Record<string, string> = {
 export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) => {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [nome, setNome] = useState("");
+  const [perfil, setPerfil] = useState<string>("padrao");
   const [menusPermitidos, setMenusPermitidos] = useState<Record<string, MenuPermissions>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
