@@ -36,22 +36,21 @@ export default function TvSignageDashboards() {
 
 
   // Deriva query params atuais quando a rota é /tv/cameras
-  const parseCamsCfg = (rota: string | null | undefined) => {
-    const cfg = { grupos: [] as string[], cameras: [] as string[], rotate: 0 };
+    const parseCamsCfg = (rota: string | null | undefined) => {
+    const cfg = { grupos: [] as string[], cameras: [] as string[], unidade: "", rotate: 0 };
     if (!rota) return cfg;
     const qIdx = rota.indexOf("?");
     if (qIdx < 0) return cfg;
     const sp = new URLSearchParams(rota.slice(qIdx + 1));
     cfg.grupos = (sp.get("grupos") || "").split(",").map((s) => s.trim()).filter(Boolean);
     cfg.cameras = (sp.get("cameras") || "").split(",").map((s) => s.trim()).filter(Boolean);
-    cfg.rotate = parseInt(sp.get("rotate") || "0") || 0;
+    cfg.unidade = sp.get("unidade") || "";
     return cfg;
   };
-  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; rotate: number }) => {
+  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; unidade?: string }) => {
     const sp = new URLSearchParams();
     if (cfg.cameras.length) sp.set("cameras", cfg.cameras.join(","));
-    else if (cfg.grupos.length) sp.set("grupos", cfg.grupos.join(","));
-    if (cfg.rotate > 0) sp.set("rotate", String(cfg.rotate));
+    if (cfg.unidade) sp.set("unidade", cfg.unidade);
     const qs = sp.toString();
     return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
   };
@@ -88,14 +87,14 @@ export default function TvSignageDashboards() {
   };
 
 
-  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
+  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit?.rota_interna ?? "") : { grupos: [] as string[], cameras: [] as string[], unidade: "", rotate: 0 };
   const apresId = (() => {
     const r = edit?.rota_interna || "";
     const q = r.indexOf("?");
     if (q < 0) return "";
     return new URLSearchParams(r.slice(q + 1)).get("id") || "";
   })();
-  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; rotate: number }>) => {
+  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; unidade: string; rotate: number }>) => {
     const merged = { ...camsCfg, ...patch };
     setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
   };
@@ -209,6 +208,20 @@ export default function TvSignageDashboards() {
                   {isCamsRoute(edit.rota_interna) && (
                     <div className="space-y-3 rounded-md border p-3 bg-muted/30">
                       <div className="text-xs font-medium">Configuração do mosaico de câmeras</div>
+                      <div>
+                        <Label className="text-xs">Unidade (opcional)</Label>
+                        <Select
+                          value={camsCfg.unidade || ""}
+                          onValueChange={(v) => updateCamsCfg({ unidade: v })}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue placeholder="Todas as unidades" /></SelectTrigger>
+                          <SelectContent>
+                            {gruposVeiculos.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div>
                         <Label className="text-xs">Grupos de câmeras (opcional)</Label>
                         <p className="text-[11px] text-muted-foreground mb-1">
