@@ -182,6 +182,10 @@ export default function PortariaRelatorioUnidades() {
     carregar();
   }, [carregar]);
 
+  // Sincronização automática: qualquer entrada/saída/ocorrência registrada
+  // na portaria recarrega o relatório sem precisar atualizar a tela.
+  usePortariaRealtime(carregar);
+
   const totais = useMemo(
     () =>
       linhas.reduce((acc, l) => {
