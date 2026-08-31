@@ -47,20 +47,6 @@ export default function TvSignageDashboards() {
     cfg.unidade = sp.get("unidade") || "";
     return cfg;
   };
-  if (cfg.unidade) {
-    sp.set("unidade", cfg.unidade);
-  }
-  return cfg;
-
-    if (!rota) return cfg;
-    const qIdx = rota.indexOf("?");
-    if (qIdx < 0) return cfg;
-    const sp = new URLSearchParams(rota.slice(qIdx + 1));
-    cfg.grupos = (sp.get("grupos") || "").split(",").map((s) => s.trim()).filter(Boolean);
-    cfg.cameras = (sp.get("cameras") || "").split(",").map((s) => s.trim()).filter(Boolean);
-    cfg.rotate = parseInt(sp.get("rotate") || "0") || 0;
-    return cfg;
-  };
   const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; unidade?: string }) => {
     const sp = new URLSearchParams();
     if (cfg.cameras.length) sp.set("cameras", cfg.cameras.join(","));
