@@ -82,22 +82,43 @@ cat > "$DEST/openbox-rc.xml" <<'EOS'
   </applications>
 </openbox_config>
 EOS
-
 # ── 4. Atualizador ───────────────────────────────────────────────────────
 cat > "$DEST/update.sh" <<'EOS'
 #!/bin/bash
 # Baixa a última versão publicada do Coletor e reinicia o kiosk.
+# Pode ser chamado: manualmente (sudo /opt/coletor/update.sh), pelo botão
+# "Baixar e instalar" do aplicativo, ou por comando remoto vindo do CRM.
 set -euo pipefail
-URL="${COLETOR_URL:-https://crmpilar.lovable.app/__l5e/assets-v1/13bc261c-f998-4cd2-9d73-3de090606255/ColetorPilar-Linux.AppImage}"
+VERSION_URL="https://crmpilar.lovable.app/coletor/version.json"
+FALLBACK="https://crmpilar.lovable.app/__l5e/assets-v1/13bc261c-f998-4cd2-9d73-3de090606255/ColetorPilar-Linux.AppImage"
+
+URL="${COLETOR_URL:-}"
+if [ -z "$URL" ]; then
+  URL=$(curl -fsSL "$VERSION_URL?t=$(date +%s)" 2>/dev/null \
+        | grep -o '"downloadUrlLinux"[^,}]*' | cut -d'"' -f4 || true)
+fi
+[ -z "$URL" ] && URL="$FALLBACK"
+
 TMP=$(mktemp)
 echo "baixando $URL"
-curl -fL --retry 3 -o "$TMP" "$URL"
+if ! curl -fL --retry 3 -o "$TMP" "$URL"; then
+  echo "falha no download, tentando fallback"
+  curl -fL --retry 3 -o "$TMP" "$FALLBACK"
+fi
 install -m 0755 "$TMP" /opt/coletor/ColetorPilar.AppImage
 rm -f "$TMP"
 systemctl restart coletor-kiosk
 echo "atualizado"
 EOS
 chmod +x "$DEST/update.sh"
+
+# Permite que o app (usuário sem privilégios) dispare a atualização sem senha —
+# usado pelo botão da tela do aplicativo e pelo comando remoto do CRM.
+cat > /etc/sudoers.d/coletor-update <<EOS
+$USER_APP ALL=(root) NOPASSWD: /opt/coletor/update.sh
+EOS
+chmod 0440 /etc/sudoers.d/coletor-update
+
 
 # ── 5. Serviço systemd (sem login, direto no gráfico) ────────────────────
 cat > /etc/systemd/system/coletor-kiosk.service <<EOS
