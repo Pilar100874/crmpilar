@@ -158,11 +158,15 @@ function createTray() {
   ]));
 }
 
+const { startRemoto, stopRemoto, statusRemoto } = require('./remoto');
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
   startCollector();
+  try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
 });
+
 
 app.on('window-all-closed', (e) => e.preventDefault());
 
