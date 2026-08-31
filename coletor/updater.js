@@ -121,11 +121,45 @@ function psQuote(value) {
   return `'${String(value).replace(/'/g, "''")}'`;
 }
 
+// ─── Appliance / Linux (ISO) ──────────────────────────────────────────
+// No appliance o app roda como usuário sem privilégios; /opt/coletor/update.sh
+// está liberado no sudoers (NOPASSWD) e faz download + systemctl restart.
+async function instalarLinux(downloadUrl, onProgress) {
+  const updateSh = '/opt/coletor/update.sh';
+  if (fs.existsSync(updateSh)) {
+    if (onProgress) onProgress(10);
+    const env = { ...process.env };
+    if (downloadUrl) env.COLETOR_URL = downloadUrl;
+    const usarSudo = typeof process.getuid === 'function' && process.getuid() !== 0;
+    const cmd = usarSudo ? 'sudo' : updateSh;
+    const args = usarSudo ? ['-n', updateSh] : [];
+    spawn(cmd, args, { detached: true, stdio: 'ignore', env }).unref();
+    if (onProgress) onProgress(100);
+    setTimeout(() => { app.isQuitting = true; app.quit(); }, 1500);
+    return updateSh;
+  }
+
+  // Instalação avulsa (AppImage rodando fora do appliance)
+  if (!downloadUrl) throw new Error('URL de download não informada');
+  const alvo = process.env.APPIMAGE || path.join(os.homedir(), 'ColetorPilar.AppImage');
+  const tmp = path.join(os.tmpdir(), `ColetorPilar-${Date.now()}.AppImage`);
+  await baixarArquivo(downloadUrl, tmp, onProgress);
+  fs.chmodSync(tmp, 0o755);
+  fs.copyFileSync(tmp, alvo);
+  fs.chmodSync(alvo, 0o755);
+  try { fs.unlinkSync(tmp); } catch {}
+  spawn(alvo, [], { detached: true, stdio: 'ignore' }).unref();
+  setTimeout(() => { app.isQuitting = true; app.quit(); }, 1000);
+  return alvo;
+}
+
 async function baixarEInstalar(downloadUrl, onProgress) {
+  if (process.platform === 'linux') return await instalarLinux(downloadUrl, onProgress);
   if (!downloadUrl) throw new Error('URL de download não informada');
   const ext = downloadUrl.toLowerCase().endsWith('.msi') ? '.msi' : '.exe';
   const destino = path.join(os.tmpdir(), `ColetorPilar-Setup-${Date.now()}${ext}`);
   await baixarArquivo(downloadUrl, destino, onProgress);
+
 
   // Log de instalação para diagnóstico caso algo falhe silenciosamente.
   const logPath = path.join(os.tmpdir(), `ColetorPilar-Install-${Date.now()}.log`);
