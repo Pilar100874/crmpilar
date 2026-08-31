@@ -1,5 +1,6 @@
-// Lista de filiais para o Coletor Desktop exibir num dropdown na primeira abertura.
-// Público (verify_jwt=false) — retorna apenas nome/cidade/uf, sem CNPJ ou dados sensíveis.
+// Lista de unidades para o Coletor Desktop exibir num dropdown na primeira abertura.
+// Público (verify_jwt=false) — retorna apenas nome/cidade/uf + nome do estabelecimento,
+// sem CNPJ ou dados sensíveis.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
@@ -14,12 +15,32 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const { data, error } = await sb
+
+    let estabelecimentoId: string | null = null;
+    try {
+      const body = await req.json();
+      estabelecimentoId = body?.estabelecimento_id ?? null;
+    } catch { /* body vazio */ }
+
+    let q = sb
       .from("unidades")
-      .select("id, nome, cidade, uf")
+      .select("id, nome, cidade, uf, estabelecimento_id, estabelecimentos(nome)")
       .order("nome");
+    if (estabelecimentoId) q = q.eq("estabelecimento_id", estabelecimentoId);
+
+    const { data, error } = await q;
     if (error) throw error;
-    return new Response(JSON.stringify({ filiais: data || [] }), {
+
+    const unidades = (data || []).map((u: any) => ({
+      id: u.id,
+      nome: u.nome,
+      cidade: u.cidade,
+      uf: u.uf,
+      estabelecimento_id: u.estabelecimento_id,
+      estabelecimento_nome: u.estabelecimentos?.nome ?? null,
+    }));
+
+    return new Response(JSON.stringify({ filiais: unidades, unidades }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e: any) {
