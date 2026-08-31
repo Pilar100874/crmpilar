@@ -28592,6 +28592,7 @@ export type Database = {
           tracker_config_status: string
           tracker_expect_sms_reply: boolean
           tracker_model_id: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -28617,6 +28618,7 @@ export type Database = {
           tracker_config_status?: string
           tracker_expect_sms_reply?: boolean
           tracker_model_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -28642,6 +28644,7 @@ export type Database = {
           tracker_config_status?: string
           tracker_expect_sms_reply?: boolean
           tracker_model_id?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -28671,6 +28674,13 @@ export type Database = {
             columns: ["tracker_model_id"]
             isOneToOne: false
             referencedRelation: "tracker_device_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "veiculos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
