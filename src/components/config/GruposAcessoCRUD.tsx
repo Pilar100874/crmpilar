@@ -117,8 +117,10 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
 
     const grupoData = {
       nome,
+      perfil,
       menus_permitidos: menusPermitidos as any,
-    };
+    } as any;
+
 
     if (editingId) {
       const { error } = await supabase
