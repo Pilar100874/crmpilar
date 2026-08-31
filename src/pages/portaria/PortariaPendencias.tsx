@@ -188,7 +188,7 @@ export default function PortariaPendencias() {
         icon: Truck,
         cor: "text-amber-500 bg-amber-500/10",
         itens: filtrar(transportadoras),
-        acao: () => navigate("/portaria/transportadoras/saida"),
+        acao: () => navigate("/transportadoras/saida"),
         acaoLabel: "Registrar saída",
       },
       {
@@ -197,7 +197,7 @@ export default function PortariaPendencias() {
         icon: Users,
         cor: "text-emerald-500 bg-emerald-500/10",
         itens: filtrar(visitantes),
-        acao: () => navigate("/visitantes"),
+        acao: () => navigate("/controle-visitantes/presentes"),
         acaoLabel: "Abrir visitantes",
       },
       {
@@ -206,7 +206,7 @@ export default function PortariaPendencias() {
         icon: FileWarning,
         cor: "text-rose-500 bg-rose-500/10",
         itens: filtrar(ocorrencias),
-        acao: () => navigate("/portaria/livro"),
+        acao: () => navigate("/livro-ocorrencia/ocorrencias"),
         acaoLabel: "Abrir livro",
       },
     ],
