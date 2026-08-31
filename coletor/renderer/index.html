@@ -259,28 +259,28 @@
 
       <!-- Filial obrigatória -->
       <div class="card banner" id="filialCard" style="display:none;">
-        <div class="card-title"><span class="ico amber">🏢</span> Selecione a filial deste computador</div>
+        <div class="card-title"><span class="ico amber">🏢</span> Selecione a unidade deste computador</div>
         <p class="muted" style="margin:0 0 10px">
-          Cada filial precisa ser vinculada aqui — assim o coletor só acessa relógios e câmeras daquela filial,
+          Cada unidade precisa ser vinculada aqui — assim o coletor só acessa relógios e câmeras daquela unidade,
           mesmo quando IPs internos se repetem em outras lojas.
         </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <select id="filialSelect" class="filial-select"><option value="">— carregando —</option></select>
-          <button class="btn success" onclick="salvarFilial()">Confirmar filial</button>
+          <button class="btn success" onclick="salvarFilial()">Confirmar unidade</button>
         </div>
       </div>
 
-      <!-- Filial ativa -->
+      <!-- Unidade ativa -->
       <div class="card filial-info-card" id="filialInfo" style="display:none;">
         <div class="filial-info-row">
           <div class="filial-main">
             <span class="ico" style="width:32px;height:32px;border-radius:10px;background:var(--info-bg);color:var(--info);display:inline-flex;align-items:center;justify-content:center;">🏢</span>
             <div style="min-width:0;">
-              <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Filial ativa</div>
+              <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Unidade ativa</div>
               <div class="filial-name" id="filialAtualNome">—</div>
             </div>
           </div>
-          <button class="btn ghost" onclick="trocarFilial()">Trocar filial</button>
+          <button class="btn ghost" onclick="trocarFilial()">Trocar unidade</button>
         </div>
       </div>
 
@@ -321,7 +321,7 @@
             <label class="switch"><input type="checkbox" id="togglePonto" onchange="togglePonto(this.checked)"><span class="track"></span></label>
           </div>
           <div class="status-line" id="pontoStatus">—</div>
-          <div class="meta">Sincroniza batidas dos relógios da filial a cada ciclo.</div>
+          <div class="meta">Sincroniza batidas dos relógios da unidade a cada ciclo.</div>
         </div>
         <div class="module">
           <div class="module-head">
@@ -488,7 +488,7 @@
           </div>
           <div style="padding:20px 22px;">
             <div id="discoverStep1">
-              <div id="discFilialInfo" style="padding:10px 12px; background:#F1F5F9; border-radius:8px; font-size:13px; color:var(--text-2); margin-bottom:14px;">🏢 Carregando filial…</div>
+              <div id="discFilialInfo" style="padding:10px 12px; background:#F1F5F9; border-radius:8px; font-size:13px; color:var(--text-2); margin-bottom:14px;">🏢 Carregando unidade…</div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
                 <div style="grid-column:1/-1;">
                   <label style="font-size:12px; color:var(--text-2); font-weight:600;">Fabricantes a procurar</label>
@@ -666,19 +666,29 @@
       sel.innerHTML = '<option value="">— carregando —</option>';
       try{
         const filiais = await window.coletor.listarFiliais();
-        sel.innerHTML = '<option value="">— selecione —</option>' + filiais.map(f =>
-          `<option value="${f.id}" data-nome="${escapeHtml(f.nome)}">${escapeHtml(f.nome)}${f.cidade ? ' — ' + escapeHtml(f.cidade) + '/' + escapeHtml(f.uf || '') : ''}</option>`
-        ).join('');
+        // Agrupa por estabelecimento para não misturar unidades de cadastros diferentes
+        const grupos = {};
+        filiais.forEach(f => {
+          const g = f.estabelecimento_nome || 'Unidades';
+          (grupos[g] = grupos[g] || []).push(f);
+        });
+        const opt = f => `<option value="${f.id}" data-nome="${escapeHtml(f.nome)}">${escapeHtml(f.nome)}${f.cidade ? ' — ' + escapeHtml(f.cidade) + (f.uf ? '/' + escapeHtml(f.uf) : '') : ''}</option>`;
+        const nomes = Object.keys(grupos).sort();
+        const corpo = nomes.length > 1
+          ? nomes.map(n => `<optgroup label="${escapeHtml(n)}">${grupos[n].map(opt).join('')}</optgroup>`).join('')
+          : filiais.map(opt).join('');
+        sel.innerHTML = '<option value="">— selecione —</option>' + corpo;
       } catch(e){ sel.innerHTML = '<option value="">erro: ' + escapeHtml(e.message) + '</option>'; }
     }
     async function salvarFilial(){
       const sel = document.getElementById('filialSelect');
-      const id = sel.value; if (!id) return alert('Selecione uma filial');
+      const id = sel.value; if (!id) return alert('Selecione uma unidade');
       const nome = sel.options[sel.selectedIndex].getAttribute('data-nome');
       await window.coletor.setFilial(id, nome); refresh();
     }
+
     async function trocarFilial(){
-      if (!confirm('Trocar a filial deste computador? Os coletores serão reiniciados.')) return;
+      if (!confirm('Trocar a unidade deste computador? Os coletores serão reiniciados.')) return;
       await window.coletor.setFilial(null, null); await carregarFiliais(); refresh();
     }
 
@@ -824,8 +834,8 @@
         const nome = st?.config?.filialNome || st?.config?.filialId || null;
         const el = document.getElementById('discFilialInfo');
         if (el){
-          if (nome) el.innerHTML = `🏢 As câmeras serão criadas na filial: <b>${nome}</b>`;
-          else el.innerHTML = `⚠ Nenhuma filial definida neste coletor. <b>Selecione a filial na tela principal antes de continuar</b> — o CRM exige filial para vincular as câmeras.`;
+          if (nome) el.innerHTML = `🏢 As câmeras serão criadas na unidade: <b>${nome}</b>`;
+          else el.innerHTML = `⚠ Nenhuma unidade definida neste coletor. <b>Selecione a unidade na tela principal antes de continuar</b> — o CRM exige unidade para vincular as câmeras.`;
           el.style.color = nome ? 'var(--text-2)' : 'var(--danger)';
         }
       }catch{}
@@ -856,7 +866,7 @@
       try{
         const st = await window.coletor.getStatus();
         if (!st?.config?.filialId){
-          alert('Selecione a filial deste coletor na tela principal antes de descobrir câmeras. As câmeras encontradas serão criadas vinculadas a essa filial.');
+          alert('Selecione a unidade deste coletor na tela principal antes de descobrir câmeras. As câmeras encontradas serão criadas vinculadas a essa unidade.');
           return;
         }
       }catch{}
