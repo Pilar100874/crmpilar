@@ -63,7 +63,7 @@ export default function PortariaColetores() {
     }
     setNome("");
     carregar();
-    toast({ title: "Coletor criado", description: "Copie a chave e cole no Coletor Pilar instalado na rede." });
+    toast({ title: "Coletor criado", description: "No appliance ISO (1.9.4+) a conexão é automática — a chave só é usada na instalação manual para Windows." });
   };
 
   const alternarAtivo = async (c: Coletor, ativo: boolean) => {
@@ -89,9 +89,14 @@ export default function PortariaColetores() {
         <p className="text-sm font-medium">Dispositivos em rede local (IP interno)</p>
         <p className="text-xs text-muted-foreground">
           Equipamentos com IP tipo <strong>192.168.x.x</strong> não são alcançados pela nuvem. Instale o
-          <strong> Coletor Pilar</strong> em um computador da mesma rede, cole a chave abaixo no módulo
-          <strong> Coletor de Portaria</strong> e marque a opção <strong>“Acessar pela rede local (Coletor Pilar)”</strong> no
-          cadastro do dispositivo. Assim o CRM envia o comando e o Coletor abre o portão localmente — sem abrir portas no roteador.
+          <strong> Coletor Pilar</strong> em um computador da mesma rede e marque a opção
+          <strong> “Acessar pela rede local (Coletor Pilar)”</strong> no cadastro do dispositivo.
+          Assim o CRM envia o comando e o Coletor abre o portão localmente — sem abrir portas no roteador.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          <strong>Não é preciso copiar chave:</strong> no appliance ISO (versão 1.9.4+) o coletor se cadastra e
+          conecta sozinho assim que liga. A chave abaixo só é necessária na instalação manual do Coletor Pilar
+          para Windows (versões antigas) — nesse caso cole-a no módulo <strong>Coletor de Portaria</strong> do app.
         </p>
         <Button variant="outline" size="sm" className="mt-2" asChild>
           <a href="https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe">
