@@ -66,13 +66,8 @@ interface GrupoAcesso {
   perfil?: string;
 }
 
-const PERFIL_LABEL: Record<string, string> = {
-  padrao: "Padrão",
-  admin: "Administrador",
-  atendente: "Atendente",
-  porteiro: "Porteiro",
-  gerente: "Gerente",
-};
+
+
 
 
 interface Segmento {
@@ -302,6 +297,16 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       });
       return;
     }
+
+    if (!grupoAcessoId) {
+      toast({
+        title: "Grupo de acesso obrigatório",
+        description: "Selecione o grupo de acesso do usuário",
+        variant: "destructive",
+      });
+      return;
+    }
+
 
     if (!estabelecimentoId) {
       toast({
@@ -1001,10 +1006,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div>
-              <Label>Perfil (definido pelo grupo de acesso)</Label>
-              <Input value={PERFIL_LABEL[perfilGrupo]} readOnly disabled />
-            </div>
+
+
 
           </div>
         </Card>
@@ -1067,7 +1070,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
 
             <div>
-              <Label htmlFor="usuario-grupo">Grupo de Acesso</Label>
+              <Label htmlFor="usuario-grupo">Grupo de Acesso *</Label>
               <Select value={grupoAcessoId} onValueChange={setGrupoAcessoId}>
                 <SelectTrigger id="usuario-grupo">
                   <SelectValue placeholder="Selecione o grupo" />
