@@ -17,7 +17,6 @@ Deno.serve(async (req) => {
     const { data, error } = await sb
       .from("unidades")
       .select("id, nome, cidade, uf")
-      .eq("ativo", true)
       .order("nome");
     if (error) throw error;
     return new Response(JSON.stringify({ filiais: data || [] }), {
