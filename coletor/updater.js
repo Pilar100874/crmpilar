@@ -73,7 +73,9 @@ async function checarAtualizacao() {
   try {
     const remoto = await fetchJson(VERSION_URL + '?t=' + Date.now());
     let disponivel = cmpVersion(remoto.version, local) > 0;
-    const downloadUrl = remoto.downloadUrl || null;
+    const downloadUrl = (process.platform === 'linux'
+      ? (remoto.downloadUrlLinux || remoto.downloadUrl)
+      : remoto.downloadUrl) || null;
 
     // Se o GitHub/release foi removido, não mostra falso aviso de atualização.
     if (disponivel && !(await urlExiste(downloadUrl))) {
@@ -91,6 +93,7 @@ async function checarAtualizacao() {
     return { localVersion: local, erro: e.message };
   }
 }
+
 
 function baixarArquivo(url, destino, onProgress) {
   return new Promise((resolve, reject) => {
