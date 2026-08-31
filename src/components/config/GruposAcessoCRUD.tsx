@@ -93,6 +93,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
       setGrupos((data || []).map(grupo => ({
         id: grupo.id,
         nome: grupo.nome,
+        perfil: ((grupo as any).perfil as string) || 'padrao',
         menus_permitidos: typeof grupo.menus_permitidos === 'object' && 
           grupo.menus_permitidos !== null && 
           !Array.isArray(grupo.menus_permitidos)
