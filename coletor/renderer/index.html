@@ -834,8 +834,8 @@
         const nome = st?.config?.filialNome || st?.config?.filialId || null;
         const el = document.getElementById('discFilialInfo');
         if (el){
-          if (nome) el.innerHTML = `🏢 As câmeras serão criadas na filial: <b>${nome}</b>`;
-          else el.innerHTML = `⚠ Nenhuma filial definida neste coletor. <b>Selecione a filial na tela principal antes de continuar</b> — o CRM exige filial para vincular as câmeras.`;
+          if (nome) el.innerHTML = `🏢 As câmeras serão criadas na unidade: <b>${nome}</b>`;
+          else el.innerHTML = `⚠ Nenhuma unidade definida neste coletor. <b>Selecione a unidade na tela principal antes de continuar</b> — o CRM exige unidade para vincular as câmeras.`;
           el.style.color = nome ? 'var(--text-2)' : 'var(--danger)';
         }
       }catch{}
@@ -866,7 +866,7 @@
       try{
         const st = await window.coletor.getStatus();
         if (!st?.config?.filialId){
-          alert('Selecione a filial deste coletor na tela principal antes de descobrir câmeras. As câmeras encontradas serão criadas vinculadas a essa filial.');
+          alert('Selecione a unidade deste coletor na tela principal antes de descobrir câmeras. As câmeras encontradas serão criadas vinculadas a essa unidade.');
           return;
         }
       }catch{}
