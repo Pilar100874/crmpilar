@@ -136,11 +136,13 @@ rm -f "$TMP"
 # Remove binários desempacotados antigos que poderiam continuar sendo abertos
 rm -f /opt/coletor/ColetorPilar /opt/coletor/coletor 2>/dev/null || true
 
-# Restaura as configurações caso algo as tenha removido
-if [ ! -f "$CFG_HOME" ] && [ -f /opt/coletor/config/ponto-coletor.json.bak ]; then
-  cp -f /opt/coletor/config/ponto-coletor.json.bak "$CFG_HOME"
-  chown "$USER_APP_DEF":"$USER_APP_DEF" "$CFG_HOME"
+# Restaura as configurações no HOME (sempre a cópia mais recente do espelho)
+if [ -f "$CFG_DIR/ponto-coletor.json" ]; then
+  cp -f "$CFG_DIR/ponto-coletor.json" "$CFG_HOME"
 fi
+chown "$USER_APP_DEF":"$USER_APP_DEF" "$CFG_HOME" 2>/dev/null || true
+chown -R "$USER_APP_DEF":"$USER_APP_DEF" "$CFG_DIR" 2>/dev/null || true
+chmod 0775 "$CFG_DIR" 2>/dev/null || true
 
 echo "instalado: $(ls -l /opt/coletor/ColetorPilar.AppImage)"
 systemctl restart coletor-kiosk
