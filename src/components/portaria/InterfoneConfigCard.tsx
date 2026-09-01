@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
-import { BellRing, Loader2, Save, Video } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { BellRing, Check, ChevronsUpDown, Loader2, Save, Video, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useInterfoneConfig, registrarToque } from "@/lib/portaria/interfone";
+
 
 export default function InterfoneConfigCard() {
   const { unidadeId } = useUnidadeAtual();
