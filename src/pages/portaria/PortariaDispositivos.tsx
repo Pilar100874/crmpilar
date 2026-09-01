@@ -271,14 +271,14 @@ export default function PortariaDispositivos() {
                   Credenciais salvas em {new Date(credResumo[form.id!].updated_at).toLocaleString("pt-BR")} —
                   {credResumo[form.id!].tem_usuario ? " usuário ✓" : " usuário —"}
                   {credResumo[form.id!].tem_senha ? " senha ✓" : " senha —"}
-                  {credResumo[form.id!].tem_token ? " token ✓" : " token —"}
+                  {form.tipo === "idface" ? "" : credResumo[form.id!].tem_token ? " token ✓" : " token —"}
                 </p>
               ) : (
                 <p className="text-[11px] text-muted-foreground">Nenhuma credencial salva para este dispositivo.</p>
               )}
               <p className="text-[11px] text-muted-foreground">
                 Deixe em branco para manter as credenciais atuais. Elas nunca são retornadas para o navegador (por isso os campos aparecem vazios).
-                No iDFace o Token não é necessário: use apenas usuário e senha do equipamento.
+                {form.tipo === "idface" ? "" : " No iDFace o Token não é necessário: use apenas usuário e senha do equipamento."}
               </p>
 
             </div>
