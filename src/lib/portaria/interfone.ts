@@ -118,7 +118,7 @@ export function useCampainha(
   useEffect(() => {
     if (!ativo) return;
     const canal = supabase
-      .channel(`interfone-campainha-${unidadeId ?? "global"}`)
+      .channel(`interfone-campainha-${unidadeId ?? "global"}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "port_campainha_eventos" },
