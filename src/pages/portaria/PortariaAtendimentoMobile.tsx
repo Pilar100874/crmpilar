@@ -10,9 +10,10 @@ import { usePushInterfone, notificarCampainhaLocal, isAppNativo } from "@/lib/po
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PortariaSipRamal from "@/components/portaria/PortariaSipRamal";
 import logoPilar from "@/assets/logo-2.png";
+import logoPilarBranco from "@/assets/logo_branco.png";
 
 /** Tela de atendimento do interfone otimizada para celular (usada também no app Android). */
-export default function PortariaAtendimentoMobile() {
+export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
   const { unidadeId } = useUnidadeAtual();
   const { config } = useInterfoneConfig(unidadeId);
   const { status, registrar } = usePushInterfone(unidadeId);
