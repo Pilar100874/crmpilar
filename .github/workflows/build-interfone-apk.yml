@@ -45,7 +45,7 @@ jobs:
 
       - name: Gerar projeto Android
         working-directory: portaria-app
-        run: npx cap add android --verbose
+        run: npx cap add android
 
       - name: Aplicar versão no build.gradle
         working-directory: portaria-app
