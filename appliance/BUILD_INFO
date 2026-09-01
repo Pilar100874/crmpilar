@@ -1,4 +1,4 @@
-COLETOR_APPLIANCE_VERSION=1.9.5
-BUILD_REQUESTED=2026-08-31T21:05Z
-INCLUDES=coletor-desktop,portaria(shelly,control-id,filtro-unidade),rtsp-snapshot,ponto,cameras(filtro-unidade),atualizacao-remota,config-preservada
-NOTAS=Coletor 1.9.5 - atualizacao mantem todas as opcoes habilitadas (unidade, ponto, cameras, portaria) via merge das copias de configuracao.
+COLETOR_APPLIANCE_VERSION=1.9.6
+BUILD_REQUESTED=2026-09-01T14:49Z
+INCLUDES=coletor-desktop,portaria(shelly,control-id,filtro-unidade,camera-idface),rtsp-snapshot,ponto,cameras(filtro-unidade),atualizacao-remota,config-preservada
+NOTAS=Coletor 1.9.6 - captura a camera integrada do iDFace pela API oficial e entrega a imagem ao CRM pela rede local.

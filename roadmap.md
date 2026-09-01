@@ -20,4 +20,4 @@
 
 - [ ] Coletor 1.9.2 no equipamento: atualização in-app não funciona (update.sh antigo) — atualizar via ISO 1.9.4 (pen drive)
 
-- [ ] Interfone: tela nao abre (iframe HTTP bloqueado em HTTPS) e video ao vivo do interfone
+- [x] Interfone: capturar a câmera integrada do iDFace pelo Coletor local, sem iframe HTTP bloqueado

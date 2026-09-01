@@ -24,11 +24,13 @@ Deno.serve(async (req) => {
 
   const ctx = await autenticar(req);
   if (!ctx) return responder(401, { error: "Não autenticado" });
-  if (!ctx.isGestor) return responder(403, { error: "Somente administradores da portaria." });
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return responder(400, { error: parsed.error.flatten().fieldErrors });
   const { acao, device_id, usuario, senha, token } = parsed.data;
+  if (!ctx.isGestor && !(ctx.isStaff && acao === "capturar_camera")) {
+    return responder(403, { error: "Somente administradores da portaria." });
+  }
 
   const admin = adminClient();
   const { data: device } = await admin.from("port_devices").select("*").eq("id", device_id).maybeSingle();
