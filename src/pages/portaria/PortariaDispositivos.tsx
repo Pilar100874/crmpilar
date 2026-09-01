@@ -263,7 +263,7 @@ export default function PortariaDispositivos() {
                             {(f === "saida" || f === "ambos") && (
                               <SelectItem value="saida">Saída — aciona fechadura / portão (relé)</SelectItem>
                             )}
-                            {(f === "entrada" || f ===) && (
+                            {(f === "entrada" || f === "ambos") && (
                               <SelectItem value="entrada">Entrada — campainha / botão (entrada digital)</SelectItem>
                             )}
                           </>
