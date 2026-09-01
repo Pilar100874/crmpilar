@@ -55,7 +55,8 @@ export function lerConfigSip(): PortariaSipConfig {
 const TECLAS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
 /** Ramal SIP embarcado no app da Portaria: registra no PABX e permite atender/ligar. */
-export default function PortariaSipRamal() {
+export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
+
   const { toast } = useToast();
   const { connect, disconnect, dial, hangup, answer, isRegistered, isConnecting, activeCalls } =
     useSipConnection();
@@ -119,18 +120,26 @@ export default function PortariaSipRamal() {
       ? { texto: `Ramal ${config.ramal} online`, cor: "default" as const }
       : { texto: "Desconectado", cor: "destructive" as const };
 
+  const btnEscuro = dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : "";
+  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white hover:bg-orange-600" : "";
+
   return (
-    <Card>
+    <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <PhoneCall className="h-4 w-4" /> Ramal SIP
+          <PhoneCall className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Ramal SIP
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant={status.cor}>{status.texto}</Badge>
+          <Badge
+            variant={status.cor}
+            className={dark && isRegistered ? "bg-orange-500 text-white hover:bg-orange-500" : ""}
+          >
+            {status.texto}
+          </Badge>
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8"
+            className={`h-8 w-8 ${dark ? "text-slate-300 hover:bg-white/10 hover:text-white" : ""}`}
             onClick={() => setEditando((v) => !v)}
             aria-label="Configurar ramal SIP"
           >
@@ -138,6 +147,7 @@ export default function PortariaSipRamal() {
           </Button>
         </div>
       </CardHeader>
+
 
       <CardContent className="space-y-4">
         {editando && (
@@ -230,11 +240,11 @@ export default function PortariaSipRamal() {
 
         <div className="flex gap-2">
           {isRegistered ? (
-            <Button variant="outline" className="flex-1" onClick={() => void disconnect()}>
+            <Button variant="outline" className={`flex-1 ${btnEscuro}`} onClick={() => void disconnect()}>
               <Unplug className="mr-2 h-4 w-4" /> Desconectar
             </Button>
           ) : (
-            <Button className="flex-1" disabled={isConnecting} onClick={() => void conectar()}>
+            <Button className={`flex-1 ${btnLaranja}`} disabled={isConnecting} onClick={() => void conectar()}>
               <PlugZap className="mr-2 h-4 w-4" />
               {isConnecting ? "Conectando..." : "Conectar ramal"}
             </Button>
@@ -242,12 +252,14 @@ export default function PortariaSipRamal() {
           {config.ramalPortaria && (
             <Button
               variant="secondary"
+              className={btnEscuro}
               disabled={!isRegistered}
               onClick={() => void dial(config.ramalPortaria)}
             >
               <Phone className="mr-2 h-4 w-4" /> Portaria
             </Button>
           )}
+
         </div>
 
         {activeCalls.length > 0 && (
@@ -294,14 +306,14 @@ export default function PortariaSipRamal() {
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Digite o número ou ramal"
             inputMode="tel"
-            className="text-center text-lg tracking-widest"
+            className={`text-center text-lg tracking-widest ${dark ? "border-white/15 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
           />
           <div className="grid grid-cols-3 gap-2">
             {TECLAS.map((t) => (
               <Button
                 key={t}
                 variant="outline"
-                className="h-12 text-lg"
+                className={`h-12 text-lg ${btnEscuro}`}
                 onClick={() => setNumero((n) => n + t)}
               >
                 {t}
@@ -311,14 +323,14 @@ export default function PortariaSipRamal() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="w-14"
+              className={`w-14 ${btnEscuro}`}
               onClick={() => setNumero((n) => n.slice(0, -1))}
               aria-label="Apagar"
             >
               <Delete className="h-4 w-4" />
             </Button>
             <Button
-              className="flex-1"
+              className={`flex-1 ${btnLaranja}`}
               disabled={!isRegistered || !numero.trim()}
               onClick={() => void dial(numero.trim())}
             >
@@ -326,6 +338,7 @@ export default function PortariaSipRamal() {
             </Button>
           </div>
         </div>
+
       </CardContent>
     </Card>
   );

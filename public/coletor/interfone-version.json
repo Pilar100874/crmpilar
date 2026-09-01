@@ -1,6 +1,6 @@
 {
-  "version": "1.4.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.4.0/pilar-interfone-v1.4.0.apk",
-  "filename": "pilar-interfone-v1.4.0.apk",
-  "notas": "v1.4.0: novo visual escuro da marca (tela de login em vidro com gradiente, cabeçalho e cartões no padrão Pilar) e ícone/splash refeitos — logo branco sobre fundo azul-marinho com detalhe laranja, sem mais logo branco sobre fundo branco."
+  "version": "1.5.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.5.0/pilar-interfone-v1.5.0.apk",
+  "filename": "pilar-interfone-v1.5.0.apk",
+  "notas": "v1.5.0: app renomeado para Pilar Sip, novo ícone (fone + onda em fundo azul-marinho com barra laranja), tela sem o aviso de observações, histórico em aba separada e botões ajustados ao tema escuro."
 }
