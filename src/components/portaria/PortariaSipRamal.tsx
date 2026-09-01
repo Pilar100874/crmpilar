@@ -159,6 +159,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-servidor">Servidor (PABX)</Label>
                 <Input
                   id="sip-servidor"
+                  className={inputEscuro}
                   value={config.servidor}
                   onChange={(e) => setConfig({ ...config, servidor: e.target.value })}
                   placeholder="pabx.empresa.com.br"
@@ -168,6 +169,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-remoto">Servidor alternativo</Label>
                 <Input
                   id="sip-remoto"
+                  className={inputEscuro}
                   value={config.servidorRemoto}
                   onChange={(e) => setConfig({ ...config, servidorRemoto: e.target.value })}
                   placeholder="opcional"
@@ -177,6 +179,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-ramal">Ramal</Label>
                 <Input
                   id="sip-ramal"
+                  className={inputEscuro}
                   value={config.ramal}
                   onChange={(e) => setConfig({ ...config, ramal: e.target.value })}
                   placeholder="1001"
@@ -187,6 +190,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-senha">Senha SIP</Label>
                 <Input
                   id="sip-senha"
+                  className={inputEscuro}
                   type="password"
                   value={config.senha}
                   onChange={(e) => setConfig({ ...config, senha: e.target.value })}
@@ -196,6 +200,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-nome">Nome exibido</Label>
                 <Input
                   id="sip-nome"
+                  className={inputEscuro}
                   value={config.nome}
                   onChange={(e) => setConfig({ ...config, nome: e.target.value })}
                   placeholder="Portaria"
@@ -205,6 +210,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-portaria">Ramal da portaria/interfone</Label>
                 <Input
                   id="sip-portaria"
+                  className={inputEscuro}
                   value={config.ramalPortaria}
                   onChange={(e) => setConfig({ ...config, ramalPortaria: e.target.value })}
                   placeholder="2000"
