@@ -15,6 +15,8 @@ import { comandoControlId, usePortariaPerfil } from "@/lib/portaria/api";
 import PortariaColetores from "@/components/portaria/PortariaColetores";
 import InterfoneConfigCard from "@/components/portaria/InterfoneConfigCard";
 import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
+import PushFirebaseCard from "@/components/portaria/PushFirebaseCard";
+
 import PortariaPermissoes from "@/pages/portaria/PortariaPermissoes";
 
 
