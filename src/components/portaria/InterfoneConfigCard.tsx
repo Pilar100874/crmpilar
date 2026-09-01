@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
-import { BellRing, Loader2, Save, Video } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { BellRing, Check, ChevronsUpDown, Loader2, Save, Video, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useInterfoneConfig, registrarToque } from "@/lib/portaria/interfone";
+
 
 export default function InterfoneConfigCard() {
   const { unidadeId } = useUnidadeAtual();
@@ -17,7 +20,13 @@ export default function InterfoneConfigCard() {
   const [devices, setDevices] = useState<{ id: string; nome: string }[]>([]);
   const [cameras, setCameras] = useState<{ id: string; nome: string }[]>([]);
   const [salvando, setSalvando] = useState(false);
+  const [abertoCams, setAbertoCams] = useState(false);
   const [sip, setSip] = useState("");
+
+  const selecionadas = useMemo(
+    () => cameras.filter((c) => (config?.cameras_extras ?? []).includes(c.id)),
+    [cameras, config?.cameras_extras],
+  );
 
   useEffect(() => {
     setSip(config?.sip_uri ?? "");
@@ -100,19 +109,58 @@ export default function InterfoneConfigCard() {
         <p className="text-xs text-muted-foreground">
           Além da câmera do interfone, estas imagens aparecem no popup antes de abrir o portão.
         </p>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 pt-1">
-          {cameras.map((c) => (
-            <label key={c.id} className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer">
-              <Checkbox
-                checked={(config.cameras_extras ?? []).includes(c.id)}
-                onCheckedChange={(v) => alternarCamera(c.id, v === true)}
-              />
-              <span className="text-sm truncate">{c.nome}</span>
-            </label>
-          ))}
-          {cameras.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma câmera ativa nesta unidade.</p>}
-        </div>
+
+        <Popover open={abertoCams} onOpenChange={setAbertoCams}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" className="w-full justify-between bg-background">
+              <span className="truncate text-sm font-normal">
+                {selecionadas.length === 0
+                  ? "Selecionar câmeras..."
+                  : `${selecionadas.length} câmera(s) selecionada(s)`}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover z-50" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar câmera..." />
+              <CommandList>
+                <CommandEmpty>Nenhuma câmera ativa nesta unidade.</CommandEmpty>
+                <CommandGroup>
+                  {cameras.map((c) => {
+                    const marcado = (config.cameras_extras ?? []).includes(c.id);
+                    return (
+                      <CommandItem key={c.id} value={c.nome} onSelect={() => alternarCamera(c.id, !marcado)}>
+                        <Check className={`mr-2 h-4 w-4 ${marcado ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{c.nome}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {selecionadas.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {selecionadas.map((c) => (
+              <Badge key={c.id} variant="secondary" className="gap-1 pr-1">
+                <span className="truncate max-w-[160px]">{c.nome}</span>
+                <button
+                  type="button"
+                  aria-label={`Remover ${c.nome}`}
+                  onClick={() => alternarCamera(c.id, false)}
+                  className="rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
+
 
       <div className="rounded-lg border p-3 space-y-2">
         <Label className="text-sm">Ramal de áudio (SIP) para falar pelo computador</Label>
