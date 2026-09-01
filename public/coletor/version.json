@@ -1,6 +1,6 @@
 {
-  "version": "1.9.6",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.6/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.6/ColetorPilar-Linux.AppImage",
-  "notas": "1.9.6: captura a câmera integrada do interfone iDFace pela rede local e exibe a imagem diretamente no CRM."
+  "version": "1.9.7",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.7/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.7/ColetorPilar-Linux.AppImage",
+  "notas": "1.9.7: detecta o toque da campainha do interfone iDFace na rede local e avisa o CRM para abrir o popup do interfone."
 }
