@@ -16,6 +16,7 @@ type Dispositivo = {
   id: string;
   nome: string;
   tipo: string;
+  funcao: "entrada" | "saida" | null;
   modelo: string | null;
   localizacao: string | null;
   ip: string | null;
@@ -33,7 +34,7 @@ type Dispositivo = {
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
+  nome: "", tipo: "shelly", funcao: "saida", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
 };
 
