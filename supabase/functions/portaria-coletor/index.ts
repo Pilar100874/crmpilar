@@ -5,19 +5,21 @@ import { z } from "npm:zod@3";
 import { adminClient } from "../_shared/portaria/auth.ts";
 
 const BodySchema = z.object({
-  token: z.string().min(10).max(200).optional(),
-  device_key: z.string().min(8).max(120).optional(),
-  hostname: z.string().max(120).optional(),
-  unidade_nome: z.string().max(160).optional(),
+  token: z.string().min(10).max(200).nullish(),
+  device_key: z.string().min(8).max(120).nullish(),
+  hostname: z.string().max(120).nullish(),
+  unidade_nome: z.string().max(160).nullish(),
   acao: z.enum(["handshake", "jobs", "resultado", "provisionar"]),
-  versao: z.string().max(40).optional(),
-  ip_local: z.string().max(60).optional(),
-  unidade_id: z.string().uuid().nullable().optional(),
-  job_id: z.string().uuid().optional(),
-  ok: z.boolean().optional(),
-  mensagem: z.string().max(500).optional(),
+  // O Coletor pode enviar null nestes campos (instalação nova / sem dados ainda).
+  versao: z.string().max(40).nullish(),
+  ip_local: z.string().max(60).nullish(),
+  unidade_id: z.string().uuid().nullish(),
+  job_id: z.string().uuid().nullish(),
+  ok: z.boolean().nullish(),
+  mensagem: z.string().max(500).nullish(),
   dados: z.unknown().optional(),
-  limite: z.number().int().min(1).max(20).optional(),
+  limite: z.number().int().min(1).max(20).nullish(),
+
 
 });
 
