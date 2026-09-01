@@ -20,7 +20,13 @@ export default function InterfoneConfigCard() {
   const [devices, setDevices] = useState<{ id: string; nome: string }[]>([]);
   const [cameras, setCameras] = useState<{ id: string; nome: string }[]>([]);
   const [salvando, setSalvando] = useState(false);
+  const [abertoCams, setAbertoCams] = useState(false);
   const [sip, setSip] = useState("");
+
+  const selecionadas = useMemo(
+    () => cameras.filter((c) => (config?.cameras_extras ?? []).includes(c.id)),
+    [cameras, config?.cameras_extras],
+  );
 
   useEffect(() => {
     setSip(config?.sip_uri ?? "");
