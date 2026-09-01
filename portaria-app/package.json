@@ -1,0 +1,15 @@
+{
+  "name": "pilar-interfone-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App Android do Interfone/Portaria Pilar (Capacitor)",
+  "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/local-notifications": "^7.0.1",
+    "@capacitor/push-notifications": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.4"
+  }
+}
