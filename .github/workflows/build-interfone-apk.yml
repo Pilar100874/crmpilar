@@ -67,12 +67,12 @@ jobs:
         working-directory: portaria-app
         run: npx @capacitor/assets generate --android --assetPath assets
 
-      - name: Nome do app (Pilar Portaria)
+      - name: Nome do app (Pilar Sip)
         working-directory: portaria-app
         run: |
           STR=android/app/src/main/res/values/strings.xml
-          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">Pilar Portaria</string>|' "$STR"
-          sed -i 's|<string name="title_activity_main">.*</string>|<string name="title_activity_main">Pilar Portaria</string>|' "$STR"
+          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">Pilar Sip</string>|' "$STR"
+          sed -i 's|<string name="title_activity_main">.*</string>|<string name="title_activity_main">Pilar Sip</string>|' "$STR"
           cat "$STR"
 
       - name: Aplicar versão no build.gradle

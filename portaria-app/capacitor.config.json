@@ -1,6 +1,6 @@
 {
   "appId": "br.com.pilar.interfone",
-  "appName": "Pilar Portaria",
+  "appName": "Pilar Sip",
   "webDir": "www",
   "android": {
     "allowMixedContent": true
