@@ -27,3 +27,10 @@
 - [ ] Popup automático ao tocar a campainha com câmera do iDFace + câmeras extras + botões abrir porta/portão
 - [ ] Seleção de câmeras extras nas configurações do módulo de câmeras
 - [ ] Conversar (áudio) com quem está no interfone pelo computador
+
+## App móvel de atendimento (Capacitor) + Coletor 1.9.7
+- [x] Publicar Coletor 1.9.7 (ISO/instalador) com detecção da campainha
+- [x] Confirmar que o toque na rede local dispara o popup do interfone (câmera + botões)
+- [x] Coletor real cadastrado e online na Portaria (status + captura da câmera do iDFace)
+- [x] URL do coletor no backend: não se aplica (o Coletor busca os comandos no CRM, o backend não chama IP local)
+- [ ] App Android nativo (Capacitor) para atendimento do interfone com push nativo (FCM)

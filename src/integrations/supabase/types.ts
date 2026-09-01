@@ -22111,6 +22111,39 @@ export type Database = {
           },
         ]
       }
+      port_push_tokens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          plataforma: string
+          token: string
+          unidade_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          plataforma?: string
+          token: string
+          unidade_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          plataforma?: string
+          token?: string
+          unidade_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       port_remote_commands: {
         Row: {
           access_point_id: string | null
