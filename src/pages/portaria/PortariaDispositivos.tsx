@@ -289,6 +289,7 @@ export default function PortariaDispositivos() {
               </p>
 
             </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAberto(false)}>Cancelar</Button>
