@@ -87,10 +87,16 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           if [ -z "$GOOGLE_SERVICES_JSON" ]; then
-            echo "Sem GOOGLE_SERVICES_JSON: APK sem push nativo (o restante funciona)"
+            echo "Sem segredo GOOGLE_SERVICES_JSON: buscando o arquivo salvo nas Configurações da Portaria..."
+            GOOGLE_SERVICES_JSON=$(curl -sf "https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/portaria-google-services" || true)
+          fi
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "Sem google-services.json: APK sem push nativo (o restante funciona)"
             exit 0
           fi
+          mkdir -p android/app
           echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+
           python3 - <<'PY'
           import re
           root = 'android/build.gradle'

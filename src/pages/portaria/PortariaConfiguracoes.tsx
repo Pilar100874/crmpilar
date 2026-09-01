@@ -15,6 +15,8 @@ import { comandoControlId, usePortariaPerfil } from "@/lib/portaria/api";
 import PortariaColetores from "@/components/portaria/PortariaColetores";
 import InterfoneConfigCard from "@/components/portaria/InterfoneConfigCard";
 import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
+import PushFirebaseCard from "@/components/portaria/PushFirebaseCard";
+
 import PortariaPermissoes from "@/pages/portaria/PortariaPermissoes";
 
 
@@ -110,8 +112,9 @@ export default function PortariaConfiguracoes() {
       </div>
 
       <Tabs defaultValue="interfone">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="interfone">Interfone</TabsTrigger>
+          <TabsTrigger value="push">Push nativo</TabsTrigger>
           <TabsTrigger value="acessos">Pontos de acesso</TabsTrigger>
           <TabsTrigger value="perfis">Perfis e permissões</TabsTrigger>
           <TabsTrigger value="facial">Facial / iDFace</TabsTrigger>
@@ -122,6 +125,11 @@ export default function PortariaConfiguracoes() {
           <InterfoneConfigCard />
           <InterfoneAppDownloadCard />
         </TabsContent>
+
+        <TabsContent value="push" className="space-y-4 pt-4">
+          <PushFirebaseCard />
+        </TabsContent>
+
 
 
 

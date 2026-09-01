@@ -6,6 +6,9 @@ const Body = z.object({
   unidade_id: z.string().uuid().nullable().optional(),
   titulo: z.string().min(1).max(120).optional(),
   corpo: z.string().min(1).max(300).optional(),
+  tipo: z.enum(["campainha", "sip"]).optional(),
+  rota: z.string().max(200).optional(),
+  origem: z.string().max(120).optional(),
 });
 
 type ServiceAccount = { client_email: string; private_key: string; project_id: string };
@@ -65,7 +68,15 @@ Deno.serve(async (req) => {
   try {
     const parsed = Body.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json(400, { error: parsed.error.flatten().fieldErrors });
-    const { unidade_id = null, titulo, corpo } = parsed.data;
+    const { unidade_id = null, titulo, corpo, tipo = "campainha", rota, origem } = parsed.data;
+    const ehSip = tipo === "sip";
+    const canal = ehSip ? "ramal_sip" : "interfone";
+    const rotaFinal = rota ?? (ehSip ? "/app/ramal" : "/app/interfone");
+    const tituloFinal = titulo ?? (ehSip ? "Chamada no ramal SIP" : "Campainha do interfone");
+    const corpoFinal = corpo ??
+      (ehSip
+        ? `Ligação recebida${origem ? ` de ${origem}` : ""}. Toque para atender.`
+        : "Alguém está na portaria. Toque para atender.");
 
     const bruto = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
     if (!bruto) return json(200, { ok: false, mensagem: "Notificações no celular ainda não configuradas." });
@@ -88,12 +99,10 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           message: {
             token: t.token,
-            notification: {
-              title: titulo ?? "Campainha do interfone",
-              body: corpo ?? "Alguém está na portaria. Toque para atender.",
-            },
-            data: { rota: "/app/interfone", tipo: "campainha" },
-            android: { priority: "HIGH", notification: { channel_id: "interfone", sound: "default" } },
+            notification: { title: tituloFinal, body: corpoFinal },
+            data: { rota: rotaFinal, tipo, origem: origem ?? "" },
+            android: { priority: "HIGH", notification: { channel_id: canal, sound: "default" } },
+            apns: { payload: { aps: { sound: "default", "content-available": 1 } } },
           },
         }),
       });

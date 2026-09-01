@@ -77,3 +77,15 @@ export async function notificarCampainhaLocal(titulo: string, corpo: string) {
     /* sem permissão: apenas ignora */
   }
 }
+
+/**
+ * Avisa os celulares registrados que há uma chamada chegando no ramal SIP.
+ * Usa o mesmo canal de push da campainha, com tipo "sip".
+ */
+export async function notificarChamadaSip(unidadeId: string | null, origem?: string) {
+  const { data, error } = await supabase.functions.invoke("portaria-push-campainha", {
+    body: { unidade_id: unidadeId, tipo: "sip", origem: origem ?? null },
+  });
+  const r = data as { ok?: boolean; enviados?: number; mensagem?: string } | null;
+  return { ok: !!r?.ok && !error, enviados: r?.enviados ?? 0, mensagem: r?.mensagem ?? error?.message };
+}
