@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Loader2, Plus, RefreshCw, Trash2, Wifi, WifiOff, Download } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Trash2, Wifi, WifiOff, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 type Coletor = {
   id: string;
   nome: string;
-  token: string;
+  token?: string | null; // mantido só por compatibilidade; não é mais exibido
   ativo: boolean;
   versao: string | null;
   ip_local: string | null;
@@ -36,7 +36,7 @@ export default function PortariaColetores() {
     setCarregando(true);
     const { data, error } = await supabase
       .from("port_coletores")
-      .select("id, nome, token, ativo, versao, ip_local, ultima_comunicacao")
+      .select("id, nome, ativo, versao, ip_local, ultima_comunicacao")
       .order("created_at", { ascending: true });
     if (error) toast({ title: "Não foi possível carregar os coletores", description: error.message, variant: "destructive" });
     setLista((data ?? []) as Coletor[]);
@@ -63,7 +63,7 @@ export default function PortariaColetores() {
     }
     setNome("");
     carregar();
-    toast({ title: "Coletor criado", description: "No appliance ISO (1.9.4+) a conexão é automática — a chave só é usada na instalação manual para Windows." });
+    toast({ title: "Coletor criado", description: "No appliance ISO (1.9.4+) a conexão é automática — ele se registra sozinho ao ligar." });
   };
 
   const alternarAtivo = async (c: Coletor, ativo: boolean) => {
@@ -78,10 +78,6 @@ export default function PortariaColetores() {
     carregar();
   };
 
-  const copiar = async (texto: string) => {
-    await navigator.clipboard.writeText(texto);
-    toast({ title: "Chave copiada" });
-  };
 
   return (
     <div className="space-y-4">
@@ -95,8 +91,8 @@ export default function PortariaColetores() {
         </p>
         <p className="text-xs text-muted-foreground">
           <strong>Não é preciso copiar chave:</strong> no appliance ISO (versão 1.9.4+) o coletor se cadastra e
-          conecta sozinho assim que liga. A chave abaixo só é necessária na instalação manual do Coletor Pilar
-          para Windows (versões antigas) — nesse caso cole-a no módulo <strong>Coletor de Portaria</strong> do app.
+          conecta sozinho assim que liga. Para instalação manual do Coletor Pilar no Windows (versões antigas),
+          baixe o instalador abaixo e siga as instruções do módulo <strong>Coletor de Portaria</strong> do app.
         </p>
         <Button variant="outline" size="sm" className="mt-2" asChild>
           <a href="https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe">
@@ -155,12 +151,6 @@ export default function PortariaColetores() {
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input readOnly value={c.token} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
-                  <Button variant="outline" size="icon" onClick={() => copiar(c.token)}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             );
