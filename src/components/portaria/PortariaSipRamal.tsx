@@ -55,7 +55,8 @@ export function lerConfigSip(): PortariaSipConfig {
 const TECLAS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
 /** Ramal SIP embarcado no app da Portaria: registra no PABX e permite atender/ligar. */
-export default function PortariaSipRamal() {
+export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
+
   const { toast } = useToast();
   const { connect, disconnect, dial, hangup, answer, isRegistered, isConnecting, activeCalls } =
     useSipConnection();
