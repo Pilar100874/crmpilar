@@ -9,7 +9,7 @@ const BodySchema = z.object({
   device_key: z.string().min(8).max(120).nullish(),
   hostname: z.string().max(120).nullish(),
   unidade_nome: z.string().max(160).nullish(),
-  acao: z.enum(["handshake", "jobs", "resultado", "provisionar"]),
+  acao: z.enum(["handshake", "jobs", "resultado", "provisionar", "campainha"]),
   // O Coletor pode enviar null nestes campos (instalação nova / sem dados ainda).
   versao: z.string().max(40).nullish(),
   ip_local: z.string().max(60).nullish(),
@@ -19,6 +19,7 @@ const BodySchema = z.object({
   mensagem: z.string().max(500).nullish(),
   dados: z.unknown().optional(),
   limite: z.number().int().min(1).max(20).nullish(),
+  device_id_evento: z.string().uuid().nullish(),
 
 
 });
@@ -106,6 +107,16 @@ Deno.serve(async (req) => {
     .eq("id", coletor.id);
 
   const unidadeId = body.unidade_id ?? null;
+
+  // Toque de campainha detectado na rede local pelo Coletor.
+  if (body.acao === "campainha") {
+    await admin.from("port_campainha_eventos").insert({
+      unidade_id: unidadeId,
+      device_id: body.device_id_evento ?? null,
+      origem: "idface",
+    });
+    return responder(200, { ok: true });
+  }
 
   if (body.acao === "handshake") {
     let devQ = admin
