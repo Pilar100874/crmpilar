@@ -21,6 +21,8 @@ import { isSoloMode } from "@/components/OpenInNewTabButton";
 import SoloBackButton from "@/components/SoloBackButton";
 import UnidadeAtualBadge from "@/components/UnidadeAtualBadge";
 import { usePortariaPerfil } from "@/lib/portaria/api";
+import InterfoneWatcher from "@/components/portaria/InterfoneWatcher";
+
 
 interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; gestor?: boolean; staff?: boolean }
 
