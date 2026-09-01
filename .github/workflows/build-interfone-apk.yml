@@ -1,0 +1,181 @@
+name: Build Pilar Interfone APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'portaria-app/**'
+      - '.github/workflows/build-interfone-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Ler versão
+        id: version
+        run: |
+          VERSION=$(tr -d ' \n\r' < portaria-app/VERSION)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Versão: ${VERSION}"
+
+      - name: Instalar dependências do Capacitor
+        working-directory: portaria-app
+        run: npm install --no-audit --no-fund
+
+      - name: Gerar projeto Android
+        working-directory: portaria-app
+        run: npx cap add android
+
+      - name: Aplicar versão no build.gradle
+        working-directory: portaria-app
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CODE=$(echo "$VERSION" | awk -F. '{printf "%d%02d%02d", $1, $2, $3}')
+          sed -i "s/versionName \".*\"/versionName \"${VERSION}\"/" android/app/build.gradle
+          sed -i "s/versionCode [0-9]\+/versionCode ${CODE}/" android/app/build.gradle
+          grep -n "version" android/app/build.gradle | head -20
+
+      - name: Configurar Firebase (push) se o segredo existir
+        working-directory: portaria-app
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+            # plugin do Google Services (necessário para FCM)
+            sed -i 's/^}$/    dependencies { classpath "com.google.gms:google-services:4.4.2" }\n}/' android/build.gradle || true
+            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+            echo "google-services.json aplicado"
+          else
+            echo "Sem GOOGLE_SERVICES_JSON: APK sem push nativo (o restante funciona)"
+          fi
+
+      - name: Permissões de câmera/microfone e rede local
+        working-directory: portaria-app
+        run: |
+          MAN=android/app/src/main/AndroidManifest.xml
+          python3 - "$MAN" <<'PY'
+          import sys, re
+          p = sys.argv[1]
+          s = open(p, encoding='utf-8').read()
+          perms = [
+              'android.permission.CAMERA',
+              'android.permission.RECORD_AUDIO',
+              'android.permission.MODIFY_AUDIO_SETTINGS',
+              'android.permission.POST_NOTIFICATIONS',
+              'android.permission.VIBRATE',
+              'android.permission.ACCESS_NETWORK_STATE',
+          ]
+          add = "\n".join(
+              f'    <uses-permission android:name="{x}" />' for x in perms if x not in s
+          )
+          if add:
+              s = s.replace('</manifest>', add + '\n</manifest>')
+          s = s.replace('android:usesCleartextTraffic="true"', 'android:usesCleartextTraffic="true"')
+          open(p, 'w', encoding='utf-8').write(s)
+          print(s)
+          PY
+
+      - name: Build APK (debug assinado, instalável)
+        working-directory: portaria-app/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean :app:assembleDebug --no-daemon
+
+      - name: Renomear APK
+        id: rename
+        working-directory: portaria-app
+        run: |
+          mkdir -p dist
+          SRC=android/app/build/outputs/apk/debug/app-debug.apk
+          DST=dist/pilar-interfone-v${{ steps.version.outputs.version }}.apk
+          test -f "$SRC"
+          cp "$SRC" "$DST"
+          ls -lh dist/
+
+      - name: Verificar APK instalável
+        working-directory: portaria-app
+        run: |
+          APK="dist/pilar-interfone-v${{ steps.version.outputs.version }}.apk"
+          test -s "$APK"
+          unzip -t "$APK" >/dev/null
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          "$APKSIGNER" verify --min-sdk-version 23 --verbose --print-certs "$APK"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilar-interfone-v${{ steps.version.outputs.version }}
+          path: portaria-app/dist/*.apk
+
+      - name: Criar / atualizar GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: interfone-v${{ steps.version.outputs.version }}
+          name: Pilar Interfone v${{ steps.version.outputs.version }}
+          body: |
+            APK do app de atendimento do Interfone (Portaria).
+
+            - Abre direto a tela `/app/interfone` do CRM
+            - Câmeras do interfone + botões de abrir porta/portão
+            - Áudio ao vivo (WebRTC) com o computador
+            - Push da campainha (quando o `GOOGLE_SERVICES_JSON` está configurado)
+          files: |
+            portaria-app/dist/pilar-interfone-v${{ steps.version.outputs.version }}.apk
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Atualizar public/coletor/interfone-version.json
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REPO="${{ github.repository }}"
+          FILENAME="pilar-interfone-v${VERSION}.apk"
+          URL="https://github.com/${REPO}/releases/download/interfone-v${VERSION}/${FILENAME}"
+          node -e "
+            const fs = require('fs');
+            const p = 'public/coletor/interfone-version.json';
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            j.version = '${VERSION}';
+            j.downloadUrl = '${URL}';
+            j.filename = '${FILENAME}';
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+          "
+          cat public/coletor/interfone-version.json
+
+      - name: Commit interfone-version.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/coletor/interfone-version.json; then
+            echo "sem alteração"
+          else
+            git add public/coletor/interfone-version.json
+            git commit -m "chore(interfone): publish apk v${{ steps.version.outputs.version }} [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push origin HEAD:main && break
+              echo "push retry $i..."
+              sleep 3
+            done
+          fi

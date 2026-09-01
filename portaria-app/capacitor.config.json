@@ -1,0 +1,18 @@
+{
+  "appId": "br.com.pilar.interfone",
+  "appName": "Pilar Interfone",
+  "webDir": "www",
+  "server": {
+    "url": "https://crm.pilar.com.br/app/interfone",
+    "cleartext": true,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}
