@@ -45,6 +45,7 @@ export default function PortariaDispositivos() {
   const [salvando, setSalvando] = useState(false);
   const [form, setForm] = useState<Partial<Dispositivo>>(VAZIO);
   const [cred, setCred] = useState({ usuario: "", senha: "", token: "" });
+  const [credResumo, setCredResumo] = useState<Record<string, { tem_usuario: boolean; tem_senha: boolean; tem_token: boolean; updated_at: string }>>({});
   const [excluir, setExcluir] = useState<Dispositivo | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
 
@@ -52,10 +53,15 @@ export default function PortariaDispositivos() {
     setCarregando(true);
     const { data } = await supabase.from("port_devices").select("*").order("nome");
     setLista((data ?? []) as unknown as Dispositivo[]);
+    const { data: resumo } = await (supabase as any).rpc("port_credenciais_resumo");
+    const mapa: Record<string, any> = {};
+    ((resumo ?? []) as any[]).forEach((r) => { mapa[r.device_id] = r; });
+    setCredResumo(mapa);
     setCarregando(false);
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
 
   const abrirNovo = () => { setForm(VAZIO); setCred({ usuario: "", senha: "", token: "" }); setAberto(true); };
   const abrirEdicao = (d: Dispositivo) => { setForm(d); setCred({ usuario: "", senha: "", token: "" }); setAberto(true); };
@@ -258,9 +264,21 @@ export default function PortariaDispositivos() {
                 <div><Label>Senha</Label><Input type="password" value={cred.senha} onChange={(e) => setCred({ ...cred, senha: e.target.value })} autoComplete="new-password" /></div>
                 <div><Label>Token / auth key</Label><Input type="password" value={cred.token} onChange={(e) => setCred({ ...cred, token: e.target.value })} autoComplete="new-password" /></div>
               </div>
+              {form.id && credResumo[form.id] ? (
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                  Credenciais salvas em {new Date(credResumo[form.id!].updated_at).toLocaleString("pt-BR")} —
+                  {credResumo[form.id!].tem_usuario ? " usuário ✓" : " usuário —"}
+                  {credResumo[form.id!].tem_senha ? " senha ✓" : " senha —"}
+                  {credResumo[form.id!].tem_token ? " token ✓" : " token —"}
+                </p>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">Nenhuma credencial salva para este dispositivo.</p>
+              )}
               <p className="text-[11px] text-muted-foreground">
-                Deixe em branco para manter as credenciais atuais. Elas nunca são retornadas para o navegador.
+                Deixe em branco para manter as credenciais atuais. Elas nunca são retornadas para o navegador (por isso os campos aparecem vazios).
+                No iDFace o Token não é necessário: use apenas usuário e senha do equipamento.
               </p>
+
             </div>
           </div>
           <DialogFooter>
