@@ -8,6 +8,7 @@ import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta, type ToqueCampainha } from "@/lib/portaria/interfone";
 import { usePushInterfone, notificarCampainhaLocal, isAppNativo } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
+import PortariaSipRamal from "@/components/portaria/PortariaSipRamal";
 
 /** Tela de atendimento do interfone otimizada para celular (usada também no app Android). */
 export default function PortariaAtendimentoMobile() {
@@ -83,6 +84,10 @@ export default function PortariaAtendimentoMobile() {
       >
         <BellRing className="h-5 w-5" /> Abrir câmera do interfone
       </Button>
+
+      <PortariaSipRamal />
+
+
 
       <Card>
         <CardHeader className="pb-2">
