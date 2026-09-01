@@ -141,7 +141,7 @@ export default function PortariaInterfone() {
     setErroImagem(null);
     void capturar(cameraId);
     if (!aoVivo) return;
-    const t = setInterval(() => void capturar(cameraId), INTERVALO_SNAPSHOT_MS);
+    const t = setInterval(() => void capturar(cameraId), intervaloMs);
     return () => clearInterval(t);
   }, [cameraId, aoVivo, capturar]);
 
