@@ -106,7 +106,9 @@ export default function PortariaAtendimentoMobile() {
               className="flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-left"
             >
               <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
-              <Badge variant={t.atendido_em ? "outline" : "default"}>{t.atendido_em ? "Atendido" : "Novo"}</Badge>
+              <Badge variant={t.status === "pendente" ? "default" : "outline"}>
+                {t.status === "pendente" ? "Novo" : "Atendido"}
+              </Badge>
             </button>
           ))}
         </CardContent>
