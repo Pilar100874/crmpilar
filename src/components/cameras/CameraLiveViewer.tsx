@@ -378,7 +378,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
             autoPlay
             playsInline
             muted={audioMuted}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
           />
           <button
             onClick={toggleFullscreen}
