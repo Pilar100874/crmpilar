@@ -30,7 +30,11 @@ interface DispositivoIdface {
   endpoint: string | null;
 }
 
-const INTERVALO_SNAPSHOT_MS = 6000;
+const OPCOES_FPS = [
+  { label: "Rápido (1s)", ms: 1000 },
+  { label: "Normal (2s)", ms: 2000 },
+  { label: "Econômico (6s)", ms: 6000 },
+];
 
 export default function PortariaInterfone() {
   const { unidadeId, unidadeNome } = useUnidadeAtual();
@@ -44,6 +48,7 @@ export default function PortariaInterfone() {
   const [aoVivo, setAoVivo] = useState(true);
   const [idfaces, setIdfaces] = useState<DispositivoIdface[]>([]);
   const [idfaceId, setIdfaceId] = useState<string>("");
+  const [intervaloMs, setIntervaloMs] = useState<number>(2000);
   const cameraRef = useRef<string>("");
 
 
@@ -96,6 +101,15 @@ export default function PortariaInterfone() {
     return `http://${d.ip}${porta}/`;
   }, [idfaces, idfaceId]);
 
+  // Navegador bloqueia conteúdo HTTP dentro de página HTTPS (mixed content):
+  // nesse caso o iframe fica em branco, então mostramos o atalho para nova aba.
+  const bloqueadoMixedContent = useMemo(
+    () => typeof window !== "undefined" && window.location.protocol === "https:" && !!idfaceUrl && idfaceUrl.startsWith("http://"),
+    [idfaceUrl],
+  );
+
+
+
 
   const capturar = useCallback(async (id: string, manual = false) => {
     if (!id) return;
@@ -127,9 +141,9 @@ export default function PortariaInterfone() {
     setErroImagem(null);
     void capturar(cameraId);
     if (!aoVivo) return;
-    const t = setInterval(() => void capturar(cameraId), INTERVALO_SNAPSHOT_MS);
+    const t = setInterval(() => void capturar(cameraId), intervaloMs);
     return () => clearInterval(t);
-  }, [cameraId, aoVivo, capturar]);
+  }, [cameraId, aoVivo, capturar, intervaloMs]);
 
   const abrir = async (ponto: PontoAcesso) => {
     setAcionando(ponto.id);
@@ -156,7 +170,7 @@ export default function PortariaInterfone() {
         <Badge variant={aoVivo ? "default" : "secondary"}>{aoVivo ? "Ao vivo" : "Pausado"}</Badge>
       </div>
 
-      <Tabs defaultValue="idface" className="space-y-4">
+      <Tabs defaultValue="camera" className="space-y-4">
         <TabsList>
           <TabsTrigger value="idface">Interfone iDFace</TabsTrigger>
           <TabsTrigger value="camera">Câmera + acionamentos</TabsTrigger>
@@ -189,26 +203,37 @@ export default function PortariaInterfone() {
               {idfaceUrl && <span className="text-xs text-muted-foreground">{idfaceUrl}</span>}
             </div>
 
-            {idfaceUrl ? (
+            {idfaceUrl && !bloqueadoMixedContent ? (
               <iframe
                 title="Interface do interfone iDFace"
                 src={idfaceUrl}
                 className="w-full h-[70vh] bg-background"
               />
             ) : (
-              <div className="h-[40vh] flex flex-col items-center justify-center gap-2 text-muted-foreground text-center p-6">
+              <div className="h-[40vh] flex flex-col items-center justify-center gap-3 text-muted-foreground text-center p-6">
                 <MonitorSmartphone className="h-10 w-10" />
-                <p className="text-sm">
-                  Nenhum dispositivo iDFace com IP cadastrado nesta unidade. Configure em Portaria → Dispositivos.
-                </p>
+                {idfaceUrl ? (
+                  <>
+                    <p className="text-sm max-w-md">
+                      O navegador não permite exibir a tela do iDFace ({idfaceUrl}) dentro do CRM, porque o sistema roda
+                      em HTTPS e o equipamento responde em HTTP. Use o botão abaixo para abrir a interface do interfone.
+                    </p>
+                    <Button onClick={() => window.open(idfaceUrl, "_blank", "noopener")}>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir tela do interfone
+                    </Button>
+                    <p className="text-xs">
+                      Para ver o vídeo ao vivo sem sair do CRM, use a aba “Câmera + acionamentos”.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm">
+                    Nenhum dispositivo iDFace com IP cadastrado nesta unidade. Configure em Portaria → Dispositivos.
+                  </p>
+                )}
               </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            A interface do iDFace é servida pelo próprio equipamento na rede local ({idfaceUrl ?? "IP não informado"}).
-            Se ela não carregar aqui dentro (o equipamento pode bloquear exibição em quadro, ou o CRM estar em HTTPS),
-            use o botão “Abrir em nova aba”.
-          </p>
         </TabsContent>
 
         <TabsContent value="camera">
@@ -236,7 +261,20 @@ export default function PortariaInterfone() {
               {aoVivo ? <VideoOff className="h-4 w-4 mr-2" /> : <Video className="h-4 w-4 mr-2" />}
               {aoVivo ? "Pausar" : "Ao vivo"}
             </Button>
+            <Select value={String(intervaloMs)} onValueChange={(v) => setIntervaloMs(Number(v))}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OPCOES_FPS.map((o) => (
+                  <SelectItem key={o.ms} value={String(o.ms)}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
 
           <div className="aspect-video bg-muted flex items-center justify-center relative">
             {imagem ? (

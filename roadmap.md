@@ -19,3 +19,5 @@
 - [x] Unificar permissões no Grupo de acesso: criar grupos Porteiro e Gerente, remover flags de permissões e campo Tipo, ajustar usos no sistema
 
 - [ ] Coletor 1.9.2 no equipamento: atualização in-app não funciona (update.sh antigo) — atualizar via ISO 1.9.4 (pen drive)
+
+- [ ] Interfone: tela nao abre (iframe HTTP bloqueado em HTTPS) e video ao vivo do interfone
