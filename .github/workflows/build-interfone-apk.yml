@@ -100,6 +100,18 @@ jobs:
           mkdir -p android/app
           echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
+          # Garante que o pacote do json seja o mesmo do app (br.com.pilar.interfone)
+          python3 - <<'PY'
+          import json
+          p = 'android/app/google-services.json'
+          d = json.load(open(p, encoding='utf-8'))
+          pkg = 'br.com.pilar.interfone'
+          for c in d.get('client', []):
+              c.setdefault('client_info', {}).setdefault('android_client_info', {})['package_name'] = pkg
+          json.dump(d, open(p, 'w', encoding='utf-8'))
+          print('package_name ajustado para', pkg)
+          PY
+
           python3 - <<'PY'
           import re
           root = 'android/build.gradle'
