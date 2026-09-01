@@ -14,6 +14,14 @@ export default defineConfig(({ mode }) => ({
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
   plugins: [react(), mcpPlugin(), mode === "development" && componentTagger()].filter(Boolean),
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        interfone: path.resolve(__dirname, "interfone.html"),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

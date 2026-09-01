@@ -50,6 +50,9 @@ jobs:
           rm -rf portaria-app/www
           mkdir -p portaria-app/www
           cp -r dist/* portaria-app/www/
+          # App nativo: somente interfone + ramal SIP (sem o CRM web)
+          rm -f portaria-app/www/index.html
+          mv portaria-app/www/interfone.html portaria-app/www/index.html
           ls -lh portaria-app/www | head -20
 
       - name: Instalar dependências do Capacitor
