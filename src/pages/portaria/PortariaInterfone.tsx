@@ -203,26 +203,37 @@ export default function PortariaInterfone() {
               {idfaceUrl && <span className="text-xs text-muted-foreground">{idfaceUrl}</span>}
             </div>
 
-            {idfaceUrl ? (
+            {idfaceUrl && !bloqueadoMixedContent ? (
               <iframe
                 title="Interface do interfone iDFace"
                 src={idfaceUrl}
                 className="w-full h-[70vh] bg-background"
               />
             ) : (
-              <div className="h-[40vh] flex flex-col items-center justify-center gap-2 text-muted-foreground text-center p-6">
+              <div className="h-[40vh] flex flex-col items-center justify-center gap-3 text-muted-foreground text-center p-6">
                 <MonitorSmartphone className="h-10 w-10" />
-                <p className="text-sm">
-                  Nenhum dispositivo iDFace com IP cadastrado nesta unidade. Configure em Portaria → Dispositivos.
-                </p>
+                {idfaceUrl ? (
+                  <>
+                    <p className="text-sm max-w-md">
+                      O navegador não permite exibir a tela do iDFace ({idfaceUrl}) dentro do CRM, porque o sistema roda
+                      em HTTPS e o equipamento responde em HTTP. Use o botão abaixo para abrir a interface do interfone.
+                    </p>
+                    <Button onClick={() => window.open(idfaceUrl, "_blank", "noopener")}>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir tela do interfone
+                    </Button>
+                    <p className="text-xs">
+                      Para ver o vídeo ao vivo sem sair do CRM, use a aba “Câmera + acionamentos”.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm">
+                    Nenhum dispositivo iDFace com IP cadastrado nesta unidade. Configure em Portaria → Dispositivos.
+                  </p>
+                )}
               </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            A interface do iDFace é servida pelo próprio equipamento na rede local ({idfaceUrl ?? "IP não informado"}).
-            Se ela não carregar aqui dentro (o equipamento pode bloquear exibição em quadro, ou o CRM estar em HTTPS),
-            use o botão “Abrir em nova aba”.
-          </p>
         </TabsContent>
 
         <TabsContent value="camera">
