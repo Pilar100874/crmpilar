@@ -40,5 +40,5 @@
 ## Vehicle function task (Shelly i4 Gen3 entrada / Shelly 1 Gen3 saida + fix typecheck)
 
 ## Push nativo (Firebase) – Portaria
-- [ ] Campo no CRM para colar o google-services.json (Configurações > Push nativo) + passo a passo
-- [ ] Push funcionando para campainha E para chamada do ramal SIP
+- [x] Campo no CRM para colar o google-services.json (Configurações > Push nativo) + passo a passo
+- [x] Push funcionando para campainha E para chamada do ramal SIP (tipo campainha/sip na função de push)
