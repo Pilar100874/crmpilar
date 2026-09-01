@@ -16,6 +16,7 @@ type Dispositivo = {
   id: string;
   nome: string;
   tipo: string;
+  funcao: "entrada" | "saida" | null;
   modelo: string | null;
   localizacao: string | null;
   ip: string | null;
@@ -33,7 +34,7 @@ type Dispositivo = {
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
+  nome: "", tipo: "shelly", funcao: "saida", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
 };
 
@@ -72,6 +73,10 @@ export default function PortariaDispositivos() {
     const payload = {
       nome: form.nome.trim().toUpperCase(),
       tipo: form.tipo || "shelly",
+      config: {
+        ...((form.config ?? {}) as Record<string, unknown>),
+        funcao: form.tipo === "shelly" ? (form.funcao || "saida") : null,
+      },
       modelo: form.modelo || null,
       localizacao: form.localizacao?.toUpperCase() || null,
       ip: form.ip || null,
@@ -83,7 +88,6 @@ export default function PortariaDispositivos() {
       firmware: form.firmware || null,
       habilitado: form.habilitado ?? true,
       via_coletor: form.via_coletor ?? false,
-      config: (form.config ?? {}) as never,
     };
     let id = form.id;
     if (id) {
@@ -155,7 +159,7 @@ export default function PortariaDispositivos() {
                 <div className="min-w-0">
                   <p className="font-semibold truncate flex items-center gap-2"><Cpu className="h-4 w-4 text-primary" />{d.nome}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {[d.tipo === "idface" ? "Control iD iDFace" : "Shelly", d.modelo, d.localizacao, d.ip].filter(Boolean).join(" · ")}
+                    {[d.tipo === "idface" ? "Control iD iDFace" : d.tipo === "shelly" ? `Shelly ${d.config?.funcao === "entrada" ? "i4 Gen3 (entrada)" : "1 Gen3 (saída)"}` : d.tipo, d.modelo, d.localizacao, d.ip].filter(Boolean).join(" · ")}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className="flex items-center gap-1.5 text-xs">
@@ -163,6 +167,11 @@ export default function PortariaDispositivos() {
                       <span className="capitalize text-muted-foreground">{d.status ?? "offline"}</span>
                     </span>
                     <Badge variant={d.habilitado ? "default" : "secondary"}>{d.habilitado ? "Habilitado" : "Desabilitado"}</Badge>
+                    {d.tipo === "shelly" && (d.config as any)?.funcao && (
+                      <Badge variant="outline">
+                        {(d.config as any).funcao === "entrada" ? "Entrada · Shelly i4 Gen3" : "Saída · Shelly 1 Gen3"}
+                      </Badge>
+                    )}
                     {d.via_coletor && <Badge variant="outline">Via Coletor local</Badge>}
                     {d.ultima_comunicacao && (
                       <span className="text-[11px] text-muted-foreground">{new Date(d.ultima_comunicacao).toLocaleString("pt-BR")}</span>
@@ -208,6 +217,21 @@ export default function PortariaDispositivos() {
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
             <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
+            {form.tipo === "shelly" && (
+              <div className="sm:col-span-2">
+                <Label>Função do dispositivo</Label>
+                <Select value={(form.funcao as string) ?? "saida"} onValueChange={(v) => setForm({ ...form, funcao: v as "entrada" | "saida" })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="saida">Saída — Shelly 1 Gen3 (abre fechadura / portão)</SelectItem>
+                    <SelectItem value="entrada">Entrada — Shelly i4 Gen3 (campainha / botão)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Use <strong>Entrada</strong> para o Shelly i4 (detecta o toque na campainha) e <strong>Saída</strong> para o Shelly 1 (aciona a fechadura).
+                </p>
+              </div>
+            )}
             {form.tipo !== "shelly" && (
               <div className="sm:col-span-2">
                 <Label>Endpoint / URL (opcional, sobrepõe IP)</Label>

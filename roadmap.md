@@ -37,3 +37,4 @@
 - [ ] Gerar o APK Android (npx cap sync/add android) e testar o push no aparelho
 - [ ] Publicar o app para o manifesto do Coletor 1.9.7 ficar no ar (crm.pilar.com.br/coletor/version.json ainda serve 1.9.6)
 - [x] APK do interfone compilado por GitHub Actions (portaria-app + build-interfone-apk.yml) e card de download nas Configurações da Portaria
+## Vehicle function task (Shelly i4 Gen3 entrada / Shelly 1 Gen3 saida + fix typecheck)
