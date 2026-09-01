@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Loader2, Plus, RefreshCw, Trash2, Wifi, WifiOff, Download } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Trash2, Wifi, WifiOff, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,10 +78,6 @@ export default function PortariaColetores() {
     carregar();
   };
 
-  const copiar = async (texto: string) => {
-    await navigator.clipboard.writeText(texto);
-    toast({ title: "Chave copiada" });
-  };
 
   return (
     <div className="space-y-4">
