@@ -23,11 +23,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -45,7 +45,7 @@ jobs:
 
       - name: Gerar projeto Android
         working-directory: portaria-app
-        run: npx cap add android
+        run: npx cap add android --verbose
 
       - name: Aplicar versão no build.gradle
         working-directory: portaria-app
@@ -61,15 +61,29 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
-            echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
-            # plugin do Google Services (necessário para FCM)
-            sed -i 's/^}$/    dependencies { classpath "com.google.gms:google-services:4.4.2" }\n}/' android/build.gradle || true
-            echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-            echo "google-services.json aplicado"
-          else
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
             echo "Sem GOOGLE_SERVICES_JSON: APK sem push nativo (o restante funciona)"
+            exit 0
           fi
+          echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          python3 - <<'PY'
+          import re
+          root = 'android/build.gradle'
+          s = open(root, encoding='utf-8').read()
+          if 'com.google.gms:google-services' not in s:
+              s = re.sub(
+                  r'(dependencies\s*\{)',
+                  r'\1\n        classpath "com.google.gms:google-services:4.4.2"',
+                  s, count=1)
+              open(root, 'w', encoding='utf-8').write(s)
+          app = 'android/app/build.gradle'
+          a = open(app, encoding='utf-8').read()
+          if 'com.google.gms.google-services' not in a:
+              a += "\napply plugin: 'com.google.gms.google-services'\n"
+              open(app, 'w', encoding='utf-8').write(a)
+          print(open(root, encoding='utf-8').read())
+          PY
+          echo "google-services.json aplicado"
 
       - name: Permissões de câmera/microfone e rede local
         working-directory: portaria-app
@@ -92,7 +106,6 @@ jobs:
           )
           if add:
               s = s.replace('</manifest>', add + '\n</manifest>')
-          s = s.replace('android:usesCleartextTraffic="true"', 'android:usesCleartextTraffic="true"')
           open(p, 'w', encoding='utf-8').write(s)
           print(s)
           PY
@@ -101,7 +114,8 @@ jobs:
         working-directory: portaria-app/android
         run: |
           chmod +x ./gradlew
-          ./gradlew clean :app:assembleDebug --no-daemon
+          ./gradlew clean :app:assembleDebug --no-daemon --stacktrace
+
 
       - name: Renomear APK
         id: rename
