@@ -46,8 +46,14 @@ export default function PortariaAtendimentoMobile() {
 
   return (
     <div className="mx-auto w-full max-w-md space-y-4 p-3">
-      <header className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Atendimento do interfone</h1>
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <img src={logoPilar} alt="Pilar Portaria" className="h-9 w-auto object-contain" />
+          <div>
+            <p className="text-sm font-semibold leading-tight">Pilar Portaria</p>
+            <p className="text-xs text-muted-foreground leading-tight">Atendimento do interfone</p>
+          </div>
+        </div>
         <Badge variant={config?.ativo ? "default" : "outline"} className="gap-1">
           {config?.ativo ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
           {config?.ativo ? "Ativo" : "Desligado"}
