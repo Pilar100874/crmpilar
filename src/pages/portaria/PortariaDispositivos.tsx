@@ -36,8 +36,9 @@ type Dispositivo = {
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", funcao: "saida", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
+  nome: "", tipo: "shelly", funcao: "saida", modelo: "shelly-1-gen3", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
+
 };
 
 export default function PortariaDispositivos() {
