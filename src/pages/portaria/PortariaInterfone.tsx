@@ -101,6 +101,15 @@ export default function PortariaInterfone() {
     return `http://${d.ip}${porta}/`;
   }, [idfaces, idfaceId]);
 
+  // Navegador bloqueia conteúdo HTTP dentro de página HTTPS (mixed content):
+  // nesse caso o iframe fica em branco, então mostramos o atalho para nova aba.
+  const bloqueadoMixedContent = useMemo(
+    () => typeof window !== "undefined" && window.location.protocol === "https:" && !!idfaceUrl && idfaceUrl.startsWith("http://"),
+    [idfaceUrl],
+  );
+
+
+
 
   const capturar = useCallback(async (id: string, manual = false) => {
     if (!id) return;
