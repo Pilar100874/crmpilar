@@ -88,7 +88,6 @@ export default function PortariaDispositivos() {
       firmware: form.firmware || null,
       habilitado: form.habilitado ?? true,
       via_coletor: form.via_coletor ?? false,
-      config: (form.config ?? {}) as never,
     };
     let id = form.id;
     if (id) {
