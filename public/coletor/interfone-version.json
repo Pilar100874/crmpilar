@@ -1,6 +1,6 @@
 {
   "version": "1.5.1",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.5.0/pilar-interfone-v1.5.0.apk",
-  "filename": "pilar-interfone-v1.5.0.apk",
-  "notas": "v1.5.0: app renomeado para Pilar Sip, novo ícone (fone + onda em fundo azul-marinho com barra laranja), tela sem o aviso de observações, histórico em aba separada e botões ajustados ao tema escuro."
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.5.1/pilar-interfone-v1.5.1.apk",
+  "filename": "pilar-interfone-v1.5.1.apk",
+  "notas": "v1.5.1: discador SIP com tom escuro combinando com o app, botão \"Interfone\" na aba de atendimento e botões de abertura do popup sem corte de texto."
 }
