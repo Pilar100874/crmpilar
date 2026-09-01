@@ -50,9 +50,9 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
     <div className={`mx-auto w-full max-w-md space-y-4 p-3 ${dark ? "text-white" : ""}`}>
       <header className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
         <div className="flex items-center gap-2">
-          <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Portaria" className="h-9 w-auto object-contain" />
+          <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Sip" className="h-9 w-auto object-contain" />
           <div>
-            <p className="text-sm font-semibold leading-tight">Pilar Portaria</p>
+            <p className="text-sm font-semibold leading-tight">Pilar Sip</p>
             <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Atendimento do interfone</p>
           </div>
         </div>
