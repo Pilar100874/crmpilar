@@ -48,6 +48,7 @@ export default function PortariaInterfone() {
   const [aoVivo, setAoVivo] = useState(true);
   const [idfaces, setIdfaces] = useState<DispositivoIdface[]>([]);
   const [idfaceId, setIdfaceId] = useState<string>("");
+  const [intervaloMs, setIntervaloMs] = useState<number>(2000);
   const cameraRef = useRef<string>("");
 
 
