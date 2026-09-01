@@ -63,7 +63,7 @@ export default function PortariaColetores() {
     }
     setNome("");
     carregar();
-    toast({ title: "Coletor criado", description: "No appliance ISO (1.9.4+) a conexão é automática — a chave só é usada na instalação manual para Windows." });
+    toast({ title: "Coletor criado", description: "No appliance ISO (1.9.4+) a conexão é automática — ele se registra sozinho ao ligar." });
   };
 
   const alternarAtivo = async (c: Coletor, ativo: boolean) => {
