@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 type Coletor = {
   id: string;
   nome: string;
-  token?: string | null;
+  token?: string | null; // mantido só por compatibilidade; não é mais exibido
   ativo: boolean;
   versao: string | null;
   ip_local: string | null;
