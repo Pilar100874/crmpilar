@@ -153,7 +153,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
 
       <CardContent className="space-y-4">
         {editando && (
-          <div className="space-y-3 rounded-lg border p-3">
+          <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="sip-servidor">Servidor (PABX)</Label>
