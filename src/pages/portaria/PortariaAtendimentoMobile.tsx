@@ -8,6 +8,7 @@ import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta, type ToqueCampainha } from "@/lib/portaria/interfone";
 import { usePushInterfone, notificarCampainhaLocal, isAppNativo } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
+import PortariaSipRamal from "@/components/portaria/PortariaSipRamal";
 
 /** Tela de atendimento do interfone otimizada para celular (usada também no app Android). */
 export default function PortariaAtendimentoMobile() {
