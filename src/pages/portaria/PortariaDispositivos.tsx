@@ -208,12 +208,18 @@ export default function PortariaDispositivos() {
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
             <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
-            <div className="sm:col-span-2">
-              <Label>Endpoint / URL (opcional, sobrepõe IP)</Label>
-              <Input value={form.endpoint ?? ""} onChange={(e) => setForm({ ...form, endpoint: e.target.value })} placeholder="http://192.168.0.50" />
-            </div>
-            <div><Label>Identificador do dispositivo</Label><Input value={form.device_id ?? ""} onChange={(e) => setForm({ ...form, device_id: e.target.value })} /></div>
-            <div><Label>Firmware</Label><Input value={form.firmware ?? ""} onChange={(e) => setForm({ ...form, firmware: e.target.value })} /></div>
+            {form.tipo !== "shelly" && (
+              <div className="sm:col-span-2">
+                <Label>Endpoint / URL (opcional, sobrepõe IP)</Label>
+                <Input value={form.endpoint ?? ""} onChange={(e) => setForm({ ...form, endpoint: e.target.value })} placeholder="http://192.168.0.50" />
+              </div>
+            )}
+            {form.tipo !== "shelly" && (
+              <div><Label>Identificador do dispositivo</Label><Input value={form.device_id ?? ""} onChange={(e) => setForm({ ...form, device_id: e.target.value })} /></div>
+            )}
+            {form.tipo !== "shelly" && (
+              <div><Label>Firmware</Label><Input value={form.firmware ?? ""} onChange={(e) => setForm({ ...form, firmware: e.target.value })} /></div>
+            )}
 
             {form.tipo === "shelly" && (
               <>
@@ -257,6 +263,7 @@ export default function PortariaDispositivos() {
               <Switch checked={form.habilitado ?? true} onCheckedChange={(v) => setForm({ ...form, habilitado: v })} />
             </div>
 
+            {form.tipo !== "shelly" && (
             <div className="sm:col-span-2 rounded-md border p-3 space-y-3 bg-muted/30">
               <p className="text-sm font-medium flex items-center gap-2"><KeyRound className="h-4 w-4" />Credenciais (armazenadas somente no backend)</p>
               <div className={`grid grid-cols-1 gap-3 ${form.tipo === "idface" ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
@@ -282,6 +289,7 @@ export default function PortariaDispositivos() {
               </p>
 
             </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAberto(false)}>Cancelar</Button>
