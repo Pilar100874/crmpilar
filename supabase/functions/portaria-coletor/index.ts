@@ -115,6 +115,19 @@ Deno.serve(async (req) => {
       device_id: body.device_id_evento ?? null,
       origem: "idface",
     });
+    // Avisa os celulares registrados (push nativo), sem travar a resposta ao Coletor.
+    try {
+      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/portaria-push-campainha`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ unidade_id: unidadeId }),
+      });
+    } catch {
+      /* notificação é complementar: o alerta em tempo real continua funcionando */
+    }
     return responder(200, { ok: true });
   }
 
