@@ -292,6 +292,9 @@ export default function PortariaInterfone() {
           )}
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
+
   );
 }
