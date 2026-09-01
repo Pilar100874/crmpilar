@@ -100,12 +100,14 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
 
 
 
-      <Card>
+      <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Últimos toques</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {toques.length === 0 && <p className="text-sm text-muted-foreground">Nenhum toque registrado ainda.</p>}
+          {toques.length === 0 && (
+            <p className={`text-sm ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
+          )}
           {toques.map((t) => (
             <button
               key={t.id}
@@ -113,10 +115,15 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
                 setToqueId(t.id);
                 setAberto(true);
               }}
-              className="flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-left"
+              className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
+                dark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "bg-card"
+              }`}
             >
               <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
-              <Badge variant={t.status === "pendente" ? "default" : "outline"}>
+              <Badge
+                variant={t.status === "pendente" ? "default" : "outline"}
+                className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
+              >
                 {t.status === "pendente" ? "Novo" : "Atendido"}
               </Badge>
             </button>
