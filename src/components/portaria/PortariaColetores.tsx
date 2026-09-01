@@ -91,8 +91,8 @@ export default function PortariaColetores() {
         </p>
         <p className="text-xs text-muted-foreground">
           <strong>Não é preciso copiar chave:</strong> no appliance ISO (versão 1.9.4+) o coletor se cadastra e
-          conecta sozinho assim que liga. A chave abaixo só é necessária na instalação manual do Coletor Pilar
-          para Windows (versões antigas) — nesse caso cole-a no módulo <strong>Coletor de Portaria</strong> do app.
+          conecta sozinho assim que liga. Para instalação manual do Coletor Pilar no Windows (versões antigas),
+          baixe o instalador abaixo e siga as instruções do módulo <strong>Coletor de Portaria</strong> do app.
         </p>
         <Button variant="outline" size="sm" className="mt-2" asChild>
           <a href="https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe">
