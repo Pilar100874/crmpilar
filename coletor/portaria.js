@@ -59,6 +59,39 @@ function requisicao(url, { method = 'GET', headers = {}, body = null, timeout = 
   });
 }
 
+function requisicaoBinaria(url, { method = 'GET', headers = {}, body = null, timeout = 12000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const alvo = new URL(url);
+    const mod = alvo.protocol === 'https:' ? https : http;
+    const req = mod.request(
+      {
+        hostname: alvo.hostname,
+        port: alvo.port || (alvo.protocol === 'https:' ? 443 : 80),
+        path: `${alvo.pathname}${alvo.search}`,
+        method,
+        headers,
+        rejectUnauthorized: false,
+        timeout,
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          const bytes = Buffer.concat(chunks);
+          if (res.statusCode >= 400) {
+            return reject(new Error(`HTTP ${res.statusCode}: ${bytes.toString('utf-8').slice(0, 160)}`));
+          }
+          resolve({ bytes, contentType: res.headers['content-type'] || 'image/jpeg' });
+        });
+      },
+    );
+    req.on('timeout', () => req.destroy(new Error('Tempo esgotado ao capturar a câmera do iDFace.')));
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
 function baseUrlShelly(device) {
   if (device.endpoint) return String(device.endpoint).replace(/\/+$/, '');
   const proto = (device.config && device.config.protocolo) || 'http';
@@ -129,11 +162,46 @@ async function controlidStatus(device, cred) {
   return { mensagem: 'Login no equipamento efetuado pelo Coletor.', dados: { sessao: !!sessao } };
 }
 
+async function controlidCapturarCamera(device, cred) {
+  const alvo = resolverProtocolo({ ip: device.ip, porta: device.porta, https: false });
+  const host = device.ip;
+  const port = device.porta || alvo.porta || 80;
+  const usaHttps = !!alvo.https;
+  const sessao = await login({
+    host, port, https: usaHttps,
+    login: (cred && cred.usuario) || 'admin',
+    password: (cred && cred.senha) || 'admin',
+  });
+  const base = `${usaHttps ? 'https' : 'http'}://${host}:${port}`;
+  const corpo = JSON.stringify({ frame_type: 'camera', camera: 'rgb' });
+  try {
+    const captura = await requisicaoBinaria(`${base}/save_screenshot.fcgi?session=${encodeURIComponent(sessao)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(corpo) },
+      body: corpo,
+    });
+    if (!captura.bytes.length) throw new Error('O iDFace retornou uma imagem vazia.');
+    return {
+      mensagem: 'Imagem capturada pela câmera do iDFace.',
+      dados: {
+        imagem_base64: captura.bytes.toString('base64'),
+        content_type: captura.contentType,
+      },
+    };
+  } finally {
+    try { await logout({ host, port, https: usaHttps, session: sessao }); } catch {}
+  }
+}
+
 async function executarJob(job) {
   const device = job.device || {};
   const cred = job.credenciais || {};
   const params = job.parametros || {};
   const idface = String(device.tipo || '').toLowerCase() === 'idface';
+  if (job.comando === 'capturar_camera') {
+    if (!idface) throw new Error('Captura integrada disponível somente para o iDFace.');
+    return await controlidCapturarCamera(device, cred);
+  }
   if (job.comando === 'abrir') {
     return idface
       ? await controlidAbrir(device, cred, Number(params.porta) || 1)

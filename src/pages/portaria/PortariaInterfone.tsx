@@ -48,8 +48,12 @@ export default function PortariaInterfone() {
   const [aoVivo, setAoVivo] = useState(true);
   const [idfaces, setIdfaces] = useState<DispositivoIdface[]>([]);
   const [idfaceId, setIdfaceId] = useState<string>("");
+  const [imagemIdface, setImagemIdface] = useState<string | null>(null);
+  const [erroIdface, setErroIdface] = useState<string | null>(null);
+  const [carregandoIdface, setCarregandoIdface] = useState(false);
   const [intervaloMs, setIntervaloMs] = useState<number>(2000);
   const cameraRef = useRef<string>("");
+  const capturaIdfaceEmAndamento = useRef(false);
 
 
   useEffect(() => {
@@ -134,6 +138,47 @@ export default function PortariaInterfone() {
     }
   }, []);
 
+  const capturarIdface = useCallback(async (id: string, manual = false) => {
+    if (!id || capturaIdfaceEmAndamento.current) return;
+    capturaIdfaceEmAndamento.current = true;
+    setCarregandoIdface(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("portaria-dispositivo", {
+        body: { acao: "capturar_camera", device_id: id },
+      });
+      if (error) throw error;
+      const resposta = data as {
+        ok?: boolean;
+        mensagem?: string;
+        dados?: { imagem_base64?: string; content_type?: string };
+      } | null;
+      if (!resposta?.ok || !resposta.dados?.imagem_base64) {
+        throw new Error(resposta?.mensagem || "O iDFace não retornou uma imagem.");
+      }
+      const tipo = resposta.dados.content_type?.startsWith("image/") ? resposta.dados.content_type : "image/jpeg";
+      setImagemIdface(`data:${tipo};base64,${resposta.dados.imagem_base64}`);
+      setErroIdface(null);
+      if (manual) toast.success("Imagem do interfone atualizada");
+    } catch (e) {
+      const msg = (e as Error).message || "Não foi possível abrir a câmera do interfone.";
+      setErroIdface(msg);
+      if (manual) toast.error(msg);
+    } finally {
+      capturaIdfaceEmAndamento.current = false;
+      setCarregandoIdface(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setImagemIdface(null);
+    setErroIdface(null);
+    if (!idfaceId) return;
+    void capturarIdface(idfaceId);
+    if (!aoVivo) return;
+    const t = setInterval(() => void capturarIdface(idfaceId), intervaloMs);
+    return () => clearInterval(t);
+  }, [aoVivo, capturarIdface, idfaceId, intervaloMs]);
+
   // Atualização periódica (modo ao vivo)
   useEffect(() => {
     if (!cameraId) return;
@@ -194,43 +239,47 @@ export default function PortariaInterfone() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!idfaceUrl}
-                onClick={() => idfaceUrl && window.open(idfaceUrl, "_blank", "noopener")}
+                disabled={!idfaceId || carregandoIdface}
+                onClick={() => void capturarIdface(idfaceId, true)}
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Abrir em nova aba
+                {carregandoIdface ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Atualizar imagem
               </Button>
-              {idfaceUrl && <span className="text-xs text-muted-foreground">{idfaceUrl}</span>}
+              <Button variant={aoVivo ? "secondary" : "default"} size="sm" onClick={() => setAoVivo((v) => !v)}>
+                {aoVivo ? <VideoOff className="h-4 w-4 mr-2" /> : <Video className="h-4 w-4 mr-2" />}
+                {aoVivo ? "Pausar" : "Ao vivo"}
+              </Button>
             </div>
 
-            {idfaceUrl && !bloqueadoMixedContent ? (
-              <iframe
-                title="Interface do interfone iDFace"
-                src={idfaceUrl}
-                className="w-full h-[70vh] bg-background"
-              />
-            ) : (
-              <div className="h-[40vh] flex flex-col items-center justify-center gap-3 text-muted-foreground text-center p-6">
-                <MonitorSmartphone className="h-10 w-10" />
-                {idfaceUrl ? (
-                  <>
-                    <p className="text-sm max-w-md">
-                      O navegador não permite exibir a tela do iDFace ({idfaceUrl}) dentro do CRM, porque o sistema roda
-                      em HTTPS e o equipamento responde em HTTP. Use o botão abaixo para abrir a interface do interfone.
-                    </p>
-                    <Button onClick={() => window.open(idfaceUrl, "_blank", "noopener")}>
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Abrir tela do interfone
-                    </Button>
-                    <p className="text-xs">
-                      Para ver o vídeo ao vivo sem sair do CRM, use a aba “Câmera + acionamentos”.
-                    </p>
-                  </>
-                ) : (
+            <div className="aspect-video bg-muted flex items-center justify-center relative">
+              {imagemIdface ? (
+                <img src={imagemIdface} alt="Imagem da câmera do interfone iDFace" className="h-full w-full object-contain" />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-muted-foreground text-center p-6">
+                  {carregandoIdface ? <Loader2 className="h-10 w-10 animate-spin" /> : <MonitorSmartphone className="h-10 w-10" />}
                   <p className="text-sm">
-                    Nenhum dispositivo iDFace com IP cadastrado nesta unidade. Configure em Portaria → Dispositivos.
+                    {!idfaces.length
+                      ? "Nenhum iDFace cadastrado nesta unidade."
+                      : erroIdface || (carregandoIdface ? "Conectando à câmera do interfone..." : "Sem imagem")}
                   </p>
-                )}
+                </div>
+              )}
+              {imagemIdface && carregandoIdface && (
+                <span className="absolute top-2 right-2 rounded-full bg-background/80 p-1.5">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </span>
+              )}
+            </div>
+
+            {idfaceUrl && (
+              <div className="flex items-center justify-between gap-3 border-t p-3">
+                <p className="text-xs text-muted-foreground">
+                  A imagem é capturada pelo Coletor da rede local.
+                </p>
+                <Button variant="ghost" size="sm" onClick={() => window.open(idfaceUrl, "_blank", "noopener")}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Abrir painel do iDFace
+                </Button>
               </div>
             )}
           </div>
