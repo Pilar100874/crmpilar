@@ -106,13 +106,19 @@ export default function PortariaConfiguracoes() {
         <p className="text-sm text-muted-foreground">Pontos de acesso, permissões de perfil e sincronização facial.</p>
       </div>
 
-      <Tabs defaultValue="acessos">
+      <Tabs defaultValue="interfone">
         <TabsList>
+          <TabsTrigger value="interfone">Interfone</TabsTrigger>
           <TabsTrigger value="acessos">Pontos de acesso</TabsTrigger>
           <TabsTrigger value="perfis">Perfis e permissões</TabsTrigger>
           <TabsTrigger value="facial">Facial / iDFace</TabsTrigger>
           <TabsTrigger value="coletores">Coletores (rede local)</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="interfone" className="space-y-4 pt-4">
+          <InterfoneConfigCard />
+        </TabsContent>
+
 
         <TabsContent value="acessos" className="space-y-3 pt-4">
           <div className="flex justify-end">
