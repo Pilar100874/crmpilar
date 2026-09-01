@@ -102,8 +102,12 @@ export default function PortariaLayout() {
               Configuração do interfone
             </p>
           </div>
+          <div className="ml-auto shrink-0">
+            <InterfoneWatcher />
+          </div>
         </div>
       </div>
+
 
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:flex-row">
