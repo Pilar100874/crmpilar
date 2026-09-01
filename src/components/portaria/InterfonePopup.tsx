@@ -51,14 +51,15 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
         .eq("ativo", true)
         .order("ordem");
       if (unidadeId) qp = qp.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
-      const promessas: Promise<unknown>[] = [qp];
+      const promessas: Promise<unknown>[] = [Promise.resolve(qp)];
       const ids = config.cameras_extras ?? [];
-      const qc = ids.length
-        ? supabase.from("cv_cameras").select("id, nome").in("id", ids).eq("ativo", true).order("nome")
+      const qc: Promise<unknown> = ids.length
+        ? Promise.resolve(supabase.from("cv_cameras").select("id, nome").in("id", ids).eq("ativo", true).order("nome"))
         : Promise.resolve({ data: [] as CameraExtra[] });
-      const qd = config.device_id
-        ? supabase.from("port_devices").select("ip, porta, endpoint").eq("id", config.device_id).maybeSingle()
+      const qd: Promise<unknown> = config.device_id
+        ? Promise.resolve(supabase.from("port_devices").select("ip, porta, endpoint").eq("id", config.device_id).maybeSingle())
         : Promise.resolve({ data: null });
+
       const [{ data: aps }, { data: cams }, { data: dev }] = (await Promise.all([
         promessas[0],
         qc,
