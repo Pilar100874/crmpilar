@@ -44,3 +44,6 @@
 - [x] Push funcionando para campainha E para chamada do ramal SIP (tipo campainha/sip na função de push)
 
 - [x] APK Pilar Portaria nativo: bundle exclusivo (interfone + ramal SIP), sem o CRM web nem tela de login do sistema
+
+## Fix build APK (Firebase)
+- [x] Workflow ajusta automaticamente o package_name do google-services.json para br.com.pilar.interfone (corrige "No matching client found")
