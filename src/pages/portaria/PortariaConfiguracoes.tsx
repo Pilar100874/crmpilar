@@ -13,7 +13,9 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { comandoControlId, usePortariaPerfil } from "@/lib/portaria/api";
 import PortariaColetores from "@/components/portaria/PortariaColetores";
+import InterfoneConfigCard from "@/components/portaria/InterfoneConfigCard";
 import PortariaPermissoes from "@/pages/portaria/PortariaPermissoes";
+
 
 type Ponto = {
   id: string;
