@@ -10,9 +10,10 @@ import { usePushInterfone, notificarCampainhaLocal, isAppNativo } from "@/lib/po
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PortariaSipRamal from "@/components/portaria/PortariaSipRamal";
 import logoPilar from "@/assets/logo-2.png";
+import logoPilarBranco from "@/assets/logo_branco.png";
 
 /** Tela de atendimento do interfone otimizada para celular (usada também no app Android). */
-export default function PortariaAtendimentoMobile() {
+export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
   const { unidadeId } = useUnidadeAtual();
   const { config } = useInterfoneConfig(unidadeId);
   const { status, registrar } = usePushInterfone(unidadeId);
@@ -46,28 +47,31 @@ export default function PortariaAtendimentoMobile() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-4 p-3">
-      <header className="flex items-center justify-between gap-3">
+    <div className={`mx-auto w-full max-w-md space-y-4 p-3 ${dark ? "text-white" : ""}`}>
+      <header className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
         <div className="flex items-center gap-2">
-          <img src={logoPilar} alt="Pilar Portaria" className="h-9 w-auto object-contain" />
+          <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Portaria" className="h-9 w-auto object-contain" />
           <div>
             <p className="text-sm font-semibold leading-tight">Pilar Portaria</p>
-            <p className="text-xs text-muted-foreground leading-tight">Atendimento do interfone</p>
+            <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Atendimento do interfone</p>
           </div>
         </div>
-        <Badge variant={config?.ativo ? "default" : "outline"} className="gap-1">
+        <Badge
+          variant={config?.ativo ? "default" : "outline"}
+          className={`gap-1 ${dark ? (config?.ativo ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}`}
+        >
           {config?.ativo ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
           {config?.ativo ? "Ativo" : "Desligado"}
         </Badge>
       </header>
 
-      <Card>
+      <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Smartphone className="h-4 w-4" /> Alertas neste aparelho
+            <Smartphone className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Alertas neste aparelho
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
+        <CardContent className={`space-y-2 text-sm ${dark ? "text-slate-300" : "text-muted-foreground"}`}>
           {status === "ativo" && <p>Este celular receberá o alerta mesmo com o app fechado.</p>}
           {status === "indisponivel" && (
             <p>No navegador o alerta chega com esta tela aberta. Instale o app Android para receber com o app fechado.</p>
@@ -83,7 +87,7 @@ export default function PortariaAtendimentoMobile() {
 
       <Button
         size="lg"
-        className="w-full gap-2"
+        className={`w-full gap-2 ${dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600" : ""}`}
         onClick={() => {
           setToqueId(toques[0]?.id ?? null);
           setAberto(true);
@@ -96,12 +100,14 @@ export default function PortariaAtendimentoMobile() {
 
 
 
-      <Card>
+      <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Últimos toques</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {toques.length === 0 && <p className="text-sm text-muted-foreground">Nenhum toque registrado ainda.</p>}
+          {toques.length === 0 && (
+            <p className={`text-sm ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
+          )}
           {toques.map((t) => (
             <button
               key={t.id}
@@ -109,10 +115,15 @@ export default function PortariaAtendimentoMobile() {
                 setToqueId(t.id);
                 setAberto(true);
               }}
-              className="flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-left"
+              className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
+                dark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "bg-card"
+              }`}
             >
               <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
-              <Badge variant={t.status === "pendente" ? "default" : "outline"}>
+              <Badge
+                variant={t.status === "pendente" ? "default" : "outline"}
+                className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
+              >
                 {t.status === "pendente" ? "Novo" : "Atendido"}
               </Badge>
             </button>
