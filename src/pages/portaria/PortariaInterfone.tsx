@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Building2, DoorOpen, ExternalLink, Loader2, MonitorSmartphone, RefreshCw, Video, VideoOff } from "lucide-react";
+import { Building2, DoorOpen, ExternalLink, Loader2, RefreshCw, Video, VideoOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { abrirAcesso } from "@/lib/portaria/api";
+import { useInterfoneConfig } from "@/lib/portaria/interfone";
+import InterfoneTile from "@/components/portaria/InterfoneTile";
 
 interface Camera {
   id: string;
@@ -38,29 +40,24 @@ const OPCOES_FPS = [
 
 export default function PortariaInterfone() {
   const { unidadeId, unidadeNome } = useUnidadeAtual();
+  const { config } = useInterfoneConfig(unidadeId);
   const [cameras, setCameras] = useState<Camera[]>([]);
-  const [cameraId, setCameraId] = useState<string>("");
-  const [imagem, setImagem] = useState<string | null>(null);
-  const [carregandoImagem, setCarregandoImagem] = useState(false);
-  const [erroImagem, setErroImagem] = useState<string | null>(null);
   const [pontos, setPontos] = useState<PontoAcesso[]>([]);
-  const [acionando, setAcionando] = useState<string | null>(null);
-  const [aoVivo, setAoVivo] = useState(true);
   const [idfaces, setIdfaces] = useState<DispositivoIdface[]>([]);
   const [idfaceId, setIdfaceId] = useState<string>("");
+  const [imagens, setImagens] = useState<Record<string, string>>({});
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const [carregando, setCarregando] = useState<Record<string, boolean>>({});
   const [imagemIdface, setImagemIdface] = useState<string | null>(null);
   const [erroIdface, setErroIdface] = useState<string | null>(null);
   const [carregandoIdface, setCarregandoIdface] = useState(false);
+  const [acionando, setAcionando] = useState<string | null>(null);
+  const [aoVivo, setAoVivo] = useState(true);
   const [intervaloMs, setIntervaloMs] = useState<number>(2000);
-  const cameraRef = useRef<string>("");
+  const [expandido, setExpandido] = useState<string | null>(null);
   const capturaIdfaceEmAndamento = useRef(false);
 
-
-  useEffect(() => {
-    cameraRef.current = cameraId;
-  }, [cameraId]);
-
-  // Câmeras e pontos de acesso da unidade atual
+  // Câmeras, pontos de acesso e iDFaces da unidade atual
   useEffect(() => {
     let ativo = true;
     (async () => {
@@ -72,7 +69,6 @@ export default function PortariaInterfone() {
         .eq("ativo", true)
         .order("ordem");
       if (unidadeId) qp = qp.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
-
       let qd = supabase
         .from("port_devices")
         .select("id, nome, ip, porta, endpoint")
@@ -83,10 +79,8 @@ export default function PortariaInterfone() {
 
       const [{ data: cams }, { data: aps }, { data: devs }] = await Promise.all([qc, qp, qd]);
       if (!ativo) return;
-      const lista = (cams ?? []) as Camera[];
-      setCameras(lista);
+      setCameras((cams ?? []) as Camera[]);
       setPontos((aps ?? []) as PontoAcesso[]);
-      setCameraId((atual) => atual || lista[0]?.id || "");
       const listaDev = (devs ?? []) as DispositivoIdface[];
       setIdfaces(listaDev);
       setIdfaceId((atual) => atual || listaDev[0]?.id || "");
@@ -95,6 +89,16 @@ export default function PortariaInterfone() {
       ativo = false;
     };
   }, [unidadeId]);
+
+  // Câmeras marcadas para abrir junto com o interfone
+  const camerasSelecionadas = useMemo(() => {
+    const ids = config?.cameras_extras ?? [];
+    return cameras.filter((c) => ids.includes(c.id));
+  }, [cameras, config?.cameras_extras]);
+
+  useEffect(() => {
+    if (config?.device_id) setIdfaceId(config.device_id);
+  }, [config?.device_id]);
 
   const idfaceUrl = useMemo(() => {
     const d = idfaces.find((x) => x.id === idfaceId);
@@ -105,30 +109,24 @@ export default function PortariaInterfone() {
     return `http://${d.ip}${porta}/`;
   }, [idfaces, idfaceId]);
 
-  const capturar = useCallback(async (id: string, manual = false) => {
+  const capturar = useCallback(async (id: string) => {
     if (!id) return;
-    setCarregandoImagem(true);
+    setCarregando((s) => ({ ...s, [id]: true }));
     try {
-      const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
-        body: { camera_id: id },
-      });
+      const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", { body: { camera_id: id } });
       if (error) throw error;
       const url = (data as { signed_url?: string; error?: string } | null)?.signed_url;
       if (!url) throw new Error((data as { error?: string } | null)?.error || "Câmera não respondeu.");
-      if (cameraRef.current !== id) return;
-      setImagem(url);
-      setErroImagem(null);
-      if (manual) toast.success("Imagem atualizada");
+      setImagens((s) => ({ ...s, [id]: url }));
+      setErros((s) => ({ ...s, [id]: "" }));
     } catch (e) {
-      const msg = (e as Error).message || "Não foi possível obter a imagem da câmera.";
-      setErroImagem(msg);
-      if (manual) toast.error(msg);
+      setErros((s) => ({ ...s, [id]: (e as Error).message || "Falha na câmera." }));
     } finally {
-      setCarregandoImagem(false);
+      setCarregando((s) => ({ ...s, [id]: false }));
     }
   }, []);
 
-  const capturarIdface = useCallback(async (id: string, manual = false) => {
+  const capturarIdface = useCallback(async (id: string) => {
     if (!id || capturaIdfaceEmAndamento.current) return;
     capturaIdfaceEmAndamento.current = true;
     setCarregandoIdface(true);
@@ -148,37 +146,38 @@ export default function PortariaInterfone() {
       const tipo = resposta.dados.content_type?.startsWith("image/") ? resposta.dados.content_type : "image/jpeg";
       setImagemIdface(`data:${tipo};base64,${resposta.dados.imagem_base64}`);
       setErroIdface(null);
-      if (manual) toast.success("Imagem do interfone atualizada");
     } catch (e) {
-      const msg = (e as Error).message || "Não foi possível abrir a câmera do interfone.";
-      setErroIdface(msg);
-      if (manual) toast.error(msg);
+      setErroIdface((e as Error).message || "Não foi possível abrir a câmera do interfone.");
     } finally {
       capturaIdfaceEmAndamento.current = false;
       setCarregandoIdface(false);
     }
   }, []);
 
+  // Loop do interfone
   useEffect(() => {
-    setImagemIdface(null);
-    setErroIdface(null);
     if (!idfaceId) return;
+    setImagemIdface(null);
     void capturarIdface(idfaceId);
     if (!aoVivo) return;
     const t = setInterval(() => void capturarIdface(idfaceId), intervaloMs);
     return () => clearInterval(t);
   }, [aoVivo, capturarIdface, idfaceId, intervaloMs]);
 
-  // Atualização periódica (modo ao vivo)
+  // Loop das câmeras selecionadas
   useEffect(() => {
-    if (!cameraId) return;
-    setImagem(null);
-    setErroImagem(null);
-    void capturar(cameraId);
+    const ids = camerasSelecionadas.map((c) => c.id);
+    if (!ids.length) return;
+    ids.forEach((id) => void capturar(id));
     if (!aoVivo) return;
-    const t = setInterval(() => void capturar(cameraId), intervaloMs);
+    const t = setInterval(() => ids.forEach((id) => void capturar(id)), intervaloMs);
     return () => clearInterval(t);
-  }, [cameraId, aoVivo, capturar, intervaloMs]);
+  }, [aoVivo, camerasSelecionadas, capturar, intervaloMs]);
+
+  const atualizarTudo = () => {
+    if (idfaceId) void capturarIdface(idfaceId);
+    camerasSelecionadas.forEach((c) => void capturar(c.id));
+  };
 
   const abrir = async (ponto: PontoAcesso) => {
     setAcionando(ponto.id);
@@ -186,14 +185,51 @@ export default function PortariaInterfone() {
     setAcionando(null);
     if (r.ok) {
       toast.success(`${ponto.nome}: ${r.mensagem}`);
-      void capturar(cameraId);
+      atualizarTudo();
     } else {
       toast.error(r.mensagem);
     }
   };
 
+  const botoes = (
+    <>
+      {pontos.map((p) => (
+        <Button
+          key={p.id}
+          size="sm"
+          className="shadow-lg"
+          disabled={acionando === p.id}
+          onClick={() => void abrir(p)}
+        >
+          {acionando === p.id ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <DoorOpen className="mr-2 h-4 w-4" />
+          )}
+          {p.nome}
+        </Button>
+      ))}
+    </>
+  );
+
+  const tileExpandido = useMemo(() => {
+    if (!expandido) return null;
+    if (expandido === "idface") {
+      return { titulo: "Interfone", imagem: imagemIdface, carregando: carregandoIdface, erro: erroIdface };
+    }
+    const cam = camerasSelecionadas.find((c) => c.id === expandido);
+    return cam
+      ? {
+          titulo: cam.nome,
+          imagem: imagens[cam.id] ?? null,
+          carregando: !!carregando[cam.id],
+          erro: erros[cam.id] || null,
+        }
+      : null;
+  }, [expandido, imagemIdface, carregandoIdface, erroIdface, camerasSelecionadas, imagens, carregando, erros]);
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-xl font-bold">Interfone</h2>
         {unidadeNome && (
@@ -205,173 +241,105 @@ export default function PortariaInterfone() {
         <Badge variant={aoVivo ? "default" : "secondary"}>{aoVivo ? "Ao vivo" : "Pausado"}</Badge>
       </div>
 
-      <Tabs defaultValue="idface" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="idface">Interfone iDFace</TabsTrigger>
-          <TabsTrigger value="camera">Câmera + acionamentos</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="idface" className="space-y-3">
-          <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="flex flex-wrap items-center gap-2 border-b p-3">
-              <Select value={idfaceId} onValueChange={setIdfaceId}>
-                <SelectTrigger className="w-full sm:w-64">
-                  <SelectValue placeholder={idfaces.length ? "Selecione o iDFace" : "Nenhum iDFace nesta unidade"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {idfaces.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!idfaceId || carregandoIdface}
-                onClick={() => void capturarIdface(idfaceId, true)}
-              >
-                {carregandoIdface ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                Atualizar imagem
-              </Button>
-              <Button variant={aoVivo ? "secondary" : "default"} size="sm" onClick={() => setAoVivo((v) => !v)}>
-                {aoVivo ? <VideoOff className="h-4 w-4 mr-2" /> : <Video className="h-4 w-4 mr-2" />}
-                {aoVivo ? "Pausar" : "Ao vivo"}
-              </Button>
-            </div>
-
-            <div className="aspect-video bg-muted flex items-center justify-center relative">
-              {imagemIdface ? (
-                <img src={imagemIdface} alt="Imagem da câmera do interfone iDFace" className="h-full w-full object-contain" />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-muted-foreground text-center p-6">
-                  {carregandoIdface ? <Loader2 className="h-10 w-10 animate-spin" /> : <MonitorSmartphone className="h-10 w-10" />}
-                  <p className="text-sm">
-                    {!idfaces.length
-                      ? "Nenhum iDFace cadastrado nesta unidade."
-                      : erroIdface || (carregandoIdface ? "Conectando à câmera do interfone..." : "Sem imagem")}
-                  </p>
-                </div>
-              )}
-              {imagemIdface && carregandoIdface && (
-                <span className="absolute top-2 right-2 rounded-full bg-background/80 p-1.5">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </span>
-              )}
-            </div>
-
-            {idfaceUrl && (
-              <div className="flex items-center justify-between gap-3 border-t p-3">
-                <p className="text-xs text-muted-foreground">
-                  A imagem é capturada pelo Coletor da rede local.
-                </p>
-                <Button variant="ghost" size="sm" onClick={() => window.open(idfaceUrl, "_blank", "noopener")}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Abrir painel do iDFace
-                </Button>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="camera">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="rounded-xl border bg-card overflow-hidden">
-
-          <div className="flex flex-wrap items-center gap-2 border-b p-3">
-            <Select value={cameraId} onValueChange={setCameraId}>
-              <SelectTrigger className="w-full sm:w-64">
-                <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera na unidade"} />
-              </SelectTrigger>
-              <SelectContent>
-                {cameras.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={() => void capturar(cameraId, true)} disabled={!cameraId || carregandoImagem}>
-              {carregandoImagem ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-              Atualizar
-            </Button>
-            <Button variant={aoVivo ? "secondary" : "default"} size="sm" onClick={() => setAoVivo((v) => !v)}>
-              {aoVivo ? <VideoOff className="h-4 w-4 mr-2" /> : <Video className="h-4 w-4 mr-2" />}
-              {aoVivo ? "Pausar" : "Ao vivo"}
-            </Button>
-            <Select value={String(intervaloMs)} onValueChange={(v) => setIntervaloMs(Number(v))}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {OPCOES_FPS.map((o) => (
-                  <SelectItem key={o.ms} value={String(o.ms)}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-
-          <div className="aspect-video bg-muted flex items-center justify-center relative">
-            {imagem ? (
-              <img src={imagem} alt="Imagem da câmera do interfone" className="w-full h-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center gap-2 text-muted-foreground p-6 text-center">
-                {carregandoImagem ? <Loader2 className="h-10 w-10 animate-spin" /> : <Video className="h-10 w-10" />}
-                <p className="text-sm">
-                  {!cameras.length
-                    ? "Nenhuma câmera cadastrada para esta unidade."
-                    : erroImagem || (carregandoImagem ? "Capturando imagem..." : "Sem imagem")}
-                </p>
-              </div>
-            )}
-            {imagem && carregandoImagem && (
-              <span className="absolute top-2 right-2 rounded-full bg-background/80 p-1.5">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-xl border bg-card p-4 space-y-3">
-          <h3 className="font-semibold">Acionamentos</h3>
-          {pontos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum ponto de acesso configurado para esta unidade. Cadastre em Portaria → Configurações.
-            </p>
-          ) : (
-            <div className="grid gap-2">
-              {pontos.map((p) => (
-                <Button
-                  key={p.id}
-                  className="h-12 justify-start"
-                  variant="secondary"
-                  disabled={acionando === p.id}
-                  onClick={() => void abrir(p)}
-                >
-                  {acionando === p.id ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <DoorOpen className="h-4 w-4 mr-2" />
-                  )}
-                  {p.nome}
-                </Button>
-              ))}
-            </div>
-          )}
-          {erroImagem && (
-            <p className="text-xs text-muted-foreground">
-              Falha na imagem: {erroImagem}
-            </p>
-          )}
-        </div>
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
+        <Select value={idfaceId} onValueChange={setIdfaceId}>
+          <SelectTrigger className="w-full sm:w-64">
+            <SelectValue placeholder={idfaces.length ? "Selecione o interfone" : "Nenhum iDFace nesta unidade"} />
+          </SelectTrigger>
+          <SelectContent>
+            {idfaces.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                {d.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={atualizarTudo}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Atualizar
+        </Button>
+        <Button variant={aoVivo ? "secondary" : "default"} size="sm" onClick={() => setAoVivo((v) => !v)}>
+          {aoVivo ? <VideoOff className="mr-2 h-4 w-4" /> : <Video className="mr-2 h-4 w-4" />}
+          {aoVivo ? "Pausar" : "Ao vivo"}
+        </Button>
+        <Select value={String(intervaloMs)} onValueChange={(v) => setIntervaloMs(Number(v))}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {OPCOES_FPS.map((o) => (
+              <SelectItem key={o.ms} value={String(o.ms)}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {idfaceUrl && (
+          <Button variant="ghost" size="sm" onClick={() => window.open(idfaceUrl, "_blank", "noopener")}>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Painel do iDFace
+          </Button>
+        )}
       </div>
-        </TabsContent>
-      </Tabs>
-    </div>
 
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="lg:col-span-2">
+          <InterfoneTile
+            titulo="Interfone"
+            destaque
+            imagem={imagemIdface}
+            carregando={carregandoIdface}
+            erro={idfaces.length ? erroIdface : "Nenhum iDFace cadastrado nesta unidade."}
+            onExpandir={() => setExpandido("idface")}
+          >
+            {botoes}
+          </InterfoneTile>
+        </div>
+
+        {camerasSelecionadas.map((c) => (
+          <InterfoneTile
+            key={c.id}
+            titulo={c.nome}
+            imagem={imagens[c.id] ?? null}
+            carregando={!!carregando[c.id]}
+            erro={erros[c.id] || null}
+            onExpandir={() => setExpandido(c.id)}
+          >
+            {botoes}
+          </InterfoneTile>
+        ))}
+      </div>
+
+      {camerasSelecionadas.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Nenhuma câmera marcada para abrir junto com o interfone. Selecione as câmeras em Portaria → Configurações →
+          Interfone.
+        </p>
+      )}
+      {pontos.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Nenhum ponto de acesso configurado nesta unidade — os botões de portão/porta aparecem sobre as imagens depois
+          do cadastro em Portaria → Configurações.
+        </p>
+      )}
+
+      <Dialog open={!!expandido} onOpenChange={(v) => !v && setExpandido(null)}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>{tileExpandido?.titulo ?? "Imagem"}</DialogTitle>
+          </DialogHeader>
+          {tileExpandido && (
+            <InterfoneTile
+              titulo={tileExpandido.titulo}
+              imagem={tileExpandido.imagem}
+              carregando={tileExpandido.carregando}
+              erro={tileExpandido.erro}
+            >
+              {botoes}
+            </InterfoneTile>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
