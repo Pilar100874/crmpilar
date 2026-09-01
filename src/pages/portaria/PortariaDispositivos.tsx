@@ -73,7 +73,10 @@ export default function PortariaDispositivos() {
     const payload = {
       nome: form.nome.trim().toUpperCase(),
       tipo: form.tipo || "shelly",
-      funcao: form.tipo === "shelly" ? (form.funcao || "saida") : null,
+      config: {
+        ...((form.config ?? {}) as Record<string, unknown>),
+        funcao: form.tipo === "shelly" ? (form.funcao || "saida") : null,
+      },
       modelo: form.modelo || null,
       localizacao: form.localizacao?.toUpperCase() || null,
       ip: form.ip || null,
