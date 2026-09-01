@@ -95,5 +95,7 @@ Deno.serve(async (req) => {
     mensagem: mensagem ?? null,
   });
 
-  return responder(ok ? 200 : 502, { ok, mensagem: mensagem ?? null, dados });
+  // Falha do equipamento não é erro HTTP: devolvemos 200 com ok=false para o app
+  // exibir a mensagem amigável em vez de estourar erro de função.
+  return responder(200, { ok, mensagem: mensagem ?? null, dados });
 });
