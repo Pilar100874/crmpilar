@@ -84,6 +84,10 @@ export default function PortariaAtendimentoMobile() {
         <BellRing className="h-5 w-5" /> Abrir câmera do interfone
       </Button>
 
+      <PortariaSipRamal />
+
+
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Últimos toques</CardTitle>
