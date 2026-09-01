@@ -261,7 +261,20 @@ export default function PortariaInterfone() {
               {aoVivo ? <VideoOff className="h-4 w-4 mr-2" /> : <Video className="h-4 w-4 mr-2" />}
               {aoVivo ? "Pausar" : "Ao vivo"}
             </Button>
+            <Select value={String(intervaloMs)} onValueChange={(v) => setIntervaloMs(Number(v))}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OPCOES_FPS.map((o) => (
+                  <SelectItem key={o.ms} value={String(o.ms)}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
 
           <div className="aspect-video bg-muted flex items-center justify-center relative">
             {imagem ? (
