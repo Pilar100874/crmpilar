@@ -30,7 +30,11 @@ interface DispositivoIdface {
   endpoint: string | null;
 }
 
-const INTERVALO_SNAPSHOT_MS = 6000;
+const OPCOES_FPS = [
+  { label: "Rápido (1s)", ms: 1000 },
+  { label: "Normal (2s)", ms: 2000 },
+  { label: "Econômico (6s)", ms: 6000 },
+];
 
 export default function PortariaInterfone() {
   const { unidadeId, unidadeNome } = useUnidadeAtual();
