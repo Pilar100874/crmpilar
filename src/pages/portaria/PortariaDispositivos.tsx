@@ -160,7 +160,7 @@ export default function PortariaDispositivos() {
                 <div className="min-w-0">
                   <p className="font-semibold truncate flex items-center gap-2"><Cpu className="h-4 w-4 text-primary" />{d.nome}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {[d.tipo === "idface" ? "Control iD iDFace" : "Shelly", d.modelo, d.localizacao, d.ip].filter(Boolean).join(" · ")}
+                    {[d.tipo === "idface" ? "Control iD iDFace" : d.tipo === "shelly" ? `Shelly ${d.config?.funcao === "entrada" ? "i4 Gen3 (entrada)" : "1 Gen3 (saída)"}` : d.tipo, d.modelo, d.localizacao, d.ip].filter(Boolean).join(" · ")}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className="flex items-center gap-1.5 text-xs">
