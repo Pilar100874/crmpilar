@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { BellRing, Smartphone, Wifi, WifiOff } from "lucide-react";
-import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,11 +45,6 @@ export default function PortariaAtendimentoMobile() {
 
   return (
     <div className="mx-auto w-full max-w-md space-y-4 p-3">
-      <Helmet>
-        <title>Atendimento do interfone | Portaria</title>
-        <meta name="description" content="Atenda a campainha da portaria pelo celular: veja a câmera e abra porta ou portão." />
-      </Helmet>
-
       <header className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Atendimento do interfone</h1>
         <Badge variant={config?.ativo ? "default" : "outline"} className="gap-1">
