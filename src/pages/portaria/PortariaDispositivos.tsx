@@ -213,7 +213,34 @@ export default function PortariaDispositivos() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Modelo</Label><Input value={form.modelo ?? ""} onChange={(e) => setForm({ ...form, modelo: e.target.value })} /></div>
+            {form.tipo === "shelly" ? (
+              <div>
+                <Label>Modelo Shelly</Label>
+                <Select
+                  value={form.modelo || "shelly-1-gen3"}
+                  onValueChange={(v) => {
+                    const m = getShellyModelo(v);
+                    setForm({
+                      ...form,
+                      modelo: v,
+                      funcao: m && m.funcao !== "ambos" ? m.funcao : (form.funcao ?? "saida"),
+                      canal_rele: Math.min(Number(form.canal_rele ?? 0), Math.max((m?.canais ?? 1) - 1, 0)),
+                      config: { ...config, geracao: m?.geracao ?? "gen2" },
+                    });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                  <SelectContent className="bg-popover max-h-72">
+                    {SHELLY_MODELOS.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{m.nome} — {m.descricao}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div><Label>Modelo</Label><Input value={form.modelo ?? ""} onChange={(e) => setForm({ ...form, modelo: e.target.value })} /></div>
+            )}
+
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
             <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
