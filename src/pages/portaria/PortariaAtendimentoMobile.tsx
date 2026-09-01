@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta, type ToqueCampainha } from "@/lib/portaria/interfone";
-import { usePushInterfone, notificarCampainhaLocal, isAppNativo } from "@/lib/portaria/push";
+import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PortariaSipRamal from "@/components/portaria/PortariaSipRamal";
 import logoPilar from "@/assets/logo-2.png";
