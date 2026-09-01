@@ -120,7 +120,9 @@ export default function PortariaConfiguracoes() {
 
         <TabsContent value="interfone" className="space-y-4 pt-4">
           <InterfoneConfigCard />
+          <InterfoneAppDownloadCard />
         </TabsContent>
+
 
 
         <TabsContent value="acessos" className="space-y-3 pt-4">
