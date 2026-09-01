@@ -156,8 +156,65 @@ export default function PortariaInterfone() {
         <Badge variant={aoVivo ? "default" : "secondary"}>{aoVivo ? "Ao vivo" : "Pausado"}</Badge>
       </div>
 
+      <Tabs defaultValue="idface" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="idface">Interfone iDFace</TabsTrigger>
+          <TabsTrigger value="camera">Câmera + acionamentos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="idface" className="space-y-3">
+          <div className="rounded-xl border bg-card overflow-hidden">
+            <div className="flex flex-wrap items-center gap-2 border-b p-3">
+              <Select value={idfaceId} onValueChange={setIdfaceId}>
+                <SelectTrigger className="w-full sm:w-64">
+                  <SelectValue placeholder={idfaces.length ? "Selecione o iDFace" : "Nenhum iDFace nesta unidade"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {idfaces.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!idfaceUrl}
+                onClick={() => idfaceUrl && window.open(idfaceUrl, "_blank", "noopener")}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Abrir em nova aba
+              </Button>
+              {idfaceUrl && <span className="text-xs text-muted-foreground">{idfaceUrl}</span>}
+            </div>
+
+            {idfaceUrl ? (
+              <iframe
+                title="Interface do interfone iDFace"
+                src={idfaceUrl}
+                className="w-full h-[70vh] bg-background"
+              />
+            ) : (
+              <div className="h-[40vh] flex flex-col items-center justify-center gap-2 text-muted-foreground text-center p-6">
+                <MonitorSmartphone className="h-10 w-10" />
+                <p className="text-sm">
+                  Nenhum dispositivo iDFace com IP cadastrado nesta unidade. Configure em Portaria → Dispositivos.
+                </p>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A interface do iDFace é servida pelo próprio equipamento na rede local ({idfaceUrl ?? "IP não informado"}).
+            Se ela não carregar aqui dentro (o equipamento pode bloquear exibição em quadro, ou o CRM estar em HTTPS),
+            use o botão “Abrir em nova aba”.
+          </p>
+        </TabsContent>
+
+        <TabsContent value="camera">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="rounded-xl border bg-card overflow-hidden">
+
           <div className="flex flex-wrap items-center gap-2 border-b p-3">
             <Select value={cameraId} onValueChange={setCameraId}>
               <SelectTrigger className="w-full sm:w-64">
