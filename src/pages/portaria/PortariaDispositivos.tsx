@@ -161,7 +161,11 @@ export default function PortariaDispositivos() {
                 <div className="min-w-0">
                   <p className="font-semibold truncate flex items-center gap-2"><Cpu className="h-4 w-4 text-primary" />{d.nome}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {[d.tipo === "idface" ? "Control iD iDFace" : d.tipo === "shelly" ? `Shelly ${d.config?.funcao === "entrada" ? "i4 Gen3 (entrada)" : "1 Gen3 (saída)"}` : d.tipo, d.modelo, d.localizacao, d.ip].filter(Boolean).join(" · ")}
+                    {[
+                      d.tipo === "idface" ? "Control iD iDFace" : d.tipo === "shelly" ? (getShellyModelo(d.modelo)?.nome ?? "Shelly") : d.tipo,
+                      d.localizacao,
+                      d.ip,
+                    ].filter(Boolean).join(" · ")}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className="flex items-center gap-1.5 text-xs">
@@ -169,11 +173,10 @@ export default function PortariaDispositivos() {
                       <span className="capitalize text-muted-foreground">{d.status ?? "offline"}</span>
                     </span>
                     <Badge variant={d.habilitado ? "default" : "secondary"}>{d.habilitado ? "Habilitado" : "Desabilitado"}</Badge>
-                    {d.tipo === "shelly" && (d.config as any)?.funcao && (
-                      <Badge variant="outline">
-                        {(d.config as any).funcao === "entrada" ? "Entrada · Shelly i4 Gen3" : "Saída · Shelly 1 Gen3"}
-                      </Badge>
+                    {d.tipo === "shelly" && (
+                      <Badge variant="outline">{rotuloShelly(d.modelo, (d.config as any)?.funcao)}</Badge>
                     )}
+
                     {d.via_coletor && <Badge variant="outline">Via Coletor local</Badge>}
                     {d.ultima_comunicacao && (
                       <span className="text-[11px] text-muted-foreground">{new Date(d.ultima_comunicacao).toLocaleString("pt-BR")}</span>
