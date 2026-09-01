@@ -110,8 +110,9 @@ export default function PortariaConfiguracoes() {
       </div>
 
       <Tabs defaultValue="interfone">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="interfone">Interfone</TabsTrigger>
+          <TabsTrigger value="push">Push nativo</TabsTrigger>
           <TabsTrigger value="acessos">Pontos de acesso</TabsTrigger>
           <TabsTrigger value="perfis">Perfis e permissões</TabsTrigger>
           <TabsTrigger value="facial">Facial / iDFace</TabsTrigger>
@@ -122,6 +123,11 @@ export default function PortariaConfiguracoes() {
           <InterfoneConfigCard />
           <InterfoneAppDownloadCard />
         </TabsContent>
+
+        <TabsContent value="push" className="space-y-4 pt-4">
+          <PushFirebaseCard />
+        </TabsContent>
+
 
 
 
