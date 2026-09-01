@@ -178,6 +178,7 @@ export default function PortariaInterfone() {
             imagem={imagens[idface.id] ?? null}
             carregando={carregando[idface.id]}
             erro={erros[idface.id] || null}
+            // Botões de acesso (portão/porta) apenas no tile do interfone
             acoes={pontos.length ? botoes : null}
             className="lg:col-span-2"
           />
@@ -190,7 +191,7 @@ export default function PortariaInterfone() {
             imagem={imagens[c.id] ?? null}
             carregando={carregando[c.id]}
             erro={erros[c.id] || null}
-            acoes={pontos.length ? botoes : null}
+            acoes={null}
           />
         ))}
       </div>
