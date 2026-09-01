@@ -278,11 +278,11 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
               return (
                 <div
                   key={call.id}
-                  className="flex items-center justify-between rounded-lg border bg-muted/40 p-3"
+                  className={`flex items-center justify-between rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : "bg-muted/40"}`}
                 >
                   <div>
                     <p className="text-sm font-medium">{call.phoneNumber}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className={`text-xs ${dark ? "text-slate-400" : "text-muted-foreground"}`}>
                       {tocando
                         ? "Chamando você..."
                         : emChamada
@@ -314,7 +314,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Digite o número ou ramal"
             inputMode="tel"
-            className={`text-center text-lg tracking-widest ${dark ? "border-white/15 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
+            className={`text-center text-lg tracking-widest ${dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
           />
           <div className="grid grid-cols-3 gap-2">
             {TECLAS.map((t) => (

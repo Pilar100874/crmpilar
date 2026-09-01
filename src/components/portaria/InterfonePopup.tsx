@@ -233,12 +233,16 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           {pontos.map((p) => (
             <Button
               key={p.id}
-              className="h-12 flex-1 min-w-[160px] text-base font-semibold"
+              className="h-12 flex-1 min-w-0 basis-[45%] px-3 text-sm font-semibold"
               disabled={acionando === p.id}
               onClick={() => void abrir(p)}
             >
-              {acionando === p.id ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <DoorOpen className="h-5 w-5 mr-2" />}
-              ABRIR {p.tipo === "porta" ? "PORTA" : "PORTÃO"} · {p.nome}
+              {acionando === p.id ? (
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin mr-2" />
+              ) : (
+                <DoorOpen className="h-5 w-5 shrink-0 mr-2" />
+              )}
+              <span className="truncate">Abrir {p.nome}</span>
             </Button>
           ))}
           <Button
