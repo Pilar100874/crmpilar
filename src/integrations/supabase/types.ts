@@ -22111,6 +22111,36 @@ export type Database = {
           },
         ]
       }
+      port_push_config: {
+        Row: {
+          app_id: string | null
+          created_at: string
+          google_services_json: string | null
+          id: string
+          package_name: string | null
+          project_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          app_id?: string | null
+          created_at?: string
+          google_services_json?: string | null
+          id?: string
+          package_name?: string | null
+          project_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string | null
+          created_at?: string
+          google_services_json?: string | null
+          id?: string
+          package_name?: string | null
+          project_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       port_push_tokens: {
         Row: {
           ativo: boolean
