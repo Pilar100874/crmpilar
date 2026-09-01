@@ -60,6 +60,18 @@ jobs:
         working-directory: portaria-app
         run: npx cap add android
 
+      - name: Gerar ícones e splash com o logo da Pilar
+        working-directory: portaria-app
+        run: npx @capacitor/assets generate --android --assetPath assets
+
+      - name: Nome do app (Pilar Portaria)
+        working-directory: portaria-app
+        run: |
+          STR=android/app/src/main/res/values/strings.xml
+          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">Pilar Portaria</string>|' "$STR"
+          sed -i 's|<string name="title_activity_main">.*</string>|<string name="title_activity_main">Pilar Portaria</string>|' "$STR"
+          cat "$STR"
+
       - name: Aplicar versão no build.gradle
         working-directory: portaria-app
         run: |
