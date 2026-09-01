@@ -120,11 +120,13 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       ? { texto: `Ramal ${config.ramal} online`, cor: "default" as const }
       : { texto: "Desconectado", cor: "destructive" as const };
 
-  const btnEscuro = dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : "";
-  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white hover:bg-orange-600" : "";
+  const btnEscuro = dark ? "border-white/10 bg-white/10 text-white hover:bg-white/20" : "";
+  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600" : "";
+  const inputEscuro = dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : "";
+  const labelEscura = dark ? "text-slate-300" : "";
 
   return (
-    <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
+    <Card className={dark ? "border-white/10 bg-[#111F36]/90 text-white shadow-xl backdrop-blur" : ""}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
           <PhoneCall className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Ramal SIP
@@ -151,12 +153,13 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
 
       <CardContent className="space-y-4">
         {editando && (
-          <div className="space-y-3 rounded-lg border p-3">
+          <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="sip-servidor">Servidor (PABX)</Label>
                 <Input
                   id="sip-servidor"
+                  className={inputEscuro}
                   value={config.servidor}
                   onChange={(e) => setConfig({ ...config, servidor: e.target.value })}
                   placeholder="pabx.empresa.com.br"
@@ -166,6 +169,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-remoto">Servidor alternativo</Label>
                 <Input
                   id="sip-remoto"
+                  className={inputEscuro}
                   value={config.servidorRemoto}
                   onChange={(e) => setConfig({ ...config, servidorRemoto: e.target.value })}
                   placeholder="opcional"
@@ -175,6 +179,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-ramal">Ramal</Label>
                 <Input
                   id="sip-ramal"
+                  className={inputEscuro}
                   value={config.ramal}
                   onChange={(e) => setConfig({ ...config, ramal: e.target.value })}
                   placeholder="1001"
@@ -185,6 +190,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-senha">Senha SIP</Label>
                 <Input
                   id="sip-senha"
+                  className={inputEscuro}
                   type="password"
                   value={config.senha}
                   onChange={(e) => setConfig({ ...config, senha: e.target.value })}
@@ -194,6 +200,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-nome">Nome exibido</Label>
                 <Input
                   id="sip-nome"
+                  className={inputEscuro}
                   value={config.nome}
                   onChange={(e) => setConfig({ ...config, nome: e.target.value })}
                   placeholder="Portaria"
@@ -203,6 +210,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 <Label htmlFor="sip-portaria">Ramal da portaria/interfone</Label>
                 <Input
                   id="sip-portaria"
+                  className={inputEscuro}
                   value={config.ramalPortaria}
                   onChange={(e) => setConfig({ ...config, ramalPortaria: e.target.value })}
                   placeholder="2000"
@@ -270,11 +278,11 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
               return (
                 <div
                   key={call.id}
-                  className="flex items-center justify-between rounded-lg border bg-muted/40 p-3"
+                  className={`flex items-center justify-between rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : "bg-muted/40"}`}
                 >
                   <div>
                     <p className="text-sm font-medium">{call.phoneNumber}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className={`text-xs ${dark ? "text-slate-400" : "text-muted-foreground"}`}>
                       {tocando
                         ? "Chamando você..."
                         : emChamada
@@ -306,7 +314,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Digite o número ou ramal"
             inputMode="tel"
-            className={`text-center text-lg tracking-widest ${dark ? "border-white/15 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
+            className={`text-center text-lg tracking-widest ${dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
           />
           <div className="grid grid-cols-3 gap-2">
             {TECLAS.map((t) => (
