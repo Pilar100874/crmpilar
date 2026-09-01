@@ -255,10 +255,21 @@ export default function PortariaDispositivos() {
                 <Label>Função do dispositivo</Label>
                 <Select value={(form.funcao as string) ?? "saida"} onValueChange={(v) => setForm({ ...form, funcao: v as "entrada" | "saida" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    <SelectItem value="saida">Saída — aciona fechadura / portão (relé)</SelectItem>
-                    <SelectItem value="entrada">Entrada — campainha / botão (entrada digital)</SelectItem>
-                  </SelectContent>
+                    <SelectContent className="bg-popover">
+                      {(() => {
+                        const f = getShellyModelo(form.modelo)?.funcao ?? "ambos";
+                        return (
+                          <>
+                            {(f === "saida" || f === "ambos") && (
+                              <SelectItem value="saida">Saída — aciona fechadura / portão (relé)</SelectItem>
+                            )}
+                            {(f === "entrada" || f === "ambos") && (
+                              <SelectItem value="entrada">Entrada — campainha / botão (entrada digital)</SelectItem>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground mt-1">
                   {getShellyModelo(form.modelo)?.descricao ?? "Selecione o modelo para preencher geração e canais automaticamente."}
