@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STATUS_CORES, salvarCredenciais, testarDispositivo } from "@/lib/portaria/api";
+import { SHELLY_MODELOS, getShellyModelo, rotuloShelly } from "@/lib/portaria/shellyModelos";
+
 
 type Dispositivo = {
   id: string;
@@ -34,8 +36,9 @@ type Dispositivo = {
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", funcao: "saida", modelo: "", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
+  nome: "", tipo: "shelly", funcao: "saida", modelo: "shelly-1-gen3", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
+
 };
 
 export default function PortariaDispositivos() {
@@ -159,7 +162,11 @@ export default function PortariaDispositivos() {
                 <div className="min-w-0">
                   <p className="font-semibold truncate flex items-center gap-2"><Cpu className="h-4 w-4 text-primary" />{d.nome}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {[d.tipo === "idface" ? "Control iD iDFace" : d.tipo === "shelly" ? `Shelly ${d.config?.funcao === "entrada" ? "i4 Gen3 (entrada)" : "1 Gen3 (saída)"}` : d.tipo, d.modelo, d.localizacao, d.ip].filter(Boolean).join(" · ")}
+                    {[
+                      d.tipo === "idface" ? "Control iD iDFace" : d.tipo === "shelly" ? (getShellyModelo(d.modelo)?.nome ?? "Shelly") : d.tipo,
+                      d.localizacao,
+                      d.ip,
+                    ].filter(Boolean).join(" · ")}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className="flex items-center gap-1.5 text-xs">
@@ -167,11 +174,10 @@ export default function PortariaDispositivos() {
                       <span className="capitalize text-muted-foreground">{d.status ?? "offline"}</span>
                     </span>
                     <Badge variant={d.habilitado ? "default" : "secondary"}>{d.habilitado ? "Habilitado" : "Desabilitado"}</Badge>
-                    {d.tipo === "shelly" && (d.config as any)?.funcao && (
-                      <Badge variant="outline">
-                        {(d.config as any).funcao === "entrada" ? "Entrada · Shelly i4 Gen3" : "Saída · Shelly 1 Gen3"}
-                      </Badge>
+                    {d.tipo === "shelly" && (
+                      <Badge variant="outline">{rotuloShelly(d.modelo, (d.config as any)?.funcao)}</Badge>
                     )}
+
                     {d.via_coletor && <Badge variant="outline">Via Coletor local</Badge>}
                     {d.ultima_comunicacao && (
                       <span className="text-[11px] text-muted-foreground">{new Date(d.ultima_comunicacao).toLocaleString("pt-BR")}</span>
@@ -213,7 +219,34 @@ export default function PortariaDispositivos() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Modelo</Label><Input value={form.modelo ?? ""} onChange={(e) => setForm({ ...form, modelo: e.target.value })} /></div>
+            {form.tipo === "shelly" ? (
+              <div>
+                <Label>Modelo Shelly</Label>
+                <Select
+                  value={form.modelo || "shelly-1-gen3"}
+                  onValueChange={(v) => {
+                    const m = getShellyModelo(v);
+                    setForm({
+                      ...form,
+                      modelo: v,
+                      funcao: m && m.funcao !== "ambos" ? m.funcao : (form.funcao ?? "saida"),
+                      canal_rele: Math.min(Number(form.canal_rele ?? 0), Math.max((m?.canais ?? 1) - 1, 0)),
+                      config: { ...config, geracao: m?.geracao ?? "gen2" },
+                    });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                  <SelectContent className="bg-popover max-h-72">
+                    {SHELLY_MODELOS.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{m.nome} — {m.descricao}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div><Label>Modelo</Label><Input value={form.modelo ?? ""} onChange={(e) => setForm({ ...form, modelo: e.target.value })} /></div>
+            )}
+
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
             <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
@@ -223,13 +256,15 @@ export default function PortariaDispositivos() {
                 <Select value={(form.funcao as string) ?? "saida"} onValueChange={(v) => setForm({ ...form, funcao: v as "entrada" | "saida" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-popover">
-                    <SelectItem value="saida">Saída — Shelly 1 Gen3 (abre fechadura / portão)</SelectItem>
-                    <SelectItem value="entrada">Entrada — Shelly i4 Gen3 (campainha / botão)</SelectItem>
+                    <SelectItem value="saida">Saída — aciona fechadura / portão (relé)</SelectItem>
+                    <SelectItem value="entrada">Entrada — campainha / botão (entrada digital)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Use <strong>Entrada</strong> para o Shelly i4 (detecta o toque na campainha) e <strong>Saída</strong> para o Shelly 1 (aciona a fechadura).
+                  {getShellyModelo(form.modelo)?.descricao ?? "Selecione o modelo para preencher geração e canais automaticamente."}
+                  {getShellyModelo(form.modelo) ? ` · ${getShellyModelo(form.modelo)!.canais} canal(is)` : ""}
                 </p>
+
               </div>
             )}
             {form.tipo !== "shelly" && (
