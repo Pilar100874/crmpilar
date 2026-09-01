@@ -47,16 +47,19 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   });
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-4 p-3">
-      <header className="flex items-center justify-between gap-3">
+    <div className={`mx-auto w-full max-w-md space-y-4 p-3 ${dark ? "text-white" : ""}`}>
+      <header className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
         <div className="flex items-center gap-2">
-          <img src={logoPilar} alt="Pilar Portaria" className="h-9 w-auto object-contain" />
+          <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Portaria" className="h-9 w-auto object-contain" />
           <div>
             <p className="text-sm font-semibold leading-tight">Pilar Portaria</p>
-            <p className="text-xs text-muted-foreground leading-tight">Atendimento do interfone</p>
+            <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Atendimento do interfone</p>
           </div>
         </div>
-        <Badge variant={config?.ativo ? "default" : "outline"} className="gap-1">
+        <Badge
+          variant={config?.ativo ? "default" : "outline"}
+          className={`gap-1 ${dark ? (config?.ativo ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}`}
+        >
           {config?.ativo ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
           {config?.ativo ? "Ativo" : "Desligado"}
         </Badge>
