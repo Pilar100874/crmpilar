@@ -42,3 +42,5 @@
 ## Push nativo (Firebase) – Portaria
 - [x] Campo no CRM para colar o google-services.json (Configurações > Push nativo) + passo a passo
 - [x] Push funcionando para campainha E para chamada do ramal SIP (tipo campainha/sip na função de push)
+
+- [x] APK Pilar Portaria nativo: bundle exclusivo (interfone + ramal SIP), sem o CRM web nem tela de login do sistema
