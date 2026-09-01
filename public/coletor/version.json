@@ -1,6 +1,6 @@
 {
-  "version": "1.9.5",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.5/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.5/ColetorPilar-Linux.AppImage",
-  "notas": "1.9.5: a atualização preserva exatamente as opções habilitadas (unidade, ponto, câmeras, portaria) — configuração é mesclada e restaurada automaticamente."
+  "version": "1.9.6",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.6/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.6/ColetorPilar-Linux.AppImage",
+  "notas": "1.9.6: captura a câmera integrada do interfone iDFace pela rede local e exibe a imagem diretamente no CRM."
 }

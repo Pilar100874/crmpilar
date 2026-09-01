@@ -7,7 +7,7 @@ import { ControlIDService } from "../_shared/portaria/controlid.ts";
 import { executarViaColetor } from "../_shared/portaria/coletor.ts";
 
 const BodySchema = z.object({
-  acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste"]),
+  acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste", "capturar_camera"]),
   device_id: z.string().uuid(),
   usuario: z.string().max(200).optional(),
   senha: z.string().max(300).optional(),
@@ -24,11 +24,13 @@ Deno.serve(async (req) => {
 
   const ctx = await autenticar(req);
   if (!ctx) return responder(401, { error: "Não autenticado" });
-  if (!ctx.isGestor) return responder(403, { error: "Somente administradores da portaria." });
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return responder(400, { error: parsed.error.flatten().fieldErrors });
   const { acao, device_id, usuario, senha, token } = parsed.data;
+  if (!ctx.isGestor && !(ctx.isStaff && acao === "capturar_camera")) {
+    return responder(403, { error: "Somente administradores da portaria." });
+  }
 
   const admin = adminClient();
   const { data: device } = await admin.from("port_devices").select("*").eq("id", device_id).maybeSingle();
@@ -65,12 +67,18 @@ Deno.serve(async (req) => {
   if (device.via_coletor) {
     const r = await executarViaColetor(admin, {
       device_id,
-      comando: acao === "pulso_teste" ? "abrir" : "status",
+      comando: acao === "pulso_teste" ? "abrir" : acao === "capturar_camera" ? "capturar_camera" : "status",
       parametros: { canal: device.canal_rele ?? 0, porta: 1 },
       solicitado_por: ctx.userId,
-    });
+    }, acao === "capturar_camera" ? 20000 : undefined);
     ok = r.ok; mensagem = r.mensagem; dados = r.dados;
   } else if (device.tipo === "idface") {
+    if (acao === "capturar_camera") {
+      return responder(200, {
+        ok: false,
+        mensagem: "A câmera do iDFace precisa usar o Coletor da rede local.",
+      });
+    }
     const servico = new ControlIDService(device as never, cred ?? {});
     const r = acao === "pulso_teste" ? await servico.openDoor(1) : await servico.getDeviceStatus();
     ok = r.ok; mensagem = r.mensagem; dados = r.dados;
