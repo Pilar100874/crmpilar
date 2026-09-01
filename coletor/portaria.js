@@ -239,6 +239,70 @@ async function garantirRegistro(cfg) {
   return token;
 }
 
+
+// ---- Campainha do interfone -------------------------------------------------
+// O iDFace registra o toque da campainha no log de acessos. O Coletor observa
+// os registros novos e avisa o CRM, que abre o popup do interfone na hora.
+const CAMPAINHA = { ultimoId: {}, iniciado: {} };
+const EVENTOS_CAMPAINHA_PADRAO = [7, 8];
+
+async function lerLogsRecentes(device, cred) {
+  const alvo = resolverProtocolo({ ip: device.ip, porta: device.porta, https: false });
+  const host = device.ip;
+  const port = device.porta || alvo.porta || 80;
+  const usaHttps = !!alvo.https;
+  const sessao = await login({
+    host, port, https: usaHttps,
+    login: (cred && cred.usuario) || 'admin',
+    password: (cred && cred.senha) || 'admin',
+  });
+  const base = `${usaHttps ? 'https' : 'http'}://${host}:${port}`;
+  const corpo = JSON.stringify({ object: 'access_logs', order_by: ['id'], order_desc: true, limit: 10 });
+  try {
+    const texto = await requisicao(`${base}/load_objects.fcgi?session=${encodeURIComponent(sessao)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(corpo) },
+      body: corpo,
+    });
+    const json = JSON.parse(texto);
+    return json.access_logs || [];
+  } finally {
+    try { await logout({ host, port, https: usaHttps, session: sessao }); } catch {}
+  }
+}
+
+async function verificarCampainha(cfg, dispositivos) {
+  for (const device of dispositivos || []) {
+    if (String(device.tipo || '').toLowerCase() !== 'idface') continue;
+    if (!device.ip) continue;
+    const eventos = (device.config && device.config.campainha_eventos) || EVENTOS_CAMPAINHA_PADRAO;
+    try {
+      const logs = await lerLogsRecentes(device, device.credenciais || {});
+      if (!logs.length) continue;
+      const maiorId = logs.reduce((m, l) => Math.max(m, Number(l.id) || 0), 0);
+      if (!CAMPAINHA.iniciado[device.id]) {
+        // Primeira leitura: apenas memoriza o ponto de partida
+        CAMPAINHA.iniciado[device.id] = true;
+        CAMPAINHA.ultimoId[device.id] = maiorId;
+        continue;
+      }
+      const anterior = CAMPAINHA.ultimoId[device.id] || 0;
+      const novos = logs.filter((l) => Number(l.id) > anterior);
+      CAMPAINHA.ultimoId[device.id] = Math.max(anterior, maiorId);
+      const tocou = novos.some((l) => eventos.includes(Number(l.event)));
+      if (tocou) {
+        await chamar(cfg, {
+          acao: 'campainha',
+          unidade_id: cfg.filialId || null,
+          device_id_evento: device.id,
+        });
+      }
+    } catch (e) {
+      ESTADO.ultimoErro = e.message;
+    }
+  }
+}
+
 async function pollPortariaOnce(cfg) {
   try {
     await garantirRegistro(cfg);
@@ -250,6 +314,7 @@ async function pollPortariaOnce(cfg) {
     const unidadeId = cfg.filialId || null;
     const handshake = await chamar(cfg, { acao: 'handshake', versao: cfg.versao || null, unidade_id: unidadeId });
     ESTADO.dispositivos = handshake.dispositivos || [];
+    await verificarCampainha(cfg, ESTADO.dispositivos);
     const { jobs } = await chamar(cfg, { acao: 'jobs', limite: 5, unidade_id: unidadeId });
     for (const job of jobs || []) {
       let ok = true;
@@ -277,4 +342,4 @@ async function pollPortariaOnce(cfg) {
   return ESTADO;
 }
 
-module.exports = { pollPortariaOnce, garantirRegistro, ESTADO };
+module.exports = { pollPortariaOnce, garantirRegistro, verificarCampainha, ESTADO };

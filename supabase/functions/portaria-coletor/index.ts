@@ -127,7 +127,18 @@ Deno.serve(async (req) => {
     // Cada Coletor atende somente a unidade em que está instalado.
     if (unidadeId) devQ = devQ.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
     const { data: dispositivos } = await devQ;
-    return responder(200, { ok: true, coletor_id: coletor.id, dispositivos: dispositivos ?? [] });
+    // Credenciais acompanham o handshake: o Coletor precisa delas para observar
+    // a campainha no log do iDFace (nunca saem da rede local do cliente).
+    const comCred = [] as unknown[];
+    for (const d of dispositivos ?? []) {
+      const { data: cred } = await admin
+        .from("port_device_credentials")
+        .select("usuario, senha, token")
+        .eq("device_id", d.id as string)
+        .maybeSingle();
+      comCred.push({ ...d, credenciais: cred ?? {} });
+    }
+    return responder(200, { ok: true, coletor_id: coletor.id, dispositivos: comCred });
   }
 
   if (body.acao === "jobs") {
