@@ -67,13 +67,13 @@ export function useInterfoneConfig(unidadeId: string | null) {
   // Mantém a flag sincronizada entre abas/telas
   useEffect(() => {
     const canal = supabase
-      .channel(`interfone-config-${unidadeId ?? "global"}`)
+      .channel(`interfone-config-${unidadeId ?? "global"}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "port_interfone_config" }, () => {
         void carregar();
       })
       .subscribe();
     return () => {
-      supabase.removeChannel(canal);
+      void supabase.removeChannel(canal);
     };
   }, [carregar, unidadeId]);
 
