@@ -65,13 +65,13 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </Badge>
       </header>
 
-      <Card>
+      <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Smartphone className="h-4 w-4" /> Alertas neste aparelho
+            <Smartphone className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Alertas neste aparelho
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
+        <CardContent className={`space-y-2 text-sm ${dark ? "text-slate-300" : "text-muted-foreground"}`}>
           {status === "ativo" && <p>Este celular receberá o alerta mesmo com o app fechado.</p>}
           {status === "indisponivel" && (
             <p>No navegador o alerta chega com esta tela aberta. Instale o app Android para receber com o app fechado.</p>
@@ -87,7 +87,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
 
       <Button
         size="lg"
-        className="w-full gap-2"
+        className={`w-full gap-2 ${dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600" : ""}`}
         onClick={() => {
           setToqueId(toques[0]?.id ?? null);
           setAberto(true);
