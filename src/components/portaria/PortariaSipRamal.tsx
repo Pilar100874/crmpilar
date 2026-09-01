@@ -240,11 +240,11 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
 
         <div className="flex gap-2">
           {isRegistered ? (
-            <Button variant="outline" className="flex-1" onClick={() => void disconnect()}>
+            <Button variant="outline" className={`flex-1 ${btnEscuro}`} onClick={() => void disconnect()}>
               <Unplug className="mr-2 h-4 w-4" /> Desconectar
             </Button>
           ) : (
-            <Button className="flex-1" disabled={isConnecting} onClick={() => void conectar()}>
+            <Button className={`flex-1 ${btnLaranja}`} disabled={isConnecting} onClick={() => void conectar()}>
               <PlugZap className="mr-2 h-4 w-4" />
               {isConnecting ? "Conectando..." : "Conectar ramal"}
             </Button>
@@ -252,12 +252,14 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
           {config.ramalPortaria && (
             <Button
               variant="secondary"
+              className={btnEscuro}
               disabled={!isRegistered}
               onClick={() => void dial(config.ramalPortaria)}
             >
               <Phone className="mr-2 h-4 w-4" /> Portaria
             </Button>
           )}
+
         </div>
 
         {activeCalls.length > 0 && (
