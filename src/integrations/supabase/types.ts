@@ -21690,6 +21690,42 @@ export type Database = {
           },
         ]
       }
+      port_campainha_eventos: {
+        Row: {
+          atendido_em: string | null
+          atendido_por: string | null
+          created_at: string
+          device_id: string | null
+          id: string
+          observacao: string | null
+          origem: string
+          status: string
+          unidade_id: string | null
+        }
+        Insert: {
+          atendido_em?: string | null
+          atendido_por?: string | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          observacao?: string | null
+          origem?: string
+          status?: string
+          unidade_id?: string | null
+        }
+        Update: {
+          atendido_em?: string | null
+          atendido_por?: string | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          observacao?: string | null
+          origem?: string
+          status?: string
+          unidade_id?: string | null
+        }
+        Relationships: []
+      }
       port_coletores: {
         Row: {
           ativo: boolean
@@ -21910,6 +21946,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      port_interfone_config: {
+        Row: {
+          ativo: boolean
+          auto_popup: boolean
+          cameras_extras: string[]
+          created_at: string
+          device_id: string | null
+          id: string
+          sip_uri: string | null
+          som: boolean
+          unidade_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          auto_popup?: boolean
+          cameras_extras?: string[]
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          sip_uri?: string | null
+          som?: boolean
+          unidade_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          auto_popup?: boolean
+          cameras_extras?: string[]
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          sip_uri?: string | null
+          som?: boolean
+          unidade_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       port_people: {
         Row: {

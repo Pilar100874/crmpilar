@@ -21,6 +21,8 @@ import { isSoloMode } from "@/components/OpenInNewTabButton";
 import SoloBackButton from "@/components/SoloBackButton";
 import UnidadeAtualBadge from "@/components/UnidadeAtualBadge";
 import { usePortariaPerfil } from "@/lib/portaria/api";
+import InterfoneWatcher from "@/components/portaria/InterfoneWatcher";
+
 
 interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; gestor?: boolean; staff?: boolean }
 
@@ -55,6 +57,7 @@ export default function PortariaLayout() {
     return (
       <div className="h-full flex flex-col bg-background text-foreground">
         <SoloBackButton />
+        <div className="px-3 pt-2"><InterfoneWatcher /></div>
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
             <Outlet />
@@ -102,8 +105,12 @@ export default function PortariaLayout() {
               Configuração do interfone
             </p>
           </div>
+          <div className="ml-auto shrink-0">
+            <InterfoneWatcher />
+          </div>
         </div>
       </div>
+
 
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:flex-row">
