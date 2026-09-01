@@ -21,3 +21,9 @@
 - [ ] Coletor 1.9.2 no equipamento: atualização in-app não funciona (update.sh antigo) — atualizar via ISO 1.9.4 (pen drive)
 
 - [x] Interfone: capturar a câmera integrada do iDFace pelo Coletor local, sem iframe HTTP bloqueado
+
+## Interfone (Portaria)
+- [ ] Flag "Interfone ativo" no menu principal (liga/desliga popup da campainha)
+- [ ] Popup automático ao tocar a campainha com câmera do iDFace + câmeras extras + botões abrir porta/portão
+- [ ] Seleção de câmeras extras nas configurações do módulo de câmeras
+- [ ] Conversar (áudio) com quem está no interfone pelo computador
