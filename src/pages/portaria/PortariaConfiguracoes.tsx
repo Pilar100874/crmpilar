@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Loader2, Pencil, Trash2, DoorOpen, UserCog, RefreshCw } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, DoorOpen, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { comandoControlId, usePortariaPerfil, type PortRole } from "@/lib/portaria/api";
+import { comandoControlId, usePortariaPerfil } from "@/lib/portaria/api";
 import PortariaColetores from "@/components/portaria/PortariaColetores";
+import PortariaPermissoes from "@/pages/portaria/PortariaPermissoes";
 
 type Ponto = {
   id: string;
@@ -25,44 +26,28 @@ type Ponto = {
   ativo: boolean | null;
 };
 
-type Papel = { id: string; user_id: string; role: PortRole };
-
 const VAZIO: Partial<Ponto> = { nome: "", tipo: "portao", confirmar_abertura: true, ordem: 0, ativo: true };
-
-const ROLE_LABEL: Record<PortRole, string> = {
-  super_admin: "Super Administrador",
-  admin: "Administrador",
-  porteiro: "Porteiro / Operador",
-  morador: "Usuário / Morador",
-};
 
 export default function PortariaConfiguracoes() {
   const { toast } = useToast();
   const { isSuperAdmin } = usePortariaPerfil();
   const [pontos, setPontos] = useState<Ponto[]>([]);
   const [devices, setDevices] = useState<{ id: string; nome: string; tipo: string }[]>([]);
-  const [papeis, setPapeis] = useState<Papel[]>([]);
-  const [usuarios, setUsuarios] = useState<Record<string, string>>({});
   const [carregando, setCarregando] = useState(true);
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [form, setForm] = useState<Partial<Ponto>>(VAZIO);
   const [excluir, setExcluir] = useState<Ponto | null>(null);
-  const [novoPapel, setNovoPapel] = useState<{ user_id: string; role: PortRole }>({ user_id: "", role: "porteiro" });
   const [sincronizando, setSincronizando] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
-    const [{ data: p }, { data: d }, { data: r }, { data: u }] = await Promise.all([
+    const [{ data: p }, { data: d }] = await Promise.all([
       supabase.from("port_access_points").select("*").order("ordem"),
       supabase.from("port_devices").select("id, nome, tipo").order("nome"),
-      supabase.from("port_user_roles").select("id, user_id, role"),
-      supabase.from("usuarios").select("auth_user_id, nome, email").not("auth_user_id", "is", null),
     ]);
     setPontos((p ?? []) as Ponto[]);
     setDevices(d ?? []);
-    setPapeis((r ?? []) as Papel[]);
-    setUsuarios(Object.fromEntries((u ?? []).map((x) => [x.auth_user_id as string, x.nome || x.email || "Usuário"])));
     setCarregando(false);
   }, []);
 
@@ -102,24 +87,6 @@ export default function PortariaConfiguracoes() {
       variant: error ? "destructive" : undefined,
     });
     setExcluir(null);
-    carregar();
-  };
-
-  const adicionarPapel = async () => {
-    if (!novoPapel.user_id) { toast({ title: "Selecione o usuário.", variant: "destructive" }); return; }
-    const { error } = await supabase.from("port_user_roles").insert(novoPapel);
-    toast({
-      title: error ? "Não foi possível conceder o papel" : "Papel concedido",
-      description: error?.message,
-      variant: error ? "destructive" : undefined,
-    });
-    setNovoPapel({ user_id: "", role: "porteiro" });
-    carregar();
-  };
-
-  const removerPapel = async (id: string) => {
-    const { error } = await supabase.from("port_user_roles").delete().eq("id", id);
-    if (error) toast({ title: "Não foi possível remover", description: error.message, variant: "destructive" });
     carregar();
   };
 
@@ -186,46 +153,12 @@ export default function PortariaConfiguracoes() {
 
         <TabsContent value="perfis" className="space-y-4 pt-4">
           {isSuperAdmin ? (
-            <div className="rounded-lg border p-3 grid grid-cols-1 sm:grid-cols-3 gap-3 bg-muted/30 items-end">
-              <div className="sm:col-span-1">
-                <Label className="text-xs">Usuário</Label>
-                <Select value={novoPapel.user_id} onValueChange={(v) => setNovoPapel({ ...novoPapel, user_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent className="bg-popover max-h-64">
-                    {Object.entries(usuarios).map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Perfil</Label>
-                <Select value={novoPapel.role} onValueChange={(v) => setNovoPapel({ ...novoPapel, role: v as PortRole })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    {(Object.keys(ROLE_LABEL) as PortRole[]).map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={adicionarPapel}><UserCog className="h-4 w-4 mr-2" />Conceder acesso</Button>
-            </div>
+            <PortariaPermissoes />
           ) : (
             <p className="text-sm text-muted-foreground">Somente o super administrador pode alterar perfis.</p>
           )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-            {papeis.map((p) => (
-              <div key={p.id} className="rounded-lg border bg-card p-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{usuarios[p.user_id] ?? p.user_id}</p>
-                  <p className="text-xs text-muted-foreground">{ROLE_LABEL[p.role]}</p>
-                </div>
-                {isSuperAdmin && (
-                  <Button variant="ghost" size="icon" onClick={() => removerPapel(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                )}
-              </div>
-            ))}
-            {papeis.length === 0 && <p className="text-sm text-muted-foreground">Nenhum perfil concedido ainda.</p>}
-          </div>
         </TabsContent>
+
 
         <TabsContent value="facial" className="space-y-4 pt-4">
           <div className="rounded-lg border p-4 space-y-3">
