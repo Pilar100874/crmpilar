@@ -270,6 +270,7 @@ import PortariaDispositivos from "./pages/portaria/PortariaDispositivos";
 import PortariaConfiguracoes from "./pages/portaria/PortariaConfiguracoes";
 import PortariaInterfone from "./pages/portaria/PortariaInterfone";
 import PortariaPermissoes from "./pages/portaria/PortariaPermissoes";
+import PortariaAtendimentoMobile from "./pages/portaria/PortariaAtendimentoMobile";
 
 import CamerasLayout from "./pages/cameras/CamerasLayout";
 import CamerasDashboard from "./pages/cameras/CamerasDashboard";
@@ -841,6 +842,7 @@ const App = () => (
                 <Route path="encomendas" element={<LivroEncomendas />} />
                 <Route path="palavras-chave" element={<LivroPalavrasChave />} />
               </Route>
+              <Route path="/app/interfone" element={<PortariaAtendimentoMobile />} />
               <Route path="/portaria" element={<PortariaLayout />}>
                 <Route index element={<PortariaInterfone />} />
                 <Route path="inicio" element={<PortariaDashboard />} />
