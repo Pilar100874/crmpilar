@@ -30629,6 +30629,16 @@ export type Database = {
       }
       ponto_user_empresa_ids: { Args: never; Returns: string[] }
       ponto_user_funcionario_ids: { Args: never; Returns: string[] }
+      port_credenciais_resumo: {
+        Args: never
+        Returns: {
+          device_id: string
+          tem_senha: boolean
+          tem_token: boolean
+          tem_usuario: boolean
+          updated_at: string
+        }[]
+      }
       port_has_role: {
         Args: {
           _role: Database["public"]["Enums"]["port_role"]
