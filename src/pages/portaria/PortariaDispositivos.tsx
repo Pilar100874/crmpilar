@@ -45,6 +45,7 @@ export default function PortariaDispositivos() {
   const [salvando, setSalvando] = useState(false);
   const [form, setForm] = useState<Partial<Dispositivo>>(VAZIO);
   const [cred, setCred] = useState({ usuario: "", senha: "", token: "" });
+  const [credResumo, setCredResumo] = useState<Record<string, { tem_usuario: boolean; tem_senha: boolean; tem_token: boolean; updated_at: string }>>({});
   const [excluir, setExcluir] = useState<Dispositivo | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
 
@@ -52,10 +53,15 @@ export default function PortariaDispositivos() {
     setCarregando(true);
     const { data } = await supabase.from("port_devices").select("*").order("nome");
     setLista((data ?? []) as unknown as Dispositivo[]);
+    const { data: resumo } = await (supabase as any).rpc("port_credenciais_resumo");
+    const mapa: Record<string, any> = {};
+    ((resumo ?? []) as any[]).forEach((r) => { mapa[r.device_id] = r; });
+    setCredResumo(mapa);
     setCarregando(false);
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
 
   const abrirNovo = () => { setForm(VAZIO); setCred({ usuario: "", senha: "", token: "" }); setAberto(true); };
   const abrirEdicao = (d: Dispositivo) => { setForm(d); setCred({ usuario: "", senha: "", token: "" }); setAberto(true); };
