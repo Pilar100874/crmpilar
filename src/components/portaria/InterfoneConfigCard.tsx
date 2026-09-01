@@ -1,0 +1,150 @@
+import { useEffect, useState } from "react";
+import { BellRing, Loader2, Save, Video } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useUnidadeAtual } from "@/lib/unidadeAtual";
+import { useInterfoneConfig, registrarToque } from "@/lib/portaria/interfone";
+
+export default function InterfoneConfigCard() {
+  const { unidadeId } = useUnidadeAtual();
+  const { config, carregando, salvar } = useInterfoneConfig(unidadeId);
+  const [devices, setDevices] = useState<{ id: string; nome: string }[]>([]);
+  const [cameras, setCameras] = useState<{ id: string; nome: string }[]>([]);
+  const [salvando, setSalvando] = useState(false);
+  const [sip, setSip] = useState("");
+
+  useEffect(() => {
+    setSip(config?.sip_uri ?? "");
+  }, [config?.sip_uri]);
+
+  useEffect(() => {
+    (async () => {
+      let qd = supabase.from("port_devices").select("id, nome").eq("tipo", "idface").order("nome");
+      let qc = supabase.from("cv_cameras").select("id, nome").eq("ativo", true).order("nome");
+      if (unidadeId) {
+        qd = qd.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
+        qc = qc.or(`filial_id.eq.${unidadeId},filial_id.is.null`);
+      }
+      const [{ data: d }, { data: c }] = await Promise.all([qd, qc]);
+      setDevices(d ?? []);
+      setCameras(c ?? []);
+    })();
+  }, [unidadeId]);
+
+  if (carregando || !config) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground py-8">
+        <Loader2 className="h-4 w-4 animate-spin" /> Carregando configuração do interfone...
+      </div>
+    );
+  }
+
+  const alternarCamera = (id: string, marcado: boolean) => {
+    const atual = config.cameras_extras ?? [];
+    const novas = marcado ? [...new Set([...atual, id])] : atual.filter((c) => c !== id);
+    void salvar({ cameras_extras: novas });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div>
+            <p className="font-medium text-sm">Interfone ativo</p>
+            <p className="text-xs text-muted-foreground">Quando desligado, a campainha não abre popup.</p>
+          </div>
+          <Switch checked={config.ativo} onCheckedChange={(v) => void salvar({ ativo: v })} />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div>
+            <p className="font-medium text-sm">Abrir popup automático</p>
+            <p className="text-xs text-muted-foreground">Mostra a tela do interfone ao tocar a campainha.</p>
+          </div>
+          <Switch checked={config.auto_popup} onCheckedChange={(v) => void salvar({ auto_popup: v })} />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div>
+            <p className="font-medium text-sm">Som de alerta</p>
+            <p className="text-xs text-muted-foreground">Toca um bip no computador ao chamar.</p>
+          </div>
+          <Switch checked={config.som} onCheckedChange={(v) => void salvar({ som: v })} />
+        </div>
+        <div className="rounded-lg border p-3 space-y-2">
+          <Label className="text-sm">Dispositivo do interfone (iDFace)</Label>
+          <Select
+            value={config.device_id ?? ""}
+            onValueChange={(v) => void salvar({ device_id: v || null })}
+          >
+            <SelectTrigger className="bg-background">
+              <SelectValue placeholder="Selecione o interfone" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover">
+              {devices.map((d) => (
+                <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="rounded-lg border p-3 space-y-2">
+        <Label className="text-sm flex items-center gap-2">
+          <Video className="h-4 w-4" /> Câmeras que abrem junto com o interfone
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          Além da câmera do interfone, estas imagens aparecem no popup antes de abrir o portão.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 pt-1">
+          {cameras.map((c) => (
+            <label key={c.id} className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer">
+              <Checkbox
+                checked={(config.cameras_extras ?? []).includes(c.id)}
+                onCheckedChange={(v) => alternarCamera(c.id, v === true)}
+              />
+              <span className="text-sm truncate">{c.nome}</span>
+            </label>
+          ))}
+          {cameras.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma câmera ativa nesta unidade.</p>}
+        </div>
+      </div>
+
+      <div className="rounded-lg border p-3 space-y-2">
+        <Label className="text-sm">Ramal de áudio (SIP) para falar pelo computador</Label>
+        <p className="text-xs text-muted-foreground">
+          Ex.: sip:1001@192.168.88.10 — usado pelo botão "Falar" do popup. Sem SIP, o botão abre a interface local do
+          interfone.
+        </p>
+        <div className="flex gap-2">
+          <Input value={sip} onChange={(e) => setSip(e.target.value)} placeholder="sip:1001@192.168.88.10" />
+          <Button
+            disabled={salvando}
+            onClick={async () => {
+              setSalvando(true);
+              const r = await salvar({ sip_uri: sip.trim() || null });
+              setSalvando(false);
+              r.ok ? toast.success(r.mensagem) : toast.error(r.mensagem);
+            }}
+          >
+            <Save className="h-4 w-4 mr-2" /> Salvar
+          </Button>
+        </div>
+      </div>
+
+      <Button
+        variant="outline"
+        onClick={async () => {
+          const r = await registrarToque(unidadeId, config.device_id, "teste");
+          r.ok ? toast.success("Campainha simulada — o popup deve abrir.") : toast.error(r.mensagem);
+        }}
+      >
+        <BellRing className="h-4 w-4 mr-2" /> Simular campainha (teste)
+      </Button>
+    </div>
+  );
+}
