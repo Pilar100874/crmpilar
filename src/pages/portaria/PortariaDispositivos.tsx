@@ -168,6 +168,11 @@ export default function PortariaDispositivos() {
                       <span className="capitalize text-muted-foreground">{d.status ?? "offline"}</span>
                     </span>
                     <Badge variant={d.habilitado ? "default" : "secondary"}>{d.habilitado ? "Habilitado" : "Desabilitado"}</Badge>
+                    {d.tipo === "shelly" && (d.config as any)?.funcao && (
+                      <Badge variant="outline">
+                        {(d.config as any).funcao === "entrada" ? "Entrada · Shelly i4 Gen3" : "Saída · Shelly 1 Gen3"}
+                      </Badge>
+                    )}
                     {d.via_coletor && <Badge variant="outline">Via Coletor local</Badge>}
                     {d.ultima_comunicacao && (
                       <span className="text-[11px] text-muted-foreground">{new Date(d.ultima_comunicacao).toLocaleString("pt-BR")}</span>
@@ -213,6 +218,21 @@ export default function PortariaDispositivos() {
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
             <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
+            {form.tipo === "shelly" && (
+              <div className="sm:col-span-2">
+                <Label>Função do dispositivo</Label>
+                <Select value={(form.funcao as string) ?? "saida"} onValueChange={(v) => setForm({ ...form, funcao: v as "entrada" | "saida" })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="saida">Saída — Shelly 1 Gen3 (abre fechadura / portão)</SelectItem>
+                    <SelectItem value="entrada">Entrada — Shelly i4 Gen3 (campainha / botão)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Use <strong>Entrada</strong> para o Shelly i4 (detecta o toque na campainha) e <strong>Saída</strong> para o Shelly 1 (aciona a fechadura).
+                </p>
+              </div>
+            )}
             {form.tipo !== "shelly" && (
               <div className="sm:col-span-2">
                 <Label>Endpoint / URL (opcional, sobrepõe IP)</Label>
