@@ -99,7 +99,7 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, acoe
             src={imagem}
             alt={`Imagem de ${titulo}`}
             draggable={false}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover"
             style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${zoom})`, transformOrigin: "0 0" }}
           />
         ) : (
