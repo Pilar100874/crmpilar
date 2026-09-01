@@ -120,18 +120,26 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       ? { texto: `Ramal ${config.ramal} online`, cor: "default" as const }
       : { texto: "Desconectado", cor: "destructive" as const };
 
+  const btnEscuro = dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : "";
+  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white hover:bg-orange-600" : "";
+
   return (
-    <Card>
+    <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <PhoneCall className="h-4 w-4" /> Ramal SIP
+          <PhoneCall className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Ramal SIP
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant={status.cor}>{status.texto}</Badge>
+          <Badge
+            variant={status.cor}
+            className={dark && isRegistered ? "bg-orange-500 text-white hover:bg-orange-500" : ""}
+          >
+            {status.texto}
+          </Badge>
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8"
+            className={`h-8 w-8 ${dark ? "text-slate-300 hover:bg-white/10 hover:text-white" : ""}`}
             onClick={() => setEditando((v) => !v)}
             aria-label="Configurar ramal SIP"
           >
@@ -139,6 +147,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
           </Button>
         </div>
       </CardHeader>
+
 
       <CardContent className="space-y-4">
         {editando && (
