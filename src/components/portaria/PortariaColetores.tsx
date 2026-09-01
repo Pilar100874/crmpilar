@@ -156,12 +156,6 @@ export default function PortariaColetores() {
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input readOnly value={c.token} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
-                  <Button variant="outline" size="icon" onClick={() => copiar(c.token)}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
             );
           })}
