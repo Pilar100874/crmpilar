@@ -41,6 +41,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
   const [acionando, setAcionando] = useState<string | null>(null);
   const [urlDispositivo, setUrlDispositivo] = useState<string | null>(null);
   const capturando = useRef(false);
+  const { status: statusAudio, erro: erroAudio, mudo, conectar, desconectar, alternarMudo } = useAudioInterfone(unidadeId);
 
   // Pontos de acesso, câmeras extras e endereço local do interfone
   useEffect(() => {
@@ -146,6 +147,14 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
   };
 
   const falar = () => {
+    if (statusAudio === "conectado" || statusAudio === "conectando") {
+      desconectar();
+      return;
+    }
+    void conectar();
+  };
+
+  const falarExterno = () => {
     if (config.sip_uri) {
       window.open(config.sip_uri.startsWith("sip:") ? config.sip_uri : `sip:${config.sip_uri}`, "_self");
       return;
@@ -158,6 +167,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
   };
 
   const encerrar = () => {
+    desconectar();
     if (toqueId) void atenderToque(toqueId, "Encerrado sem abrir");
     onFechar();
   };
@@ -217,6 +227,8 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           </div>
         </div>
 
+        {erroAudio && <p className="text-xs text-destructive">{erroAudio}</p>}
+
         <div className="flex flex-wrap gap-2 pt-1">
           {pontos.map((p) => (
             <Button
@@ -229,10 +241,29 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
               ABRIR {p.tipo === "porta" ? "PORTA" : "PORTÃO"} · {p.nome}
             </Button>
           ))}
-          <Button variant="secondary" className="h-12" onClick={falar}>
-            <Mic className="h-4 w-4 mr-2" /> Falar
-            {config.sip_uri ? null : <ExternalLink className="h-4 w-4 ml-2 opacity-60" />}
+          <Button
+            variant={statusAudio === "conectado" ? "default" : "secondary"}
+            className="h-12"
+            onClick={falar}
+          >
+            {statusAudio === "conectando" ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Mic className="h-4 w-4 mr-2" />
+            )}
+            {statusAudio === "conectado" ? "Encerrar conversa" : statusAudio === "conectando" ? "Chamando..." : "Falar"}
           </Button>
+          {statusAudio === "conectado" && (
+            <Button variant="outline" className="h-12" onClick={alternarMudo}>
+              {mudo ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+              {mudo ? "Microfone mudo" : "Mudo"}
+            </Button>
+          )}
+          {(config.sip_uri || urlDispositivo) && (
+            <Button variant="ghost" className="h-12" onClick={falarExterno}>
+              Ramal/interfone <ExternalLink className="h-4 w-4 ml-2 opacity-60" />
+            </Button>
+          )}
           <Button variant="outline" className="h-12" onClick={encerrar}>
             <PhoneOff className="h-4 w-4 mr-2" /> Encerrar
           </Button>
