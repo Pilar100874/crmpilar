@@ -304,14 +304,14 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Digite o número ou ramal"
             inputMode="tel"
-            className="text-center text-lg tracking-widest"
+            className={`text-center text-lg tracking-widest ${dark ? "border-white/15 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
           />
           <div className="grid grid-cols-3 gap-2">
             {TECLAS.map((t) => (
               <Button
                 key={t}
                 variant="outline"
-                className="h-12 text-lg"
+                className={`h-12 text-lg ${btnEscuro}`}
                 onClick={() => setNumero((n) => n + t)}
               >
                 {t}
@@ -321,14 +321,14 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="w-14"
+              className={`w-14 ${btnEscuro}`}
               onClick={() => setNumero((n) => n.slice(0, -1))}
               aria-label="Apagar"
             >
               <Delete className="h-4 w-4" />
             </Button>
             <Button
-              className="flex-1"
+              className={`flex-1 ${btnLaranja}`}
               disabled={!isRegistered || !numero.trim()}
               onClick={() => void dial(numero.trim())}
             >
@@ -336,6 +336,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
             </Button>
           </div>
         </div>
+
       </CardContent>
     </Card>
   );
