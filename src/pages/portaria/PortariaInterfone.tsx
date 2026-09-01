@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Building2, DoorOpen, Loader2, RefreshCw, Video, VideoOff } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Building2, DoorOpen, ExternalLink, Loader2, MonitorSmartphone, RefreshCw, Video, VideoOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { abrirAcesso } from "@/lib/portaria/api";
 
@@ -21,6 +22,14 @@ interface PontoAcesso {
   confirmar_abertura: boolean;
 }
 
+interface DispositivoIdface {
+  id: string;
+  nome: string;
+  ip: string | null;
+  porta: number | null;
+  endpoint: string | null;
+}
+
 const INTERVALO_SNAPSHOT_MS = 6000;
 
 export default function PortariaInterfone() {
@@ -33,7 +42,10 @@ export default function PortariaInterfone() {
   const [pontos, setPontos] = useState<PontoAcesso[]>([]);
   const [acionando, setAcionando] = useState<string | null>(null);
   const [aoVivo, setAoVivo] = useState(true);
+  const [idfaces, setIdfaces] = useState<DispositivoIdface[]>([]);
+  const [idfaceId, setIdfaceId] = useState<string>("");
   const cameraRef = useRef<string>("");
+
 
   useEffect(() => {
     cameraRef.current = cameraId;
