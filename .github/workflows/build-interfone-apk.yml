@@ -39,6 +39,19 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Versão: ${VERSION}"
 
+      - name: Instalar dependências do CRM (web)
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Build do app web (assets nativos)
+        run: npm run build
+
+      - name: Copiar assets para o app nativo
+        run: |
+          rm -rf portaria-app/www
+          mkdir -p portaria-app/www
+          cp -r dist/* portaria-app/www/
+          ls -lh portaria-app/www | head -20
+
       - name: Instalar dependências do Capacitor
         working-directory: portaria-app
         run: npm install --no-audit --no-fund
@@ -151,7 +164,7 @@ jobs:
           body: |
             APK do app de atendimento do Interfone (Portaria).
 
-            - Abre direto a tela `/app/interfone` do CRM
+            - App 100% nativo: telas empacotadas no APK (sem WebView remota)
             - Câmeras do interfone + botões de abrir porta/portão
             - Áudio ao vivo (WebRTC) com o computador
             - Push da campainha (quando o `GOOGLE_SERVICES_JSON` está configurado)
