@@ -120,11 +120,13 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       ? { texto: `Ramal ${config.ramal} online`, cor: "default" as const }
       : { texto: "Desconectado", cor: "destructive" as const };
 
-  const btnEscuro = dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : "";
-  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white hover:bg-orange-600" : "";
+  const btnEscuro = dark ? "border-white/10 bg-white/10 text-white hover:bg-white/20" : "";
+  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600" : "";
+  const inputEscuro = dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : "";
+  const labelEscura = dark ? "text-slate-300" : "";
 
   return (
-    <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
+    <Card className={dark ? "border-white/10 bg-[#111F36]/90 text-white shadow-xl backdrop-blur" : ""}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
           <PhoneCall className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Ramal SIP

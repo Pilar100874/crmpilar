@@ -87,7 +87,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
                 setAberto(true);
               }}
             >
-              <BellRing className="h-5 w-5" /> Câmeras
+              <BellRing className="h-5 w-5" /> Interfone
             </Button>
             <Button
               size="lg"
