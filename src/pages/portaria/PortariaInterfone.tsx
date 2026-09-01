@@ -170,7 +170,7 @@ export default function PortariaInterfone() {
         <Badge variant={aoVivo ? "default" : "secondary"}>{aoVivo ? "Ao vivo" : "Pausado"}</Badge>
       </div>
 
-      <Tabs defaultValue="idface" className="space-y-4">
+      <Tabs defaultValue="camera" className="space-y-4">
         <TabsList>
           <TabsTrigger value="idface">Interfone iDFace</TabsTrigger>
           <TabsTrigger value="camera">Câmera + acionamentos</TabsTrigger>
