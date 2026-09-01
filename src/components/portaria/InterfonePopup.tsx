@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, ExternalLink, Loader2, Mic, PhoneOff, RefreshCw } from "lucide-react";
+import { BellRing, DoorOpen, ExternalLink, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { abrirAcesso } from "@/lib/portaria/api";
 import { atenderToque, type InterfoneConfig } from "@/lib/portaria/interfone";
+import { useAudioInterfone } from "@/lib/portaria/audioInterfone";
+
 
 interface PontoAcesso {
   id: string;
