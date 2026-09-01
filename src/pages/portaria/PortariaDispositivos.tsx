@@ -262,7 +262,9 @@ export default function PortariaDispositivos() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><Label>Usuário</Label><Input value={cred.usuario} onChange={(e) => setCred({ ...cred, usuario: e.target.value })} autoComplete="off" /></div>
                 <div><Label>Senha</Label><Input type="password" value={cred.senha} onChange={(e) => setCred({ ...cred, senha: e.target.value })} autoComplete="new-password" /></div>
-                <div><Label>Token / auth key</Label><Input type="password" value={cred.token} onChange={(e) => setCred({ ...cred, token: e.target.value })} autoComplete="new-password" /></div>
+                {form.tipo !== "idface" && (
+                  <div><Label>Token / auth key</Label><Input type="password" value={cred.token} onChange={(e) => setCred({ ...cred, token: e.target.value })} autoComplete="new-password" /></div>
+                )}
               </div>
               {form.id && credResumo[form.id] ? (
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
