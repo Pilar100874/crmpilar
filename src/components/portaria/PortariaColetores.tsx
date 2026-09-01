@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 type Coletor = {
   id: string;
   nome: string;
-  token: string;
+  token?: string | null;
   ativo: boolean;
   versao: string | null;
   ip_local: string | null;
@@ -36,7 +36,7 @@ export default function PortariaColetores() {
     setCarregando(true);
     const { data, error } = await supabase
       .from("port_coletores")
-      .select("id, nome, token, ativo, versao, ip_local, ultima_comunicacao")
+      .select("id, nome, ativo, versao, ip_local, ultima_comunicacao")
       .order("created_at", { ascending: true });
     if (error) toast({ title: "Não foi possível carregar os coletores", description: error.message, variant: "destructive" });
     setLista((data ?? []) as Coletor[]);
