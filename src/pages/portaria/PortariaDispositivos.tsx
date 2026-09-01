@@ -263,6 +263,7 @@ export default function PortariaDispositivos() {
               <Switch checked={form.habilitado ?? true} onCheckedChange={(v) => setForm({ ...form, habilitado: v })} />
             </div>
 
+            {form.tipo !== "shelly" && (
             <div className="sm:col-span-2 rounded-md border p-3 space-y-3 bg-muted/30">
               <p className="text-sm font-medium flex items-center gap-2"><KeyRound className="h-4 w-4" />Credenciais (armazenadas somente no backend)</p>
               <div className={`grid grid-cols-1 gap-3 ${form.tipo === "idface" ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
