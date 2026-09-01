@@ -186,46 +186,12 @@ export default function PortariaConfiguracoes() {
 
         <TabsContent value="perfis" className="space-y-4 pt-4">
           {isSuperAdmin ? (
-            <div className="rounded-lg border p-3 grid grid-cols-1 sm:grid-cols-3 gap-3 bg-muted/30 items-end">
-              <div className="sm:col-span-1">
-                <Label className="text-xs">Usuário</Label>
-                <Select value={novoPapel.user_id} onValueChange={(v) => setNovoPapel({ ...novoPapel, user_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent className="bg-popover max-h-64">
-                    {Object.entries(usuarios).map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Perfil</Label>
-                <Select value={novoPapel.role} onValueChange={(v) => setNovoPapel({ ...novoPapel, role: v as PortRole })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    {(Object.keys(ROLE_LABEL) as PortRole[]).map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={adicionarPapel}><UserCog className="h-4 w-4 mr-2" />Conceder acesso</Button>
-            </div>
+            <PortariaPermissoes />
           ) : (
             <p className="text-sm text-muted-foreground">Somente o super administrador pode alterar perfis.</p>
           )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-            {papeis.map((p) => (
-              <div key={p.id} className="rounded-lg border bg-card p-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{usuarios[p.user_id] ?? p.user_id}</p>
-                  <p className="text-xs text-muted-foreground">{ROLE_LABEL[p.role]}</p>
-                </div>
-                {isSuperAdmin && (
-                  <Button variant="ghost" size="icon" onClick={() => removerPapel(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                )}
-              </div>
-            ))}
-            {papeis.length === 0 && <p className="text-sm text-muted-foreground">Nenhum perfil concedido ainda.</p>}
-          </div>
         </TabsContent>
+
 
         <TabsContent value="facial" className="space-y-4 pt-4">
           <div className="rounded-lg border p-4 space-y-3">
