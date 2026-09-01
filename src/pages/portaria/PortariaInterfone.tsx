@@ -64,17 +64,38 @@ export default function PortariaInterfone() {
         .order("ordem");
       if (unidadeId) qp = qp.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
 
-      const [{ data: cams }, { data: aps }] = await Promise.all([qc, qp]);
+      let qd = supabase
+        .from("port_devices")
+        .select("id, nome, ip, porta, endpoint")
+        .eq("tipo", "idface")
+        .eq("habilitado", true)
+        .order("nome");
+      if (unidadeId) qd = qd.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
+
+      const [{ data: cams }, { data: aps }, { data: devs }] = await Promise.all([qc, qp, qd]);
       if (!ativo) return;
       const lista = (cams ?? []) as Camera[];
       setCameras(lista);
       setPontos((aps ?? []) as PontoAcesso[]);
       setCameraId((atual) => atual || lista[0]?.id || "");
+      const listaDev = (devs ?? []) as DispositivoIdface[];
+      setIdfaces(listaDev);
+      setIdfaceId((atual) => atual || listaDev[0]?.id || "");
     })();
     return () => {
       ativo = false;
     };
   }, [unidadeId]);
+
+  const idfaceUrl = useMemo(() => {
+    const d = idfaces.find((x) => x.id === idfaceId);
+    if (!d) return null;
+    if (d.endpoint) return d.endpoint.startsWith("http") ? d.endpoint : `http://${d.endpoint}`;
+    if (!d.ip) return null;
+    const porta = d.porta && d.porta !== 80 ? `:${d.porta}` : "";
+    return `http://${d.ip}${porta}/`;
+  }, [idfaces, idfaceId]);
+
 
   const capturar = useCallback(async (id: string, manual = false) => {
     if (!id) return;
