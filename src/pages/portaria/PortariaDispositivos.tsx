@@ -259,24 +259,26 @@ export default function PortariaDispositivos() {
 
             <div className="sm:col-span-2 rounded-md border p-3 space-y-3 bg-muted/30">
               <p className="text-sm font-medium flex items-center gap-2"><KeyRound className="h-4 w-4" />Credenciais (armazenadas somente no backend)</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className={`grid grid-cols-1 gap-3 ${form.tipo === "idface" ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
                 <div><Label>Usuário</Label><Input value={cred.usuario} onChange={(e) => setCred({ ...cred, usuario: e.target.value })} autoComplete="off" /></div>
                 <div><Label>Senha</Label><Input type="password" value={cred.senha} onChange={(e) => setCred({ ...cred, senha: e.target.value })} autoComplete="new-password" /></div>
-                <div><Label>Token / auth key</Label><Input type="password" value={cred.token} onChange={(e) => setCred({ ...cred, token: e.target.value })} autoComplete="new-password" /></div>
+                {form.tipo !== "idface" && (
+                  <div><Label>Token / auth key</Label><Input type="password" value={cred.token} onChange={(e) => setCred({ ...cred, token: e.target.value })} autoComplete="new-password" /></div>
+                )}
               </div>
               {form.id && credResumo[form.id] ? (
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
                   Credenciais salvas em {new Date(credResumo[form.id!].updated_at).toLocaleString("pt-BR")} —
                   {credResumo[form.id!].tem_usuario ? " usuário ✓" : " usuário —"}
                   {credResumo[form.id!].tem_senha ? " senha ✓" : " senha —"}
-                  {credResumo[form.id!].tem_token ? " token ✓" : " token —"}
+                  {form.tipo === "idface" ? "" : credResumo[form.id!].tem_token ? " token ✓" : " token —"}
                 </p>
               ) : (
                 <p className="text-[11px] text-muted-foreground">Nenhuma credencial salva para este dispositivo.</p>
               )}
               <p className="text-[11px] text-muted-foreground">
                 Deixe em branco para manter as credenciais atuais. Elas nunca são retornadas para o navegador (por isso os campos aparecem vazios).
-                No iDFace o Token não é necessário: use apenas usuário e senha do equipamento.
+                {form.tipo === "idface" ? "" : " No iDFace o Token não é necessário: use apenas usuário e senha do equipamento."}
               </p>
 
             </div>
