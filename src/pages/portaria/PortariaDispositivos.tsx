@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STATUS_CORES, salvarCredenciais, testarDispositivo } from "@/lib/portaria/api";
+import { SHELLY_MODELOS, getShellyModelo, rotuloShelly } from "@/lib/portaria/shellyModelos";
+
 
 type Dispositivo = {
   id: string;
