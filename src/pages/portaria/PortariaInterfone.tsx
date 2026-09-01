@@ -143,7 +143,7 @@ export default function PortariaInterfone() {
     if (!aoVivo) return;
     const t = setInterval(() => void capturar(cameraId), intervaloMs);
     return () => clearInterval(t);
-  }, [cameraId, aoVivo, capturar]);
+  }, [cameraId, aoVivo, capturar, intervaloMs]);
 
   const abrir = async (ponto: PontoAcesso) => {
     setAcionando(ponto.id);
