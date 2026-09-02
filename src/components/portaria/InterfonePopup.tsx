@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, ExternalLink, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
+import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -154,18 +154,6 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
     void conectar();
   };
 
-  const falarExterno = () => {
-    if (config.sip_uri) {
-      window.open(config.sip_uri.startsWith("sip:") ? config.sip_uri : `sip:${config.sip_uri}`, "_self");
-      return;
-    }
-    if (urlDispositivo) {
-      window.open(urlDispositivo, "_blank", "noopener");
-      return;
-    }
-    toast.error("Configure o ramal SIP do interfone nas Configurações para falar pelo computador.");
-  };
-
   const encerrar = () => {
     desconectar();
     if (toqueId) void atenderToque(toqueId, "Encerrado sem abrir");
@@ -229,7 +217,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
         {erroAudio && <p className="text-xs text-destructive">{erroAudio}</p>}
 
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap gap-2 pt-1">
           {pontos.map((p) => (
             <Button
               key={p.id}
