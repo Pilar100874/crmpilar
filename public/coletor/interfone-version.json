@@ -1,6 +1,6 @@
 {
-  "version": "1.6.3",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.3/pilar-interfone-v1.6.3.apk",
-  "filename": "pilar-interfone-v1.6.3.apk",
-  "notas": "v1.6.3: ramal SIP volta a ficar embutido na tela de atendimento; quem abre em popup em tela cheia é a tela de Configurar ramal (engrenagem). Histórico com contraste corrigido para leitura no tema escuro."
+  "version": "1.6.4",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.4/pilar-interfone-v1.6.4.apk",
+  "filename": "pilar-interfone-v1.6.4.apk",
+  "notas": "v1.6.4: botões de viva-voz e vídeo sempre visíveis, funcionando como no WhatsApp — dá para iniciar a chamada já em viva-voz ou em vídeo, ligar a câmera no meio da conversa e pedir vídeo para a outra ponta, que aceita ou recusa. Viva-voz agora é controle local imediato."
 }
