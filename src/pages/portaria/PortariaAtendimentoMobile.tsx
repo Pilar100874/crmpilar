@@ -110,36 +110,56 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className={dark ? "!border-white/10 !bg-white/5 !text-white backdrop-blur" : ""}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Últimos toques</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {toques.length === 0 && (
-                <p className={`text-sm ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
-              )}
-              {toques.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setToqueId(t.id);
-                    setAberto(true);
-                  }}
-                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
-                    dark ? "!border-white/10 !bg-white/5 !text-white hover:!bg-white/10" : "bg-card"
-                  }`}
-                >
-                  <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
-                  <Badge
-                    variant={t.status === "pendente" ? "default" : "outline"}
-                    className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
+          {dark ? (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-white backdrop-blur">
+              <p className="mb-2 text-sm font-semibold">Últimos toques</p>
+              <div className="space-y-2">
+                {toques.length === 0 && <p className="text-sm text-slate-400">Nenhum toque registrado ainda.</p>}
+                {toques.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setToqueId(t.id);
+                      setAberto(true);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-white hover:bg-white/10"
                   >
-                    {t.status === "pendente" ? "Novo" : "Atendido"}
-                  </Badge>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
+                    <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                    <Badge
+                      variant={t.status === "pendente" ? "default" : "outline"}
+                      className={t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300"}
+                    >
+                      {t.status === "pendente" ? "Novo" : "Atendido"}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Últimos toques</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {toques.length === 0 && <p className="text-sm text-muted-foreground">Nenhum toque registrado ainda.</p>}
+                {toques.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setToqueId(t.id);
+                      setAberto(true);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-left"
+                  >
+                    <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                    <Badge variant={t.status === "pendente" ? "default" : "outline"}>
+                      {t.status === "pendente" ? "Novo" : "Atendido"}
+                    </Badge>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
