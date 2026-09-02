@@ -97,18 +97,26 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
             </button>
             <button
               type="button"
-              disabled={status === "ativo"}
-              onClick={() => void registrar()}
-              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 disabled:opacity-60 ${
+              onClick={() => setRamalAberto(true)}
+              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 ${
                 dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
               }`}
             >
-              <Smartphone className="h-5 w-5 text-slate-400" /> {status === "ativo" ? "Alertas ok" : "Ativar alertas"}
+              <PhoneCall className="h-5 w-5 text-emerald-400" /> Ramal SIP
             </button>
           </div>
 
-
-          <PortariaSipRamal dark={dark} />
+          {status !== "ativo" && (
+            <button
+              type="button"
+              onClick={() => void registrar()}
+              className={`flex h-11 w-full items-center justify-center gap-2 rounded-2xl text-xs font-semibold transition active:scale-95 ${
+                dark ? "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" : "border bg-card text-muted-foreground"
+              }`}
+            >
+              <Smartphone className="h-4 w-4" /> Ativar alertas de campainha
+            </button>
+          )}
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
