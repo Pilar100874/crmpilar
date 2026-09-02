@@ -1,6 +1,6 @@
 {
-  "version": "1.6.4",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.4/pilar-interfone-v1.6.4.apk",
-  "filename": "pilar-interfone-v1.6.4.apk",
-  "notas": "v1.6.4: botões de viva-voz e vídeo sempre visíveis, funcionando como no WhatsApp — dá para iniciar a chamada já em viva-voz ou em vídeo, ligar a câmera no meio da conversa e pedir vídeo para a outra ponta, que aceita ou recusa. Viva-voz agora é controle local imediato."
+  "version": "1.7.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.0/pilar-interfone-v1.7.0.apk",
+  "filename": "pilar-interfone-v1.7.0.apk",
+  "notas": "v1.7.0: visual novo no estilo de aplicativo de mensagens — abas de Ramais, Agenda e Campainha, lista com fotos/iniciais e botão de ligar, teclado de discagem em tela cheia e tela de chamada com atender/encerrar. Agora aparecem todos os ramais SIP cadastrados no CRM com o nome de cada usuário, e também dá para ligar para contatos da agenda do celular."
 }
