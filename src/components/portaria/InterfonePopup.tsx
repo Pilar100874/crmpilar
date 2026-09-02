@@ -275,7 +275,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
         {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
 
-        <div className="mt-auto flex flex-wrap gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap gap-2 pb-5">
           {pontos.map((p) => (
             <Button
               key={p.id}
