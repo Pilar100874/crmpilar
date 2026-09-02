@@ -150,11 +150,14 @@ export default function AppInterfone() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#16253E] to-[#0D1626] text-white">
       <PortariaAtendimentoMobile dark />
-      <div className="mx-auto w-full max-w-md px-3 pb-6">
+      <div
+        className="mx-auto w-full max-w-md px-3 pb-6"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+      >
         <Button
           variant="ghost"
           size="sm"
-          className="w-full text-slate-400 hover:bg-white/10 hover:text-white"
+          className="w-full rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
           onClick={() => void supabase.auth.signOut()}
         >
           <LogOut className="mr-2 h-4 w-4" /> Sair

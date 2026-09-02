@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, ExternalLink, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
+import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -154,18 +154,6 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
     void conectar();
   };
 
-  const falarExterno = () => {
-    if (config.sip_uri) {
-      window.open(config.sip_uri.startsWith("sip:") ? config.sip_uri : `sip:${config.sip_uri}`, "_self");
-      return;
-    }
-    if (urlDispositivo) {
-      window.open(urlDispositivo, "_blank", "noopener");
-      return;
-    }
-    toast.error("Configure o ramal SIP do interfone nas Configurações para falar pelo computador.");
-  };
-
   const encerrar = () => {
     desconectar();
     if (toqueId) void atenderToque(toqueId, "Encerrado sem abrir");
@@ -174,7 +162,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
   return (
     <Dialog open={aberto} onOpenChange={(v) => (!v ? encerrar() : undefined)}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none gap-3 overflow-y-auto rounded-none border-0 bg-[#0D1626] p-4 text-white sm:h-auto sm:max-h-[92vh] sm:w-auto sm:max-w-4xl sm:rounded-2xl sm:border" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BellRing className="h-5 w-5 text-primary animate-pulse" />
@@ -184,7 +172,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
         </DialogHeader>
 
         <div className="grid gap-3 lg:grid-cols-[1.4fr,1fr]">
-          <div className="relative overflow-hidden rounded-xl border bg-muted aspect-video">
+          <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
             {imagemIdface ? (
               <img src={imagemIdface} alt="Câmera do interfone" className="h-full w-full object-cover" />
             ) : (
@@ -206,7 +194,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
           <div className="grid grid-cols-2 gap-2 content-start">
             {cameras.map((c) => (
-              <div key={c.id} className="overflow-hidden rounded-lg border bg-muted aspect-video relative">
+              <div key={c.id} className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-black">
                 {imagens[c.id] ? (
                   <img src={imagens[c.id]} alt={`Câmera ${c.nome}`} className="h-full w-full object-cover" />
                 ) : (
@@ -229,7 +217,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
         {erroAudio && <p className="text-xs text-destructive">{erroAudio}</p>}
 
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap gap-2 pt-1">
           {pontos.map((p) => (
             <Button
               key={p.id}
@@ -263,13 +251,12 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
               {mudo ? "Microfone mudo" : "Mudo"}
             </Button>
           )}
-          {(config.sip_uri || urlDispositivo) && (
-            <Button variant="ghost" className="h-12" onClick={falarExterno}>
-              Ramal/interfone <ExternalLink className="h-4 w-4 ml-2 opacity-60" />
-            </Button>
-          )}
-          <Button variant="outline" className="h-12" onClick={encerrar}>
-            <PhoneOff className="h-4 w-4 mr-2" /> Encerrar
+          <Button
+            variant="ghost"
+            className="h-12 w-full rounded-xl border border-white/15 bg-white/5 text-white hover:bg-white/10"
+            onClick={encerrar}
+          >
+            <PhoneOff className="h-4 w-4 mr-2" /> Fechar interfone
           </Button>
         </div>
       </DialogContent>

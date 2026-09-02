@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
 
@@ -120,24 +119,32 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       ? { texto: `Ramal ${config.ramal} online`, cor: "default" as const }
       : { texto: "Desconectado", cor: "destructive" as const };
 
-  const btnEscuro = dark ? "border-white/10 bg-white/10 text-white hover:bg-white/20" : "";
-  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600" : "";
-  const inputEscuro = dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : "";
-  const labelEscura = dark ? "text-slate-300" : "";
+  const btnEscuro = dark ? "border-white/15 !bg-white/10 text-white hover:!bg-white/20" : "";
+  const btnLaranja = dark ? "!bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:!bg-orange-600" : "";
+  const inputEscuro = dark ? "border-white/15 !bg-white/10 text-white placeholder:text-slate-500" : "";
+
+  const casca = dark
+    ? "rounded-3xl border border-white/10 bg-[#0F1B2E] p-4 text-white shadow-2xl"
+    : "rounded-3xl border bg-card p-4 shadow-sm";
 
   return (
-    <Card className={dark ? "border-white/10 bg-[#111F36]/90 text-white shadow-xl backdrop-blur" : ""}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm">
+    <div className={casca}>
+      <div className="mb-3 flex flex-row items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
           <PhoneCall className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Ramal SIP
-        </CardTitle>
+        </div>
         <div className="flex items-center gap-2">
-          <Badge
-            variant={status.cor}
-            className={dark && isRegistered ? "bg-orange-500 text-white hover:bg-orange-500" : ""}
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+              isRegistered
+                ? "bg-emerald-500/15 text-emerald-400"
+                : isConnecting
+                  ? "bg-amber-500/15 text-amber-400"
+                  : "bg-red-500/15 text-red-400"
+            }`}
           >
             {status.texto}
-          </Badge>
+          </span>
           <Button
             size="icon"
             variant="ghost"
@@ -148,10 +155,10 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
             <Settings2 className="h-4 w-4" />
           </Button>
         </div>
-      </CardHeader>
+      </div>
 
+      <div className="space-y-4">
 
-      <CardContent className="space-y-4">
         {editando && (
           <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -309,45 +316,53 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
         )}
 
         <div className="space-y-3">
-          <Input
-            value={numero}
-            onChange={(e) => setNumero(e.target.value)}
-            placeholder="Digite o número ou ramal"
-            inputMode="tel"
-            className={`text-center text-lg tracking-widest ${dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
-          />
-          <div className="grid grid-cols-3 gap-2">
+          <div
+            className={`flex h-14 items-center justify-center rounded-2xl text-2xl font-semibold tracking-[0.3em] ${
+              dark ? "bg-white/5 text-white" : "bg-muted"
+            }`}
+          >
+            {numero || <span className={dark ? "text-slate-600" : "text-muted-foreground"}>—</span>}
+          </div>
+          <div className="grid grid-cols-3 gap-2.5">
             {TECLAS.map((t) => (
-              <Button
+              <button
                 key={t}
-                variant="outline"
-                className={`h-12 text-lg ${btnEscuro}`}
+                type="button"
                 onClick={() => setNumero((n) => n + t)}
+                className={`h-14 rounded-2xl text-xl font-semibold transition active:scale-95 ${
+                  dark
+                    ? "border border-white/10 bg-white/10 text-white hover:bg-white/20"
+                    : "border bg-background hover:bg-muted"
+                }`}
               >
                 {t}
-              </Button>
+              </button>
             ))}
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className={`w-14 ${btnEscuro}`}
+            <button
+              type="button"
               onClick={() => setNumero((n) => n.slice(0, -1))}
               aria-label="Apagar"
+              className={`flex h-14 w-16 items-center justify-center rounded-2xl transition active:scale-95 ${
+                dark ? "border border-white/10 bg-white/10 text-white hover:bg-white/20" : "border bg-background"
+              }`}
             >
-              <Delete className="h-4 w-4" />
-            </Button>
-            <Button
-              className={`flex-1 ${btnLaranja}`}
+              <Delete className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
               disabled={!isRegistered || !numero.trim()}
               onClick={() => void dial(numero.trim())}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-base font-semibold text-white shadow-lg shadow-emerald-500/25 transition active:scale-95 disabled:opacity-40"
             >
-              <Phone className="mr-2 h-4 w-4" /> Ligar
-            </Button>
+              <Phone className="h-5 w-5" /> Ligar
+            </button>
           </div>
         </div>
 
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+
   );
 }
