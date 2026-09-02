@@ -247,13 +247,30 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           </div>
         </div>
 
-        {videoAtivo && videoRemoto && (
+        {videoRemotoAtivo && videoRemoto && (
           <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
             <video ref={videoRef} autoPlay playsInline className="h-full w-full object-cover" />
             <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
               Vídeo ao vivo
             </span>
           </div>
+        )}
+
+        {pedidoVideoRecebido && (
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3">
+            <Video className="h-5 w-5 text-emerald-400" />
+            <span className="flex-1 text-sm font-medium text-white">A outra pessoa quer conversar em vídeo.</span>
+            <Button size="sm" className="h-9" onClick={() => void aceitarVideo()}>
+              Aceitar
+            </Button>
+            <Button size="sm" variant="outline" className="h-9 border-white/20 bg-white/5 text-white hover:bg-white/10" onClick={recusarVideo}>
+              Recusar
+            </Button>
+          </div>
+        )}
+
+        {aguardandoVideoRemoto && !videoRemotoAtivo && (
+          <AvisoInline tipo="aviso">Aguardando a outra pessoa aceitar o vídeo...</AvisoInline>
         )}
 
         {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
@@ -276,40 +293,51 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           ))}
           <Button
             variant={statusAudio === "conectado" ? "default" : "secondary"}
-            className="h-12"
+            className="h-12 flex-1 min-w-0 basis-[45%]"
             onClick={falar}
           >
             {statusAudio === "conectando" ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : statusAudio === "conectado" ? (
+              <PhoneOff className="h-4 w-4 mr-2" />
             ) : (
               <Mic className="h-4 w-4 mr-2" />
             )}
-            {statusAudio === "conectado" ? "Encerrar conversa" : statusAudio === "conectando" ? "Chamando..." : "Falar"}
+            <span className="truncate">
+              {statusAudio === "conectado" ? "Encerrar conversa" : statusAudio === "conectando" ? "Chamando..." : "Falar"}
+            </span>
           </Button>
-          {statusAudio === "conectado" && (
-            <Button variant="outline" className="h-12" onClick={alternarMudo}>
-              {mudo ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
-              {mudo ? "Microfone mudo" : "Mudo"}
-            </Button>
-          )}
           <Button
-            variant={videoAtivo ? "default" : "secondary"}
-            className={`h-12 ${meuVideo && !remotoVideoOk ? "opacity-80" : ""}`}
-            onClick={alternarVideo}
-            title={meuVideo && !remotoVideoOk ? "Aguardando a outra ponta permitir o vídeo" : undefined}
+            variant={meuVideo ? "default" : "secondary"}
+            className="h-12 flex-1 min-w-0 basis-[45%]"
+            onClick={() => void alternarVideo()}
+            title={statusAudio === "conectado" ? "Ligar/desligar sua câmera" : "Iniciar chamada em vídeo"}
           >
             {meuVideo ? <Video className="h-4 w-4 mr-2" /> : <VideoOff className="h-4 w-4 mr-2" />}
-            {videoAtivo ? "Vídeo ligado" : meuVideo ? "Vídeo (aguardando...)" : "Vídeo"}
+            <span className="truncate">
+              {meuVideo ? "Desligar vídeo" : statusAudio === "conectado" ? "Vídeo" : "Chamar em vídeo"}
+            </span>
           </Button>
           <Button
-            variant={vivaVozAtiva ? "default" : "secondary"}
-            className={`h-12 ${meuVivaVoz && !remotoVivaVozOk ? "opacity-80" : ""}`}
-            onClick={alternarVivaVoz}
-            title={meuVivaVoz && !remotoVivaVozOk ? "Aguardando a outra ponta permitir o viva-voz" : undefined}
+            variant={vivaVoz ? "default" : "secondary"}
+            className="h-12 flex-1 min-w-0 basis-[45%]"
+            onClick={() => (statusAudio === "conectado" ? alternarVivaVoz() : void ligarComVivaVoz())}
           >
-            {meuVivaVoz ? <Volume2 className="h-4 w-4 mr-2" /> : <Volume1 className="h-4 w-4 mr-2" />}
-            {vivaVozAtiva ? "Viva-voz ligado" : meuVivaVoz ? "Viva-voz (aguardando...)" : "Viva-voz"}
+            {vivaVoz ? <Volume2 className="h-4 w-4 mr-2" /> : <Volume1 className="h-4 w-4 mr-2" />}
+            <span className="truncate">
+              {vivaVoz ? "Viva-voz ligado" : statusAudio === "conectado" ? "Viva-voz" : "Chamar em viva-voz"}
+            </span>
           </Button>
+          {statusAudio === "conectado" && (
+            <Button
+              variant="outline"
+              className="h-12 flex-1 min-w-0 basis-[45%] border-white/20 bg-white/5 text-white hover:bg-white/10"
+              onClick={alternarMudo}
+            >
+              {mudo ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+              <span className="truncate">{mudo ? "Microfone mudo" : "Mudo"}</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             className="h-12 w-full rounded-xl border border-white/15 bg-white/5 text-white hover:bg-white/10"
@@ -318,6 +346,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             <PhoneOff className="h-4 w-4 mr-2" /> Fechar interfone
           </Button>
         </div>
+
       </DialogContent>
     </Dialog>
   );
