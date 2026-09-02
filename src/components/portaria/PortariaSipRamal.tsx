@@ -120,24 +120,32 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       ? { texto: `Ramal ${config.ramal} online`, cor: "default" as const }
       : { texto: "Desconectado", cor: "destructive" as const };
 
-  const btnEscuro = dark ? "border-white/10 bg-white/10 text-white hover:bg-white/20" : "";
-  const btnLaranja = dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600" : "";
-  const inputEscuro = dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : "";
-  const labelEscura = dark ? "text-slate-300" : "";
+  const btnEscuro = dark ? "border-white/15 !bg-white/10 text-white hover:!bg-white/20" : "";
+  const btnLaranja = dark ? "!bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:!bg-orange-600" : "";
+  const inputEscuro = dark ? "border-white/15 !bg-white/10 text-white placeholder:text-slate-500" : "";
+
+  const casca = dark
+    ? "rounded-3xl border border-white/10 bg-[#0F1B2E] p-4 text-white shadow-2xl"
+    : "rounded-3xl border bg-card p-4 shadow-sm";
 
   return (
-    <Card className={dark ? "border-white/10 bg-[#111F36]/90 text-white shadow-xl backdrop-blur" : ""}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm">
+    <div className={casca}>
+      <div className="mb-3 flex flex-row items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
           <PhoneCall className={`h-4 w-4 ${dark ? "text-orange-400" : ""}`} /> Ramal SIP
-        </CardTitle>
+        </div>
         <div className="flex items-center gap-2">
-          <Badge
-            variant={status.cor}
-            className={dark && isRegistered ? "bg-orange-500 text-white hover:bg-orange-500" : ""}
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+              isRegistered
+                ? "bg-emerald-500/15 text-emerald-400"
+                : isConnecting
+                  ? "bg-amber-500/15 text-amber-400"
+                  : "bg-red-500/15 text-red-400"
+            }`}
           >
             {status.texto}
-          </Badge>
+          </span>
           <Button
             size="icon"
             variant="ghost"
@@ -148,10 +156,10 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
             <Settings2 className="h-4 w-4" />
           </Button>
         </div>
-      </CardHeader>
+      </div>
 
+      <div className="space-y-4">
 
-      <CardContent className="space-y-4">
         {editando && (
           <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
             <div className="grid gap-3 sm:grid-cols-2">
