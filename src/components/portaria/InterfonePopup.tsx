@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Video, VideoOff, Volume1, Volume2 } from "lucide-react";
+import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Volume1, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -50,27 +50,11 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
     conectar,
     desconectar,
     alternarMudo,
-    meuVideo,
     vivaVoz,
-    videoRemotoAtivo,
-    videoRemoto,
-    pedidoVideoRecebido,
-    aguardandoVideoRemoto,
-    alternarVideo,
-    aceitarVideo,
-    recusarVideo,
     alternarVivaVoz,
     ligarComVivaVoz,
   } = useAudioInterfone(unidadeId);
 
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  useEffect(() => {
-    if (videoRef.current && videoRemoto) {
-      videoRef.current.srcObject = videoRemoto;
-      void videoRef.current.play().catch(() => undefined);
-    }
-  }, [videoRemoto]);
 
   // Pontos de acesso, câmeras extras e endereço local do interfone
   useEffect(() => {
@@ -200,10 +184,10 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-3 lg:grid-cols-[1.4fr,1fr]">
-          <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
+        <div className={`grid gap-2 ${cameras.length ? "sm:grid-cols-2" : ""}`}>
+          <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-black ${cameras.length ? "sm:col-span-2" : ""} aspect-video`}>
             {imagemIdface ? (
-              <img src={imagemIdface} alt="Câmera do interfone" className="h-full w-full object-cover" />
+              <img src={imagemIdface} alt="Câmera do interfone" className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-slate-400">
                 {carregandoIdface ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
@@ -225,52 +209,23 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 content-start">
-            {cameras.map((c) => (
-              <InterfoneTile
-                key={c.id}
-                titulo={c.nome}
-                imagem={imagens[c.id] ?? null}
-                className="aspect-video"
-              />
-            ))}
-            {cameras.length === 0 && (
-              <p className="col-span-2 text-xs text-muted-foreground">
-                Selecione câmeras adicionais nas Configurações do interfone para vê-las aqui.
-              </p>
-            )}
-          </div>
+          {cameras.map((c) => (
+            <InterfoneTile
+              key={c.id}
+              titulo={c.nome}
+              imagem={imagens[c.id] ?? null}
+              className={cameras.length === 1 ? "sm:col-span-2" : ""}
+            />
+          ))}
         </div>
-
-        {videoRemotoAtivo && videoRemoto && (
-          <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
-            <video ref={videoRef} autoPlay playsInline className="h-full w-full object-cover" />
-            <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
-              Vídeo ao vivo
-            </span>
-          </div>
-        )}
-
-        {pedidoVideoRecebido && (
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3">
-            <Video className="h-5 w-5 text-emerald-400" />
-            <span className="flex-1 text-sm font-medium text-white">A outra pessoa quer conversar em vídeo.</span>
-            <Button size="sm" className="h-9" onClick={() => void aceitarVideo()}>
-              Aceitar
-            </Button>
-            <Button size="sm" variant="outline" className="h-9 border-white/20 bg-white/5 text-white hover:bg-white/10" onClick={recusarVideo}>
-              Recusar
-            </Button>
-          </div>
-        )}
-
-        {aguardandoVideoRemoto && !videoRemotoAtivo && (
-          <AvisoInline tipo="aviso">Aguardando a outra pessoa aceitar o vídeo...</AvisoInline>
-        )}
 
         {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
 
-        <div className="mt-auto flex flex-wrap gap-2 pb-5">
+
+        <div
+          className="mt-auto flex flex-wrap gap-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
+        >
           {pontos.map((p) => (
             <Button
               key={p.id}
@@ -303,17 +258,6 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             </span>
           </Button>
           <Button
-            variant={meuVideo ? "default" : "secondary"}
-            className="h-12 flex-1 min-w-0 basis-[45%]"
-            onClick={() => void alternarVideo()}
-            title={statusAudio === "conectado" ? "Ligar/desligar sua câmera" : "Iniciar chamada em vídeo"}
-          >
-            {meuVideo ? <Video className="h-4 w-4 mr-2" /> : <VideoOff className="h-4 w-4 mr-2" />}
-            <span className="truncate">
-              {meuVideo ? "Desligar vídeo" : statusAudio === "conectado" ? "Vídeo" : "Chamar em vídeo"}
-            </span>
-          </Button>
-          <Button
             variant={vivaVoz ? "default" : "secondary"}
             className="h-12 flex-1 min-w-0 basis-[45%]"
             onClick={() => (statusAudio === "conectado" ? alternarVivaVoz() : void ligarComVivaVoz())}
@@ -341,6 +285,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             <PhoneOff className="h-4 w-4 mr-2" /> Fechar interfone
           </Button>
         </div>
+
 
       </DialogContent>
     </Dialog>
