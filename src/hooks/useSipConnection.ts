@@ -108,56 +108,87 @@ export const useSipConnection = () => {
     }
   }, [activeCalls, localVideoStream, toast]);
 
+  /**
+   * Monta as URLs de WebSocket a testar.
+   * Aceita "192.168.0.10", "pabx.empresa.com:8089" ou "wss://pabx.empresa.com:8089/ws".
+   */
+  const montarUrlsWs = (server: string): { urls: string[]; host: string } => {
+    const bruto = server.trim();
+    if (/^wss?:\/\//i.test(bruto)) {
+      const u = new URL(bruto);
+      return { urls: [bruto], host: u.hostname };
+    }
+    const [host, porta] = bruto.split(":");
+    const p = porta || "8089";
+    const paginaSegura = typeof window !== "undefined" && window.location.protocol === "https:";
+    const urls = [`wss://${host}:${p}/ws`];
+    // Navegador em HTTPS bloqueia ws:// (mixed content); só tentamos texto puro em HTTP.
+    if (!paginaSegura) urls.push(`ws://${host}:${p}/ws`);
+    return { urls, host };
+  };
+
   // Helper to try connecting to a server
   const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false) => {
     console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
-    
-    const wsServers = [
-      `wss://${server}:8089/ws`,
-      `ws://${server}:8089/ws`
-    ];
 
-    const sipUri = `sip:${extension}@${server}`;
-    console.log('SIP URI:', sipUri);
+    const { urls: wsServers, host } = montarUrlsWs(server);
 
-    const ua = new UserAgent({
-      uri: UserAgent.makeURI(sipUri),
-      transportOptions: {
-        server: wsServers[0],
-        connectionTimeout: 5,
-      },
-      authorizationUsername: extension,
-      authorizationPassword: password,
-      displayName: displayName || extension,
-      sessionDescriptionHandlerFactoryOptions: {
-        constraints: {
-          audio: true,
-          video: true,
-        },
-      },
-      delegate: {
-        onInvite: (invitation) => {
-          console.log('📞 Chamada recebida:', invitation.remoteIdentity.uri.user);
-          handleIncomingCall(invitation);
-        },
-        onConnect: () => {
-          console.log('✅ WebSocket conectado');
-        },
-        onDisconnect: (error) => {
-          console.error('❌ WebSocket desconectado:', error);
-          toast({
-            title: "Desconectado",
-            description: "Conexão com UCM perdida",
-            variant: "destructive",
-          });
-          setIsRegistered(false);
-        },
-      },
-    });
+    const sipUri = `sip:${extension}@${host}`;
+    console.log('SIP URI:', sipUri, 'WS:', wsServers);
 
-    await ua.start();
-    return { ua, server };
+    let ultimoErro: unknown = null;
+
+    for (const wsUrl of wsServers) {
+      const ua = new UserAgent({
+        uri: UserAgent.makeURI(sipUri),
+        transportOptions: {
+          server: wsUrl,
+          connectionTimeout: 8,
+        },
+        authorizationUsername: extension,
+        authorizationPassword: password,
+        displayName: displayName || extension,
+        sessionDescriptionHandlerFactoryOptions: {
+          constraints: {
+            audio: true,
+            video: true,
+          },
+        },
+        delegate: {
+          onInvite: (invitation) => {
+            console.log('📞 Chamada recebida:', invitation.remoteIdentity.uri.user);
+            handleIncomingCall(invitation);
+          },
+          onConnect: () => {
+            console.log('✅ WebSocket conectado:', wsUrl);
+          },
+          onDisconnect: (error) => {
+            console.error('❌ WebSocket desconectado:', error);
+            toast({
+              title: "Desconectado",
+              description: "Conexão com UCM perdida",
+              variant: "destructive",
+            });
+            setIsRegistered(false);
+          },
+        },
+      });
+
+      try {
+        await ua.start();
+        return { ua, server: wsUrl, host };
+      } catch (erro) {
+        ultimoErro = erro;
+        console.warn('⚠️ Falhou em', wsUrl, erro);
+        try { await ua.stop(); } catch { /* ignore */ }
+      }
+    }
+
+    throw ultimoErro instanceof Error
+      ? ultimoErro
+      : new Error(`WebSocket indisponível em ${wsServers.join(' e ')}`);
   }, [toast]);
+
 
   // Connect and register to UCM
   const connect = useCallback(async (config: SipConfig) => {
@@ -239,23 +270,29 @@ export const useSipConnection = () => {
 
     } catch (error) {
       console.error('❌ ERRO NA CONEXÃO:', error);
-      
+
+      const host = (config.server || '').replace(/^wss?:\/\//i, '').split('/')[0].split(':')[0];
+      const ehRedeLocal = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+
       let errorMsg = "Erro ao conectar ao UCM";
       if (error instanceof Error) {
         errorMsg = error.message;
-        
-        if (error.message.includes('WebSocket')) {
-          errorMsg = "Não foi possível conectar ao UCM via WebSocket. Verifique se a porta 8089 (WSS/WS) está acessível.";
+
+        if (/WebSocket|indisponível|Transport|timeout/i.test(error.message)) {
+          errorMsg = ehRedeLocal
+            ? `O UCM ${host} está em rede interna. Conecte o aparelho ao Wi-Fi da empresa (ou VPN) e confirme se a porta 8089 (WSS) está liberada.`
+            : `Sem resposta em wss://${host}:8089/ws. Verifique se a porta 8089 está liberada e abra https://${host}:8089/ws no navegador uma vez para aceitar o certificado do UCM.`;
         } else if (error.message.includes('401') || error.message.includes('403')) {
           errorMsg = "Credenciais inválidas. Verifique o ramal e senha.";
         }
       }
-      
+
       toast({
         title: "Erro de conexão",
         description: errorMsg,
         variant: "destructive",
       });
+
     } finally {
       setIsConnecting(false);
     }
