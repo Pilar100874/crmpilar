@@ -82,29 +82,20 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsList>
 
         <TabsContent value="atendimento" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 ${
-                dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
-              }`}
-              onClick={() => {
-                setToqueId(toques[0]?.id ?? null);
-                setAberto(true);
-              }}
-            >
-              <BellRing className="h-5 w-5 text-orange-400" /> Interfone
-            </button>
-            <button
-              type="button"
-              onClick={() => setRamalAberto(true)}
-              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 ${
-                dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
-              }`}
-            >
-              <PhoneCall className="h-5 w-5 text-emerald-400" /> Ramal SIP
-            </button>
-          </div>
+          <button
+            type="button"
+            className={`flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 ${
+              dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
+            }`}
+            onClick={() => {
+              setToqueId(toques[0]?.id ?? null);
+              setAberto(true);
+            }}
+          >
+            <BellRing className="h-5 w-5 text-orange-400" /> Abrir interfone
+          </button>
+
+          <PortariaSipRamal dark={dark} />
 
           {status !== "ativo" && (
             <button
