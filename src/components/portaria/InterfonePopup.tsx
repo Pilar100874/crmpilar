@@ -290,6 +290,24 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             </Button>
           )}
           <Button
+            variant={videoAtivo ? "default" : "secondary"}
+            className={`h-12 ${meuVideo && !remotoVideoOk ? "opacity-80" : ""}`}
+            onClick={alternarVideo}
+            title={meuVideo && !remotoVideoOk ? "Aguardando a outra ponta permitir o vídeo" : undefined}
+          >
+            {meuVideo ? <Video className="h-4 w-4 mr-2" /> : <VideoOff className="h-4 w-4 mr-2" />}
+            {videoAtivo ? "Vídeo ligado" : meuVideo ? "Vídeo (aguardando...)" : "Vídeo"}
+          </Button>
+          <Button
+            variant={vivaVozAtiva ? "default" : "secondary"}
+            className={`h-12 ${meuVivaVoz && !remotoVivaVozOk ? "opacity-80" : ""}`}
+            onClick={alternarVivaVoz}
+            title={meuVivaVoz && !remotoVivaVozOk ? "Aguardando a outra ponta permitir o viva-voz" : undefined}
+          >
+            {meuVivaVoz ? <Volume2 className="h-4 w-4 mr-2" /> : <Volume1 className="h-4 w-4 mr-2" />}
+            {vivaVozAtiva ? "Viva-voz ligado" : meuVivaVoz ? "Viva-voz (aguardando...)" : "Viva-voz"}
+          </Button>
+          <Button
             variant="ghost"
             className="h-12 w-full rounded-xl border border-white/15 bg-white/5 text-white hover:bg-white/10"
             onClick={encerrar}
