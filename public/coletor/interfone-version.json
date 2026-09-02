@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.0/pilar-interfone-v1.6.0.apk",
-  "filename": "pilar-interfone-v1.6.0.apk",
-  "notas": "v1.6.0: visual moderno em tema escuro, teclado do discador legível, interfone abre em tela cheia, botão Ramal/interfone removido e conteúdo respeitando a barra de status do celular."
+  "version": "1.6.1",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.1/pilar-interfone-v1.6.1.apk",
+  "filename": "pilar-interfone-v1.6.1.apk",
+  "notas": "v1.6.1: logotipo centralizado no topo, histórico em tema escuro legível e opções de vídeo e viva-voz na conversa (ativam só quando as duas pontas permitem)."
 }

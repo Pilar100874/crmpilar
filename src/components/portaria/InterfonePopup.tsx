@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
+import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Video, VideoOff, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,31 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
   const [acionando, setAcionando] = useState<string | null>(null);
   const [urlDispositivo, setUrlDispositivo] = useState<string | null>(null);
   const capturando = useRef(false);
-  const { status: statusAudio, erro: erroAudio, mudo, conectar, desconectar, alternarMudo } = useAudioInterfone(unidadeId);
+  const {
+    status: statusAudio,
+    erro: erroAudio,
+    mudo,
+    conectar,
+    desconectar,
+    alternarMudo,
+    meuVideo,
+    meuVivaVoz,
+    remotoVideoOk,
+    remotoVivaVozOk,
+    videoAtivo,
+    vivaVozAtiva,
+    videoRemoto,
+    alternarVideo,
+    alternarVivaVoz,
+  } = useAudioInterfone(unidadeId);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    if (videoRef.current && videoRemoto) {
+      videoRef.current.srcObject = videoRemoto;
+      void videoRef.current.play().catch(() => undefined);
+    }
+  }, [videoRemoto]);
 
   // Pontos de acesso, câmeras extras e endereço local do interfone
   useEffect(() => {
@@ -181,6 +205,14 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
                 <p className="text-sm">{erroIdface ?? "Conectando à câmera do interfone..."}</p>
               </div>
             )}
+            {videoAtivo && videoRemoto && (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="absolute bottom-2 left-2 w-28 rounded-xl border border-white/20 bg-black object-cover shadow-lg"
+              />
+            )}
             <Button
               size="icon"
               variant="secondary"
@@ -249,6 +281,40 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             <Button variant="outline" className="h-12" onClick={alternarMudo}>
               {mudo ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
               {mudo ? "Microfone mudo" : "Mudo"}
+            </Button>
+          )}
+          {statusAudio === "conectado" && (
+            <Button
+              variant={videoAtivo ? "default" : "outline"}
+              className={`h-12 ${videoAtivo ? "!bg-orange-500 text-white hover:!bg-orange-600" : ""}`}
+              onClick={alternarVideo}
+              title={
+                videoAtivo
+                  ? "Vídeo ativo nas duas pontas"
+                  : meuVideo && !remotoVideoOk
+                    ? "Você permitiu — aguardando a outra ponta permitir o vídeo"
+                    : "Permitir vídeo (só ativa se a outra ponta também permitir)"
+              }
+            >
+              {videoAtivo ? <Video className="h-4 w-4 mr-2" /> : <VideoOff className="h-4 w-4 mr-2" />}
+              {videoAtivo ? "Vídeo ativo" : meuVideo && !remotoVideoOk ? "Aguardando..." : "Vídeo"}
+            </Button>
+          )}
+          {statusAudio === "conectado" && (
+            <Button
+              variant={vivaVozAtiva ? "default" : "outline"}
+              className={`h-12 ${vivaVozAtiva ? "!bg-orange-500 text-white hover:!bg-orange-600" : ""}`}
+              onClick={alternarVivaVoz}
+              title={
+                vivaVozAtiva
+                  ? "Viva-voz ativo nas duas pontas"
+                  : meuVivaVoz && !remotoVivaVozOk
+                    ? "Você permitiu — aguardando a outra ponta permitir o viva-voz"
+                    : "Permitir viva-voz (só ativa se a outra ponta também permitir)"
+              }
+            >
+              {vivaVozAtiva ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+              {vivaVozAtiva ? "Viva-voz ativo" : meuVivaVoz && !remotoVivaVozOk ? "Aguardando..." : "Viva-voz"}
             </Button>
           )}
           <Button

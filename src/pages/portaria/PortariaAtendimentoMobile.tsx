@@ -52,13 +52,12 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
       className={`mx-auto w-full max-w-md space-y-4 px-3 pb-4 ${dark ? "text-white" : ""}`}
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
     >
-      <header className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
-        <div className="flex items-center gap-2">
-          <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Sip" className="h-9 w-auto object-contain" />
-          <div>
-            <p className="text-sm font-semibold leading-tight">Pilar Sip</p>
-            <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Interfone e ramal SIP</p>
-          </div>
+      <header className={`flex flex-col items-center gap-2 rounded-2xl p-4 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
+        <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Sip" className="h-12 w-auto object-contain drop-shadow" />
+        <div className="h-0.5 w-14 rounded-full bg-orange-500" />
+        <div className="text-center">
+          <p className="text-sm font-semibold leading-tight">Pilar Sip</p>
+          <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Interfone e ramal SIP</p>
         </div>
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
@@ -111,36 +110,56 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Últimos toques</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {toques.length === 0 && (
-                <p className={`text-sm ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
-              )}
-              {toques.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setToqueId(t.id);
-                    setAberto(true);
-                  }}
-                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
-                    dark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "bg-card"
-                  }`}
-                >
-                  <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
-                  <Badge
-                    variant={t.status === "pendente" ? "default" : "outline"}
-                    className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
+          {dark ? (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-white backdrop-blur">
+              <p className="mb-2 text-sm font-semibold">Últimos toques</p>
+              <div className="space-y-2">
+                {toques.length === 0 && <p className="text-sm text-slate-400">Nenhum toque registrado ainda.</p>}
+                {toques.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setToqueId(t.id);
+                      setAberto(true);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-white hover:bg-white/10"
                   >
-                    {t.status === "pendente" ? "Novo" : "Atendido"}
-                  </Badge>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
+                    <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                    <Badge
+                      variant={t.status === "pendente" ? "default" : "outline"}
+                      className={t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300"}
+                    >
+                      {t.status === "pendente" ? "Novo" : "Atendido"}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Últimos toques</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {toques.length === 0 && <p className="text-sm text-muted-foreground">Nenhum toque registrado ainda.</p>}
+                {toques.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setToqueId(t.id);
+                      setAberto(true);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-left"
+                  >
+                    <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                    <Badge variant={t.status === "pendente" ? "default" : "outline"}>
+                      {t.status === "pendente" ? "Novo" : "Atendido"}
+                    </Badge>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
