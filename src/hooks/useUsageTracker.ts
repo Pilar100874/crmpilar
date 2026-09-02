@@ -14,17 +14,20 @@ export function useUsageTracker() {
   const lastTickRef = useRef<number>(Date.now());
   const currentRouteRef = useRef<string>(location.pathname);
   const ctxRef = useRef<{ usuario_id: string; estabelecimento_id: string } | null>(null);
+  const tokenRef = useRef<string | null>(null);
 
   // Carrega contexto do usuário uma vez
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
+      if (!session?.user) return;
+      tokenRef.current = session.access_token;
       const { data: u } = await supabase
         .from("usuarios")
         .select("id, estabelecimento_id")
-        .eq("auth_user_id", auth.user.id)
+        .eq("auth_user_id", session.user.id)
         .maybeSingle();
       if (!mounted || !u) return;
       ctxRef.current = { usuario_id: u.id, estabelecimento_id: u.estabelecimento_id };
@@ -98,7 +101,8 @@ export function useUsageTracker() {
     const onBeforeUnload = () => {
       // best-effort
       const ctx = ctxRef.current;
-      if (!ctx) return;
+      const token = tokenRef.current;
+      if (!ctx || !token) return;
       const now = Date.now();
       const duration = now - enterAtRef.current;
       if (duration < 1500) return;
@@ -121,6 +125,7 @@ export function useUsageTracker() {
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${token}`,
             Prefer: "return=minimal",
           },
           body,

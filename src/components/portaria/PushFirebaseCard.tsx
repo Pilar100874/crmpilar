@@ -37,7 +37,7 @@ function lerArquivo(texto: string): { dados?: DadosArquivo; erro?: string } {
   return { dados: { projectId, appId, packageName } };
 }
 
-const PACOTE_ESPERADO = "app.lovable.p1afb47beda3540dfa390d0f257cc5ab1";
+const PACOTE_ESPERADO = "br.com.pilar.interfone";
 
 export default function PushFirebaseCard() {
   const { toast } = useToast();
