@@ -154,6 +154,32 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
       </Tabs>
 
 
+      {ramalAberto && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col ${dark ? "bg-[#0B1424] text-white" : "bg-background"}`}
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
+          <div className={`mx-auto flex w-full max-w-md items-center justify-between px-4 py-3 ${dark ? "border-b border-white/10" : "border-b"}`}>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <PhoneCall className="h-4 w-4 text-emerald-400" /> Ramal SIP
+            </div>
+            <button
+              type="button"
+              aria-label="Fechar ramal"
+              onClick={() => setRamalAberto(false)}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
+                dark ? "bg-white/10 text-white hover:bg-white/20" : "bg-muted"
+              }`}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-3 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
+            <PortariaSipRamal dark={dark} />
+          </div>
+        </div>
+      )}
+
       {config && (
         <InterfonePopup
           aberto={aberto}
