@@ -52,13 +52,12 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
       className={`mx-auto w-full max-w-md space-y-4 px-3 pb-4 ${dark ? "text-white" : ""}`}
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
     >
-      <header className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
-        <div className="flex items-center gap-2">
-          <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Sip" className="h-9 w-auto object-contain" />
-          <div>
-            <p className="text-sm font-semibold leading-tight">Pilar Sip</p>
-            <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Interfone e ramal SIP</p>
-          </div>
+      <header className={`flex flex-col items-center gap-2 rounded-2xl p-4 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
+        <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Sip" className="h-12 w-auto object-contain drop-shadow" />
+        <div className="h-0.5 w-14 rounded-full bg-orange-500" />
+        <div className="text-center">
+          <p className="text-sm font-semibold leading-tight">Pilar Sip</p>
+          <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Interfone e ramal SIP</p>
         </div>
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
