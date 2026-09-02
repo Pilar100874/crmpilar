@@ -1,6 +1,6 @@
 {
-  "version": "1.6.2",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.2/pilar-interfone-v1.6.2.apk",
-  "filename": "pilar-interfone-v1.6.2.apk",
-  "notas": "v1.6.2: tela de conectar ramal agora abre em popup em tela cheia (como o interfone), campos com contraste corrigido para leitura, histórico redesenhado para o tema escuro, mensagens de erro em banners elegantes e vídeo/viva-voz com consentimento das duas pontas."
+  "version": "1.6.3",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.3/pilar-interfone-v1.6.3.apk",
+  "filename": "pilar-interfone-v1.6.3.apk",
+  "notas": "v1.6.3: ramal SIP volta a ficar embutido na tela de atendimento; quem abre em popup em tela cheia é a tela de Configurar ramal (engrenagem). Histórico com contraste corrigido para leitura no tema escuro."
 }
