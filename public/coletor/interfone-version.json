@@ -1,6 +1,6 @@
 {
-  "version": "1.7.2",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.2/pilar-interfone-v1.7.2.apk",
-  "filename": "pilar-interfone-v1.7.2.apk",
-  "notas": "Sem videochamada no interfone, botao Fechar elevado acima da barra do Android e cameras em grade otimizada"
+  "version": "1.7.3",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.3/pilar-interfone-v1.7.3.apk",
+  "filename": "pilar-interfone-v1.7.3.apk",
+  "notas": "Servidor alternativo (DDNS) para uso fora da empresa e mensagens centralizadas que somem em 2 segundos"
 }
