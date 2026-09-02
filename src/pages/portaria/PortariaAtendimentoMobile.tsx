@@ -110,13 +110,13 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className={dark ? "border-white/15 !bg-[#101C30] text-white shadow-xl" : ""}>
+          <Card className={dark ? "border-white/20 !bg-[#0D1830] text-white shadow-xl" : ""}>
             <CardHeader className="pb-2">
-              <CardTitle className={`text-sm ${dark ? "text-white" : ""}`}>Últimos toques</CardTitle>
+              <CardTitle className={`text-sm font-semibold ${dark ? "text-white" : ""}`}>Últimos toques</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {toques.length === 0 && (
-                <p className={`text-sm ${dark ? "text-slate-300" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
+                <p className={`text-sm ${dark ? "text-slate-200" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
               )}
               {toques.map((t) => (
                 <button
@@ -125,14 +125,14 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
                     setToqueId(t.id);
                     setAberto(true);
                   }}
-                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.98] ${
-                    dark ? "border-white/15 !bg-[#16233B] text-white hover:!bg-[#1C2C47]" : "bg-card"
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left transition active:scale-[0.98] ${
+                    dark ? "border-white/20 !bg-[#1D2E4E] hover:!bg-[#25396A]" : "bg-card"
                   }`}
                 >
-                  <span className={`text-sm font-medium ${dark ? "text-slate-100" : ""}`}>{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                  <span className={`text-sm font-semibold ${dark ? "text-white" : ""}`}>{new Date(t.created_at).toLocaleString("pt-BR")}</span>
                   <Badge
                     variant={t.status === "pendente" ? "default" : "outline"}
-                    className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
+                    className={dark ? (t.status === "pendente" ? "border-transparent bg-orange-500 font-semibold text-white hover:bg-orange-500" : "border-white/30 bg-white/10 font-semibold text-white") : ""}
                   >
                     {t.status === "pendente" ? "Novo" : "Atendido"}
                   </Badge>
@@ -142,33 +142,6 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
           </Card>
         </TabsContent>
       </Tabs>
-
-
-      {ramalAberto && (
-        <div
-          className={`fixed inset-0 z-50 flex flex-col ${dark ? "bg-[#0B1424] text-white" : "bg-background"}`}
-          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-        >
-          <div className={`mx-auto flex w-full max-w-md items-center justify-between px-4 py-3 ${dark ? "border-b border-white/10" : "border-b"}`}>
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <PhoneCall className="h-4 w-4 text-emerald-400" /> Ramal SIP
-            </div>
-            <button
-              type="button"
-              aria-label="Fechar ramal"
-              onClick={() => setRamalAberto(false)}
-              className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
-                dark ? "bg-white/10 text-white hover:bg-white/20" : "bg-muted"
-              }`}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-3 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
-            <PortariaSipRamal dark={dark} />
-          </div>
-        </div>
-      )}
 
       {config && (
         <InterfonePopup
