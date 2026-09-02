@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Loader2, BellRing, Phone } from "lucide-react";
+import { LogOut, Loader2, BellRing, Phone, ShieldAlert } from "lucide-react";
 import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobile";
 import logoPilar from "@/assets/logo_branco.png";
 
@@ -14,12 +14,34 @@ export default function AppInterfone() {
   const [senha, setSenha] = useState("");
   const [entrando, setEntrando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [permitido, setPermitido] = useState<boolean | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSessao(!!data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSessao(!!s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!sessao) {
+      setPermitido(null);
+      return;
+    }
+    let cancelado = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data } = await supabase
+        .from("usuarios")
+        .select("pode_usar_interfone")
+        .eq("auth_user_id", auth.user.id)
+        .maybeSingle();
+      if (!cancelado) setPermitido(!!(data as any)?.pode_usar_interfone);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [sessao]);
 
   const entrar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +113,36 @@ export default function AppInterfone() {
             <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> Ramal SIP</span>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (permitido === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0D1626]">
+        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (!permitido) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-b from-[#16253E] to-[#0D1626] p-6 text-center">
+        <ShieldAlert className="h-10 w-10 text-orange-500" />
+        <div>
+          <h1 className="text-lg font-semibold text-white">Acesso não liberado</h1>
+          <p className="mt-1 max-w-xs text-sm text-slate-400">
+            Seu usuário não tem permissão para usar o interfone. Peça ao administrador para liberar o acesso no
+            cadastro de usuários.
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          className="text-slate-300 hover:bg-white/10 hover:text-white"
+          onClick={() => void supabase.auth.signOut()}
+        >
+          <LogOut className="mr-2 h-4 w-4" /> Sair
+        </Button>
       </div>
     );
   }
