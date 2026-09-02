@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
+import AvisoInline from "@/components/portaria/AvisoInline";
 
 const STORAGE_KEY = "portaria.sip.config";
 
@@ -64,6 +65,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
   const [editando, setEditando] = useState(false);
   const [numero, setNumero] = useState("");
   const [tentouAuto, setTentouAuto] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   const configValida = useMemo(
     () => !!(config.servidor && config.ramal && config.senha),
@@ -73,13 +75,10 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
   const conectar = useCallback(async () => {
     if (!configValida) {
       setEditando(true);
-      toast({
-        title: "Configure o ramal",
-        description: "Informe servidor, ramal e senha SIP para registrar o aparelho.",
-        variant: "destructive",
-      });
+      setAviso("Informe servidor, ramal e senha SIP para registrar o aparelho.");
       return;
     }
+    setAviso(null);
     await connect({
       server: config.servidor.trim(),
       remoteServer: config.servidorRemoto.trim() || undefined,
@@ -110,6 +109,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     setEditando(false);
     setTentouAuto(false);
+    setAviso(null);
     toast({ title: "Ramal salvo", description: "Configuração guardada neste aparelho." });
   };
 
@@ -121,7 +121,9 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
 
   const btnEscuro = dark ? "border-white/15 !bg-white/10 text-white hover:!bg-white/20" : "";
   const btnLaranja = dark ? "!bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:!bg-orange-600" : "";
-  const inputEscuro = dark ? "border-white/15 !bg-white/10 text-white placeholder:text-slate-500" : "";
+  const inputEscuro = dark
+    ? "border-white/25 !bg-[#16233B] !text-white placeholder:text-slate-400 focus-visible:ring-orange-500"
+    : "";
 
   const casca = dark
     ? "rounded-3xl border border-white/10 bg-[#0F1B2E] p-4 text-white shadow-2xl"
@@ -158,6 +160,9 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       </div>
 
       <div className="space-y-4">
+
+        {aviso && <AvisoInline tipo="aviso">{aviso}</AvisoInline>}
+
 
         {editando && (
           <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
@@ -247,7 +252,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
               />
             </div>
 
-            <Button className="w-full" onClick={salvar}>
+            <Button className={`w-full ${btnLaranja}`} onClick={salvar}>
               Salvar ramal
             </Button>
           </div>

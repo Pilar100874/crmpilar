@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BellRing, Smartphone, Wifi, WifiOff } from "lucide-react";
+import { BellRing, PhoneCall, Smartphone, Wifi, WifiOff, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   const [toques, setToques] = useState<ToqueCampainha[]>([]);
   const [toqueId, setToqueId] = useState<string | null>(null);
   const [aberto, setAberto] = useState(false);
+  const [ramalAberto, setRamalAberto] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -96,28 +97,36 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
             </button>
             <button
               type="button"
-              disabled={status === "ativo"}
-              onClick={() => void registrar()}
-              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 disabled:opacity-60 ${
+              onClick={() => setRamalAberto(true)}
+              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 ${
                 dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
               }`}
             >
-              <Smartphone className="h-5 w-5 text-slate-400" /> {status === "ativo" ? "Alertas ok" : "Ativar alertas"}
+              <PhoneCall className="h-5 w-5 text-emerald-400" /> Ramal SIP
             </button>
           </div>
 
-
-          <PortariaSipRamal dark={dark} />
+          {status !== "ativo" && (
+            <button
+              type="button"
+              onClick={() => void registrar()}
+              className={`flex h-11 w-full items-center justify-center gap-2 rounded-2xl text-xs font-semibold transition active:scale-95 ${
+                dark ? "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" : "border bg-card text-muted-foreground"
+              }`}
+            >
+              <Smartphone className="h-4 w-4" /> Ativar alertas de campainha
+            </button>
+          )}
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
+          <Card className={dark ? "border-white/15 !bg-[#101C30] text-white shadow-xl" : ""}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Últimos toques</CardTitle>
+              <CardTitle className={`text-sm ${dark ? "text-white" : ""}`}>Últimos toques</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {toques.length === 0 && (
-                <p className={`text-sm ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
+                <p className={`text-sm ${dark ? "text-slate-300" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
               )}
               {toques.map((t) => (
                 <button
@@ -126,11 +135,11 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
                     setToqueId(t.id);
                     setAberto(true);
                   }}
-                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
-                    dark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "bg-card"
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.98] ${
+                    dark ? "border-white/15 !bg-[#16233B] text-white hover:!bg-[#1C2C47]" : "bg-card"
                   }`}
                 >
-                  <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                  <span className={`text-sm font-medium ${dark ? "text-slate-100" : ""}`}>{new Date(t.created_at).toLocaleString("pt-BR")}</span>
                   <Badge
                     variant={t.status === "pendente" ? "default" : "outline"}
                     className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
@@ -144,6 +153,32 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsContent>
       </Tabs>
 
+
+      {ramalAberto && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col ${dark ? "bg-[#0B1424] text-white" : "bg-background"}`}
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
+          <div className={`mx-auto flex w-full max-w-md items-center justify-between px-4 py-3 ${dark ? "border-b border-white/10" : "border-b"}`}>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <PhoneCall className="h-4 w-4 text-emerald-400" /> Ramal SIP
+            </div>
+            <button
+              type="button"
+              aria-label="Fechar ramal"
+              onClick={() => setRamalAberto(false)}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
+                dark ? "bg-white/10 text-white hover:bg-white/20" : "bg-muted"
+              }`}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-3 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
+            <PortariaSipRamal dark={dark} />
+          </div>
+        </div>
+      )}
 
       {config && (
         <InterfonePopup

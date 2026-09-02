@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw } from "lucide-react";
+import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Video, VideoOff, Volume1, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { abrirAcesso } from "@/lib/portaria/api";
 import { atenderToque, type InterfoneConfig } from "@/lib/portaria/interfone";
 import { useAudioInterfone } from "@/lib/portaria/audioInterfone";
+import AvisoInline from "@/components/portaria/AvisoInline";
 
 
 interface PontoAcesso {
@@ -41,7 +42,31 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
   const [acionando, setAcionando] = useState<string | null>(null);
   const [urlDispositivo, setUrlDispositivo] = useState<string | null>(null);
   const capturando = useRef(false);
-  const { status: statusAudio, erro: erroAudio, mudo, conectar, desconectar, alternarMudo } = useAudioInterfone(unidadeId);
+  const {
+    status: statusAudio,
+    erro: erroAudio,
+    mudo,
+    conectar,
+    desconectar,
+    alternarMudo,
+    meuVideo,
+    meuVivaVoz,
+    remotoVideoOk,
+    remotoVivaVozOk,
+    videoAtivo,
+    vivaVozAtiva,
+    videoRemoto,
+    alternarVideo,
+    alternarVivaVoz,
+  } = useAudioInterfone(unidadeId);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    if (videoRef.current && videoRemoto) {
+      videoRef.current.srcObject = videoRemoto;
+      void videoRef.current.play().catch(() => undefined);
+    }
+  }, [videoRemoto]);
 
   // Pontos de acesso, câmeras extras e endereço local do interfone
   useEffect(() => {
@@ -176,9 +201,13 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             {imagemIdface ? (
               <img src={imagemIdface} alt="Câmera do interfone" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground p-4 text-center">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-slate-400">
                 {carregandoIdface ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
-                <p className="text-sm">{erroIdface ?? "Conectando à câmera do interfone..."}</p>
+                {erroIdface ? (
+                  <AvisoInline tipo="aviso">{erroIdface}</AvisoInline>
+                ) : (
+                  <p className="text-sm">Conectando à câmera do interfone...</p>
+                )}
               </div>
             )}
             <Button
@@ -215,7 +244,16 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           </div>
         </div>
 
-        {erroAudio && <p className="text-xs text-destructive">{erroAudio}</p>}
+        {videoAtivo && videoRemoto && (
+          <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
+            <video ref={videoRef} autoPlay playsInline className="h-full w-full object-cover" />
+            <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
+              Vídeo ao vivo
+            </span>
+          </div>
+        )}
+
+        {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
 
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
           {pontos.map((p) => (
@@ -251,6 +289,24 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
               {mudo ? "Microfone mudo" : "Mudo"}
             </Button>
           )}
+          <Button
+            variant={videoAtivo ? "default" : "secondary"}
+            className={`h-12 ${meuVideo && !remotoVideoOk ? "opacity-80" : ""}`}
+            onClick={alternarVideo}
+            title={meuVideo && !remotoVideoOk ? "Aguardando a outra ponta permitir o vídeo" : undefined}
+          >
+            {meuVideo ? <Video className="h-4 w-4 mr-2" /> : <VideoOff className="h-4 w-4 mr-2" />}
+            {videoAtivo ? "Vídeo ligado" : meuVideo ? "Vídeo (aguardando...)" : "Vídeo"}
+          </Button>
+          <Button
+            variant={vivaVozAtiva ? "default" : "secondary"}
+            className={`h-12 ${meuVivaVoz && !remotoVivaVozOk ? "opacity-80" : ""}`}
+            onClick={alternarVivaVoz}
+            title={meuVivaVoz && !remotoVivaVozOk ? "Aguardando a outra ponta permitir o viva-voz" : undefined}
+          >
+            {meuVivaVoz ? <Volume2 className="h-4 w-4 mr-2" /> : <Volume1 className="h-4 w-4 mr-2" />}
+            {vivaVozAtiva ? "Viva-voz ligado" : meuVivaVoz ? "Viva-voz (aguardando...)" : "Viva-voz"}
+          </Button>
           <Button
             variant="ghost"
             className="h-12 w-full rounded-xl border border-white/15 bg-white/5 text-white hover:bg-white/10"
