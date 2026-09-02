@@ -10,3 +10,8 @@
 - [x] Build validado (npm run build OK)
 - [ ] Viva-voz/videochamada na tela de chamada SIP (PilarFone) com botoes estilo WhatsApp
 - [ ] Mostrar capturas de cada tela do app ao usuario
+
+## 2026-09-02
+- [x] InterfoneTile: zoom por clique + arraste (corrigidos erros TS de 'movido')
+- [x] InterfonePopup: botão fechar com respiro (pb-5) e import do InterfoneTile
+- [x] Typecheck OK (tsgo --noEmit)
