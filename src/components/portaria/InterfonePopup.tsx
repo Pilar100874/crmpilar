@@ -9,6 +9,7 @@ import { abrirAcesso } from "@/lib/portaria/api";
 import { atenderToque, type InterfoneConfig } from "@/lib/portaria/interfone";
 import { useAudioInterfone } from "@/lib/portaria/audioInterfone";
 import AvisoInline from "@/components/portaria/AvisoInline";
+import { InterfoneTile } from "@/components/portaria/InterfoneTile";
 
 
 interface PontoAcesso {
@@ -226,18 +227,12 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
           <div className="grid grid-cols-2 gap-2 content-start">
             {cameras.map((c) => (
-              <div key={c.id} className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-black">
-                {imagens[c.id] ? (
-                  <img src={imagens[c.id]} alt={`Câmera ${c.nome}`} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-[11px] text-muted-foreground">
-                    Carregando...
-                  </div>
-                )}
-                <span className="absolute bottom-1 left-1 rounded bg-background/80 px-1 text-[10px] font-medium">
-                  {c.nome}
-                </span>
-              </div>
+              <InterfoneTile
+                key={c.id}
+                titulo={c.nome}
+                imagem={imagens[c.id] ?? null}
+                className="aspect-video"
+              />
             ))}
             {cameras.length === 0 && (
               <p className="col-span-2 text-xs text-muted-foreground">
@@ -275,7 +270,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
         {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
 
-        <div className="mt-auto flex flex-wrap gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap gap-2 pb-5">
           {pontos.map((p) => (
             <Button
               key={p.id}
