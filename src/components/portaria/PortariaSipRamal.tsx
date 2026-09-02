@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
+import AvisoInline from "@/components/portaria/AvisoInline";
 
 const STORAGE_KEY = "portaria.sip.config";
 
@@ -64,6 +65,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
   const [editando, setEditando] = useState(false);
   const [numero, setNumero] = useState("");
   const [tentouAuto, setTentouAuto] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   const configValida = useMemo(
     () => !!(config.servidor && config.ramal && config.senha),
@@ -73,13 +75,10 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
   const conectar = useCallback(async () => {
     if (!configValida) {
       setEditando(true);
-      toast({
-        title: "Configure o ramal",
-        description: "Informe servidor, ramal e senha SIP para registrar o aparelho.",
-        variant: "destructive",
-      });
+      setAviso("Informe servidor, ramal e senha SIP para registrar o aparelho.");
       return;
     }
+    setAviso(null);
     await connect({
       server: config.servidor.trim(),
       remoteServer: config.servidorRemoto.trim() || undefined,
@@ -110,6 +109,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     setEditando(false);
     setTentouAuto(false);
+    setAviso(null);
     toast({ title: "Ramal salvo", description: "Configuração guardada neste aparelho." });
   };
 
@@ -160,6 +160,9 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
       </div>
 
       <div className="space-y-4">
+
+        {aviso && <AvisoInline tipo="aviso">{aviso}</AvisoInline>}
+
 
         {editando && (
           <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
