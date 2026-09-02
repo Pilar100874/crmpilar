@@ -50,6 +50,7 @@ interface Usuario {
   grupos_acesso?: { nome: string };
   estabelecimentos?: { nome: string };
   is_porteiro?: boolean;
+  pode_usar_interfone?: boolean;
   is_atendente?: boolean;
   atendente_id?: string;
   tipo?: string;
@@ -119,6 +120,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
+  const [podeUsarInterfone, setPodeUsarInterfone] = useState(false);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -371,6 +373,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       usuario_sip: usuarioSip || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
+      pode_usar_interfone: podeUsarInterfone,
     };
 
     if (editingId) {
@@ -671,6 +674,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAdmin(false);
     setIsAtendente(false);
     setIsPorteiro(false);
+    setPodeUsarInterfone(false);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -701,6 +705,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUsuarioSip(usuario.usuario_sip || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
+    setPodeUsarInterfone(!!(usuario as any).pode_usar_interfone);
     setEditingId(usuario.id);
     setFormOpen(true);
 
@@ -1046,6 +1051,20 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 onChange={(e) => setUsuarioSip(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="space-y-0.5 pr-4">
+              <Label htmlFor="usuario-interfone">Acesso ao Interfone (app Pilar Sip)</Label>
+              <p className="text-xs text-muted-foreground">
+                Permite que este usuário entre no aplicativo do interfone e receba as chamadas de campainha.
+              </p>
+            </div>
+            <Switch
+              id="usuario-interfone"
+              checked={podeUsarInterfone}
+              onCheckedChange={setPodeUsarInterfone}
+            />
           </div>
         </Card>
 
