@@ -166,96 +166,121 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
 
 
         {editando && (
-          <div className={`space-y-3 rounded-lg border p-3 ${dark ? "border-white/10 bg-white/5" : ""}`}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="sip-servidor">Servidor (PABX)</Label>
-                <Input
-                  id="sip-servidor"
-                  className={inputEscuro}
-                  value={config.servidor}
-                  onChange={(e) => setConfig({ ...config, servidor: e.target.value })}
-                  placeholder="pabx.empresa.com.br"
-                />
+          <div
+            className={`fixed inset-0 z-50 flex flex-col ${dark ? "bg-[#0B1424] text-white" : "bg-background"}`}
+            style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          >
+            <div className={`mx-auto flex w-full max-w-md items-center justify-between px-4 py-3 ${dark ? "border-b border-white/10" : "border-b"}`}>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Settings2 className="h-4 w-4 text-orange-400" /> Configurar ramal SIP
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="sip-remoto">Servidor alternativo</Label>
-                <Input
-                  id="sip-remoto"
-                  className={inputEscuro}
-                  value={config.servidorRemoto}
-                  onChange={(e) => setConfig({ ...config, servidorRemoto: e.target.value })}
-                  placeholder="opcional"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="sip-ramal">Ramal</Label>
-                <Input
-                  id="sip-ramal"
-                  className={inputEscuro}
-                  value={config.ramal}
-                  onChange={(e) => setConfig({ ...config, ramal: e.target.value })}
-                  placeholder="1001"
-                  inputMode="numeric"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="sip-senha">Senha SIP</Label>
-                <Input
-                  id="sip-senha"
-                  className={inputEscuro}
-                  type="password"
-                  value={config.senha}
-                  onChange={(e) => setConfig({ ...config, senha: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="sip-nome">Nome exibido</Label>
-                <Input
-                  id="sip-nome"
-                  className={inputEscuro}
-                  value={config.nome}
-                  onChange={(e) => setConfig({ ...config, nome: e.target.value })}
-                  placeholder="Portaria"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="sip-portaria">Ramal da portaria/interfone</Label>
-                <Input
-                  id="sip-portaria"
-                  className={inputEscuro}
-                  value={config.ramalPortaria}
-                  onChange={(e) => setConfig({ ...config, ramalPortaria: e.target.value })}
-                  placeholder="2000"
-                  inputMode="numeric"
-                />
-              </div>
+              <button
+                type="button"
+                aria-label="Fechar configuração"
+                onClick={() => setEditando(false)}
+                className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
+                  dark ? "bg-white/10 text-white hover:bg-white/20" : "bg-muted"
+                }`}
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
+            <div
+              className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-4 py-4"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+            >
+              <div className={`space-y-3 rounded-2xl border p-4 ${dark ? "border-white/10 bg-white/5" : ""}`}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-servidor">Servidor (PABX)</Label>
+                    <Input
+                      id="sip-servidor"
+                      className={inputEscuro}
+                      value={config.servidor}
+                      onChange={(e) => setConfig({ ...config, servidor: e.target.value })}
+                      placeholder="pabx.empresa.com.br"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-remoto">Servidor alternativo</Label>
+                    <Input
+                      id="sip-remoto"
+                      className={inputEscuro}
+                      value={config.servidorRemoto}
+                      onChange={(e) => setConfig({ ...config, servidorRemoto: e.target.value })}
+                      placeholder="opcional"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-ramal">Ramal</Label>
+                    <Input
+                      id="sip-ramal"
+                      className={inputEscuro}
+                      value={config.ramal}
+                      onChange={(e) => setConfig({ ...config, ramal: e.target.value })}
+                      placeholder="1001"
+                      inputMode="numeric"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-senha">Senha SIP</Label>
+                    <Input
+                      id="sip-senha"
+                      className={inputEscuro}
+                      type="password"
+                      value={config.senha}
+                      onChange={(e) => setConfig({ ...config, senha: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-nome">Nome exibido</Label>
+                    <Input
+                      id="sip-nome"
+                      className={inputEscuro}
+                      value={config.nome}
+                      onChange={(e) => setConfig({ ...config, nome: e.target.value })}
+                      placeholder="Portaria"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-portaria">Ramal da portaria/interfone</Label>
+                    <Input
+                      id="sip-portaria"
+                      className={inputEscuro}
+                      value={config.ramalPortaria}
+                      onChange={(e) => setConfig({ ...config, ramalPortaria: e.target.value })}
+                      placeholder="2000"
+                      inputMode="numeric"
+                    />
+                  </div>
+                </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="sip-auto" className="text-sm font-normal">
-                Conectar automaticamente ao abrir
-              </Label>
-              <Switch
-                id="sip-auto"
-                checked={config.autoConectar}
-                onCheckedChange={(v) => setConfig({ ...config, autoConectar: v })}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="sip-atender" className="text-sm font-normal">
-                Atender chamadas automaticamente
-              </Label>
-              <Switch
-                id="sip-atender"
-                checked={config.autoAtender}
-                onCheckedChange={(v) => setConfig({ ...config, autoAtender: v })}
-              />
-            </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="sip-auto" className="text-sm font-normal">
+                    Conectar automaticamente ao abrir
+                  </Label>
+                  <Switch
+                    id="sip-auto"
+                    checked={config.autoConectar}
+                    onCheckedChange={(v) => setConfig({ ...config, autoConectar: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="sip-atender" className="text-sm font-normal">
+                    Atender chamadas automaticamente
+                  </Label>
+                  <Switch
+                    id="sip-atender"
+                    checked={config.autoAtender}
+                    onCheckedChange={(v) => setConfig({ ...config, autoAtender: v })}
+                  />
+                </div>
 
-            <Button className={`w-full ${btnLaranja}`} onClick={salvar}>
-              Salvar ramal
-            </Button>
+                <Button className={`w-full ${btnLaranja}`} onClick={salvar}>
+                  Salvar ramal
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 
