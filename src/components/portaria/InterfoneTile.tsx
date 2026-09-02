@@ -81,17 +81,25 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, acoe
           aplicar(zoom > 1 ? 1 : 2.5, e.clientX - (rect?.left ?? 0), e.clientY - (rect?.top ?? 0));
         }}
         onPointerDown={(e) => {
-          if (zoom <= 1) return;
-          arrasto.current = { x: e.clientX, y: e.clientY, ox: pos.x, oy: pos.y };
+          arrasto.current = { x: e.clientX, y: e.clientY, ox: pos.x, oy: pos.y, movido: false };
           (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
         }}
         onPointerMove={(e) => {
           const a = arrasto.current;
           if (!a) return;
-          setPos({ x: a.ox + (e.clientX - a.x), y: a.oy + (e.clientY - a.y) });
+          if (Math.abs(e.clientX - a.x) > 6 || Math.abs(e.clientY - a.y) > 6) {
+            arrasto.current = { ...a, movido: true };
+            if (zoom > 1) setPos({ x: a.ox + (e.clientX - a.x), y: a.oy + (e.clientY - a.y) });
+          }
         }}
-        onPointerUp={() => {
+        onPointerUp={(e) => {
+          const a = arrasto.current;
           arrasto.current = null;
+          // Clique (sem arraste): alterna zoom no ponto clicado
+          if (a && !a.movido) {
+            const rect = ref.current?.getBoundingClientRect();
+            aplicar(zoom > 1 ? 1 : 2.5, e.clientX - (rect?.left ?? 0), e.clientY - (rect?.top ?? 0));
+          }
         }}
       >
         {imagem ? (
