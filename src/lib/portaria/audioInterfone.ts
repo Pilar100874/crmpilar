@@ -5,9 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
  * Conversa entre quem está no computador da portaria e quem está no celular,
  * usando WebRTC com sinalização pelo Realtime.
  *
- * Vídeo e viva-voz só são ativados quando AS DUAS pontas permitem: cada lado
- * envia um sinal de "capacidade" com suas permissões locais; o recurso liga
- * apenas quando os dois lados estão com a flag ligada.
+ * Funciona como no WhatsApp:
+ * - Viva-voz é um controle local (não depende da outra ponta).
+ * - A chamada pode começar já em vídeo ou só em áudio.
+ * - No meio da conversa qualquer lado pode ligar a própria câmera e/ou pedir
+ *   vídeo para a outra ponta, que aceita ou recusa.
  */
 export type StatusAudio = "desligado" | "conectando" | "conectado" | "erro";
 
@@ -19,7 +21,9 @@ type Sinal =
   | { tipo: "oferta"; de: string; sdp: RTCSessionDescriptionInit }
   | { tipo: "resposta"; de: string; sdp: RTCSessionDescriptionInit }
   | { tipo: "ice"; de: string; candidate: RTCIceCandidateInit }
-  | { tipo: "capacidade"; de: string; video: boolean; vivaVoz: boolean }
+  | { tipo: "video"; de: string; ligado: boolean }
+  | { tipo: "pedido_video"; de: string }
+  | { tipo: "recusa_video"; de: string }
   | { tipo: "encerrar"; de: string };
 
 export function useAudioInterfone(unidadeId: string | null, autoAtender = true) {
@@ -27,9 +31,10 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
   const [erro, setErro] = useState<string | null>(null);
   const [mudo, setMudo] = useState(false);
   const [meuVideo, setMeuVideo] = useState(false);
-  const [meuVivaVoz, setMeuVivaVoz] = useState(false);
-  const [remotoVideoOk, setRemotoVideoOk] = useState(false);
-  const [remotoVivaVozOk, setRemotoVivaVozOk] = useState(false);
+  const [vivaVoz, setVivaVoz] = useState(false);
+  const [videoRemotoAtivo, setVideoRemotoAtivo] = useState(false);
+  const [pedidoVideoRecebido, setPedidoVideoRecebido] = useState(false);
+  const [aguardandoVideoRemoto, setAguardandoVideoRemoto] = useState(false);
   const [videoRemoto, setVideoRemoto] = useState<MediaStream | null>(null);
 
   const pc = useRef<RTCPeerConnection | null>(null);
@@ -38,29 +43,19 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
   const audio = useRef<HTMLAudioElement | null>(null);
   const canal = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const eu = useRef(Math.random().toString(36).slice(2));
-  const remotoVideoRef = useRef(false);
   const meuVideoRef = useRef(false);
-
-  const videoAtivo = meuVideo && remotoVideoOk;
-  const vivaVozAtiva = meuVivaVoz && remotoVivaVozOk;
+  const vivaVozRef = useRef(false);
 
   const enviar = useCallback((sinal: Sinal) => {
     void canal.current?.send({ type: "broadcast", event: "sinal", payload: sinal });
   }, []);
 
-  const enviarCapacidade = useCallback(
-    (video: boolean, vivaVoz: boolean) => {
-      enviar({ tipo: "capacidade", de: eu.current, video, vivaVoz });
-    },
-    [enviar],
-  );
-
   const aplicarVivaVoz = useCallback((ligar: boolean) => {
     const el = audio.current as (HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> }) | null;
-    if (!el?.setSinkId) return;
-    // Em Android/Chrome o alto-falante costuma ser o sink "default" quando não há fone
+    if (!el) return;
+    el.volume = 1;
+    if (!el.setSinkId) return;
     void el.setSinkId(ligar ? "default" : "").catch(() => undefined);
-    if (ligar) el.volume = 1;
   }, []);
 
   const limpar = useCallback(() => {
@@ -75,12 +70,14 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
       audio.current.remove();
       audio.current = null;
     }
+    meuVideoRef.current = false;
     setStatus("desligado");
     setMudo(false);
+    setMeuVideo(false);
     setVideoRemoto(null);
-    setRemotoVideoOk(false);
-    setRemotoVivaVozOk(false);
-    remotoVideoRef.current = false;
+    setVideoRemotoAtivo(false);
+    setPedidoVideoRecebido(false);
+    setAguardandoVideoRemoto(false);
   }, []);
 
   const renegociar = useCallback(
@@ -92,34 +89,26 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
     [enviar],
   );
 
-  /** Liga/desliga a faixa de vídeo local conforme o consentimento das duas pontas. */
-  const sincronizarVideo = useCallback(
-    async (remotoOk: boolean) => {
-      const conexao = pc.current;
-      if (!conexao) return;
-      const ambos = meuVideoRef.current && remotoOk;
-      const temVideo = !!videoLocal.current;
-      try {
-        if (ambos && !temVideo) {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          const faixa = stream.getVideoTracks()[0];
-          videoLocal.current = faixa;
-          conexao.addTrack(faixa, local.current ?? stream);
-          // Só o lado com id menor inicia a renegociação para evitar conflito de ofertas
-          await renegociar(conexao);
-        } else if (!ambos && temVideo) {
-          const sender = conexao.getSenders().find((s) => s.track === videoLocal.current);
-          if (sender) conexao.removeTrack(sender);
-          videoLocal.current?.stop();
-          videoLocal.current = null;
-          await renegociar(conexao);
-        }
-      } catch {
-        setErro("Não foi possível acessar a câmera para o vídeo.");
-      }
-    },
-    [renegociar],
-  );
+  /** Liga a câmera local e publica a faixa de vídeo. */
+  const ligarCameraLocal = useCallback(async () => {
+    const conexao = pc.current;
+    if (!conexao || videoLocal.current) return;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    const faixa = stream.getVideoTracks()[0];
+    videoLocal.current = faixa;
+    conexao.addTrack(faixa, local.current ?? stream);
+    await renegociar(conexao);
+  }, [renegociar]);
+
+  const desligarCameraLocal = useCallback(async () => {
+    const conexao = pc.current;
+    if (!conexao || !videoLocal.current) return;
+    const sender = conexao.getSenders().find((s) => s.track === videoLocal.current);
+    if (sender) conexao.removeTrack(sender);
+    videoLocal.current.stop();
+    videoLocal.current = null;
+    await renegociar(conexao);
+  }, [renegociar]);
 
   const criarPeer = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -132,6 +121,11 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
     conexao.ontrack = (e) => {
       if (e.track.kind === "video") {
         setVideoRemoto(e.streams[0] ?? new MediaStream([e.track]));
+        setVideoRemotoAtivo(true);
+        setAguardandoVideoRemoto(false);
+        e.track.onended = () => setVideoRemotoAtivo(false);
+        e.track.onmute = () => setVideoRemotoAtivo(false);
+        e.track.onunmute = () => setVideoRemotoAtivo(true);
         return;
       }
       if (!audio.current) {
@@ -142,19 +136,16 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
       }
       audio.current.srcObject = e.streams[0];
       void audio.current.play().catch(() => undefined);
+      aplicarVivaVoz(vivaVozRef.current);
     };
     conexao.onconnectionstatechange = () => {
       const s = conexao.connectionState;
-      if (s === "connected") {
-        setStatus("conectado");
-        // Ao conectar, avisa a outra ponta das permissões atuais
-        enviarCapacidade(meuVideoRef.current, meuVivaVoz);
-      }
+      if (s === "connected") setStatus("conectado");
       if (s === "failed" || s === "disconnected" || s === "closed") limpar();
     };
     pc.current = conexao;
     return conexao;
-  }, [enviar, enviarCapacidade, limpar, meuVivaVoz]);
+  }, [aplicarVivaVoz, enviar, limpar]);
 
   // Canal de sinalização por unidade
   useEffect(() => {
@@ -177,12 +168,15 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
           await pc.current.setRemoteDescription(new RTCSessionDescription(s.sdp)).catch(() => undefined);
         } else if (s.tipo === "ice" && pc.current) {
           await pc.current.addIceCandidate(new RTCIceCandidate(s.candidate)).catch(() => undefined);
-        } else if (s.tipo === "capacidade") {
-          remotoVideoRef.current = s.video;
-          setRemotoVideoOk(s.video);
-          setRemotoVivaVozOk(s.vivaVoz);
-          aplicarVivaVoz(meuVivaVoz && s.vivaVoz);
-          void sincronizarVideo(s.video);
+        } else if (s.tipo === "video") {
+          setVideoRemotoAtivo(s.ligado);
+          if (s.ligado) setAguardandoVideoRemoto(false);
+          else setVideoRemoto(null);
+        } else if (s.tipo === "pedido_video") {
+          if (!meuVideoRef.current) setPedidoVideoRecebido(true);
+        } else if (s.tipo === "recusa_video") {
+          setAguardandoVideoRemoto(false);
+          setErro("A outra pessoa recusou o vídeo.");
         } else if (s.tipo === "encerrar") {
           limpar();
         }
@@ -197,22 +191,33 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
       canal.current = null;
       limpar();
     };
-  }, [autoAtender, criarPeer, enviar, limpar, unidadeId, aplicarVivaVoz, meuVivaVoz, sincronizarVideo]);
+  }, [autoAtender, criarPeer, enviar, limpar, unidadeId]);
 
-  /** Abre o microfone e chama quem estiver na outra ponta. */
-  const conectar = useCallback(async () => {
-    setErro(null);
-    setStatus("conectando");
-    try {
-      const conexao = await criarPeer();
-      await renegociar(conexao);
-      enviarCapacidade(meuVideoRef.current, meuVivaVoz);
-    } catch (e) {
-      setErro((e as Error).message || "Não foi possível acessar o microfone.");
-      setStatus("erro");
-      limpar();
-    }
-  }, [criarPeer, enviarCapacidade, limpar, meuVivaVoz, renegociar]);
+  /** Abre o microfone e chama quem estiver na outra ponta (opcionalmente já em vídeo). */
+  const conectar = useCallback(
+    async (comVideo = false) => {
+      setErro(null);
+      setStatus("conectando");
+      try {
+        const conexao = await criarPeer();
+        if (comVideo) {
+          meuVideoRef.current = true;
+          setMeuVideo(true);
+          await ligarCameraLocal();
+          enviar({ tipo: "video", de: eu.current, ligado: true });
+          enviar({ tipo: "pedido_video", de: eu.current });
+          setAguardandoVideoRemoto(true);
+        } else {
+          await renegociar(conexao);
+        }
+      } catch (e) {
+        setErro((e as Error).message || "Não foi possível acessar o microfone.");
+        setStatus("erro");
+        limpar();
+      }
+    },
+    [criarPeer, enviar, ligarCameraLocal, limpar, renegociar],
+  );
 
   const desconectar = useCallback(() => {
     enviar({ tipo: "encerrar", de: eu.current });
@@ -226,40 +231,93 @@ export function useAudioInterfone(unidadeId: string | null, autoAtender = true) 
     setMudo(novo);
   }, [mudo]);
 
-  /** Permite (ou não) vídeo nesta ponta. Só ativa se a outra ponta também permitir. */
-  const alternarVideo = useCallback(() => {
+  /** Liga/desliga a própria câmera. Se não houver chamada, inicia já em vídeo. */
+  const alternarVideo = useCallback(async () => {
+    setErro(null);
+    if (!pc.current) {
+      await conectar(true);
+      return;
+    }
     const novo = !meuVideoRef.current;
     meuVideoRef.current = novo;
     setMeuVideo(novo);
-    enviarCapacidade(novo, meuVivaVoz);
-    void sincronizarVideo(remotoVideoRef.current);
-  }, [enviarCapacidade, meuVivaVoz, sincronizarVideo]);
+    try {
+      if (novo) {
+        await ligarCameraLocal();
+        enviar({ tipo: "video", de: eu.current, ligado: true });
+        if (!videoRemotoAtivo) {
+          enviar({ tipo: "pedido_video", de: eu.current });
+          setAguardandoVideoRemoto(true);
+        }
+      } else {
+        await desligarCameraLocal();
+        enviar({ tipo: "video", de: eu.current, ligado: false });
+        setAguardandoVideoRemoto(false);
+      }
+    } catch {
+      meuVideoRef.current = false;
+      setMeuVideo(false);
+      setErro("Não foi possível acessar a câmera.");
+    }
+  }, [conectar, desligarCameraLocal, enviar, ligarCameraLocal, videoRemotoAtivo]);
 
-  /** Permite (ou não) viva-voz nesta ponta. Só ativa se a outra ponta também permitir. */
+  /** Aceita o pedido de vídeo da outra ponta. */
+  const aceitarVideo = useCallback(async () => {
+    setPedidoVideoRecebido(false);
+    if (meuVideoRef.current) return;
+    try {
+      meuVideoRef.current = true;
+      setMeuVideo(true);
+      await ligarCameraLocal();
+      enviar({ tipo: "video", de: eu.current, ligado: true });
+    } catch {
+      meuVideoRef.current = false;
+      setMeuVideo(false);
+      setErro("Não foi possível acessar a câmera.");
+    }
+  }, [enviar, ligarCameraLocal]);
+
+  const recusarVideo = useCallback(() => {
+    setPedidoVideoRecebido(false);
+    enviar({ tipo: "recusa_video", de: eu.current });
+  }, [enviar]);
+
+  /** Viva-voz: controle local, igual ao WhatsApp. */
   const alternarVivaVoz = useCallback(() => {
-    setMeuVivaVoz((atual) => {
-      const novo = !atual;
-      enviarCapacidade(meuVideoRef.current, novo);
-      aplicarVivaVoz(novo && remotoVivaVozOk);
-      return novo;
-    });
-  }, [aplicarVivaVoz, enviarCapacidade, remotoVivaVozOk]);
+    const novo = !vivaVozRef.current;
+    vivaVozRef.current = novo;
+    setVivaVoz(novo);
+    aplicarVivaVoz(novo);
+  }, [aplicarVivaVoz]);
+
+  /** Inicia a chamada já em viva-voz. */
+  const ligarComVivaVoz = useCallback(async () => {
+    if (!vivaVozRef.current) {
+      vivaVozRef.current = true;
+      setVivaVoz(true);
+    }
+    if (!pc.current) await conectar(false);
+    aplicarVivaVoz(true);
+  }, [aplicarVivaVoz, conectar]);
 
   return {
     status,
     erro,
+    limparErro: () => setErro(null),
     mudo,
     conectar,
     desconectar,
     alternarMudo,
     meuVideo,
-    meuVivaVoz,
-    remotoVideoOk,
-    remotoVivaVozOk,
-    videoAtivo,
-    vivaVozAtiva,
+    vivaVoz,
+    videoRemotoAtivo,
     videoRemoto,
+    pedidoVideoRecebido,
+    aguardandoVideoRemoto,
     alternarVideo,
+    aceitarVideo,
+    recusarVideo,
     alternarVivaVoz,
+    ligarComVivaVoz,
   };
 }
