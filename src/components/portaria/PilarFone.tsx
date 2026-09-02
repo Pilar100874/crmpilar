@@ -567,18 +567,6 @@ export default function PilarFone({
           </div>
 
           <div className="flex w-full max-w-xs items-center justify-around">
-            {chamadaAtual.state === SessionState.Established && (
-              <button
-                type="button"
-                aria-label="Mudo"
-                onClick={() => setMudo((m) => !m)}
-                className={`flex h-14 w-14 items-center justify-center rounded-full transition active:scale-95 ${
-                  mudo ? "bg-white text-[#0B141A]" : "bg-white/10 text-white"
-                }`}
-              >
-                {mudo ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-              </button>
-            )}
             {chamadaAtual.direction === "inbound" && chamadaAtual.state !== SessionState.Established && (
               <button
                 type="button"
