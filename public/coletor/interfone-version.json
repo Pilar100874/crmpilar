@@ -2,5 +2,5 @@
   "version": "1.6.0",
   "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.6.0/pilar-interfone-v1.6.0.apk",
   "filename": "pilar-interfone-v1.6.0.apk",
-  "notas": "v1.6.0: discador SIP com tom escuro combinando com o app, botão \"Interfone\" na aba de atendimento e botões de abertura do popup sem corte de texto."
+  "notas": "v1.6.0: visual moderno em tema escuro, teclado do discador legível, interfone abre em tela cheia, botão Ramal/interfone removido e conteúdo respeitando a barra de status do celular."
 }
