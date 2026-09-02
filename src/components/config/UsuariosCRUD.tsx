@@ -119,6 +119,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
+  const [podeUsarInterfone, setPodeUsarInterfone] = useState(false);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
