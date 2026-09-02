@@ -8,3 +8,5 @@
 - [x] Versão marcada v1.6.2 + interfone-version.json atualizado
 - [x] Contraste de textos/fundo do APK — ajustado pelo próprio usuário
 - [x] Build validado (npm run build OK)
+- [ ] Viva-voz/videochamada na tela de chamada SIP (PilarFone) com botoes estilo WhatsApp
+- [ ] Mostrar capturas de cada tela do app ao usuario

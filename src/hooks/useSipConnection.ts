@@ -26,11 +26,87 @@ export const useSipConnection = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeCalls, setActiveCalls] = useState<CallSession[]>([]);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localVideoStream, setLocalVideoStream] = useState<MediaStream | null>(null);
+  const [vivaVoz, setVivaVoz] = useState(false);
+  const [mudo, setMudo] = useState(false);
   const [remoteAudio] = useState(() => {
     const audio = new Audio();
     audio.autoplay = true;
     return audio;
   });
+
+  const obterPeerConnection = (session: Session): RTCPeerConnection | null => {
+    const sdh = session.sessionDescriptionHandler as { peerConnection?: RTCPeerConnection } | undefined;
+    return sdh?.peerConnection ?? null;
+  };
+
+  const aplicarVivaVoz = useCallback(async (ativo: boolean) => {
+    const destino = ativo ? "speaker" : "";
+    try {
+      const el = remoteAudio as HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> };
+      if (typeof el.setSinkId === "function") await el.setSinkId(destino);
+    } catch {
+      // Nem todo aparelho/navegador permite escolher a saída; mantemos o estado mesmo assim.
+    }
+    remoteAudio.volume = 1.0;
+    remoteAudio.muted = false;
+  }, [remoteAudio]);
+
+  /** Viva-voz é um controle local imediato (como no WhatsApp), não depende da outra ponta. */
+  const toggleVivaVoz = useCallback(async () => {
+    const proximo = !vivaVoz;
+    setVivaVoz(proximo);
+    await aplicarVivaVoz(proximo);
+  }, [vivaVoz, aplicarVivaVoz]);
+
+  /** Silencia/dessilencia o microfone de todas as chamadas ativas. */
+  const toggleMudo = useCallback(() => {
+    const proximo = !mudo;
+    activeCalls.forEach((c) => {
+      const pc = obterPeerConnection(c.session);
+      pc?.getSenders().forEach((s) => {
+        if (s.track?.kind === "audio") s.track.enabled = !proximo;
+      });
+    });
+    setMudo(proximo);
+  }, [mudo, activeCalls]);
+
+  /** Liga/desliga a câmera no meio da chamada (a outra ponta precisa aceitar o vídeo). */
+  const toggleCamera = useCallback(async (callId: string) => {
+    const call = activeCalls.find((c) => c.id === callId);
+    if (!call) return;
+    const pc = obterPeerConnection(call.session);
+    if (!pc) return;
+
+    if (localVideoStream) {
+      localVideoStream.getTracks().forEach((t) => {
+        t.stop();
+        const sender = pc.getSenders().find((s) => s.track === t);
+        if (sender) pc.removeTrack(sender);
+      });
+      setLocalVideoStream(null);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      stream.getVideoTracks().forEach((t) => pc.addTrack(t, stream));
+      setLocalVideoStream(stream);
+      // Tenta renegociar para a outra ponta receber o vídeo.
+      const sessao = call.session as Session & { reinvite?: () => Promise<void> };
+      if (typeof sessao.reinvite === "function") {
+        try { await sessao.reinvite(); } catch { /* melhor esforço */ }
+      }
+      toast({ title: "Câmera ligada", description: "Aguarde a outra ponta aceitar o vídeo." });
+    } catch {
+      toast({
+        title: "Câmera indisponível",
+        description: "Permita o acesso à câmera para chamadas com vídeo.",
+        variant: "destructive",
+      });
+    }
+  }, [activeCalls, localVideoStream, toast]);
 
   // Helper to try connecting to a server
   const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false) => {
@@ -56,7 +132,7 @@ export const useSipConnection = () => {
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: true,
-          video: false,
+          video: true,
         },
       },
       delegate: {
@@ -229,8 +305,8 @@ export const useSipConnection = () => {
     });
   }, [toast]);
 
-  // Make outbound call
-  const dial = useCallback(async (phoneNumber: string) => {
+  // Make outbound call (pode já iniciar em vídeo e/ou viva-voz, como no WhatsApp)
+  const dial = useCallback(async (phoneNumber: string, opcoes?: { video?: boolean; vivaVoz?: boolean }) => {
     if (!userAgent || !isRegistered) {
       toast({
         title: "Erro",
@@ -277,6 +353,11 @@ export const useSipConnection = () => {
 
       setActiveCalls(prev => [...prev, callSession]);
 
+      if (opcoes?.vivaVoz) {
+        setVivaVoz(true);
+        void aplicarVivaVoz(true);
+      }
+
       // Setup session state change handler
       inviter.stateChange.addListener(async (state) => {
         console.log('Estado da chamada mudou:', state);
@@ -291,6 +372,12 @@ export const useSipConnection = () => {
         if (state === SessionState.Established) {
           console.log('🎤 Configurando mídia para chamada estabelecida...');
           await setupRemoteMedia(inviter);
+          if (opcoes?.video) {
+            const sdh = inviter.sessionDescriptionHandler as { localMediaStream?: MediaStream } | undefined;
+            if (sdh?.localMediaStream?.getVideoTracks().length) {
+              setLocalVideoStream(sdh.localMediaStream);
+            }
+          }
           toast({
             title: "Chamada conectada",
             description: `Conectado com ${phoneNumber}`,
@@ -311,7 +398,7 @@ export const useSipConnection = () => {
         sessionDescriptionHandlerOptions: {
           constraints: {
             audio: true,
-            video: false,
+            video: !!opcoes?.video,
           },
         },
         requestDelegate: {
@@ -433,6 +520,7 @@ export const useSipConnection = () => {
 
       if (remoteStream.getTracks().length > 0) {
         remoteAudio.srcObject = remoteStream;
+        setRemoteStream(remoteStream);
         remoteAudio.volume = 1.0;
         console.log('✅ Stream remoto configurado, iniciando reprodução...');
         
@@ -483,6 +571,11 @@ export const useSipConnection = () => {
       }
 
       setActiveCalls(prev => prev.filter(c => c.id !== callId));
+      setRemoteStream(null);
+      localVideoStream?.getTracks().forEach((t) => t.stop());
+      setLocalVideoStream(null);
+      setVivaVoz(false);
+      setMudo(false);
 
       toast({
         title: "Chamada encerrada",
@@ -490,15 +583,29 @@ export const useSipConnection = () => {
     } catch (error) {
       console.error('Erro ao desligar:', error);
     }
-  }, [activeCalls, toast]);
+  }, [activeCalls, localVideoStream, toast]);
 
-  // Answer incoming call
-  const answer = useCallback(async (callId: string) => {
+  // Answer incoming call (pode atender já com vídeo/viva-voz)
+  const answer = useCallback(async (callId: string, opcoes?: { video?: boolean; vivaVoz?: boolean }) => {
     const call = activeCalls.find(c => c.id === callId);
     if (!call || call.direction !== 'inbound') return;
 
     try {
-      await (call.session as any).accept();
+      await (call.session as any).accept({
+        sessionDescriptionHandlerOptions: {
+          constraints: { audio: true, video: !!opcoes?.video },
+        },
+      });
+      if (opcoes?.vivaVoz) {
+        setVivaVoz(true);
+        void aplicarVivaVoz(true);
+      }
+      if (opcoes?.video) {
+        const sdh = call.session.sessionDescriptionHandler as { localMediaStream?: MediaStream } | undefined;
+        if (sdh?.localMediaStream?.getVideoTracks().length) {
+          setLocalVideoStream(sdh.localMediaStream);
+        }
+      }
       toast({
         title: "Chamada atendida",
       });
@@ -510,7 +617,7 @@ export const useSipConnection = () => {
         variant: "destructive",
       });
     }
-  }, [activeCalls, toast]);
+  }, [activeCalls, aplicarVivaVoz, toast]);
 
   // Disconnect
   const disconnect = useCallback(async () => {
@@ -562,5 +669,12 @@ export const useSipConnection = () => {
     isRegistered,
     isConnecting,
     activeCalls,
+    remoteStream,
+    localVideoStream,
+    vivaVoz,
+    mudo,
+    toggleVivaVoz,
+    toggleMudo,
+    toggleCamera,
   };
 };

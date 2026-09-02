@@ -4,6 +4,8 @@ import {
   BellRing,
   Delete,
   Grid3X3,
+  Mic,
+  MicOff,
   Phone,
   PhoneCall,
   PhoneOff,
@@ -13,6 +15,8 @@ import {
   Smartphone,
   Users,
   Video,
+  VideoOff,
+  Volume2,
   X,
 } from "lucide-react";
 import { SessionState } from "sip.js";
@@ -97,8 +101,23 @@ export default function PilarFone({
   onAbrirToque,
 }: Props) {
   const { toast } = useToast();
-  const { connect, disconnect, dial, hangup, answer, isRegistered, isConnecting, activeCalls } =
-    useSipConnection();
+  const {
+    connect,
+    disconnect,
+    dial,
+    hangup,
+    answer,
+    isRegistered,
+    isConnecting,
+    activeCalls,
+    remoteStream,
+    localVideoStream,
+    vivaVoz,
+    mudo,
+    toggleVivaVoz,
+    toggleMudo,
+    toggleCamera,
+  } = useSipConnection();
 
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
   const [rascunho, setRascunho] = useState<PortariaSipConfig>(config);
@@ -186,6 +205,19 @@ export default function PilarFone({
     void answer(chamadaEntrante.id);
   }, [config.autoAtender, chamadaEntrante, answer]);
 
+  const videoRemotoRef = useRef<HTMLVideoElement | null>(null);
+  const videoLocalRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (videoRemotoRef.current && remoteStream) videoRemotoRef.current.srcObject = remoteStream;
+  }, [remoteStream, chamadaAtual?.id]);
+
+  useEffect(() => {
+    if (videoLocalRef.current && localVideoStream) videoLocalRef.current.srcObject = localVideoStream;
+  }, [localVideoStream]);
+
+  const temVideoRemoto = !!remoteStream && remoteStream.getVideoTracks().length > 0;
+
   const nomePorNumero = useCallback(
     (num: string) => {
       const r = ramais.find((x) => x.ramal === num);
@@ -197,7 +229,7 @@ export default function PilarFone({
   );
 
   const ligar = useCallback(
-    (destino: string) => {
+    (destino: string, comVideo = false, comVivaVoz = false) => {
       const alvo = destino.trim();
       if (!alvo) return;
       if (!isRegistered) {
@@ -209,7 +241,7 @@ export default function PilarFone({
         return;
       }
       setTecladoAberto(false);
-      void dial(alvo);
+      void dial(alvo, { video: comVideo, vivaVoz: comVivaVoz });
     },
     [dial, isRegistered, toast],
   );
@@ -517,7 +549,15 @@ export default function PilarFone({
               ))}
             </div>
             <div className="mx-auto mt-6 flex w-full max-w-xs items-center justify-between">
-              <span className="h-12 w-12" />
+              <button
+                type="button"
+                aria-label="Ligar com vídeo"
+                disabled={!numero.trim()}
+                onClick={() => ligar(numero, true)}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1F2C34] text-[#00A884] transition active:scale-90 disabled:opacity-40"
+              >
+                <Video className="h-6 w-6" />
+              </button>
               <button
                 type="button"
                 aria-label="Ligar"
@@ -540,56 +580,142 @@ export default function PilarFone({
         </div>
       )}
 
-      {/* Tela de chamada */}
+      {/* Tela de chamada (estilo WhatsApp: viva-voz, mudo e vídeo sempre à mão) */}
       {chamadaAtual && (
         <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-gradient-to-b from-[#1F2C34] to-[#0B141A] px-6 py-10 text-center"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 40px)" }}
+          className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-[#1F2C34] to-[#0B141A] px-6 pb-8 text-center"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+          }}
         >
-          <div className="flex flex-col items-center gap-3">
-            <span
-              className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold text-white"
-              style={{ backgroundColor: corAvatar(nomePorNumero(chamadaAtual.phoneNumber)) }}
+          {/* Vídeo da outra ponta em tela cheia quando disponível */}
+          {temVideoRemoto && (
+            <video
+              ref={videoRemotoRef}
+              autoPlay
+              playsInline
+              className="absolute inset-0 h-full w-full bg-black object-cover"
+            />
+          )}
+
+          {/* Minha câmera em miniatura (PiP) */}
+          {localVideoStream && (
+            <video
+              ref={videoLocalRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute right-4 z-10 h-36 w-24 rounded-2xl border-2 border-white/20 bg-black object-cover shadow-xl"
+              style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+            />
+          )}
+
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3">
+            {!temVideoRemoto && (
+              <span
+                className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold text-white"
+                style={{ backgroundColor: corAvatar(nomePorNumero(chamadaAtual.phoneNumber)) }}
+              >
+                {iniciais(nomePorNumero(chamadaAtual.phoneNumber))}
+              </span>
+            )}
+            <p
+              className={`text-2xl font-semibold ${temVideoRemoto ? "rounded-full bg-black/50 px-4 py-1 backdrop-blur" : ""}`}
             >
-              {iniciais(nomePorNumero(chamadaAtual.phoneNumber))}
-            </span>
-            <p className="text-2xl font-semibold">{nomePorNumero(chamadaAtual.phoneNumber)}</p>
-            <p className="text-sm text-[#8696A0]">
+              {nomePorNumero(chamadaAtual.phoneNumber)}
+            </p>
+            <p
+              className={`text-sm ${temVideoRemoto ? "rounded-full bg-black/50 px-3 py-0.5 text-white/80 backdrop-blur" : "text-[#8696A0]"}`}
+            >
               {chamadaAtual.state === SessionState.Established
-                ? "Em conversa"
+                ? temVideoRemoto
+                  ? "Videochamada"
+                  : "Em conversa"
                 : chamadaAtual.direction === "inbound"
                   ? "Chamada recebida"
                   : "Chamando..."}
             </p>
           </div>
 
-          <div className="flex w-full max-w-xs items-center justify-around">
-            {chamadaAtual.direction === "inbound" && chamadaAtual.state !== SessionState.Established && (
+          {/* Controles da chamada */}
+          <div className="relative z-10 flex w-full max-w-sm items-center justify-around self-center">
+            {chamadaAtual.state === SessionState.Established ? (
+              <>
+                <button
+                  type="button"
+                  aria-label={mudo ? "Ativar microfone" : "Silenciar microfone"}
+                  onClick={toggleMudo}
+                  className={`flex h-14 w-14 flex-col items-center justify-center rounded-full transition active:scale-95 ${
+                    mudo ? "bg-white text-[#0B141A]" : "bg-white/15 text-white backdrop-blur"
+                  }`}
+                >
+                  {mudo ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                </button>
+                <button
+                  type="button"
+                  aria-label={vivaVoz ? "Desligar viva-voz" : "Ligar viva-voz"}
+                  onClick={() => void toggleVivaVoz()}
+                  className={`flex h-14 w-14 flex-col items-center justify-center rounded-full transition active:scale-95 ${
+                    vivaVoz ? "bg-white text-[#0B141A]" : "bg-white/15 text-white backdrop-blur"
+                  }`}
+                >
+                  <Volume2 className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={localVideoStream ? "Desligar câmera" : "Ligar câmera"}
+                  onClick={() => void toggleCamera(chamadaAtual.id)}
+                  className={`flex h-14 w-14 flex-col items-center justify-center rounded-full transition active:scale-95 ${
+                    localVideoStream ? "bg-white text-[#0B141A]" : "bg-white/15 text-white backdrop-blur"
+                  }`}
+                >
+                  {localVideoStream ? <VideoOff className="h-6 w-6" /> : <Video className="h-6 w-6" />}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Encerrar"
+                  onClick={() => void hangup(chamadaAtual.id)}
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition active:scale-95"
+                >
+                  <PhoneOff className="h-7 w-7" />
+                </button>
+              </>
+            ) : chamadaAtual.direction === "inbound" ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="Atender com vídeo"
+                  onClick={() => void answer(chamadaAtual.id, { video: true })}
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition active:scale-95"
+                >
+                  <Video className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Recusar"
+                  onClick={() => void hangup(chamadaAtual.id)}
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition active:scale-95"
+                >
+                  <PhoneOff className="h-7 w-7" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Atender"
+                  onClick={() => void answer(chamadaAtual.id, { vivaVoz: false })}
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A884] text-[#0B141A] shadow-lg transition active:scale-95"
+                >
+                  <Phone className="h-7 w-7" />
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                aria-label="Atender"
-                onClick={() => void answer(chamadaAtual.id)}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A884] text-[#0B141A] transition active:scale-95"
+                aria-label="Cancelar chamada"
+                onClick={() => void hangup(chamadaAtual.id)}
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition active:scale-95"
               >
-                <Phone className="h-7 w-7" />
-              </button>
-            )}
-            <button
-              type="button"
-              aria-label="Encerrar"
-              onClick={() => void hangup(chamadaAtual.id)}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white transition active:scale-95"
-            >
-              <PhoneOff className="h-7 w-7" />
-            </button>
-            {chamadaAtual.state === SessionState.Established && (
-              <button
-                type="button"
-                aria-label="Abrir interfone"
-                onClick={onAbrirInterfone}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white transition active:scale-95"
-              >
-                <Video className="h-6 w-6" />
+                <PhoneOff className="h-7 w-7" />
               </button>
             )}
           </div>

@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.0/pilar-interfone-v1.7.0.apk",
-  "filename": "pilar-interfone-v1.7.0.apk",
-  "notas": "v1.7.0: visual novo no estilo de aplicativo de mensagens — abas de Ramais, Agenda e Campainha, lista com fotos/iniciais e botão de ligar, teclado de discagem em tela cheia e tela de chamada com atender/encerrar. Agora aparecem todos os ramais SIP cadastrados no CRM com o nome de cada usuário, e também dá para ligar para contatos da agenda do celular."
+  "version": "1.7.1",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.1/pilar-interfone-v1.7.1.apk",
+  "filename": "pilar-interfone-v1.7.1.apk",
+  "notas": "Viva-voz, mudo e videochamada direto na tela de chamada SIP, com botoes sempre visiveis estilo WhatsApp"
 }
