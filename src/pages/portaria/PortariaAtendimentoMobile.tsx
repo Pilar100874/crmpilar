@@ -110,7 +110,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
+          <Card className={dark ? "!border-white/10 !bg-white/5 !text-white backdrop-blur" : ""}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Últimos toques</CardTitle>
             </CardHeader>
@@ -126,7 +126,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
                     setAberto(true);
                   }}
                   className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
-                    dark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "bg-card"
+                    dark ? "!border-white/10 !bg-white/5 !text-white hover:!bg-white/10" : "bg-card"
                   }`}
                 >
                   <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
