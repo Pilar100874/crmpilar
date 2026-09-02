@@ -7,4 +7,4 @@
 - [x] Mensagens de erro mais bonitas (banner inline AvisoInline)
 - [x] Versão marcada v1.6.2 + interfone-version.json atualizado
 - [x] Contraste de textos/fundo do APK — ajustado pelo próprio usuário
-- [ ] Validar build (npm run build)
+- [x] Build validado (npm run build OK)
