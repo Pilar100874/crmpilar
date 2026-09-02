@@ -201,9 +201,13 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             {imagemIdface ? (
               <img src={imagemIdface} alt="Câmera do interfone" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground p-4 text-center">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-slate-400">
                 {carregandoIdface ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
-                <p className="text-sm">{erroIdface ?? "Conectando à câmera do interfone..."}</p>
+                {erroIdface ? (
+                  <AvisoInline tipo="aviso">{erroIdface}</AvisoInline>
+                ) : (
+                  <p className="text-sm">Conectando à câmera do interfone...</p>
+                )}
               </div>
             )}
             <Button
@@ -240,7 +244,16 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
           </div>
         </div>
 
-        {erroAudio && <p className="text-xs text-destructive">{erroAudio}</p>}
+        {videoAtivo && videoRemoto && (
+          <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
+            <video ref={videoRef} autoPlay playsInline className="h-full w-full object-cover" />
+            <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
+              Vídeo ao vivo
+            </span>
+          </div>
+        )}
+
+        {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
 
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
           {pontos.map((p) => (
