@@ -75,7 +75,7 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, acoe
       <div
         ref={ref}
         className="relative aspect-video bg-muted overflow-hidden select-none touch-none"
-        style={{ cursor: zoom > 1 ? "grab" : "default" }}
+        style={{ cursor: zoom > 1 ? "grab" : "zoom-in" }}
         onDoubleClick={(e) => {
           const rect = ref.current?.getBoundingClientRect();
           aplicar(zoom > 1 ? 1 : 2.5, e.clientX - (rect?.left ?? 0), e.clientY - (rect?.top ?? 0));
