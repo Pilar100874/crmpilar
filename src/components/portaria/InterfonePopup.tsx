@@ -50,15 +50,18 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
     desconectar,
     alternarMudo,
     meuVideo,
-    meuVivaVoz,
-    remotoVideoOk,
-    remotoVivaVozOk,
-    videoAtivo,
-    vivaVozAtiva,
+    vivaVoz,
+    videoRemotoAtivo,
     videoRemoto,
+    pedidoVideoRecebido,
+    aguardandoVideoRemoto,
     alternarVideo,
+    aceitarVideo,
+    recusarVideo,
     alternarVivaVoz,
+    ligarComVivaVoz,
   } = useAudioInterfone(unidadeId);
+
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   useEffect(() => {
