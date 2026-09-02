@@ -55,7 +55,7 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, acoe
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  const arrasto = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+  const arrasto = useRef<{ x: number; y: number; ox: number; oy: number; movido?: boolean } | null>(null);
 
   const zoomBotao = (fator: number) => {
     const el = ref.current;
