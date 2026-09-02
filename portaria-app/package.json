@@ -4,6 +4,7 @@
   "private": true,
   "description": "App Android do Interfone/Portaria Pilar (Capacitor)",
   "dependencies": {
+    "@capacitor-community/contacts": "^7.0.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/core": "^7.4.4",
     "@capacitor/local-notifications": "^7.0.1",
