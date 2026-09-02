@@ -9,6 +9,7 @@ import { abrirAcesso } from "@/lib/portaria/api";
 import { atenderToque, type InterfoneConfig } from "@/lib/portaria/interfone";
 import { useAudioInterfone } from "@/lib/portaria/audioInterfone";
 import AvisoInline from "@/components/portaria/AvisoInline";
+import { InterfoneTile } from "@/components/portaria/InterfoneTile";
 
 
 interface PontoAcesso {
