@@ -238,7 +238,10 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
         {erroAudio && <AvisoInline tipo="erro">{erroAudio}</AvisoInline>}
 
 
-        <div className="mt-auto flex flex-wrap gap-2 pb-5">
+        <div
+          className="mt-auto flex flex-wrap gap-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
+        >
           {pontos.map((p) => (
             <Button
               key={p.id}
@@ -271,17 +274,6 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             </span>
           </Button>
           <Button
-            variant={meuVideo ? "default" : "secondary"}
-            className="h-12 flex-1 min-w-0 basis-[45%]"
-            onClick={() => void alternarVideo()}
-            title={statusAudio === "conectado" ? "Ligar/desligar sua câmera" : "Iniciar chamada em vídeo"}
-          >
-            {meuVideo ? <Video className="h-4 w-4 mr-2" /> : <VideoOff className="h-4 w-4 mr-2" />}
-            <span className="truncate">
-              {meuVideo ? "Desligar vídeo" : statusAudio === "conectado" ? "Vídeo" : "Chamar em vídeo"}
-            </span>
-          </Button>
-          <Button
             variant={vivaVoz ? "default" : "secondary"}
             className="h-12 flex-1 min-w-0 basis-[45%]"
             onClick={() => (statusAudio === "conectado" ? alternarVivaVoz() : void ligarComVivaVoz())}
@@ -309,6 +301,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
             <PhoneOff className="h-4 w-4 mr-2" /> Fechar interfone
           </Button>
         </div>
+
 
       </DialogContent>
     </Dialog>
