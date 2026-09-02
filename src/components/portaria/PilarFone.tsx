@@ -737,7 +737,7 @@ export default function PilarFone({
           >
             {[
               { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
-              { id: "servidorRemoto", rotulo: "Servidor alternativo", ph: "opcional" },
+              { id: "servidorRemoto", rotulo: "Servidor alternativo (fora da empresa)", ph: "pilar.myddns.me" },
               { id: "ramal", rotulo: "Ramal", ph: "1001" },
               { id: "senha", rotulo: "Senha SIP", ph: "" },
               { id: "nome", rotulo: "Nome exibido", ph: "Portaria" },
