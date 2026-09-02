@@ -4,8 +4,6 @@ import {
   BellRing,
   Delete,
   Grid3X3,
-  Mic,
-  MicOff,
   Phone,
   PhoneCall,
   PhoneOff,
@@ -116,7 +114,6 @@ export default function PilarFone({
   const [erroAgenda, setErroAgenda] = useState<string | null>(null);
   const [carregandoAgenda, setCarregandoAgenda] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [mudo, setMudo] = useState(false);
   const tentouAuto = useRef(false);
 
   const configValida = useMemo(
