@@ -299,7 +299,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         const stream = v.srcObject as MediaStream | null;
         const tracks = stream?.getAudioTracks?.() || [];
         if (!tracks.length) {
-          toast.error("Esta câmera não está enviando áudio. Habilite áudio no stream principal (main) e atualize o Coletor para 1.7.1+.");
+          toast.error("Esta câmera não está enviando áudio. Habilite áudio no stream principal (main) e atualize o Coletor para 1.7.2+.");
         } else {
           toast.success("Áudio ligado");
         }
