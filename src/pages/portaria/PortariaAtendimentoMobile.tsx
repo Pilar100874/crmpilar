@@ -49,7 +49,10 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   });
 
   return (
-    <div className={`mx-auto w-full max-w-md space-y-4 p-3 ${dark ? "text-white" : ""}`}>
+    <div
+      className={`mx-auto w-full max-w-md space-y-4 px-3 pb-4 ${dark ? "text-white" : ""}`}
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
+    >
       <header className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${dark ? "border border-white/10 bg-white/5 backdrop-blur" : ""}`}>
         <div className="flex items-center gap-2">
           <img src={dark ? logoPilarBranco : logoPilar} alt="Pilar Sip" className="h-9 w-auto object-contain" />
@@ -58,47 +61,52 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
             <p className={`text-xs leading-tight ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Interfone e ramal SIP</p>
           </div>
         </div>
-        <Badge
-          variant={config?.ativo ? "default" : "outline"}
-          className={`gap-1 ${dark ? (config?.ativo ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}`}
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+            config?.ativo ? "bg-emerald-500/15 text-emerald-400" : "bg-white/10 text-slate-300"
+          }`}
         >
           {config?.ativo ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
           {config?.ativo ? "Ativo" : "Desligado"}
-        </Badge>
+        </span>
       </header>
 
       <Tabs defaultValue="atendimento" className="w-full">
-        <TabsList className={`grid w-full grid-cols-2 ${dark ? "border border-white/10 bg-white/5 text-slate-300" : ""}`}>
-          <TabsTrigger value="atendimento" className={dark ? "data-[state=active]:bg-orange-500 data-[state=active]:text-white" : ""}>
+        <TabsList className={`grid w-full grid-cols-2 rounded-2xl ${dark ? "border border-white/10 bg-white/5 text-slate-300" : ""}`}>
+          <TabsTrigger value="atendimento" className={`rounded-xl ${dark ? "data-[state=active]:bg-white/15 data-[state=active]:text-white" : ""}`}>
             Atendimento
           </TabsTrigger>
-          <TabsTrigger value="historico" className={dark ? "data-[state=active]:bg-orange-500 data-[state=active]:text-white" : ""}>
+          <TabsTrigger value="historico" className={`rounded-xl ${dark ? "data-[state=active]:bg-white/15 data-[state=active]:text-white" : ""}`}>
             Histórico
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="atendimento" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              size="lg"
-              className={`h-14 gap-2 ${dark ? "bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600" : ""}`}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 ${
+                dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
+              }`}
               onClick={() => {
                 setToqueId(toques[0]?.id ?? null);
                 setAberto(true);
               }}
             >
-              <BellRing className="h-5 w-5" /> Interfone
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className={`h-14 gap-2 ${dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""}`}
+              <BellRing className="h-5 w-5 text-orange-400" /> Interfone
+            </button>
+            <button
+              type="button"
               disabled={status === "ativo"}
               onClick={() => void registrar()}
+              className={`flex h-14 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-95 disabled:opacity-60 ${
+                dark ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border bg-card"
+              }`}
             >
-              <Smartphone className="h-5 w-5" /> {status === "ativo" ? "Alertas ok" : "Ativar alertas"}
-            </Button>
+              <Smartphone className="h-5 w-5 text-slate-400" /> {status === "ativo" ? "Alertas ok" : "Ativar alertas"}
+            </button>
           </div>
+
 
           <PortariaSipRamal dark={dark} />
         </TabsContent>
