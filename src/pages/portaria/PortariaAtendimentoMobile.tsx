@@ -120,13 +120,13 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className={dark ? "border-white/10 bg-white/5 text-white backdrop-blur" : ""}>
+          <Card className={dark ? "border-white/15 !bg-[#101C30] text-white shadow-xl" : ""}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Últimos toques</CardTitle>
+              <CardTitle className={`text-sm ${dark ? "text-white" : ""}`}>Últimos toques</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {toques.length === 0 && (
-                <p className={`text-sm ${dark ? "text-slate-400" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
+                <p className={`text-sm ${dark ? "text-slate-300" : "text-muted-foreground"}`}>Nenhum toque registrado ainda.</p>
               )}
               {toques.map((t) => (
                 <button
@@ -135,11 +135,11 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
                     setToqueId(t.id);
                     setAberto(true);
                   }}
-                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left ${
-                    dark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "bg-card"
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.98] ${
+                    dark ? "border-white/15 !bg-[#16233B] text-white hover:!bg-[#1C2C47]" : "bg-card"
                   }`}
                 >
-                  <span className="text-sm">{new Date(t.created_at).toLocaleString("pt-BR")}</span>
+                  <span className={`text-sm font-medium ${dark ? "text-slate-100" : ""}`}>{new Date(t.created_at).toLocaleString("pt-BR")}</span>
                   <Badge
                     variant={t.status === "pendente" ? "default" : "outline"}
                     className={dark ? (t.status === "pendente" ? "bg-orange-500 text-white hover:bg-orange-500" : "border-white/20 text-slate-300") : ""}
