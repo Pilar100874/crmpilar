@@ -270,23 +270,29 @@ export const useSipConnection = () => {
 
     } catch (error) {
       console.error('❌ ERRO NA CONEXÃO:', error);
-      
+
+      const host = (config.server || '').replace(/^wss?:\/\//i, '').split('/')[0].split(':')[0];
+      const ehRedeLocal = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+
       let errorMsg = "Erro ao conectar ao UCM";
       if (error instanceof Error) {
         errorMsg = error.message;
-        
-        if (error.message.includes('WebSocket')) {
-          errorMsg = "Não foi possível conectar ao UCM via WebSocket. Verifique se a porta 8089 (WSS/WS) está acessível.";
+
+        if (/WebSocket|indisponível|Transport|timeout/i.test(error.message)) {
+          errorMsg = ehRedeLocal
+            ? `O UCM ${host} está em rede interna. Conecte o aparelho ao Wi-Fi da empresa (ou VPN) e confirme se a porta 8089 (WSS) está liberada.`
+            : `Sem resposta em wss://${host}:8089/ws. Verifique se a porta 8089 está liberada e abra https://${host}:8089/ws no navegador uma vez para aceitar o certificado do UCM.`;
         } else if (error.message.includes('401') || error.message.includes('403')) {
           errorMsg = "Credenciais inválidas. Verifique o ramal e senha.";
         }
       }
-      
+
       toast({
         title: "Erro de conexão",
         description: errorMsg,
         variant: "destructive",
       });
+
     } finally {
       setIsConnecting(false);
     }
