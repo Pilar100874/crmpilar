@@ -7,6 +7,7 @@ import {
   Settings2,
   PlugZap,
   Unplug,
+  X,
 } from "lucide-react";
 import { SessionState } from "sip.js";
 import { Button } from "@/components/ui/button";
