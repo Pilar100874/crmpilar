@@ -317,45 +317,53 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
         )}
 
         <div className="space-y-3">
-          <Input
-            value={numero}
-            onChange={(e) => setNumero(e.target.value)}
-            placeholder="Digite o número ou ramal"
-            inputMode="tel"
-            className={`text-center text-lg tracking-widest ${dark ? "border-white/10 bg-white/10 text-white placeholder:text-slate-500" : ""}`}
-          />
-          <div className="grid grid-cols-3 gap-2">
+          <div
+            className={`flex h-14 items-center justify-center rounded-2xl text-2xl font-semibold tracking-[0.3em] ${
+              dark ? "bg-white/5 text-white" : "bg-muted"
+            }`}
+          >
+            {numero || <span className={dark ? "text-slate-600" : "text-muted-foreground"}>—</span>}
+          </div>
+          <div className="grid grid-cols-3 gap-2.5">
             {TECLAS.map((t) => (
-              <Button
+              <button
                 key={t}
-                variant="outline"
-                className={`h-12 text-lg ${btnEscuro}`}
+                type="button"
                 onClick={() => setNumero((n) => n + t)}
+                className={`h-14 rounded-2xl text-xl font-semibold transition active:scale-95 ${
+                  dark
+                    ? "border border-white/10 bg-white/10 text-white hover:bg-white/20"
+                    : "border bg-background hover:bg-muted"
+                }`}
               >
                 {t}
-              </Button>
+              </button>
             ))}
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className={`w-14 ${btnEscuro}`}
+            <button
+              type="button"
               onClick={() => setNumero((n) => n.slice(0, -1))}
               aria-label="Apagar"
+              className={`flex h-14 w-16 items-center justify-center rounded-2xl transition active:scale-95 ${
+                dark ? "border border-white/10 bg-white/10 text-white hover:bg-white/20" : "border bg-background"
+              }`}
             >
-              <Delete className="h-4 w-4" />
-            </Button>
-            <Button
-              className={`flex-1 ${btnLaranja}`}
+              <Delete className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
               disabled={!isRegistered || !numero.trim()}
               onClick={() => void dial(numero.trim())}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-base font-semibold text-white shadow-lg shadow-emerald-500/25 transition active:scale-95 disabled:opacity-40"
             >
-              <Phone className="mr-2 h-4 w-4" /> Ligar
-            </Button>
+              <Phone className="h-5 w-5" /> Ligar
+            </button>
           </div>
         </div>
 
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+
   );
 }
