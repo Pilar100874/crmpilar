@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Video, VideoOff, Volume1, Volume2 } from "lucide-react";
+import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Volume1, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -50,27 +50,11 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
     conectar,
     desconectar,
     alternarMudo,
-    meuVideo,
     vivaVoz,
-    videoRemotoAtivo,
-    videoRemoto,
-    pedidoVideoRecebido,
-    aguardandoVideoRemoto,
-    alternarVideo,
-    aceitarVideo,
-    recusarVideo,
     alternarVivaVoz,
     ligarComVivaVoz,
   } = useAudioInterfone(unidadeId);
 
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  useEffect(() => {
-    if (videoRef.current && videoRemoto) {
-      videoRef.current.srcObject = videoRemoto;
-      void videoRef.current.play().catch(() => undefined);
-    }
-  }, [videoRemoto]);
 
   // Pontos de acesso, câmeras extras e endereço local do interfone
   useEffect(() => {
