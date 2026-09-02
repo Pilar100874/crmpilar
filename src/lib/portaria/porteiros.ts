@@ -103,16 +103,27 @@ export interface RegistroPorteiro {
 }
 
 /**
- * Identifica o porteiro que está executando o registro.
- * Somente o usuário logado com o flag "Porteiro" pode registrar movimentações.
+ * Identifica quem está executando o registro (porteiro quando houver o flag,
+ * senão o próprio usuário logado). Não restringe quem pode registrar.
  */
 export async function getRegistroPorteiro(): Promise<RegistroPorteiro> {
   const p = await getPorteiroLogado();
-  return { porteiro_id: p?.id ?? null, porteiro_nome: p?.nome ?? null };
+  if (p) return { porteiro_id: p.id, porteiro_nome: p.nome };
+  // Qualquer usuário logado pode registrar a movimentação; guardamos quem registrou.
+  const { data } = await supabase.auth.getUser();
+  const uid = data.user?.id;
+  if (!uid) return { porteiro_id: null, porteiro_nome: null };
+  const { data: u } = await supabase
+    .from("usuarios")
+    .select("id, nome")
+    .eq("auth_user_id", uid)
+    .maybeSingle();
+  const row = u as any;
+  return { porteiro_id: row?.id ?? null, porteiro_nome: row?.nome ?? null };
 }
 
 export const MSG_SEM_PERMISSAO_PORTEIRO =
-  "Apenas usuários marcados como Porteiro no cadastro de usuários podem registrar movimentações da Portaria.";
+  "Não foi possível identificar seu usuário. Faça login novamente para registrar a movimentação.";
 
 /**
  * Garante que o usuário logado é porteiro. Retorna null quando não for

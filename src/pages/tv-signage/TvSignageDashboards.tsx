@@ -45,12 +45,15 @@ export default function TvSignageDashboards() {
     cfg.grupos = (sp.get("grupos") || "").split(",").map((s) => s.trim()).filter(Boolean);
     cfg.cameras = (sp.get("cameras") || "").split(",").map((s) => s.trim()).filter(Boolean);
     cfg.unidade = sp.get("unidade") || "";
+    cfg.rotate = parseInt(sp.get("rotate") || "0") || 0;
     return cfg;
   };
-  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; unidade?: string }) => {
+  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; unidade?: string; rotate?: number }) => {
     const sp = new URLSearchParams();
     if (cfg.cameras.length) sp.set("cameras", cfg.cameras.join(","));
+    else if (cfg.grupos.length) sp.set("grupos", cfg.grupos.join(","));
     if (cfg.unidade) sp.set("unidade", cfg.unidade);
+    if (cfg.rotate && cfg.rotate > 0) sp.set("rotate", String(cfg.rotate));
     const qs = sp.toString();
     return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
   };
