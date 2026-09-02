@@ -121,7 +121,9 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
 
   const btnEscuro = dark ? "border-white/15 !bg-white/10 text-white hover:!bg-white/20" : "";
   const btnLaranja = dark ? "!bg-orange-500 font-semibold text-white shadow-lg shadow-orange-500/25 hover:!bg-orange-600" : "";
-  const inputEscuro = dark ? "border-white/15 !bg-white/10 text-white placeholder:text-slate-500" : "";
+  const inputEscuro = dark
+    ? "border-white/25 !bg-[#16233B] !text-white placeholder:text-slate-400 focus-visible:ring-orange-500"
+    : "";
 
   const casca = dark
     ? "rounded-3xl border border-white/10 bg-[#0F1B2E] p-4 text-white shadow-2xl"
@@ -247,7 +249,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
               />
             </div>
 
-            <Button className="w-full" onClick={salvar}>
+            <Button className={`w-full ${btnLaranja}`} onClick={salvar}>
               Salvar ramal
             </Button>
           </div>
