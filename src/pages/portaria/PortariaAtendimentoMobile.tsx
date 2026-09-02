@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BellRing, Smartphone, Wifi, WifiOff } from "lucide-react";
+import { BellRing, PhoneCall, Smartphone, Wifi, WifiOff, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   const [toques, setToques] = useState<ToqueCampainha[]>([]);
   const [toqueId, setToqueId] = useState<string | null>(null);
   const [aberto, setAberto] = useState(false);
+  const [ramalAberto, setRamalAberto] = useState(false);
 
   useEffect(() => {
     let ativo = true;
