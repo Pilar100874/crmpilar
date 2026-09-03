@@ -1057,24 +1057,11 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between rounded-lg border border-border p-3">
-            <div className="space-y-0.5 pr-4">
-              <Label htmlFor="usuario-interfone">Acesso ao Interfone (app Pilar Fone)</Label>
-              <p className="text-xs text-muted-foreground">
-                Permite que este usuário entre no aplicativo do interfone e receba as chamadas de campainha.
-              </p>
-            </div>
-            <Switch
-              id="usuario-interfone"
-              checked={podeUsarInterfone}
-              onCheckedChange={setPodeUsarInterfone}
-            />
-          </div>
-
           <div className="mt-4 rounded-lg border border-border p-3">
             <Label>Abas liberadas no Pilar Fone (web e APK)</Label>
             <p className="text-xs text-muted-foreground mb-3">
-              Selecione quais telas o usuário poderá abrir no telefone. Se nenhuma for marcada, todas ficam disponíveis.
+              Selecione quais telas o usuário poderá abrir no telefone. Se nenhuma for marcada, o Pilar Fone fica
+              indisponível para este usuário (o botão não aparece na web e o app não libera as telas).
             </p>
             <div className="grid grid-cols-2 gap-2">
               {ABAS_PILAR_FONE.map((a) => {
