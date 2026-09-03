@@ -76,8 +76,6 @@ import BotCreate from './BotCreate';
 import BotTest from './BotTest';
 
 // Import Telefonia components
-import Softphone from './Softphone';
-import VideoCall from './VideoCall';
 import BotResponseMonitor from './BotResponseMonitor';
 
 interface TabItem {
@@ -109,8 +107,6 @@ const tabItems: TabItem[] = [
   { id: 'monitor-respostas', label: 'Monitor de Respostas', icon: MessageSquare },
   { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
-  { id: 'softphone', label: 'Softphone', icon: Phone },
-  { id: 'videochamada', label: 'Videochamada', icon: Video },
   { id: 'sms', label: 'Envio de SMS', icon: Smartphone },
   { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
 ];
@@ -708,27 +704,6 @@ export default function AtendimentoConfig() {
                 <CardContent className="px-3 sm:px-6"><BotTest embedded /></CardContent>
               </Card>
             </TabsContent>
-
-            <TabsContent value="softphone" className="mt-0 h-full">
-              <Card className="h-full">
-                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Phone className="h-4 w-4 sm:h-5 sm:w-5" />Softphone</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Realize chamadas telefônicas via SIP</CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 sm:px-6"><Softphone embedded /></CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="videochamada" className="mt-0 h-full">
-              <Card className="h-full">
-                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Video className="h-4 w-4 sm:h-5 sm:w-5" />Videochamada</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Realize videochamadas com clientes</CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 sm:px-6"><VideoCall embedded /></CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="sms" className="mt-0 h-full overflow-y-auto">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">

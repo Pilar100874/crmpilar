@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
-import { useState } from "react";
+import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 
 interface ClientDetailsPanelProps {
   customer?: {
@@ -26,8 +25,6 @@ export function ClientDetailsPanel({
   onAddCompany
 }: ClientDetailsPanelProps) {
   const navigate = useNavigate();
-  const [showSoftphone, setShowSoftphone] = useState(false);
-  const [dialNumber, setDialNumber] = useState("");
 
   if (!customer) {
     return (
@@ -55,10 +52,7 @@ export function ClientDetailsPanel({
                 variant="ghost"
                 size="sm"
                 className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-primary"
-                onClick={() => {
-                  setDialNumber(customer.telefone || "");
-                  setShowSoftphone(true);
-                }}
+                onClick={() => abrirPilarSip(customer.telefone)}
               >
                 <Phone className="w-3 h-3 mr-1" />
                 {customer.telefone}
@@ -149,11 +143,6 @@ export function ClientDetailsPanel({
       </div>
 
 
-      <SoftphoneDialog 
-        open={showSoftphone}
-        onOpenChange={setShowSoftphone}
-        initialNumber={dialNumber}
-      />
     </div>
   );
 }
