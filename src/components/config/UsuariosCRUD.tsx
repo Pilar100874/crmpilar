@@ -116,6 +116,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [tipo, setTipo] = useState<string>("padrao");
   const [senhaSip, setSenhaSip] = useState("");
   const [usuarioSip, setUsuarioSip] = useState("");
+  const [sipServidor, setSipServidor] = useState("");
+  const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
+  const [ramalPortaria, setRamalPortaria] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
@@ -374,6 +377,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       ramal: ramal || null,
       senha_sip: senhaSip || null,
       usuario_sip: usuarioSip || null,
+      sip_servidor: sipServidor || null,
+      sip_servidor_alternativo: sipServidorAlternativo || null,
+      ramal_portaria: ramalPortaria || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
@@ -683,6 +689,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal("");
     setSenhaSip("");
     setUsuarioSip("");
+    setSipServidor("");
+    setSipServidorAlternativo("");
+    setRamalPortaria("");
     setTipo("padrao");
     setEditingId(null);
     setFormOpen(false);
@@ -706,6 +715,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal(usuario.ramal || "");
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
+    setSipServidor(((usuario as unknown as Record<string, string | null>).sip_servidor) || "");
+    setSipServidorAlternativo(((usuario as unknown as Record<string, string | null>).sip_servidor_alternativo) || "");
+    setRamalPortaria(((usuario as unknown as Record<string, string | null>).ramal_portaria) || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
@@ -1052,6 +1064,36 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 placeholder="Se diferente do ramal"
                 value={usuarioSip}
                 onChange={(e) => setUsuarioSip(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-sip-servidor">Servidor (PABX)</Label>
+              <Input
+                id="usuario-sip-servidor"
+                placeholder="192.168.88.250"
+                value={sipServidor}
+                onChange={(e) => setSipServidor(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-sip-servidor-alt">Servidor alternativo</Label>
+              <Input
+                id="usuario-sip-servidor-alt"
+                placeholder="pilar.myddns.me"
+                value={sipServidorAlternativo}
+                onChange={(e) => setSipServidorAlternativo(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-ramal-portaria">Ramal da TV/portaria</Label>
+              <Input
+                id="usuario-ramal-portaria"
+                placeholder="2000"
+                value={ramalPortaria}
+                onChange={(e) => setRamalPortaria(e.target.value)}
               />
             </div>
           </div>

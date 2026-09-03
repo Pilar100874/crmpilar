@@ -28585,11 +28585,14 @@ export type Database = {
           porta_pop: number | null
           porta_smtp: number | null
           ramal: string | null
+          ramal_portaria: string | null
           ramal_senha: string | null
           segmento_id: string | null
           senha_email: string | null
           senha_hash: string
           senha_sip: string | null
+          sip_servidor: string | null
+          sip_servidor_alternativo: string | null
           smtp: string | null
           tipo: string
           unidade_id: string | null
@@ -28622,11 +28625,14 @@ export type Database = {
           porta_pop?: number | null
           porta_smtp?: number | null
           ramal?: string | null
+          ramal_portaria?: string | null
           ramal_senha?: string | null
           segmento_id?: string | null
           senha_email?: string | null
           senha_hash: string
           senha_sip?: string | null
+          sip_servidor?: string | null
+          sip_servidor_alternativo?: string | null
           smtp?: string | null
           tipo?: string
           unidade_id?: string | null
@@ -28659,11 +28665,14 @@ export type Database = {
           porta_pop?: number | null
           porta_smtp?: number | null
           ramal?: string | null
+          ramal_portaria?: string | null
           ramal_senha?: string | null
           segmento_id?: string | null
           senha_email?: string | null
           senha_hash?: string
           senha_sip?: string | null
+          sip_servidor?: string | null
+          sip_servidor_alternativo?: string | null
           smtp?: string | null
           tipo?: string
           unidade_id?: string | null
