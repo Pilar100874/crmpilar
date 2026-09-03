@@ -438,6 +438,19 @@ export default function PilarFone({
               Desconectar
             </button>
           )}
+          <label
+            htmlFor="pf-auto-atender"
+            className="ml-auto inline-flex cursor-pointer items-center gap-1.5 font-semibold text-[#AEBAC1]"
+          >
+            <PhoneIncoming className="h-3 w-3" />
+            Atender automaticamente
+            <Switch
+              id="pf-auto-atender"
+              checked={config.autoAtender}
+              onCheckedChange={alternarAutoAtender}
+              className="scale-[0.7] data-[state=checked]:bg-[#00A884]"
+            />
+          </label>
         </div>
 
         <nav className="px-3 pb-3">
