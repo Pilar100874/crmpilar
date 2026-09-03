@@ -556,17 +556,19 @@ export default function PilarFone({
                 <button
                   type="button"
                   aria-label={`Ligar para ${r.nome}`}
+                  disabled={!isRegistered}
+                  title={isRegistered ? `Ligar para ${r.nome}` : "Ramal SIP desconectado"}
                   onClick={() => {
                     registrarChamada({ grupo: "ramais", nome: r.nome, numero: r.ramal, direcao: "saida" });
                     ligar(r.ramal);
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884] transition active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884] transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Phone className="h-5 w-5" />
                 </button>
               </div>
             ))}
-            <PilarFoneHistorico grupo="ramais" titulo="Chamadas recentes" onLigar={(n) => ligar(n)} />
+            <PilarFoneHistorico grupo="ramais" titulo="Chamadas recentes" onLigar={isRegistered ? (n) => ligar(n) : undefined} />
           </div>
         )}
 
@@ -577,6 +579,7 @@ export default function PilarFone({
                 registrarChamada({ grupo: "cadastros", nome: nome || numero, numero, direcao: "saida" });
                 ligar(numero);
               }}
+              ligarDesabilitado={!isRegistered}
               onWhatsapp={(c: ContatoCadastro) => {
                 setAlvoWhatsapp({ nome: c.nome, numero: c.numero });
                 setAba("whatsapp");
@@ -585,7 +588,7 @@ export default function PilarFone({
             <PilarFoneHistorico
               grupo="cadastros"
               titulo="Cadastros recentes"
-              onLigar={(n) => ligar(n)}
+              onLigar={isRegistered ? (n) => ligar(n) : undefined}
             />
           </div>
         )}
@@ -668,8 +671,9 @@ export default function PilarFone({
         title={
           aba === "chamadas" ? "Abrir interfone" : aba === "whatsapp" ? "Nova conversa de WhatsApp" : "Abrir teclado"
         }
+        disabled={(aba === "ramais" || aba === "cadastros") && !isRegistered}
         onClick={() => (aba === "chamadas" ? onAbrirInterfone() : setTecladoAberto(true))}
-        className={`${camada} left-1/2 z-30 -translate-x-1/2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95`}
+        className={`${camada} left-1/2 z-30 -translate-x-1/2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40`}
         style={{ bottom: `calc(${padBottom} + 20px)` }}
       >
         {aba === "chamadas" ? (
@@ -721,7 +725,7 @@ export default function PilarFone({
               <button
                 type="button"
                 aria-label="Ligar com vídeo"
-                disabled={!numero.trim() || aba === "whatsapp"}
+                disabled={!numero.trim() || aba === "whatsapp" || !isRegistered}
                 onClick={() => ligar(numero, true)}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1F2C34] text-[#00A884] transition active:scale-90 disabled:opacity-40"
               >
@@ -731,7 +735,7 @@ export default function PilarFone({
                 type="button"
                 aria-label={aba === "whatsapp" ? "Abrir conversa de WhatsApp" : "Ligar"}
                 title={aba === "whatsapp" ? "Abrir conversa de WhatsApp" : "Ligar"}
-                disabled={!numero.trim()}
+                disabled={!numero.trim() || (aba !== "whatsapp" && !isRegistered)}
                 onClick={() => {
                   const alvo = numero.trim();
                   if (!alvo) return;

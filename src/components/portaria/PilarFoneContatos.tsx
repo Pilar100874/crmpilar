@@ -49,11 +49,13 @@ function limpar(numero: string) {
 
 interface Props {
   onLigar: (numero: string, nome?: string) => void;
+  /** Desabilita a ação de ligar (ex.: ramal SIP desconectado). */
+  ligarDesabilitado?: boolean;
   onWhatsapp: (contato: ContatoCadastro) => void;
 }
 
 /** Agenda geral do CRM: pesquisa em empresas e contatos com filtro por tipo. */
-export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
+export default function PilarFoneContatos({ onLigar, onWhatsapp, ligarDesabilitado }: Props) {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("todos");
   const [itens, setItens] = useState<ContatoCadastro[]>([]);
@@ -239,8 +241,10 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
           <button
             type="button"
             aria-label={`Ligar para ${c.nome}`}
+            disabled={ligarDesabilitado}
+            title={ligarDesabilitado ? "Ramal SIP desconectado" : `Ligar para ${c.nome}`}
             onClick={() => onLigar(limpar(c.numero), c.nome)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#E9EDEF] transition active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#E9EDEF] transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Phone className="h-5 w-5" />
           </button>
