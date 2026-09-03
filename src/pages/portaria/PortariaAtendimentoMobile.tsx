@@ -7,7 +7,7 @@ import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PilarFone from "@/components/portaria/PilarFone";
 import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
 
 /** Tela do app Pilar Fone no celular: agenda de ramais, discador e interfone. */
 export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
@@ -20,20 +20,13 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   const [aberto, setAberto] = useState(false);
   const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>();
 
-  // Servidor SIP vem sempre da configuração do estabelecimento (não é editável no aparelho).
+  // Toda a telefonia (servidor e servidor alternativo inclusos) vem do cadastro do usuário.
   useEffect(() => {
     let ativo = true;
-    void (async () => {
-      const estabelecimentoId = await getEstabelecimentoId();
-      if (!estabelecimentoId) return;
-      const { data } = await supabase
-        .from("ucm_config")
-        .select("ucm_host, remote_ip")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .maybeSingle();
-      if (!ativo || !data) return;
-      setServidores({ servidor: data.ucm_host ?? "", servidorRemoto: data.remote_ip ?? "" });
-    })();
+    void lerConfigSipDoUsuario().then((cfg) => {
+      if (!ativo || !cfg) return;
+      setServidores({ servidor: cfg.servidor ?? "", servidorRemoto: cfg.servidorRemoto ?? "" });
+    });
     return () => {
       ativo = false;
     };

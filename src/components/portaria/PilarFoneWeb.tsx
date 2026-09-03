@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta } from "@/lib/portaria/interfone";
 import InterfonePopup from "./InterfonePopup";
@@ -151,17 +151,11 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   useEffect(() => {
     if (semAcesso) return;
     let ativo = true;
-    void (async () => {
-      const estabelecimentoId = await getEstabelecimentoId();
-      if (!estabelecimentoId) return;
-      const { data } = await supabase
-        .from("ucm_config")
-        .select("ucm_host, remote_ip")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .maybeSingle();
-      if (!ativo || !data) return;
-      setServidores({ servidor: data.ucm_host ?? "", servidorRemoto: data.remote_ip ?? "" });
-    })();
+    // Toda a telefonia (servidor e servidor alternativo inclusos) vem do cadastro do usuário.
+    void lerConfigSipDoUsuario().then((cfg) => {
+      if (!ativo || !cfg) return;
+      setServidores({ servidor: cfg.servidor ?? "", servidorRemoto: cfg.servidorRemoto ?? "" });
+    });
     return () => {
       ativo = false;
     };
