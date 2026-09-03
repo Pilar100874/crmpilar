@@ -309,14 +309,18 @@ export default function PilarFone({
     (c) => !filtro || c.nome.toLowerCase().includes(filtro) || c.numero.includes(filtro),
   );
 
+  const camada = embedded ? "absolute" : "fixed";
+  const padTop = embedded ? "0px" : "env(safe-area-inset-top, 0px)";
+  const padBottom = embedded ? "0px" : "env(safe-area-inset-bottom, 0px)";
+
   const campo = "border-white/10 !bg-[#0B141A] !text-[#E9EDEF] placeholder:text-[#8696A0] focus-visible:ring-[#00A884]";
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#0B141A] text-[#E9EDEF]">
+    <div className={`relative flex flex-col overflow-hidden bg-[#0B141A] text-[#E9EDEF] ${embedded ? "h-full" : "min-h-[100dvh]"}`}>
       {/* Cabeçalho */}
       <header
-        className="sticky top-0 z-20 bg-[#1F2C34]"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        className="sticky top-0 z-20 shrink-0 bg-[#1F2C34]"
+        style={{ paddingTop: padTop }}
       >
         <div className="flex items-center gap-2 px-4 py-3">
           {buscaAberta ? (
@@ -399,7 +403,7 @@ export default function PilarFone({
         </nav>
       </header>
 
-      <main className="flex-1 pb-28">
+      <main className={`flex-1 pb-28 ${embedded ? "min-h-0 overflow-y-auto" : ""}`}>
         {aviso && (
           <div className="p-3">
             <AvisoInline tipo="aviso">{aviso}</AvisoInline>
@@ -556,7 +560,7 @@ export default function PilarFone({
         type="button"
         aria-label="Abrir teclado"
         onClick={() => setTecladoAberto(true)}
-        className="fixed right-5 z-30 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95"
+        className={`${camada} right-5 z-30 flex h-14 w-14`.concat(" ") + " items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
       >
         <Grid3X3 className="h-6 w-6" />
@@ -564,7 +568,7 @@ export default function PilarFone({
 
       {/* Teclado de discagem */}
       {tecladoAberto && (
-        <div className="fixed inset-0 z-40 flex flex-col bg-[#0B141A]" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className={`${camada} inset-0 z-40 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-base font-semibold">Discar</span>
             <button
@@ -576,7 +580,7 @@ export default function PilarFone({
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex flex-1 flex-col justify-end px-6 pb-8" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+          <div className="flex flex-1 flex-col justify-end overflow-y-auto px-6 pb-8" style={{ paddingBottom: `calc(${padBottom} + 24px)` }}>
             <div className="mb-6 text-center">
               <p className="min-h-[2.5rem] text-3xl font-light tracking-widest">{numero || "\u00A0"}</p>
               {numero && <p className="mt-1 text-sm text-[#00A884]">{nomePorNumero(numero)}</p>}
@@ -629,10 +633,10 @@ export default function PilarFone({
       {/* Tela de chamada (estilo WhatsApp: viva-voz, mudo e vídeo sempre à mão) */}
       {chamadaAtual && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-[#1F2C34] to-[#0B141A] px-6 pb-8 text-center"
+          className={`${camada} inset-0 z-50 flex flex-col bg-gradient-to-b from-[#1F2C34] to-[#0B141A] px-6 pb-8 text-center`}
           style={{
-            paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)",
-            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+            paddingTop: `calc(${padTop} + 24px)`,
+            paddingBottom: `calc(${padBottom} + 24px)`,
           }}
         >
           {/* Vídeo da outra ponta em tela cheia quando disponível */}
@@ -653,7 +657,7 @@ export default function PilarFone({
               playsInline
               muted
               className="absolute right-4 z-10 h-36 w-24 rounded-2xl border-2 border-white/20 bg-black object-cover shadow-xl"
-              style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+              style={{ top: `calc(${padTop} + 80px)` }}
             />
           )}
 
@@ -770,7 +774,7 @@ export default function PilarFone({
 
       {/* Configuração do ramal */}
       {configAberta && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[#0B141A]" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className={`${camada} inset-0 z-50 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
           <div className="flex items-center gap-3 bg-[#1F2C34] px-4 py-3">
             <button type="button" aria-label="Fechar" onClick={() => setConfigAberta(false)}>
               <ArrowLeft className="h-5 w-5 text-[#AEBAC1]" />
@@ -779,7 +783,7 @@ export default function PilarFone({
           </div>
           <div
             className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+            style={{ paddingBottom: `calc(${padBottom} + 24px)` }}
           >
             {[
               { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
