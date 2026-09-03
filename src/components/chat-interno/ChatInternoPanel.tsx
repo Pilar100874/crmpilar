@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   User,
   Check,
-  Video,
+  Phone,
   Paperclip,
   FileText,
   Image as ImageIcon,
@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
-import { VideoChamadaDialog } from './VideoChamadaDialog';
+import { abrirPilarSip } from '@/components/portaria/PilarFoneWeb';
 
 interface ChatInternoPanelProps {
   isOpen: boolean;
@@ -35,6 +35,7 @@ interface Usuario {
   id: string;
   nome: string;
   email: string;
+  ramal?: string | null;
 }
 
 export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
@@ -53,7 +54,6 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     carregarConversas,
     marcarComoLida,
     videoChamadaPendente,
-    limparVideoChamadaPendente,
   } = useChatInternoContext();
 
   const [mensagemInput, setMensagemInput] = useState('');
@@ -64,26 +64,21 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [tituloNovaConversa, setTituloNovaConversa] = useState('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [participantesConversa, setParticipantesConversa] = useState<{[key: string]: Usuario[]}>({});
-  const [showVideoChamada, setShowVideoChamada] = useState(false);
-  const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [wasOpen, setWasOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [anexoPreview, setAnexoPreview] = useState<{url: string; name: string; type: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Quando receber uma videochamada pendente, abrir automaticamente o diálogo
+  // A chamada iniciada no chat usa o mesmo telefone SIP, sem um segundo diálogo de vídeo.
   useEffect(() => {
-    if (videoChamadaPendente) {
-      // Encontrar a conversa correspondente
-      const conversa = conversas.find(c => c.id === videoChamadaPendente.conversaId);
-      if (conversa) {
-        setConversaAtual(conversa);
-        setIsIncomingCall(true);
-        setShowVideoChamada(true);
-      }
-    }
-  }, [videoChamadaPendente, conversas, setConversaAtual]);
+    if (!videoChamadaPendente) return;
+    const conversa = conversas.find((item) => item.id === videoChamadaPendente.conversaId);
+    const outroUsuario = conversa
+      ? (participantesConversa[conversa.id] || []).find((participante) => participante.id !== usuarioAtualId)
+      : undefined;
+    abrirPilarSip(outroUsuario?.ramal ?? undefined);
+  }, [videoChamadaPendente, conversas, participantesConversa, usuarioAtualId]);
 
   // Sempre abrir na lista de conversas/usuários ao abrir o painel (apenas quando muda de fechado para aberto)
   // Também marca como lida ao fechar se estava numa conversa
@@ -106,14 +101,15 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const carregarParticipantes = async (conversaId: string) => {
     const { data } = await supabase
       .from('chat_interno_participantes')
-      .select(`
-        usuario_id,
-        usuarios:usuarios!chat_interno_participantes_usuario_id_fkey (
-          id,
-          nome,
-          email
-        )
-      `)
+       .select(`
+         usuario_id,
+         usuarios:usuarios!chat_interno_participantes_usuario_id_fkey (
+           id,
+           nome,
+           email,
+           ramal
+         )
+       `)
       .eq('conversa_id', conversaId);
 
     if (data) {
@@ -179,7 +175,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
 
     const { data, error } = await supabase
       .from('usuarios')
-      .select('id, nome, email')
+      .select('id, nome, email, ramal')
       .eq('estabelecimento_id', estabelecimentoId)
       .order('nome');
 
@@ -320,24 +316,22 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 {getConversaNome(conversaAtual)}
               </span>
               <div className="flex items-center gap-1">
-                {/* Botão de videochamada - apenas para conversas diretas */}
+                {/* Um único telefone para voz, viva-voz e vídeo */}
                 {conversaAtual.tipo === 'direto' && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      setIsIncomingCall(false);
-                      setShowVideoChamada(true);
+                      const outroUsuario = (participantesConversa[conversaAtual.id] || [])
+                        .find((participante) => participante.id !== usuarioAtualId);
+                      abrirPilarSip(outroUsuario?.ramal ?? undefined);
                     }}
-                    title="Iniciar videochamada"
+                    title="Abrir Pilar Sip"
                     className={cn(
                       videoChamadaPendente?.conversaId === conversaAtual.id && "animate-pulse"
                     )}
                   >
-                    <Video className={cn(
-                      "h-4 w-4",
-                      videoChamadaPendente?.conversaId === conversaAtual.id && "text-green-500"
-                    )} />
+                    <Phone className="h-4 w-4" />
                   </Button>
                 )}
                 <Button
@@ -699,12 +693,12 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                           {format(new Date(conversa.updated_at), 'dd/MM HH:mm', { locale: ptBR })}
                         </p>
                       </div>
-                      {/* Indicador de videochamada pendente */}
-                      {temChamadaPendente && (
-                        <div className="animate-pulse">
-                          <Video className="h-5 w-5 text-green-500" />
-                        </div>
-                      )}
+                       {/* Indicador de chamada pendente */}
+                       {temChamadaPendente && (
+                         <div className="animate-pulse">
+                           <Phone className="h-5 w-5 text-green-500" />
+                         </div>
+                       )}
                       {conversa.tipo === 'grupo' && (
                         <Badge variant="secondary" className="text-xs">
                           Grupo
@@ -720,28 +714,6 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
       )}
       </div>
 
-      {/* Dialog de Videochamada */}
-      {conversaAtual && conversaAtual.tipo === 'direto' && usuarioAtualId && (
-        <VideoChamadaDialog
-          isOpen={showVideoChamada}
-          onClose={() => {
-            setShowVideoChamada(false);
-            setIsIncomingCall(false);
-            limparVideoChamadaPendente();
-          }}
-          usuarioRemotoId={
-            (participantesConversa[conversaAtual.id] || [])
-              .find(p => p.id !== usuarioAtualId)?.id || ''
-          }
-          usuarioRemotoNome={
-            (participantesConversa[conversaAtual.id] || [])
-              .find(p => p.id !== usuarioAtualId)?.nome || 'Usuário'
-          }
-          usuarioAtualId={usuarioAtualId}
-          conversaId={conversaAtual.id}
-          isIncoming={isIncomingCall}
-        />
-      )}
     </div>
   );
 }
