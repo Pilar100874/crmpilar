@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta } from "@/lib/portaria/interfone";
 import InterfonePopup from "./InterfonePopup";
