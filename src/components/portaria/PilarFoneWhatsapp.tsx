@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, RefreshCw, Search, Send } from "lucide-react";
+import { ArrowLeft, Mic, Paperclip, RefreshCw, Search, Send, Square, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -18,6 +18,18 @@ interface MensagemItem {
   sender: string;
   text: string | null;
   created_at: string;
+  attachments?: any;
+}
+
+/** Extrai a primeira mídia da mensagem (anexo ou áudio). */
+function midiaDaMensagem(m: MensagemItem): { url: string; tipo: string; nome?: string } | null {
+  const bruto = m.attachments;
+  const lista = Array.isArray(bruto) ? bruto : bruto ? [bruto] : [];
+  const primeiro: any = lista[0];
+  if (!primeiro) return null;
+  const url = primeiro.url || primeiro.fileUrl || primeiro.link;
+  if (!url) return null;
+  return { url, tipo: primeiro.contentType || primeiro.type || "", nome: primeiro.fileName || primeiro.name };
 }
 
 export interface AlvoWhatsapp {
@@ -42,7 +54,32 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
   const [mensagens, setMensagens] = useState<MensagemItem[]>([]);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
+  const [somenteMinhas, setSomenteMinhas] = useState(
+    () => localStorage.getItem("pilarFoneWaMinhas") !== "0",
+  );
+  const [gravando, setGravando] = useState(false);
   const fimRef = useRef<HTMLDivElement | null>(null);
+  const arquivoRef = useRef<HTMLInputElement | null>(null);
+  const gravadorRef = useRef<MediaRecorder | null>(null);
+  const pedacosRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
+      const { data } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", auth.user.id)
+        .maybeSingle();
+      setUsuarioId((data as { id: string } | null)?.id ?? null);
+    })();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("pilarFoneWaMinhas", somenteMinhas ? "1" : "0");
+  }, [somenteMinhas]);
 
   const carregarConversas = useCallback(async () => {
     setCarregando(true);
@@ -53,6 +90,9 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
       .order("updated_at", { ascending: false })
       .limit(50);
     if (estabelecimentoId) query = query.eq("estabelecimento_id", estabelecimentoId);
+    if (somenteMinhas && usuarioId) {
+      query = query.or(`assignee_id.eq.${usuarioId},atendente_atual_id.eq.${usuarioId}`);
+    }
     const { data } = await query;
 
     const lista: ConversaItem[] = (data ?? []).map((c: any) => ({
@@ -63,7 +103,7 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
     }));
     setConversas(lista);
     setCarregando(false);
-  }, []);
+  }, [somenteMinhas, usuarioId]);
 
   useEffect(() => {
     void carregarConversas();
@@ -72,7 +112,7 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
   const carregarMensagens = useCallback(async (conversaId: string) => {
     const { data } = await supabase
       .from("messages")
-      .select("id, sender, text, created_at")
+      .select("id, sender, text, created_at, attachments")
       .eq("conversation_id", conversaId)
       .order("created_at", { ascending: true })
       .limit(200);
@@ -108,6 +148,77 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
     onAlvoConsumido?.();
   }, [alvo, conversas, onAlvoConsumido]);
 
+  /** Vincula a conversa ao usuário logado para aparecer em "Minhas conversas". */
+  const assumirConversa = useCallback(
+    async (conversaId: string) => {
+      if (!conversaId || !usuarioId) return;
+      await supabase
+        .from("conversations")
+        .update({ assignee_id: usuarioId })
+        .eq("id", conversaId)
+        .is("assignee_id", null);
+    },
+    [usuarioId],
+  );
+
+  /** Sobe o arquivo e dispara o envio pelo WhatsApp. */
+  const enviarArquivo = async (arquivo: File | Blob, nome: string, tipo: string) => {
+    if (!aberta || enviando) return;
+    setEnviando(true);
+    try {
+      const caminho = `pilar-fone/${Date.now()}-${nome.replace(/[^\w.-]/g, "_")}`;
+      const { error: upErro } = await supabase.storage
+        .from("chat-attachments")
+        .upload(caminho, arquivo, { contentType: tipo, upsert: false });
+      if (upErro) throw upErro;
+      const { data: pub } = supabase.storage.from("chat-attachments").getPublicUrl(caminho);
+
+      const estabelecimentoId = await getEstabelecimentoId();
+      const body: Record<string, unknown> = { fileUrl: pub.publicUrl, fileName: nome, contentType: tipo };
+      if (aberta.id) body.conversationId = aberta.id;
+      else {
+        body.telefone = soDigitos(aberta.telefone);
+        body.estabelecimento_id = estabelecimentoId;
+      }
+      const { error } = await supabase.functions.invoke("send-agent-message", { body });
+      if (error) throw error;
+      if (aberta.id) {
+        void assumirConversa(aberta.id);
+        void carregarMensagens(aberta.id);
+      } else void carregarConversas();
+      toast.success("Arquivo enviado");
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível enviar o arquivo");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  /** Grava um áudio pelo microfone e envia ao encerrar. */
+  const alternarGravacao = async () => {
+    if (gravando) {
+      gravadorRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const gravador = new MediaRecorder(stream);
+      pedacosRef.current = [];
+      gravador.ondataavailable = (e) => e.data.size && pedacosRef.current.push(e.data);
+      gravador.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setGravando(false);
+        const blob = new Blob(pedacosRef.current, { type: gravador.mimeType || "audio/webm" });
+        if (blob.size > 0) void enviarArquivo(blob, `audio-${Date.now()}.webm`, blob.type);
+      };
+      gravadorRef.current = gravador;
+      gravador.start();
+      setGravando(true);
+    } catch {
+      toast.error("Não foi possível acessar o microfone");
+    }
+  };
+
   const enviar = async () => {
     const conteudo = texto.trim();
     if (!conteudo || !aberta || enviando) return;
@@ -123,7 +234,10 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
       const { error } = await supabase.functions.invoke("send-agent-message", { body });
       if (error) throw error;
       setTexto("");
-      if (aberta.id) void carregarMensagens(aberta.id);
+      if (aberta.id) {
+        void assumirConversa(aberta.id);
+        void carregarMensagens(aberta.id);
+      }
       else void carregarConversas();
       toast.success("Mensagem enviada");
     } catch (e: any) {
@@ -157,7 +271,32 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
                   m.sender === "customer" ? "bg-[#1F2C34] text-[#E9EDEF]" : "bg-[#005C4B] text-white"
                 }`}
               >
-                <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                {(() => {
+                  const midia = midiaDaMensagem(m);
+                  if (!midia) return null;
+                  if (midia.tipo.startsWith("audio"))
+                    return <audio controls src={midia.url} className="mb-1 w-52 max-w-full" />;
+                  if (midia.tipo.startsWith("image"))
+                    return (
+                      <img
+                        src={midia.url}
+                        alt={midia.nome || "Imagem enviada no WhatsApp"}
+                        className="mb-1 max-h-56 rounded-lg object-cover"
+                        loading="lazy"
+                      />
+                    );
+                  return (
+                    <a
+                      href={midia.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-1 flex items-center gap-2 underline"
+                    >
+                      <Paperclip className="h-4 w-4" /> {midia.nome || "Arquivo"}
+                    </a>
+                  );
+                })()}
+                {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
                 <p className="mt-0.5 text-right text-[10px] opacity-60">
                   {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </p>
@@ -168,6 +307,26 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
         </div>
 
         <div className="flex items-end gap-2 bg-[#1F2C34] px-3 py-2">
+          <input
+            ref={arquivoRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => {
+              const arquivo = e.target.files?.[0];
+              e.target.value = "";
+              if (arquivo) void enviarArquivo(arquivo, arquivo.name, arquivo.type || "application/octet-stream");
+            }}
+          />
+          <button
+            type="button"
+            aria-label="Anexar arquivo"
+            title="Anexar arquivo"
+            disabled={enviando}
+            onClick={() => arquivoRef.current?.click()}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2A3942] text-[#AEBAC1] disabled:opacity-50"
+          >
+            <Paperclip className="h-5 w-5" />
+          </button>
           <textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
@@ -181,6 +340,18 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
             placeholder="Mensagem"
             className="max-h-24 flex-1 resize-none rounded-2xl bg-[#2A3942] px-3 py-2 text-sm text-[#E9EDEF] outline-none placeholder:text-[#8696A0]"
           />
+          <button
+            type="button"
+            aria-label={gravando ? "Parar gravação e enviar áudio" : "Gravar áudio"}
+            title={gravando ? "Parar gravação e enviar áudio" : "Gravar áudio"}
+            onClick={() => void alternarGravacao()}
+            disabled={enviando}
+            className={`flex h-10 w-10 items-center justify-center rounded-full disabled:opacity-50 ${
+              gravando ? "bg-red-500 text-white animate-pulse" : "bg-[#2A3942] text-[#AEBAC1]"
+            }`}
+          >
+            {gravando ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5" />}
+          </button>
           <button
             type="button"
             aria-label="Enviar mensagem"
@@ -213,6 +384,15 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
             placeholder="Buscar conversa"
             className="w-full bg-transparent text-sm text-[#E9EDEF] outline-none placeholder:text-[#8696A0]"
           />
+          <button
+            type="button"
+            aria-label={somenteMinhas ? "Mostrando minhas conversas" : "Mostrando todas as conversas"}
+            title={somenteMinhas ? "Minhas conversas" : "Todas as conversas"}
+            onClick={() => setSomenteMinhas((v) => !v)}
+            className={somenteMinhas ? "text-[#00A884]" : "text-[#8696A0]"}
+          >
+            <Users className="h-4 w-4" />
+          </button>
           <button type="button" aria-label="Atualizar" onClick={() => void carregarConversas()}>
             <RefreshCw className={`h-4 w-4 text-[#8696A0] ${carregando ? "animate-spin" : ""}`} />
           </button>
@@ -230,6 +410,7 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
           type="button"
           onClick={() => {
             registrarChamada({ grupo: "whatsapp", nome: c.nome, numero: c.telefone, direcao: "saida" });
+            void assumirConversa(c.id);
             setAberta(c);
           }}
           className="flex w-full items-center gap-3 px-4 py-2.5 text-left active:bg-white/5"

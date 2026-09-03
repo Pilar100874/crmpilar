@@ -6,6 +6,7 @@ import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta } from "@/lib/portaria/interfone";
 import InterfonePopup from "./InterfonePopup";
 import PilarFone from "./PilarFone";
+import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
@@ -39,6 +40,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const [modo, setModo] = useState<"popup" | "painel">(
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
+  const abasPermitidas = useAbasPermitidas();
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
@@ -216,6 +218,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       initialWhatsapp={contatoInicial}
 
       serverConfig={servidores}
+      abasPermitidas={abasPermitidas}
       mostrarInterfone={!!config}
       historico={historico}
       onAbrirToque={(id) => {

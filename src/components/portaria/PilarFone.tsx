@@ -113,6 +113,8 @@ interface Props {
   onFechar?: () => void;
   /** Ações extras exibidas no cabeçalho do telefone. */
   headerExtra?: React.ReactNode;
+  /** Abas liberadas para o usuário (vazio/indefinido = todas). */
+  abasPermitidas?: Aba[];
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -131,6 +133,7 @@ export default function PilarFone({
   mostrarInterfone = true,
   onFechar,
   headerExtra,
+  abasPermitidas,
 }: Props) {
 
   const { toast } = useToast();
@@ -176,6 +179,23 @@ export default function PilarFone({
     () => !!(config.servidor && config.ramal && config.senha),
     [config.servidor, config.ramal, config.senha],
   );
+
+  const abasVisiveis = useMemo(() => {
+    const todas = [
+      { id: "ramais" as Aba, rotulo: "Ramais", Icone: Users },
+      { id: "cadastros" as Aba, rotulo: "Cadastros", Icone: BookUser },
+      { id: "whatsapp" as Aba, rotulo: "WhatsApp", Icone: MessageCircle },
+      ...(mostrarInterfone ? [{ id: "chamadas" as Aba, rotulo: "Interfone", Icone: BellRing }] : []),
+    ];
+    if (!abasPermitidas || abasPermitidas.length === 0) return todas;
+    return todas.filter((t) => abasPermitidas.includes(t.id));
+  }, [mostrarInterfone, abasPermitidas]);
+
+  useEffect(() => {
+    if (abasVisiveis.length && !abasVisiveis.some((t) => t.id === aba)) {
+      setAba(abasVisiveis[0].id);
+    }
+  }, [abasVisiveis, aba]);
 
   useEffect(() => {
     let ativo = true;
@@ -435,12 +455,7 @@ export default function PilarFone({
 
         <nav className="px-3 pb-3">
           <div className="flex gap-1 overflow-x-auto rounded-2xl bg-white/[0.06] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {([
-              { id: "ramais", rotulo: "Ramais", Icone: Users },
-              { id: "cadastros", rotulo: "Cadastros", Icone: BookUser },
-              { id: "whatsapp", rotulo: "WhatsApp", Icone: MessageCircle },
-              ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Interfone", Icone: BellRing }] : []),
-            ] as Array<{ id: Aba; rotulo: string; Icone: typeof Users }>).map((t) => {
+            {abasVisiveis.map((t) => {
               const ativa = aba === t.id;
               return (
                 <button

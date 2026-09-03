@@ -6,10 +6,12 @@ import { useCampainha, useInterfoneConfig, tocarAlerta, type ToqueCampainha } fr
 import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PilarFone from "@/components/portaria/PilarFone";
+import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
 
 /** Tela do app Pilar Fone no celular: agenda de ramais, discador e interfone. */
 export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
   const { unidadeId } = useUnidadeAtual();
+  const abasPermitidas = useAbasPermitidas();
   const { config } = useInterfoneConfig(unidadeId);
   const { status, registrar } = usePushInterfone(unidadeId);
   const [toques, setToques] = useState<ToqueCampainha[]>([]);
@@ -44,6 +46,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   return (
     <div className={dark ? "dark" : undefined}>
       <PilarFone
+        abasPermitidas={abasPermitidas}
         onAbrirInterfone={() => {
           setToqueId(toques[0]?.id ?? null);
           setAberto(true);

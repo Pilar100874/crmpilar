@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ABAS_PILAR_FONE, type AbaPilarFoneId } from "@/lib/portaria/abasPilarFone";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -51,6 +52,7 @@ interface Usuario {
   estabelecimentos?: { nome: string };
   is_porteiro?: boolean;
   pode_usar_interfone?: boolean;
+  pilarfone_abas?: string[] | null;
   is_atendente?: boolean;
   atendente_id?: string;
   tipo?: string;
@@ -121,6 +123,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
   const [podeUsarInterfone, setPodeUsarInterfone] = useState(false);
+  const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -374,6 +377,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
       pode_usar_interfone: podeUsarInterfone,
+      pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
     };
 
     if (editingId) {
@@ -675,6 +679,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAtendente(false);
     setIsPorteiro(false);
     setPodeUsarInterfone(false);
+    setAbasPilarFone([]);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -706,6 +711,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
     setPodeUsarInterfone(!!(usuario as any).pode_usar_interfone);
+    setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
     setEditingId(usuario.id);
     setFormOpen(true);
 
@@ -1066,6 +1072,37 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               onCheckedChange={setPodeUsarInterfone}
             />
           </div>
+
+          <div className="mt-4 rounded-lg border border-border p-3">
+            <Label>Abas liberadas no Pilar Fone (web e APK)</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Selecione quais telas o usuário poderá abrir no telefone. Se nenhuma for marcada, todas ficam disponíveis.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {ABAS_PILAR_FONE.map((a) => {
+                const marcada = abasPilarFone.includes(a.id);
+                return (
+                  <label
+                    key={a.id}
+                    htmlFor={`aba-${a.id}`}
+                    className="flex items-center gap-2 rounded-md border border-border p-2 text-sm cursor-pointer"
+                  >
+                    <Checkbox
+                      id={`aba-${a.id}`}
+                      checked={marcada}
+                      onCheckedChange={(v) =>
+                        setAbasPilarFone((atual) =>
+                          v ? [...atual, a.id] : atual.filter((x) => x !== a.id),
+                        )
+                      }
+                    />
+                    {a.rotulo}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
         </Card>
 
         {/* Vinculações */}

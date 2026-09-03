@@ -28578,6 +28578,7 @@ export type Database = {
           imap: string | null
           is_porteiro: boolean
           nome: string
+          pilarfone_abas: string[] | null
           pode_usar_interfone: boolean
           pop: string | null
           porta_imap: number | null
@@ -28614,6 +28615,7 @@ export type Database = {
           imap?: string | null
           is_porteiro?: boolean
           nome: string
+          pilarfone_abas?: string[] | null
           pode_usar_interfone?: boolean
           pop?: string | null
           porta_imap?: number | null
@@ -28650,6 +28652,7 @@ export type Database = {
           imap?: string | null
           is_porteiro?: boolean
           nome?: string
+          pilarfone_abas?: string[] | null
           pode_usar_interfone?: boolean
           pop?: string | null
           porta_imap?: number | null
