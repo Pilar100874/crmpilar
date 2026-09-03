@@ -421,17 +421,6 @@ export default function PilarFone({
               <X className="h-4 w-4" />
             </button>
           )}
-          <button
-            type="button"
-            aria-label="Configurar ramal"
-            onClick={() => {
-              setRascunho(config);
-              setConfigAberta(true);
-            }}
-            className="p-1"
-          >
-            <Settings2 className="h-5 w-5 text-[#AEBAC1]" />
-          </button>
         </div>
 
 
@@ -929,72 +918,6 @@ export default function PilarFone({
         </div>
       )}
 
-      {/* Configuração do ramal */}
-      {configAberta && (
-        <div className={`${camada} inset-0 z-50 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
-          <div className="flex items-center gap-3 bg-[#1F2C34] px-4 py-3">
-            <button type="button" aria-label="Fechar" onClick={() => setConfigAberta(false)}>
-              <ArrowLeft className="h-5 w-5 text-[#AEBAC1]" />
-            </button>
-            <span className="text-base font-semibold">Configurar ramal SIP</span>
-          </div>
-          <div
-            className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
-            style={{ paddingBottom: `calc(${padBottom} + 24px)` }}
-          >
-            <p className="text-xs text-[#8696A0]">
-              Os dados de telefonia (servidor, servidor alternativo, ramal, senha e ramal da TV/portaria) são
-              definidos pelo administrador no cadastro do usuário.
-            </p>
-            {[
-              { id: "servidor", rotulo: "Servidor (PABX)" },
-              { id: "servidorRemoto", rotulo: "Servidor alternativo" },
-              { id: "ramal", rotulo: "Ramal" },
-              { id: "nome", rotulo: "Nome exibido" },
-              { id: "ramalPortaria", rotulo: "Ramal da TV/portaria" },
-            ].map((campoCfg) => (
-              <div key={campoCfg.id} className="space-y-1.5">
-                <Label className="text-[13px] text-[#8696A0]">{campoCfg.rotulo}</Label>
-                <Input
-                  readOnly
-                  disabled
-                  className={campo}
-                  value={(rascunho[campoCfg.id as keyof PortariaSipConfig] as string) || "Não definido"}
-                />
-              </div>
-            ))}
-
-            <div className="flex items-center justify-between rounded-xl bg-[#1F2C34] px-4 py-3">
-              <Label htmlFor="sip-auto" className="text-sm font-normal text-white">
-                Conectar automaticamente ao abrir
-              </Label>
-              <Switch
-                id="sip-auto"
-                checked={rascunho.autoConectar}
-                onCheckedChange={(v) => setRascunho({ ...rascunho, autoConectar: v })}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#1F2C34] px-4 py-3">
-              <Label htmlFor="sip-atender" className="text-sm font-normal text-white">
-                Atender chamadas automaticamente
-              </Label>
-              <Switch
-                id="sip-atender"
-                checked={rascunho.autoAtender}
-                onCheckedChange={(v) => setRascunho({ ...rascunho, autoAtender: v })}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={salvar}
-              className="h-12 w-full rounded-full bg-[#00A884] text-sm font-semibold text-[#0B141A] transition active:scale-95"
-            >
-              Salvar ramal
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
