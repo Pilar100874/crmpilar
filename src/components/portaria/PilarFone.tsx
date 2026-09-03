@@ -115,6 +115,8 @@ interface Props {
   headerExtra?: React.ReactNode;
   /** Abas liberadas para o usuário (vazio/indefinido = todas). */
   abasPermitidas?: Aba[];
+  /** Disparado quando chega uma chamada SIP. */
+  onChamadaRecebida?: () => void;
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -134,6 +136,7 @@ export default function PilarFone({
   onFechar,
   headerExtra,
   abasPermitidas,
+  onChamadaRecebida,
 }: Props) {
 
   const { toast } = useToast();
