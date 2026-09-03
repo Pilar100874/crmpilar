@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft,
   BellRing,
   BookUser,
   MessageCircle,
@@ -10,10 +9,10 @@ import {
   MicOff,
   Phone,
   PhoneCall,
+  PhoneIncoming,
   PhoneOff,
   RefreshCw,
   Search,
-  Settings2,
   Smartphone,
   Users,
   Video,
@@ -23,8 +22,6 @@ import {
 } from "lucide-react";
 import { SessionState } from "sip.js";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
@@ -390,7 +387,6 @@ export default function PilarFone({
   const padTop = embedded ? "0px" : "env(safe-area-inset-top, 0px)";
   const padBottom = embedded ? "0px" : "env(safe-area-inset-bottom, 0px)";
 
-  const campo = "border-white/10 !bg-[#0B141A] !text-[#E9EDEF] placeholder:text-[#8696A0] focus-visible:ring-[#00A884]";
 
   return (
     <div className={`relative flex flex-col overflow-hidden bg-[#0B141A] text-[#E9EDEF] ${embedded ? "h-full" : "min-h-[100dvh]"}`}>
