@@ -43,6 +43,23 @@ export default function PilarFoneWeb() {
     inicioY: 0,
   });
 
+  // Posição da janela flutuante (modo flutuante: arrastar e soltar)
+  const [posFlutuante, setPosFlutuante] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const salvo = localStorage.getItem("pilarSipFloatPos");
+      return salvo ? (JSON.parse(salvo) as { x: number; y: number }) : null;
+    } catch {
+      return null;
+    }
+  });
+  const arrastoJanela = useRef<{ ativo: boolean; inicioX: number; inicioY: number; baseX: number; baseY: number }>({
+    ativo: false,
+    inicioX: 0,
+    inicioY: 0,
+    baseX: 0,
+    baseY: 0,
+  });
+
   useEffect(() => {
     const abrir = (event: Event) => {
       const detail = (event as CustomEvent<{ numero?: string }>).detail;
