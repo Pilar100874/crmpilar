@@ -62,6 +62,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const semAcesso = abasPermitidas !== undefined && abasPermitidas.length === 0;
   const semAcessoRef = useRef(semAcesso);
   semAcessoRef.current = semAcesso;
+  const [alerta, setAlerta] = useState(false);
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
