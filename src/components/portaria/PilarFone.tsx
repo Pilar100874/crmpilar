@@ -27,6 +27,8 @@ import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
 import AvisoInline from "@/components/portaria/AvisoInline";
+import PilarFoneContatos, { type ContatoCadastro } from "@/components/portaria/PilarFoneContatos";
+import PilarFoneWhatsapp, { type AlvoWhatsapp } from "@/components/portaria/PilarFoneWhatsapp";
 
 import {
   lerConfigSip,
@@ -82,7 +84,7 @@ function Avatar({ nome }: { nome: string }) {
   );
 }
 
-type Aba = "ramais" | "chamadas";
+type Aba = "ramais" | "cadastros" | "whatsapp" | "chamadas";
 
 interface Props {
   /** Abre a tela do interfone (campainha). */
@@ -143,6 +145,7 @@ export default function PilarFone({
   const [configAberta, setConfigAberta] = useState(false);
   const [configSincronizada, setConfigSincronizada] = useState(false);
   const [aba, setAba] = useState<Aba>("ramais");
+  const [alvoWhatsapp, setAlvoWhatsapp] = useState<AlvoWhatsapp | null>(null);
   const [busca, setBusca] = useState("");
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [tecladoAberto, setTecladoAberto] = useState(false);
@@ -397,9 +400,11 @@ export default function PilarFone({
           )}
         </div>
 
-        <nav className="flex border-b border-white/5">
+        <nav className="flex overflow-x-auto border-b border-white/5">
           {([
             { id: "ramais", rotulo: "Ramais" },
+            { id: "cadastros", rotulo: "Cadastros" },
+            { id: "whatsapp", rotulo: "WhatsApp" },
             ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Interfone" }] : []),
           ] as Array<{ id: Aba; rotulo: string }>).map((t) => (
             <button
@@ -470,6 +475,22 @@ export default function PilarFone({
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {aba === "cadastros" && (
+          <PilarFoneContatos
+            onLigar={(numero) => ligar(numero)}
+            onWhatsapp={(c: ContatoCadastro) => {
+              setAlvoWhatsapp({ nome: c.nome, numero: c.numero });
+              setAba("whatsapp");
+            }}
+          />
+        )}
+
+        {aba === "whatsapp" && (
+          <div className={embedded ? "h-full" : "h-[calc(100vh-220px)]"}>
+            <PilarFoneWhatsapp alvo={alvoWhatsapp} onAlvoConsumido={() => setAlvoWhatsapp(null)} />
           </div>
         )}
 

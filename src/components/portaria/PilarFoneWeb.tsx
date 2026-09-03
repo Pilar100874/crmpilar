@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GripHorizontal, PanelRight, Phone, Smartphone } from "lucide-react";
+import { ExternalLink, GripHorizontal, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
@@ -14,8 +14,13 @@ export function abrirPilarSip(numero?: string) {
   window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero } }));
 }
 
-export default function PilarFoneWeb() {
-  const [aberto, setAberto] = useState(false);
+interface PilarFoneWebProps {
+  /** Renderiza o telefone ocupando toda a janela (rota /pilar-sip aberta em outro monitor). */
+  janela?: boolean;
+}
+
+export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
+  const [aberto, setAberto] = useState(janela);
   const [modo, setModo] = useState<"popup" | "painel">(
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
@@ -194,19 +199,56 @@ export default function PilarFoneWeb() {
         setInterfoneAberto(true);
       }}
       headerExtra={
-        <button
-          type="button"
-          aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
-          title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
-          onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
-        >
-          {modo === "popup" ? <PanelRight className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
-        </button>
+        janela ? undefined : (
+          <>
+            <button
+              type="button"
+              aria-label="Abrir em janela separada (outro monitor)"
+              title="Abrir em janela separada (outro monitor)"
+              onClick={() => {
+                window.open(
+                  "/pilar-sip",
+                  "pilarSipJanela",
+                  "popup=yes,width=430,height=840,left=80,top=80,menubar=no,toolbar=no",
+                );
+                setAberto(false);
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
+              title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
+              onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+            >
+              {modo === "popup" ? <PanelRight className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+            </button>
+          </>
+        )
       }
-      onFechar={() => setAberto(false)}
+      onFechar={() => (janela ? window.close() : setAberto(false))}
     />
   );
+
+  if (janela) {
+    return (
+      <>
+        <div className="fixed inset-0 bg-[#0B141A]">{controlesTelefone}</div>
+        {config && (
+          <InterfonePopup
+            aberto={interfoneAberto}
+            onFechar={() => setInterfoneAberto(false)}
+            config={config}
+            unidadeId={unidadeId}
+            toqueId={toqueId}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
