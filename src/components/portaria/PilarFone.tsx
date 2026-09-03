@@ -39,6 +39,7 @@ import {
   salvarConfigSip,
   type PortariaSipConfig,
 } from "@/lib/portaria/sipConfig";
+import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
 import { sincronizarConfigSip, salvarConfigNaNuvem } from "@/lib/portaria/sipConfigCloud";
 import { agendaDisponivel, lerAgendaCelular, type ContatoCelular } from "@/lib/portaria/agendaCelular";
 
@@ -214,6 +215,21 @@ export default function PilarFone({
       ativo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // A telefonia (servidor, servidor alternativo, ramal, senha e ramal da TV/portaria)
+  // é definida pelo administrador no cadastro do usuário.
+  useEffect(() => {
+    let ativo = true;
+    void lerConfigSipDoUsuario().then((doCadastro) => {
+      if (!ativo || !doCadastro) return;
+      setConfig((atual) => ({ ...atual, ...doCadastro }));
+      setRascunho((atual) => ({ ...atual, ...doCadastro }));
+      setConfigSincronizada(true);
+    });
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -927,28 +943,23 @@ export default function PilarFone({
             style={{ paddingBottom: `calc(${padBottom} + 24px)` }}
           >
             <p className="text-xs text-[#8696A0]">
-              {serverConfig?.servidor
-                ? `Servidor definido na configuração do estabelecimento: ${serverConfig.servidor}${serverConfig.servidorRemoto ? ` (alternativo: ${serverConfig.servidorRemoto})` : ""}.`
-                : "O servidor SIP é definido na configuração do estabelecimento. Peça ao administrador para cadastrá-lo."}
+              Os dados de telefonia (servidor, servidor alternativo, ramal, senha e ramal da TV/portaria) são
+              definidos pelo administrador no cadastro do usuário.
             </p>
             {[
-              { id: "ramal", rotulo: "Ramal", ph: "1001" },
-              { id: "senha", rotulo: "Senha SIP", ph: "" },
-              { id: "nome", rotulo: "Nome exibido", ph: "Portaria" },
-              { id: "ramalPortaria", rotulo: "Ramal da portaria/interfone", ph: "2000" },
+              { id: "servidor", rotulo: "Servidor (PABX)" },
+              { id: "servidorRemoto", rotulo: "Servidor alternativo" },
+              { id: "ramal", rotulo: "Ramal" },
+              { id: "nome", rotulo: "Nome exibido" },
+              { id: "ramalPortaria", rotulo: "Ramal da TV/portaria" },
             ].map((campoCfg) => (
               <div key={campoCfg.id} className="space-y-1.5">
-                <Label htmlFor={`sip-${campoCfg.id}`} className="text-[13px] text-[#8696A0]">
-                  {campoCfg.rotulo}
-                </Label>
+                <Label className="text-[13px] text-[#8696A0]">{campoCfg.rotulo}</Label>
                 <Input
-                  id={`sip-${campoCfg.id}`}
+                  readOnly
+                  disabled
                   className={campo}
-                  type={campoCfg.id === "senha" ? "password" : "text"}
-                  inputMode={campoCfg.id === "ramal" || campoCfg.id === "ramalPortaria" ? "numeric" : undefined}
-                  placeholder={campoCfg.ph}
-                  value={rascunho[campoCfg.id as keyof PortariaSipConfig] as string}
-                  onChange={(e) => setRascunho({ ...rascunho, [campoCfg.id]: e.target.value })}
+                  value={(rascunho[campoCfg.id as keyof PortariaSipConfig] as string) || "Não definido"}
                 />
               </div>
             ))}
