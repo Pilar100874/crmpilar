@@ -167,7 +167,7 @@ export default function PilarFone({
   const [busca, setBusca] = useState("");
   const [tipoRamal, setTipoRamal] = useState<string>("todos");
 
-  const [buscaAberta, setBuscaAberta] = useState(false);
+  
   const [tecladoAberto, setTecladoAberto] = useState(false);
   const [numero, setNumero] = useState("");
   const [ramais, setRamais] = useState<RamalCrm[]>([]);
