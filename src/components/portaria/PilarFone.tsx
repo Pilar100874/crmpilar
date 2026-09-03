@@ -666,7 +666,7 @@ export default function PilarFone({
       {tecladoAberto && (
         <div className={`${camada} inset-0 z-40 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-base font-semibold">Discar</span>
+            <span className="text-base font-semibold">{aba === "whatsapp" ? "Nova conversa" : "Discar"}</span>
             <button
               type="button"
               aria-label="Fechar teclado"
