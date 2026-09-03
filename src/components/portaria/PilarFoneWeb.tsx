@@ -280,6 +280,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     <PilarFone
       embedded
       initialNumber={numeroInicial}
+      onChamadaRecebida={() => setAlerta(true)}
       initialAba={abaInicial}
       initialWhatsapp={contatoInicial}
 
