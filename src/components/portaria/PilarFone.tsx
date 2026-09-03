@@ -267,11 +267,12 @@ export default function PilarFone({
     });
   }, [config, configValida, connect]);
 
+  // Conexão é sempre automática: assim que a configuração do cadastro é carregada, o ramal se registra.
   useEffect(() => {
-    if (!configSincronizada || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
+    if (!configSincronizada || tentouAuto.current || !configValida || isRegistered || isConnecting) return;
     tentouAuto.current = true;
     void conectar();
-  }, [config.autoConectar, configSincronizada, configValida, isRegistered, isConnecting, conectar]);
+  }, [configSincronizada, configValida, isRegistered, isConnecting, conectar]);
 
   // Grupo de ramais SIP cadastrados no CRM
   const carregarRamais = useCallback(async () => {
@@ -362,14 +363,11 @@ export default function PilarFone({
     [dial, isRegistered, toast],
   );
 
-  const salvar = () => {
-    salvarConfigSip(rascunho);
-    setConfig(rascunho);
-    setConfigAberta(false);
-    tentouAuto.current = false;
-    setAviso(null);
-    void salvarConfigNaNuvem(rascunho);
-    toast({ title: "Ramal salvo", description: "Configuração guardada neste aparelho e protegida na nuvem." });
+  const alternarAutoAtender = (valor: boolean) => {
+    const nova = { ...config, autoAtender: valor };
+    setConfig(nova);
+    salvarConfigSip(nova);
+    void salvarConfigNaNuvem(nova);
   };
 
   const filtro = busca.trim().toLowerCase();
