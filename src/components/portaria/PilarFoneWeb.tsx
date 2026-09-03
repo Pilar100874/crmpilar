@@ -411,6 +411,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         }}
       >
         <Phone className="w-3 h-3" />
+        {alerta && !aberto && (
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+        )}
       </div>
       )}
 
