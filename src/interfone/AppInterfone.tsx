@@ -67,10 +67,10 @@ export default function AppInterfone() {
         <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-orange-500/20 blur-3xl" />
         <div className="relative w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-xl">
           <div className="mb-6 flex flex-col items-center gap-3 text-center">
-            <img src={logoPilar} alt="Pilar Sip" className="h-14 w-auto object-contain drop-shadow" />
+            <img src={logoPilar} alt="Pilar Fone" className="h-14 w-auto object-contain drop-shadow" />
             <div className="h-1 w-16 rounded-full bg-orange-500" />
             <div>
-              <h1 className="text-lg font-semibold text-white">Pilar Sip</h1>
+              <h1 className="text-lg font-semibold text-white">Pilar Fone</h1>
               <p className="text-xs text-slate-400">Interfone e ramal SIP</p>
             </div>
           </div>

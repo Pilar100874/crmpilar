@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, MessageCircle, Phone, RefreshCw, Search, User } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Handshake,
+  MessageCircle,
+  Phone,
+  RefreshCw,
+  Search,
+  Tag,
+  Truck,
+  User,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -18,9 +30,22 @@ const FILTROS_BASE = [
   { id: "contato", rotulo: "Contatos" },
 ];
 
+/** Ícone de cada filtro (inclui os tipos de cliente dinâmicos). */
+function iconeFiltro(id: string) {
+  if (id === "todos") return Users;
+  if (id === "empresa") return Building2;
+  if (id === "contato") return User;
+  const tipo = id.replace("tipo:", "").toLowerCase();
+  if (tipo.includes("transport")) return Truck;
+  if (tipo.includes("vendedor") || tipo.includes("represent")) return Briefcase;
+  if (tipo.includes("b2b") || tipo.includes("parceir")) return Handshake;
+  return Tag;
+}
+
 function limpar(numero: string) {
   return numero.replace(/\D/g, "");
 }
+
 
 interface Props {
   onLigar: (numero: string, nome?: string) => void;
@@ -125,25 +150,28 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
             <RefreshCw className={`h-4 w-4 text-[#8696A0] ${carregando ? "animate-spin" : ""}`} />
           </button>
         </div>
-        <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {filtros.map((f) => {
             const ativo = filtro === f.id;
+            const Icone = iconeFiltro(f.id);
             return (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setFiltro(f.id)}
                 aria-pressed={ativo}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold capitalize transition ${
+                aria-label={f.rotulo}
+                title={`${f.rotulo} (${contarFiltro(f.id)})`}
+                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
                   ativo
                     ? "border-[#00A884] bg-[#00A884] text-[#0B141A] shadow-[0_2px_10px_rgba(0,168,132,0.3)]"
                     : "border-white/10 bg-white/[0.06] text-[#AEBAC1] hover:bg-white/10"
                 }`}
               >
-                {f.rotulo}
+                <Icone className="h-[18px] w-[18px]" />
                 <span
-                  className={`rounded-full px-1.5 text-[10px] font-bold ${
-                    ativo ? "bg-black/15 text-[#0B141A]" : "bg-white/10 text-[#8696A0]"
+                  className={`absolute -right-0.5 -top-0.5 min-w-[16px] rounded-full px-1 text-[9px] font-bold leading-4 ${
+                    ativo ? "bg-[#0B141A] text-[#00A884]" : "bg-white/15 text-[#8696A0]"
                   }`}
                 >
                   {contarFiltro(f.id)}
@@ -152,6 +180,7 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
             );
           })}
         </div>
+
       </div>
 
       {carregando && <p className="px-4 py-6 text-sm text-[#8696A0]">Carregando cadastros...</p>}

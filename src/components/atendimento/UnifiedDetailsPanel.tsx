@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
+import { abrirPilarSip, abrirWhatsappPilarFone } from "@/components/portaria/PilarFoneWeb";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
@@ -71,8 +71,6 @@ export function UnifiedDetailsPanel({
   onCreateContato,
   onCreateEmpresa
 }: UnifiedDetailsPanelProps) {
-  const [showSoftphone, setShowSoftphone] = useState(false);
-  const [dialNumber, setDialNumber] = useState("");
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
@@ -528,9 +526,19 @@ export function UnifiedDetailsPanel({
                     className="h-7 text-xs flex-1 max-w-[140px]"
                     placeholder="+55 (00) 00000-0000"
                   />
+                ) : whatsapp ? (
+                  <button
+                    type="button"
+                    onClick={() => abrirWhatsappPilarFone(whatsapp, nome)}
+                    title="Abrir conversa no telefone"
+                    className="text-xs truncate max-w-[140px] text-primary hover:underline"
+                  >
+                    {whatsapp}
+                  </button>
                 ) : (
-                  <span className="text-xs truncate max-w-[140px]">{whatsapp || '-'}</span>
+                  <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
+
               </div>
 
               {/* Telefone */}
@@ -545,9 +553,19 @@ export function UnifiedDetailsPanel({
                     className="h-7 text-xs flex-1 max-w-[140px]"
                     placeholder="+55 (00) 00000-0000"
                   />
+                ) : telefone ? (
+                  <button
+                    type="button"
+                    onClick={() => abrirPilarSip(telefone.replace(/\D/g, ''))}
+                    title="Ligar pelo telefone"
+                    className="text-xs truncate max-w-[140px] text-primary hover:underline"
+                  >
+                    {telefone}
+                  </button>
                 ) : (
-                  <span className="text-xs truncate max-w-[140px]">{telefone || '-'}</span>
+                  <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
+
               </div>
 
               {/* Email */}
@@ -622,12 +640,6 @@ export function UnifiedDetailsPanel({
       </div>
 
       {/* Dialogs */}
-      <SoftphoneDialog 
-        open={showSoftphone}
-        onOpenChange={setShowSoftphone}
-        initialNumber={dialNumber}
-      />
-
       <VincularEmpresaDialog
         open={showVincularDialog}
         onOpenChange={setShowVincularDialog}

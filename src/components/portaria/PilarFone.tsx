@@ -101,6 +101,11 @@ interface Props {
   /** Embutido no sistema (popup em formato de celular). */
   embedded?: boolean;
   initialNumber?: string;
+  /** Tela que deve ser exibida ao abrir. */
+  initialAba?: Aba;
+  /** Abre direto a conversa de WhatsApp do contato. */
+  initialWhatsapp?: { nome: string; numero: string };
+
   /** Servidores vindos da configuração do estabelecimento. */
   serverConfig?: { servidor: string; servidorRemoto: string };
   mostrarInterfone?: boolean;
@@ -119,6 +124,9 @@ export default function PilarFone({
   onAbrirToque,
   embedded = false,
   initialNumber,
+  initialAba,
+  initialWhatsapp,
+
   serverConfig,
   mostrarInterfone = true,
   onFechar,
@@ -189,11 +197,22 @@ export default function PilarFone({
   }, [serverConfig?.servidor, serverConfig?.servidorRemoto]);
 
   useEffect(() => {
-    if (initialNumber) {
+    if (initialWhatsapp?.numero) {
+      setAlvoWhatsapp(initialWhatsapp);
+      setAba("whatsapp");
+      setTecladoAberto(false);
+      return;
+    }
+    if (initialAba) {
+      setAba(initialAba);
+      if (initialAba !== "ramais") setTecladoAberto(false);
+    }
+    if (initialNumber && !initialAba) {
       setNumero(initialNumber);
       setTecladoAberto(true);
     }
-  }, [initialNumber]);
+  }, [initialNumber, initialAba, initialWhatsapp?.numero, initialWhatsapp?.nome]);
+
 
 
   const conectar = useCallback(async () => {
@@ -349,12 +368,12 @@ export default function PilarFone({
             </>
           ) : (
             <>
-              <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Sip</h1>
+              <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
               {headerExtra}
               {onFechar && (
                 <button
                   type="button"
-                  aria-label="Fechar Pilar Sip"
+                  aria-label="Fechar Pilar Fone"
                   onClick={onFechar}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
                 >

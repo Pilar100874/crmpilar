@@ -7,7 +7,7 @@ import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PilarFone from "@/components/portaria/PilarFone";
 
-/** Tela do app Pilar Sip no celular: agenda de ramais, discador e interfone. */
+/** Tela do app Pilar Fone no celular: agenda de ramais, discador e interfone. */
 export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
   const { unidadeId } = useUnidadeAtual();
   const { config } = useInterfoneConfig(unidadeId);

@@ -33,7 +33,7 @@ interface Props {
 
 const soDigitos = (v: string) => v.replace(/\D/g, "");
 
-/** Aba de conversas de WhatsApp dentro do Pilar Sip. */
+/** Aba de conversas de WhatsApp dentro do Pilar Fone. */
 export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
   const [conversas, setConversas] = useState<ConversaItem[]>([]);
   const [busca, setBusca] = useState("");

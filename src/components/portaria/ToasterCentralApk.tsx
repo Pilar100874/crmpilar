@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 /**
- * Mensagens do app Pilar Sip: aparecem no centro da tela e somem sozinhas em 2 segundos.
+ * Mensagens do app Pilar Fone: aparecem no centro da tela e somem sozinhas em 2 segundos.
  */
 export default function ToasterCentralApk() {
   const { toasts, dismiss } = useToast();

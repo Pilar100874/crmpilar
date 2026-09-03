@@ -9,10 +9,25 @@ import PilarFone from "./PilarFone";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
-/** Abre o Pilar Sip em qualquer lugar do sistema (opcionalmente já com um número). */
-export function abrirPilarSip(numero?: string) {
-  window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero } }));
+export type AbaPilarFone = "ramais" | "cadastros" | "whatsapp" | "chamadas";
+
+export interface OpcoesAbrirPilarFone {
+  /** Tela do telefone que deve ser aberta. */
+  aba?: AbaPilarFone;
+  /** Nome do contato (usado na tela de WhatsApp). */
+  nome?: string;
 }
+
+/** Abre o Pilar Fone em qualquer lugar do sistema (opcionalmente já com um número e tela). */
+export function abrirPilarSip(numero?: string, opcoes?: OpcoesAbrirPilarFone) {
+  window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero, ...opcoes } }));
+}
+
+/** Abre o telefone direto na conversa de WhatsApp do número. */
+export function abrirWhatsappPilarFone(numero: string, nome?: string) {
+  abrirPilarSip(numero, { aba: "whatsapp", nome });
+}
+
 
 interface PilarFoneWebProps {
   /** Renderiza o telefone ocupando toda a janela (rota /pilar-sip aberta em outro monitor). */
@@ -25,12 +40,15 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
+  const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
+  const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
+
   const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>({
     servidor: "",
     servidorRemoto: "",
   });
 
-  // Interfone dentro do Pilar Sip (igual ao APK)
+  // Interfone dentro do Pilar Fone (igual ao APK)
   const { unidadeId } = useUnidadeAtual();
   const { config } = useInterfoneConfig(unidadeId);
   const [interfoneAberto, setInterfoneAberto] = useState(false);
@@ -67,10 +85,17 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   useEffect(() => {
     const abrir = (event: Event) => {
-      const detail = (event as CustomEvent<{ numero?: string }>).detail;
+      const detail = (event as CustomEvent<{ numero?: string; aba?: AbaPilarFone; nome?: string }>).detail;
       setNumeroInicial(detail?.numero);
+      setAbaInicial(detail?.aba);
+      setContatoInicial(
+        detail?.aba === "whatsapp" && detail?.numero
+          ? { nome: detail.nome || detail.numero, numero: detail.numero }
+          : undefined,
+      );
       setAberto(true);
     };
+
     window.addEventListener(EVENTO_ABRIR, abrir);
     return () => window.removeEventListener(EVENTO_ABRIR, abrir);
   }, []);
@@ -187,6 +212,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     <PilarFone
       embedded
       initialNumber={numeroInicial}
+      initialAba={abaInicial}
+      initialWhatsapp={contatoInicial}
+
       serverConfig={servidores}
       mostrarInterfone={!!config}
       historico={historico}
@@ -257,8 +285,8 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
         role="button"
         tabIndex={0}
-        aria-label={aberto ? "Fechar Pilar Sip" : "Abrir Pilar Sip"}
-        title="Pilar Sip (arraste para mover)"
+        aria-label={aberto ? "Fechar Pilar Fone" : "Abrir Pilar Fone"}
+        title="Pilar Fone (arraste para mover)"
         style={posicaoY !== null ? { top: posicaoY, bottom: "auto" } : undefined}
         onPointerDown={(e) => {
           (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -281,7 +309,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         aberto && (
           <div
             role="dialog"
-            aria-label="Pilar Sip"
+            aria-label="Pilar Fone"
             className="fixed z-[1100] w-[min(400px,calc(100vw-1.5rem))] overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] shadow-2xl"
             style={{
               left: posFlutuante?.x ?? undefined,
@@ -294,7 +322,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
             <div
               className="flex h-7 cursor-grab items-center justify-center bg-white/5 text-[#AEBAC1] active:cursor-grabbing"
               style={{ touchAction: "none" }}
-              title="Arraste para mover o Pilar Sip"
+              title="Arraste para mover o Pilar Fone"
               onPointerDown={iniciarArrastoJanela}
               onPointerMove={moverArrastoJanela}
               onPointerUp={terminarArrastoJanela}
