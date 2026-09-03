@@ -698,7 +698,7 @@ export default function PilarFone({
               <button
                 type="button"
                 aria-label="Ligar com vídeo"
-                disabled={!numero.trim()}
+                disabled={!numero.trim() || aba === "whatsapp"}
                 onClick={() => ligar(numero, true)}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1F2C34] text-[#00A884] transition active:scale-90 disabled:opacity-40"
               >
@@ -706,13 +706,31 @@ export default function PilarFone({
               </button>
               <button
                 type="button"
-                aria-label="Ligar"
+                aria-label={aba === "whatsapp" ? "Abrir conversa de WhatsApp" : "Ligar"}
+                title={aba === "whatsapp" ? "Abrir conversa de WhatsApp" : "Ligar"}
                 disabled={!numero.trim()}
-                onClick={() => ligar(numero)}
+                onClick={() => {
+                  const alvo = numero.trim();
+                  if (!alvo) return;
+                  if (aba === "whatsapp") {
+                    registrarChamada({ grupo: "whatsapp", nome: nomePorNumero(alvo), numero: alvo, direcao: "saida" });
+                    setAlvoWhatsapp({ nome: nomePorNumero(alvo), numero: alvo });
+                    setTecladoAberto(false);
+                    return;
+                  }
+                  registrarChamada({
+                    grupo: aba === "cadastros" ? "cadastros" : "ramais",
+                    nome: nomePorNumero(alvo),
+                    numero: alvo,
+                    direcao: "saida",
+                  });
+                  ligar(alvo);
+                }}
                 className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A884] text-[#0B141A] shadow-lg transition active:scale-95 disabled:opacity-40"
               >
-                <Phone className="h-7 w-7" />
+                {aba === "whatsapp" ? <MessageCircle className="h-7 w-7" /> : <Phone className="h-7 w-7" />}
               </button>
+
               <button
                 type="button"
                 aria-label="Apagar"
