@@ -118,8 +118,8 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, esti
           </div>
         )}
 
-        <div className="absolute top-2 left-2 flex items-center gap-2">
-          <span className="rounded-md bg-background/80 px-2 py-1 text-xs font-semibold backdrop-blur">{titulo}</span>
+        <div className="absolute bottom-2 left-2 flex items-center gap-2">
+          <span className="text-sm font-semibold text-black drop-shadow-[0_1px_2px_rgba(255,255,255,0.6)]">{titulo}</span>
           {imagem && carregando && (
             <span className="rounded-full bg-background/80 p-1">
               <Loader2 className="h-3 w-3 animate-spin" />
