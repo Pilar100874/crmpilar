@@ -124,7 +124,6 @@ export default function PilarFone({
   const [rascunho, setRascunho] = useState<PortariaSipConfig>(config);
   const [configAberta, setConfigAberta] = useState(false);
   const [configSincronizada, setConfigSincronizada] = useState(false);
-  const [configSincronizada, setConfigSincronizada] = useState(false);
   const [aba, setAba] = useState<Aba>("ramais");
   const [busca, setBusca] = useState("");
   const [buscaAberta, setBuscaAberta] = useState(false);
