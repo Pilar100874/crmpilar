@@ -61,6 +61,25 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const [toqueId, setToqueId] = useState<string | null>(null);
   const [historico, setHistorico] = useState<Array<{ id: string; created_at: string; status: string }>>([]);
 
+  // Tela cheia na janela separada (remove a barra do navegador)
+  const [emTelaCheia, setEmTelaCheia] = useState(false);
+  useEffect(() => {
+    if (!janela) return;
+    const sincronizar = () => setEmTelaCheia(!!document.fullscreenElement);
+    sincronizar();
+    document.addEventListener("fullscreenchange", sincronizar);
+    return () => document.removeEventListener("fullscreenchange", sincronizar);
+  }, [janela]);
+
+  const alternarTelaCheia = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      /* navegador pode bloquear sem interação do usuário */
+    }
+  };
+
   // Posição vertical da aba, arrastável (mesma ideia do chat interno)
   const [posicaoY, setPosicaoY] = useState<number | null>(() => {
     const salvo = localStorage.getItem("pilarSipTabY");
