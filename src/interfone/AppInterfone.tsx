@@ -34,10 +34,14 @@ export default function AppInterfone() {
       if (!auth.user) return;
       const { data } = await supabase
         .from("usuarios")
-        .select("pode_usar_interfone")
+        .select("pode_usar_interfone, pilarfone_abas")
         .eq("auth_user_id", auth.user.id)
         .maybeSingle();
-      if (!cancelado) setPermitido(!!(data as any)?.pode_usar_interfone);
+      if (!cancelado) {
+        const registro = data as { pode_usar_interfone?: boolean; pilarfone_abas?: string[] | null } | null;
+        // Acesso pelo campo antigo (legado) ou por pelo menos uma aba liberada no cadastro.
+        setPermitido(!!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0);
+      }
     })();
     return () => {
       cancelado = true;
