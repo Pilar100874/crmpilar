@@ -41,6 +41,10 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
   const abasPermitidas = useAbasPermitidas();
+  // Sem nenhuma aba marcada no cadastro = sem acesso ao Pilar Fone (botão não aparece).
+  const semAcesso = abasPermitidas !== undefined && abasPermitidas.length === 0;
+  const semAcessoRef = useRef(semAcesso);
+  semAcessoRef.current = semAcesso;
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
@@ -87,6 +91,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   useEffect(() => {
     const abrir = (event: Event) => {
+      if (semAcessoRef.current) return;
       const detail = (event as CustomEvent<{ numero?: string; aba?: AbaPilarFone; nome?: string }>).detail;
       setNumeroInicial(detail?.numero);
       setAbaInicial(detail?.aba);
