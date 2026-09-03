@@ -393,50 +393,31 @@ export default function PilarFone({
         style={{ paddingTop: padTop }}
       >
         <div className="flex items-center gap-2 px-4 py-3">
-          {buscaAberta ? (
-            <>
-              <button type="button" aria-label="Fechar busca" onClick={() => { setBuscaAberta(false); setBusca(""); }}>
-                <ArrowLeft className="h-5 w-5 text-[#8696A0]" />
-              </button>
-              <input
-                autoFocus
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar nome ou ramal"
-                className="flex-1 bg-transparent text-base text-[#E9EDEF] outline-none placeholder:text-[#8696A0]"
-              />
-            </>
-          ) : (
-            <>
-              <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
-              {headerExtra}
-              {onFechar && (
-                <button
-                  type="button"
-                  aria-label="Fechar Pilar Fone"
-                  onClick={onFechar}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <button type="button" aria-label="Buscar" onClick={() => setBuscaAberta(true)} className="p-1">
-                <Search className="h-5 w-5 text-[#AEBAC1]" />
-              </button>
-              <button
-                type="button"
-                aria-label="Configurar ramal"
-                onClick={() => {
-                  setRascunho(config);
-                  setConfigAberta(true);
-                }}
-                className="p-1"
-              >
-                <Settings2 className="h-5 w-5 text-[#AEBAC1]" />
-              </button>
-            </>
+          <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
+          {headerExtra}
+          {onFechar && (
+            <button
+              type="button"
+              aria-label="Fechar Pilar Fone"
+              onClick={onFechar}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+            >
+              <X className="h-4 w-4" />
+            </button>
           )}
+          <button
+            type="button"
+            aria-label="Configurar ramal"
+            onClick={() => {
+              setRascunho(config);
+              setConfigAberta(true);
+            }}
+            className="p-1"
+          >
+            <Settings2 className="h-5 w-5 text-[#AEBAC1]" />
+          </button>
         </div>
+
 
         <div className="flex items-center gap-2 px-4 pb-2 text-[11px]">
           <span
