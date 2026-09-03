@@ -124,6 +124,9 @@ export default function PilarFone({
   onAbrirToque,
   embedded = false,
   initialNumber,
+  initialAba,
+  initialWhatsapp,
+
   serverConfig,
   mostrarInterfone = true,
   onFechar,
