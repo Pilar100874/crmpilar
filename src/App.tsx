@@ -143,6 +143,7 @@ import PontoFerias from "./pages/ponto/PontoFerias";
 import PontoAFD from "./pages/ponto/PontoAFD";
 import EspelhoFuncionario from "./pages/ponto/EspelhoFuncionario";
 import PontoTotem from "./pages/ponto/PontoTotem";
+import PilarSipJanela from "./pages/PilarSipJanela";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoImportarAFD from "./pages/ponto/PontoImportarAFD";
@@ -479,6 +480,7 @@ const App = () => (
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/espelho-funcionario/:token" element={<EspelhoFuncionario />} />
             <Route path="/ponto/totem" element={<PontoTotem />} />
+            <Route path="/pilar-sip" element={<PilarSipJanela />} />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
               
