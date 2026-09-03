@@ -101,6 +101,11 @@ interface Props {
   /** Embutido no sistema (popup em formato de celular). */
   embedded?: boolean;
   initialNumber?: string;
+  /** Tela que deve ser exibida ao abrir. */
+  initialAba?: Aba;
+  /** Abre direto a conversa de WhatsApp do contato. */
+  initialWhatsapp?: { nome: string; numero: string };
+
   /** Servidores vindos da configuração do estabelecimento. */
   serverConfig?: { servidor: string; servidorRemoto: string };
   mostrarInterfone?: boolean;
