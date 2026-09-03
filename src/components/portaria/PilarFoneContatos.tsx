@@ -64,6 +64,27 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
     const estabelecimentoId = await getEstabelecimentoId();
     const termo = busca.trim();
 
+    // Escopo: usuário comum vê apenas empresas/contatos vinculados a ele;
+    // administrador vê todos os cadastros do estabelecimento.
+    let empresaIds: string[] | null = null;
+    let contatoIds: string[] | null = null;
+    const { data: auth } = await supabase.auth.getUser();
+    if (auth?.user) {
+      const [{ data: eu }, { data: isAdmin }] = await Promise.all([
+        supabase.from("usuarios").select("id").eq("auth_user_id", auth.user.id).maybeSingle(),
+        supabase.rpc("has_role", { _user_id: auth.user.id, _role: "admin" }),
+      ]);
+      const meuId = (eu as { id?: string } | null)?.id;
+      if (!isAdmin && meuId) {
+        const [vincEmpresas, vincContatos] = await Promise.all([
+          supabase.from("empresa_vinculos").select("empresa_id").eq("usuario_id", meuId),
+          supabase.from("customer_vinculos").select("customer_id").eq("usuario_id", meuId),
+        ]);
+        empresaIds = Array.from(new Set((vincEmpresas.data ?? []).map((v) => v.empresa_id as string)));
+        contatoIds = Array.from(new Set((vincContatos.data ?? []).map((v) => v.customer_id as string)));
+      }
+    }
+
     let qEmpresas = supabase
       .from("empresas")
       .select("id, nome, nome_fantasia, telefone, whatsapp, contato_nome, contato_telefone, tipo_cliente")
