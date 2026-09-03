@@ -160,14 +160,30 @@ export default function PilarFone({
     let ativo = true;
     void sincronizarConfigSip().then((sincronizada) => {
       if (!ativo) return;
-      setConfig(sincronizada);
-      setRascunho(sincronizada);
+      const final = serverConfig?.servidor ? { ...sincronizada, ...serverConfig } : sincronizada;
+      setConfig(final);
+      setRascunho(final);
       setConfigSincronizada(true);
     });
     return () => {
       ativo = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!serverConfig?.servidor) return;
+    setConfig((atual) => ({ ...atual, ...serverConfig }));
+    setRascunho((atual) => ({ ...atual, ...serverConfig }));
+  }, [serverConfig?.servidor, serverConfig?.servidorRemoto]);
+
+  useEffect(() => {
+    if (initialNumber) {
+      setNumero(initialNumber);
+      setTecladoAberto(true);
+    }
+  }, [initialNumber]);
+
 
   const conectar = useCallback(async () => {
     if (!configValida) {
