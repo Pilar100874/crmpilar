@@ -298,6 +298,12 @@ export default function PilarFone({
   );
   const chamadaAtual = activeCalls[0] ?? null;
 
+  // Avisa o container (aba lateral) que há chamada entrante para piscar o botão
+  useEffect(() => {
+    if (chamadaEntrante) onChamadaRecebida?.();
+  }, [chamadaEntrante, onChamadaRecebida]);
+
+
   useEffect(() => {
     if (!config.autoAtender || !chamadaEntrante) return;
     void answer(chamadaEntrante.id);
