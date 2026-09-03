@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, GripHorizontal, PanelRight, Phone, Smartphone } from "lucide-react";
+import { ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
@@ -60,6 +60,25 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const [interfoneAberto, setInterfoneAberto] = useState(false);
   const [toqueId, setToqueId] = useState<string | null>(null);
   const [historico, setHistorico] = useState<Array<{ id: string; created_at: string; status: string }>>([]);
+
+  // Tela cheia na janela separada (remove a barra do navegador)
+  const [emTelaCheia, setEmTelaCheia] = useState(false);
+  useEffect(() => {
+    if (!janela) return;
+    const sincronizar = () => setEmTelaCheia(!!document.fullscreenElement);
+    sincronizar();
+    document.addEventListener("fullscreenchange", sincronizar);
+    return () => document.removeEventListener("fullscreenchange", sincronizar);
+  }, [janela]);
+
+  const alternarTelaCheia = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      /* navegador pode bloquear sem interação do usuário */
+    }
+  };
 
   // Posição vertical da aba, arrastável (mesma ideia do chat interno)
   const [posicaoY, setPosicaoY] = useState<number | null>(() => {
@@ -235,7 +254,17 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         setInterfoneAberto(true);
       }}
       headerExtra={
-        janela ? undefined : (
+        janela ? (
+          <button
+            type="button"
+            aria-label={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
+            title={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
+            onClick={() => void alternarTelaCheia()}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+          >
+            {emTelaCheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+        ) : (
           <>
             <button
               type="button"
