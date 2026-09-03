@@ -58,19 +58,27 @@ export default function PilarFoneWeb() {
 
   return (
     <>
-      {/* Aba lateral (mesmo padrão do chat interno), logo acima dele */}
+      {/* Aba lateral (mesmo padrão do chat interno), logo acima dele: clique abre/fecha */}
       <div
-        className="sip-tab"
+        className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
         role="button"
         tabIndex={0}
-        aria-label="Abrir Pilar Sip"
-        title="Pilar Sip"
+        aria-label={aberto ? "Fechar Pilar Sip" : "Abrir Pilar Sip"}
+        title={aberto ? "Fechar Pilar Sip" : "Abrir Pilar Sip"}
         onClick={() => {
+          if (aberto) {
+            setAberto(false);
+            return;
+          }
           setNumeroInicial(undefined);
           setAberto(true);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
+            if (aberto) {
+              setAberto(false);
+              return;
+            }
             setNumeroInicial(undefined);
             setAberto(true);
           }
