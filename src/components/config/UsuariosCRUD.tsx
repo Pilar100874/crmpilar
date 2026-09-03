@@ -677,7 +677,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAdmin(false);
     setIsAtendente(false);
     setIsPorteiro(false);
-    setPodeUsarInterfone(false);
     setAbasPilarFone([]);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
