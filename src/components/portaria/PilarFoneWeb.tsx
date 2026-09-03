@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PanelRight, Phone, Smartphone } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { GripHorizontal, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
@@ -42,6 +41,23 @@ export default function PilarFoneWeb() {
     ativo: false,
     movido: false,
     inicioY: 0,
+  });
+
+  // Posição da janela flutuante (modo flutuante: arrastar e soltar)
+  const [posFlutuante, setPosFlutuante] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const salvo = localStorage.getItem("pilarSipFloatPos");
+      return salvo ? (JSON.parse(salvo) as { x: number; y: number }) : null;
+    } catch {
+      return null;
+    }
+  });
+  const arrastoJanela = useRef<{ ativo: boolean; inicioX: number; inicioY: number; baseX: number; baseY: number }>({
+    ativo: false,
+    inicioX: 0,
+    inicioY: 0,
+    baseX: 0,
+    baseY: 0,
   });
 
   useEffect(() => {
@@ -136,6 +152,32 @@ export default function PilarFoneWeb() {
     alternar();
   };
 
+  // Arrasto da janela flutuante pela alça no topo
+  const iniciarArrastoJanela = (e: React.PointerEvent<HTMLDivElement>) => {
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    const largura = Math.min(400, window.innerWidth - 24);
+    const altura = Math.min(780, window.innerHeight - 48);
+    const base = posFlutuante ?? { x: window.innerWidth - largura - 16, y: window.innerHeight - altura - 16 };
+    arrastoJanela.current = { ativo: true, inicioX: e.clientX, inicioY: e.clientY, baseX: base.x, baseY: base.y };
+    if (!posFlutuante) setPosFlutuante(base);
+  };
+
+  const moverArrastoJanela = (e: React.PointerEvent<HTMLDivElement>) => {
+    const a = arrastoJanela.current;
+    if (!a.ativo) return;
+    const largura = Math.min(400, window.innerWidth - 24);
+    const altura = Math.min(780, window.innerHeight - 48);
+    const x = Math.max(0, Math.min(window.innerWidth - largura, a.baseX + (e.clientX - a.inicioX)));
+    const y = Math.max(0, Math.min(window.innerHeight - altura, a.baseY + (e.clientY - a.inicioY)));
+    setPosFlutuante({ x, y });
+  };
+
+  const terminarArrastoJanela = () => {
+    if (!arrastoJanela.current.ativo) return;
+    arrastoJanela.current.ativo = false;
+    if (posFlutuante) localStorage.setItem("pilarSipFloatPos", JSON.stringify(posFlutuante));
+  };
+
   const controlesTelefone = (
     <PilarFone
       embedded
@@ -154,8 +196,8 @@ export default function PilarFoneWeb() {
       headerExtra={
         <button
           type="button"
-          aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
-          title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
+          aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
+          title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
           onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
           className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
         >
@@ -193,18 +235,38 @@ export default function PilarFoneWeb() {
       </div>
 
       {modo === "popup" ? (
-        <Dialog open={aberto} onOpenChange={setAberto}>
-          <DialogContent className="z-[1100] w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
-            <DialogTitle className="sr-only">Pilar Sip</DialogTitle>
-            <DialogDescription className="sr-only">
-              Telefone SIP com ramais, discador, interfone e chamadas de voz e vídeo.
-            </DialogDescription>
-            <div className="relative h-[min(780px,calc(100dvh-3rem))] w-full overflow-hidden rounded-[28px]">
+        // Modo flutuante: janela estilo celular que pode ser arrastada e solta em qualquer ponto da tela
+        aberto && (
+          <div
+            role="dialog"
+            aria-label="Pilar Sip"
+            className="fixed z-[1100] w-[min(400px,calc(100vw-1.5rem))] overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] shadow-2xl"
+            style={{
+              left: posFlutuante?.x ?? undefined,
+              top: posFlutuante?.y ?? undefined,
+              right: posFlutuante ? undefined : 16,
+              bottom: posFlutuante ? undefined : 16,
+            }}
+          >
+            {/* Alça de arrasto */}
+            <div
+              className="flex h-7 cursor-grab items-center justify-center bg-white/5 text-[#AEBAC1] active:cursor-grabbing"
+              style={{ touchAction: "none" }}
+              title="Arraste para mover o Pilar Sip"
+              onPointerDown={iniciarArrastoJanela}
+              onPointerMove={moverArrastoJanela}
+              onPointerUp={terminarArrastoJanela}
+              onPointerCancel={terminarArrastoJanela}
+            >
+              <GripHorizontal className="h-4 w-4" />
+            </div>
+            <div className="relative h-[min(740px,calc(100dvh-5rem))] w-full overflow-hidden">
               {controlesTelefone}
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )
       ) : (
+        // Modo painel: abre deslizando igual ao chat interno
         <div className={`sip-slide-menu ${aberto ? "open" : ""}`} aria-hidden={!aberto}>
           <div className="relative h-full w-full overflow-hidden">{controlesTelefone}</div>
         </div>
