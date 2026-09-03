@@ -53,26 +53,27 @@ export default function PilarFoneWeb() {
 
   return (
     <>
-      <TooltipProvider delayDuration={300}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={() => {
-                setNumeroInicial(undefined);
-                setAberto(true);
-              }}
-              aria-label="Abrir Pilar Sip"
-              className="fixed bottom-4 right-16 z-[1000] h-10 w-10 rounded-full border-primary/30 bg-background/95 text-primary shadow-lg backdrop-blur hover:bg-accent"
-            >
-              <Phone className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Abrir Pilar Sip</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      {/* Aba lateral (mesmo padrão do chat interno), logo acima dele */}
+      <div
+        className="sip-tab"
+        role="button"
+        tabIndex={0}
+        aria-label="Abrir Pilar Sip"
+        title="Pilar Sip"
+        onClick={() => {
+          setNumeroInicial(undefined);
+          setAberto(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setNumeroInicial(undefined);
+            setAberto(true);
+          }
+        }}
+      >
+        <Phone className="w-3 h-3" />
+      </div>
+
 
       <Dialog open={aberto} onOpenChange={setAberto}>
         <DialogContent className="w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
