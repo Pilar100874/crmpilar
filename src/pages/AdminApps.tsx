@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
 import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
 
 
