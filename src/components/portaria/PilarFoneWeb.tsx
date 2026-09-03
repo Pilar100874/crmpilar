@@ -291,7 +291,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   return (
     <>
-      {/* Aba lateral (mesmo padrão do chat interno): clique abre/fecha e pode ser arrastada */}
+      {/* Aba lateral (mesmo padrão do chat interno): clique abre/fecha e pode ser arrastada.
+          Só aparece depois de carregar as permissões e apenas se houver abas liberadas. */}
+      {abasPermitidas !== undefined && (
       <div
         className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
         role="button"
@@ -314,6 +316,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       >
         <Phone className="w-3 h-3" />
       </div>
+      )}
 
       {modo === "popup" ? (
         // Modo flutuante: janela estilo celular que pode ser arrastada e solta em qualquer ponto da tela
