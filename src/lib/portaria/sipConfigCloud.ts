@@ -13,25 +13,41 @@ import {
 
 const TABELA = "sip_config_usuario";
 
-export async function salvarConfigNaNuvem(config: PortariaSipConfig): Promise<boolean> {
+async function identidadeUsuario() {
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return false;
+  if (!auth.user) return null;
+  const { data: usuario } = await supabase
+    .from("usuarios")
+    .select("id")
+    .eq("auth_user_id", auth.user.id)
+    .maybeSingle();
+  return usuario?.id ? { authId: auth.user.id, usuarioId: usuario.id } : null;
+}
+
+export async function salvarConfigNaNuvem(config: PortariaSipConfig): Promise<boolean> {
+  const identidade = await identidadeUsuario();
+  if (!identidade) return false;
   const { error } = await (supabase as any)
     .from(TABELA)
     .upsert(
-      { user_id: auth.user.id, config, atualizado_em: new Date().toISOString() },
+      {
+        user_id: identidade.authId,
+        usuario_id: identidade.usuarioId,
+        config,
+        atualizado_em: new Date().toISOString(),
+      },
       { onConflict: "user_id" },
     );
   return !error;
 }
 
 export async function lerConfigDaNuvem(): Promise<PortariaSipConfig | null> {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
+  const identidade = await identidadeUsuario();
+  if (!identidade) return null;
   const { data, error } = await (supabase as any)
     .from(TABELA)
     .select("config")
-    .eq("user_id", auth.user.id)
+    .eq("usuario_id", identidade.usuarioId)
     .maybeSingle();
   if (error || !data?.config) return null;
   return { ...CONFIG_SIP_PADRAO, ...(data.config as Partial<PortariaSipConfig>) };
