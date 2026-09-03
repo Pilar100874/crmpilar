@@ -190,8 +190,30 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     setToqueId(toque.id);
     setAberto(true);
     setInterfoneAberto(true);
+    setAlerta(true);
     if (config?.som) tocarAlerta();
   });
+
+  // Novas mensagens de WhatsApp fazem a aba piscar (igual ao chat interno)
+  useEffect(() => {
+    if (semAcesso) return;
+    const canal = supabase
+      .channel("pilar-fone-alerta-wa")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        const msg = payload.new as { sender?: string };
+        if (msg?.sender === "agent" || msg?.sender === "user") return;
+        setAlerta(true);
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(canal);
+    };
+  }, [semAcesso]);
+
+  // Ao abrir o telefone o alerta para
+  useEffect(() => {
+    if (aberto) setAlerta(false);
+  }, [aberto]);
 
   const alternar = () => {
     if (aberto) {
@@ -199,8 +221,10 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       return;
     }
     setNumeroInicial(undefined);
+    setAlerta(false);
     setAberto(true);
   };
+
 
   const iniciarArrasto = (clientY: number) => {
     arrasto.current = { ativo: true, movido: false, inicioY: clientY };
