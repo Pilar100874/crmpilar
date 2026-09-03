@@ -194,10 +194,10 @@ export default function PilarFone({
   }, [config, configValida, connect]);
 
   useEffect(() => {
-    if (!configSincronizada || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
+    if (!configSincronizada || (embedded && !serverConfig) || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
     tentouAuto.current = true;
     void conectar();
-  }, [config.autoConectar, configSincronizada, configValida, isRegistered, isConnecting, conectar]);
+  }, [config.autoConectar, configSincronizada, configValida, embedded, isRegistered, isConnecting, serverConfig, conectar]);
 
   // Grupo de ramais SIP cadastrados no CRM
   const carregarRamais = useCallback(async () => {

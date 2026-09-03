@@ -2,7 +2,6 @@ import { User, Phone, Building2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useState } from "react";
 import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 
 interface ClientDetailsPanelProps {
@@ -24,8 +23,6 @@ export function ClientDetailsPanel({
   additionalInfo,
   onAddCompany
 }: ClientDetailsPanelProps) {
-  const [dialNumber, setDialNumber] = useState("");
-
   if (!customer) {
     return (
       <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
