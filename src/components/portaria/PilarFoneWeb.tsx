@@ -152,6 +152,32 @@ export default function PilarFoneWeb() {
     alternar();
   };
 
+  // Arrasto da janela flutuante pela alça no topo
+  const iniciarArrastoJanela = (e: React.PointerEvent<HTMLDivElement>) => {
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    const largura = Math.min(400, window.innerWidth - 24);
+    const altura = Math.min(780, window.innerHeight - 48);
+    const base = posFlutuante ?? { x: window.innerWidth - largura - 16, y: window.innerHeight - altura - 16 };
+    arrastoJanela.current = { ativo: true, inicioX: e.clientX, inicioY: e.clientY, baseX: base.x, baseY: base.y };
+    if (!posFlutuante) setPosFlutuante(base);
+  };
+
+  const moverArrastoJanela = (e: React.PointerEvent<HTMLDivElement>) => {
+    const a = arrastoJanela.current;
+    if (!a.ativo) return;
+    const largura = Math.min(400, window.innerWidth - 24);
+    const altura = Math.min(780, window.innerHeight - 48);
+    const x = Math.max(0, Math.min(window.innerWidth - largura, a.baseX + (e.clientX - a.inicioX)));
+    const y = Math.max(0, Math.min(window.innerHeight - altura, a.baseY + (e.clientY - a.inicioY)));
+    setPosFlutuante({ x, y });
+  };
+
+  const terminarArrastoJanela = () => {
+    if (!arrastoJanela.current.ativo) return;
+    arrastoJanela.current.ativo = false;
+    if (posFlutuante) localStorage.setItem("pilarSipFloatPos", JSON.stringify(posFlutuante));
+  };
+
   const controlesTelefone = (
     <PilarFone
       embedded
