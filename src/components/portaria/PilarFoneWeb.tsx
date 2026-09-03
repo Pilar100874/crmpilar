@@ -85,10 +85,17 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   useEffect(() => {
     const abrir = (event: Event) => {
-      const detail = (event as CustomEvent<{ numero?: string }>).detail;
+      const detail = (event as CustomEvent<{ numero?: string; aba?: AbaPilarFone; nome?: string }>).detail;
       setNumeroInicial(detail?.numero);
+      setAbaInicial(detail?.aba);
+      setContatoInicial(
+        detail?.aba === "whatsapp" && detail?.numero
+          ? { nome: detail.nome || detail.numero, numero: detail.numero }
+          : undefined,
+      );
       setAberto(true);
     };
+
     window.addEventListener(EVENTO_ABRIR, abrir);
     return () => window.removeEventListener(EVENTO_ABRIR, abrir);
   }, []);
