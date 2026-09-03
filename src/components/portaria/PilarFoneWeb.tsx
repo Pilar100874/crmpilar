@@ -6,6 +6,7 @@ import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta } from "@/lib/portaria/interfone";
 import InterfonePopup from "./InterfonePopup";
 import PilarFone from "./PilarFone";
+import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 

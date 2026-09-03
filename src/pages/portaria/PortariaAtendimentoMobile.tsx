@@ -6,6 +6,7 @@ import { useCampainha, useInterfoneConfig, tocarAlerta, type ToqueCampainha } fr
 import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PilarFone from "@/components/portaria/PilarFone";
+import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
 
 /** Tela do app Pilar Fone no celular: agenda de ramais, discador e interfone. */
 export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
