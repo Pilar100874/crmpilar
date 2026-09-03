@@ -949,7 +949,7 @@ export default function PilarFone({
             ))}
 
             <div className="flex items-center justify-between rounded-xl bg-[#1F2C34] px-4 py-3">
-              <Label htmlFor="sip-auto" className="text-sm font-normal">
+              <Label htmlFor="sip-auto" className="text-sm font-normal text-white">
                 Conectar automaticamente ao abrir
               </Label>
               <Switch
@@ -959,7 +959,7 @@ export default function PilarFone({
               />
             </div>
             <div className="flex items-center justify-between rounded-xl bg-[#1F2C34] px-4 py-3">
-              <Label htmlFor="sip-atender" className="text-sm font-normal">
+              <Label htmlFor="sip-atender" className="text-sm font-normal text-white">
                 Atender chamadas automaticamente
               </Label>
               <Switch
