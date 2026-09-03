@@ -10,6 +10,7 @@ interface Props {
   carregando?: boolean;
   erro?: string | null;
   destaque?: boolean;
+  esticado?: boolean;
   acoes?: ReactNode;
   className?: string;
 }
@@ -18,7 +19,7 @@ const MIN = 1;
 const MAX = 6;
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
-export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, acoes, className }: Props) {
+export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, esticado, acoes, className }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -71,10 +72,10 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, acoe
   };
 
   return (
-    <div className={cn("rounded-xl border bg-card overflow-hidden", destaque && "ring-2 ring-primary/40", className)}>
+    <div className={cn("rounded-xl border bg-card overflow-hidden", esticado && "h-full min-h-0", destaque && "ring-2 ring-primary/40", className)}>
       <div
         ref={ref}
-        className="relative aspect-video bg-muted overflow-hidden select-none touch-none"
+        className={cn("relative bg-muted overflow-hidden select-none touch-none", esticado ? "h-full" : "aspect-video")}
         style={{ cursor: zoom > 1 ? "grab" : "zoom-in" }}
         onDoubleClick={(e) => {
           const rect = ref.current?.getBoundingClientRect();
