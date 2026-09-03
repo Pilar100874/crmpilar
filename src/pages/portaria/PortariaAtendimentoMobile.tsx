@@ -67,6 +67,5 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         />
       )}
     </div>
-    </ChatInternoProvider>
   );
 }
