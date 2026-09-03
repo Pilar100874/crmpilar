@@ -155,14 +155,26 @@ export default function PilarFone({
     let ativo = true;
     void sincronizarConfigSip().then((sincronizada) => {
       if (!ativo) return;
-      setConfig(sincronizada);
-      setRascunho(sincronizada);
+      const configuracao = serverConfig ? { ...sincronizada, ...serverConfig } : sincronizada;
+      setConfig(configuracao);
+      setRascunho(configuracao);
       setConfigSincronizada(true);
     });
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [serverConfig]);
+
+  useEffect(() => {
+    if (serverConfig) {
+      setConfig((atual) => ({ ...atual, ...serverConfig }));
+      setRascunho((atual) => ({ ...atual, ...serverConfig }));
+    }
+  }, [serverConfig]);
+
+  useEffect(() => {
+    if (initialNumber) setNumero(initialNumber);
+  }, [initialNumber]);
 
   const conectar = useCallback(async () => {
     if (!configValida) {
@@ -395,19 +407,21 @@ export default function PilarFone({
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
-            <button
-              type="button"
-              onClick={onAbrirInterfone}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20">
-                <BellRing className="h-5 w-5 text-orange-400" />
-              </span>
-              <span className="flex-1">
-                <span className="block text-[15px] font-semibold">Interfone da portaria</span>
-                <span className="block text-[13px] text-[#8696A0]">Câmeras, abertura e conversa</span>
-              </span>
-            </button>
+            {mostrarInterfone && (
+              <button
+                type="button"
+                onClick={onAbrirInterfone}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20">
+                  <BellRing className="h-5 w-5 text-orange-400" />
+                </span>
+                <span className="flex-1">
+                  <span className="block text-[15px] font-semibold">Interfone da portaria</span>
+                  <span className="block text-[13px] text-[#8696A0]">Câmeras, abertura e conversa</span>
+                </span>
+              </button>
+            )}
             {carregandoRamais && <p className="px-4 py-6 text-sm text-[#8696A0]">Carregando ramais...</p>}
             {!carregandoRamais && ramaisFiltrados.length === 0 && (
               <p className="px-4 py-6 text-sm text-[#8696A0]">Nenhum ramal SIP cadastrado no CRM.</p>
@@ -761,8 +775,10 @@ export default function PilarFone({
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
           >
             {[
-              { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
-              { id: "servidorRemoto", rotulo: "Servidor alternativo (fora da empresa)", ph: "pilar.myddns.me" },
+              ...(serverConfig ? [] : [
+                { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
+                { id: "servidorRemoto", rotulo: "Servidor alternativo (fora da empresa)", ph: "pilar.myddns.me" },
+              ]),
               { id: "ramal", rotulo: "Ramal", ph: "1001" },
               { id: "senha", rotulo: "Senha SIP", ph: "" },
               { id: "nome", rotulo: "Nome exibido", ph: "Portaria" },

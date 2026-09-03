@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   User,
   Check,
-  Video,
+  Phone,
   Paperclip,
   FileText,
   Image as ImageIcon,
@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
-import { VideoChamadaDialog } from './VideoChamadaDialog';
+import { abrirPilarSip } from '@/components/portaria/PilarFoneWeb';
 
 interface ChatInternoPanelProps {
   isOpen: boolean;
@@ -53,7 +53,6 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     carregarConversas,
     marcarComoLida,
     videoChamadaPendente,
-    limparVideoChamadaPendente,
   } = useChatInternoContext();
 
   const [mensagemInput, setMensagemInput] = useState('');
@@ -64,26 +63,11 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [tituloNovaConversa, setTituloNovaConversa] = useState('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [participantesConversa, setParticipantesConversa] = useState<{[key: string]: Usuario[]}>({});
-  const [showVideoChamada, setShowVideoChamada] = useState(false);
-  const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [wasOpen, setWasOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [anexoPreview, setAnexoPreview] = useState<{url: string; name: string; type: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Quando receber uma videochamada pendente, abrir automaticamente o diálogo
-  useEffect(() => {
-    if (videoChamadaPendente) {
-      // Encontrar a conversa correspondente
-      const conversa = conversas.find(c => c.id === videoChamadaPendente.conversaId);
-      if (conversa) {
-        setConversaAtual(conversa);
-        setIsIncomingCall(true);
-        setShowVideoChamada(true);
-      }
-    }
-  }, [videoChamadaPendente, conversas, setConversaAtual]);
 
   // Sempre abrir na lista de conversas/usuários ao abrir o painel (apenas quando muda de fechado para aberto)
   // Também marca como lida ao fechar se estava numa conversa
@@ -320,24 +304,18 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 {getConversaNome(conversaAtual)}
               </span>
               <div className="flex items-center gap-1">
-                {/* Botão de videochamada - apenas para conversas diretas */}
+                {/* Um único telefone para voz, viva-voz e vídeo */}
                 {conversaAtual.tipo === 'direto' && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      setIsIncomingCall(false);
-                      setShowVideoChamada(true);
-                    }}
-                    title="Iniciar videochamada"
+                    onClick={() => abrirPilarSip()}
+                    title="Abrir Pilar Sip"
                     className={cn(
                       videoChamadaPendente?.conversaId === conversaAtual.id && "animate-pulse"
                     )}
                   >
-                    <Video className={cn(
-                      "h-4 w-4",
-                      videoChamadaPendente?.conversaId === conversaAtual.id && "text-green-500"
-                    )} />
+                    <Phone className="h-4 w-4" />
                   </Button>
                 )}
                 <Button
@@ -720,28 +698,6 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
       )}
       </div>
 
-      {/* Dialog de Videochamada */}
-      {conversaAtual && conversaAtual.tipo === 'direto' && usuarioAtualId && (
-        <VideoChamadaDialog
-          isOpen={showVideoChamada}
-          onClose={() => {
-            setShowVideoChamada(false);
-            setIsIncomingCall(false);
-            limparVideoChamadaPendente();
-          }}
-          usuarioRemotoId={
-            (participantesConversa[conversaAtual.id] || [])
-              .find(p => p.id !== usuarioAtualId)?.id || ''
-          }
-          usuarioRemotoNome={
-            (participantesConversa[conversaAtual.id] || [])
-              .find(p => p.id !== usuarioAtualId)?.nome || 'Usuário'
-          }
-          usuarioAtualId={usuarioAtualId}
-          conversaId={conversaAtual.id}
-          isIncoming={isIncomingCall}
-        />
-      )}
     </div>
   );
 }
