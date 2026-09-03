@@ -347,6 +347,25 @@ All colors MUST be HSL.
     background: hsl(160 84% 24%);
   }
 
+  /* Piscar quando chega WhatsApp, campainha da portaria ou chamada SIP */
+  .sip-tab-pulse {
+    animation: sip-pulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes sip-pulse {
+    0%, 100% {
+      background: hsl(160 84% 30%);
+      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+      transform: scale(1);
+    }
+    50% {
+      background: hsl(140 90% 45%);
+      box-shadow: -2px 0 20px hsl(160 84% 40% / 0.7), 0 0 10px hsl(140 90% 55% / 0.5);
+      transform: scale(1.1);
+    }
+  }
+
+
   .sip-tab svg {
     color: white;
     opacity: 0.9;

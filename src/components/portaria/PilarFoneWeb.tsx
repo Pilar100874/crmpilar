@@ -62,6 +62,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const semAcesso = abasPermitidas !== undefined && abasPermitidas.length === 0;
   const semAcessoRef = useRef(semAcesso);
   semAcessoRef.current = semAcesso;
+  const [alerta, setAlerta] = useState(false);
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
@@ -190,8 +191,30 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     setToqueId(toque.id);
     setAberto(true);
     setInterfoneAberto(true);
+    setAlerta(true);
     if (config?.som) tocarAlerta();
   });
+
+  // Novas mensagens de WhatsApp fazem a aba piscar (igual ao chat interno)
+  useEffect(() => {
+    if (semAcesso) return;
+    const canal = supabase
+      .channel("pilar-fone-alerta-wa")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        const msg = payload.new as { sender?: string };
+        if (msg?.sender === "agent" || msg?.sender === "user") return;
+        setAlerta(true);
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(canal);
+    };
+  }, [semAcesso]);
+
+  // Ao abrir o telefone o alerta para
+  useEffect(() => {
+    if (aberto) setAlerta(false);
+  }, [aberto]);
 
   const alternar = () => {
     if (aberto) {
@@ -199,8 +222,10 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       return;
     }
     setNumeroInicial(undefined);
+    setAlerta(false);
     setAberto(true);
   };
+
 
   const iniciarArrasto = (clientY: number) => {
     arrasto.current = { ativo: true, movido: false, inicioY: clientY };
@@ -255,6 +280,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     <PilarFone
       embedded
       initialNumber={numeroInicial}
+      onChamadaRecebida={() => setAlerta(true)}
       initialAba={abaInicial}
       initialWhatsapp={contatoInicial}
 
@@ -365,7 +391,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
           Só aparece depois de carregar as permissões e apenas se houver abas liberadas. */}
       {abasPermitidas !== undefined && (
       <div
-        className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
+        className={`sip-tab ${aberto && modo === "painel" ? "open" : ""} ${alerta && !aberto ? "sip-tab-pulse" : ""}`}
         role="button"
         tabIndex={0}
         aria-label={aberto ? "Fechar Pilar Fone" : "Abrir Pilar Fone"}
@@ -385,6 +411,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         }}
       >
         <Phone className="w-3 h-3" />
+        {alerta && !aberto && (
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+        )}
       </div>
       )}
 
