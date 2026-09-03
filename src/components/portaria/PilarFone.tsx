@@ -487,6 +487,23 @@ export default function PilarFone({
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
+            <div className="px-4 pb-3">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#111B21] px-3 py-2">
+                <Search className="h-4 w-4 shrink-0 text-[#8696A0]" />
+                <input
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar nome ou ramal"
+                  className="w-full bg-transparent text-sm text-[#E9EDEF] outline-none placeholder:text-[#8696A0]"
+                />
+                {busca && (
+                  <button type="button" aria-label="Limpar busca" onClick={() => setBusca("")}>
+                    <X className="h-4 w-4 text-[#8696A0]" />
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {(["todos", ...tiposRamal] as string[]).map((t) => {
                 const ativo = tipoRamal === t;
