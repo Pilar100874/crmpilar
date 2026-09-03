@@ -231,7 +231,7 @@ export default function PushFirebaseCard() {
               <strong>Salvar</strong>.
             </li>
             <li>
-              Gere o APK novamente (workflow <strong>Build Pilar Interfone APK</strong>). O build pega este arquivo
+              Gere o APK novamente (workflow <strong>Build Pilar Fone APK</strong>). O build pega este arquivo
               automaticamente e o app passa a receber campainha e chamadas do ramal SIP com o celular bloqueado.
             </li>
             <li>
