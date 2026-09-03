@@ -25462,6 +25462,24 @@ export type Database = {
           },
         ]
       }
+      sip_config_usuario: {
+        Row: {
+          atualizado_em: string
+          config: Json
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          config?: Json
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          config?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       skills: {
         Row: {
           ativo: boolean
