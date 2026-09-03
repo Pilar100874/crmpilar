@@ -41,6 +41,10 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
   const abasPermitidas = useAbasPermitidas();
+  // Sem nenhuma aba marcada no cadastro = sem acesso ao Pilar Fone (botão não aparece).
+  const semAcesso = abasPermitidas !== undefined && abasPermitidas.length === 0;
+  const semAcessoRef = useRef(semAcesso);
+  semAcessoRef.current = semAcesso;
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
@@ -87,6 +91,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   useEffect(() => {
     const abrir = (event: Event) => {
+      if (semAcessoRef.current) return;
       const detail = (event as CustomEvent<{ numero?: string; aba?: AbaPilarFone; nome?: string }>).detail;
       setNumeroInicial(detail?.numero);
       setAbaInicial(detail?.aba);
@@ -144,7 +149,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     };
   }, [aberto, unidadeId]);
 
-  useCampainha(unidadeId, !!config?.ativo, (toque) => {
+  useCampainha(unidadeId, !!config?.ativo && !semAcesso, (toque) => {
     setHistorico((atual) => [{ id: toque.id, created_at: toque.created_at, status: toque.status }, ...atual].slice(0, 20));
     setToqueId(toque.id);
     setAberto(true);
@@ -264,6 +269,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     />
   );
 
+  // Sem abas liberadas: telefone indisponível (nada é renderizado, inclusive a aba lateral)
+  if (semAcesso) return null;
+
   if (janela) {
     return (
       <>
@@ -283,7 +291,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   return (
     <>
-      {/* Aba lateral (mesmo padrão do chat interno): clique abre/fecha e pode ser arrastada */}
+      {/* Aba lateral (mesmo padrão do chat interno): clique abre/fecha e pode ser arrastada.
+          Só aparece depois de carregar as permissões e apenas se houver abas liberadas. */}
+      {abasPermitidas !== undefined && (
       <div
         className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
         role="button"
@@ -306,6 +316,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       >
         <Phone className="w-3 h-3" />
       </div>
+      )}
 
       {modo === "popup" ? (
         // Modo flutuante: janela estilo celular que pode ser arrastada e solta em qualquer ponto da tela

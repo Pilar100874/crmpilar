@@ -13,7 +13,8 @@ export type AbaPilarFoneId = (typeof ABAS_PILAR_FONE)[number]["id"];
 
 /**
  * Abas liberadas para o usuário logado.
- * Quando o cadastro não define nenhuma, todas ficam disponíveis.
+ * `undefined` = ainda carregando. Lista vazia = nenhuma aba liberada
+ * (o telefone fica indisponível e o botão lateral não aparece na web).
  */
 export function useAbasPermitidas(): AbaPilarFoneId[] | undefined {
   const [abas, setAbas] = useState<AbaPilarFoneId[] | undefined>(undefined);
@@ -28,9 +29,9 @@ export function useAbasPermitidas(): AbaPilarFoneId[] | undefined {
         .select("pilarfone_abas")
         .eq("auth_user_id", auth.user.id)
         .maybeSingle();
+      if (cancelado) return;
       const lista = (data as { pilarfone_abas?: string[] } | null)?.pilarfone_abas;
-      if (cancelado || !lista || lista.length === 0) return;
-      setAbas(lista.filter((a): a is AbaPilarFoneId => ABAS_PILAR_FONE.some((x) => x.id === a)));
+      setAbas((lista ?? []).filter((a): a is AbaPilarFoneId => ABAS_PILAR_FONE.some((x) => x.id === a)));
     })();
     return () => {
       cancelado = true;

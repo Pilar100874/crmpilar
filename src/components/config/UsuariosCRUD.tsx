@@ -51,7 +51,7 @@ interface Usuario {
   grupos_acesso?: { nome: string };
   estabelecimentos?: { nome: string };
   is_porteiro?: boolean;
-  pode_usar_interfone?: boolean;
+  
   pilarfone_abas?: string[] | null;
   is_atendente?: boolean;
   atendente_id?: string;
@@ -122,7 +122,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
-  const [podeUsarInterfone, setPodeUsarInterfone] = useState(false);
+  
   const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
@@ -376,7 +376,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       usuario_sip: usuarioSip || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
-      pode_usar_interfone: podeUsarInterfone,
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
     };
 
@@ -678,7 +677,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAdmin(false);
     setIsAtendente(false);
     setIsPorteiro(false);
-    setPodeUsarInterfone(false);
     setAbasPilarFone([]);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
@@ -710,7 +708,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUsuarioSip(usuario.usuario_sip || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
-    setPodeUsarInterfone(!!(usuario as any).pode_usar_interfone);
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
     setEditingId(usuario.id);
     setFormOpen(true);
@@ -1059,24 +1056,11 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between rounded-lg border border-border p-3">
-            <div className="space-y-0.5 pr-4">
-              <Label htmlFor="usuario-interfone">Acesso ao Interfone (app Pilar Fone)</Label>
-              <p className="text-xs text-muted-foreground">
-                Permite que este usuário entre no aplicativo do interfone e receba as chamadas de campainha.
-              </p>
-            </div>
-            <Switch
-              id="usuario-interfone"
-              checked={podeUsarInterfone}
-              onCheckedChange={setPodeUsarInterfone}
-            />
-          </div>
-
           <div className="mt-4 rounded-lg border border-border p-3">
             <Label>Abas liberadas no Pilar Fone (web e APK)</Label>
             <p className="text-xs text-muted-foreground mb-3">
-              Selecione quais telas o usuário poderá abrir no telefone. Se nenhuma for marcada, todas ficam disponíveis.
+              Selecione quais telas o usuário poderá abrir no telefone. Se nenhuma for marcada, o Pilar Fone fica
+              indisponível para este usuário (o botão não aparece na web e o app não libera as telas).
             </p>
             <div className="grid grid-cols-2 gap-2">
               {ABAS_PILAR_FONE.map((a) => {

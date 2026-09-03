@@ -31,3 +31,6 @@
 - [x] Permissão por abas do Pilar Fone no cadastro de usuário (web + APK)
 - [x] WhatsApp do Pilar Fone: anexar arquivos e enviar áudio
 - [x] WhatsApp do Pilar Fone: separar conversas por usuário do sistema
+- [x] Abas do Pilar Fone: nenhuma marcada = nenhuma disponível (antes liberava todas)
+- [x] Sem abas liberadas: botão lateral do Pilar Fone não aparece na web
+- [x] Remover switch "Acesso ao Interfone" do cadastro de usuários (redundante com as abas)

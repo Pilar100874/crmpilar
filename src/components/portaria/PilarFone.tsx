@@ -187,7 +187,8 @@ export default function PilarFone({
       { id: "whatsapp" as Aba, rotulo: "WhatsApp", Icone: MessageCircle },
       ...(mostrarInterfone ? [{ id: "chamadas" as Aba, rotulo: "Interfone", Icone: BellRing }] : []),
     ];
-    if (!abasPermitidas || abasPermitidas.length === 0) return todas;
+    // `undefined` = ainda carregando (mostra tudo). Lista vazia = nenhuma aba liberada.
+    if (!abasPermitidas) return todas;
     return todas.filter((t) => abasPermitidas.includes(t.id));
   }, [mostrarInterfone, abasPermitidas]);
 
