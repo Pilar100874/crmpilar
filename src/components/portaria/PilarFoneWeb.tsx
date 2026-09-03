@@ -149,7 +149,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   }, [modo]);
 
   useEffect(() => {
-    if (!aberto) return;
+    if (semAcesso) return;
     let ativo = true;
     void (async () => {
       const estabelecimentoId = await getEstabelecimentoId();
@@ -165,7 +165,8 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     return () => {
       ativo = false;
     };
-  }, [aberto]);
+  }, [semAcesso]);
+
 
   // Histórico de toques da campainha para a aba Campainha
   useEffect(() => {
