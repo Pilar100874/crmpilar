@@ -292,6 +292,34 @@ All colors MUST be HSL.
     right: 0;
   }
 
+  /* Aba lateral do Pilar Sip, logo acima da aba do chat interno */
+  .sip-tab {
+    position: fixed;
+    right: 0;
+    bottom: calc(15% + 68px);
+    width: 24px;
+    height: 60px;
+    background: hsl(160 84% 30%);
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 501;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+  }
+
+  .sip-tab:hover {
+    width: 25px;
+    background: hsl(160 84% 24%);
+  }
+
+  .sip-tab svg {
+    color: white;
+    opacity: 0.9;
+  }
+
   /* Mobile/tablet: painel ocupa tela inteira e aba some quando aberto */
   @media (max-width: 1024px) {
     .chat-slide-menu {

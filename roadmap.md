@@ -16,3 +16,9 @@
 - [x] InterfoneTile: zoom por clique + arraste (corrigidos erros TS de 'movido')
 - [x] InterfonePopup: botão fechar com respiro (pb-5) e import do InterfoneTile
 - [x] Typecheck OK (tsgo --noEmit)
+
+## 2026-09-03
+- [x] Unificar softphone + videochamada no Pilar Sip (popup em formato de celular)
+- [x] Remover abas Softphone/Videochamada de Configurações de Atendimento
+- [x] Botão fechar, borda mais fina e botões sem corte no popup
+- [x] Gatilho como aba lateral (estilo chat interno), logo acima do chat

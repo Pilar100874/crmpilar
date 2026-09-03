@@ -1,27 +1,24 @@
 import { useEffect, useState } from "react";
-import { Phone, Smartphone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import PilarFone from "./PilarFone";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
+/** Abre o Pilar Sip em qualquer lugar do sistema (opcionalmente já com um número). */
 export function abrirPilarSip(numero?: string) {
   window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero } }));
-}
-
-interface ServidoresEstabelecimento {
-  servidor: string;
-  servidorRemoto: string;
 }
 
 export default function PilarFoneWeb() {
   const [aberto, setAberto] = useState(false);
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
-  const [servidores, setServidores] = useState<ServidoresEstabelecimento>({ servidor: "", servidorRemoto: "" });
+  const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>({
+    servidor: "",
+    servidorRemoto: "",
+  });
 
   useEffect(() => {
     const abrir = (event: Event) => {
@@ -45,10 +42,7 @@ export default function PilarFoneWeb() {
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
       if (!ativo || !data) return;
-      setServidores({
-        servidor: data.ucm_host ?? "",
-        servidorRemoto: data.remote_ip ?? "",
-      });
+      setServidores({ servidor: data.ucm_host ?? "", servidorRemoto: data.remote_ip ?? "" });
     })();
     return () => {
       ativo = false;
@@ -57,47 +51,43 @@ export default function PilarFoneWeb() {
 
   return (
     <>
-      <TooltipProvider delayDuration={300}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={() => {
-                setNumeroInicial(undefined);
-                setAberto(true);
-              }}
-              aria-label="Abrir Pilar Sip"
-              className="fixed bottom-4 right-16 z-[1000] h-10 w-10 rounded-full border-primary/30 bg-background/95 text-primary shadow-lg backdrop-blur hover:bg-accent"
-            >
-              <Phone className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Abrir Pilar Sip</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      {/* Aba lateral (mesmo padrão do chat interno), logo acima dele */}
+      <div
+        className="sip-tab"
+        role="button"
+        tabIndex={0}
+        aria-label="Abrir Pilar Sip"
+        title="Pilar Sip"
+        onClick={() => {
+          setNumeroInicial(undefined);
+          setAberto(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setNumeroInicial(undefined);
+            setAberto(true);
+          }
+        }}
+      >
+        <Phone className="w-3 h-3" />
+      </div>
+
 
       <Dialog open={aberto} onOpenChange={setAberto}>
-        <DialogContent className="w-[min(430px,calc(100vw-1rem))] max-w-none overflow-hidden rounded-[32px] border-border/70 bg-card p-0 shadow-2xl sm:max-h-[calc(100dvh-2rem)]">
+        <DialogContent className="w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
           <DialogTitle className="sr-only">Pilar Sip</DialogTitle>
           <DialogDescription className="sr-only">
-            Telefone SIP com agenda, discador, chamadas de voz e vídeo.
+            Telefone SIP com agenda, discador e chamadas de voz e vídeo.
           </DialogDescription>
-          <div className="relative flex h-[min(860px,calc(100dvh-2rem))] w-full overflow-hidden rounded-[32px] border-8 border-foreground/10 bg-background shadow-inner">
-            <div className="pointer-events-none absolute left-1/2 top-1 z-20 h-1.5 w-20 -translate-x-1/2 rounded-full bg-foreground/20" />
-            <div className="pointer-events-none absolute bottom-1 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 text-[9px] text-muted-foreground/70">
-              <Smartphone className="h-3 w-3" /> Pilar Sip
-            </div>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <PilarFone
-                embedded
-                initialNumber={numeroInicial}
-                serverConfig={servidores}
-                mostrarInterfone={false}
-                onAbrirInterfone={() => undefined}
-              />
-            </div>
+          <div className="relative h-[min(780px,calc(100dvh-3rem))] w-full overflow-hidden rounded-[28px]">
+            <PilarFone
+              embedded
+              initialNumber={numeroInicial}
+              serverConfig={servidores}
+              mostrarInterfone={false}
+              onAbrirInterfone={() => undefined}
+              onFechar={() => setAberto(false)}
+            />
           </div>
         </DialogContent>
       </Dialog>

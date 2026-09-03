@@ -91,11 +91,14 @@ interface Props {
   alertasAtivos?: boolean;
   historico?: Array<{ id: string; created_at: string; status: string }>;
   onAbrirToque?: (id: string) => void;
-  /** Quando embutido no sistema, os servidores vêm da configuração do estabelecimento. */
+  /** Embutido no sistema (popup em formato de celular). */
   embedded?: boolean;
   initialNumber?: string;
+  /** Servidores vindos da configuração do estabelecimento. */
   serverConfig?: { servidor: string; servidorRemoto: string };
   mostrarInterfone?: boolean;
+  /** Fecha o telefone (exibido apenas no modo embutido). */
+  onFechar?: () => void;
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -109,7 +112,9 @@ export default function PilarFone({
   initialNumber,
   serverConfig,
   mostrarInterfone = true,
+  onFechar,
 }: Props) {
+
   const { toast } = useToast();
   const {
     connect,
@@ -155,26 +160,30 @@ export default function PilarFone({
     let ativo = true;
     void sincronizarConfigSip().then((sincronizada) => {
       if (!ativo) return;
-      const configuracao = serverConfig ? { ...sincronizada, ...serverConfig } : sincronizada;
-      setConfig(configuracao);
-      setRascunho(configuracao);
+      const final = serverConfig?.servidor ? { ...sincronizada, ...serverConfig } : sincronizada;
+      setConfig(final);
+      setRascunho(final);
       setConfigSincronizada(true);
     });
     return () => {
       ativo = false;
     };
-  }, [serverConfig]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (serverConfig) {
-      setConfig((atual) => ({ ...atual, ...serverConfig }));
-      setRascunho((atual) => ({ ...atual, ...serverConfig }));
+    if (!serverConfig?.servidor) return;
+    setConfig((atual) => ({ ...atual, ...serverConfig }));
+    setRascunho((atual) => ({ ...atual, ...serverConfig }));
+  }, [serverConfig?.servidor, serverConfig?.servidorRemoto]);
+
+  useEffect(() => {
+    if (initialNumber) {
+      setNumero(initialNumber);
+      setTecladoAberto(true);
     }
-  }, [serverConfig]);
-
-  useEffect(() => {
-    if (initialNumber) setNumero(initialNumber);
   }, [initialNumber]);
+
 
   const conectar = useCallback(async () => {
     if (!configValida) {
@@ -194,10 +203,10 @@ export default function PilarFone({
   }, [config, configValida, connect]);
 
   useEffect(() => {
-    if (!configSincronizada || (embedded && !serverConfig?.servidor) || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
+    if (!configSincronizada || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
     tentouAuto.current = true;
     void conectar();
-  }, [config.autoConectar, configSincronizada, configValida, embedded, isRegistered, isConnecting, serverConfig, conectar]);
+  }, [config.autoConectar, configSincronizada, configValida, isRegistered, isConnecting, conectar]);
 
   // Grupo de ramais SIP cadastrados no CRM
   const carregarRamais = useCallback(async () => {
@@ -300,14 +309,18 @@ export default function PilarFone({
     (c) => !filtro || c.nome.toLowerCase().includes(filtro) || c.numero.includes(filtro),
   );
 
+  const camada = embedded ? "absolute" : "fixed";
+  const padTop = embedded ? "0px" : "env(safe-area-inset-top, 0px)";
+  const padBottom = embedded ? "0px" : "env(safe-area-inset-bottom, 0px)";
+
   const campo = "border-white/10 !bg-[#0B141A] !text-[#E9EDEF] placeholder:text-[#8696A0] focus-visible:ring-[#00A884]";
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col bg-[#0B141A] text-[#E9EDEF]">
+    <div className={`relative flex flex-col overflow-hidden bg-[#0B141A] text-[#E9EDEF] ${embedded ? "h-full" : "min-h-[100dvh]"}`}>
       {/* Cabeçalho */}
       <header
-        className="sticky top-0 z-20 bg-[#1F2C34]"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        className="sticky top-0 z-20 shrink-0 bg-[#1F2C34]"
+        style={{ paddingTop: padTop }}
       >
         <div className="flex items-center gap-2 px-4 py-3">
           {buscaAberta ? (
@@ -326,6 +339,16 @@ export default function PilarFone({
           ) : (
             <>
               <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Sip</h1>
+              {onFechar && (
+                <button
+                  type="button"
+                  aria-label="Fechar Pilar Sip"
+                  onClick={onFechar}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
               <button type="button" aria-label="Buscar" onClick={() => setBuscaAberta(true)} className="p-1">
                 <Search className="h-5 w-5 text-[#AEBAC1]" />
               </button>
@@ -390,7 +413,7 @@ export default function PilarFone({
         </nav>
       </header>
 
-      <main className="flex-1 pb-28">
+      <main className={`flex-1 pb-28 ${embedded ? "min-h-0 overflow-y-auto" : ""}`}>
         {aviso && (
           <div className="p-3">
             <AvisoInline tipo="aviso">{aviso}</AvisoInline>
@@ -549,15 +572,15 @@ export default function PilarFone({
         type="button"
         aria-label="Abrir teclado"
         onClick={() => setTecladoAberto(true)}
-        className={`${embedded ? "absolute" : "fixed"} right-5 z-30 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95`}
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
+        className={`${camada} right-5 z-30 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95`}
+        style={{ bottom: `calc(${padBottom} + 20px)` }}
       >
         <Grid3X3 className="h-6 w-6" />
       </button>
 
       {/* Teclado de discagem */}
       {tecladoAberto && (
-        <div className={`${embedded ? "absolute" : "fixed"} inset-0 z-40 flex flex-col bg-[#0B141A]`} style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className={`${camada} inset-0 z-40 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-base font-semibold">Discar</span>
             <button
@@ -569,7 +592,7 @@ export default function PilarFone({
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex flex-1 flex-col justify-end px-6 pb-8" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+          <div className="flex flex-1 flex-col justify-end overflow-y-auto px-6 pb-8" style={{ paddingBottom: `calc(${padBottom} + 24px)` }}>
             <div className="mb-6 text-center">
               <p className="min-h-[2.5rem] text-3xl font-light tracking-widest">{numero || "\u00A0"}</p>
               {numero && <p className="mt-1 text-sm text-[#00A884]">{nomePorNumero(numero)}</p>}
@@ -622,10 +645,10 @@ export default function PilarFone({
       {/* Tela de chamada (estilo WhatsApp: viva-voz, mudo e vídeo sempre à mão) */}
       {chamadaAtual && (
         <div
-          className={`${embedded ? "absolute" : "fixed"} inset-0 z-50 flex flex-col bg-gradient-to-b from-[#1F2C34] to-[#0B141A] px-6 pb-8 text-center`}
+          className={`${camada} inset-0 z-50 flex flex-col bg-gradient-to-b from-[#1F2C34] to-[#0B141A] px-6 pb-8 text-center`}
           style={{
-            paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)",
-            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+            paddingTop: `calc(${padTop} + 24px)`,
+            paddingBottom: `calc(${padBottom} + 24px)`,
           }}
         >
           {/* Vídeo da outra ponta em tela cheia quando disponível */}
@@ -646,7 +669,7 @@ export default function PilarFone({
               playsInline
               muted
               className="absolute right-4 z-10 h-36 w-24 rounded-2xl border-2 border-white/20 bg-black object-cover shadow-xl"
-              style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+              style={{ top: `calc(${padTop} + 80px)` }}
             />
           )}
 
@@ -763,25 +786,29 @@ export default function PilarFone({
 
       {/* Configuração do ramal */}
       {configAberta && (
-        <div className={`${embedded ? "absolute" : "fixed"} inset-0 z-50 flex flex-col bg-[#0B141A]`} style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className={`${camada} inset-0 z-50 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
           <div className="flex items-center gap-3 bg-[#1F2C34] px-4 py-3">
             <button type="button" aria-label="Fechar" onClick={() => setConfigAberta(false)}>
               <ArrowLeft className="h-5 w-5 text-[#AEBAC1]" />
             </button>
             <span className="text-base font-semibold">Configurar ramal SIP</span>
           </div>
-          {embedded && serverConfig && (
-            <p className="px-4 pt-3 text-xs text-[#8696A0]">O servidor é definido na configuração do estabelecimento. Aqui ficam apenas os dados deste aparelho.</p>
-          )}
           <div
             className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+            style={{ paddingBottom: `calc(${padBottom} + 24px)` }}
           >
+            {serverConfig?.servidor && (
+              <p className="text-xs text-[#8696A0]">
+                O servidor é definido na configuração do estabelecimento. Aqui ficam apenas os dados deste aparelho.
+              </p>
+            )}
             {[
-              ...(serverConfig ? [] : [
-                { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
-                { id: "servidorRemoto", rotulo: "Servidor alternativo (fora da empresa)", ph: "pilar.myddns.me" },
-              ]),
+              ...(serverConfig?.servidor
+                ? []
+                : [
+                    { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
+                    { id: "servidorRemoto", rotulo: "Servidor alternativo (fora da empresa)", ph: "pilar.myddns.me" },
+                  ]),
               { id: "ramal", rotulo: "Ramal", ph: "1001" },
               { id: "senha", rotulo: "Senha SIP", ph: "" },
               { id: "nome", rotulo: "Nome exibido", ph: "Portaria" },
