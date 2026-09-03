@@ -256,7 +256,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="sip-auto" className="text-sm font-normal">
+                  <Label htmlFor="sip-auto" className="text-sm font-normal text-white">
                     Conectar automaticamente ao abrir
                   </Label>
                   <Switch
@@ -266,7 +266,7 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="sip-atender" className="text-sm font-normal">
+                  <Label htmlFor="sip-atender" className="text-sm font-normal text-white">
                     Atender chamadas automaticamente
                   </Label>
                   <Switch
