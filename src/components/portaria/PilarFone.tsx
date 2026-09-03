@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft,
   BellRing,
   BookUser,
   MessageCircle,
@@ -10,10 +9,10 @@ import {
   MicOff,
   Phone,
   PhoneCall,
+  PhoneIncoming,
   PhoneOff,
   RefreshCw,
   Search,
-  Settings2,
   Smartphone,
   Users,
   Video,
@@ -23,8 +22,6 @@ import {
 } from "lucide-react";
 import { SessionState } from "sip.js";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
@@ -160,8 +157,6 @@ export default function PilarFone({
   } = useSipConnection();
 
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
-  const [rascunho, setRascunho] = useState<PortariaSipConfig>(config);
-  const [configAberta, setConfigAberta] = useState(false);
   const [configSincronizada, setConfigSincronizada] = useState(false);
   const [aba, setAba] = useState<Aba>("ramais");
   const [alvoWhatsapp, setAlvoWhatsapp] = useState<AlvoWhatsapp | null>(null);
@@ -208,7 +203,6 @@ export default function PilarFone({
       if (!ativo) return;
       const final = serverConfig?.servidor ? { ...sincronizada, ...serverConfig } : sincronizada;
       setConfig(final);
-      setRascunho(final);
       setConfigSincronizada(true);
     });
     return () => {
@@ -224,7 +218,6 @@ export default function PilarFone({
     void lerConfigSipDoUsuario().then((doCadastro) => {
       if (!ativo || !doCadastro) return;
       setConfig((atual) => ({ ...atual, ...doCadastro }));
-      setRascunho((atual) => ({ ...atual, ...doCadastro }));
       setConfigSincronizada(true);
     });
     return () => {
@@ -235,7 +228,6 @@ export default function PilarFone({
   useEffect(() => {
     if (!serverConfig?.servidor) return;
     setConfig((atual) => ({ ...atual, ...serverConfig }));
-    setRascunho((atual) => ({ ...atual, ...serverConfig }));
   }, [serverConfig?.servidor, serverConfig?.servidorRemoto]);
 
   useEffect(() => {
@@ -259,9 +251,7 @@ export default function PilarFone({
 
   const conectar = useCallback(async () => {
     if (!configValida) {
-      setRascunho(config);
-      setConfigAberta(true);
-      setAviso("Informe servidor, ramal e senha SIP para registrar o aparelho.");
+      setAviso("Telefonia não configurada. Peça ao administrador para preencher os dados SIP no seu cadastro de usuário.");
       return;
     }
     setAviso(null);
@@ -274,11 +264,12 @@ export default function PilarFone({
     });
   }, [config, configValida, connect]);
 
+  // Conexão é sempre automática: assim que a configuração do cadastro é carregada, o ramal se registra.
   useEffect(() => {
-    if (!configSincronizada || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
+    if (!configSincronizada || tentouAuto.current || !configValida || isRegistered || isConnecting) return;
     tentouAuto.current = true;
     void conectar();
-  }, [config.autoConectar, configSincronizada, configValida, isRegistered, isConnecting, conectar]);
+  }, [configSincronizada, configValida, isRegistered, isConnecting, conectar]);
 
   // Grupo de ramais SIP cadastrados no CRM
   const carregarRamais = useCallback(async () => {
@@ -369,14 +360,11 @@ export default function PilarFone({
     [dial, isRegistered, toast],
   );
 
-  const salvar = () => {
-    salvarConfigSip(rascunho);
-    setConfig(rascunho);
-    setConfigAberta(false);
-    tentouAuto.current = false;
-    setAviso(null);
-    void salvarConfigNaNuvem(rascunho);
-    toast({ title: "Ramal salvo", description: "Configuração guardada neste aparelho e protegida na nuvem." });
+  const alternarAutoAtender = (valor: boolean) => {
+    const nova = { ...config, autoAtender: valor };
+    setConfig(nova);
+    salvarConfigSip(nova);
+    void salvarConfigNaNuvem(nova);
   };
 
   const filtro = busca.trim().toLowerCase();
@@ -399,7 +387,6 @@ export default function PilarFone({
   const padTop = embedded ? "0px" : "env(safe-area-inset-top, 0px)";
   const padBottom = embedded ? "0px" : "env(safe-area-inset-bottom, 0px)";
 
-  const campo = "border-white/10 !bg-[#0B141A] !text-[#E9EDEF] placeholder:text-[#8696A0] focus-visible:ring-[#00A884]";
 
   return (
     <div className={`relative flex flex-col overflow-hidden bg-[#0B141A] text-[#E9EDEF] ${embedded ? "h-full" : "min-h-[100dvh]"}`}>
@@ -421,17 +408,6 @@ export default function PilarFone({
               <X className="h-4 w-4" />
             </button>
           )}
-          <button
-            type="button"
-            aria-label="Configurar ramal"
-            onClick={() => {
-              setRascunho(config);
-              setConfigAberta(true);
-            }}
-            className="p-1"
-          >
-            <Settings2 className="h-5 w-5 text-[#AEBAC1]" />
-          </button>
         </div>
 
 
@@ -458,6 +434,19 @@ export default function PilarFone({
               Desconectar
             </button>
           )}
+          <label
+            htmlFor="pf-auto-atender"
+            className="ml-auto inline-flex cursor-pointer items-center gap-1.5 font-semibold text-[#AEBAC1]"
+          >
+            <PhoneIncoming className="h-3 w-3" />
+            Atender automaticamente
+            <Switch
+              id="pf-auto-atender"
+              checked={config.autoAtender}
+              onCheckedChange={alternarAutoAtender}
+              className="scale-[0.7] data-[state=checked]:bg-[#00A884]"
+            />
+          </label>
         </div>
 
         <nav className="px-3 pb-3">
@@ -929,72 +918,6 @@ export default function PilarFone({
         </div>
       )}
 
-      {/* Configuração do ramal */}
-      {configAberta && (
-        <div className={`${camada} inset-0 z-50 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
-          <div className="flex items-center gap-3 bg-[#1F2C34] px-4 py-3">
-            <button type="button" aria-label="Fechar" onClick={() => setConfigAberta(false)}>
-              <ArrowLeft className="h-5 w-5 text-[#AEBAC1]" />
-            </button>
-            <span className="text-base font-semibold">Configurar ramal SIP</span>
-          </div>
-          <div
-            className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
-            style={{ paddingBottom: `calc(${padBottom} + 24px)` }}
-          >
-            <p className="text-xs text-[#8696A0]">
-              Os dados de telefonia (servidor, servidor alternativo, ramal, senha e ramal da TV/portaria) são
-              definidos pelo administrador no cadastro do usuário.
-            </p>
-            {[
-              { id: "servidor", rotulo: "Servidor (PABX)" },
-              { id: "servidorRemoto", rotulo: "Servidor alternativo" },
-              { id: "ramal", rotulo: "Ramal" },
-              { id: "nome", rotulo: "Nome exibido" },
-              { id: "ramalPortaria", rotulo: "Ramal da TV/portaria" },
-            ].map((campoCfg) => (
-              <div key={campoCfg.id} className="space-y-1.5">
-                <Label className="text-[13px] text-[#8696A0]">{campoCfg.rotulo}</Label>
-                <Input
-                  readOnly
-                  disabled
-                  className={campo}
-                  value={(rascunho[campoCfg.id as keyof PortariaSipConfig] as string) || "Não definido"}
-                />
-              </div>
-            ))}
-
-            <div className="flex items-center justify-between rounded-xl bg-[#1F2C34] px-4 py-3">
-              <Label htmlFor="sip-auto" className="text-sm font-normal text-white">
-                Conectar automaticamente ao abrir
-              </Label>
-              <Switch
-                id="sip-auto"
-                checked={rascunho.autoConectar}
-                onCheckedChange={(v) => setRascunho({ ...rascunho, autoConectar: v })}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#1F2C34] px-4 py-3">
-              <Label htmlFor="sip-atender" className="text-sm font-normal text-white">
-                Atender chamadas automaticamente
-              </Label>
-              <Switch
-                id="sip-atender"
-                checked={rascunho.autoAtender}
-                onCheckedChange={(v) => setRascunho({ ...rascunho, autoAtender: v })}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={salvar}
-              className="h-12 w-full rounded-full bg-[#00A884] text-sm font-semibold text-[#0B141A] transition active:scale-95"
-            >
-              Salvar ramal
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
