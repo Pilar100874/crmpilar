@@ -25,3 +25,6 @@
 - [x] Remover aba Chat do Pilar Fone (chat volta a ser só o painel lateral próprio)
 - [x] Interfone dentro do Pilar Fone web (igual ao APK): config, campainha em tempo real e InterfonePopup
 - [x] Aba lateral do Pilar Fone arrastável verticalmente (posição salva no navegador)
+- [x] Clicar em números no painel de chat abre a tela correspondente do telefone (WhatsApp/discador)
+- [x] Renomear "Pilar Sip" para "Pilar Fone" (web e APK)
+- [x] Filtros de Cadastros como ícones
