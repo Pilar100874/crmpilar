@@ -160,8 +160,6 @@ export default function PilarFone({
   } = useSipConnection();
 
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
-  const [rascunho, setRascunho] = useState<PortariaSipConfig>(config);
-  const [configAberta, setConfigAberta] = useState(false);
   const [configSincronizada, setConfigSincronizada] = useState(false);
   const [aba, setAba] = useState<Aba>("ramais");
   const [alvoWhatsapp, setAlvoWhatsapp] = useState<AlvoWhatsapp | null>(null);
@@ -259,9 +257,7 @@ export default function PilarFone({
 
   const conectar = useCallback(async () => {
     if (!configValida) {
-      setRascunho(config);
-      setConfigAberta(true);
-      setAviso("Informe servidor, ramal e senha SIP para registrar o aparelho.");
+      setAviso("Telefonia não configurada. Peça ao administrador para preencher os dados SIP no seu cadastro de usuário.");
       return;
     }
     setAviso(null);
