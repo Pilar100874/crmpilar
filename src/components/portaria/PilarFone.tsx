@@ -485,17 +485,28 @@ export default function PilarFone({
                 </button>
               </div>
             ))}
+            <PilarFoneHistorico grupo="ramais" titulo="Chamadas recentes" onLigar={(n) => ligar(n)} />
           </div>
         )}
 
         {aba === "cadastros" && (
-          <PilarFoneContatos
-            onLigar={(numero) => ligar(numero)}
-            onWhatsapp={(c: ContatoCadastro) => {
-              setAlvoWhatsapp({ nome: c.nome, numero: c.numero });
-              setAba("whatsapp");
-            }}
-          />
+          <div>
+            <PilarFoneContatos
+              onLigar={(numero, nome) => {
+                registrarChamada({ grupo: "cadastros", nome: nome || numero, numero, direcao: "saida" });
+                ligar(numero);
+              }}
+              onWhatsapp={(c: ContatoCadastro) => {
+                setAlvoWhatsapp({ nome: c.nome, numero: c.numero });
+                setAba("whatsapp");
+              }}
+            />
+            <PilarFoneHistorico
+              grupo="cadastros"
+              titulo="Cadastros recentes"
+              onLigar={(n) => ligar(n)}
+            />
+          </div>
         )}
 
         {aba === "whatsapp" && (
