@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PanelRight, Phone, Smartphone } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { GripHorizontal, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
