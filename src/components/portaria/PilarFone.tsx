@@ -478,6 +478,22 @@ export default function PilarFone({
           </div>
         )}
 
+        {aba === "cadastros" && (
+          <PilarFoneContatos
+            onLigar={(numero) => ligar(numero)}
+            onWhatsapp={(c: ContatoCadastro) => {
+              setAlvoWhatsapp({ nome: c.nome, numero: c.numero });
+              setAba("whatsapp");
+            }}
+          />
+        )}
+
+        {aba === "whatsapp" && (
+          <div className={embedded ? "h-full" : "h-[calc(100vh-220px)]"}>
+            <PilarFoneWhatsapp alvo={alvoWhatsapp} onAlvoConsumido={() => setAlvoWhatsapp(null)} />
+          </div>
+        )}
+
         {aba === "chamadas" && (
           <div>
             {/* Cartão principal: abre o interfone com câmeras, áudio e abertura */}
