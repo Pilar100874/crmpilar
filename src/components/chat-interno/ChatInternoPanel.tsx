@@ -39,7 +39,7 @@ interface Usuario {
   email: string;
 }
 
-export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
+export function ChatInternoPanel({ isOpen, onClose, inline = false }: ChatInternoPanelProps) {
   const {
     conversas,
     conversaAtual,
