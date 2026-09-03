@@ -34,3 +34,5 @@
 - [x] Abas do Pilar Fone: nenhuma marcada = nenhuma disponível (antes liberava todas)
 - [x] Sem abas liberadas: botão lateral do Pilar Fone não aparece na web
 - [x] Remover switch "Acesso ao Interfone" do cadastro de usuários (redundante com as abas)
+- [x] Tela Campainha do interfone sem rolagem (layout flex, vídeos preenchem a tela) e sem relógio no topo
+- [x] Nome da câmera na parte inferior da imagem, texto preto, sem borda/fundo
