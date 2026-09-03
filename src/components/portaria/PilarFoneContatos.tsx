@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, MessageCircle, Phone, RefreshCw, Search, User } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Handshake,
+  MessageCircle,
+  Phone,
+  RefreshCw,
+  Search,
+  Tag,
+  Truck,
+  User,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -18,9 +30,22 @@ const FILTROS_BASE = [
   { id: "contato", rotulo: "Contatos" },
 ];
 
+/** Ícone de cada filtro (inclui os tipos de cliente dinâmicos). */
+function iconeFiltro(id: string) {
+  if (id === "todos") return Users;
+  if (id === "empresa") return Building2;
+  if (id === "contato") return User;
+  const tipo = id.replace("tipo:", "").toLowerCase();
+  if (tipo.includes("transport")) return Truck;
+  if (tipo.includes("vendedor") || tipo.includes("represent")) return Briefcase;
+  if (tipo.includes("b2b") || tipo.includes("parceir")) return Handshake;
+  return Tag;
+}
+
 function limpar(numero: string) {
   return numero.replace(/\D/g, "");
 }
+
 
 interface Props {
   onLigar: (numero: string, nome?: string) => void;
