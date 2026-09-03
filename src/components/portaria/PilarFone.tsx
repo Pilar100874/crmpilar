@@ -32,6 +32,7 @@ import {
   salvarConfigSip,
   type PortariaSipConfig,
 } from "@/lib/portaria/sipConfig";
+import { sincronizarConfigSip, salvarConfigNaNuvem } from "@/lib/portaria/sipConfigCloud";
 import { agendaDisponivel, lerAgendaCelular, type ContatoCelular } from "@/lib/portaria/agendaCelular";
 
 const TECLAS = [
@@ -122,6 +123,7 @@ export default function PilarFone({
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
   const [rascunho, setRascunho] = useState<PortariaSipConfig>(config);
   const [configAberta, setConfigAberta] = useState(false);
+  const [configSincronizada, setConfigSincronizada] = useState(false);
   const [aba, setAba] = useState<Aba>("ramais");
   const [busca, setBusca] = useState("");
   const [buscaAberta, setBuscaAberta] = useState(false);
@@ -139,6 +141,19 @@ export default function PilarFone({
     () => !!(config.servidor && config.ramal && config.senha),
     [config.servidor, config.ramal, config.senha],
   );
+
+  useEffect(() => {
+    let ativo = true;
+    void sincronizarConfigSip().then((sincronizada) => {
+      if (!ativo) return;
+      setConfig(sincronizada);
+      setRascunho(sincronizada);
+      setConfigSincronizada(true);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const conectar = useCallback(async () => {
     if (!configValida) {
@@ -158,10 +173,10 @@ export default function PilarFone({
   }, [config, configValida, connect]);
 
   useEffect(() => {
-    if (tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
+    if (!configSincronizada || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
     tentouAuto.current = true;
     void conectar();
-  }, [config.autoConectar, configValida, isRegistered, isConnecting, conectar]);
+  }, [config.autoConectar, configSincronizada, configValida, isRegistered, isConnecting, conectar]);
 
   // Grupo de ramais SIP cadastrados no CRM
   const carregarRamais = useCallback(async () => {
@@ -252,7 +267,8 @@ export default function PilarFone({
     setConfigAberta(false);
     tentouAuto.current = false;
     setAviso(null);
-    toast({ title: "Ramal salvo", description: "Configuração guardada neste aparelho." });
+    void salvarConfigNaNuvem(rascunho);
+    toast({ title: "Ramal salvo", description: "Configuração guardada neste aparelho e protegida na nuvem." });
   };
 
   const filtro = busca.trim().toLowerCase();

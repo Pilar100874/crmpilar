@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogOut, Loader2, BellRing, Phone, ShieldAlert } from "lucide-react";
 import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobile";
+import AtualizadorApk from "@/components/portaria/AtualizadorApk";
 import logoPilar from "@/assets/logo_branco.png";
 
 /** App nativo da Portaria: só interfone (campainha/câmeras) e ramal SIP. */
@@ -149,6 +150,7 @@ export default function AppInterfone() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#16253E] to-[#0D1626] text-white">
+      <AtualizadorApk />
       <PortariaAtendimentoMobile dark />
       <div
         className="mx-auto w-full max-w-md px-3 pb-6"
