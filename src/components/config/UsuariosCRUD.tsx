@@ -51,7 +51,7 @@ interface Usuario {
   grupos_acesso?: { nome: string };
   estabelecimentos?: { nome: string };
   is_porteiro?: boolean;
-  pode_usar_interfone?: boolean;
+  
   pilarfone_abas?: string[] | null;
   is_atendente?: boolean;
   atendente_id?: string;
@@ -122,7 +122,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
-  const [podeUsarInterfone, setPodeUsarInterfone] = useState(false);
+  
   const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
@@ -376,7 +376,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       usuario_sip: usuarioSip || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
-      pode_usar_interfone: podeUsarInterfone,
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
     };
 
@@ -710,7 +709,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUsuarioSip(usuario.usuario_sip || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
-    setPodeUsarInterfone(!!(usuario as any).pode_usar_interfone);
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
     setEditingId(usuario.id);
     setFormOpen(true);
