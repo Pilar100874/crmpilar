@@ -194,7 +194,7 @@ export default function PilarFone({
   }, [config, configValida, connect]);
 
   useEffect(() => {
-    if (!configSincronizada || (embedded && !serverConfig) || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
+    if (!configSincronizada || (embedded && !serverConfig?.servidor) || tentouAuto.current || !config.autoConectar || !configValida || isRegistered || isConnecting) return;
     tentouAuto.current = true;
     void conectar();
   }, [config.autoConectar, configSincronizada, configValida, embedded, isRegistered, isConnecting, serverConfig, conectar]);
@@ -770,6 +770,9 @@ export default function PilarFone({
             </button>
             <span className="text-base font-semibold">Configurar ramal SIP</span>
           </div>
+          {embedded && serverConfig && (
+            <p className="px-4 pt-3 text-xs text-[#8696A0]">O servidor é definido na configuração do estabelecimento. Aqui ficam apenas os dados deste aparelho.</p>
+          )}
           <div
             className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}

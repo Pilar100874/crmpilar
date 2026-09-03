@@ -70,6 +70,16 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // A chamada iniciada no chat usa o mesmo telefone SIP, sem um segundo diálogo de vídeo.
+  useEffect(() => {
+    if (!videoChamadaPendente) return;
+    const conversa = conversas.find((item) => item.id === videoChamadaPendente.conversaId);
+    const outroUsuario = conversa
+      ? (participantesConversa[conversa.id] || []).find((participante) => participante.id !== usuarioAtualId)
+      : undefined;
+    abrirPilarSip(outroUsuario?.ramal ?? undefined);
+  }, [videoChamadaPendente, conversas, participantesConversa, usuarioAtualId]);
+
   // Sempre abrir na lista de conversas/usuários ao abrir o painel (apenas quando muda de fechado para aberto)
   // Também marca como lida ao fechar se estava numa conversa
   useEffect(() => {

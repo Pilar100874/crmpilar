@@ -21,7 +21,7 @@ interface ServidoresEstabelecimento {
 export default function PilarFoneWeb() {
   const [aberto, setAberto] = useState(false);
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
-  const [servidores, setServidores] = useState<ServidoresEstabelecimento | null>(null);
+  const [servidores, setServidores] = useState<ServidoresEstabelecimento>({ servidor: "", servidorRemoto: "" });
 
   useEffect(() => {
     const abrir = (event: Event) => {
@@ -93,7 +93,7 @@ export default function PilarFoneWeb() {
               <PilarFone
                 embedded
                 initialNumber={numeroInicial}
-                serverConfig={servidores ?? undefined}
+                serverConfig={servidores}
                 mostrarInterfone={false}
                 onAbrirInterfone={() => undefined}
               />
