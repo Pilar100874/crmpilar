@@ -8,7 +8,6 @@ import {
   Mic,
   MicOff,
   Phone,
-  PhoneCall,
   PhoneIncoming,
   PhoneOff,
   RefreshCw,
