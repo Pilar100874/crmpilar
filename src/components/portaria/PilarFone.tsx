@@ -590,6 +590,8 @@ export default function PilarFone({
       >
         <Grid3X3 className="h-6 w-6" />
       </button>
+      )}
+
 
       {/* Teclado de discagem */}
       {tecladoAberto && (
