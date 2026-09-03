@@ -481,6 +481,29 @@ export default function PilarFone({
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
+            <div className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {(["todos", ...tiposRamal] as string[]).map((t) => {
+                const ativo = tipoRamal === t;
+                const total = t === "todos" ? ramais.length : ramais.filter((r) => (r.tipo ?? "") === t).length;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTipoRamal(t)}
+                    title={t === "todos" ? "Todos os ramais" : t}
+                    aria-label={t === "todos" ? "Todos os ramais" : t}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold capitalize transition ${
+                      ativo ? "bg-[#00A884] text-[#0B141A]" : "bg-white/[0.06] text-[#AEBAC1] active:scale-95"
+                    }`}
+                  >
+                    {t === "todos" ? <Users className="h-3.5 w-3.5" /> : <BookUser className="h-3.5 w-3.5" />}
+                    {t === "todos" ? "Todos" : t}
+                    <span className={`rounded-full px-1.5 text-[10px] ${ativo ? "bg-black/15" : "bg-white/10"}`}>{total}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             {mostrarInterfone && (
               <button
                 type="button"
