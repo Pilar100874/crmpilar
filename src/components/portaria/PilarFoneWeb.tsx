@@ -391,7 +391,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
           Só aparece depois de carregar as permissões e apenas se houver abas liberadas. */}
       {abasPermitidas !== undefined && (
       <div
-        className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
+        className={`sip-tab ${aberto && modo === "painel" ? "open" : ""} ${alerta && !aberto ? "sip-tab-pulse" : ""}`}
         role="button"
         tabIndex={0}
         aria-label={aberto ? "Fechar Pilar Fone" : "Abrir Pilar Fone"}
