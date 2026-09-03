@@ -27,7 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
 import AvisoInline from "@/components/portaria/AvisoInline";
-import { ChatInternoPanel } from "@/components/chat-interno/ChatInternoPanel";
+
 import {
   lerConfigSip,
   salvarConfigSip,
@@ -82,7 +82,7 @@ function Avatar({ nome }: { nome: string }) {
   );
 }
 
-type Aba = "ramais" | "chamadas" | "chat";
+type Aba = "ramais" | "chamadas";
 
 interface Props {
   /** Abre a tela do interfone (campainha). */
@@ -401,7 +401,6 @@ export default function PilarFone({
           {([
             { id: "ramais", rotulo: "Ramais" },
             ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Campainha" }] : []),
-            { id: "chat", rotulo: "Chat" },
           ] as Array<{ id: Aba; rotulo: string }>).map((t) => (
             <button
               key={t.id}
@@ -418,7 +417,7 @@ export default function PilarFone({
         </nav>
       </header>
 
-      <main className={`flex-1 ${aba === "chat" ? "flex min-h-0 flex-col overflow-hidden pb-0" : "pb-28"} ${embedded ? "min-h-0 overflow-y-auto" : ""}`}>
+      <main className={`flex-1 pb-28 ${embedded ? "min-h-0 overflow-y-auto" : ""}`}>
         {aviso && (
           <div className="p-3">
             <AvisoInline tipo="aviso">{aviso}</AvisoInline>
@@ -474,12 +473,6 @@ export default function PilarFone({
           </div>
         )}
 
-        {aba === "chat" && (
-          <div className="dark h-full min-h-[420px] bg-[#0B141A] text-[#E9EDEF]">
-            <ChatInternoPanel inline isOpen onClose={() => setAba("ramais")} />
-          </div>
-        )}
-
         {aba === "chamadas" && (
           <div>
             <p className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#00A884]">
@@ -530,7 +523,6 @@ export default function PilarFone({
       </main>
 
       {/* Botão flutuante do teclado */}
-      {aba !== "chat" && (
       <button
         type="button"
         aria-label="Abrir teclado"
@@ -540,7 +532,8 @@ export default function PilarFone({
       >
         <Grid3X3 className="h-6 w-6" />
       </button>
-      )}
+
+
 
 
       {/* Teclado de discagem */}
