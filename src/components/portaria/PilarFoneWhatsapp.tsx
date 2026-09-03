@@ -3,6 +3,8 @@ import { ArrowLeft, RefreshCw, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import PilarFoneHistorico from "@/components/portaria/PilarFoneHistorico";
+import { registrarChamada } from "@/lib/portaria/historicoChamadas";
 
 interface ConversaItem {
   id: string;
@@ -226,7 +228,10 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
         <button
           key={c.id}
           type="button"
-          onClick={() => setAberta(c)}
+          onClick={() => {
+            registrarChamada({ grupo: "whatsapp", nome: c.nome, numero: c.telefone, direcao: "saida" });
+            setAberta(c);
+          }}
           className="flex w-full items-center gap-3 px-4 py-2.5 text-left active:bg-white/5"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#00A884]/20 text-sm font-bold text-[#00A884]">
@@ -241,6 +246,8 @@ export default function PilarFoneWhatsapp({ alvo, onAlvoConsumido }: Props) {
           </span>
         </button>
       ))}
+
+      <PilarFoneHistorico grupo="whatsapp" titulo="Conversas recentes" />
     </div>
   );
 }
