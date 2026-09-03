@@ -31,6 +31,8 @@ import { useToast } from "@/hooks/use-toast";
 import AvisoInline from "@/components/portaria/AvisoInline";
 import PilarFoneContatos, { type ContatoCadastro } from "@/components/portaria/PilarFoneContatos";
 import PilarFoneWhatsapp, { type AlvoWhatsapp } from "@/components/portaria/PilarFoneWhatsapp";
+import PilarFoneHistorico from "@/components/portaria/PilarFoneHistorico";
+import { registrarChamada } from "@/lib/portaria/historicoChamadas";
 
 import {
   lerConfigSip,
@@ -478,7 +480,10 @@ export default function PilarFone({
                 <button
                   type="button"
                   aria-label={`Ligar para ${r.nome}`}
-                  onClick={() => ligar(r.ramal)}
+                  onClick={() => {
+                    registrarChamada({ grupo: "ramais", nome: r.nome, numero: r.ramal, direcao: "saida" });
+                    ligar(r.ramal);
+                  }}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884] transition active:scale-95"
                 >
                   <Phone className="h-5 w-5" />
