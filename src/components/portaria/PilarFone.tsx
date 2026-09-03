@@ -159,6 +159,8 @@ export default function PilarFone({
   const [aba, setAba] = useState<Aba>("ramais");
   const [alvoWhatsapp, setAlvoWhatsapp] = useState<AlvoWhatsapp | null>(null);
   const [busca, setBusca] = useState("");
+  const [tipoRamal, setTipoRamal] = useState<string>("todos");
+
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [tecladoAberto, setTecladoAberto] = useState(false);
   const [numero, setNumero] = useState("");
