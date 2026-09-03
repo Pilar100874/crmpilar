@@ -926,18 +926,12 @@ export default function PilarFone({
             className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
             style={{ paddingBottom: `calc(${padBottom} + 24px)` }}
           >
-            {serverConfig?.servidor && (
-              <p className="text-xs text-[#8696A0]">
-                O servidor é definido na configuração do estabelecimento. Aqui ficam apenas os dados deste aparelho.
-              </p>
-            )}
+            <p className="text-xs text-[#8696A0]">
+              {serverConfig?.servidor
+                ? `Servidor definido na configuração do estabelecimento: ${serverConfig.servidor}${serverConfig.servidorRemoto ? ` (alternativo: ${serverConfig.servidorRemoto})` : ""}.`
+                : "O servidor SIP é definido na configuração do estabelecimento. Peça ao administrador para cadastrá-lo."}
+            </p>
             {[
-              ...(serverConfig?.servidor
-                ? []
-                : [
-                    { id: "servidor", rotulo: "Servidor (PABX)", ph: "pabx.empresa.com.br" },
-                    { id: "servidorRemoto", rotulo: "Servidor alternativo (fora da empresa)", ph: "pilar.myddns.me" },
-                  ]),
               { id: "ramal", rotulo: "Ramal", ph: "1001" },
               { id: "senha", rotulo: "Senha SIP", ph: "" },
               { id: "nome", rotulo: "Nome exibido", ph: "Portaria" },
