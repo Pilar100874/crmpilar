@@ -636,16 +636,28 @@ export default function PilarFone({
         )}
       </main>
 
-      {/* Botão flutuante do teclado */}
+      {/* Botão flutuante: age conforme a aba aberta */}
       <button
         type="button"
-        aria-label="Abrir teclado"
-        onClick={() => setTecladoAberto(true)}
+        aria-label={
+          aba === "chamadas" ? "Abrir interfone" : aba === "whatsapp" ? "Nova conversa de WhatsApp" : "Abrir teclado"
+        }
+        title={
+          aba === "chamadas" ? "Abrir interfone" : aba === "whatsapp" ? "Nova conversa de WhatsApp" : "Abrir teclado"
+        }
+        onClick={() => (aba === "chamadas" ? onAbrirInterfone() : setTecladoAberto(true))}
         className={`${camada} left-1/2 z-30 -translate-x-1/2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95`}
         style={{ bottom: `calc(${padBottom} + 20px)` }}
       >
-        <Grid3X3 className="h-6 w-6" />
+        {aba === "chamadas" ? (
+          <BellRing className="h-6 w-6" />
+        ) : aba === "whatsapp" ? (
+          <MessageCircle className="h-6 w-6" />
+        ) : (
+          <Grid3X3 className="h-6 w-6" />
+        )}
       </button>
+
 
 
 
