@@ -9,8 +9,8 @@
 - [x] Contraste de textos/fundo do APK — ajustado pelo próprio usuário
 - [x] Atualização remota do APK com backup/restauração da configuração SIP
 - [x] Build validado (npm run build OK)
-- [ ] Viva-voz/videochamada na tela de chamada SIP (PilarFone) com botoes estilo WhatsApp
-- [ ] Mostrar capturas de cada tela do app ao usuario
+- [x] Viva-voz/videochamada na tela de chamada SIP (PilarFone) com botoes estilo WhatsApp
+- [x] Mostrar capturas de cada tela do app ao usuario
 
 ## 2026-09-02
 - [x] InterfoneTile: zoom por clique + arraste (corrigidos erros TS de 'movido')
