@@ -560,8 +560,8 @@ export default function PilarFone({
         type="button"
         aria-label="Abrir teclado"
         onClick={() => setTecladoAberto(true)}
-        className={`${camada} right-5 z-30 flex h-14 w-14`.concat(" ") + " items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
+        className={`${camada} right-5 z-30 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95`}
+        style={{ bottom: `calc(${padBottom} + 20px)` }}
       >
         <Grid3X3 className="h-6 w-6" />
       </button>
