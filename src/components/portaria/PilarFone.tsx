@@ -167,7 +167,7 @@ export default function PilarFone({
   const [busca, setBusca] = useState("");
   const [tipoRamal, setTipoRamal] = useState<string>("todos");
 
-  const [buscaAberta, setBuscaAberta] = useState(false);
+  
   const [tecladoAberto, setTecladoAberto] = useState(false);
   const [numero, setNumero] = useState("");
   const [ramais, setRamais] = useState<RamalCrm[]>([]);
@@ -393,50 +393,31 @@ export default function PilarFone({
         style={{ paddingTop: padTop }}
       >
         <div className="flex items-center gap-2 px-4 py-3">
-          {buscaAberta ? (
-            <>
-              <button type="button" aria-label="Fechar busca" onClick={() => { setBuscaAberta(false); setBusca(""); }}>
-                <ArrowLeft className="h-5 w-5 text-[#8696A0]" />
-              </button>
-              <input
-                autoFocus
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar nome ou ramal"
-                className="flex-1 bg-transparent text-base text-[#E9EDEF] outline-none placeholder:text-[#8696A0]"
-              />
-            </>
-          ) : (
-            <>
-              <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
-              {headerExtra}
-              {onFechar && (
-                <button
-                  type="button"
-                  aria-label="Fechar Pilar Fone"
-                  onClick={onFechar}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <button type="button" aria-label="Buscar" onClick={() => setBuscaAberta(true)} className="p-1">
-                <Search className="h-5 w-5 text-[#AEBAC1]" />
-              </button>
-              <button
-                type="button"
-                aria-label="Configurar ramal"
-                onClick={() => {
-                  setRascunho(config);
-                  setConfigAberta(true);
-                }}
-                className="p-1"
-              >
-                <Settings2 className="h-5 w-5 text-[#AEBAC1]" />
-              </button>
-            </>
+          <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
+          {headerExtra}
+          {onFechar && (
+            <button
+              type="button"
+              aria-label="Fechar Pilar Fone"
+              onClick={onFechar}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+            >
+              <X className="h-4 w-4" />
+            </button>
           )}
+          <button
+            type="button"
+            aria-label="Configurar ramal"
+            onClick={() => {
+              setRascunho(config);
+              setConfigAberta(true);
+            }}
+            className="p-1"
+          >
+            <Settings2 className="h-5 w-5 text-[#AEBAC1]" />
+          </button>
         </div>
+
 
         <div className="flex items-center gap-2 px-4 pb-2 text-[11px]">
           <span
@@ -506,6 +487,23 @@ export default function PilarFone({
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
+            <div className="px-4 pb-3">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#111B21] px-3 py-2">
+                <Search className="h-4 w-4 shrink-0 text-[#8696A0]" />
+                <input
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar nome ou ramal"
+                  className="w-full bg-transparent text-sm text-[#E9EDEF] outline-none placeholder:text-[#8696A0]"
+                />
+                {busca && (
+                  <button type="button" aria-label="Limpar busca" onClick={() => setBusca("")}>
+                    <X className="h-4 w-4 text-[#8696A0]" />
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {(["todos", ...tiposRamal] as string[]).map((t) => {
                 const ativo = tipoRamal === t;
