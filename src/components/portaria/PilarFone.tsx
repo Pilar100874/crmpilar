@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BellRing,
+  BookUser,
+  MessageCircle,
   Delete,
   Grid3X3,
   Mic,
