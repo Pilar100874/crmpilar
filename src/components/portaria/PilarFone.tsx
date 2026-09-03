@@ -418,15 +418,16 @@ export default function PilarFone({
                   key={t.id}
                   type="button"
                   onClick={() => setAba(t.id)}
+                  aria-label={t.rotulo}
                   aria-current={ativa}
-                  className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${
+                  title={t.rotulo}
+                  className={`flex flex-1 items-center justify-center rounded-xl py-2.5 transition ${
                     ativa
                       ? "bg-[#00A884] text-[#0B141A] shadow-[0_2px_10px_rgba(0,168,132,0.35)]"
                       : "text-[#AEBAC1] hover:bg-white/5"
                   }`}
                 >
-                  <t.Icone className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{t.rotulo}</span>
+                  <t.Icone className="h-[18px] w-[18px] shrink-0" />
                 </button>
               );
             })}
