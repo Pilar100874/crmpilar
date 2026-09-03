@@ -400,7 +400,7 @@ export default function PilarFone({
         <nav className="flex border-b border-white/5">
           {([
             { id: "ramais", rotulo: "Ramais" },
-            ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Campainha" }] : []),
+            ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Interfone" }] : []),
           ] as Array<{ id: Aba; rotulo: string }>).map((t) => (
             <button
               key={t.id}
@@ -475,8 +475,22 @@ export default function PilarFone({
 
         {aba === "chamadas" && (
           <div>
+            {/* Cartão principal: abre o interfone com câmeras, áudio e abertura */}
+            <button
+              type="button"
+              onClick={onAbrirInterfone}
+              className="flex w-full items-center gap-3 border-b border-white/5 px-4 py-3 text-left active:bg-white/5"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20">
+                <BellRing className="h-5 w-5 text-orange-400" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-[15px] font-semibold">Abrir Interfone</span>
+                <span className="block text-[13px] text-[#8696A0]">Câmeras ao vivo, conversa e abertura</span>
+              </span>
+            </button>
             <p className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#00A884]">
-              Toques da campainha
+              Toques do interfone
             </p>
             {historico.length === 0 && (
               <p className="px-4 py-6 text-sm text-[#8696A0]">Nenhum toque registrado ainda.</p>
@@ -492,7 +506,7 @@ export default function PilarFone({
                   <BellRing className={`h-5 w-5 ${t.status === "pendente" ? "text-orange-400" : "text-[#8696A0]"}`} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-semibold">Campainha do interfone</span>
+                  <span className="block text-[15px] font-semibold">Toque no interfone</span>
                   <span className="block text-[13px] text-[#8696A0]">
                     {new Date(t.created_at).toLocaleString("pt-BR")}
                   </span>
@@ -514,7 +528,7 @@ export default function PilarFone({
                   onClick={onAtivarAlertas}
                   className="h-11 w-full rounded-full bg-white/10 text-sm font-semibold text-[#E9EDEF] transition active:scale-95"
                 >
-                  Ativar alertas de campainha
+                  Ativar alertas do interfone
                 </button>
               </div>
             )}
