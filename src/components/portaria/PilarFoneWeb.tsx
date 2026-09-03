@@ -254,46 +254,58 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         setInterfoneAberto(true);
       }}
       headerExtra={
-        janela ? (
+        <>
           <button
             type="button"
-            aria-label={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
-            title={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
-            onClick={() => void alternarTelaCheia()}
+            aria-label="Baixar extensão do Chrome (janela sem barra do navegador)"
+            title="Baixar extensão do Chrome (janela sem barra do navegador)"
+            onClick={baixarExtensao}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
           >
-            {emTelaCheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <Download className="h-4 w-4" />
           </button>
-        ) : (
-          <>
+          {janela ? (
             <button
               type="button"
-              aria-label="Abrir em janela separada (outro monitor)"
-              title="Abrir em janela separada (outro monitor)"
-              onClick={() => {
-                window.open(
-                  "/pilar-sip",
-                  "pilarSipJanela",
-                  "popup=yes,width=430,height=840,left=80,top=80,menubar=no,toolbar=no",
-                );
-                setAberto(false);
-              }}
+              aria-label={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
+              title={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
+              onClick={() => void alternarTelaCheia()}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
             >
-              <ExternalLink className="h-4 w-4" />
+              {emTelaCheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </button>
-            <button
-              type="button"
-              aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
-              title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
-              onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
-            >
-              {modo === "popup" ? <PanelRight className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
-            </button>
-          </>
-        )
+          ) : (
+            <>
+              <button
+                type="button"
+                aria-label="Abrir em janela separada (outro monitor)"
+                title="Abrir em janela separada (outro monitor)"
+                onClick={() => {
+                  window.open(
+                    "/pilar-sip",
+                    "pilarSipJanela",
+                    "popup=yes,width=430,height=840,left=80,top=80,menubar=no,toolbar=no",
+                  );
+                  setAberto(false);
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
+                title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como janela flutuante"}
+                onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+              >
+                {modo === "popup" ? <PanelRight className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+              </button>
+            </>
+          )}
+        </>
       }
+
       onFechar={() => (janela ? window.close() : setAberto(false))}
     />
   );
