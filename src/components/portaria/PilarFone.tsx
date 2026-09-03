@@ -27,6 +27,8 @@ import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
 import AvisoInline from "@/components/portaria/AvisoInline";
+import PilarFoneContatos, { type ContatoCadastro } from "@/components/portaria/PilarFoneContatos";
+import PilarFoneWhatsapp, { type AlvoWhatsapp } from "@/components/portaria/PilarFoneWhatsapp";
 
 import {
   lerConfigSip,
