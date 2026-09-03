@@ -40,6 +40,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
+  const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
+  const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
+
   const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>({
     servidor: "",
     servidorRemoto: "",
