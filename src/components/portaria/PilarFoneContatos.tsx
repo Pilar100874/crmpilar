@@ -101,6 +101,8 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
       qEmpresas = qEmpresas.eq("estabelecimento_id", estabelecimentoId);
       qContatos = qContatos.eq("estabelecimento_id", estabelecimentoId);
     }
+    if (empresaIds !== null) qEmpresas = qEmpresas.in("id", empresaIds.length ? empresaIds : ["00000000-0000-0000-0000-000000000000"]);
+    if (contatoIds !== null) qContatos = qContatos.in("id", contatoIds.length ? contatoIds : ["00000000-0000-0000-0000-000000000000"]);
     if (termo) {
       qEmpresas = qEmpresas.or(
         `nome.ilike.%${termo}%,nome_fantasia.ilike.%${termo}%,telefone.ilike.%${termo}%,whatsapp.ilike.%${termo}%,contato_nome.ilike.%${termo}%`,
