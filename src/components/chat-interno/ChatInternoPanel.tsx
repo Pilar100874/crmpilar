@@ -29,6 +29,8 @@ import { VideoChamadaDialog } from './VideoChamadaDialog';
 interface ChatInternoPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Renderiza embutido (dentro do Pilar Sip) em vez de painel deslizante. */
+  inline?: boolean;
 }
 
 interface Usuario {
