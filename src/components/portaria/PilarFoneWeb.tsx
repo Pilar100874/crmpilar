@@ -80,18 +80,6 @@ export default function PilarFoneWeb() {
       </div>
 
 
-      {/* Botão para alternar o modo de abertura */}
-      <button
-        type="button"
-        aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
-        title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
-        onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
-        className="fixed right-0 z-[502] flex h-6 w-6 items-center justify-center rounded-l-md bg-emerald-800 text-white/90 shadow-md transition hover:bg-emerald-900"
-        style={{ bottom: "calc(15% + 132px)" }}
-      >
-        {modo === "popup" ? <PanelRight className="h-3 w-3" /> : <Smartphone className="h-3 w-3" />}
-      </button>
-
       {modo === "popup" ? (
         <Dialog open={aberto} onOpenChange={setAberto}>
           <DialogContent className="w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
@@ -106,6 +94,17 @@ export default function PilarFoneWeb() {
                 serverConfig={servidores}
                 mostrarInterfone={false}
                 onAbrirInterfone={() => undefined}
+                headerExtra={
+                  <button
+                    type="button"
+                    aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
+                    title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
+                    onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+                  >
+                    <PanelRight className="h-4 w-4" />
+                  </button>
+                }
                 onFechar={() => setAberto(false)}
               />
             </div>
@@ -120,6 +119,18 @@ export default function PilarFoneWeb() {
               serverConfig={servidores}
               mostrarInterfone={false}
               onAbrirInterfone={() => undefined}
+            headerExtra={
+              <button
+                type="button"
+                aria-label="Abrir como popup"
+                title="Abrir como popup"
+                onClick={() => setModo("popup")}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+              >
+                <Smartphone className="h-4 w-4" />
+              </button>
+            }
+
               onFechar={() => setAberto(false)}
             />
           </div>
