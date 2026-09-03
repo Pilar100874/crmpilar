@@ -149,7 +149,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     };
   }, [aberto, unidadeId]);
 
-  useCampainha(unidadeId, !!config?.ativo, (toque) => {
+  useCampainha(unidadeId, !!config?.ativo && !semAcesso, (toque) => {
     setHistorico((atual) => [{ id: toque.id, created_at: toque.created_at, status: toque.status }, ...atual].slice(0, 20));
     setToqueId(toque.id);
     setAberto(true);
@@ -268,6 +268,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       onFechar={() => (janela ? window.close() : setAberto(false))}
     />
   );
+
+  // Sem abas liberadas: telefone indisponível (nada é renderizado, inclusive a aba lateral)
+  if (semAcesso) return null;
 
   if (janela) {
     return (
