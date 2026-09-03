@@ -3,7 +3,6 @@ import { BellRing, DoorOpen, Loader2, Mic, MicOff, PhoneOff, RefreshCw, Volume1,
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { abrirAcesso } from "@/lib/portaria/api";
 import { atenderToque, type InterfoneConfig } from "@/lib/portaria/interfone";
