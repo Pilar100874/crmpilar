@@ -82,7 +82,7 @@ function Avatar({ nome }: { nome: string }) {
   );
 }
 
-type Aba = "ramais" | "chamadas";
+type Aba = "ramais" | "cadastros" | "whatsapp" | "chamadas";
 
 interface Props {
   /** Abre a tela do interfone (campainha). */
