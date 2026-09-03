@@ -5,6 +5,7 @@ import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useCampainha, useInterfoneConfig, tocarAlerta, type ToqueCampainha } from "@/lib/portaria/interfone";
 import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
+import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import PilarFone from "@/components/portaria/PilarFone";
 
 /** Tela do app Pilar Sip no celular: agenda de ramais, discador e interfone. */
@@ -42,6 +43,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   });
 
   return (
+    <ChatInternoProvider>
     <div className={dark ? "dark" : undefined}>
       <PilarFone
         onAbrirInterfone={() => {
@@ -67,5 +69,6 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
         />
       )}
     </div>
+    </ChatInternoProvider>
   );
 }

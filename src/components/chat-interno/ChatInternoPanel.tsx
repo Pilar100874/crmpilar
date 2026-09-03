@@ -29,6 +29,8 @@ import { VideoChamadaDialog } from './VideoChamadaDialog';
 interface ChatInternoPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Renderiza embutido (dentro do Pilar Sip) em vez de painel deslizante. */
+  inline?: boolean;
 }
 
 interface Usuario {
@@ -37,7 +39,7 @@ interface Usuario {
   email: string;
 }
 
-export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
+export function ChatInternoPanel({ isOpen, onClose, inline = false }: ChatInternoPanelProps) {
   const {
     conversas,
     conversaAtual,
@@ -302,7 +304,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   });
 
   return (
-    <div className={`chat-slide-menu ${isOpen ? 'open' : ''}`}>
+    <div className={inline ? 'h-full w-full bg-background text-foreground' : `chat-slide-menu ${isOpen ? 'open' : ''}`}>
       <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b bg-primary/5">

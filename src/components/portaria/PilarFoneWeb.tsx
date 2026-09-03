@@ -82,7 +82,7 @@ export default function PilarFoneWeb() {
 
       {modo === "popup" ? (
         <Dialog open={aberto} onOpenChange={setAberto}>
-          <DialogContent className="w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
+          <DialogContent className="z-[1100] w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
             <DialogTitle className="sr-only">Pilar Sip</DialogTitle>
             <DialogDescription className="sr-only">
               Telefone SIP com agenda, discador e chamadas de voz e vídeo.
