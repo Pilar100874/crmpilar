@@ -91,6 +91,14 @@ interface Props {
   alertasAtivos?: boolean;
   historico?: Array<{ id: string; created_at: string; status: string }>;
   onAbrirToque?: (id: string) => void;
+  /** Embutido no sistema (popup em formato de celular). */
+  embedded?: boolean;
+  initialNumber?: string;
+  /** Servidores vindos da configuração do estabelecimento. */
+  serverConfig?: { servidor: string; servidorRemoto: string };
+  mostrarInterfone?: boolean;
+  /** Fecha o telefone (exibido apenas no modo embutido). */
+  onFechar?: () => void;
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -100,7 +108,13 @@ export default function PilarFone({
   alertasAtivos,
   historico = [],
   onAbrirToque,
+  embedded = false,
+  initialNumber,
+  serverConfig,
+  mostrarInterfone = true,
+  onFechar,
 }: Props) {
+
   const { toast } = useToast();
   const {
     connect,
