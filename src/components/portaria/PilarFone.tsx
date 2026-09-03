@@ -82,7 +82,7 @@ function Avatar({ nome }: { nome: string }) {
   );
 }
 
-type Aba = "ramais" | "agenda" | "chamadas" | "chat";
+type Aba = "ramais" | "chamadas" | "chat";
 
 interface Props {
   /** Abre a tela do interfone (campainha). */
@@ -397,18 +397,17 @@ export default function PilarFone({
           )}
         </div>
 
-        <nav className="grid grid-cols-4 border-b border-white/5">
+        <nav className="flex border-b border-white/5">
           {([
             { id: "ramais", rotulo: "Ramais" },
-            { id: "agenda", rotulo: "Agenda" },
-            { id: "chamadas", rotulo: "Campainha" },
+            ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Campainha" }] : []),
             { id: "chat", rotulo: "Chat" },
           ] as Array<{ id: Aba; rotulo: string }>).map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setAba(t.id)}
-              className={`relative py-3 text-sm font-semibold uppercase tracking-wide transition ${
+              className={`relative flex-1 py-3 text-sm font-semibold uppercase tracking-wide transition ${
                 aba === t.id ? "text-[#00A884]" : "text-[#8696A0]"
               }`}
             >
@@ -475,57 +474,8 @@ export default function PilarFone({
           </div>
         )}
 
-        {aba === "agenda" && (
-          <div>
-            <div className="flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#00A884]">
-              <span className="inline-flex items-center gap-2">
-                <Smartphone className="h-4 w-4" /> Agenda do celular ({contatosFiltrados.length})
-              </span>
-              <button type="button" aria-label="Atualizar agenda" onClick={() => void carregarAgenda()}>
-                <RefreshCw className={`h-4 w-4 ${carregandoAgenda ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-            {contatos.length === 0 && !carregandoAgenda && (
-              <div className="space-y-3 px-4 py-6">
-                <p className="text-sm text-[#8696A0]">
-                  {agendaDisponivel()
-                    ? "Permita o acesso aos contatos para ligar para pessoas da sua agenda."
-                    : "Este aparelho não permite ler a agenda por aqui. Use o teclado para discar."}
-                </p>
-                {erroAgenda && <AvisoInline tipo="erro">{erroAgenda}</AvisoInline>}
-                {agendaDisponivel() && (
-                  <button
-                    type="button"
-                    onClick={() => void carregarAgenda()}
-                    className="h-11 w-full rounded-full bg-[#00A884] text-sm font-semibold text-[#0B141A] transition active:scale-95"
-                  >
-                    Carregar contatos do celular
-                  </button>
-                )}
-              </div>
-            )}
-            {contatosFiltrados.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 active:bg-white/5">
-                <Avatar nome={c.nome} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold">{c.nome}</p>
-                  <p className="truncate text-[13px] text-[#8696A0]">{c.numero}</p>
-                </div>
-                <button
-                  type="button"
-                  aria-label={`Ligar para ${c.nome}`}
-                  onClick={() => ligar(c.numero)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884] transition active:scale-95"
-                >
-                  <Phone className="h-5 w-5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
         {aba === "chat" && (
-          <div className="h-full min-h-[420px]">
+          <div className="dark h-full min-h-[420px] bg-[#0B141A] text-[#E9EDEF]">
             <ChatInternoPanel inline isOpen onClose={() => setAba("ramais")} />
           </div>
         )}
