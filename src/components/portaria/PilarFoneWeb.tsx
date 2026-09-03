@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Phone } from "lucide-react";
+import { PanelRight, Phone, Smartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -14,6 +14,9 @@ export function abrirPilarSip(numero?: string) {
 
 export default function PilarFoneWeb() {
   const [aberto, setAberto] = useState(false);
+  const [modo, setModo] = useState<"popup" | "painel">(
+    () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
+  );
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>({
     servidor: "",
@@ -29,6 +32,10 @@ export default function PilarFoneWeb() {
     window.addEventListener(EVENTO_ABRIR, abrir);
     return () => window.removeEventListener(EVENTO_ABRIR, abrir);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("pilarSipModo", modo);
+  }, [modo]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -73,13 +80,40 @@ export default function PilarFoneWeb() {
       </div>
 
 
-      <Dialog open={aberto} onOpenChange={setAberto}>
-        <DialogContent className="w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
-          <DialogTitle className="sr-only">Pilar Sip</DialogTitle>
-          <DialogDescription className="sr-only">
-            Telefone SIP com agenda, discador e chamadas de voz e vídeo.
-          </DialogDescription>
-          <div className="relative h-[min(780px,calc(100dvh-3rem))] w-full overflow-hidden rounded-[28px]">
+      {/* Botão para alternar o modo de abertura */}
+      <button
+        type="button"
+        aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
+        title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
+        onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
+        className="fixed right-0 z-[502] flex h-6 w-6 items-center justify-center rounded-l-md bg-emerald-800 text-white/90 shadow-md transition hover:bg-emerald-900"
+        style={{ bottom: "calc(15% + 132px)" }}
+      >
+        {modo === "popup" ? <PanelRight className="h-3 w-3" /> : <Smartphone className="h-3 w-3" />}
+      </button>
+
+      {modo === "popup" ? (
+        <Dialog open={aberto} onOpenChange={setAberto}>
+          <DialogContent className="w-[min(400px,calc(100vw-1.5rem))] max-w-none overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] p-0 shadow-2xl">
+            <DialogTitle className="sr-only">Pilar Sip</DialogTitle>
+            <DialogDescription className="sr-only">
+              Telefone SIP com agenda, discador e chamadas de voz e vídeo.
+            </DialogDescription>
+            <div className="relative h-[min(780px,calc(100dvh-3rem))] w-full overflow-hidden rounded-[28px]">
+              <PilarFone
+                embedded
+                initialNumber={numeroInicial}
+                serverConfig={servidores}
+                mostrarInterfone={false}
+                onAbrirInterfone={() => undefined}
+                onFechar={() => setAberto(false)}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <div className={`sip-slide-menu ${aberto ? "open" : ""}`} aria-hidden={!aberto}>
+          <div className="relative h-full w-full overflow-hidden">
             <PilarFone
               embedded
               initialNumber={numeroInicial}
@@ -89,8 +123,8 @@ export default function PilarFoneWeb() {
               onFechar={() => setAberto(false)}
             />
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   );
 }
