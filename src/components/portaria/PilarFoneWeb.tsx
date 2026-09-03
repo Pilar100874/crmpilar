@@ -304,7 +304,19 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   if (janela) {
     return (
       <>
-        <div className="fixed inset-0 bg-[#0B141A]">{controlesTelefone}</div>
+        {/* Mesma aparência da janela flutuante: cartão estilo celular centralizado.
+            Em tela cheia, o cartão expande e ocupa a tela inteira (sem barra do navegador). */}
+        <div className="fixed inset-0 flex items-center justify-center bg-[#0B141A] p-3">
+          <div
+            className={`overflow-hidden bg-[#0B141A] shadow-2xl transition-all duration-200 ${
+              emTelaCheia
+                ? "h-full w-full rounded-none border-0"
+                : "h-[min(780px,calc(100vh-1.5rem))] w-[min(400px,100%)] rounded-[28px] border border-border/60"
+            }`}
+          >
+            {controlesTelefone}
+          </div>
+        </div>
         {config && (
           <InterfonePopup
             aberto={interfoneAberto}
