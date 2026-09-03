@@ -102,7 +102,7 @@ export default function PilarFoneWeb() {
                     onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
                     className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
                   >
-                    {modo === "popup" ? <PanelRight className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+                    <PanelRight className="h-4 w-4" />
                   </button>
                 }
                 onFechar={() => setAberto(false)}
