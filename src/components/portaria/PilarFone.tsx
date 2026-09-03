@@ -400,9 +400,11 @@ export default function PilarFone({
           )}
         </div>
 
-        <nav className="flex border-b border-white/5">
+        <nav className="flex overflow-x-auto border-b border-white/5">
           {([
             { id: "ramais", rotulo: "Ramais" },
+            { id: "cadastros", rotulo: "Cadastros" },
+            { id: "whatsapp", rotulo: "WhatsApp" },
             ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Interfone" }] : []),
           ] as Array<{ id: Aba; rotulo: string }>).map((t) => (
             <button
