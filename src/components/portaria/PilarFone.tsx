@@ -99,6 +99,8 @@ interface Props {
   mostrarInterfone?: boolean;
   /** Fecha o telefone (exibido apenas no modo embutido). */
   onFechar?: () => void;
+  /** Ações extras exibidas no cabeçalho do telefone. */
+  headerExtra?: React.ReactNode;
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -113,6 +115,7 @@ export default function PilarFone({
   serverConfig,
   mostrarInterfone = true,
   onFechar,
+  headerExtra,
 }: Props) {
 
   const { toast } = useToast();
@@ -339,6 +342,7 @@ export default function PilarFone({
           ) : (
             <>
               <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Sip</h1>
+              {headerExtra}
               {onFechar && (
                 <button
                   type="button"
