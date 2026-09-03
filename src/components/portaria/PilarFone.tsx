@@ -413,27 +413,17 @@ export default function PilarFone({
 
         <div className="flex items-center gap-2 px-4 pb-2 text-[11px]">
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
+            role="status"
+            aria-label={isRegistered ? "Ramal conectado" : isConnecting ? "Ramal conectando" : "Ramal desconectado"}
+            title={isRegistered ? `Ramal ${config.ramal} conectado` : isConnecting ? "Conectando..." : "Ramal desconectado"}
+            className={`inline-block h-2.5 w-2.5 rounded-full ${
               isRegistered
-                ? "bg-[#00A884]/20 text-[#00A884]"
+                ? "bg-[#00A884] shadow-[0_0_6px_rgba(0,168,132,0.8)]"
                 : isConnecting
-                  ? "bg-amber-500/20 text-amber-400"
-                  : "bg-red-500/20 text-red-400"
+                  ? "animate-pulse bg-amber-400"
+                  : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
             }`}
-          >
-            <PhoneCall className="h-3 w-3" />
-            {isConnecting ? "Conectando..." : isRegistered ? `Ramal ${config.ramal} online` : "Ramal desconectado"}
-          </span>
-          {!isRegistered && !isConnecting && (
-            <button type="button" onClick={() => void conectar()} className="font-semibold text-[#00A884] underline">
-              Conectar
-            </button>
-          )}
-          {isRegistered && (
-            <button type="button" onClick={() => void disconnect()} className="font-semibold text-[#8696A0] underline">
-              Desconectar
-            </button>
-          )}
+          />
           <label
             htmlFor="pf-auto-atender"
             className="ml-auto inline-flex cursor-pointer items-center gap-1.5 font-semibold text-[#AEBAC1]"
