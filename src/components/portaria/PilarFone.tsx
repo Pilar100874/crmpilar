@@ -400,25 +400,33 @@ export default function PilarFone({
           )}
         </div>
 
-        <nav className="flex overflow-x-auto border-b border-white/5">
-          {([
-            { id: "ramais", rotulo: "Ramais" },
-            { id: "cadastros", rotulo: "Cadastros" },
-            { id: "whatsapp", rotulo: "WhatsApp" },
-            ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Interfone" }] : []),
-          ] as Array<{ id: Aba; rotulo: string }>).map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setAba(t.id)}
-              className={`relative flex-1 py-3 text-sm font-semibold uppercase tracking-wide transition ${
-                aba === t.id ? "text-[#00A884]" : "text-[#8696A0]"
-              }`}
-            >
-              {t.rotulo}
-              {aba === t.id && <span className="absolute inset-x-4 bottom-0 h-[3px] rounded-full bg-[#00A884]" />}
-            </button>
-          ))}
+        <nav className="px-3 pb-3">
+          <div className="flex gap-1 overflow-x-auto rounded-2xl bg-white/[0.06] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {([
+              { id: "ramais", rotulo: "Ramais", Icone: Users },
+              { id: "cadastros", rotulo: "Cadastros", Icone: BookUser },
+              { id: "whatsapp", rotulo: "WhatsApp", Icone: MessageCircle },
+              ...(mostrarInterfone ? [{ id: "chamadas", rotulo: "Interfone", Icone: BellRing }] : []),
+            ] as Array<{ id: Aba; rotulo: string; Icone: typeof Users }>).map((t) => {
+              const ativa = aba === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setAba(t.id)}
+                  aria-current={ativa}
+                  className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${
+                    ativa
+                      ? "bg-[#00A884] text-[#0B141A] shadow-[0_2px_10px_rgba(0,168,132,0.35)]"
+                      : "text-[#AEBAC1] hover:bg-white/5"
+                  }`}
+                >
+                  <t.Icone className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t.rotulo}</span>
+                </button>
+              );
+            })}
+          </div>
         </nav>
       </header>
 
