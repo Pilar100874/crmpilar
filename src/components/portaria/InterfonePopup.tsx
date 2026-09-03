@@ -175,17 +175,16 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
   return (
     <Dialog open={aberto} onOpenChange={(v) => (!v ? encerrar() : undefined)}>
-      <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none gap-3 overflow-y-auto rounded-none border-0 bg-[#0D1626] p-4 text-white sm:h-auto sm:max-h-[92vh] sm:w-auto sm:max-w-4xl sm:rounded-2xl sm:border" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
-        <DialogHeader>
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-3 overflow-hidden rounded-none border-0 bg-[#0D1626] p-4 text-white sm:h-[92vh] sm:max-h-[92vh] sm:w-auto sm:max-w-4xl sm:rounded-2xl sm:border" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <BellRing className="h-5 w-5 text-primary animate-pulse" />
             Campainha do interfone
-            <Badge variant="outline">{new Date().toLocaleTimeString("pt-BR")}</Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <div className={`grid gap-2 ${cameras.length ? "sm:grid-cols-2" : ""}`}>
-          <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-black ${cameras.length ? "sm:col-span-2" : ""} aspect-video`}>
+        <div className={`grid min-h-0 flex-1 auto-rows-fr gap-2 ${cameras.length ? "sm:grid-cols-2" : ""}`}>
+          <div className={`relative min-h-0 overflow-hidden rounded-2xl border border-white/10 bg-black ${cameras.length ? "sm:col-span-2" : ""}`}>
             {imagemIdface ? (
               <img src={imagemIdface} alt="Câmera do interfone" className="h-full w-full object-contain" />
             ) : (
@@ -214,6 +213,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
               key={c.id}
               titulo={c.nome}
               imagem={imagens[c.id] ?? null}
+              esticado
               className={cameras.length === 1 ? "sm:col-span-2" : ""}
             />
           ))}
@@ -223,7 +223,7 @@ export default function InterfonePopup({ aberto, onFechar, config, unidadeId, to
 
 
         <div
-          className="mt-auto flex flex-wrap gap-2"
+          className="flex shrink-0 flex-wrap gap-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
         >
           {pontos.map((p) => (
