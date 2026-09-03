@@ -212,6 +212,9 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     <PilarFone
       embedded
       initialNumber={numeroInicial}
+      initialAba={abaInicial}
+      initialWhatsapp={contatoInicial}
+
       serverConfig={servidores}
       mostrarInterfone={!!config}
       historico={historico}
