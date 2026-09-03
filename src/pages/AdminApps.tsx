@@ -178,6 +178,10 @@ export default function AdminApps() {
 
       <MobileAppCard />
 
+      <InterfoneAppDownloadCard />
+
+
+
 
       
 
