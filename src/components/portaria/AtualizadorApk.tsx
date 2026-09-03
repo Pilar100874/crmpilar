@@ -10,7 +10,7 @@ import { lerConfigSip } from "@/lib/portaria/sipConfig";
 import { salvarConfigNaNuvem } from "@/lib/portaria/sipConfigCloud";
 
 /**
- * Atualização remota do APK Pilar Sip.
+ * Atualização remota do APK Pilar Fone.
  * Antes de baixar a nova versão faz o backup das configurações do ramal na
  * nuvem, então nada é perdido ao instalar por cima.
  */
@@ -99,7 +99,7 @@ export default function AtualizadorApk({ compacto = false }: { compacto?: boolea
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Atualização disponível ({nova.version})</p>
           <p className="mt-0.5 line-clamp-2 text-xs text-[#8696A0]">
-            {nova.notas || "Nova versão do Pilar Sip."} Suas configurações do ramal são salvas antes
+            {nova.notas || "Nova versão do Pilar Fone."} Suas configurações do ramal são salvas antes
             da instalação.
           </p>
           <div className="mt-2 flex gap-2">

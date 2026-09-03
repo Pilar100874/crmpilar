@@ -48,7 +48,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     servidorRemoto: "",
   });
 
-  // Interfone dentro do Pilar Sip (igual ao APK)
+  // Interfone dentro do Pilar Fone (igual ao APK)
   const { unidadeId } = useUnidadeAtual();
   const { config } = useInterfoneConfig(unidadeId);
   const [interfoneAberto, setInterfoneAberto] = useState(false);
@@ -285,8 +285,8 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         className={`sip-tab ${aberto && modo === "painel" ? "open" : ""}`}
         role="button"
         tabIndex={0}
-        aria-label={aberto ? "Fechar Pilar Sip" : "Abrir Pilar Sip"}
-        title="Pilar Sip (arraste para mover)"
+        aria-label={aberto ? "Fechar Pilar Fone" : "Abrir Pilar Fone"}
+        title="Pilar Fone (arraste para mover)"
         style={posicaoY !== null ? { top: posicaoY, bottom: "auto" } : undefined}
         onPointerDown={(e) => {
           (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -309,7 +309,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         aberto && (
           <div
             role="dialog"
-            aria-label="Pilar Sip"
+            aria-label="Pilar Fone"
             className="fixed z-[1100] w-[min(400px,calc(100vw-1.5rem))] overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] shadow-2xl"
             style={{
               left: posFlutuante?.x ?? undefined,
@@ -322,7 +322,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
             <div
               className="flex h-7 cursor-grab items-center justify-center bg-white/5 text-[#AEBAC1] active:cursor-grabbing"
               style={{ touchAction: "none" }}
-              title="Arraste para mover o Pilar Sip"
+              title="Arraste para mover o Pilar Fone"
               onPointerDown={iniciarArrastoJanela}
               onPointerMove={moverArrastoJanela}
               onPointerUp={terminarArrastoJanela}

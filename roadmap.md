@@ -18,10 +18,10 @@
 - [x] Typecheck OK (tsgo --noEmit)
 
 ## 2026-09-03
-- [x] Unificar softphone + videochamada no Pilar Sip (popup em formato de celular)
+- [x] Unificar softphone + videochamada no Pilar Fone (popup em formato de celular)
 - [x] Remover abas Softphone/Videochamada de Configurações de Atendimento
 - [x] Botão fechar, borda mais fina e botões sem corte no popup
 - [x] Gatilho como aba lateral (estilo chat interno), logo acima do chat
-- [x] Remover aba Chat do Pilar Sip (chat volta a ser só o painel lateral próprio)
-- [x] Interfone dentro do Pilar Sip web (igual ao APK): config, campainha em tempo real e InterfonePopup
-- [x] Aba lateral do Pilar Sip arrastável verticalmente (posição salva no navegador)
+- [x] Remover aba Chat do Pilar Fone (chat volta a ser só o painel lateral próprio)
+- [x] Interfone dentro do Pilar Fone web (igual ao APK): config, campainha em tempo real e InterfonePopup
+- [x] Aba lateral do Pilar Fone arrastável verticalmente (posição salva no navegador)

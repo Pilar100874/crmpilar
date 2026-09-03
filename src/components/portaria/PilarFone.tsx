@@ -368,12 +368,12 @@ export default function PilarFone({
             </>
           ) : (
             <>
-              <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Sip</h1>
+              <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
               {headerExtra}
               {onFechar && (
                 <button
                   type="button"
-                  aria-label="Fechar Pilar Sip"
+                  aria-label="Fechar Pilar Fone"
                   onClick={onFechar}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
                 >

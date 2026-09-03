@@ -292,7 +292,7 @@ All colors MUST be HSL.
     right: 0;
   }
 
-  /* Painel lateral do Pilar Sip (mesmo comportamento do chat interno) */
+  /* Painel lateral do Pilar Fone (mesmo comportamento do chat interno) */
   .sip-slide-menu {
     position: fixed;
     right: -400px;
@@ -311,7 +311,7 @@ All colors MUST be HSL.
     right: 0;
   }
 
-  /* Aba lateral do Pilar Sip, logo acima da aba do chat interno (arrastável na vertical) */
+  /* Aba lateral do Pilar Fone, logo acima da aba do chat interno (arrastável na vertical) */
   .sip-tab {
     position: fixed;
     right: 0;
