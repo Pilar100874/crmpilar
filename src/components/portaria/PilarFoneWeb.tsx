@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, GripHorizontal, PanelRight, Phone, Smartphone } from "lucide-react";
+import { ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
