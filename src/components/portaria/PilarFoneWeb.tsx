@@ -9,10 +9,25 @@ import PilarFone from "./PilarFone";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
-/** Abre o Pilar Sip em qualquer lugar do sistema (opcionalmente já com um número). */
-export function abrirPilarSip(numero?: string) {
-  window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero } }));
+export type AbaPilarFone = "ramais" | "cadastros" | "whatsapp" | "chamadas";
+
+export interface OpcoesAbrirPilarFone {
+  /** Tela do telefone que deve ser aberta. */
+  aba?: AbaPilarFone;
+  /** Nome do contato (usado na tela de WhatsApp). */
+  nome?: string;
 }
+
+/** Abre o Pilar Fone em qualquer lugar do sistema (opcionalmente já com um número e tela). */
+export function abrirPilarSip(numero?: string, opcoes?: OpcoesAbrirPilarFone) {
+  window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero, ...opcoes } }));
+}
+
+/** Abre o telefone direto na conversa de WhatsApp do número. */
+export function abrirWhatsappPilarFone(numero: string, nome?: string) {
+  abrirPilarSip(numero, { aba: "whatsapp", nome });
+}
+
 
 interface PilarFoneWebProps {
   /** Renderiza o telefone ocupando toda a janela (rota /pilar-sip aberta em outro monitor). */
