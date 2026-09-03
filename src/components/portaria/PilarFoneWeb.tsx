@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
+import { Download, ExternalLink, GripHorizontal, Maximize2, Minimize2, PanelRight, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
@@ -27,6 +27,23 @@ export function abrirPilarSip(numero?: string, opcoes?: OpcoesAbrirPilarFone) {
 /** Abre o telefone direto na conversa de WhatsApp do número. */
 export function abrirWhatsappPilarFone(numero: string, nome?: string) {
   abrirPilarSip(numero, { aba: "whatsapp", nome });
+}
+
+/** Baixa o pacote da extensão do Chrome que abre o Pilar Fone sem a barra do navegador. */
+export function baixarExtensao() {
+  fetch("/pilar-fone-extension.zip")
+    .then((res) => {
+      if (!res.ok) throw new Error(`Falha ao baixar (${res.status})`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "pilar-fone-extension.zip";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((err) => alert(err.message));
 }
 
 
