@@ -304,7 +304,7 @@ export function ChatInternoPanel({ isOpen, onClose, inline = false }: ChatIntern
   });
 
   return (
-    <div className={`chat-slide-menu ${isOpen ? 'open' : ''}`}>
+    <div className={inline ? 'h-full w-full bg-background text-foreground' : `chat-slide-menu ${isOpen ? 'open' : ''}`}>
       <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b bg-primary/5">
