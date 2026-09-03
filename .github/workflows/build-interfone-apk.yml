@@ -1,4 +1,4 @@
-name: Build Pilar Interfone APK
+name: Build Pilar Fone APK
 
 on:
   workflow_dispatch:
@@ -194,7 +194,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: interfone-v${{ steps.version.outputs.version }}
-          name: Pilar Interfone v${{ steps.version.outputs.version }}
+          name: Pilar Fone v${{ steps.version.outputs.version }}
           body: |
             APK do app de atendimento do Interfone (Portaria).
 
