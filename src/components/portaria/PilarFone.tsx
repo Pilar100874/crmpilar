@@ -332,9 +332,17 @@ export default function PilarFone({
   };
 
   const filtro = busca.trim().toLowerCase();
+  const tiposRamal = useMemo(() => {
+    const set = new Set<string>();
+    ramais.forEach((r) => { if (r.tipo) set.add(r.tipo); });
+    return Array.from(set).sort();
+  }, [ramais]);
   const ramaisFiltrados = ramais.filter(
-    (r) => !filtro || r.nome.toLowerCase().includes(filtro) || r.ramal.includes(filtro),
+    (r) =>
+      (tipoRamal === "todos" || (r.tipo ?? "") === tipoRamal) &&
+      (!filtro || r.nome.toLowerCase().includes(filtro) || r.ramal.includes(filtro)),
   );
+
   const contatosFiltrados = contatos.filter(
     (c) => !filtro || c.nome.toLowerCase().includes(filtro) || c.numero.includes(filtro),
   );
