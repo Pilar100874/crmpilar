@@ -23,7 +23,7 @@ function limpar(numero: string) {
 }
 
 interface Props {
-  onLigar: (numero: string) => void;
+  onLigar: (numero: string, nome?: string) => void;
   onWhatsapp: (contato: ContatoCadastro) => void;
 }
 
@@ -102,11 +102,13 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
     return [...FILTROS_BASE, ...tipos.map((t) => ({ id: `tipo:${t}`, rotulo: t }))];
   }, [itens]);
 
-  const visiveis = itens.filter((i) => {
-    if (filtro === "todos") return true;
-    if (filtro.startsWith("tipo:")) return i.tipo === filtro.slice(5);
-    return i.origem === filtro;
-  });
+  const aplica = (i: ContatoCadastro, alvo: string) => {
+    if (alvo === "todos") return true;
+    if (alvo.startsWith("tipo:")) return i.tipo === alvo.slice(5);
+    return i.origem === alvo;
+  };
+  const contarFiltro = (alvo: string) => itens.filter((i) => aplica(i, alvo)).length;
+  const visiveis = itens.filter((i) => aplica(i, filtro));
 
   return (
     <div>
@@ -123,19 +125,32 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
             <RefreshCw className={`h-4 w-4 text-[#8696A0] ${carregando ? "animate-spin" : ""}`} />
           </button>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {filtros.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFiltro(f.id)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold capitalize transition ${
-                filtro === f.id ? "bg-[#00A884] text-[#0B141A]" : "bg-white/10 text-[#AEBAC1]"
-              }`}
-            >
-              {f.rotulo}
-            </button>
-          ))}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {filtros.map((f) => {
+            const ativo = filtro === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFiltro(f.id)}
+                aria-pressed={ativo}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold capitalize transition ${
+                  ativo
+                    ? "border-[#00A884] bg-[#00A884] text-[#0B141A] shadow-[0_2px_10px_rgba(0,168,132,0.3)]"
+                    : "border-white/10 bg-white/[0.06] text-[#AEBAC1] hover:bg-white/10"
+                }`}
+              >
+                {f.rotulo}
+                <span
+                  className={`rounded-full px-1.5 text-[10px] font-bold ${
+                    ativo ? "bg-black/15 text-[#0B141A]" : "bg-white/10 text-[#8696A0]"
+                  }`}
+                >
+                  {contarFiltro(f.id)}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -172,7 +187,7 @@ export default function PilarFoneContatos({ onLigar, onWhatsapp }: Props) {
           <button
             type="button"
             aria-label={`Ligar para ${c.nome}`}
-            onClick={() => onLigar(limpar(c.numero))}
+            onClick={() => onLigar(limpar(c.numero), c.nome)}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#E9EDEF] transition active:scale-95"
           >
             <Phone className="h-5 w-5" />
