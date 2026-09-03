@@ -122,14 +122,15 @@ export default function PilarFoneWeb() {
             headerExtra={
               <button
                 type="button"
-                aria-label={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
-                title={modo === "popup" ? "Abrir como painel lateral" : "Abrir como popup"}
-                onClick={() => setModo(modo === "popup" ? "painel" : "popup")}
+                aria-label="Abrir como popup"
+                title="Abrir como popup"
+                onClick={() => setModo("popup")}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
               >
-                {modo === "popup" ? <PanelRight className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+                <Smartphone className="h-4 w-4" />
               </button>
             }
+
               onFechar={() => setAberto(false)}
             />
           </div>
