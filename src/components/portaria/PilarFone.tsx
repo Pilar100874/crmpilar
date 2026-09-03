@@ -580,6 +580,7 @@ export default function PilarFone({
       </main>
 
       {/* Botão flutuante do teclado */}
+      {aba !== "chat" && (
       <button
         type="button"
         aria-label="Abrir teclado"
