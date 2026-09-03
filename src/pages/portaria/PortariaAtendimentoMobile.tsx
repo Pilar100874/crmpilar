@@ -7,6 +7,7 @@ import { usePushInterfone, notificarCampainhaLocal } from "@/lib/portaria/push";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import PilarFone from "@/components/portaria/PilarFone";
 import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 /** Tela do app Pilar Fone no celular: agenda de ramais, discador e interfone. */
 export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boolean }) {
@@ -17,6 +18,26 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
   const [toques, setToques] = useState<ToqueCampainha[]>([]);
   const [toqueId, setToqueId] = useState<string | null>(null);
   const [aberto, setAberto] = useState(false);
+  const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>();
+
+  // Servidor SIP vem sempre da configuração do estabelecimento (não é editável no aparelho).
+  useEffect(() => {
+    let ativo = true;
+    void (async () => {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+      const { data } = await supabase
+        .from("ucm_config")
+        .select("ucm_host, remote_ip")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+      if (!ativo || !data) return;
+      setServidores({ servidor: data.ucm_host ?? "", servidorRemoto: data.remote_ip ?? "" });
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -47,6 +68,7 @@ export default function PortariaAtendimentoMobile({ dark = false }: { dark?: boo
     <div className={dark ? "dark" : undefined}>
       <PilarFone
         abasPermitidas={abasPermitidas}
+        serverConfig={servidores}
         onAbrirInterfone={() => {
           setToqueId(toques[0]?.id ?? null);
           setAberto(true);
