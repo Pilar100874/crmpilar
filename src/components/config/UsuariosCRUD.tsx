@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ABAS_PILAR_FONE, type AbaPilarFoneId } from "@/lib/portaria/abasPilarFone";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -51,6 +52,7 @@ interface Usuario {
   estabelecimentos?: { nome: string };
   is_porteiro?: boolean;
   pode_usar_interfone?: boolean;
+  pilarfone_abas?: string[] | null;
   is_atendente?: boolean;
   atendente_id?: string;
   tipo?: string;
@@ -121,6 +123,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
   const [podeUsarInterfone, setPodeUsarInterfone] = useState(false);
+  const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -374,6 +377,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
       pode_usar_interfone: podeUsarInterfone,
+      pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
     };
 
     if (editingId) {
@@ -675,6 +679,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAtendente(false);
     setIsPorteiro(false);
     setPodeUsarInterfone(false);
+    setAbasPilarFone([]);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -706,6 +711,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
     setPodeUsarInterfone(!!(usuario as any).pode_usar_interfone);
+    setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
     setEditingId(usuario.id);
     setFormOpen(true);
 
