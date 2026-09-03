@@ -128,7 +128,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
-            Endereço IP local quando estiver na rede interna (sem https://)
+            Servidor SIP usado pelo Pilar Fone (web e APK) na rede interna, sem https://
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             onChange={(e) => setConfig({ ...config, remote_ip: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
-            Endereço IP público ou domínio para acesso externo (sem https://)
+            Servidor alternativo do Pilar Fone para uso fora da empresa (ex.: pilar.myddns.me), sem https://
           </p>
         </div>
 
