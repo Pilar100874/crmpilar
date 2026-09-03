@@ -159,6 +159,8 @@ export default function PilarFone({
   const [aba, setAba] = useState<Aba>("ramais");
   const [alvoWhatsapp, setAlvoWhatsapp] = useState<AlvoWhatsapp | null>(null);
   const [busca, setBusca] = useState("");
+  const [tipoRamal, setTipoRamal] = useState<string>("todos");
+
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [tecladoAberto, setTecladoAberto] = useState(false);
   const [numero, setNumero] = useState("");
@@ -332,9 +334,17 @@ export default function PilarFone({
   };
 
   const filtro = busca.trim().toLowerCase();
+  const tiposRamal = useMemo(() => {
+    const set = new Set<string>();
+    ramais.forEach((r) => { if (r.tipo) set.add(r.tipo); });
+    return Array.from(set).sort();
+  }, [ramais]);
   const ramaisFiltrados = ramais.filter(
-    (r) => !filtro || r.nome.toLowerCase().includes(filtro) || r.ramal.includes(filtro),
+    (r) =>
+      (tipoRamal === "todos" || (r.tipo ?? "") === tipoRamal) &&
+      (!filtro || r.nome.toLowerCase().includes(filtro) || r.ramal.includes(filtro)),
   );
+
   const contatosFiltrados = contatos.filter(
     (c) => !filtro || c.nome.toLowerCase().includes(filtro) || c.numero.includes(filtro),
   );
@@ -471,6 +481,29 @@ export default function PilarFone({
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
+            <div className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {(["todos", ...tiposRamal] as string[]).map((t) => {
+                const ativo = tipoRamal === t;
+                const total = t === "todos" ? ramais.length : ramais.filter((r) => (r.tipo ?? "") === t).length;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTipoRamal(t)}
+                    title={t === "todos" ? "Todos os ramais" : t}
+                    aria-label={t === "todos" ? "Todos os ramais" : t}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold capitalize transition ${
+                      ativo ? "bg-[#00A884] text-[#0B141A]" : "bg-white/[0.06] text-[#AEBAC1] active:scale-95"
+                    }`}
+                  >
+                    {t === "todos" ? <Users className="h-3.5 w-3.5" /> : <BookUser className="h-3.5 w-3.5" />}
+                    {t === "todos" ? "Todos" : t}
+                    <span className={`rounded-full px-1.5 text-[10px] ${ativo ? "bg-black/15" : "bg-white/10"}`}>{total}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             {mostrarInterfone && (
               <button
                 type="button"
@@ -603,16 +636,28 @@ export default function PilarFone({
         )}
       </main>
 
-      {/* Botão flutuante do teclado */}
+      {/* Botão flutuante: age conforme a aba aberta */}
       <button
         type="button"
-        aria-label="Abrir teclado"
-        onClick={() => setTecladoAberto(true)}
+        aria-label={
+          aba === "chamadas" ? "Abrir interfone" : aba === "whatsapp" ? "Nova conversa de WhatsApp" : "Abrir teclado"
+        }
+        title={
+          aba === "chamadas" ? "Abrir interfone" : aba === "whatsapp" ? "Nova conversa de WhatsApp" : "Abrir teclado"
+        }
+        onClick={() => (aba === "chamadas" ? onAbrirInterfone() : setTecladoAberto(true))}
         className={`${camada} left-1/2 z-30 -translate-x-1/2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00A884] text-[#0B141A] shadow-xl shadow-black/40 transition active:scale-95`}
         style={{ bottom: `calc(${padBottom} + 20px)` }}
       >
-        <Grid3X3 className="h-6 w-6" />
+        {aba === "chamadas" ? (
+          <BellRing className="h-6 w-6" />
+        ) : aba === "whatsapp" ? (
+          <MessageCircle className="h-6 w-6" />
+        ) : (
+          <Grid3X3 className="h-6 w-6" />
+        )}
       </button>
+
 
 
 
@@ -621,7 +666,7 @@ export default function PilarFone({
       {tecladoAberto && (
         <div className={`${camada} inset-0 z-40 flex flex-col bg-[#0B141A]`} style={{ paddingTop: padTop }}>
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-base font-semibold">Discar</span>
+            <span className="text-base font-semibold">{aba === "whatsapp" ? "Nova conversa" : "Discar"}</span>
             <button
               type="button"
               aria-label="Fechar teclado"
@@ -653,7 +698,7 @@ export default function PilarFone({
               <button
                 type="button"
                 aria-label="Ligar com vídeo"
-                disabled={!numero.trim()}
+                disabled={!numero.trim() || aba === "whatsapp"}
                 onClick={() => ligar(numero, true)}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1F2C34] text-[#00A884] transition active:scale-90 disabled:opacity-40"
               >
@@ -661,13 +706,31 @@ export default function PilarFone({
               </button>
               <button
                 type="button"
-                aria-label="Ligar"
+                aria-label={aba === "whatsapp" ? "Abrir conversa de WhatsApp" : "Ligar"}
+                title={aba === "whatsapp" ? "Abrir conversa de WhatsApp" : "Ligar"}
                 disabled={!numero.trim()}
-                onClick={() => ligar(numero)}
+                onClick={() => {
+                  const alvo = numero.trim();
+                  if (!alvo) return;
+                  if (aba === "whatsapp") {
+                    registrarChamada({ grupo: "whatsapp", nome: nomePorNumero(alvo), numero: alvo, direcao: "saida" });
+                    setAlvoWhatsapp({ nome: nomePorNumero(alvo), numero: alvo });
+                    setTecladoAberto(false);
+                    return;
+                  }
+                  registrarChamada({
+                    grupo: aba === "cadastros" ? "cadastros" : "ramais",
+                    nome: nomePorNumero(alvo),
+                    numero: alvo,
+                    direcao: "saida",
+                  });
+                  ligar(alvo);
+                }}
                 className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A884] text-[#0B141A] shadow-lg transition active:scale-95 disabled:opacity-40"
               >
-                <Phone className="h-7 w-7" />
+                {aba === "whatsapp" ? <MessageCircle className="h-7 w-7" /> : <Phone className="h-7 w-7" />}
               </button>
+
               <button
                 type="button"
                 aria-label="Apagar"
