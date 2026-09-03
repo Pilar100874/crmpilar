@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pilar Fone</title>
+    <style>
+      body {
+        margin: 0;
+        width: 260px;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #0b1220;
+        color: #e5edff;
+        padding: 16px;
+      }
+      h1 { font-size: 15px; margin: 0 0 12px; }
+      label { font-size: 11px; opacity: 0.7; display: block; margin-bottom: 4px; }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #24334d;
+        background: #101a2e;
+        color: #e5edff;
+        font-size: 12px;
+      }
+      button {
+        margin-top: 12px;
+        width: 100%;
+        padding: 10px;
+        border: 0;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { background: #1d4ed8; }
+    </style>
+  </head>
+  <body>
+    <h1>Pilar Fone</h1>
+    <label for="url">Endereço do sistema</label>
+    <input id="url" type="url" placeholder="https://crmpilar.lovable.app/pilar-sip" />
+    <button id="abrir">Abrir janela do telefone</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
