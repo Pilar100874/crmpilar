@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import PilarFone from "./PilarFone";

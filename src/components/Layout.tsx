@@ -59,6 +59,7 @@ import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder"
 import VoiceAssistant from "@/components/voz/VoiceAssistant";
 import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
+import PilarFoneWeb from "@/components/portaria/PilarFoneWeb";
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
 import { SupportTicketFloatingButton } from "@/components/support/SupportTicketFloatingButton";
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
@@ -1680,6 +1681,7 @@ export default function Layout({ children }: LayoutProps) {
       <IncomingCallNotification />
       <ChatInternoProvider>
         <ChatAvisosFloatingButton />
+      <PilarFoneWeb />
       </ChatInternoProvider>
       
       <FloatingMacroRecorder />
