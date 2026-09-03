@@ -35,6 +35,7 @@ interface Usuario {
   id: string;
   nome: string;
   email: string;
+  ramal?: string | null;
 }
 
 export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
@@ -90,14 +91,15 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const carregarParticipantes = async (conversaId: string) => {
     const { data } = await supabase
       .from('chat_interno_participantes')
-      .select(`
-        usuario_id,
-        usuarios:usuarios!chat_interno_participantes_usuario_id_fkey (
-          id,
-          nome,
-          email
-        )
-      `)
+       .select(`
+         usuario_id,
+         usuarios:usuarios!chat_interno_participantes_usuario_id_fkey (
+           id,
+           nome,
+           email,
+           ramal
+         )
+       `)
       .eq('conversa_id', conversaId);
 
     if (data) {
@@ -163,7 +165,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
 
     const { data, error } = await supabase
       .from('usuarios')
-      .select('id, nome, email')
+      .select('id, nome, email, ramal')
       .eq('estabelecimento_id', estabelecimentoId)
       .order('nome');
 
@@ -309,7 +311,11 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => abrirPilarSip()}
+                    onClick={() => {
+                      const outroUsuario = (participantesConversa[conversaAtual.id] || [])
+                        .find((participante) => participante.id !== usuarioAtualId);
+                      abrirPilarSip(outroUsuario?.ramal ?? undefined);
+                    }}
                     title="Abrir Pilar Sip"
                     className={cn(
                       videoChamadaPendente?.conversaId === conversaAtual.id && "animate-pulse"
@@ -677,12 +683,12 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                           {format(new Date(conversa.updated_at), 'dd/MM HH:mm', { locale: ptBR })}
                         </p>
                       </div>
-                      {/* Indicador de videochamada pendente */}
-                      {temChamadaPendente && (
-                        <div className="animate-pulse">
-                          <Video className="h-5 w-5 text-green-500" />
-                        </div>
-                      )}
+                       {/* Indicador de chamada pendente */}
+                       {temChamadaPendente && (
+                         <div className="animate-pulse">
+                           <Phone className="h-5 w-5 text-green-500" />
+                         </div>
+                       )}
                       {conversa.tipo === 'grupo' && (
                         <Badge variant="secondary" className="text-xs">
                           Grupo
