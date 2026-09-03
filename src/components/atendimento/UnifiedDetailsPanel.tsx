@@ -555,9 +555,19 @@ export function UnifiedDetailsPanel({
                     className="h-7 text-xs flex-1 max-w-[140px]"
                     placeholder="+55 (00) 00000-0000"
                   />
+                ) : telefone ? (
+                  <button
+                    type="button"
+                    onClick={() => abrirPilarSip(telefone.replace(/\D/g, ''))}
+                    title="Ligar pelo telefone"
+                    className="text-xs truncate max-w-[140px] text-primary hover:underline"
+                  >
+                    {telefone}
+                  </button>
                 ) : (
-                  <span className="text-xs truncate max-w-[140px]">{telefone || '-'}</span>
+                  <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
+
               </div>
 
               {/* Email */}
