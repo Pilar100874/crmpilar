@@ -254,7 +254,17 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         setInterfoneAberto(true);
       }}
       headerExtra={
-        janela ? undefined : (
+        janela ? (
+          <button
+            type="button"
+            aria-label={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
+            title={emTelaCheia ? "Sair da tela cheia" : "Tela cheia (sem barra do navegador)"}
+            onClick={() => void alternarTelaCheia()}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#AEBAC1] transition active:scale-95"
+          >
+            {emTelaCheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+        ) : (
           <>
             <button
               type="button"
