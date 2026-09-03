@@ -197,11 +197,22 @@ export default function PilarFone({
   }, [serverConfig?.servidor, serverConfig?.servidorRemoto]);
 
   useEffect(() => {
-    if (initialNumber) {
+    if (initialWhatsapp?.numero) {
+      setAlvoWhatsapp(initialWhatsapp);
+      setAba("whatsapp");
+      setTecladoAberto(false);
+      return;
+    }
+    if (initialAba) {
+      setAba(initialAba);
+      if (initialAba !== "ramais") setTecladoAberto(false);
+    }
+    if (initialNumber && !initialAba) {
       setNumero(initialNumber);
       setTecladoAberto(true);
     }
-  }, [initialNumber]);
+  }, [initialNumber, initialAba, initialWhatsapp?.numero, initialWhatsapp?.nome]);
+
 
 
   const conectar = useCallback(async () => {
