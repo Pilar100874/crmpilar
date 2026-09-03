@@ -149,7 +149,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   }, [modo]);
 
   useEffect(() => {
-    if (!aberto) return;
+    if (semAcesso) return;
     let ativo = true;
     void (async () => {
       const estabelecimentoId = await getEstabelecimentoId();
@@ -165,7 +165,8 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     return () => {
       ativo = false;
     };
-  }, [aberto]);
+  }, [semAcesso]);
+
 
   // Histórico de toques da campainha para a aba Campainha
   useEffect(() => {
@@ -418,12 +419,16 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       )}
 
       {modo === "popup" ? (
-        // Modo flutuante: janela estilo celular que pode ser arrastada e solta em qualquer ponto da tela
-        aberto && (
+        // Modo flutuante: janela estilo celular arrastável.
+        // Fica montada (oculta) quando fechada para o ramal SIP continuar registrado e avisar chamadas.
+        abasPermitidas !== undefined && (
           <div
             role="dialog"
             aria-label="Pilar Fone"
-            className="fixed z-[1100] w-[min(400px,calc(100vw-1.5rem))] overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] shadow-2xl"
+            aria-hidden={!aberto}
+            className={`fixed z-[1100] w-[min(400px,calc(100vw-1.5rem))] overflow-hidden rounded-[28px] border border-border/60 bg-[#0B141A] shadow-2xl ${
+              aberto ? "" : "pointer-events-none invisible opacity-0"
+            }`}
             style={{
               left: posFlutuante?.x ?? undefined,
               top: posFlutuante?.y ?? undefined,
@@ -448,6 +453,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
             </div>
           </div>
         )
+
       ) : (
         // Modo painel: abre deslizando igual ao chat interno
         <div className={`sip-slide-menu ${aberto ? "open" : ""}`} aria-hidden={!aberto}>
