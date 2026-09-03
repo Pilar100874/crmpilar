@@ -28,3 +28,6 @@
 - [x] Clicar em números no painel de chat abre a tela correspondente do telefone (WhatsApp/discador)
 - [x] Renomear "Pilar Sip" para "Pilar Fone" (web e APK)
 - [x] Filtros de Cadastros como ícones
+- [ ] Permissão por abas do Pilar Fone no cadastro de usuário (web + APK)
+- [ ] WhatsApp do Pilar Fone: anexar arquivos e enviar áudio
+- [ ] WhatsApp do Pilar Fone: separar conversas por usuário do sistema
