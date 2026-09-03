@@ -14,8 +14,13 @@ export function abrirPilarSip(numero?: string) {
   window.dispatchEvent(new CustomEvent(EVENTO_ABRIR, { detail: { numero } }));
 }
 
-export default function PilarFoneWeb() {
-  const [aberto, setAberto] = useState(false);
+interface PilarFoneWebProps {
+  /** Renderiza o telefone ocupando toda a janela (rota /pilar-sip aberta em outro monitor). */
+  janela?: boolean;
+}
+
+export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
+  const [aberto, setAberto] = useState(janela);
   const [modo, setModo] = useState<"popup" | "painel">(
     () => (localStorage.getItem("pilarSipModo") as "popup" | "painel") || "popup",
   );
