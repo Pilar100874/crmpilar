@@ -206,7 +206,6 @@ export default function PilarFone({
       if (!ativo) return;
       const final = serverConfig?.servidor ? { ...sincronizada, ...serverConfig } : sincronizada;
       setConfig(final);
-      setRascunho(final);
       setConfigSincronizada(true);
     });
     return () => {
@@ -222,7 +221,6 @@ export default function PilarFone({
     void lerConfigSipDoUsuario().then((doCadastro) => {
       if (!ativo || !doCadastro) return;
       setConfig((atual) => ({ ...atual, ...doCadastro }));
-      setRascunho((atual) => ({ ...atual, ...doCadastro }));
       setConfigSincronizada(true);
     });
     return () => {
@@ -233,7 +231,6 @@ export default function PilarFone({
   useEffect(() => {
     if (!serverConfig?.servidor) return;
     setConfig((atual) => ({ ...atual, ...serverConfig }));
-    setRascunho((atual) => ({ ...atual, ...serverConfig }));
   }, [serverConfig?.servidor, serverConfig?.servidorRemoto]);
 
   useEffect(() => {
