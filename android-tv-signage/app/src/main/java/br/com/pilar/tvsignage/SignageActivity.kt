@@ -569,10 +569,27 @@ class SignageActivity : AppCompatActivity() {
         val deviceId = DeviceStore.deviceId(this).orEmpty()
         val url = BuildConfig.APP_BASE_URL + "/tv-signage/simular" +
             (if (deviceId.isNotEmpty()) "/$deviceId" else "") + "?" + params
+        // Na tela dividida o layout web já é responsivo: cada painel se adapta à sua
+        // metade. Por isso desligamos o "overview mode" da WebView, que reduzia a
+        // página inteira e deixava o conteúdo pequeno com bordas pretas na TV.
+        aplicarEscalaNativa(true)
         b.txtStandby.visibility = View.GONE
         b.webview.visibility = View.VISIBLE
         b.webview.loadUrl(url)
     }
+
+    /**
+     * Alterna entre a renderização 1:1 (CSS px = px da TV, usada na tela dividida)
+     * e o modo padrão de "página larga" usado por dashboards e URLs externas.
+     */
+    private fun aplicarEscalaNativa(umParaUm: Boolean) {
+        val s = b.webview.settings
+        s.loadWithOverviewMode = !umParaUm
+        s.useWideViewPort = !umParaUm
+        s.textZoom = 100
+        b.webview.setInitialScale(if (umParaUm) 100 else 0)
+    }
+
 
     private fun loadDashboard(dash: JSONObject) {
         val tipo = dash.optString("tipo")
