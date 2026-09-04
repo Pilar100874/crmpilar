@@ -70,6 +70,26 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [webcamFor, setWebcamFor] = useState<{ key: string; label: string; extra?: boolean } | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const extraInputRef = useRef<HTMLInputElement | null>(null);
+  // Mantém sempre a lista mais recente para evitar perder fotos em envios simultâneos.
+  const valueRef = useRef<CapturedPhoto[]>(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  /** Resolve o estabelecimento do usuário; se ausente, usa o do veículo selecionado. */
+  const resolverEstabelecimento = async (): Promise<string | null> => {
+    const doUsuario = await getEstabelecimentoId();
+    if (doUsuario) return doUsuario;
+    if (!vehicleId) return null;
+    const { data } = await supabase
+      .from("cv_vehicles")
+      .select("estabelecimento_id")
+      .eq("id", vehicleId)
+      .maybeSingle();
+    return (data as any)?.estabelecimento_id ?? null;
+  };
+
+
 
 
   const getUrl = async (path: string) => {
