@@ -26,7 +26,31 @@ Deno.serve(async (req) => {
     playlist = { ...pl, items };
   }
 
+  // Tela dividida: conteúdo do painel B
+  let splitDashboard = null;
+  let splitPlaylist = null;
+  const splitModo = device.split_modo || "nenhum";
+  if (splitModo !== "nenhum") {
+    if (device.split_b_dashboard_id) {
+      const { data } = await sb.from("tv_dashboards").select("*").eq("id", device.split_b_dashboard_id).maybeSingle();
+      splitDashboard = data;
+    }
+    if (device.split_b_playlist_id) {
+      const { data: pl } = await sb.from("tv_playlists").select("*").eq("id", device.split_b_playlist_id).maybeSingle();
+      const { data: items } = await sb.from("tv_playlist_items")
+        .select("*, dashboard:tv_dashboards(*)")
+        .eq("playlist_id", device.split_b_playlist_id)
+        .order("ordem", { ascending: true });
+      splitPlaylist = { ...pl, items };
+    }
+  }
+
   return json({
+    split: {
+      modo: splitModo,
+      proporcao: device.split_proporcao ?? 50,
+      painel_b: { dashboard: splitDashboard, playlist: splitPlaylist },
+    },
     device: {
       id: device.id,
       nome: device.nome,

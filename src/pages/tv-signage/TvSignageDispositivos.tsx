@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, Wifi, WifiOff, AlertTriangle, PlayCircle, Monitor, MapPin, Layers, Clock, Tv, Activity } from "lucide-react";
+import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, Wifi, WifiOff, AlertTriangle, PlayCircle, Monitor, MapPin, Layers, Clock, Tv, Activity, Columns2 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -84,6 +84,10 @@ export default function TvSignageDispositivos() {
         dashboard_atual_id: dados.dashboard_atual_id || null, playlist_id: dados.playlist_id || null,
         tema: dados.tema, idioma: dados.idioma, versao_min_requerida: dados.versao_min_requerida,
         observacoes: dados.observacoes,
+        split_modo: dados.split_modo || "nenhum",
+        split_proporcao: dados.split_proporcao ?? 50,
+        split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
+        split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
       }).eq("id", dados.id);
       if (error) return toast.error(error.message);
       toast.success("Dispositivo atualizado");
@@ -98,6 +102,10 @@ export default function TvSignageDispositivos() {
         dashboard_atual_id: dados.dashboard_atual_id || null, playlist_id: dados.playlist_id || null,
         tema: dados.tema, idioma: dados.idioma, versao_min_requerida: dados.versao_min_requerida,
         observacoes: dados.observacoes,
+        split_modo: dados.split_modo || "nenhum",
+        split_proporcao: dados.split_proporcao ?? 50,
+        split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
+        split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
       } as any);
       if (error) return toast.error(error.message);
       toast.success("Dispositivo cadastrado");
@@ -336,7 +344,11 @@ export default function TvSignageDispositivos() {
                 </Select>
               </div>
               <div className="md:col-span-2 p-3 rounded-lg border border-border bg-muted/30 space-y-3">
-                <p className="text-xs text-muted-foreground">Escolha <b>um</b>: Dashboard fixo <b>ou</b> Playlist (nunca os dois).</p>
+                <p className="text-xs text-muted-foreground">
+                  {(edit.split_modo && edit.split_modo !== "nenhum")
+                    ? <>Conteúdo do <b>Painel A</b> ({edit.split_modo === "horizontal" ? "parte de cima" : "lado esquerdo"}). Escolha <b>um</b>: Dashboard fixo <b>ou</b> Playlist.</>
+                    : <>Escolha <b>um</b>: Dashboard fixo <b>ou</b> Playlist (nunca os dois).</>}
+                </p>
                 <div><Label>Dashboard fixo</Label>
                   <Select value={edit.dashboard_atual_id || "none"} onValueChange={(v) => setEdit({ ...edit, dashboard_atual_id: v === "none" ? null : v, playlist_id: null })}>
                     <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
@@ -350,6 +362,76 @@ export default function TvSignageDispositivos() {
                   </Select>
                 </div>
               </div>
+
+              {/* Tela dividida */}
+              <div className="md:col-span-2 p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Columns2 className="w-4 h-4 text-primary" />
+                  <Label className="font-semibold">Tela dividida</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Exiba dois conteúdos ao mesmo tempo (dashboard fixo ou playlist em cada painel).
+                </p>
+                <div>
+                  <Label>Divisão</Label>
+                  <Select value={edit.split_modo || "nenhum"} onValueChange={(v) => setEdit({ ...edit, split_modo: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nenhum">Sem divisão (tela cheia)</SelectItem>
+                      <SelectItem value="horizontal">Horizontal — cima / baixo</SelectItem>
+                      <SelectItem value="vertical">Vertical — esquerda / direita</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {edit.split_modo && edit.split_modo !== "nenhum" && (
+                  <>
+                    <div>
+                      <Label>
+                        Proporção do Painel A ({edit.split_modo === "horizontal" ? "cima" : "esquerda"}): {edit.split_proporcao ?? 50}% / {100 - (edit.split_proporcao ?? 50)}%
+                      </Label>
+                      <input
+                        type="range"
+                        min={20}
+                        max={80}
+                        step={5}
+                        value={edit.split_proporcao ?? 50}
+                        onChange={(e) => setEdit({ ...edit, split_proporcao: Number(e.target.value) })}
+                        className="w-full accent-primary mt-2"
+                      />
+                    </div>
+                    <div className="pt-2 border-t space-y-3">
+                      <p className="text-xs text-muted-foreground">
+                        Conteúdo do <b>Painel B</b> ({edit.split_modo === "horizontal" ? "parte de baixo" : "lado direito"}).
+                      </p>
+                      <div><Label>Dashboard fixo</Label>
+                        <Select value={edit.split_b_dashboard_id || "none"} onValueChange={(v) => setEdit({ ...edit, split_b_dashboard_id: v === "none" ? null : v, split_b_playlist_id: null })}>
+                          <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">Nenhum</SelectItem>{dashboards.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div><Label>Playlist (rotação)</Label>
+                        <Select value={edit.split_b_playlist_id || "none"} onValueChange={(v) => setEdit({ ...edit, split_b_playlist_id: v === "none" ? null : v, split_b_dashboard_id: null })}>
+                          <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">Nenhuma</SelectItem>{playlists.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className={`rounded-md border border-dashed p-2 grid gap-1 h-24 ${edit.split_modo === "horizontal" ? "grid-rows-2" : "grid-cols-2"}`}
+                      style={edit.split_modo === "horizontal"
+                        ? { gridTemplateRows: `${edit.split_proporcao ?? 50}% ${100 - (edit.split_proporcao ?? 50)}%` }
+                        : { gridTemplateColumns: `${edit.split_proporcao ?? 50}% ${100 - (edit.split_proporcao ?? 50)}%` }}
+                    >
+                      <div className="bg-primary/15 rounded flex items-center justify-center text-[10px] text-primary font-medium truncate px-1">
+                        A · {playlists.find((p) => p.id === edit.playlist_id)?.nome || dashboards.find((d) => d.id === edit.dashboard_atual_id)?.nome || "vazio"}
+                      </div>
+                      <div className="bg-emerald-500/15 rounded flex items-center justify-center text-[10px] text-emerald-600 font-medium truncate px-1">
+                        B · {playlists.find((p) => p.id === edit.split_b_playlist_id)?.nome || dashboards.find((d) => d.id === edit.split_b_dashboard_id)?.nome || "vazio"}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div><Label>Tema</Label>
                 <Select value={edit.tema || "dark"} onValueChange={(v) => setEdit({ ...edit, tema: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>

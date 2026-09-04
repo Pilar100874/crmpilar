@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pause, Play, Monitor, X } from "lucide-react";
 import TvNotificationBar from "@/components/tv/TvNotificationBar";
+import TvPainelPlayer from "@/components/tv/TvPainelPlayer";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { TV_FIM_CONTEUDO } from "@/lib/tv/cicloConteudo";
 
@@ -17,6 +18,8 @@ export default function TvSignageSimulador() {
   useFullscreen(true);
   const [device, setDevice] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [itemsB, setItemsB] = useState<Item[]>([]);
+  const [split, setSplit] = useState<{ modo: "horizontal" | "vertical"; proporcao: number } | null>(null);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showBar, setShowBar] = useState(true);
@@ -46,6 +49,34 @@ export default function TvSignageSimulador() {
     return { url, nome: dsh.nome, duracao: 0, refresh: 0 };
 
   };
+
+  /** Monta a lista de itens de um painel a partir de um dashboard fixo ou de uma playlist. */
+  const buildLista = async (dashboardId: string | null, playlistId: string | null, devId?: string): Promise<Item[]> => {
+    if (playlistId) {
+      const { data: pl } = await supabase.from("tv_playlists").select("id").eq("id", playlistId).maybeSingle();
+      if (pl) {
+        const { data: its } = await supabase
+          .from("tv_playlist_items")
+          .select("*, dashboard:tv_dashboards(*)")
+          .eq("playlist_id", pl.id)
+          .order("ordem", { ascending: true });
+        return ((its || [])
+          .map((it: any) => {
+            const b = buildUrl(it.dashboard, devId);
+            return b ? { ...b, duracao: it.duracao_segundos || 10, aoFinal: it.modo_avanco === "fim_conteudo" } : null;
+          })
+          .filter(Boolean) as Item[]);
+      }
+    }
+    if (dashboardId) {
+      const { data } = await supabase.from("tv_dashboards").select("*").eq("id", dashboardId).maybeSingle();
+      const b = buildUrl(data, devId);
+      if (b) return [{ ...b, duracao: 0 }];
+    }
+    return [];
+  };
+
+
 
 
   useEffect(() => {
@@ -130,7 +161,17 @@ export default function TvSignageSimulador() {
           const b = buildUrl(dashboard, previewDeviceId);
           if (b) list = [{ ...b, duracao: 0 }];
         }
-        if (!list.length) {
+        // Tela dividida em modo prévia/ad-hoc (?split=horizontal&b_dashboard_id=...)
+        const modoSplitPrev = qs.get("split") || "nenhum";
+        let listBPrev: Item[] = [];
+        if (modoSplitPrev === "horizontal" || modoSplitPrev === "vertical") {
+          listBPrev = await buildLista(qs.get("b_dashboard_id"), qs.get("b_playlist_id"), previewDeviceId);
+          setSplit({ modo: modoSplitPrev, proporcao: Number(qs.get("proporcao") || 50) });
+        } else {
+          setSplit(null);
+        }
+
+        if (!list.length && !listBPrev.length) {
           console.warn("[Simulador] prévia sem itens", { previewDashboardId, previewPlaylistId, previewRota, dashboard, playlist });
           setErro(
             previewPlaylistId
@@ -141,6 +182,7 @@ export default function TvSignageSimulador() {
           );
         }
         setItems(list);
+        setItemsB(listBPrev);
         setLoading(false);
         return;
       }
@@ -197,7 +239,22 @@ export default function TvSignageSimulador() {
         const b = buildUrl({ nome: "Prévia", tipo: "tela_interna", rota_interna: previewRota, refresh_segundos: 0 }, dev.id);
         if (b) list = [{ ...b, duracao: 0 }];
       }
-      if (!list.length) {
+
+      // Tela dividida: painel B configurado no dispositivo
+      const modoSplit = (qs.get("split") || dev.split_modo || "nenhum") as string;
+      let listB: Item[] = [];
+      if (modoSplit === "horizontal" || modoSplit === "vertical") {
+        listB = await buildLista(
+          qs.get("b_dashboard_id") || dev.split_b_dashboard_id || null,
+          qs.get("b_playlist_id") || dev.split_b_playlist_id || null,
+          dev.id,
+        );
+        setSplit({ modo: modoSplit as any, proporcao: Number(qs.get("proporcao") || dev.split_proporcao || 50) });
+      } else {
+        setSplit(null);
+      }
+
+      if (!list.length && !listB.length) {
         setErro(
           targetDashboardId || targetPlaylistId
             ? "Não foi possível carregar o conteúdo da prévia. Verifique se o dashboard/playlist ainda existe."
@@ -205,6 +262,7 @@ export default function TvSignageSimulador() {
         );
       }
       setItems(list);
+      setItemsB(listB);
       setLoading(false);
     })();
   }, [deviceId, deviceCode]);
@@ -346,11 +404,26 @@ export default function TvSignageSimulador() {
           <Button variant="secondary" onClick={() => navigate(-1)}>Voltar</Button>
         </div>
       )}
+      {/* Tela dividida: dois painéis independentes (cada um com dashboard fixo ou playlist) */}
+      {split && !erro && (
+        <div
+          className={`absolute inset-0 z-10 grid gap-[2px] bg-black ${split.modo === "horizontal" ? "grid-rows-2" : "grid-cols-2"}`}
+          style={
+            split.modo === "horizontal"
+              ? { gridTemplateRows: `${split.proporcao}% ${100 - split.proporcao}%` }
+              : { gridTemplateColumns: `${split.proporcao}% ${100 - split.proporcao}%` }
+          }
+        >
+          <TvPainelPlayer items={items} paused={paused} reloadKey={reloadKey} />
+          <TvPainelPlayer items={itemsB} paused={paused} reloadKey={reloadKey} />
+        </div>
+      )}
+
       {/* Transição fluida: o próximo item já fica pré-carregado (invisível) e a troca
           é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro.
           Exceção: itens "ao final do conteúdo" NÃO são pré-carregados, senão a
           apresentação já começa a rodar escondida e entra no ar pela metade. */}
-      {items.map((item, i) => {
+      {!split && items.map((item, i) => {
         const preCarregar = i === proxIdx && !item.aoFinal;
         if (i !== idx && !preCarregar) return null;
         const ativo = i === idx;
