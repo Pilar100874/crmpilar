@@ -17,6 +17,8 @@ export default function TvSignageSimulador() {
   useFullscreen(true);
   const [device, setDevice] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [itemsB, setItemsB] = useState<Item[]>([]);
+  const [split, setSplit] = useState<{ modo: "horizontal" | "vertical"; proporcao: number } | null>(null);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showBar, setShowBar] = useState(true);
