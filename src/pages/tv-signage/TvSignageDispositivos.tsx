@@ -197,7 +197,7 @@ export default function TvSignageDispositivos() {
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-white/15 backdrop-blur-sm">
-              <Tv className="w-6 h-6" />
+              <Tv className="w-6 h-6 text-black" />
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-black">Dispositivos</h1>
