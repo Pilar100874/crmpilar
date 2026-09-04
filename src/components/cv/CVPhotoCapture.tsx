@@ -173,9 +173,14 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   ) => {
     if (!file) return;
     setUploading(key);
-    const ext = file.name.split(".").pop() || "jpg";
-    const estIdUpload = await getEstabelecimentoId();
-    const path = `${estIdUpload ?? "sem-estabelecimento"}/${stage}/${Date.now()}-${key}.${ext}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const estIdUpload = await resolverEstabelecimento();
+    if (!estIdUpload) {
+      toast.error(`Não foi possível enviar ${label}: usuário sem estabelecimento definido. Peça ao administrador para vincular seu usuário a uma unidade.`);
+      setUploading(null);
+      return;
+    }
+    const path = `${estIdUpload}/${stage}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${key}.${ext}`;
     const { error } = await supabase.storage.from("cv-vehicle-photos").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
@@ -188,8 +193,9 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     }
     const url = await getUrl(path);
     setPreviews((p) => ({ ...p, [key]: url }));
-    const existing = value.find((p) => p.angle_key === key);
-    const next = value.filter((p) => p.angle_key !== key);
+    const atual = valueRef.current;
+    const existing = atual.find((p) => p.angle_key === key);
+    const next = atual.filter((p) => p.angle_key !== key);
     next.push({
       angle_key: key,
       angle_label: label,
@@ -197,6 +203,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
       caption: existing?.caption ?? "",
       is_extra: opts?.extra ?? false,
     });
+    valueRef.current = next;
     onChange(next);
     setUploading(null);
     if (opts?.angle) runAiCompare(opts.angle, path);
@@ -207,9 +214,11 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
 
   const addExtra = (file: File | undefined) => {
     if (!file) return;
-    const count = value.filter((p) => p.is_extra).length + 1;
-    uploadPhoto(`extra-${Date.now()}`, `Foto extra ${count}`, file, { extra: true });
+    const count = valueRef.current.filter((p) => p.is_extra).length + 1;
+    const key = `extra-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    uploadPhoto(key, `Foto extra ${count}`, file, { extra: true });
   };
+
 
   const setCaption = (key: string, caption: string) => {
     onChange(value.map((p) => (p.angle_key === key ? { ...p, caption } : p)));
