@@ -200,8 +200,8 @@ export default function TvSignageDispositivos() {
               <Tv className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold">Dispositivos</h1>
-              <p className="text-sm text-primary-foreground/80">Gerencie suas telas remotas em tempo real</p>
+              <h1 className="text-xl md:text-2xl font-bold text-black">Dispositivos</h1>
+              <p className="text-sm text-black/80">Gerencie suas telas remotas em tempo real</p>
             </div>
           </div>
           <div className="flex gap-2">
