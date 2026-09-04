@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -153,7 +154,8 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     if (!file) return;
     setUploading(key);
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `${stage}/${Date.now()}-${key}.${ext}`;
+    const estIdUpload = await getEstabelecimentoId();
+    const path = `${estIdUpload ?? "sem-estabelecimento"}/${stage}/${Date.now()}-${key}.${ext}`;
     const { error } = await supabase.storage.from("cv-vehicle-photos").upload(path, file, {
       cacheControl: "3600",
       upsert: false,

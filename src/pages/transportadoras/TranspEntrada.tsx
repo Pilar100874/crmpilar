@@ -52,7 +52,9 @@ export default function TranspEntrada() {
 
   async function uploadCnhFoto(file: File): Promise<string> {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `cnh/${crypto.randomUUID()}.${ext}`;
+    const estIdUpload = await getEstabelecimentoId();
+    if (!estIdUpload) throw new Error("Estabelecimento não encontrado");
+    const path = `${estIdUpload}/cnh/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("cv-vehicle-photos").upload(path, file, { upsert: false });
     if (error) throw new Error(error.message);
     return path;
