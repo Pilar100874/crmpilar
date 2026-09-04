@@ -140,12 +140,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Criar Release versionada (se tag informada)
-        if: github.event.inputs.release_tag != ''
+      - name: Criar / atualizar Release versionada
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.release_tag }}
-          name: Android TV Signage ${{ github.event.inputs.release_tag }}
+          tag_name: android-tv-signage-v${{ env.TV_VERSION_NAME }}
+          name: Android TV Signage v${{ env.TV_VERSION_NAME }}
           files: |
             android-tv-signage/app/build/outputs/apk/release/app-release.apk
             android-tv-signage/app/build/outputs/apk/release/app-kiosk-release.apk

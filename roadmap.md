@@ -40,4 +40,4 @@
 ## 2026-09-04
 - [x] Incrementar Android TV Signage para 1.6.0 e alinhar manifesto do APK
 - [x] Incrementar Pilar Fone para 1.7.6 e alinhar manifesto do APK
-- [ ] Confirmar conclusão das duas releases no GitHub Actions
+- [ ] Confirmar conclusão das duas releases no GitHub Actions após sincronização com a branch principal
