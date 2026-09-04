@@ -40,6 +40,7 @@ export default function CVVehicleExit() {
 
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
+  const [aiCompare, setAiCompare] = useState(true);
   const [pendentesOpen, setPendentesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -80,6 +81,7 @@ export default function CVVehicleExit() {
     }));
     setAngles(invertedAngles);
     setPhotosRequired((cfg.data as any)?.exit_photos_required ?? true);
+    setAiCompare((cfg.data as any)?.exit_ai_analysis ?? true);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -482,7 +484,7 @@ export default function CVVehicleExit() {
                         <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
                       </div>
                     )}
-                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} vehicleId={form.vehicle_id} aiCompare />
+                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} vehicleId={form.vehicle_id} aiCompare={aiCompare} />
                   <FotosPendentesDialog
                     open={pendentesOpen}
                     onOpenChange={setPendentesOpen}
