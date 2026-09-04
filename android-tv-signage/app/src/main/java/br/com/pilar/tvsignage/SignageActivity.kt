@@ -599,6 +599,7 @@ class SignageActivity : AppCompatActivity() {
             else -> null
         }
         if (url.isNullOrEmpty()) { showStandby("Dashboard inválido"); return }
+        aplicarEscalaNativa(false)
         b.txtStandby.visibility = View.GONE
         b.webview.visibility = View.VISIBLE
         b.webview.loadUrl(url)
