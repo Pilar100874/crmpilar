@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
+import { Camera, Plus, Trash2, Save, Settings, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -22,6 +22,8 @@ export default function CVInspectionConfig() {
   const [photos, setPhotos] = useState<Angle[]>([]);
   const [exitRequired, setExitRequired] = useState(true);
   const [entryRequired, setEntryRequired] = useState(true);
+  const [entryAi, setEntryAi] = useState(true);
+  const [exitAi, setExitAi] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cameras, setCameras] = useState<CameraOption[]>([]);
@@ -49,6 +51,8 @@ export default function CVInspectionConfig() {
       setPhotos(base.length ? base : fallback);
       setExitRequired((data as any).exit_photos_required ?? true);
       setEntryRequired((data as any).entry_photos_required ?? true);
+      setEntryAi((data as any).entry_ai_analysis ?? true);
+      setExitAi((data as any).exit_ai_analysis ?? true);
     }
     setLoading(false);
   };
@@ -76,6 +80,8 @@ export default function CVInspectionConfig() {
       entry_photos: photos as any, // mantém sincronizado — mesma lista para entrada e saída
       exit_photos_required: exitRequired,
       entry_photos_required: entryRequired,
+      entry_ai_analysis: entryAi,
+      exit_ai_analysis: exitAi,
       updated_at: new Date().toISOString(),
     };
     let q;
@@ -115,6 +121,24 @@ export default function CVInspectionConfig() {
             <p className="text-xs text-muted-foreground">Se desligado, o operador pode concluir a entrada sem tirar fotos.</p>
           </div>
           <Switch checked={entryRequired} onCheckedChange={setEntryRequired} />
+        </Card>
+        <Card className="p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Análise das fotos por IA na Entrada
+            </p>
+            <p className="text-xs text-muted-foreground">Compara automaticamente a foto nova com a anterior e aponta possíveis avarias.</p>
+          </div>
+          <Switch checked={entryAi} onCheckedChange={setEntryAi} />
+        </Card>
+        <Card className="p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Análise das fotos por IA na Saída
+            </p>
+            <p className="text-xs text-muted-foreground">Compara automaticamente a foto nova com a anterior e aponta possíveis avarias.</p>
+          </div>
+          <Switch checked={exitAi} onCheckedChange={setExitAi} />
         </Card>
       </div>
 

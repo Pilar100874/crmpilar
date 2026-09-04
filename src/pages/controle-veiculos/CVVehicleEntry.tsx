@@ -35,6 +35,7 @@ export default function CVVehicleEntry() {
   const [defectTypes, setDefectTypes] = useState<any[]>([]);
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [photosRequired, setPhotosRequired] = useState(true);
+  const [aiCompare, setAiCompare] = useState(true);
   const [pendentesOpen, setPendentesOpen] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
@@ -72,6 +73,7 @@ export default function CVVehicleEntry() {
     setDefectTypes(dt.data ?? []);
     setAngles(((cfg.data?.entry_photos as any) ?? []) as PhotoAngle[]);
     setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
+    setAiCompare((cfg.data as any)?.entry_ai_analysis ?? true);
     setLoading(false);
     // Deep-link (ex.: vindo da TV Portaria): já abre a entrada do movimento indicado
     const alvo = params.get("movimento");
@@ -445,7 +447,7 @@ export default function CVVehicleEntry() {
                     </div>
                   )}
 
-                  <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} vehicleId={selected?.vehicle_id} aiCompare />
+                  <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} vehicleId={selected?.vehicle_id} aiCompare={aiCompare} />
                   <FotosPendentesDialog
                     open={pendentesOpen}
                     onOpenChange={setPendentesOpen}
