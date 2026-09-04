@@ -33,7 +33,7 @@ export default function TvSignageDispositivos() {
 
   const carregar = async () => {
     const [{ data: d }, { data: g }, { data: dsh }, { data: pls }] = await Promise.all([
-      supabase.from("tv_devices").select("*, grupo:tv_groups(nome), dashboard:tv_dashboards(nome), playlist:tv_playlists(nome)").order("created_at", { ascending: false }),
+      supabase.from("tv_devices").select("*, grupo:tv_groups!tv_devices_grupo_id_fkey(nome), dashboard:tv_dashboards!tv_devices_dashboard_atual_id_fkey(nome), playlist:tv_playlists!tv_devices_playlist_id_fkey(nome)").order("created_at", { ascending: false }),
       supabase.from("tv_groups").select("id, nome"),
       supabase.from("tv_dashboards").select("id, nome"),
       supabase.from("tv_playlists").select("id, nome"),
