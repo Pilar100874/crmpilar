@@ -1,0 +1,2 @@
+ALTER TABLE public.tv_devices DROP CONSTRAINT IF EXISTS tv_devices_split_proporcao_check;
+ALTER TABLE public.tv_devices ADD CONSTRAINT tv_devices_split_proporcao_check CHECK (split_proporcao BETWEEN 10 AND 90);
