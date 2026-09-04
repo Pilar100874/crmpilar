@@ -161,7 +161,17 @@ export default function TvSignageSimulador() {
           const b = buildUrl(dashboard, previewDeviceId);
           if (b) list = [{ ...b, duracao: 0 }];
         }
-        if (!list.length) {
+        // Tela dividida em modo prévia/ad-hoc (?split=horizontal&b_dashboard_id=...)
+        const modoSplitPrev = qs.get("split") || "nenhum";
+        let listBPrev: Item[] = [];
+        if (modoSplitPrev === "horizontal" || modoSplitPrev === "vertical") {
+          listBPrev = await buildLista(qs.get("b_dashboard_id"), qs.get("b_playlist_id"), previewDeviceId);
+          setSplit({ modo: modoSplitPrev, proporcao: Number(qs.get("proporcao") || 50) });
+        } else {
+          setSplit(null);
+        }
+
+        if (!list.length && !listBPrev.length) {
           console.warn("[Simulador] prévia sem itens", { previewDashboardId, previewPlaylistId, previewRota, dashboard, playlist });
           setErro(
             previewPlaylistId
@@ -172,6 +182,7 @@ export default function TvSignageSimulador() {
           );
         }
         setItems(list);
+        setItemsB(listBPrev);
         setLoading(false);
         return;
       }
