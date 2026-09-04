@@ -392,11 +392,26 @@ export default function TvSignageSimulador() {
           <Button variant="secondary" onClick={() => navigate(-1)}>Voltar</Button>
         </div>
       )}
+      {/* Tela dividida: dois painéis independentes (cada um com dashboard fixo ou playlist) */}
+      {split && !erro && (
+        <div
+          className={`absolute inset-0 z-10 grid gap-[2px] bg-black ${split.modo === "horizontal" ? "grid-rows-2" : "grid-cols-2"}`}
+          style={
+            split.modo === "horizontal"
+              ? { gridTemplateRows: `${split.proporcao}% ${100 - split.proporcao}%` }
+              : { gridTemplateColumns: `${split.proporcao}% ${100 - split.proporcao}%` }
+          }
+        >
+          <TvPainelPlayer items={items} paused={paused} reloadKey={reloadKey} />
+          <TvPainelPlayer items={itemsB} paused={paused} reloadKey={reloadKey} />
+        </div>
+      )}
+
       {/* Transição fluida: o próximo item já fica pré-carregado (invisível) e a troca
           é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro.
           Exceção: itens "ao final do conteúdo" NÃO são pré-carregados, senão a
           apresentação já começa a rodar escondida e entra no ar pela metade. */}
-      {items.map((item, i) => {
+      {!split && items.map((item, i) => {
         const preCarregar = i === proxIdx && !item.aoFinal;
         if (i !== idx && !preCarregar) return null;
         const ativo = i === idx;
