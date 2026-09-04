@@ -20,7 +20,9 @@ const CNH_BUCKET = "cv-vehicle-photos";
 
 async function uploadCnhFoto(file: File): Promise<string> {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `cnh/${crypto.randomUUID()}.${ext}`;
+  const estId = await getEstabelecimentoId();
+  if (!estId) throw new Error("Estabelecimento não encontrado");
+  const path = `${estId}/cnh/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(CNH_BUCKET).upload(path, file, { upsert: false });
   if (error) throw new Error(error.message);
   return path;
