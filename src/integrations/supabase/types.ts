@@ -6593,9 +6593,11 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          entry_ai_analysis: boolean
           entry_photos: Json
           entry_photos_required: boolean
           estabelecimento_id: string | null
+          exit_ai_analysis: boolean
           exit_photos: Json
           exit_photos_required: boolean
           id: string
@@ -6605,9 +6607,11 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
+          entry_ai_analysis?: boolean
           entry_photos?: Json
           entry_photos_required?: boolean
           estabelecimento_id?: string | null
+          exit_ai_analysis?: boolean
           exit_photos?: Json
           exit_photos_required?: boolean
           id?: string
@@ -6617,9 +6621,11 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
+          entry_ai_analysis?: boolean
           entry_photos?: Json
           entry_photos_required?: boolean
           estabelecimento_id?: string | null
+          exit_ai_analysis?: boolean
           exit_photos?: Json
           exit_photos_required?: boolean
           id?: string
