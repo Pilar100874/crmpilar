@@ -528,6 +528,16 @@ class SignageActivity : AppCompatActivity() {
 
     private fun applyConfig(json: JSONObject) {
         ui.removeCallbacks(playlistRunnable)
+
+        // Tela dividida: delega a exibição ao player web, que roda os dois painéis
+        // (cada um com dashboard fixo ou playlist) lado a lado / um sobre o outro.
+        val split = json.optJSONObject("split")
+        val splitModo = split?.optString("modo") ?: "nenhum"
+        if (splitModo == "horizontal" || splitModo == "vertical") {
+            carregarTelaDividida(json, split!!, splitModo)
+            return
+        }
+
         val playlist = json.optJSONObject("playlist")
         if (playlist != null && playlist.optJSONArray("items") != null) {
             val arr: JSONArray = playlist.getJSONArray("items")
@@ -542,6 +552,26 @@ class SignageActivity : AppCompatActivity() {
         }
         val dash = json.optJSONObject("dashboard")
         if (dash != null) loadDashboard(dash) else showStandby("Nenhum dashboard atribuído")
+    }
+
+    /** Monta a URL do player web em modo tela dividida. */
+    private fun carregarTelaDividida(json: JSONObject, split: JSONObject, modo: String) {
+        val params = StringBuilder("split=$modo&proporcao=" + split.optInt("proporcao", 50))
+        json.optJSONObject("playlist")?.optString("id")?.takeIf { it.isNotEmpty() }
+            ?.let { params.append("&playlist_id=").append(it) }
+            ?: json.optJSONObject("dashboard")?.optString("id")?.takeIf { it.isNotEmpty() }
+                ?.let { params.append("&dashboard_id=").append(it) }
+        val painelB = split.optJSONObject("painel_b")
+        painelB?.optJSONObject("playlist")?.optString("id")?.takeIf { it.isNotEmpty() }
+            ?.let { params.append("&b_playlist_id=").append(it) }
+            ?: painelB?.optJSONObject("dashboard")?.optString("id")?.takeIf { it.isNotEmpty() }
+                ?.let { params.append("&b_dashboard_id=").append(it) }
+        val deviceId = DeviceStore.deviceId(this).orEmpty()
+        val url = BuildConfig.APP_BASE_URL + "/tv-signage/simular" +
+            (if (deviceId.isNotEmpty()) "/$deviceId" else "") + "?" + params
+        b.txtStandby.visibility = View.GONE
+        b.webview.visibility = View.VISIBLE
+        b.webview.loadUrl(url)
     }
 
     private fun loadDashboard(dash: JSONObject) {
