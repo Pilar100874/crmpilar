@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, Wifi, WifiOff, AlertTriangle, PlayCircle, Monitor, MapPin, Layers, Clock, Tv, Activity } from "lucide-react";
+import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, Wifi, WifiOff, AlertTriangle, PlayCircle, Monitor, MapPin, Layers, Clock, Tv, Activity, Columns2 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -84,6 +84,10 @@ export default function TvSignageDispositivos() {
         dashboard_atual_id: dados.dashboard_atual_id || null, playlist_id: dados.playlist_id || null,
         tema: dados.tema, idioma: dados.idioma, versao_min_requerida: dados.versao_min_requerida,
         observacoes: dados.observacoes,
+        split_modo: dados.split_modo || "nenhum",
+        split_proporcao: dados.split_proporcao ?? 50,
+        split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
+        split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
       }).eq("id", dados.id);
       if (error) return toast.error(error.message);
       toast.success("Dispositivo atualizado");
@@ -98,6 +102,10 @@ export default function TvSignageDispositivos() {
         dashboard_atual_id: dados.dashboard_atual_id || null, playlist_id: dados.playlist_id || null,
         tema: dados.tema, idioma: dados.idioma, versao_min_requerida: dados.versao_min_requerida,
         observacoes: dados.observacoes,
+        split_modo: dados.split_modo || "nenhum",
+        split_proporcao: dados.split_proporcao ?? 50,
+        split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
+        split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
       } as any);
       if (error) return toast.error(error.message);
       toast.success("Dispositivo cadastrado");
