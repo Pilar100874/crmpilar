@@ -49,6 +49,34 @@ export default function TvSignageSimulador() {
 
   };
 
+  /** Monta a lista de itens de um painel a partir de um dashboard fixo ou de uma playlist. */
+  const buildLista = async (dashboardId: string | null, playlistId: string | null, devId?: string): Promise<Item[]> => {
+    if (playlistId) {
+      const { data: pl } = await supabase.from("tv_playlists").select("id").eq("id", playlistId).maybeSingle();
+      if (pl) {
+        const { data: its } = await supabase
+          .from("tv_playlist_items")
+          .select("*, dashboard:tv_dashboards(*)")
+          .eq("playlist_id", pl.id)
+          .order("ordem", { ascending: true });
+        return ((its || [])
+          .map((it: any) => {
+            const b = buildUrl(it.dashboard, devId);
+            return b ? { ...b, duracao: it.duracao_segundos || 10, aoFinal: it.modo_avanco === "fim_conteudo" } : null;
+          })
+          .filter(Boolean) as Item[]);
+      }
+    }
+    if (dashboardId) {
+      const { data } = await supabase.from("tv_dashboards").select("*").eq("id", dashboardId).maybeSingle();
+      const b = buildUrl(data, devId);
+      if (b) return [{ ...b, duracao: 0 }];
+    }
+    return [];
+  };
+
+
+
 
   useEffect(() => {
     (async () => {
