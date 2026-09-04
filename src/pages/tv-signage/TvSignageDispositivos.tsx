@@ -386,18 +386,48 @@ export default function TvSignageDispositivos() {
                 {edit.split_modo && edit.split_modo !== "nenhum" && (
                   <>
                     <div>
-                      <Label>
-                        Proporção do Painel A ({edit.split_modo === "horizontal" ? "cima" : "esquerda"}): {edit.split_proporcao ?? 50}% / {100 - (edit.split_proporcao ?? 50)}%
-                      </Label>
+                      <div className="flex items-center justify-between gap-3">
+                        <Label>
+                          Proporção ({edit.split_modo === "horizontal" ? "cima / baixo" : "esquerda / direita"})
+                        </Label>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Input
+                            type="number" min={10} max={90} step={1}
+                            value={edit.split_proporcao ?? 50}
+                            onChange={(e) => {
+                              const v = Math.max(10, Math.min(90, Number(e.target.value) || 50));
+                              setEdit({ ...edit, split_proporcao: v });
+                            }}
+                            className="h-7 w-16 text-center text-xs px-1"
+                          />
+                          <span className="text-muted-foreground font-medium">% A / {100 - (edit.split_proporcao ?? 50)}% B</span>
+                        </div>
+                      </div>
                       <input
                         type="range"
-                        min={20}
-                        max={80}
+                        min={10}
+                        max={90}
                         step={5}
                         value={edit.split_proporcao ?? 50}
                         onChange={(e) => setEdit({ ...edit, split_proporcao: Number(e.target.value) })}
                         className="w-full accent-primary mt-2"
                       />
+                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                        {[20, 30, 40, 50, 60, 70, 80].map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setEdit({ ...edit, split_proporcao: v })}
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                              (edit.split_proporcao ?? 50) === v
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-border hover:bg-muted"
+                            }`}
+                          >
+                            {v}/{100 - v}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <div className="pt-2 border-t space-y-3">
                       <p className="text-xs text-muted-foreground">
