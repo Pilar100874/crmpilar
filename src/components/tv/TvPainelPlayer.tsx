@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TV_FIM_CONTEUDO } from "@/lib/tv/cicloConteudo";
 
 export type TvPainelItem = {
@@ -25,12 +25,6 @@ interface Props {
 export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, rotulo }: Props) {
   const [idx, setIdx] = useState(0);
   const iframesRef = useRef<Record<number, HTMLIFrameElement | null>>({});
-  const painelRef = useRef<HTMLDivElement | null>(null);
-  const [enquadramento, setEnquadramento] = useState(() => ({
-    largura: typeof window === "undefined" ? 1920 : window.innerWidth,
-    altura: typeof window === "undefined" ? 1080 : window.innerHeight,
-    escala: 1,
-  }));
 
   useEffect(() => { setIdx(0); }, [items]);
 
@@ -41,32 +35,6 @@ export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, r
     const t = setTimeout(() => setIdx((i) => (i + 1) % items.length), cur.duracao * 1000);
     return () => clearTimeout(t);
   }, [idx, items, paused]);
-
-  // Cada painel dividido mantém uma área virtual do tamanho total da TV e é
-  // reduzido proporcionalmente para caber no espaço disponível. Assim, o
-  // dashboard não recebe uma viewport cortada pela divisão e permanece 100%
-  // visível, com barras pretas apenas quando as proporções forem diferentes.
-  useLayoutEffect(() => {
-    const painel = painelRef.current;
-    if (!painel) return;
-
-    const atualizar = () => {
-      const largura = Math.max(1, window.innerWidth);
-      const altura = Math.max(1, window.innerHeight);
-      const rect = painel.getBoundingClientRect();
-      const escala = Math.min(rect.width / largura, rect.height / altura);
-      setEnquadramento({ largura, altura, escala: Math.max(0.01, escala) });
-    };
-
-    atualizar();
-    const observer = new ResizeObserver(atualizar);
-    observer.observe(painel);
-    window.addEventListener("resize", atualizar);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", atualizar);
-    };
-  }, []);
 
   useEffect(() => {
     const onMsg = (ev: MessageEvent) => {
@@ -93,7 +61,7 @@ export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, r
   }
 
   return (
-    <div ref={painelRef} className="relative w-full h-full bg-black overflow-hidden">
+    <div className="relative w-full h-full min-w-0 min-h-0 bg-black overflow-hidden">
       {items.map((item, i) => {
         const preCarregar = i === proxIdx && !item.aoFinal;
         if (i !== idx && !preCarregar) return null;
@@ -104,13 +72,7 @@ export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, r
             ref={(el) => { iframesRef.current[i] = el; }}
             src={montarUrl(item)}
             title={item.nome}
-            className={`absolute left-1/2 top-1/2 border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
-            style={{
-              width: enquadramento.largura,
-              height: enquadramento.altura,
-              transform: `translate(-50%, -50%) scale(${enquadramento.escala})`,
-              transformOrigin: "center",
-            }}
+            className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             allow="fullscreen; autoplay; camera; microphone; geolocation"
           />
         );
