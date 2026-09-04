@@ -205,7 +205,7 @@ export default function TvSignageDispositivos() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={carregar} className="bg-white/15 hover:bg-white/25 text-primary-foreground border-0 backdrop-blur-sm">
+            <Button variant="secondary" size="sm" onClick={carregar} className="bg-white/15 hover:bg-white/25 text-black border-0 backdrop-blur-sm">
               <RefreshCw className="w-4 h-4 mr-1.5" />Atualizar
             </Button>
             <Button size="sm" onClick={() => setEdit({})} className="bg-white text-primary hover:bg-white/90 font-semibold">
