@@ -227,7 +227,22 @@ export default function TvSignageSimulador() {
         const b = buildUrl({ nome: "Prévia", tipo: "tela_interna", rota_interna: previewRota, refresh_segundos: 0 }, dev.id);
         if (b) list = [{ ...b, duracao: 0 }];
       }
-      if (!list.length) {
+
+      // Tela dividida: painel B configurado no dispositivo
+      const modoSplit = (qs.get("split") || dev.split_modo || "nenhum") as string;
+      let listB: Item[] = [];
+      if (modoSplit === "horizontal" || modoSplit === "vertical") {
+        listB = await buildLista(
+          qs.get("b_dashboard_id") || dev.split_b_dashboard_id || null,
+          qs.get("b_playlist_id") || dev.split_b_playlist_id || null,
+          dev.id,
+        );
+        setSplit({ modo: modoSplit as any, proporcao: Number(qs.get("proporcao") || dev.split_proporcao || 50) });
+      } else {
+        setSplit(null);
+      }
+
+      if (!list.length && !listB.length) {
         setErro(
           targetDashboardId || targetPlaylistId
             ? "Não foi possível carregar o conteúdo da prévia. Verifique se o dashboard/playlist ainda existe."
@@ -235,6 +250,7 @@ export default function TvSignageSimulador() {
         );
       }
       setItems(list);
+      setItemsB(listB);
       setLoading(false);
     })();
   }, [deviceId, deviceCode]);
