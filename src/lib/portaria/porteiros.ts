@@ -35,6 +35,26 @@ export async function listarPorteiros(apenasAtivos = true): Promise<Porteiro[]> 
   }));
 }
 
+/**
+ * Administradores do sistema podem operar toda a Portaria (entradas, saídas etc.)
+ * mesmo sem o flag "Porteiro".
+ */
+export async function isAdministradorSistema(authUserId: string, usuarioId?: string | null): Promise<boolean> {
+  const [{ data: adm }, { data: papelPortaria }] = await Promise.all([
+    supabase.from("administradores").select("id").eq("id", authUserId).maybeSingle(),
+    supabase.from("port_user_roles").select("role").eq("user_id", authUserId).in("role", ["admin", "super_admin"]).maybeSingle(),
+  ]);
+  if (adm || papelPortaria) return true;
+  if (!usuarioId) return false;
+  const { data: role } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", usuarioId)
+    .eq("role", "admin")
+    .maybeSingle();
+  return !!role;
+}
+
 /** Retorna o porteiro correspondente ao usuário logado, ou null. */
 export async function getPorteiroLogado(): Promise<Porteiro | null> {
   const { data } = await supabase.auth.getUser();
@@ -46,7 +66,8 @@ export async function getPorteiroLogado(): Promise<Porteiro | null> {
     .eq("auth_user_id", uid)
     .maybeSingle();
   const row = u as any;
-  if (!row || !row.is_porteiro || row.ativo === false) return null;
+  if (!row || row.ativo === false) return null;
+  if (!row.is_porteiro && !(await isAdministradorSistema(uid, row.id))) return null;
   return {
     id: row.id,
     nome: row.nome,
@@ -54,6 +75,7 @@ export async function getPorteiroLogado(): Promise<Porteiro | null> {
     estabelecimento_id: row.estabelecimento_id ?? null,
     ativo: true,
   };
+
 }
 
 export interface ContextoPorteiro {
