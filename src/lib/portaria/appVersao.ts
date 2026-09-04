@@ -1,5 +1,5 @@
 /** Versão embarcada no APK (mantida igual a portaria-app/VERSION). */
-export const APP_VERSAO = "1.7.5";
+export const APP_VERSAO = "1.7.6";
 
 const ORIGENS = [
   "/coletor/interfone-version.json",

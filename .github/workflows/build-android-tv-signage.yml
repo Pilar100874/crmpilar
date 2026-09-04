@@ -16,10 +16,6 @@ on:
 permissions:
   contents: write
 
-env:
-  # Versão base; o versionCode será incrementado no primeiro step via GITHUB_ENV
-  TV_VERSION_NAME: 1.5.${{ github.run_number }}
-
 jobs:
   build:
     name: Build APK
@@ -32,11 +28,13 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Definir versionCode automático
+      - name: Definir versão do aplicativo
         run: |
           VCODE=$((18 + ${{ github.run_number }}))
+          VNAME=$(tr -d ' \n\r' < VERSION)
           echo "TV_VERSION_CODE=${VCODE}" >> "$GITHUB_ENV"
-          echo "versionCode=${VCODE}"
+          echo "TV_VERSION_NAME=${VNAME}" >> "$GITHUB_ENV"
+          echo "Versão ${VNAME} (code ${VCODE})"
 
 
 
