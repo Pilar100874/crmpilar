@@ -29,11 +29,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Definir versão do aplicativo
+        id: version
         run: |
           VCODE=$((18 + ${{ github.run_number }}))
           VNAME=$(tr -d ' \n\r' < VERSION)
           echo "TV_VERSION_CODE=${VCODE}" >> "$GITHUB_ENV"
           echo "TV_VERSION_NAME=${VNAME}" >> "$GITHUB_ENV"
+          echo "name=${VNAME}" >> "$GITHUB_OUTPUT"
           echo "Versão ${VNAME} (code ${VCODE})"
 
 
@@ -143,8 +145,8 @@ jobs:
       - name: Criar / atualizar Release versionada
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-tv-signage-v${{ env.TV_VERSION_NAME }}
-          name: Android TV Signage v${{ env.TV_VERSION_NAME }}
+          tag_name: android-tv-signage-v${{ steps.version.outputs.name }}
+          name: Android TV Signage v${{ steps.version.outputs.name }}
           files: |
             android-tv-signage/app/build/outputs/apk/release/app-release.apk
             android-tv-signage/app/build/outputs/apk/release/app-kiosk-release.apk
