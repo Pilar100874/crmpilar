@@ -31,7 +31,10 @@ export default function AppInterfone() {
     let cancelado = false;
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
+      if (!auth.user) {
+        if (!cancelado) setPermitido(false);
+        return;
+      }
       const { data } = await supabase
         .from("usuarios")
         .select("pode_usar_interfone, pilarfone_abas")
