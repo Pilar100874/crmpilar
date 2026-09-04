@@ -36,3 +36,8 @@
 - [x] Remover switch "Acesso ao Interfone" do cadastro de usuários (redundante com as abas)
 - [x] Tela Campainha do interfone sem rolagem (layout flex, vídeos preenchem a tela) e sem relógio no topo
 - [x] Nome da câmera na parte inferior da imagem, texto preto, sem borda/fundo
+
+## 2026-09-04
+- [x] Incrementar Android TV Signage para 1.6.0 e alinhar manifesto do APK
+- [x] Incrementar Pilar Fone para 1.7.6 e alinhar manifesto do APK
+- [ ] Confirmar conclusão das duas releases no GitHub Actions após sincronização com a branch principal
