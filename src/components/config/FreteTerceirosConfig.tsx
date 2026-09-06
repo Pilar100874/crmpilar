@@ -46,6 +46,9 @@ export default function FreteTerceirosConfig({ estabelecimentoId }: { estabeleci
   const [configs, setConfigs] = useState<FreteConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [showKeys, setShowKeys] = useState<Set<string>>(new Set());
+  const [testando, setTestando] = useState<string | null>(null);
+  const [enderecoTeste, setEnderecoTeste] = useState({ coleta: "", entrega: "" });
+
 
   useEffect(() => {
     loadConfigs();
