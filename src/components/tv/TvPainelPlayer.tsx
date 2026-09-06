@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { TV_FIM_CONTEUDO } from "@/lib/tv/cicloConteudo";
 
 export type TvPainelItem = {
@@ -70,7 +70,7 @@ export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, r
   // Truque de "zoom sem scroll": o iframe é renderizado num palco maior que o
   // painel (100/escala %) e depois reduzido via transform. O conteúdo inteiro
   // continua visível, apenas menor — nada de barras de rolagem no painel.
-  const palcoStyle: React.CSSProperties =
+  const palcoStyle: CSSProperties =
     escala === 1
       ? { position: "absolute", inset: 0 }
       : {
