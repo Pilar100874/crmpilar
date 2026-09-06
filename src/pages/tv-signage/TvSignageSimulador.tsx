@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pause, Play, Monitor, X } from "lucide-react";
 import TvNotificationBar from "@/components/tv/TvNotificationBar";
 import TvPainelPlayer from "@/components/tv/TvPainelPlayer";
+import TvSplitLayout, { type TvVisibilidade } from "@/components/tv/TvSplitLayout";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { TV_FIM_CONTEUDO } from "@/lib/tv/cicloConteudo";
 
