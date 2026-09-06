@@ -19,7 +19,19 @@ export default function TvSignageSimulador() {
   const [device, setDevice] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [itemsB, setItemsB] = useState<Item[]>([]);
-  const [split, setSplit] = useState<{ modo: "horizontal" | "vertical"; proporcao: number; zoomA: number; zoomB: number } | null>(null);
+  const [itemsC, setItemsC] = useState<Item[]>([]);
+  const [split, setSplit] = useState<{
+    modo: "horizontal" | "vertical";
+    paineis: number;
+    proporcao: number;
+    proporcaoB: number;
+    zoomA: number;
+    zoomB: number;
+    zoomC: number;
+    visB: TvVisibilidade;
+    visC: TvVisibilidade;
+  } | null>(null);
+
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showBar, setShowBar] = useState(true);
