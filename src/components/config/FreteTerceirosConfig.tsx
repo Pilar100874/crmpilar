@@ -99,6 +99,43 @@ export default function FreteTerceirosConfig({ estabelecimentoId }: { estabeleci
     if (error) toast.error("Erro ao salvar");
   };
 
+  const updateExtra = async (config: FreteConfig, campo: string, value: string) => {
+    const extra = { ...(config.configuracao_extra || {}), [campo]: value };
+    await updateConfig(config.id, "configuracao_extra", extra);
+  };
+
+  const testarCotacao = async (config: FreteConfig) => {
+    setTestando(config.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("frete-entrega-expressa", {
+        body: {
+          estabelecimento_id: estabelecimentoId,
+          provider: config.provider,
+          coleta: { endereco: enderecoTeste.coleta },
+          entrega: { endereco: enderecoTeste.entrega },
+        },
+      });
+      if (error) throw error;
+      const cotacao = (data as any)?.cotacoes?.[0];
+      if (!cotacao) {
+        toast.error((data as any)?.aviso || "Nenhuma cotação retornada. Ative a integração antes de testar.");
+      } else if (cotacao.erro) {
+        toast.error(cotacao.erro);
+      } else {
+        toast.success(
+          `${cotacao.nome}: ${cotacao.valor != null
+            ? cotacao.valor.toLocaleString("pt-BR", { style: "currency", currency: cotacao.moeda || "BRL" })
+            : "valor não informado"}${cotacao.prazo_minutos ? ` • ~${cotacao.prazo_minutos} min` : ""}`
+        );
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao consultar a cotação");
+    } finally {
+      setTestando(null);
+    }
+  };
+
+
   const deleteConfig = async (id: string) => {
     const { error } = await supabase
       .from("frete_terceiros_config" as any)
