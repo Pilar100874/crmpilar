@@ -241,7 +241,9 @@ export default function FreteTerceirosConfig({ estabelecimentoId }: { estabeleci
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs">API Key</Label>
+                <Label className="text-xs">
+                  {config.provider === "uber_direct" ? "Client Secret" : "API Key"}
+                </Label>
                 <div className="relative">
                   <Input
                     className="h-8 text-xs pr-8"
@@ -261,7 +263,13 @@ export default function FreteTerceirosConfig({ estabelecimentoId }: { estabeleci
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">Token (opcional)</Label>
+                <Label className="text-xs">
+                  {config.provider === "lalamove"
+                    ? "API Secret"
+                    : config.provider === "uber_direct"
+                      ? "Token (opcional)"
+                      : "Token (opcional)"}
+                </Label>
                 <div className="relative">
                   <Input
                     className="h-8 text-xs pr-8"
@@ -280,6 +288,88 @@ export default function FreteTerceirosConfig({ estabelecimentoId }: { estabeleci
                 </div>
               </div>
             </div>
+
+            {config.provider === "uber_direct" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Client ID</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    value={config.configuracao_extra?.client_id || ""}
+                    onChange={e => updateExtra(config, "client_id", e.target.value)}
+                    placeholder="Client ID do Uber Direct"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Customer ID</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    value={config.configuracao_extra?.customer_id || ""}
+                    onChange={e => updateExtra(config, "customer_id", e.target.value)}
+                    placeholder="Customer ID (organização)"
+                  />
+                </div>
+              </div>
+            )}
+
+            {config.provider === "lalamove" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Mercado</Label>
+                  <Input
+                    className="h-8 text-xs"
+                    value={config.configuracao_extra?.market || "BR"}
+                    onChange={e => updateExtra(config, "market", e.target.value.toUpperCase())}
+                    placeholder="BR"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Tipo de veículo</Label>
+                  <Select
+                    value={config.configuracao_extra?.service_type || "MOTORCYCLE"}
+                    onValueChange={v => updateExtra(config, "service_type", v)}
+                  >
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {LALAMOVE_SERVICOS.map(s => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {(config.provider === "uber_direct" || config.provider === "lalamove") && (
+              <div className="rounded-md border border-dashed p-3 space-y-2">
+                <Label className="text-xs font-medium">Testar cotação de entrega</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    className="h-8 text-xs"
+                    value={enderecoTeste.coleta}
+                    onChange={e => setEnderecoTeste(p => ({ ...p, coleta: e.target.value }))}
+                    placeholder="Endereço de coleta"
+                  />
+                  <Input
+                    className="h-8 text-xs"
+                    value={enderecoTeste.entrega}
+                    onChange={e => setEnderecoTeste(p => ({ ...p, entrega: e.target.value }))}
+                    placeholder="Endereço de entrega"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5"
+                  disabled={testando === config.id || !enderecoTeste.coleta || !enderecoTeste.entrega}
+                  onClick={() => testarCotacao(config)}
+                >
+                  <Truck className="h-3.5 w-3.5" />
+                  {testando === config.id ? "Consultando..." : "Consultar preço"}
+                </Button>
+              </div>
+            )}
+
           </CardContent>
         </Card>
       ))}
