@@ -278,24 +278,48 @@ export default function TvSignageSimulador() {
         if (b) list = [{ ...b, duracao: 0 }];
       }
 
-      // Tela dividida: painel B configurado no dispositivo
+      // Tela dividida: painéis B e C configurados no dispositivo
       const modoSplit = (qs.get("split") || dev.split_modo || "nenhum") as string;
       let listB: Item[] = [];
+      let listC: Item[] = [];
       if (modoSplit === "horizontal" || modoSplit === "vertical") {
+        const paineis = Number(qs.get("paineis") || dev.split_paineis || 2) === 3 ? 3 : 2;
         listB = await buildLista(
           qs.get("b_dashboard_id") || dev.split_b_dashboard_id || null,
           qs.get("b_playlist_id") || dev.split_b_playlist_id || null,
           dev.id,
         );
+        if (paineis === 3) {
+          listC = await buildLista(
+            qs.get("c_dashboard_id") || dev.split_c_dashboard_id || null,
+            qs.get("c_playlist_id") || dev.split_c_playlist_id || null,
+            dev.id,
+          );
+        }
         setSplit({
           modo: modoSplit as any,
+          paineis,
           proporcao: Number(qs.get("proporcao") || dev.split_proporcao || 50),
+          proporcaoB: Number(qs.get("proporcao_b") || dev.split_proporcao_b || 25),
           zoomA: Number(qs.get("zoom_a") || dev.split_zoom_a || 100),
           zoomB: Number(qs.get("zoom_b") || dev.split_zoom_b || 100),
+          zoomC: Number(qs.get("zoom_c") || dev.split_zoom_c || 100),
+          visB: {
+            modo: (qs.get("b_visivel") || dev.split_b_visivel_modo) === "intervalo" ? "intervalo" : "sempre",
+            intervalo: Number(qs.get("b_intervalo") || dev.split_b_intervalo_segundos || 300),
+            duracao: Number(qs.get("b_duracao") || dev.split_b_duracao_segundos || 30),
+          },
+          visC: {
+            modo: (qs.get("c_visivel") || dev.split_c_visivel_modo) === "intervalo" ? "intervalo" : "sempre",
+            intervalo: Number(qs.get("c_intervalo") || dev.split_c_intervalo_segundos || 300),
+            duracao: Number(qs.get("c_duracao") || dev.split_c_duracao_segundos || 30),
+          },
         });
       } else {
         setSplit(null);
       }
+      setItemsC(listC);
+
 
       if (!list.length && !listB.length) {
         setErro(
