@@ -15,6 +15,12 @@ interface Props {
   reloadKey?: number;
   /** Rótulo opcional exibido discretamente no canto do painel. */
   rotulo?: string;
+  /**
+   * Zoom do conteúdo em % (padrão 100). Valores menores que 100 "afastam" o
+   * conteúdo para caber mais informação no painel SEM barra de rolagem; maiores
+   * ampliam. Útil quando a tela está dividida e o dashboard foi feito para tela cheia.
+   */
+  zoom?: number;
 }
 
 /**
@@ -22,7 +28,7 @@ interface Props {
  * com pré-carregamento do próximo item e cross-fade. É usado tanto em tela cheia
  * quanto em cada metade da tela dividida (horizontal/vertical).
  */
-export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, rotulo }: Props) {
+export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, rotulo, zoom = 100 }: Props) {
   const [idx, setIdx] = useState(0);
   const iframesRef = useRef<Record<number, HTMLIFrameElement | null>>({});
 
@@ -60,6 +66,23 @@ export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, r
     );
   }
 
+  const escala = Math.max(25, Math.min(200, zoom)) / 100;
+  // Truque de "zoom sem scroll": o iframe é renderizado num palco maior que o
+  // painel (100/escala %) e depois reduzido via transform. O conteúdo inteiro
+  // continua visível, apenas menor — nada de barras de rolagem no painel.
+  const palcoStyle: React.CSSProperties =
+    escala === 1
+      ? { position: "absolute", inset: 0 }
+      : {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: `${100 / escala}%`,
+          height: `${100 / escala}%`,
+          transform: `scale(${escala})`,
+          transformOrigin: "0 0",
+        };
+
   return (
     <div className="relative w-full h-full min-w-0 min-h-0 bg-black overflow-hidden">
       {items.map((item, i) => {
@@ -67,14 +90,15 @@ export default function TvPainelPlayer({ items, paused = false, reloadKey = 0, r
         if (i !== idx && !preCarregar) return null;
         const ativo = i === idx;
         return (
-          <iframe
-            key={`${i}-${reloadKey}`}
-            ref={(el) => { iframesRef.current[i] = el; }}
-            src={montarUrl(item)}
-            title={item.nome}
-            className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
-            allow="fullscreen; autoplay; camera; microphone; geolocation"
-          />
+          <div key={`${i}-${reloadKey}`} style={palcoStyle}>
+            <iframe
+              ref={(el) => { iframesRef.current[i] = el; }}
+              src={montarUrl(item)}
+              title={item.nome}
+              className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${ativo ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
+              allow="fullscreen; autoplay; camera; microphone; geolocation"
+            />
+          </div>
         );
       })}
       {rotulo && (
