@@ -27567,11 +27567,22 @@ export type Database = {
           playlist_id: string | null
           resolucao: string | null
           split_b_dashboard_id: string | null
+          split_b_duracao_segundos: number
+          split_b_intervalo_segundos: number
           split_b_playlist_id: string | null
+          split_b_visivel_modo: string
+          split_c_dashboard_id: string | null
+          split_c_duracao_segundos: number
+          split_c_intervalo_segundos: number
+          split_c_playlist_id: string | null
+          split_c_visivel_modo: string
           split_modo: string
+          split_paineis: number
           split_proporcao: number
+          split_proporcao_b: number
           split_zoom_a: number
           split_zoom_b: number
+          split_zoom_c: number
           status: string
           tema: string | null
           token_hash: string
@@ -27601,11 +27612,22 @@ export type Database = {
           playlist_id?: string | null
           resolucao?: string | null
           split_b_dashboard_id?: string | null
+          split_b_duracao_segundos?: number
+          split_b_intervalo_segundos?: number
           split_b_playlist_id?: string | null
+          split_b_visivel_modo?: string
+          split_c_dashboard_id?: string | null
+          split_c_duracao_segundos?: number
+          split_c_intervalo_segundos?: number
+          split_c_playlist_id?: string | null
+          split_c_visivel_modo?: string
           split_modo?: string
+          split_paineis?: number
           split_proporcao?: number
+          split_proporcao_b?: number
           split_zoom_a?: number
           split_zoom_b?: number
+          split_zoom_c?: number
           status?: string
           tema?: string | null
           token_hash: string
@@ -27635,11 +27657,22 @@ export type Database = {
           playlist_id?: string | null
           resolucao?: string | null
           split_b_dashboard_id?: string | null
+          split_b_duracao_segundos?: number
+          split_b_intervalo_segundos?: number
           split_b_playlist_id?: string | null
+          split_b_visivel_modo?: string
+          split_c_dashboard_id?: string | null
+          split_c_duracao_segundos?: number
+          split_c_intervalo_segundos?: number
+          split_c_playlist_id?: string | null
+          split_c_visivel_modo?: string
           split_modo?: string
+          split_paineis?: number
           split_proporcao?: number
+          split_proporcao_b?: number
           split_zoom_a?: number
           split_zoom_b?: number
+          split_zoom_c?: number
           status?: string
           tema?: string | null
           token_hash?: string
@@ -27681,6 +27714,20 @@ export type Database = {
           {
             foreignKeyName: "tv_devices_split_b_playlist_id_fkey"
             columns: ["split_b_playlist_id"]
+            isOneToOne: false
+            referencedRelation: "tv_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_devices_split_c_dashboard_id_fkey"
+            columns: ["split_c_dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "tv_dashboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_devices_split_c_playlist_id_fkey"
+            columns: ["split_c_playlist_id"]
             isOneToOne: false
             referencedRelation: "tv_playlists"
             referencedColumns: ["id"]
