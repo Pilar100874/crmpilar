@@ -177,17 +177,37 @@ export default function TvSignageSimulador() {
         // Tela dividida em modo prévia/ad-hoc (?split=horizontal&b_dashboard_id=...)
         const modoSplitPrev = qs.get("split") || "nenhum";
         let listBPrev: Item[] = [];
+        let listCPrev: Item[] = [];
         if (modoSplitPrev === "horizontal" || modoSplitPrev === "vertical") {
+          const paineisPrev = Number(qs.get("paineis") || 2) === 3 ? 3 : 2;
           listBPrev = await buildLista(qs.get("b_dashboard_id"), qs.get("b_playlist_id"), previewDeviceId);
+          if (paineisPrev === 3) {
+            listCPrev = await buildLista(qs.get("c_dashboard_id"), qs.get("c_playlist_id"), previewDeviceId);
+          }
           setSplit({
             modo: modoSplitPrev,
+            paineis: paineisPrev,
             proporcao: Number(qs.get("proporcao") || 50),
+            proporcaoB: Number(qs.get("proporcao_b") || 25),
             zoomA: Number(qs.get("zoom_a") || 100),
             zoomB: Number(qs.get("zoom_b") || 100),
+            zoomC: Number(qs.get("zoom_c") || 100),
+            visB: {
+              modo: (qs.get("b_visivel") as any) === "intervalo" ? "intervalo" : "sempre",
+              intervalo: Number(qs.get("b_intervalo") || 300),
+              duracao: Number(qs.get("b_duracao") || 30),
+            },
+            visC: {
+              modo: (qs.get("c_visivel") as any) === "intervalo" ? "intervalo" : "sempre",
+              intervalo: Number(qs.get("c_intervalo") || 300),
+              duracao: Number(qs.get("c_duracao") || 30),
+            },
           });
         } else {
           setSplit(null);
         }
+        setItemsC(listCPrev);
+
 
         if (!list.length && !listBPrev.length) {
           console.warn("[Simulador] prévia sem itens", { previewDashboardId, previewPlaylistId, previewRota, dashboard, playlist });
