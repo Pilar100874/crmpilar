@@ -74,6 +74,31 @@ export default function TvSignageDispositivos() {
     return matchBusca && matchStatus && matchGrupo;
   });
 
+  /** Campos da tela dividida (painéis A/B/C, proporções, zoom e visibilidade). */
+  const camposSplit = (dados: any) => {
+    const dividido = dados.split_modo && dados.split_modo !== "nenhum";
+    const paineis = dividido ? Number(dados.split_paineis ?? 2) : 2;
+    return {
+      split_modo: dados.split_modo || "nenhum",
+      split_paineis: paineis === 3 ? 3 : 2,
+      split_proporcao: dados.split_proporcao ?? 50,
+      split_proporcao_b: dados.split_proporcao_b ?? 25,
+      split_zoom_a: dados.split_zoom_a ?? 100,
+      split_zoom_b: dados.split_zoom_b ?? 100,
+      split_zoom_c: dados.split_zoom_c ?? 100,
+      split_b_dashboard_id: dividido ? (dados.split_b_dashboard_id || null) : null,
+      split_b_playlist_id: dividido ? (dados.split_b_playlist_id || null) : null,
+      split_c_dashboard_id: dividido && paineis === 3 ? (dados.split_c_dashboard_id || null) : null,
+      split_c_playlist_id: dividido && paineis === 3 ? (dados.split_c_playlist_id || null) : null,
+      split_b_visivel_modo: dados.split_b_visivel_modo === "intervalo" ? "intervalo" : "sempre",
+      split_b_intervalo_segundos: Math.max(10, Number(dados.split_b_intervalo_segundos ?? 300)),
+      split_b_duracao_segundos: Math.max(5, Number(dados.split_b_duracao_segundos ?? 30)),
+      split_c_visivel_modo: dados.split_c_visivel_modo === "intervalo" ? "intervalo" : "sempre",
+      split_c_intervalo_segundos: Math.max(10, Number(dados.split_c_intervalo_segundos ?? 300)),
+      split_c_duracao_segundos: Math.max(5, Number(dados.split_c_duracao_segundos ?? 30)),
+    };
+  };
+
   const salvar = async (dados: any) => {
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
@@ -84,12 +109,7 @@ export default function TvSignageDispositivos() {
         dashboard_atual_id: dados.dashboard_atual_id || null, playlist_id: dados.playlist_id || null,
         tema: dados.tema, idioma: dados.idioma, versao_min_requerida: dados.versao_min_requerida,
         observacoes: dados.observacoes,
-        split_modo: dados.split_modo || "nenhum",
-        split_proporcao: dados.split_proporcao ?? 50,
-        split_zoom_a: dados.split_zoom_a ?? 100,
-        split_zoom_b: dados.split_zoom_b ?? 100,
-        split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
-        split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
+        ...camposSplit(dados),
       }).eq("id", dados.id);
       if (error) return toast.error(error.message);
       toast.success("Dispositivo atualizado");
@@ -104,13 +124,9 @@ export default function TvSignageDispositivos() {
         dashboard_atual_id: dados.dashboard_atual_id || null, playlist_id: dados.playlist_id || null,
         tema: dados.tema, idioma: dados.idioma, versao_min_requerida: dados.versao_min_requerida,
         observacoes: dados.observacoes,
-        split_modo: dados.split_modo || "nenhum",
-        split_proporcao: dados.split_proporcao ?? 50,
-        split_zoom_a: dados.split_zoom_a ?? 100,
-        split_zoom_b: dados.split_zoom_b ?? 100,
-        split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
-        split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
+        ...camposSplit(dados),
       } as any);
+
       if (error) return toast.error(error.message);
       toast.success("Dispositivo cadastrado");
       setEdit(null);
