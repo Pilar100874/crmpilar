@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pause, Play, Monitor, X } from "lucide-react";
 import TvNotificationBar from "@/components/tv/TvNotificationBar";
 import TvPainelPlayer from "@/components/tv/TvPainelPlayer";
+import TvSplitLayout, { type TvVisibilidade } from "@/components/tv/TvSplitLayout";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { TV_FIM_CONTEUDO } from "@/lib/tv/cicloConteudo";
 
@@ -19,7 +20,19 @@ export default function TvSignageSimulador() {
   const [device, setDevice] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [itemsB, setItemsB] = useState<Item[]>([]);
-  const [split, setSplit] = useState<{ modo: "horizontal" | "vertical"; proporcao: number; zoomA: number; zoomB: number } | null>(null);
+  const [itemsC, setItemsC] = useState<Item[]>([]);
+  const [split, setSplit] = useState<{
+    modo: "horizontal" | "vertical";
+    paineis: number;
+    proporcao: number;
+    proporcaoB: number;
+    zoomA: number;
+    zoomB: number;
+    zoomC: number;
+    visB: TvVisibilidade;
+    visC: TvVisibilidade;
+  } | null>(null);
+
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showBar, setShowBar] = useState(true);
@@ -164,17 +177,37 @@ export default function TvSignageSimulador() {
         // Tela dividida em modo prévia/ad-hoc (?split=horizontal&b_dashboard_id=...)
         const modoSplitPrev = qs.get("split") || "nenhum";
         let listBPrev: Item[] = [];
+        let listCPrev: Item[] = [];
         if (modoSplitPrev === "horizontal" || modoSplitPrev === "vertical") {
+          const paineisPrev = Number(qs.get("paineis") || 2) === 3 ? 3 : 2;
           listBPrev = await buildLista(qs.get("b_dashboard_id"), qs.get("b_playlist_id"), previewDeviceId);
+          if (paineisPrev === 3) {
+            listCPrev = await buildLista(qs.get("c_dashboard_id"), qs.get("c_playlist_id"), previewDeviceId);
+          }
           setSplit({
             modo: modoSplitPrev,
+            paineis: paineisPrev,
             proporcao: Number(qs.get("proporcao") || 50),
+            proporcaoB: Number(qs.get("proporcao_b") || 25),
             zoomA: Number(qs.get("zoom_a") || 100),
             zoomB: Number(qs.get("zoom_b") || 100),
+            zoomC: Number(qs.get("zoom_c") || 100),
+            visB: {
+              modo: (qs.get("b_visivel") as any) === "intervalo" ? "intervalo" : "sempre",
+              intervalo: Number(qs.get("b_intervalo") || 300),
+              duracao: Number(qs.get("b_duracao") || 30),
+            },
+            visC: {
+              modo: (qs.get("c_visivel") as any) === "intervalo" ? "intervalo" : "sempre",
+              intervalo: Number(qs.get("c_intervalo") || 300),
+              duracao: Number(qs.get("c_duracao") || 30),
+            },
           });
         } else {
           setSplit(null);
         }
+        setItemsC(listCPrev);
+
 
         if (!list.length && !listBPrev.length) {
           console.warn("[Simulador] prévia sem itens", { previewDashboardId, previewPlaylistId, previewRota, dashboard, playlist });
@@ -245,24 +278,48 @@ export default function TvSignageSimulador() {
         if (b) list = [{ ...b, duracao: 0 }];
       }
 
-      // Tela dividida: painel B configurado no dispositivo
+      // Tela dividida: painéis B e C configurados no dispositivo
       const modoSplit = (qs.get("split") || dev.split_modo || "nenhum") as string;
       let listB: Item[] = [];
+      let listC: Item[] = [];
       if (modoSplit === "horizontal" || modoSplit === "vertical") {
+        const paineis = Number(qs.get("paineis") || dev.split_paineis || 2) === 3 ? 3 : 2;
         listB = await buildLista(
           qs.get("b_dashboard_id") || dev.split_b_dashboard_id || null,
           qs.get("b_playlist_id") || dev.split_b_playlist_id || null,
           dev.id,
         );
+        if (paineis === 3) {
+          listC = await buildLista(
+            qs.get("c_dashboard_id") || dev.split_c_dashboard_id || null,
+            qs.get("c_playlist_id") || dev.split_c_playlist_id || null,
+            dev.id,
+          );
+        }
         setSplit({
           modo: modoSplit as any,
+          paineis,
           proporcao: Number(qs.get("proporcao") || dev.split_proporcao || 50),
+          proporcaoB: Number(qs.get("proporcao_b") || dev.split_proporcao_b || 25),
           zoomA: Number(qs.get("zoom_a") || dev.split_zoom_a || 100),
           zoomB: Number(qs.get("zoom_b") || dev.split_zoom_b || 100),
+          zoomC: Number(qs.get("zoom_c") || dev.split_zoom_c || 100),
+          visB: {
+            modo: (qs.get("b_visivel") || dev.split_b_visivel_modo) === "intervalo" ? "intervalo" : "sempre",
+            intervalo: Number(qs.get("b_intervalo") || dev.split_b_intervalo_segundos || 300),
+            duracao: Number(qs.get("b_duracao") || dev.split_b_duracao_segundos || 30),
+          },
+          visC: {
+            modo: (qs.get("c_visivel") || dev.split_c_visivel_modo) === "intervalo" ? "intervalo" : "sempre",
+            intervalo: Number(qs.get("c_intervalo") || dev.split_c_intervalo_segundos || 300),
+            duracao: Number(qs.get("c_duracao") || dev.split_c_duracao_segundos || 30),
+          },
         });
       } else {
         setSplit(null);
       }
+      setItemsC(listC);
+
 
       if (!list.length && !listB.length) {
         setErro(
@@ -416,18 +473,30 @@ export default function TvSignageSimulador() {
       )}
       {/* Tela dividida: dois painéis independentes (cada um com dashboard fixo ou playlist) */}
       {split && !erro && (
-        <div
-          className={`absolute inset-0 z-10 grid gap-[2px] bg-black ${split.modo === "horizontal" ? "grid-rows-2" : "grid-cols-2"}`}
-          style={
-            split.modo === "horizontal"
-              ? { gridTemplateRows: `${split.proporcao}% ${100 - split.proporcao}%` }
-              : { gridTemplateColumns: `${split.proporcao}% ${100 - split.proporcao}%` }
-          }
-        >
-          <TvPainelPlayer items={items} paused={paused} reloadKey={reloadKey} zoom={split.zoomA} />
-          <TvPainelPlayer items={itemsB} paused={paused} reloadKey={reloadKey} zoom={split.zoomB} />
-        </div>
+        <TvSplitLayout
+          modo={split.modo}
+          paused={paused}
+          reloadKey={reloadKey}
+          paineis={[
+            { items, proporcao: split.proporcao, zoom: split.zoomA },
+            {
+              items: itemsB,
+              proporcao: split.paineis === 3 ? split.proporcaoB : 100 - split.proporcao,
+              zoom: split.zoomB,
+              visibilidade: split.visB,
+            },
+            ...(split.paineis === 3
+              ? [{
+                  items: itemsC,
+                  proporcao: Math.max(5, 100 - split.proporcao - split.proporcaoB),
+                  zoom: split.zoomC,
+                  visibilidade: split.visC,
+                }]
+              : []),
+          ]}
+        />
       )}
+
 
       {/* Transição fluida: o próximo item já fica pré-carregado (invisível) e a troca
           é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro.
