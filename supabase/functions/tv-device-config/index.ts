@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     split: {
       modo: splitModo,
       proporcao: device.split_proporcao ?? 50,
+      zoom_a: device.split_zoom_a ?? 100,
+      zoom_b: device.split_zoom_b ?? 100,
       painel_b: { dashboard: splitDashboard, playlist: splitPlaylist },
     },
     device: {
