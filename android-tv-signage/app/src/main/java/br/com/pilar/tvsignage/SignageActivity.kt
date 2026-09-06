@@ -557,8 +557,18 @@ class SignageActivity : AppCompatActivity() {
     /** Monta a URL do player web em modo tela dividida. */
     private fun carregarTelaDividida(json: JSONObject, split: JSONObject, modo: String) {
         val params = StringBuilder("split=$modo&proporcao=" + split.optInt("proporcao", 50))
+        val paineis = if (split.optInt("paineis", 2) == 3) 3 else 2
+        params.append("&paineis=").append(paineis)
+        params.append("&proporcao_b=").append(split.optInt("proporcao_b", 25))
         params.append("&zoom_a=").append(split.optInt("zoom_a", 100))
         params.append("&zoom_b=").append(split.optInt("zoom_b", 100))
+        params.append("&zoom_c=").append(split.optInt("zoom_c", 100))
+        params.append("&b_visivel=").append(split.optString("b_visivel", "sempre"))
+        params.append("&b_intervalo=").append(split.optInt("b_intervalo", 300))
+        params.append("&b_duracao=").append(split.optInt("b_duracao", 30))
+        params.append("&c_visivel=").append(split.optString("c_visivel", "sempre"))
+        params.append("&c_intervalo=").append(split.optInt("c_intervalo", 300))
+        params.append("&c_duracao=").append(split.optInt("c_duracao", 30))
         json.optJSONObject("playlist")?.optString("id")?.takeIf { it.isNotEmpty() }
             ?.let { params.append("&playlist_id=").append(it) }
             ?: json.optJSONObject("dashboard")?.optString("id")?.takeIf { it.isNotEmpty() }
@@ -568,6 +578,14 @@ class SignageActivity : AppCompatActivity() {
             ?.let { params.append("&b_playlist_id=").append(it) }
             ?: painelB?.optJSONObject("dashboard")?.optString("id")?.takeIf { it.isNotEmpty() }
                 ?.let { params.append("&b_dashboard_id=").append(it) }
+        if (paineis == 3) {
+            val painelC = split.optJSONObject("painel_c")
+            painelC?.optJSONObject("playlist")?.optString("id")?.takeIf { it.isNotEmpty() }
+                ?.let { params.append("&c_playlist_id=").append(it) }
+                ?: painelC?.optJSONObject("dashboard")?.optString("id")?.takeIf { it.isNotEmpty() }
+                    ?.let { params.append("&c_dashboard_id=").append(it) }
+        }
+
         val deviceId = DeviceStore.deviceId(this).orEmpty()
         val url = BuildConfig.APP_BASE_URL + "/tv-signage/simular" +
             (if (deviceId.isNotEmpty()) "/$deviceId" else "") + "?" + params
