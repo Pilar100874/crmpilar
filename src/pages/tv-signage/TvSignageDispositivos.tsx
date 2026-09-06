@@ -86,6 +86,8 @@ export default function TvSignageDispositivos() {
         observacoes: dados.observacoes,
         split_modo: dados.split_modo || "nenhum",
         split_proporcao: dados.split_proporcao ?? 50,
+        split_zoom_a: dados.split_zoom_a ?? 100,
+        split_zoom_b: dados.split_zoom_b ?? 100,
         split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
         split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
       }).eq("id", dados.id);
@@ -104,6 +106,8 @@ export default function TvSignageDispositivos() {
         observacoes: dados.observacoes,
         split_modo: dados.split_modo || "nenhum",
         split_proporcao: dados.split_proporcao ?? 50,
+        split_zoom_a: dados.split_zoom_a ?? 100,
+        split_zoom_b: dados.split_zoom_b ?? 100,
         split_b_dashboard_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_dashboard_id || null) : null,
         split_b_playlist_id: dados.split_modo && dados.split_modo !== "nenhum" ? (dados.split_b_playlist_id || null) : null,
       } as any);
@@ -428,6 +432,56 @@ export default function TvSignageDispositivos() {
                           </button>
                         ))}
                       </div>
+                    </div>
+                    <div className="pt-2 border-t space-y-3">
+                      <p className="text-xs text-muted-foreground">
+                        Zoom do conteúdo de cada painel — abaixo de 100% o conteúdo encolhe para
+                        caber inteiro <b>sem barra de rolagem</b>; acima de 100% amplia.
+                      </p>
+                      {([
+                        { campo: "split_zoom_a" as const, rotulo: `Zoom do Painel A (${edit.split_modo === "horizontal" ? "cima" : "esquerda"})` },
+                        { campo: "split_zoom_b" as const, rotulo: `Zoom do Painel B (${edit.split_modo === "horizontal" ? "baixo" : "direita"})` },
+                      ]).map(({ campo, rotulo }) => (
+                        <div key={campo}>
+                          <div className="flex items-center justify-between gap-3">
+                            <Label>{rotulo}</Label>
+                            <div className="flex items-center gap-1 text-xs">
+                              <Input
+                                type="number" min={25} max={200} step={5}
+                                value={(edit as any)[campo] ?? 100}
+                                onChange={(e) => {
+                                  const v = Math.max(25, Math.min(200, Number(e.target.value) || 100));
+                                  setEdit({ ...edit, [campo]: v });
+                                }}
+                                className="h-7 w-16 text-center text-xs px-1"
+                              />
+                              <span className="text-muted-foreground font-medium">%</span>
+                            </div>
+                          </div>
+                          <input
+                            type="range" min={25} max={200} step={5}
+                            value={(edit as any)[campo] ?? 100}
+                            onChange={(e) => setEdit({ ...edit, [campo]: Number(e.target.value) })}
+                            className="w-full accent-primary mt-2"
+                          />
+                          <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                            {[50, 65, 75, 85, 100, 125, 150].map((v) => (
+                              <button
+                                key={v}
+                                type="button"
+                                onClick={() => setEdit({ ...edit, [campo]: v })}
+                                className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                                  (((edit as any)[campo]) ?? 100) === v
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                                }`}
+                              >
+                                {v}%
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                     <div className="pt-2 border-t space-y-3">
                       <p className="text-xs text-muted-foreground">

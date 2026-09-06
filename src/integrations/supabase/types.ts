@@ -27570,6 +27570,8 @@ export type Database = {
           split_b_playlist_id: string | null
           split_modo: string
           split_proporcao: number
+          split_zoom_a: number
+          split_zoom_b: number
           status: string
           tema: string | null
           token_hash: string
@@ -27602,6 +27604,8 @@ export type Database = {
           split_b_playlist_id?: string | null
           split_modo?: string
           split_proporcao?: number
+          split_zoom_a?: number
+          split_zoom_b?: number
           status?: string
           tema?: string | null
           token_hash: string
@@ -27634,6 +27638,8 @@ export type Database = {
           split_b_playlist_id?: string | null
           split_modo?: string
           split_proporcao?: number
+          split_zoom_a?: number
+          split_zoom_b?: number
           status?: string
           tema?: string | null
           token_hash?: string

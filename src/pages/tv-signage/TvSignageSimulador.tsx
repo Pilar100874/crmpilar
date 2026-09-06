@@ -19,7 +19,7 @@ export default function TvSignageSimulador() {
   const [device, setDevice] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [itemsB, setItemsB] = useState<Item[]>([]);
-  const [split, setSplit] = useState<{ modo: "horizontal" | "vertical"; proporcao: number } | null>(null);
+  const [split, setSplit] = useState<{ modo: "horizontal" | "vertical"; proporcao: number; zoomA: number; zoomB: number } | null>(null);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showBar, setShowBar] = useState(true);
@@ -166,7 +166,12 @@ export default function TvSignageSimulador() {
         let listBPrev: Item[] = [];
         if (modoSplitPrev === "horizontal" || modoSplitPrev === "vertical") {
           listBPrev = await buildLista(qs.get("b_dashboard_id"), qs.get("b_playlist_id"), previewDeviceId);
-          setSplit({ modo: modoSplitPrev, proporcao: Number(qs.get("proporcao") || 50) });
+          setSplit({
+            modo: modoSplitPrev,
+            proporcao: Number(qs.get("proporcao") || 50),
+            zoomA: Number(qs.get("zoom_a") || 100),
+            zoomB: Number(qs.get("zoom_b") || 100),
+          });
         } else {
           setSplit(null);
         }
@@ -249,7 +254,12 @@ export default function TvSignageSimulador() {
           qs.get("b_playlist_id") || dev.split_b_playlist_id || null,
           dev.id,
         );
-        setSplit({ modo: modoSplit as any, proporcao: Number(qs.get("proporcao") || dev.split_proporcao || 50) });
+        setSplit({
+          modo: modoSplit as any,
+          proporcao: Number(qs.get("proporcao") || dev.split_proporcao || 50),
+          zoomA: Number(qs.get("zoom_a") || dev.split_zoom_a || 100),
+          zoomB: Number(qs.get("zoom_b") || dev.split_zoom_b || 100),
+        });
       } else {
         setSplit(null);
       }
@@ -414,8 +424,8 @@ export default function TvSignageSimulador() {
               : { gridTemplateColumns: `${split.proporcao}% ${100 - split.proporcao}%` }
           }
         >
-          <TvPainelPlayer items={items} paused={paused} reloadKey={reloadKey} />
-          <TvPainelPlayer items={itemsB} paused={paused} reloadKey={reloadKey} />
+          <TvPainelPlayer items={items} paused={paused} reloadKey={reloadKey} zoom={split.zoomA} />
+          <TvPainelPlayer items={itemsB} paused={paused} reloadKey={reloadKey} zoom={split.zoomB} />
         </div>
       )}
 

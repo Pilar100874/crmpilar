@@ -557,6 +557,8 @@ class SignageActivity : AppCompatActivity() {
     /** Monta a URL do player web em modo tela dividida. */
     private fun carregarTelaDividida(json: JSONObject, split: JSONObject, modo: String) {
         val params = StringBuilder("split=$modo&proporcao=" + split.optInt("proporcao", 50))
+        params.append("&zoom_a=").append(split.optInt("zoom_a", 100))
+        params.append("&zoom_b=").append(split.optInt("zoom_b", 100))
         json.optJSONObject("playlist")?.optString("id")?.takeIf { it.isNotEmpty() }
             ?.let { params.append("&playlist_id=").append(it) }
             ?: json.optJSONObject("dashboard")?.optString("id")?.takeIf { it.isNotEmpty() }
