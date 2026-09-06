@@ -29,8 +29,18 @@ const PROVIDERS = [
   { value: "kangu", label: "Kangu" },
   { value: "frenet", label: "Frenet" },
   { value: "intelipost", label: "Intelipost" },
+  { value: "uber_direct", label: "Uber Direct (entrega expressa)" },
+  { value: "lalamove", label: "Lalamove (entrega expressa)" },
   { value: "custom", label: "Outro (personalizado)" },
 ];
+
+const LALAMOVE_SERVICOS = [
+  { value: "MOTORCYCLE", label: "Moto" },
+  { value: "SEDAN", label: "Carro (sedan)" },
+  { value: "VAN", label: "Van" },
+  { value: "TRUCK550", label: "Caminhão 550" },
+];
+
 
 export default function FreteTerceirosConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [configs, setConfigs] = useState<FreteConfig[]>([]);
