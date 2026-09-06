@@ -403,24 +403,120 @@ export default function TvSignageDispositivos() {
                     </SelectContent>
                   </Select>
                 </div>
-                {edit.split_modo && edit.split_modo !== "nenhum" && (
+                {edit.split_modo && edit.split_modo !== "nenhum" && (() => {
+                  const paineis = Number(edit.split_paineis ?? 2) === 3 ? 3 : 2;
+                  const pa = Number(edit.split_proporcao ?? 50);
+                  const pb = paineis === 3 ? Number(edit.split_proporcao_b ?? 25) : 100 - pa;
+                  const pc = Math.max(0, 100 - pa - pb);
+                  const horizontal = edit.split_modo === "horizontal";
+                  const nomeConteudo = (dashId: any, plId: any) =>
+                    playlists.find((p) => p.id === plId)?.nome ||
+                    dashboards.find((d) => d.id === dashId)?.nome ||
+                    "vazio";
+                  const tracks = paineis === 3 ? `${pa}% ${pb}% ${pc}%` : `${pa}% ${100 - pa}%`;
+
+                  const blocoVisibilidade = (letra: "b" | "c") => {
+                    const modoCampo = `split_${letra}_visivel_modo`;
+                    const intCampo = `split_${letra}_intervalo_segundos`;
+                    const durCampo = `split_${letra}_duracao_segundos`;
+                    const modo = (edit as any)[modoCampo] || "sempre";
+                    return (
+                      <div className="space-y-2">
+                        <Label>Exibição do Painel {letra.toUpperCase()}</Label>
+                        <Select value={modo} onValueChange={(v) => setEdit({ ...edit, [modoCampo]: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sempre">Sempre visível</SelectItem>
+                            <SelectItem value="intervalo">Aparece de tempos em tempos</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {modo === "intervalo" && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-xs">A cada (segundos)</Label>
+                              <Input
+                                type="number" min={10} step={10}
+                                value={(edit as any)[intCampo] ?? 300}
+                                onChange={(e) => setEdit({ ...edit, [intCampo]: Math.max(10, Number(e.target.value) || 300) })}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Fica visível por (segundos)</Label>
+                              <Input
+                                type="number" min={5} step={5}
+                                value={(edit as any)[durCampo] ?? 30}
+                                onChange={(e) => setEdit({ ...edit, [durCampo]: Math.max(5, Number(e.target.value) || 30) })}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <p className="col-span-2 text-[11px] text-muted-foreground">
+                              Enquanto esse painel estiver escondido, os demais ocupam a tela inteira.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  };
+
+                  const blocoConteudo = (letra: "b" | "c", descricao: string) => {
+                    const dashCampo = `split_${letra}_dashboard_id`;
+                    const plCampo = `split_${letra}_playlist_id`;
+                    return (
+                      <div className="pt-2 border-t space-y-3">
+                        <p className="text-xs text-muted-foreground">
+                          Conteúdo do <b>Painel {letra.toUpperCase()}</b> ({descricao}).
+                        </p>
+                        <div><Label>Dashboard fixo</Label>
+                          <Select value={(edit as any)[dashCampo] || "none"} onValueChange={(v) => setEdit({ ...edit, [dashCampo]: v === "none" ? null : v, [plCampo]: null })}>
+                            <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                            <SelectContent><SelectItem value="none">Nenhum</SelectItem>{dashboards.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div><Label>Playlist (rotação)</Label>
+                          <Select value={(edit as any)[plCampo] || "none"} onValueChange={(v) => setEdit({ ...edit, [plCampo]: v === "none" ? null : v, [dashCampo]: null })}>
+                            <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                            <SelectContent><SelectItem value="none">Nenhuma</SelectItem>{playlists.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        {blocoVisibilidade(letra)}
+                      </div>
+                    );
+                  };
+
+                  return (
                   <>
+                    <div>
+                      <Label>Quantidade de áreas</Label>
+                      <Select
+                        value={String(paineis)}
+                        onValueChange={(v) => setEdit({ ...edit, split_paineis: Number(v) })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2">2 áreas (A e B)</SelectItem>
+                          <SelectItem value="3">3 áreas (A, B e C)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div>
                       <div className="flex items-center justify-between gap-3">
                         <Label>
-                          Proporção ({edit.split_modo === "horizontal" ? "cima / baixo" : "esquerda / direita"})
+                          Proporção ({horizontal ? "de cima para baixo" : "da esquerda para a direita"})
                         </Label>
                         <div className="flex items-center gap-1 text-xs">
                           <Input
                             type="number" min={10} max={90} step={1}
-                            value={edit.split_proporcao ?? 50}
+                            value={pa}
                             onChange={(e) => {
                               const v = Math.max(10, Math.min(90, Number(e.target.value) || 50));
                               setEdit({ ...edit, split_proporcao: v });
                             }}
                             className="h-7 w-16 text-center text-xs px-1"
                           />
-                          <span className="text-muted-foreground font-medium">% A / {100 - (edit.split_proporcao ?? 50)}% B</span>
+                          <span className="text-muted-foreground font-medium">
+                            % A {paineis === 3 ? `/ ${pb}% B / ${pc}% C` : `/ ${100 - pa}% B`}
+                          </span>
                         </div>
                       </div>
                       <input
@@ -428,26 +524,53 @@ export default function TvSignageDispositivos() {
                         min={10}
                         max={90}
                         step={5}
-                        value={edit.split_proporcao ?? 50}
+                        value={pa}
                         onChange={(e) => setEdit({ ...edit, split_proporcao: Number(e.target.value) })}
                         className="w-full accent-primary mt-2"
                       />
-                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                        {[20, 30, 40, 50, 60, 70, 80].map((v) => (
-                          <button
-                            key={v}
-                            type="button"
-                            onClick={() => setEdit({ ...edit, split_proporcao: v })}
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
-                              (edit.split_proporcao ?? 50) === v
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-background text-muted-foreground border-border hover:bg-muted"
-                            }`}
-                          >
-                            {v}/{100 - v}
-                          </button>
-                        ))}
-                      </div>
+                      {paineis === 2 && (
+                        <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                          {[20, 30, 40, 50, 60, 70, 80].map((v) => (
+                            <button
+                              key={v}
+                              type="button"
+                              onClick={() => setEdit({ ...edit, split_proporcao: v })}
+                              className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                                pa === v
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                              }`}
+                            >
+                              {v}/{100 - v}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {paineis === 3 && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <Label>Fatia do Painel B</Label>
+                            <div className="flex items-center gap-1 text-xs">
+                              <Input
+                                type="number" min={5} max={90} step={1}
+                                value={pb}
+                                onChange={(e) => {
+                                  const v = Math.max(5, Math.min(90 - 5, Number(e.target.value) || 25));
+                                  setEdit({ ...edit, split_proporcao_b: Math.min(v, Math.max(5, 95 - pa)) });
+                                }}
+                                className="h-7 w-16 text-center text-xs px-1"
+                              />
+                              <span className="text-muted-foreground font-medium">% — sobra {pc}% para C</span>
+                            </div>
+                          </div>
+                          <input
+                            type="range" min={5} max={85} step={5}
+                            value={pb}
+                            onChange={(e) => setEdit({ ...edit, split_proporcao_b: Math.min(Number(e.target.value), Math.max(5, 95 - pa)) })}
+                            className="w-full accent-primary mt-2"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="pt-2 border-t space-y-3">
                       <p className="text-xs text-muted-foreground">
@@ -455,8 +578,9 @@ export default function TvSignageDispositivos() {
                         caber inteiro <b>sem barra de rolagem</b>; acima de 100% amplia.
                       </p>
                       {([
-                        { campo: "split_zoom_a" as const, rotulo: `Zoom do Painel A (${edit.split_modo === "horizontal" ? "cima" : "esquerda"})` },
-                        { campo: "split_zoom_b" as const, rotulo: `Zoom do Painel B (${edit.split_modo === "horizontal" ? "baixo" : "direita"})` },
+                        { campo: "split_zoom_a" as const, rotulo: `Zoom do Painel A (${horizontal ? "cima" : "esquerda"})` },
+                        { campo: "split_zoom_b" as const, rotulo: `Zoom do Painel B (${horizontal ? "meio/baixo" : "meio/direita"})` },
+                        ...(paineis === 3 ? [{ campo: "split_zoom_c" as const, rotulo: `Zoom do Painel C (${horizontal ? "baixo" : "direita"})` }] : []),
                       ]).map(({ campo, rotulo }) => (
                         <div key={campo}>
                           <div className="flex items-center justify-between gap-3">
@@ -499,37 +623,29 @@ export default function TvSignageDispositivos() {
                         </div>
                       ))}
                     </div>
-                    <div className="pt-2 border-t space-y-3">
-                      <p className="text-xs text-muted-foreground">
-                        Conteúdo do <b>Painel B</b> ({edit.split_modo === "horizontal" ? "parte de baixo" : "lado direito"}).
-                      </p>
-                      <div><Label>Dashboard fixo</Label>
-                        <Select value={edit.split_b_dashboard_id || "none"} onValueChange={(v) => setEdit({ ...edit, split_b_dashboard_id: v === "none" ? null : v, split_b_playlist_id: null })}>
-                          <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                          <SelectContent><SelectItem value="none">Nenhum</SelectItem>{dashboards.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                      <div><Label>Playlist (rotação)</Label>
-                        <Select value={edit.split_b_playlist_id || "none"} onValueChange={(v) => setEdit({ ...edit, split_b_playlist_id: v === "none" ? null : v, split_b_dashboard_id: null })}>
-                          <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                          <SelectContent><SelectItem value="none">Nenhuma</SelectItem>{playlists.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className={`rounded-md border border-dashed p-2 grid gap-1 h-24 ${edit.split_modo === "horizontal" ? "grid-rows-2" : "grid-cols-2"}`}
-                      style={edit.split_modo === "horizontal"
-                        ? { gridTemplateRows: `${edit.split_proporcao ?? 50}% ${100 - (edit.split_proporcao ?? 50)}%` }
-                        : { gridTemplateColumns: `${edit.split_proporcao ?? 50}% ${100 - (edit.split_proporcao ?? 50)}%` }}
+                    {blocoConteudo("b", horizontal ? (paineis === 3 ? "faixa do meio" : "parte de baixo") : (paineis === 3 ? "coluna do meio" : "lado direito"))}
+                    {paineis === 3 && blocoConteudo("c", horizontal ? "parte de baixo" : "lado direito")}
+                    <div className={`rounded-md border border-dashed p-2 grid gap-1 h-24`}
+                      style={horizontal ? { gridTemplateRows: tracks } : { gridTemplateColumns: tracks }}
                     >
                       <div className="bg-primary/15 rounded flex items-center justify-center text-[10px] text-primary font-medium truncate px-1">
-                        A · {playlists.find((p) => p.id === edit.playlist_id)?.nome || dashboards.find((d) => d.id === edit.dashboard_atual_id)?.nome || "vazio"}
+                        A · {nomeConteudo(edit.dashboard_atual_id, edit.playlist_id)}
                       </div>
                       <div className="bg-emerald-500/15 rounded flex items-center justify-center text-[10px] text-emerald-600 font-medium truncate px-1">
-                        B · {playlists.find((p) => p.id === edit.split_b_playlist_id)?.nome || dashboards.find((d) => d.id === edit.split_b_dashboard_id)?.nome || "vazio"}
+                        B · {nomeConteudo(edit.split_b_dashboard_id, edit.split_b_playlist_id)}
+                        {edit.split_b_visivel_modo === "intervalo" && " ⏱"}
                       </div>
+                      {paineis === 3 && (
+                        <div className="bg-amber-500/15 rounded flex items-center justify-center text-[10px] text-amber-600 font-medium truncate px-1">
+                          C · {nomeConteudo(edit.split_c_dashboard_id, edit.split_c_playlist_id)}
+                          {edit.split_c_visivel_modo === "intervalo" && " ⏱"}
+                        </div>
+                      )}
                     </div>
                   </>
-                )}
+                  );
+                })()}
+
               </div>
 
               <div><Label>Tema</Label>
