@@ -473,18 +473,30 @@ export default function TvSignageSimulador() {
       )}
       {/* Tela dividida: dois painéis independentes (cada um com dashboard fixo ou playlist) */}
       {split && !erro && (
-        <div
-          className={`absolute inset-0 z-10 grid gap-[2px] bg-black ${split.modo === "horizontal" ? "grid-rows-2" : "grid-cols-2"}`}
-          style={
-            split.modo === "horizontal"
-              ? { gridTemplateRows: `${split.proporcao}% ${100 - split.proporcao}%` }
-              : { gridTemplateColumns: `${split.proporcao}% ${100 - split.proporcao}%` }
-          }
-        >
-          <TvPainelPlayer items={items} paused={paused} reloadKey={reloadKey} zoom={split.zoomA} />
-          <TvPainelPlayer items={itemsB} paused={paused} reloadKey={reloadKey} zoom={split.zoomB} />
-        </div>
+        <TvSplitLayout
+          modo={split.modo}
+          paused={paused}
+          reloadKey={reloadKey}
+          paineis={[
+            { items, proporcao: split.proporcao, zoom: split.zoomA },
+            {
+              items: itemsB,
+              proporcao: split.paineis === 3 ? split.proporcaoB : 100 - split.proporcao,
+              zoom: split.zoomB,
+              visibilidade: split.visB,
+            },
+            ...(split.paineis === 3
+              ? [{
+                  items: itemsC,
+                  proporcao: Math.max(5, 100 - split.proporcao - split.proporcaoB),
+                  zoom: split.zoomC,
+                  visibilidade: split.visC,
+                }]
+              : []),
+          ]}
+        />
       )}
+
 
       {/* Transição fluida: o próximo item já fica pré-carregado (invisível) e a troca
           é apenas um cross-fade — sem tela de carregando entre um conteúdo e outro.
