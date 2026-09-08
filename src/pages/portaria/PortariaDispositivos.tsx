@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STATUS_CORES, salvarCredenciais, testarDispositivo } from "@/lib/portaria/api";
-import { SHELLY_MODELOS, getShellyModelo, rotuloShelly } from "@/lib/portaria/shellyModelos";
+import { SHELLY_MODELOS, getShellyModelo, rotuloShelly, portaPadraoDispositivo } from "@/lib/portaria/shellyModelos";
 
 
 type Dispositivo = {
@@ -36,7 +36,7 @@ type Dispositivo = {
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", funcao: "saida", modelo: "shelly-1-gen3", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
+  nome: "", tipo: "shelly", funcao: "saida", modelo: "shelly-1-gen3", localizacao: "", porta: portaPadraoDispositivo("shelly", "shelly-1-gen3"), canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
 
 };
@@ -211,7 +211,19 @@ export default function PortariaDispositivos() {
             <div><Label>Nome *</Label><Input value={form.nome ?? ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
             <div>
               <Label>Tipo</Label>
-              <Select value={form.tipo ?? "shelly"} onValueChange={(v) => setForm({ ...form, tipo: v })}>
+              <Select
+                value={form.tipo ?? "shelly"}
+                onValueChange={(v) => {
+                  const anterior = portaPadraoDispositivo(form.tipo, form.modelo);
+                  const sugerida = portaPadraoDispositivo(v, null);
+                  setForm({
+                    ...form,
+                    tipo: v,
+                    // preenche a porta padrão do novo tipo quando vazia ou ainda com a sugestão anterior
+                    porta: !form.porta || Number(form.porta) === anterior ? sugerida : form.porta,
+                  });
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-popover">
                   <SelectItem value="shelly">Shelly (contato seco)</SelectItem>
@@ -226,12 +238,15 @@ export default function PortariaDispositivos() {
                   value={form.modelo || "shelly-1-gen3"}
                   onValueChange={(v) => {
                     const m = getShellyModelo(v);
+                    const anterior = portaPadraoDispositivo(form.tipo, form.modelo);
+                    const sugerida = portaPadraoDispositivo("shelly", v);
                     setForm({
                       ...form,
                       modelo: v,
                       funcao: m && m.funcao !== "ambos" ? m.funcao : (form.funcao ?? "saida"),
                       canal_rele: Math.min(Number(form.canal_rele ?? 0), Math.max((m?.canais ?? 1) - 1, 0)),
                       config: { ...config, geracao: m?.geracao ?? "gen2" },
+                      porta: !form.porta || Number(form.porta) === anterior ? sugerida : form.porta,
                     });
                   }}
                 >
@@ -249,7 +264,18 @@ export default function PortariaDispositivos() {
 
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
-            <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
+            <div>
+              <Label>Porta</Label>
+              <Input
+                type="number"
+                value={form.porta ?? ""}
+                placeholder={String(portaPadraoDispositivo(form.tipo, form.modelo))}
+                onChange={(e) => setForm({ ...form, porta: e.target.value === "" ? null : Number(e.target.value) })}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Sugestão: {portaPadraoDispositivo(form.tipo, form.modelo)} (padrão do {form.tipo === "idface" ? "iDFace Max" : "Shelly"})
+              </p>
+            </div>
             {form.tipo === "shelly" && (
               <div className="sm:col-span-2">
                 <Label>Função do dispositivo</Label>
