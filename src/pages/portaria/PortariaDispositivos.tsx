@@ -238,12 +238,15 @@ export default function PortariaDispositivos() {
                   value={form.modelo || "shelly-1-gen3"}
                   onValueChange={(v) => {
                     const m = getShellyModelo(v);
+                    const anterior = portaPadraoDispositivo(form.tipo, form.modelo);
+                    const sugerida = portaPadraoDispositivo("shelly", v);
                     setForm({
                       ...form,
                       modelo: v,
                       funcao: m && m.funcao !== "ambos" ? m.funcao : (form.funcao ?? "saida"),
                       canal_rele: Math.min(Number(form.canal_rele ?? 0), Math.max((m?.canais ?? 1) - 1, 0)),
                       config: { ...config, geracao: m?.geracao ?? "gen2" },
+                      porta: !form.porta || Number(form.porta) === anterior ? sugerida : form.porta,
                     });
                   }}
                 >
