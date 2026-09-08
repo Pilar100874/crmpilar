@@ -588,6 +588,27 @@
         `${(pt.dispositivos || []).length} dispositivo(s) local(is) · ${pt.executados || 0} comando(s) executado(s)` +
         (pt.ultimoErro ? ` · último erro: ${pt.ultimoErro}` : '');
 
+      const saude = pt.saude || [];
+      const boxDisp = document.getElementById('portariaDispositivos');
+      if (!saude.length) {
+        boxDisp.innerHTML = '<div class="meta">Nenhum dispositivo verificado ainda.</div>';
+      } else {
+        boxDisp.innerHTML = saude.map(d => {
+          const nome = String(d.nome || 'Dispositivo').replace(/</g,'&lt;');
+          const tipo = String(d.tipo || '—').replace(/</g,'&lt;');
+          const alvo = d.ip ? `${d.ip}:${d.porta}` : 'sem endereço';
+          const detalhe = d.ativo ? `${d.ms} ms` : (d.erro || 'sem resposta');
+          return `<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 8px; border:1px solid var(--stroke); border-radius:8px;">
+              <div style="min-width:0;">
+                <div style="font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${nome}</div>
+                <div class="meta" style="font-size:11px;">${tipo} · ${alvo} · ${String(detalhe).replace(/</g,'&lt;')}</div>
+              </div>
+              <span class="pill ${d.ativo ? 'pill-on' : 'pill-off'}">${d.ativo ? 'Ativo' : 'Inativo'}</span>
+            </div>`;
+        }).join('');
+      }
+
+
       document.getElementById('pontoStatus').innerHTML = s.pontoRunning
         ? '<span class="pill pill-on">Rodando</span>'
         : '<span class="pill pill-off">Parado</span>';
