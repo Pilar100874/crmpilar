@@ -154,7 +154,13 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   let resultado: { ok: boolean; mensagem?: string; detalhes?: unknown };
-  if (device.via_coletor) {
+  // Endereços de rede interna nunca são alcançáveis pela nuvem: usar o Coletor.
+  const enderecoLocal = ehEnderecoLocal(
+    (device.ip as string | null) ?? null,
+    (device.endpoint as string | null) ?? null,
+  );
+  if (device.via_coletor || enderecoLocal) {
+
     // Dispositivo em rede local: o Coletor Pilar executa o comando na LAN.
     const canalColetor = ponto.acao != null && ponto.acao !== "" ? Number(ponto.acao) : (device.canal_rele as number);
     const r = await executarViaColetor(admin, {
