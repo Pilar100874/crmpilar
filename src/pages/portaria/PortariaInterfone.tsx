@@ -157,6 +157,10 @@ export default function PortariaInterfone() {
     </>
   );
 
+  const mostrarIdface = idface && !erros[idface.id];
+  const camerasVisiveis = cameras.filter((c) => !erros[c.id]);
+  const botoesAcessoVisiveis = !mostrarIdface && pontos.length > 0;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -171,7 +175,7 @@ export default function PortariaInterfone() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        {idface && (
+        {mostrarIdface && (
           <InterfoneTile
             titulo={idface.nome}
             destaque
@@ -184,7 +188,13 @@ export default function PortariaInterfone() {
           />
         )}
 
-        {cameras.map((c) => (
+        {botoesAcessoVisiveis && (
+          <div className="lg:col-span-2 flex flex-wrap gap-2 rounded-xl border bg-card p-3">
+            {botoes}
+          </div>
+        )}
+
+        {camerasVisiveis.map((c) => (
           <InterfoneTile
             key={c.id}
             titulo={c.nome}
@@ -196,9 +206,9 @@ export default function PortariaInterfone() {
         ))}
       </div>
 
-      {!idface && !cameras.length && (
+      {!mostrarIdface && !camerasVisiveis.length && !botoesAcessoVisiveis && (
         <p className="text-sm text-muted-foreground">
-          Nenhum interfone ou câmera configurada para esta unidade. Configure em Portaria → Configurações.
+          Nenhum interfone ou câmera disponível no momento. Verifique as configurações em Portaria → Configurações.
         </p>
       )}
     </div>
