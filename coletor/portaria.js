@@ -232,10 +232,86 @@ const ESTADO = {
   ativo: false,
   ultimaSync: null,
   dispositivos: [],
+  saude: [],
   executados: 0,
   erros: 0,
   ultimoErro: null,
 };
+
+// ---- Verificação de atividade dos dispositivos do interfone -----------------
+// Testa uma conexão TCP simples com cada equipamento para saber se está ativo.
+function testarTcp(host, porta, timeout = 2500) {
+  return new Promise((resolve) => {
+    const inicio = Date.now();
+    const socket = net.connect({ host, port: porta });
+    const encerrar = (ok, erro) => {
+      try { socket.destroy(); } catch {}
+      resolve({ ok, ms: Date.now() - inicio, erro: erro || null });
+    };
+    socket.setTimeout(timeout);
+    socket.once('connect', () => encerrar(true));
+    socket.once('timeout', () => encerrar(false, 'Sem resposta (tempo esgotado)'));
+    socket.once('error', (e) => encerrar(false, e.message));
+  });
+}
+
+function portaPadrao(device) {
+  if (device.porta) return Number(device.porta);
+  if (device.endpoint) {
+    try {
+      const u = new URL(device.endpoint);
+      if (u.port) return Number(u.port);
+      return u.protocol === 'https:' ? 443 : 80;
+    } catch {}
+  }
+  const proto = String((device.config && device.config.protocolo) || 'http').toLowerCase();
+  return proto === 'https' ? 443 : 80;
+}
+
+function hostDoDispositivo(device) {
+  if (device.ip) return device.ip;
+  if (device.endpoint) {
+    try { return new URL(device.endpoint).hostname; } catch {}
+  }
+  return null;
+}
+
+async function verificarSaude(dispositivos) {
+  const lista = [];
+  for (const device of dispositivos || []) {
+    const host = hostDoDispositivo(device);
+    const porta = portaPadrao(device);
+    if (!host) {
+      lista.push({
+        id: device.id,
+        nome: device.nome || device.identificador || 'Dispositivo',
+        tipo: device.tipo || '—',
+        ip: null,
+        porta,
+        ativo: false,
+        ms: null,
+        erro: 'Sem IP/endereço configurado',
+        verificadoEm: new Date().toISOString(),
+      });
+      continue;
+    }
+    const r = await testarTcp(host, porta);
+    lista.push({
+      id: device.id,
+      nome: device.nome || device.identificador || 'Dispositivo',
+      tipo: device.tipo || '—',
+      ip: host,
+      porta,
+      ativo: r.ok,
+      ms: r.ms,
+      erro: r.erro,
+      verificadoEm: new Date().toISOString(),
+    });
+  }
+  ESTADO.saude = lista;
+  return lista;
+}
+
 
 // Registra o equipamento na Portaria sem exigir digitação de chave.
 async function garantirRegistro(cfg) {
