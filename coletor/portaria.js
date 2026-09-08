@@ -5,6 +5,7 @@ const http = require('http');
 const https = require('https');
 const { login, logout, resolverProtocolo } = require('./controlid');
 const os = require('os');
+const net = require('net');
 const { deviceKey } = require('./deviceKey');
 
 function endpointFn(cfg) {
@@ -406,6 +407,7 @@ async function pollPortariaOnce(cfg) {
     const unidadeId = cfg.filialId || null;
     const handshake = await chamar(cfg, { acao: 'handshake', versao: cfg.versao || null, unidade_id: unidadeId });
     ESTADO.dispositivos = handshake.dispositivos || [];
+    try { await verificarSaude(ESTADO.dispositivos); } catch {}
     await verificarCampainha(cfg, ESTADO.dispositivos);
     const { jobs } = await chamar(cfg, { acao: 'jobs', limite: 5, unidade_id: unidadeId });
     for (const job of jobs || []) {
@@ -434,4 +436,4 @@ async function pollPortariaOnce(cfg) {
   return ESTADO;
 }
 
-module.exports = { pollPortariaOnce, garantirRegistro, verificarCampainha, ESTADO };
+module.exports = { pollPortariaOnce, garantirRegistro, verificarCampainha, verificarSaude, ESTADO };
