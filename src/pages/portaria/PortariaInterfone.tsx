@@ -19,6 +19,8 @@ interface Camera {
 interface PontoAcesso {
   id: string;
   nome: string;
+  device_id: string | null;
+  device: { id: string; habilitado: boolean | null; status: string | null } | null;
 }
 
 const INTERVALO_MS = 2000;
