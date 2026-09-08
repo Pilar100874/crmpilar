@@ -145,7 +145,11 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, esti
         )}
 
         {acoes && (
-          <div className="absolute bottom-0 inset-x-0 flex flex-wrap gap-2 bg-gradient-to-t from-background/85 to-transparent p-2">
+          <div
+            className="absolute bottom-0 inset-x-0 flex flex-wrap gap-2 bg-gradient-to-t from-background/85 to-transparent p-2"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+          >
             {acoes}
           </div>
         )}
