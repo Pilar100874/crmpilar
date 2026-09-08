@@ -43,6 +43,20 @@ export const SHELLY_MODELOS: ShellyModelo[] = [
 export const getShellyModelo = (id?: string | null) =>
   SHELLY_MODELOS.find((m) => m.id === id) ?? null;
 
+/** Porta padrão sugerida por tipo de dispositivo da portaria. */
+export const PORTAS_PADRAO_DISPOSITIVO: Record<string, number> = {
+  shelly: 80, // interface web / API RPC do Shelly
+  idface: 80, // painel web / API HTTP do Control iD iDFace Max
+};
+
+export const portaPadraoDispositivo = (tipo?: string | null, modelo?: string | null): number => {
+  if (tipo === "shelly" && modelo) {
+    const m = getShellyModelo(modelo);
+    if (m && m.geracao === "gen1") return 80;
+  }
+  return PORTAS_PADRAO_DISPOSITIVO[tipo ?? "shelly"] ?? 80;
+};
+
 export const rotuloShelly = (modeloId?: string | null, funcao?: string | null) => {
   const m = getShellyModelo(modeloId);
   const f = funcao === "entrada" ? "Entrada" : "Saída";
