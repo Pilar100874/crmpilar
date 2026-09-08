@@ -39,6 +39,24 @@ function ehEnderecoLocal(ip?: string | null, endpoint?: string | null): boolean 
   return false;
 }
 
+/** Traduz erros técnicos de rede em algo que o porteiro entenda. */
+function mensagemAmigavel(mensagem: string | undefined, ip: string | null): string {
+  const texto = String(mensagem ?? "");
+  const alvo = ip ? ` (${ip})` : "";
+  if (/EHOSTUNREACH|ENETUNREACH|EHOSTDOWN/i.test(texto)) {
+    return `O equipamento${alvo} não respondeu na rede. Verifique se ele está ligado e conectado.`;
+  }
+  if (/ECONNREFUSED/i.test(texto)) {
+    return `O equipamento${alvo} recusou a conexão. Confira o endereço e a porta cadastrados.`;
+  }
+  if (/ETIMEDOUT|timeout|abort/i.test(texto)) {
+    return `O equipamento${alvo} demorou demais para responder.`;
+  }
+  if (/Coletor/i.test(texto)) return texto;
+  return texto || "Não foi possível acionar o dispositivo.";
+}
+
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
