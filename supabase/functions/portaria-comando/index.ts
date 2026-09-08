@@ -213,7 +213,8 @@ Deno.serve(async (req) => {
   await registrar(resultado.ok ? "sucesso" : "erro", resultado.mensagem ?? null, deviceId);
 
   if (!resultado.ok) {
-    return responder(502, { error: resultado.mensagem || "Não foi possível acionar o dispositivo." });
+    return responder(502, { error: mensagemAmigavel(resultado.mensagem, device.ip as string | null) });
   }
+
   return responder(200, { ok: true, acesso: ponto.nome, horario: new Date().toISOString() });
 });
