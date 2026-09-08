@@ -264,7 +264,18 @@ export default function PortariaDispositivos() {
 
             <div><Label>Localização</Label><Input value={form.localizacao ?? ""} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} /></div>
             <div><Label>IP local</Label><Input value={form.ip ?? ""} onChange={(e) => setForm({ ...form, ip: e.target.value })} placeholder="192.168.0.50" /></div>
-            <div><Label>Porta</Label><Input type="number" value={form.porta ?? ""} onChange={(e) => setForm({ ...form, porta: Number(e.target.value) })} /></div>
+            <div>
+              <Label>Porta</Label>
+              <Input
+                type="number"
+                value={form.porta ?? ""}
+                placeholder={String(portaPadraoDispositivo(form.tipo, form.modelo))}
+                onChange={(e) => setForm({ ...form, porta: e.target.value === "" ? null : Number(e.target.value) })}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Sugestão: {portaPadraoDispositivo(form.tipo, form.modelo)} (padrão do {form.tipo === "idface" ? "iDFace Max" : "Shelly"})
+              </p>
+            </div>
             {form.tipo === "shelly" && (
               <div className="sm:col-span-2">
                 <Label>Função do dispositivo</Label>
