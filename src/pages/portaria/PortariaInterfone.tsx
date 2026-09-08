@@ -19,6 +19,8 @@ interface Camera {
 interface PontoAcesso {
   id: string;
   nome: string;
+  device_id: string | null;
+  device: { id: string; habilitado: boolean | null; status: string | null } | null;
 }
 
 const INTERVALO_MS = 2000;
@@ -52,14 +54,18 @@ export default function PortariaInterfone() {
         .order("nome");
       if (unidadeId) qd = qd.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
 
-      let qp = supabase.from("port_access_points").select("id, nome").eq("ativo", true).order("ordem");
+      let qp = supabase
+        .from("port_access_points")
+        .select("id, nome, device_id, device:port_devices(id, habilitado, status)")
+        .eq("ativo", true)
+        .order("ordem");
       if (unidadeId) qp = qp.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
 
       const [{ data: devs }, { data: aps }] = await Promise.all([qd, qp]);
       if (!ativo) return;
       const lista = (devs ?? []) as { id: string; nome: string }[];
       setIdface(lista.find((d) => d.id === config?.device_id) ?? lista[0] ?? null);
-      setPontos((aps ?? []) as PontoAcesso[]);
+      setPontos((aps ?? []) as unknown as PontoAcesso[]);
     })();
     return () => {
       ativo = false;
@@ -143,23 +149,34 @@ export default function PortariaInterfone() {
     setAcionando(ponto.id);
     const r = await abrirAcesso(ponto.id);
     setAcionando(null);
-    r.ok ? toast.success(`${ponto.nome}: ${r.mensagem}`) : toast.error(r.mensagem);
+    if (r.ok) {
+      toast.success(`${ponto.nome}: ${r.mensagem}`);
+      return;
+    }
+    toast.error(r.mensagem);
+    // Dispositivo falhou: esconde o botão até a tela ser recarregada.
+    setPontos((atual) => atual.filter((p) => p.id !== ponto.id));
   };
 
-  const botoes = (
+  // Só mostra botões de dispositivos habilitados e sem erro registrado.
+  const pontosVisiveis = pontos.filter(
+    (p) => p.device && p.device.habilitado !== false && p.device.status !== "erro" && p.device.status !== "offline",
+  );
+
+  const botoes = pontosVisiveis.length ? (
     <>
-      {pontos.map((p) => (
+      {pontosVisiveis.map((p) => (
         <Button key={p.id} size="sm" className="h-9" disabled={acionando === p.id} onClick={() => void abrir(p)}>
           {acionando === p.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <DoorOpen className="h-4 w-4 mr-2" />}
           {p.nome}
         </Button>
       ))}
     </>
-  );
+  ) : null;
 
   const mostrarIdface = idface && !erros[idface.id];
   const camerasVisiveis = cameras.filter((c) => !erros[c.id]);
-  const botoesAcessoVisiveis = !mostrarIdface && pontos.length > 0;
+  const botoesAcessoVisiveis = !mostrarIdface && pontosVisiveis.length > 0;
 
   return (
     <div className="space-y-4">
@@ -183,7 +200,7 @@ export default function PortariaInterfone() {
             carregando={carregando[idface.id]}
             erro={erros[idface.id] || null}
             // Botões de acesso (portão/porta) apenas no tile do interfone
-            acoes={pontos.length ? botoes : null}
+            acoes={botoes}
             className="lg:col-span-2"
           />
         )}
