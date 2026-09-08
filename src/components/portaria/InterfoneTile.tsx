@@ -72,10 +72,36 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, esti
   };
 
   return (
-    <div className={cn("rounded-xl border bg-card overflow-hidden", esticado && "h-full min-h-0", destaque && "ring-2 ring-primary/40", className)}>
+    <div className={cn("rounded-xl border bg-card overflow-hidden flex flex-col", esticado && "h-full min-h-0", destaque && "ring-2 ring-primary/40", className)}>
+      <div className="flex items-center justify-between gap-2 px-3 py-2 bg-card">
+        <span className="text-sm font-semibold text-card-foreground truncate">{titulo}</span>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => zoomBotao(1.4)}>
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => zoomBotao(1 / 1.4)}>
+            <Minus className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="h-7 w-7"
+            onClick={() => {
+              setZoom(1);
+              setPos({ x: 0, y: 0 });
+            }}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={telaCheia}>
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
       <div
         ref={ref}
-        className={cn("relative bg-muted overflow-hidden select-none touch-none", esticado ? "h-full" : "aspect-video")}
+        className={cn("relative bg-muted overflow-hidden select-none touch-none flex-1 min-h-0", esticado ? "h-full" : "aspect-video")}
         style={{ cursor: zoom > 1 ? "grab" : "zoom-in" }}
         onDoubleClick={(e) => {
           const rect = ref.current?.getBoundingClientRect();
@@ -117,34 +143,6 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, esti
             <p className="text-xs">{erro || (carregando ? "Capturando imagem..." : "Sem imagem")}</p>
           </div>
         )}
-
-        <div className="absolute bottom-1 left-2 flex items-center gap-2">
-          <span className="text-sm font-semibold text-black">{titulo}</span>
-          {imagem && carregando && <Loader2 className="h-3 w-3 animate-spin text-black" />}
-        </div>
-
-        <div className="absolute top-2 right-2 flex items-center gap-1">
-          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => zoomBotao(1.4)}>
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
-          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => zoomBotao(1 / 1.4)}>
-            <Minus className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-7 w-7"
-            onClick={() => {
-              setZoom(1);
-              setPos({ x: 0, y: 0 });
-            }}
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-          </Button>
-          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={telaCheia}>
-            <Maximize2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
 
         {acoes && (
           <div className="absolute bottom-0 inset-x-0 flex flex-wrap gap-2 bg-gradient-to-t from-background/85 to-transparent p-2">
