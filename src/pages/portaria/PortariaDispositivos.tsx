@@ -211,7 +211,19 @@ export default function PortariaDispositivos() {
             <div><Label>Nome *</Label><Input value={form.nome ?? ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
             <div>
               <Label>Tipo</Label>
-              <Select value={form.tipo ?? "shelly"} onValueChange={(v) => setForm({ ...form, tipo: v })}>
+              <Select
+                value={form.tipo ?? "shelly"}
+                onValueChange={(v) => {
+                  const anterior = portaPadraoDispositivo(form.tipo, form.modelo);
+                  const sugerida = portaPadraoDispositivo(v, null);
+                  setForm({
+                    ...form,
+                    tipo: v,
+                    // preenche a porta padrão do novo tipo quando vazia ou ainda com a sugestão anterior
+                    porta: !form.porta || Number(form.porta) === anterior ? sugerida : form.porta,
+                  });
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-popover">
                   <SelectItem value="shelly">Shelly (contato seco)</SelectItem>
