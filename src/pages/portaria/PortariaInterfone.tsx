@@ -200,7 +200,7 @@ export default function PortariaInterfone() {
             carregando={carregando[idface.id]}
             erro={erros[idface.id] || null}
             // Botões de acesso (portão/porta) apenas no tile do interfone
-            acoes={pontos.length ? botoes : null}
+            acoes={botoes}
             className="lg:col-span-2"
           />
         )}
