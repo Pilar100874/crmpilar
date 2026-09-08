@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STATUS_CORES, salvarCredenciais, testarDispositivo } from "@/lib/portaria/api";
-import { SHELLY_MODELOS, getShellyModelo, rotuloShelly } from "@/lib/portaria/shellyModelos";
+import { SHELLY_MODELOS, getShellyModelo, rotuloShelly, portaPadraoDispositivo } from "@/lib/portaria/shellyModelos";
 
 
 type Dispositivo = {
@@ -36,7 +36,7 @@ type Dispositivo = {
 };
 
 const VAZIO: Partial<Dispositivo> = {
-  nome: "", tipo: "shelly", funcao: "saida", modelo: "shelly-1-gen3", localizacao: "", canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
+  nome: "", tipo: "shelly", funcao: "saida", modelo: "shelly-1-gen3", localizacao: "", porta: portaPadraoDispositivo("shelly", "shelly-1-gen3"), canal_rele: 0, pulso_ms: 1000, habilitado: true, via_coletor: false,
   config: { geracao: "gen2", protocolo: "http" },
 
 };
