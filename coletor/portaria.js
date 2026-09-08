@@ -99,6 +99,21 @@ function baseUrlShelly(device) {
   return `${proto}://${device.ip}${porta}`;
 }
 
+// Alguns Shelly ficam cadastrados com a geração errada. Tentamos o endpoint
+// esperado e, se o aparelho responder 404, tentamos o da outra geração.
+async function tentarUrls(urls, headers) {
+  let ultimoErro = null;
+  for (const url of urls) {
+    try {
+      return await requisicao(url, { headers });
+    } catch (e) {
+      ultimoErro = e;
+      if (!/HTTP 40[04]/.test(String(e && e.message))) throw e;
+    }
+  }
+  throw ultimoErro || new Error('Dispositivo não respondeu.');
+}
+
 async function shellyPulso(device, cred, canal) {
   const base = baseUrlShelly(device);
   if (!base) throw new Error('Dispositivo sem IP/endpoint configurado.');
@@ -109,10 +124,9 @@ async function shellyPulso(device, cred, canal) {
   if (cred && cred.usuario && cred.senha) {
     headers.Authorization = 'Basic ' + Buffer.from(`${cred.usuario}:${cred.senha}`).toString('base64');
   }
-  const url = geracao === 'gen1'
-    ? `${base}/relay/${canal}?turn=on&timer=${segundos}`
-    : `${base}/rpc/Switch.Set?id=${canal}&on=true&toggle_after=${segundos}`;
-  const texto = await requisicao(url, { headers });
+  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=true&toggle_after=${segundos}`;
+  const gen1 = `${base}/relay/${canal}?turn=on&timer=${segundos}`;
+  const texto = await tentarUrls(geracao === 'gen1' ? [gen1, rpc] : [rpc, gen1], headers);
   return { mensagem: 'Relé acionado pelo Coletor local.', dados: texto.slice(0, 300) };
 }
 
@@ -124,10 +138,12 @@ async function shellyStatus(device, cred, canal) {
   if (cred && cred.usuario && cred.senha) {
     headers.Authorization = 'Basic ' + Buffer.from(`${cred.usuario}:${cred.senha}`).toString('base64');
   }
-  const url = geracao === 'gen1' ? `${base}/status` : `${base}/rpc/Shelly.GetStatus`;
-  const texto = await requisicao(url, { headers });
+  const rpc = `${base}/rpc/Shelly.GetStatus`;
+  const gen1 = `${base}/status`;
+  const texto = await tentarUrls(geracao === 'gen1' ? [gen1, rpc] : [rpc, gen1], headers);
   return { mensagem: 'Dispositivo respondeu na rede local.', dados: texto.slice(0, 300) };
 }
+
 
 async function controlidAbrir(device, cred, porta) {
   const alvo = resolverProtocolo({ ip: device.ip, porta: device.porta, https: false });

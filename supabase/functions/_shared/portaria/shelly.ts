@@ -88,16 +88,21 @@ export async function shellyPulso(
     const base = baseUrl(device);
     if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
 
-    const url = geracao === "gen1"
-      ? `${base}/relay/${canal}?turn=on&timer=${segundos}`
-      : `${base}/rpc/Switch.Set?id=${canal}&on=true&toggle_after=${segundos}`;
+    const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=true&toggle_after=${segundos}`;
+    const gen1url = `${base}/relay/${canal}?turn=on&timer=${segundos}`;
+    const urls = geracao === "gen1" ? [gen1url, rpc] : [rpc, gen1url];
 
-    const resp = await fetchComTimeout(url, { headers: authHeaders(cred) });
-    const texto = await resp.text();
+    let ultima: Response | null = null;
+    let texto = "";
+    for (const url of urls) {
+      ultima = await fetchComTimeout(url, { headers: authHeaders(cred) });
+      texto = await ultima.text();
+      if (ultima.ok || (ultima.status !== 404 && ultima.status !== 400)) break;
+    }
     return {
-      ok: resp.ok,
-      status: resp.status,
-      mensagem: resp.ok ? undefined : `Shelly respondeu ${resp.status}`,
+      ok: !!ultima?.ok,
+      status: ultima?.status,
+      mensagem: ultima?.ok ? undefined : `Shelly respondeu ${ultima?.status}`,
       detalhes: texto.slice(0, 500),
     };
   } catch (e) {
@@ -113,12 +118,20 @@ export async function shellyStatus(
   const base = baseUrl(device);
   if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
   const geracao = ((device.config?.geracao as string) || "gen2").toLowerCase();
-  const url = geracao === "gen1" ? `${base}/status` : `${base}/rpc/Shelly.GetStatus`;
+  const urls = geracao === "gen1"
+    ? [`${base}/status`, `${base}/rpc/Shelly.GetStatus`]
+    : [`${base}/rpc/Shelly.GetStatus`, `${base}/status`];
   try {
-    const resp = await fetchComTimeout(url, { headers: authHeaders(cred) }, 6000);
-    const texto = await resp.text();
-    return { ok: resp.ok, status: resp.status, detalhes: texto.slice(0, 1000) };
+    let ultima: Response | null = null;
+    let texto = "";
+    for (const url of urls) {
+      ultima = await fetchComTimeout(url, { headers: authHeaders(cred) }, 6000);
+      texto = await ultima.text();
+      if (ultima.ok || (ultima.status !== 404 && ultima.status !== 400)) break;
+    }
+    return { ok: !!ultima?.ok, status: ultima?.status, detalhes: texto.slice(0, 1000) };
   } catch (e) {
     return { ok: false, mensagem: (e as Error).message };
   }
 }
+
