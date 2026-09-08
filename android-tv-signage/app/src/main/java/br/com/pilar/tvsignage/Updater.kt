@@ -257,6 +257,8 @@ object Updater {
         Rollback.prepararBackup(ctx)
         Rollback.marcarPendente(ctx, if (info.versionCode > 0) info.versionCode else atual + 1)
         if (instalarSilencioso(file)) return Result.Instalando
+        // PackageInstaller: o Android encerra e substitui o app sozinho (sem fechar na mao).
+        if (instalarViaSession(ctx, file)) return Result.Instalando
         onInstaller(file)
         return Result.Instalando
     }
