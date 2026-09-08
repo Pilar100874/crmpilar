@@ -159,6 +159,38 @@ object Updater {
     private fun sha256Seguro(file: File): String = try { sha256(file) } catch (_: Exception) { "" }
 
 
+    /**
+     * Instalação via PackageInstaller (sessão). O sistema encerra e substitui o app sozinho —
+     * não é preciso fechar o aplicativo antes. Quando o app é device owner/privilegiado a
+     * instalação acontece sem nenhuma confirmação; caso contrário o
+     * [InstallResultReceiver] abre a confirmação automaticamente.
+     */
+    fun instalarViaSession(ctx: Context, file: File): Boolean {
+        return try {
+            val pi = ctx.packageManager.packageInstaller
+            val params = android.content.pm.PackageInstaller.SessionParams(
+                android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
+            )
+            try { params.setAppPackageName(ctx.packageName) } catch (_: Exception) {}
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                try { params.setRequireUserAction(android.content.pm.PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED) } catch (_: Exception) {}
+            }
+            val sessionId = pi.createSession(params)
+            pi.openSession(sessionId).use { session ->
+                session.openWrite("pilar-ota", 0, file.length()).use { out ->
+                    file.inputStream().use { input -> input.copyTo(out, 64 * 1024) }
+                    session.fsync(out)
+                }
+                val intent = Intent(InstallResultReceiver.ACTION).setPackage(ctx.packageName)
+                val flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+                    (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) android.app.PendingIntent.FLAG_MUTABLE else 0)
+                val pending = android.app.PendingIntent.getBroadcast(ctx, sessionId, intent, flags)
+                session.commit(pending.intentSender)
+            }
+            true
+        } catch (_: Exception) { false }
+    }
+
     /** Instalação silenciosa (root / system / device owner). Retorna true se concluiu. */
     fun instalarSilencioso(file: File): Boolean {
         for (cmd in listOf(
