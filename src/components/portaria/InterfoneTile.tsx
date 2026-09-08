@@ -1,6 +1,6 @@
 // Tile de imagem do interfone/câmeras com zoom (roda do mouse), arrastar e tela cheia.
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Maximize2, Minus, Plus, RotateCcw, Video } from "lucide-react";
+import { Loader2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -123,28 +123,6 @@ export function InterfoneTile({ titulo, imagem, carregando, erro, destaque, esti
           {imagem && carregando && <Loader2 className="h-3 w-3 animate-spin text-black" />}
         </div>
 
-        <div className="absolute top-2 right-2 flex items-center gap-1">
-          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => zoomBotao(1.4)}>
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
-          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => zoomBotao(1 / 1.4)}>
-            <Minus className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-7 w-7"
-            onClick={() => {
-              setZoom(1);
-              setPos({ x: 0, y: 0 });
-            }}
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-          </Button>
-          <Button size="icon" variant="secondary" className="h-7 w-7" onClick={telaCheia}>
-            <Maximize2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
 
         {acoes && (
           <div className="absolute bottom-0 inset-x-0 flex flex-wrap gap-2 bg-gradient-to-t from-background/85 to-transparent p-2">
