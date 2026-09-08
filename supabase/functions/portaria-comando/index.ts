@@ -17,6 +17,29 @@ function responder(status: number, corpo: unknown) {
   return new Response(JSON.stringify(corpo), { status, headers: JSON_HEADERS });
 }
 
+/** IPs/hosts que só existem dentro da rede do cliente (a nuvem nunca alcança). */
+function ehEnderecoLocal(ip?: string | null, endpoint?: string | null): boolean {
+  let host = (ip ?? "").trim();
+  if (!host && endpoint) {
+    try {
+      host = new URL(endpoint).hostname;
+    } catch {
+      host = endpoint.replace(/^\w+:\/\//, "").split("/")[0].split(":")[0];
+    }
+  }
+  if (!host) return false;
+  host = host.toLowerCase();
+  if (host === "localhost" || host.endsWith(".local")) return true;
+  const p = host.split(".").map((n) => Number(n));
+  if (p.length !== 4 || p.some((n) => !Number.isInteger(n))) return false;
+  if (p[0] === 10 || p[0] === 127) return true;
+  if (p[0] === 192 && p[1] === 168) return true;
+  if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return true;
+  if (p[0] === 169 && p[1] === 254) return true;
+  return false;
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return responder(405, { error: "Método não permitido" });
