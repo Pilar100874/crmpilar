@@ -95,5 +95,25 @@
                 <action android:name="android.intent.action.REBOOT" />
             </intent-filter>
         </receiver>
+
+        <!-- Reabre o app sozinho depois que a atualizacao OTA e instalada -->
+        <receiver
+            android:name=".UpdatedReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Resultado da instalacao via PackageInstaller -->
+        <receiver
+            android:name=".InstallResultReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="br.com.pilar.tvsignage.INSTALL_RESULT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
