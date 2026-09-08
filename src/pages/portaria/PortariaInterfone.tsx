@@ -54,7 +54,11 @@ export default function PortariaInterfone() {
         .order("nome");
       if (unidadeId) qd = qd.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
 
-      let qp = supabase.from("port_access_points").select("id, nome").eq("ativo", true).order("ordem");
+      let qp = supabase
+        .from("port_access_points")
+        .select("id, nome, device_id, device:port_devices(id, habilitado, status)")
+        .eq("ativo", true)
+        .order("ordem");
       if (unidadeId) qp = qp.or(`unidade_id.eq.${unidadeId},unidade_id.is.null`);
 
       const [{ data: devs }, { data: aps }] = await Promise.all([qd, qp]);
