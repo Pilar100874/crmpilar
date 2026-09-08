@@ -189,4 +189,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/apps/android-tv-signage-latest.json
           git commit -m "chore(tv-signage): atualizar manifesto do APK [skip ci]"
-          git push
+          for i in $(seq 1 5); do
+            git pull --rebase origin main && git push && exit 0
+            echo "Tentativa $i falhou (conflito de ref), tentando novamente..."
+            sleep 3
+          done
+          echo "Não foi possível enviar o manifesto após 5 tentativas."
+          exit 1
