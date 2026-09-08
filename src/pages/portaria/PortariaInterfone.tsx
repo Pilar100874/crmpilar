@@ -65,7 +65,7 @@ export default function PortariaInterfone() {
       if (!ativo) return;
       const lista = (devs ?? []) as { id: string; nome: string }[];
       setIdface(lista.find((d) => d.id === config?.device_id) ?? lista[0] ?? null);
-      setPontos((aps ?? []) as PontoAcesso[]);
+      setPontos((aps ?? []) as unknown as PontoAcesso[]);
     })();
     return () => {
       ativo = false;
