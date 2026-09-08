@@ -17,6 +17,47 @@ function responder(status: number, corpo: unknown) {
   return new Response(JSON.stringify(corpo), { status, headers: JSON_HEADERS });
 }
 
+/** IPs/hosts que só existem dentro da rede do cliente (a nuvem nunca alcança). */
+function ehEnderecoLocal(ip?: string | null, endpoint?: string | null): boolean {
+  let host = (ip ?? "").trim();
+  if (!host && endpoint) {
+    try {
+      host = new URL(endpoint).hostname;
+    } catch {
+      host = endpoint.replace(/^\w+:\/\//, "").split("/")[0].split(":")[0];
+    }
+  }
+  if (!host) return false;
+  host = host.toLowerCase();
+  if (host === "localhost" || host.endsWith(".local")) return true;
+  const p = host.split(".").map((n) => Number(n));
+  if (p.length !== 4 || p.some((n) => !Number.isInteger(n))) return false;
+  if (p[0] === 10 || p[0] === 127) return true;
+  if (p[0] === 192 && p[1] === 168) return true;
+  if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return true;
+  if (p[0] === 169 && p[1] === 254) return true;
+  return false;
+}
+
+/** Traduz erros técnicos de rede em algo que o porteiro entenda. */
+function mensagemAmigavel(mensagem: string | undefined, ip: string | null): string {
+  const texto = String(mensagem ?? "");
+  const alvo = ip ? ` (${ip})` : "";
+  if (/EHOSTUNREACH|ENETUNREACH|EHOSTDOWN/i.test(texto)) {
+    return `O equipamento${alvo} não respondeu na rede. Verifique se ele está ligado e conectado.`;
+  }
+  if (/ECONNREFUSED/i.test(texto)) {
+    return `O equipamento${alvo} recusou a conexão. Confira o endereço e a porta cadastrados.`;
+  }
+  if (/ETIMEDOUT|timeout|abort/i.test(texto)) {
+    return `O equipamento${alvo} demorou demais para responder.`;
+  }
+  if (/Coletor/i.test(texto)) return texto;
+  return texto || "Não foi possível acionar o dispositivo.";
+}
+
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return responder(405, { error: "Método não permitido" });
@@ -154,7 +195,13 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   let resultado: { ok: boolean; mensagem?: string; detalhes?: unknown };
-  if (device.via_coletor) {
+  // Endereços de rede interna nunca são alcançáveis pela nuvem: usar o Coletor.
+  const enderecoLocal = ehEnderecoLocal(
+    (device.ip as string | null) ?? null,
+    (device.endpoint as string | null) ?? null,
+  );
+  if (device.via_coletor || enderecoLocal) {
+
     // Dispositivo em rede local: o Coletor Pilar executa o comando na LAN.
     const canalColetor = ponto.acao != null && ponto.acao !== "" ? Number(ponto.acao) : (device.canal_rele as number);
     const r = await executarViaColetor(admin, {
@@ -184,7 +231,8 @@ Deno.serve(async (req) => {
   await registrar(resultado.ok ? "sucesso" : "erro", resultado.mensagem ?? null, deviceId);
 
   if (!resultado.ok) {
-    return responder(502, { error: resultado.mensagem || "Não foi possível acionar o dispositivo." });
+    return responder(502, { error: mensagemAmigavel(resultado.mensagem, device.ip as string | null) });
   }
+
   return responder(200, { ok: true, acesso: ponto.nome, horario: new Date().toISOString() });
 });
