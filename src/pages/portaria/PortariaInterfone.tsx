@@ -149,23 +149,34 @@ export default function PortariaInterfone() {
     setAcionando(ponto.id);
     const r = await abrirAcesso(ponto.id);
     setAcionando(null);
-    r.ok ? toast.success(`${ponto.nome}: ${r.mensagem}`) : toast.error(r.mensagem);
+    if (r.ok) {
+      toast.success(`${ponto.nome}: ${r.mensagem}`);
+      return;
+    }
+    toast.error(r.mensagem);
+    // Dispositivo falhou: esconde o botão até a tela ser recarregada.
+    setPontos((atual) => atual.filter((p) => p.id !== ponto.id));
   };
 
-  const botoes = (
+  // Só mostra botões de dispositivos habilitados e sem erro registrado.
+  const pontosVisiveis = pontos.filter(
+    (p) => p.device && p.device.habilitado !== false && p.device.status !== "erro" && p.device.status !== "offline",
+  );
+
+  const botoes = pontosVisiveis.length ? (
     <>
-      {pontos.map((p) => (
+      {pontosVisiveis.map((p) => (
         <Button key={p.id} size="sm" className="h-9" disabled={acionando === p.id} onClick={() => void abrir(p)}>
           {acionando === p.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <DoorOpen className="h-4 w-4 mr-2" />}
           {p.nome}
         </Button>
       ))}
     </>
-  );
+  ) : null;
 
   const mostrarIdface = idface && !erros[idface.id];
   const camerasVisiveis = cameras.filter((c) => !erros[c.id]);
-  const botoesAcessoVisiveis = !mostrarIdface && pontos.length > 0;
+  const botoesAcessoVisiveis = !mostrarIdface && pontosVisiveis.length > 0;
 
   return (
     <div className="space-y-4">
