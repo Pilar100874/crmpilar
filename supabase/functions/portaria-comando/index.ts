@@ -231,7 +231,8 @@ Deno.serve(async (req) => {
   await registrar(resultado.ok ? "sucesso" : "erro", resultado.mensagem ?? null, deviceId);
 
   if (!resultado.ok) {
-    return responder(502, { error: mensagemAmigavel(resultado.mensagem, device.ip as string | null) });
+    // 200 com ok=false: evita que o SDK gere erro genérico e permite exibir a mensagem amigável na UI.
+    return responder(200, { ok: false, error: mensagemAmigavel(resultado.mensagem, device.ip as string | null) });
   }
 
   return responder(200, { ok: true, acesso: ponto.nome, horario: new Date().toISOString() });
