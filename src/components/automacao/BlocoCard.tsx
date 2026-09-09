@@ -71,7 +71,7 @@ export default function BlocoCard(props: Props) {
   );
 }
 
-function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar }: Props) {
+function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplicar, onAcionar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
@@ -135,9 +135,18 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar
             style={{ borderRadius: raio }}
           >
             <GripVertical className="h-5 w-5 text-muted-foreground" />
-            <Button variant="secondary" size="icon" className="h-8 w-8" onClick={onEditar}>
+            <Button variant="secondary" size="icon" className="h-8 w-8" title="Editar elemento" onClick={onEditar}>
               <Pencil className="h-4 w-4" />
             </Button>
+            {onDuplicar && (
+              <Button
+                variant="secondary" size="icon" className="h-8 w-8" title="Duplicar elemento"
+                onClick={(e) => { e.stopPropagation(); onDuplicar(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         )}
       </div>
