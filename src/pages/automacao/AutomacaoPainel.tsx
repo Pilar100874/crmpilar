@@ -497,9 +497,9 @@ export default function AutomacaoPainel() {
       <div className="flex flex-wrap items-center gap-2">
         <Tabs value={ambienteId} onValueChange={setAmbienteId} className="min-w-0">
           <TabsList className="flex-wrap h-auto">
-            {ambientes.map((a) => (
+            {ambientesVisiveis.map((a) => (
               <TabsTrigger key={a.id} value={a.id} className="gap-1">
-                {a.nome}
+                <span className={a.ativo === false ? "line-through opacity-60" : ""}>{a.nome}</span>
                 {podeEditar && (
                   <>
                     <Pencil
