@@ -316,6 +316,14 @@ export default function AutomacaoPainel() {
           <Button size="sm" variant={modo === "livre" ? "default" : "outline"} onClick={() => trocarModo("livre")}>
             <MousePointer2 className="h-4 w-4 mr-1" /> Livre
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => ambienteAtual && setAmbienteEdit(ambienteAtual)}
+            title="Definir o tamanho e a proporção da tela de parede"
+          >
+            <Monitor className="h-4 w-4 mr-1" /> Tela de parede ({telaL}×{telaA})
+          </Button>
           <span className="ml-2 text-xs text-muted-foreground">Alinhar elemento escolhido:</span>
           {alinhamentos.map(({ dir, Icone, titulo }) => (
             <Button
@@ -333,7 +341,9 @@ export default function AutomacaoPainel() {
         </div>
       )}
 
-      <div
+      {/* Palco: reserva na página o espaço da tela de parede já reduzida. */}
+      <div ref={palcoRef} className="w-full" style={{ height: telaA * escala }}>
+        <div
         ref={gradeRef}
         onPointerMove={aoMover}
         onPointerUp={aoSoltar}
@@ -343,15 +353,18 @@ export default function AutomacaoPainel() {
             ? "relative rounded-2xl border bg-muted/20 p-2 overflow-hidden"
             : "relative rounded-2xl border bg-muted/20 p-2 grid gap-2"
         }
-        style={
-          modo === "livre"
-            ? { minHeight: 420 }
+        style={{
+          width: telaL,
+          height: telaA,
+          transform: `scale(${escala})`,
+          transformOrigin: "top left",
+          ...(modo === "livre"
+            ? {}
             : {
                 gridTemplateColumns: `repeat(${COLUNAS}, minmax(0, 1fr))`,
                 gridAutoRows: `${ALTURA_LINHA}px`,
-                minHeight: 320,
-              }
-        }
+              }),
+        }}
       >
         {doAmbiente.map((b) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
