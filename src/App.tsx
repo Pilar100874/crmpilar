@@ -927,6 +927,7 @@ const App = () => (
             <Route path="/tv/cameras" element={<TvCameras />} />
             <Route path="/tv/apresentacao" element={<TvApresentacaoEmpresa />} />
             <Route path="/tv/mural" element={<TvMural />} />
+            <Route path="/tv/automacao" element={<AutomacaoTela />} />
             <Route path="/tv-pair" element={<TvPair />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
