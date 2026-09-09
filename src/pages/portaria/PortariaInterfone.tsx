@@ -24,6 +24,8 @@ interface PontoAcesso {
 }
 
 const INTERVALO_MS = 2000;
+/** Falhas seguidas antes de esconder um quadro de imagem. */
+const LIMITE_FALHAS = 3;
 
 export default function PortariaInterfone() {
   const { unidadeId, unidadeNome } = useUnidadeAtual();
@@ -167,8 +169,9 @@ export default function PortariaInterfone() {
       return;
     }
     toast.error(r.mensagem);
-    // Dispositivo falhou: esconde o botão até a tela ser recarregada.
-    setPontos((atual) => atual.filter((p) => p.id !== ponto.id));
+    // Falha passageira: o botão continua na tela para o porteiro tentar de novo.
+    // A lista é reconsultada a cada minuto e some sozinha se o equipamento ficar em erro.
+    setRecarga((n) => n + 1);
   };
 
   // Só mostra botões de dispositivos habilitados e sem erro registrado.
@@ -187,8 +190,11 @@ export default function PortariaInterfone() {
     </>
   ) : null;
 
-  const mostrarIdface = idface && !erros[idface.id];
-  const camerasVisiveis = cameras.filter((c) => !erros[c.id]);
+  // Falhas isoladas mantêm o quadro na tela (com o aviso de erro); só some após
+  // várias falhas seguidas, indicando equipamento realmente indisponível.
+  const indisponivel = (id: string) => (falhas[id] ?? 0) >= LIMITE_FALHAS;
+  const mostrarIdface = idface && !indisponivel(idface.id);
+  const camerasVisiveis = cameras.filter((c) => !indisponivel(c.id));
   const botoesAcessoVisiveis = !mostrarIdface && pontosVisiveis.length > 0;
 
   return (
