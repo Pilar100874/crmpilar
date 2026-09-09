@@ -27,6 +27,12 @@ export interface Ambiente {
   tela_altura: number | null;
   /** Posicionamento dos elementos: "grade" ou "livre". */
   modo: "grade" | "livre" | null;
+  /** Foto de fundo do painel (caminho no armazenamento ou endereço da internet). */
+  fundo_caminho: string | null;
+  /** Transparência da foto de fundo, de 0 (invisível) a 100 (opaca). */
+  fundo_opacidade: number | null;
+  /** Como a foto ocupa a tela: "cobrir", "conter" ou "esticar". */
+  fundo_ajuste: string | null;
 }
 
 /** Guarda no banco como os elementos são posicionados no ambiente. */
