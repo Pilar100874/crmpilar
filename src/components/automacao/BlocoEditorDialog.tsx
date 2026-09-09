@@ -24,6 +24,7 @@ interface Props {
 
 export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, cameras, onChange, onSalvo }: Props) {
   const [enviando, setEnviando] = useState(false);
+  const [simLigado, setSimLigado] = useState(false);
   const blocoEdit = bloco;
   const setBlocoEdit = (fn: (b: Partial<Bloco> | null) => Partial<Bloco>) => onChange(fn(blocoEdit));
   const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
