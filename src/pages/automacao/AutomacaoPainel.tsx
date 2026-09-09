@@ -3,6 +3,7 @@ import {
   Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
+  Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -100,6 +101,46 @@ export default function AutomacaoPainel() {
   const podeEditar = admin && edicao;
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
+  // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
+  // junto do elemento, para voltar igual em qualquer aparelho.
+  const estaTravado = (b: Bloco) => !!(b.config as any)?.travado;
+  const camadaDe = (b: Bloco) => Number((b.config as any)?.camada ?? 0);
+  // Do fundo para a frente.
+  const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
+  const doFundoParaFrente = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
+
+  const gravarCamadas = async (ordem: Bloco[]) => {
+    const mapa = new Map(ordem.map((b, i) => [b.id, i]));
+    setBlocos((ant) =>
+      ant.map((b) => (mapa.has(b.id) ? { ...b, config: { ...(b.config ?? {}), camada: mapa.get(b.id) } } : b)),
+    );
+    await Promise.all(
+      ordem.map((b, i) =>
+        camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
+      ),
+    );
+  };
+
+  const moverCamada = async (id: string, acao: "frente" | "fundo" | "subir" | "descer") => {
+    const ordem = [...doFundoParaFrente];
+    const i = ordem.findIndex((b) => b.id === id);
+    if (i < 0) return;
+    const [item] = ordem.splice(i, 1);
+    const destino =
+      acao === "frente" ? ordem.length : acao === "fundo" ? 0 : acao === "subir" ? Math.min(ordem.length, i + 1) : Math.max(0, i - 1);
+    ordem.splice(destino, 0, item);
+    await gravarCamadas(ordem);
+  };
+
+  const alternarTravado = async (bloco: Bloco) => {
+    const novo = !estaTravado(bloco);
+    setBlocos((ant) =>
+      ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
+    );
+    await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } });
+    toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+  };
+
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
   // reduzido/ampliado para caber por inteiro no espaço disponível.
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
@@ -139,13 +180,14 @@ export default function AutomacaoPainel() {
   const aoArrastar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
     setSelecionado(bloco.id);
+    if (estaTravado(bloco)) return;
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
     arrasto.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bx: bloco.x, by: bloco.y, pl: p.l, pt: p.t };
   };
 
   const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
-    if (!podeEditar) return;
+    if (!podeEditar || estaTravado(bloco)) return;
     e.stopPropagation();
     setSelecionado(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -215,6 +257,7 @@ export default function AutomacaoPainel() {
   const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
     const bloco = doAmbiente.find((b) => b.id === selecionado);
     if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
+    if (estaTravado(bloco)) { toast.error("Este elemento está bloqueado. Libere o cadeado para movê-lo."); return; }
     const { cx } = celula();
     if (modo === "livre") {
       const largura = telaL;
@@ -360,6 +403,55 @@ export default function AutomacaoPainel() {
         </div>
       )}
 
+      {podeEditar && doAmbiente.length > 0 && (
+        <div className="rounded-xl border bg-card">
+          <div className="flex items-center gap-2 border-b px-3 py-2">
+            <Layers className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Camadas</span>
+            <span className="text-xs text-muted-foreground">de cima para baixo — o primeiro fica na frente</span>
+          </div>
+          <div className="max-h-56 overflow-y-auto divide-y">
+            {daFrenteParaTras.map((b) => {
+              const ativo = selecionado === b.id;
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => setSelecionado(b.id)}
+                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"}`}
+                >
+                  <span className="flex-1 truncate text-sm">{b.nome || "Sem nome"}</span>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title={estaTravado(b) ? "Liberar elemento" : "Bloquear elemento"}
+                    onClick={(e) => { e.stopPropagation(); alternarTravado(b); }}
+                  >
+                    {estaTravado(b)
+                      ? <Lock className="h-4 w-4 text-amber-500" />
+                      : <Unlock className="h-4 w-4 text-muted-foreground" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Trazer para a frente"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "frente"); }}>
+                    <ChevronsUp className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Avançar uma camada"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "subir"); }}>
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Recuar uma camada"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "descer"); }}>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar para o fundo"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "fundo"); }}>
+                    <ChevronsDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Palco: reserva na página o espaço da tela de parede já reduzida. */}
       <div ref={palcoRef} className="w-full min-w-0 overflow-hidden" style={{ height: telaA * escala }}>
         <div
@@ -397,8 +489,10 @@ export default function AutomacaoPainel() {
             }}
           />
         )}
-        {doAmbiente.map((b) => {
+        {doFundoParaFrente.map((b, indice) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
+          const travado = estaTravado(b);
+          const zIndex = indice + 1;
           return (
             <div
               key={b.id}
@@ -409,14 +503,16 @@ export default function AutomacaoPainel() {
                   ? {
                       position: "absolute",
                       left: p.l, top: p.t, width: p.w, height: p.h,
-                      cursor: podeEditar ? "grab" : undefined,
-                      touchAction: podeEditar ? "none" : undefined,
+                      zIndex,
+                      cursor: podeEditar ? (travado ? "not-allowed" : "grab") : undefined,
+                      touchAction: podeEditar && !travado ? "none" : undefined,
                     }
                   : {
                       gridColumn: `${b.x + 1} / span ${b.w}`,
                       gridRow: `${b.y + 1} / span ${b.h}`,
-                      cursor: podeEditar ? "grab" : undefined,
-                      touchAction: podeEditar ? "none" : undefined,
+                      zIndex,
+                      cursor: podeEditar ? (travado ? "not-allowed" : "grab") : undefined,
+                      touchAction: podeEditar && !travado ? "none" : undefined,
                     }
               }
             >
@@ -428,17 +524,29 @@ export default function AutomacaoPainel() {
                 onEstado={(v) => setEstados((s) => ({ ...s, [b.id]: v }))}
               />
               {podeEditar && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
-                >
-                  <Trash2 className="h-3 w-3 text-destructive" />
-                </Button>
+                <>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -top-2 -left-2 h-6 w-6 rounded-full shadow"
+                    title={travado ? "Liberar elemento" : "Bloquear elemento"}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => alternarTravado(b)}
+                  >
+                    {travado ? <Lock className="h-3 w-3 text-amber-500" /> : <Unlock className="h-3 w-3" />}
+                  </Button>
+                </>
               )}
-              {podeEditar && (
+              {podeEditar && !travado && (
                 <>
                   <div
                     onPointerDown={(e) => aoRedimensionar(e, b)}
