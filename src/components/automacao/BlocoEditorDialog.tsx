@@ -16,6 +16,7 @@ import SeletorIcone from "@/components/automacao/SeletorIcone";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
+import { FORMAS } from "@/components/automacao/BlocoForma";
 
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
 const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor"];
@@ -23,7 +24,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "clima", "grafico",
+  "interfone", "texto", "forma", "clima", "grafico",
 ];
 
 
@@ -545,6 +546,77 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   <Label className="text-xs">Tamanho da temperatura ({cfg.tamanho_temp ?? 28}px)</Label>
                   <input type="range" min={12} max={96} value={cfg.tamanho_temp ?? 28} onChange={(e) => setCfg({ tamanho_temp: Number(e.target.value) })} className="w-full accent-primary" />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "forma" && (
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Formato</Label>
+                <Select value={cfg.forma ?? "retangulo"} onValueChange={(v) => setCfg({ forma: v })}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {FORMAS.map((f) => <SelectItem key={f.valor} value={f.valor}>{f.rotulo}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Cor de fundo</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.fundo ?? "#1f2937"} onChange={(e) => setCfg({ fundo: e.target.value })} />
+                    <Input value={cfg.fundo ?? ""} placeholder="transparente" onChange={(e) => setCfg({ fundo: e.target.value || undefined })} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Cor da borda</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.borda_cor ?? "#ffffff"} onChange={(e) => setCfg({ borda_cor: e.target.value })} />
+                    <Input value={cfg.borda_cor ?? "#ffffff"} onChange={(e) => setCfg({ borda_cor: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs">Espessura da borda ({cfg.borda_espessura ?? 2}px)</Label>
+                <input type="range" min={0} max={30} value={cfg.borda_espessura ?? 2} onChange={(e) => setCfg({ borda_espessura: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+
+              <div>
+                <Label className="text-xs">Tipo de borda</Label>
+                <Select value={cfg.borda_estilo ?? "solid"} onValueChange={(v) => setCfg({ borda_estilo: v })}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="solid">Linha contínua</SelectItem>
+                    <SelectItem value="dashed">Tracejada</SelectItem>
+                    <SelectItem value="dotted">Pontilhada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(cfg.forma ?? "retangulo") === "retangulo" && (
+                <div>
+                  <Label className="text-xs">Cantos arredondados ({cfg.cantos ?? 12}px)</Label>
+                  <input type="range" min={0} max={80} value={cfg.cantos ?? 12} onChange={(e) => setCfg({ cantos: Number(e.target.value) })} className="w-full accent-primary" />
+                </div>
+              )}
+
+              <div>
+                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <input type="range" min={0} max={100} value={cfg.opacidade ?? 100} onChange={(e) => setCfg({ opacidade: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={!cfg.fundo} onChange={(e) => setCfg({ fundo: e.target.checked ? undefined : "#1f2937" })} />
+                  Sem preenchimento
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={cfg.sombra === true} onChange={(e) => setCfg({ sombra: e.target.checked })} />
+                  Sombra
+                </label>
               </div>
             </div>
           )}
