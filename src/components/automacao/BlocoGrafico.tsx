@@ -8,7 +8,7 @@ interface Ponto { hora: string; valor: number }
 export default function BlocoGrafico({ bloco }: { bloco: Bloco }) {
   const [serie, setSerie] = useState<Ponto[]>([]);
   const timer = useRef<number | null>(null);
-  const cfg = (bloco.config ?? {}) as { intervalo_seg?: number };
+  const cfg = (bloco.config ?? {}) as { intervalo_seg?: number; transparente?: boolean };
   const intervalo = Math.max(10, Number(cfg.intervalo_seg ?? 30)) * 1000;
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function BlocoGrafico({ bloco }: { bloco: Bloco }) {
   }, [bloco.device_id, bloco.canal, intervalo]);
 
   return (
-    <div className="h-full rounded-2xl border border-border bg-card p-3 flex flex-col">
+    <div className={`h-full rounded-2xl p-3 flex flex-col ${cfg.transparente ? "border border-transparent bg-transparent" : "border border-border bg-card"}`}>
       <div className="flex items-center gap-2 mb-1">
         <Activity className="h-4 w-4 text-primary" />
         <p className="text-sm font-semibold truncate">{bloco.nome}</p>

@@ -22,6 +22,7 @@ interface ConfigClima {
   cor?: string;
   cor_secundaria?: string;
   fundo?: string;
+  transparente?: boolean;
   tamanho_hora?: number;
   tamanho_data?: number;
   tamanho_temp?: number;
@@ -135,7 +136,7 @@ export default function BlocoClima({ bloco }: { bloco: Bloco }) {
     <div
       className="flex h-full w-full overflow-hidden rounded-[inherit] p-4"
       style={{
-        background: cfg.fundo || "hsl(var(--card))",
+        background: cfg.transparente ? "transparent" : cfg.fundo || "hsl(var(--card))",
         color: cor,
         fontFamily: fonteCss(cfg.fonte),
       }}

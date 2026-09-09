@@ -113,7 +113,10 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar
 
     return (
       <div
-        className="relative h-full select-none overflow-hidden"
+        className={cn(
+          "relative h-full select-none overflow-hidden",
+          transparente && "[&>*:not([data-cheio])]:!bg-transparent [&>*:not([data-cheio])]:!border-transparent",
+        )}
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
