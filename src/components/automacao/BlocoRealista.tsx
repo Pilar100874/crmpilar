@@ -26,7 +26,12 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
   const [pressionado, setPressionado] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
-  const cor = (bloco.config?.cor as string) || "#facc15";
+  const cfg = (bloco.config ?? {}) as Record<string, any>;
+  const cor = (cfg.cor as string) || "#facc15";
+  const raio = typeof cfg.raio === "number" ? cfg.raio : 22;
+  const transparente = cfg.transparente === true;
+  const comLegenda = cfg.legenda !== false;
+
 
   const acao = async () => {
     if (edicao) return;
