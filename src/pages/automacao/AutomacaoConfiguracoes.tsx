@@ -18,14 +18,19 @@ export default function AutomacaoConfiguracoes() {
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [blocos, setBlocos] = useState<Bloco[]>([]);
   const [dispositivos, setDispositivos] = useState<DispositivoSimples[]>([]);
+  const [cameras, setCameras] = useState<CameraSimples[]>([]);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
 
   const carregar = useCallback(async () => {
-    const [a, b, d] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos()]);
-    setAmbientes(a); setBlocos(b); setDispositivos(d);
+    const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
+    setAmbientes(a); setBlocos(b); setDispositivos(d); setCameras(c);
   }, []);
+
+  const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
+  const setCfg = (patch: Record<string, any>) =>
+    setBlocoEdit((b) => ({ ...b, config: { ...((b?.config ?? {}) as Record<string, any>), ...patch } }));
 
   useEffect(() => { carregar(); }, [carregar]);
 
