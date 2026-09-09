@@ -31,9 +31,40 @@ interface Props {
   onEstado: (ligado: boolean | null) => void;
   edicao?: boolean;
   onEditar?: () => void;
+  /** Avisa o painel que o elemento foi tocado (usado pelas automações). */
+  onAcionar?: () => void;
 }
 
-export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }: Props) {
+/** Envolve o elemento para que um toque também dispare as automações. */
+export default function BlocoCard(props: Props) {
+  const { bloco, ligado, onEstado, edicao, onAcionar } = props;
+  const semDispositivo = !bloco.device_id;
+
+  if (!semDispositivo || !onAcionar || edicao) {
+    return (
+      <div className="h-full" onClick={() => !edicao && onAcionar?.()}>
+        <BlocoCardInterno {...props} />
+      </div>
+    );
+  }
+
+  // Elemento sem equipamento: o toque só serve para disparar as automações.
+  return (
+    <div
+      className="h-full cursor-pointer"
+      onClickCapture={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onEstado(!(ligado === true));
+        onAcionar();
+      }}
+    >
+      <BlocoCardInterno {...props} />
+    </div>
+  );
+}
+
+function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
@@ -41,6 +72,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
   const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
   const transparente = cfg.transparente === true;
   const comLegenda = cfg.legenda !== false;
+
 
   const enviar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
     if (!bloco.device_id) {
