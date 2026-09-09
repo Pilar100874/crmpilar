@@ -502,6 +502,7 @@ export default function AutomacaoPainel() {
               );
             })}
           </div>
+          )}
         </div>
       )}
 
