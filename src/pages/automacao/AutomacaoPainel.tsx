@@ -524,17 +524,29 @@ export default function AutomacaoPainel() {
                 onEstado={(v) => setEstados((s) => ({ ...s, [b.id]: v }))}
               />
               {podeEditar && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
-                >
-                  <Trash2 className="h-3 w-3 text-destructive" />
-                </Button>
+                <>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -top-2 -left-2 h-6 w-6 rounded-full shadow"
+                    title={travado ? "Liberar elemento" : "Bloquear elemento"}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => alternarTravado(b)}
+                  >
+                    {travado ? <Lock className="h-3 w-3 text-amber-500" /> : <Unlock className="h-3 w-3" />}
+                  </Button>
+                </>
               )}
-              {podeEditar && (
+              {podeEditar && !travado && (
                 <>
                   <div
                     onPointerDown={(e) => aoRedimensionar(e, b)}
