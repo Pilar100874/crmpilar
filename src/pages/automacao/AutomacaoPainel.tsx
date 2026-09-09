@@ -211,11 +211,18 @@ export default function AutomacaoPainel() {
     return () => { ativo = false; };
   }, [ambienteAtual?.fundo_caminho]);
 
+  const ultimaLargura = useRef(0);
+
   useEffect(() => {
     const alvo = palcoRef.current;
     if (!alvo) return;
+    ultimaLargura.current = 0;
     const medir = () => {
       const disponivel = alvo.clientWidth || telaL;
+      // Ignora variações pequenas (ex.: barra de rolagem aparecendo/sumindo),
+      // que faziam a tela de fundo recalcular e "recarregar" sem parar.
+      if (Math.abs(disponivel - ultimaLargura.current) < 8) return;
+      ultimaLargura.current = disponivel;
       setEscala(Math.max(0.1, Math.min(disponivel / telaL, 1)));
     };
     medir();
