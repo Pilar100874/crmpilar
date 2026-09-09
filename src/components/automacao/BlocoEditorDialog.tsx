@@ -302,6 +302,98 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {blocoEdit?.tipo === "ambiente" && (
+            <div className="space-y-2 rounded-md border p-3">
+              <Label className="text-sm font-semibold">Fundo do cartão</Label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.semFundo === true}
+                  onChange={(e) => setCfg({ semFundo: e.target.checked })}
+                />
+                Sem fundo (transparente)
+              </label>
+              {cfg.semFundo !== true && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label>Cor do fundo</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        className="h-10 w-14 p-1"
+                        value={(cfg.fundoCor as string) ?? "#1c1c1e"}
+                        onChange={(e) => setCfg({ fundoCor: e.target.value })}
+                      />
+                      <Button type="button" variant="outline" onClick={() => setCfg({ fundoCor: undefined })}>
+                        Padrão
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Tom do fundo (%)</Label>
+                    <Input
+                      type="number" min={0} max={100}
+                      value={(cfg.fundoOpacidade as number) ?? 100}
+                      onChange={(e) => setCfg({ fundoOpacidade: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "imagemluz" && (
+            <div className="space-y-2 rounded-md border p-3">
+              <Label className="text-sm font-semibold">Efeito de aceso</Label>
+              <p className="text-xs text-muted-foreground">
+                Use uma imagem PNG com fundo transparente por cima de outra imagem para mostrar a luz acesa.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Visível quando aceso (%)</Label>
+                  <Input
+                    type="number" min={0} max={100}
+                    value={(cfg.opacidadeAceso as number) ?? 100}
+                    onChange={(e) => setCfg({ opacidadeAceso: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Visível quando apagado (%)</Label>
+                  <Input
+                    type="number" min={0} max={100}
+                    value={(cfg.opacidadeApagado as number) ?? 0}
+                    onChange={(e) => setCfg({ opacidadeApagado: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Brilho (px)</Label>
+                  <Input
+                    type="number" min={0} max={120}
+                    value={(cfg.brilho as number) ?? 24}
+                    onChange={(e) => setCfg({ brilho: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Cor do brilho</Label>
+                  <Input
+                    type="color"
+                    className="h-10 w-14 p-1"
+                    value={(cfg.corBrilho as string) ?? "#ffd479"}
+                    onChange={(e) => setCfg({ corBrilho: e.target.value })}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.legenda === true}
+                  onChange={(e) => setCfg({ legenda: e.target.checked })}
+                />
+                Mostrar o nome sobre a imagem
+              </label>
+            </div>
+          )}
+
           {blocoEdit?.tipo === "texto" && (
             <div className="space-y-2">
               <div>
