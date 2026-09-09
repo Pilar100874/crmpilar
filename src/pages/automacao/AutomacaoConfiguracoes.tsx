@@ -146,7 +146,7 @@ export default function AutomacaoConfiguracoes() {
       </Dialog>
 
       <Dialog open={!!blocoEdit} onOpenChange={(o) => !o && setBlocoEdit(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{blocoEdit?.id ? "Editar bloco" : "Novo bloco"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
@@ -349,7 +349,7 @@ export default function AutomacaoConfiguracoes() {
               </div>
             )}
 
-            {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && (
+            {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && blocoEdit?.tipo !== "imagem" && (
               <div>
                 <Label>Dispositivo</Label>
                 <Select
