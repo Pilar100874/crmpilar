@@ -18,7 +18,12 @@ interface Leitura {
   ms: number;
 }
 
-const INTERVALO = 30_000;
+const RITMOS = [
+  { valor: 3_000, label: "3 segundos" },
+  { valor: 5_000, label: "5 segundos" },
+  { valor: 15_000, label: "15 segundos" },
+  { valor: 30_000, label: "30 segundos" },
+];
 
 function haQuantoTempo(quando: number | string | null): string {
   if (!quando) return "sem registro";
@@ -40,9 +45,11 @@ export default function AutomacaoEstado() {
   const [leituras, setLeituras] = useState<Record<string, Leitura>>({});
   const [consultando, setConsultando] = useState<Record<string, boolean>>({});
   const [automatico, setAutomatico] = useState(true);
+  const [ritmo, setRitmo] = useState(3_000);
   const [atualizando, setAtualizando] = useState(false);
   const [tique, setTique] = useState(0);
   const montado = useRef(true);
+  const emAndamento = useRef(false);
 
   useEffect(() => {
     montado.current = true;
@@ -51,9 +58,9 @@ export default function AutomacaoEstado() {
     };
   }, []);
 
-  // Reescreve os textos de "há quanto tempo" a cada 15 segundos.
+  // Reescreve os textos de "há quanto tempo" a cada segundo.
   useEffect(() => {
-    const t = setInterval(() => setTique((n) => n + 1), 15_000);
+    const t = setInterval(() => setTique((n) => n + 1), 1_000);
     return () => clearInterval(t);
   }, []);
 
@@ -76,12 +83,19 @@ export default function AutomacaoEstado() {
   }, []);
 
   const atualizarTudo = useCallback(async () => {
+    if (emAndamento.current) return;
+    emAndamento.current = true;
     setAtualizando(true);
     const lista = await listarDispositivosDetalhados();
-    if (!montado.current) return;
+    if (!montado.current) {
+      emAndamento.current = false;
+      return;
+    }
     setEquipamentos(lista);
     const ativos = lista.filter((e) => e.habilitado);
-    for (const e of ativos) await consultar(e);
+    // Consulta todos ao mesmo tempo para a tela reagir quase instantaneamente.
+    await Promise.all(ativos.map((e) => consultar(e)));
+    emAndamento.current = false;
     if (montado.current) setAtualizando(false);
   }, [consultar]);
 
@@ -91,9 +105,9 @@ export default function AutomacaoEstado() {
 
   useEffect(() => {
     if (!automatico) return;
-    const t = setInterval(() => atualizarTudo(), INTERVALO);
+    const t = setInterval(() => atualizarTudo(), ritmo);
     return () => clearInterval(t);
-  }, [automatico, atualizarTudo]);
+  }, [automatico, ritmo, atualizarTudo]);
 
   const ativos = equipamentos.filter((e) => e.habilitado);
   const desligadosDoSistema = equipamentos.filter((e) => !e.habilitado);
@@ -114,6 +128,19 @@ export default function AutomacaoEstado() {
             <Switch checked={automatico} onCheckedChange={setAutomatico} />
             Atualizar sozinho
           </label>
+          <select
+            value={ritmo}
+            onChange={(ev) => setRitmo(Number(ev.target.value))}
+            disabled={!automatico}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground disabled:opacity-50"
+            aria-label="A cada quanto tempo verificar"
+          >
+            {RITMOS.map((r) => (
+              <option key={r.valor} value={r.valor}>
+                A cada {r.label}
+              </option>
+            ))}
+          </select>
           <Button size="sm" variant="outline" onClick={atualizarTudo} disabled={atualizando}>
             <RefreshCw className={`h-4 w-4 mr-1 ${atualizando ? "animate-spin" : ""}`} />
             Atualizar agora
