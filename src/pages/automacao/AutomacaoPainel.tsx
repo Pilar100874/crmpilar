@@ -588,6 +588,13 @@ export default function AutomacaoPainel() {
                   </Button>
                   <Button
                     size="icon" variant="ghost" className="h-7 w-7"
+                    title="Duplicar elemento"
+                    onClick={(e) => { e.stopPropagation(); duplicarBloco(b); }}
+                  >
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
                     title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
                     onClick={(e) => { e.stopPropagation(); alternarVisivel(b); }}
                   >
