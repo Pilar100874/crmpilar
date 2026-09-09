@@ -1,0 +1,1 @@
+ALTER TABLE public.automacao_ambientes ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;

@@ -3337,6 +3337,7 @@ export type Database = {
       }
       automacao_ambientes: {
         Row: {
+          ativo: boolean
           created_at: string
           created_by: string | null
           fundo_ajuste: string
@@ -3352,6 +3353,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ativo?: boolean
           created_at?: string
           created_by?: string | null
           fundo_ajuste?: string
@@ -3367,6 +3369,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ativo?: boolean
           created_at?: string
           created_by?: string | null
           fundo_ajuste?: string
