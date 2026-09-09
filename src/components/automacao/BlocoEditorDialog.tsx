@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import {
   Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
-  enviarImagemAutomacao, salvarBloco,
+  enviarImagemAutomacao, salvarBloco, listarUnidades, UnidadeSimples,
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
@@ -24,6 +24,13 @@ interface Props {
 export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
+  const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
+
+  useEffect(() => {
+    if (bloco?.tipo === "rastreamento" && unidades.length === 0) {
+      listarUnidades().then(setUnidades);
+    }
+  }, [bloco?.tipo, unidades.length]);
   const blocoEdit = bloco;
   const setBlocoEdit = (fn: (b: Partial<Bloco> | null) => Partial<Bloco>) => onChange(fn(blocoEdit));
   const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
@@ -293,6 +300,35 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {blocoEdit?.tipo === "rastreamento" && (
+            <div className="space-y-2">
+              <div>
+                <Label>Veículos exibidos</Label>
+                <Select
+                  value={cfg.unidade_id ?? "todos"}
+                  onValueChange={(v) => setCfg({ unidade_id: v === "todos" ? null : v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="todos">Todos os veículos</SelectItem>
+                    {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {!unidades.length && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">Nenhuma unidade cadastrada.</p>
+                )}
+              </div>
+              <div>
+                <Label>Atualizar a cada (segundos)</Label>
+                <Input
+                  type="number" min={10}
+                  value={cfg.intervalo_seg ?? 30}
+                  onChange={(e) => setCfg({ intervalo_seg: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          )}
+
           {blocoEdit?.tipo === "camera" && (
             <div>
               <Label>Câmera</Label>
@@ -367,7 +403,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
-          {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && blocoEdit?.tipo !== "imagem" && (
+          {!["camera", "mapa", "imagem", "rastreamento"].includes(blocoEdit?.tipo ?? "") && (
             <div>
               <Label>Dispositivo</Label>
               <Select

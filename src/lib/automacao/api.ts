@@ -15,7 +15,8 @@ export type TipoBloco =
   | "mapa"
   | "grafico"
   | "icone"
-  | "imagem";
+  | "imagem"
+  | "rastreamento";
 
 export interface Ambiente {
   id: string;
@@ -110,6 +111,7 @@ export const TIPOS_BLOCO: {
   { valor: "grafico", label: "Gráfico", descricao: "Acompanha a situação ao longo do tempo", grupo: "Informação" },
   { valor: "camera", label: "Câmera ao vivo", descricao: "Mostra a imagem de uma câmera", grupo: "Informação" },
   { valor: "mapa", label: "Mapa", descricao: "Mostra um local no mapa", grupo: "Informação" },
+  { valor: "rastreamento", label: "Rastreamento de veículos", descricao: "Mapa ao vivo com todos os veículos ou os de uma unidade", grupo: "Informação" },
   { valor: "imagem", label: "Imagem", descricao: "Planta da casa, foto do ambiente ou fundo", grupo: "Visual" },
 ];
 
@@ -128,6 +130,17 @@ export async function enviarImagemAutomacao(arquivo: File): Promise<string | nul
 export async function urlImagemAutomacao(caminho: string): Promise<string | null> {
   const { data } = await supabase.storage.from("automacao").createSignedUrl(caminho, 60 * 60 * 8);
   return data?.signedUrl ?? null;
+}
+
+export interface UnidadeSimples {
+  id: string;
+  nome: string;
+}
+
+/** Unidades usadas para filtrar os veículos do elemento de rastreamento. */
+export async function listarUnidades(): Promise<UnidadeSimples[]> {
+  const { data } = await db.from("unidades").select("id, nome").order("nome");
+  return (data ?? []) as UnidadeSimples[];
 }
 
 export interface CameraSimples {
