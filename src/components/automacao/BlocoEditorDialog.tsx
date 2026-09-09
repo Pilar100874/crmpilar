@@ -106,6 +106,15 @@ export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, came
               />
               Mostrar legenda (nome e situação)
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={blocoEdit?.visivel !== false}
+                onChange={(e) => setBlocoEdit((b) => ({ ...b, visivel: e.target.checked }))}
+                className="h-4 w-4 accent-primary"
+              />
+              Visível no painel (desmarque para ocultar)
+            </label>
           </div>
 
           {["luz", "tomada", "portao", "sensor"].includes(blocoEdit?.tipo ?? "") && (
