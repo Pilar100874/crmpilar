@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { UserPlus, Truck, Car, AlertTriangle, Package, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Bloco } from "@/lib/automacao/api";
@@ -109,8 +108,6 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
   const mostrarLista = cfg.mostrar_lista !== false;
   const info = MODULOS_PORTARIA.find((m) => m.valor === modulo)!;
   const Icon = ICONES[modulo];
-  const navigate = useNavigate();
-
   const [total, setTotal] = useState(0);
   const [itens, setItens] = useState<Item[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -133,11 +130,7 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
   }, [carregar, intervalo]);
 
   return (
-    <button
-      type="button"
-      onClick={() => navigate(info.rota)}
-      className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:border-primary/50"
-    >
+    <div className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left">
       <div className="flex items-center gap-2">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
           <Icon className="h-4 w-4" />
@@ -165,6 +158,6 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
           )}
         </div>
       )}
-    </button>
+    </div>
   );
 }
