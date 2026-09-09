@@ -76,7 +76,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone"].includes(bloco.tipo) && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>
