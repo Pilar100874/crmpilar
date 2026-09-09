@@ -61,15 +61,19 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       onPointerUp={() => setPressionado(false)}
       onPointerLeave={() => setPressionado(false)}
       className={cn(
-        "relative h-full w-full select-none overflow-hidden rounded-[22px] border p-3 text-left transition-all duration-150",
-        "border-border bg-gradient-to-b from-muted/40 to-muted",
+        "relative h-full w-full select-none overflow-hidden border p-3 text-left transition-all duration-150",
+        transparente ? "border-transparent bg-transparent" : "border-border bg-gradient-to-b from-muted/40 to-muted",
         pressionado && !edicao && "scale-[0.97]",
       )}
       style={{
-        boxShadow: aceso
-          ? `0 10px 22px -8px ${cor}80, inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -8px 16px rgba(0,0,0,0.10)`
-          : "0 8px 16px -10px rgba(0,0,0,0.45), inset 0 -6px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
+        borderRadius: raio,
+        boxShadow: transparente
+          ? undefined
+          : aceso
+            ? `0 10px 22px -8px ${cor}80, inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -8px 16px rgba(0,0,0,0.10)`
+            : "0 8px 16px -10px rgba(0,0,0,0.45), inset 0 -6px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
       }}
+
     >
       {/* brilho de vidro no topo */}
       <div
