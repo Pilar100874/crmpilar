@@ -90,7 +90,7 @@ export default function AutomacaoPainel() {
     const salvoBanco = ambientes.find((a) => a.id === ambienteId)?.modo;
     const salvo = salvoBanco ?? localStorage.getItem(`automacao_modo_${ambienteId}`);
     setModo(salvo === "livre" ? "livre" : "grade");
-    setSelecionado(null);
+    setSelecionados([]);
   }, [ambienteId, ambientes]);
 
   const trocarModo = (m: Modo) => {
