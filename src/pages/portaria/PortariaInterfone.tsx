@@ -79,7 +79,7 @@ export default function PortariaInterfone() {
     return () => {
       ativo = false;
     };
-  }, [unidadeId, config?.device_id]);
+  }, [unidadeId, config?.device_id, recarga]);
 
   // Câmeras adicionais selecionadas nas configurações
   useEffect(() => {
@@ -110,8 +110,10 @@ export default function PortariaInterfone() {
       if (!url) throw new Error((data as { error?: string } | null)?.error || "Câmera não respondeu.");
       setImagens((a) => ({ ...a, [id]: url }));
       setErros((a) => ({ ...a, [id]: "" }));
+      setFalhas((a) => ({ ...a, [id]: 0 }));
     } catch (e) {
       setErros((a) => ({ ...a, [id]: (e as Error).message || "Falha na imagem." }));
+      setFalhas((a) => ({ ...a, [id]: (a[id] ?? 0) + 1 }));
     } finally {
       emAndamento.current[`cam-${id}`] = false;
       marcar(id, false);
@@ -132,8 +134,10 @@ export default function PortariaInterfone() {
       const tipo = r.dados.content_type?.startsWith("image/") ? r.dados.content_type : "image/jpeg";
       setImagens((a) => ({ ...a, [id]: `data:${tipo};base64,${r.dados!.imagem_base64}` }));
       setErros((a) => ({ ...a, [id]: "" }));
+      setFalhas((a) => ({ ...a, [id]: 0 }));
     } catch (e) {
       setErros((a) => ({ ...a, [id]: (e as Error).message || "Falha na imagem do interfone." }));
+      setFalhas((a) => ({ ...a, [id]: (a[id] ?? 0) + 1 }));
     } finally {
       emAndamento.current[`idf-${id}`] = false;
       marcar(id, false);
