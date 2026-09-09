@@ -198,8 +198,8 @@ export default function AutomacaoPainel() {
     if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
     const { cx } = celula();
     if (modo === "livre") {
-      const largura = gradeRef.current?.clientWidth ?? 0;
-      const altura = gradeRef.current?.clientHeight ?? 0;
+      const largura = telaL;
+      const altura = telaA;
       const p = posLivre(bloco, cx);
       const novo: PosLivre = { ...p };
       if (dir === "esq") novo.l = 0;
