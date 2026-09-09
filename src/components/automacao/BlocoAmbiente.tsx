@@ -1,5 +1,5 @@
-// Cartão de ambiente com foto: a imagem fica clara quando está ligado
-// e escura (sem cor) quando está desligado.
+// Cartão de ambiente com foto: imagem em formato de arco (topo redondo),
+// clara quando ligado e escura quando desligado. Sem ícones laterais.
 import { useEffect, useState } from "react";
 import { Loader2, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +42,6 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
   const alternar = async () => {
     if (edicao) return;
     if (!bloco.device_id) {
-      // Sem equipamento escolhido, o cartão ainda alterna só o visual.
       onEstado(!aceso);
       return;
     }
@@ -53,14 +52,35 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
     onEstado(r.ligado ?? !aceso);
   };
 
+  const raioCartao = typeof cfg.raio === "number" ? cfg.raio : 20;
+
   return (
     <div
-      className="relative flex aspect-square h-full w-auto select-none flex-col overflow-hidden rounded-full bg-[#1c1c1e] text-left shadow-xl"
+      className="relative flex h-full w-full select-none flex-col overflow-hidden bg-[#1c1c1e] text-left shadow-xl"
+      style={{ borderRadius: raioCartao }}
       onClick={alternar}
       role="button"
     >
-      {/* Imagem de fundo preenche todo o círculo */}
-      <div className="absolute inset-0 overflow-hidden rounded-full">
+      {/* Título e estado no topo */}
+      {cfg.legenda !== false && (
+        <div className="flex items-center gap-2 px-4 pb-3 pt-4">
+          {ocupado && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-white/70" />}
+          <div className="min-w-0">
+            <p className={cn("truncate text-lg font-bold leading-tight", aceso ? "text-white" : "text-white/55")}>
+              {bloco.nome}
+            </p>
+            <p className={cn("truncate text-sm font-medium", aceso ? "text-white/70" : "text-white/40")}>
+              {aceso ? "Ligado" : "Desligado"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Foto em formato de arco: topo totalmente redondo, base reta */}
+      <div
+        className="relative mx-2 mb-2 min-h-0 flex-1 overflow-hidden"
+        style={{ borderRadius: "999px 999px 14px 14px" }}
+      >
         {src ? (
           <img
             src={src}
@@ -68,29 +88,16 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
             loading="lazy"
             className={cn(
               "h-full w-full object-cover transition-all duration-500",
-              aceso ? "grayscale-0 brightness-110" : "grayscale brightness-[0.35]",
+              aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.35]",
             )}
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#1c1c1e] text-white/40">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-white/5 text-white/40">
             <ImageIcon className="h-8 w-8" />
             <span className="px-4 text-center text-xs">Escolha uma foto</span>
           </div>
         )}
       </div>
-
-      {/* Legenda opcional como overlay no topo */}
-      {cfg.legenda !== false && (
-        <div className="relative z-10 flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-black/70 via-black/40 to-transparent px-4 pb-6 pt-4 text-center">
-          {ocupado && <Loader2 className="h-4 w-4 animate-spin text-white/80" />}
-          <p className={cn("truncate text-base font-bold leading-tight", aceso ? "text-white" : "text-white/70")}>
-            {bloco.nome}
-          </p>
-          <p className={cn("truncate text-xs font-medium", aceso ? "text-white/90" : "text-white/55")}>
-            {aceso ? "Ligado" : "Desligado"}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
