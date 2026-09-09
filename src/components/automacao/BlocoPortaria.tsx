@@ -33,26 +33,38 @@ interface Item {
 
 const db = supabase as unknown as { from: (t: string) => any };
 
-async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; itens: Item[] }> {
+const porUnidade = (q: any, unidadeId?: string | null) => (unidadeId ? q.eq("unidade_id", unidadeId) : q);
+
+async function carregarModulo(
+  modulo: ModuloPortaria,
+  unidadeId?: string | null,
+  limite = 4,
+): Promise<{ total: number; itens: Item[] }> {
   if (modulo === "visitantes") {
-    const { data, count } = await db
-      .from("port_visitors")
-      .select("id, nome, documento, created_at", { count: "exact" })
-      .eq("status", "ativo")
+    const { data, count } = await porUnidade(
+      db
+        .from("port_visitors")
+        .select("id, nome, documento, created_at", { count: "exact" })
+        .eq("status", "ativo"),
+      unidadeId,
+    )
       .order("created_at", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((v: any) => ({ titulo: v.nome ?? "Visitante", detalhe: v.documento ?? "" })),
     };
   }
   if (modulo === "transportadoras") {
-    const { data, count } = await db
-      .from("transp_movimentos")
-      .select("id, placa, motorista_nome, motivo, entrada_time", { count: "exact" })
-      .neq("status", "saiu")
+    const { data, count } = await porUnidade(
+      db
+        .from("transp_movimentos")
+        .select("id, placa, motorista_nome, motivo, entrada_time", { count: "exact" })
+        .neq("status", "saiu"),
+      unidadeId,
+    )
       .order("entrada_time", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((m: any) => ({
@@ -62,12 +74,15 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
     };
   }
   if (modulo === "veiculos") {
-    const { data, count } = await db
-      .from("cv_vehicle_movements")
-      .select("id, exit_time, vehicle:cv_vehicles(placa, modelo)", { count: "exact" })
-      .eq("status", "out")
+    const { data, count } = await porUnidade(
+      db
+        .from("cv_vehicle_movements")
+        .select("id, exit_time, vehicle:cv_vehicles(placa, modelo)", { count: "exact" })
+        .eq("status", "out"),
+      unidadeId,
+    )
       .order("exit_time", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((m: any) => ({
@@ -77,23 +92,29 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
     };
   }
   if (modulo === "ocorrencias") {
-    const { data, count } = await db
-      .from("livro_ocorrencias")
-      .select("id, tipo, gravidade, local, data_hora", { count: "exact" })
-      .eq("status", "aberta")
+    const { data, count } = await porUnidade(
+      db
+        .from("livro_ocorrencias")
+        .select("id, tipo, gravidade, local, data_hora", { count: "exact" })
+        .eq("status", "aberta"),
+      unidadeId,
+    )
       .order("data_hora", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((o: any) => ({ titulo: o.tipo ?? "Ocorrência", detalhe: o.local ?? "" })),
     };
   }
-  const { data, count } = await db
-    .from("livro_encomendas")
-    .select("id, destinatario, transportadora, data_recebimento", { count: "exact" })
-    .is("data_entrega", null)
+  const { data, count } = await porUnidade(
+    db
+      .from("livro_encomendas")
+      .select("id, destinatario, transportadora, data_recebimento", { count: "exact" })
+      .is("data_entrega", null),
+    unidadeId,
+  )
     .order("data_recebimento", { ascending: false })
-    .limit(4);
+    .limit(limite);
   return {
     total: count ?? (data?.length ?? 0),
     itens: (data ?? []).map((e: any) => ({ titulo: e.destinatario ?? "Encomenda", detalhe: e.transportadora ?? "" })),
@@ -102,10 +123,18 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
 
 /** Mostra no painel o resumo ao vivo de um controle da portaria. */
 export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
-  const cfg = (bloco.config ?? {}) as { modulo?: ModuloPortaria; intervalo_seg?: number; mostrar_lista?: boolean };
+  const cfg = (bloco.config ?? {}) as {
+    modulo?: ModuloPortaria;
+    intervalo_seg?: number;
+    mostrar_lista?: boolean;
+    unidade_id?: string | null;
+    limite?: number;
+  };
   const modulo: ModuloPortaria = cfg.modulo ?? "visitantes";
   const intervalo = Math.max(10, Number(cfg.intervalo_seg ?? 30));
   const mostrarLista = cfg.mostrar_lista !== false;
+  const unidadeId = cfg.unidade_id ?? null;
+  const limite = Math.min(20, Math.max(1, Number(cfg.limite ?? 4)));
   const info = MODULOS_PORTARIA.find((m) => m.valor === modulo)!;
   const Icon = ICONES[modulo];
   const [total, setTotal] = useState(0);
@@ -114,13 +143,13 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
 
   const carregar = useCallback(async () => {
     try {
-      const r = await carregarModulo(modulo);
+      const r = await carregarModulo(modulo, unidadeId, limite);
       setTotal(r.total);
       setItens(r.itens);
     } finally {
       setCarregando(false);
     }
-  }, [modulo]);
+  }, [modulo, unidadeId, limite]);
 
   useEffect(() => {
     setCarregando(true);
