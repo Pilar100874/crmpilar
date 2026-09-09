@@ -410,6 +410,45 @@ export default function AutomacaoPainel() {
     toast.success("Elemento duplicado.");
   };
 
+  /** Cria uma cópia completa do painel atual, com todos os elementos. */
+  const duplicarPainel = async () => {
+    if (!ambienteAtual) return;
+    setSalvandoPainel(true);
+    try {
+      const novo = await duplicarAmbiente(ambienteAtual);
+      if (!novo) { toast.error("Não foi possível duplicar o painel."); return; }
+      await carregar();
+      setAmbienteId(novo.id);
+      setSelecionados([]);
+      toast.success("Painel duplicado.");
+    } finally {
+      setSalvandoPainel(false);
+    }
+  };
+
+  /** Grava no sistema a posição e o formato de todos os elementos do painel. */
+  const salvarPainel = async () => {
+    if (!ambienteAtual) return;
+    setSalvandoPainel(true);
+    try {
+      await Promise.all(doAmbiente.map((b) => salvarBloco(b)));
+      toast.success("Painel salvo.");
+    } catch {
+      toast.error("Não foi possível salvar o painel.");
+    } finally {
+      setSalvandoPainel(false);
+    }
+  };
+
+  /** Desativa (ou reativa) o painel: desativado, só administradores enxergam. */
+  const alternarAtivoPainel = async () => {
+    if (!ambienteAtual) return;
+    const novo = ambienteAtual.ativo === false;
+    setAmbientes((ant) => ant.map((a) => (a.id === ambienteAtual.id ? { ...a, ativo: novo } : a)));
+    await definirAtivoAmbiente(ambienteAtual.id, novo);
+    toast.success(novo ? "Painel ativado." : "Painel desativado — só administradores veem.");
+  };
+
   /** Depois de salvar no editor, o elemento novo já fica escolhido. */
   const aoSalvarBloco = async (salvo?: Bloco | null) => {
     await carregar();
