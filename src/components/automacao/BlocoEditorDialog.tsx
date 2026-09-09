@@ -251,7 +251,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
-          {(blocoEdit?.tipo === "imagem" || blocoEdit?.tipo === "ambiente") && (
+          {(blocoEdit?.tipo === "imagem" || blocoEdit?.tipo === "ambiente" || blocoEdit?.tipo === "imagemluz") && (
             <div className="space-y-2">
               <Label>Imagem</Label>
               <Input
