@@ -97,7 +97,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) 
       bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :
       bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
-      bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
+      bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
       bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
       bloco.tipo === "portaria" ? <BlocoPortaria bloco={bloco} /> :
