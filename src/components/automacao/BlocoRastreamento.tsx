@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { MapPin, Loader2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { MapPin, Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LazyLogisticaMap } from "@/components/logistica/LazyLogisticaMap";
 import { VeiculoComStatus } from "@/types/logistica";
 import { Bloco } from "@/lib/automacao/api";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Cfg {
   unidade_id?: string | null;
@@ -11,13 +14,20 @@ interface Cfg {
   mostrar_lista?: boolean;
 }
 
+interface Props {
+  bloco: Bloco;
+  edicao?: boolean;
+  onAcionar?: () => void;
+}
+
 /** Mostra no painel a posição dos veículos rastreados (todos ou de uma unidade). */
-export default function BlocoRastreamento({ bloco }: { bloco: Bloco }) {
+export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
   const cfg = (bloco.config ?? {}) as Cfg;
   const unidadeId = cfg.unidade_id || null;
   const intervalo = Math.max(10, Number(cfg.intervalo_seg ?? 30));
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [ampliado, setAmpliado] = useState(false);
 
   const carregar = useCallback(async () => {
     let q = supabase.from("veiculos").select("*").eq("ativo", true).order("placa");
@@ -58,18 +68,41 @@ export default function BlocoRastreamento({ bloco }: { bloco: Bloco }) {
     return () => clearInterval(t);
   }, [carregar, intervalo]);
 
+  const alternar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (edicao) return;
+    setAmpliado((v) => !v);
+    onAcionar?.();
+  };
+
   const comPosicao = veiculos.filter((v) => v.ultima_posicao);
   const movendo = veiculos.filter((v) => v.status === "movendo").length;
 
-  return (
+  const conteudo = (
     <div className="h-full rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between gap-2 px-3 py-2">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 px-3 py-2 select-none",
+          !edicao && "cursor-pointer hover:bg-muted/40 transition-colors"
+        )}
+        onClick={alternar}
+        title="Toque para ampliar"
+      >
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
           <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
           <span className="truncate">{bloco.nome}</span>
         </span>
-        <span className="shrink-0 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground">
           {carregando ? "carregando..." : `${veiculos.length} veículos · ${movendo} em movimento`}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={(e) => { e.stopPropagation(); setAmpliado((v) => !v); onAcionar?.(); }}
+            title={ampliado ? "Reduzir" : "Ampliar"}
+          >
+            {ampliado ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </Button>
         </span>
       </div>
       <div className="relative flex-1 min-h-0">
@@ -93,5 +126,28 @@ export default function BlocoRastreamento({ bloco }: { bloco: Bloco }) {
         )}
       </div>
     </div>
+  );
+
+  if (!ampliado) return conteudo;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] bg-black p-4 flex flex-col"
+      onClick={(e) => { if (e.target === e.currentTarget) { e.stopPropagation(); setAmpliado(false); onAcionar?.(); } }}
+    >
+      <div className="relative flex-1 min-h-0 overflow-hidden rounded-2xl border border-border bg-card">
+        {conteudo}
+        <Button
+          variant="secondary"
+          size="icon"
+          className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-black/70 text-white hover:bg-black/90"
+          onClick={(e) => { e.stopPropagation(); setAmpliado(false); onAcionar?.(); }}
+          title="Voltar ao painel"
+        >
+          <Minimize2 className="h-5 w-5" />
+        </Button>
+      </div>
+    </div>,
+    document.body
   );
 }

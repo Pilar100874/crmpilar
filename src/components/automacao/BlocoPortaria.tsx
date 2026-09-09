@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { UserPlus, Truck, Car, AlertTriangle, Package, Loader2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { UserPlus, Truck, Car, AlertTriangle, Package, Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Bloco } from "@/lib/automacao/api";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export type ModuloPortaria = "visitantes" | "transportadoras" | "veiculos" | "ocorrencias" | "encomendas";
 
@@ -29,6 +32,12 @@ const ICONES = {
 interface Item {
   titulo: string;
   detalhe: string;
+}
+
+interface Props {
+  bloco: Bloco;
+  edicao?: boolean;
+  onAcionar?: () => void;
 }
 
 const db = supabase as unknown as { from: (t: string) => any };
@@ -122,7 +131,7 @@ async function carregarModulo(
 }
 
 /** Mostra no painel o resumo ao vivo de um controle da portaria. */
-export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
+export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
   const cfg = (bloco.config ?? {}) as {
     modulo?: ModuloPortaria;
     intervalo_seg?: number;
@@ -154,6 +163,7 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
   const [total, setTotal] = useState(0);
   const [itens, setItens] = useState<Item[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [ampliado, setAmpliado] = useState(false);
 
   const carregar = useCallback(async () => {
     try {
@@ -172,15 +182,29 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
     return () => clearInterval(t);
   }, [carregar, intervalo]);
 
-  return (
+  const alternar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (edicao) return;
+    setAmpliado((v) => !v);
+    onAcionar?.();
+  };
+
+  const conteudo = (
     <div
-      className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left"
+      className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left flex flex-col"
       style={{
         backgroundColor: corFundo,
         color: corTexto,
       }}
     >
-      <div className="flex items-center gap-2">
+      <div
+        className={cn(
+          "flex items-center gap-2 select-none",
+          !edicao && "cursor-pointer hover:opacity-90 transition-opacity"
+        )}
+        onClick={alternar}
+        title="Toque para ampliar"
+      >
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary"
           style={corDestaque ? { backgroundColor: `${corDestaque}26`, color: corDestaque } : undefined}
@@ -199,15 +223,24 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
           </p>
         </div>
         <span
-          className="shrink-0 font-bold tabular-nums"
+          className="flex items-center gap-2 shrink-0 font-bold tabular-nums"
           style={{ fontSize: tamNumero, color: corDestaque ?? corTexto }}
         >
           {carregando ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : total}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={(e) => { e.stopPropagation(); setAmpliado((v) => !v); onAcionar?.(); }}
+            title={ampliado ? "Reduzir" : "Ampliar"}
+          >
+            {ampliado ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </Button>
         </span>
       </div>
 
       {mostrarLista && (
-        <div className="mt-2 space-y-1">
+        <div className="mt-2 space-y-1 overflow-auto">
           {itens.length === 0 && !carregando ? (
             <p
               className="text-muted-foreground"
@@ -237,5 +270,28 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
         </div>
       )}
     </div>
+  );
+
+  if (!ampliado) return conteudo;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 p-4 sm:p-8 flex items-center justify-center"
+      onClick={(e) => { if (e.target === e.currentTarget) { e.stopPropagation(); setAmpliado(false); onAcionar?.(); } }}
+    >
+      <div className="relative w-full max-w-5xl h-full max-h-[90vh]">
+        {conteudo}
+        <Button
+          variant="secondary"
+          size="icon"
+          className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-black/70 text-white hover:bg-black/90"
+          onClick={(e) => { e.stopPropagation(); setAmpliado(false); onAcionar?.(); }}
+          title="Voltar ao painel"
+        >
+          <Minimize2 className="h-5 w-5" />
+        </Button>
+      </div>
+    </div>,
+    document.body
   );
 }

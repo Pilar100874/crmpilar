@@ -41,9 +41,11 @@ export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
 
-  if (!semDispositivo || !onAcionar || edicao || bloco.tipo === "camera") {
+  const proprioClick = ["camera", "rastreamento", "portaria"].includes(bloco.tipo);
+
+  if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
-      <div className="h-full" onClick={() => !edicao && bloco.tipo !== "camera" && onAcionar?.()}>
+      <div className="h-full" onClick={() => !edicao && !proprioClick && onAcionar?.()}>
         <BlocoCardInterno {...props} />
       </div>
     );
@@ -99,8 +101,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar
       bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
-      bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
-      bloco.tipo === "portaria" ? <BlocoPortaria bloco={bloco} /> :
+      bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
+      bloco.tipo === "portaria" ? <BlocoPortaria bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
       bloco.tipo === "interfone" ? <BlocoInterfone bloco={bloco} /> :
       bloco.tipo === "pilarfone" ? <BlocoPilarFone bloco={bloco} /> :
       bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
