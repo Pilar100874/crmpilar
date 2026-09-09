@@ -11,6 +11,7 @@ import {
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
+import BlocoCard from "@/components/automacao/BlocoCard";
 
 interface Props {
   bloco: Partial<Bloco> | null;
@@ -23,6 +24,7 @@ interface Props {
 
 export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, cameras, onChange, onSalvo }: Props) {
   const [enviando, setEnviando] = useState(false);
+  const [simLigado, setSimLigado] = useState(false);
   const blocoEdit = bloco;
   const setBlocoEdit = (fn: (b: Partial<Bloco> | null) => Partial<Bloco>) => onChange(fn(blocoEdit));
   const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
@@ -38,11 +40,53 @@ export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, came
     onSalvo();
   };
 
+  const blocoPreview = {
+    id: blocoEdit?.id ?? "preview",
+    nome: blocoEdit?.nome?.trim() || "Novo elemento",
+    tipo: (blocoEdit?.tipo ?? "luz") as TipoBloco,
+    ambiente_id: blocoEdit?.ambiente_id ?? "",
+    device_id: blocoEdit?.device_id ?? null,
+    canal: blocoEdit?.canal ?? 0,
+    x: 0, y: 0,
+    w: blocoEdit?.w ?? 3,
+    h: blocoEdit?.h ?? 2,
+    visivel: true,
+    config: cfg,
+  } as unknown as Bloco;
+
   return (
     <Dialog open={!!blocoEdit} onOpenChange={(o) => !o && onChange(null)}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{blocoEdit?.id ? "Editar elemento" : "Novo elemento"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <Label className="text-sm font-semibold">Simulação</Label>
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={simLigado}
+                  onChange={(e) => setSimLigado(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+                Simular ligado
+              </label>
+            </div>
+            <div className="flex items-center justify-center rounded-md bg-background/60 p-3">
+              <div
+                className="pointer-events-none"
+                style={{
+                  width: Math.min(320, (blocoEdit?.w ?? 3) * 56),
+                  height: Math.min(220, (blocoEdit?.h ?? 2) * 56),
+                }}
+              >
+                <BlocoCard bloco={blocoPreview} ligado={simLigado} onEstado={() => {}} />
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Prévia apenas visual: nada é enviado para o equipamento.
+            </p>
+          </div>
           <div>
             <Label>Nome</Label>
             <Input
