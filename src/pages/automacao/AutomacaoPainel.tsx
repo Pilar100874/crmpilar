@@ -560,6 +560,16 @@ export default function AutomacaoPainel() {
                   <Button
                     size="icon"
                     variant="secondary"
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full shadow"
+                    title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => alternarVisivel(b)}
+                  >
+                    {visivel ? <Eye className="h-3 w-3 text-primary" /> : <EyeOff className="h-3 w-3 text-muted-foreground" />}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
                     className="absolute -top-2 -left-2 h-6 w-6 rounded-full shadow"
                     title={travado ? "Liberar elemento" : "Bloquear elemento"}
                     onPointerDown={(e) => e.stopPropagation()}
