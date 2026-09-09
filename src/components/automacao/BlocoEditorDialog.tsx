@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
   enviarImagemAutomacao, salvarBloco, listarUnidades, UnidadeSimples,
