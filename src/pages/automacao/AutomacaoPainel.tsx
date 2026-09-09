@@ -342,7 +342,7 @@ export default function AutomacaoPainel() {
       )}
 
       {/* Palco: reserva na página o espaço da tela de parede já reduzida. */}
-      <div ref={palcoRef} className="w-full" style={{ height: telaA * escala }}>
+      <div ref={palcoRef} className="w-full min-w-0 overflow-hidden" style={{ height: telaA * escala }}>
         <div
         ref={gradeRef}
         onPointerMove={aoMover}
