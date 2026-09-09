@@ -3335,6 +3335,105 @@ export type Database = {
           },
         ]
       }
+      automacao_ambientes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      automacao_blocos: {
+        Row: {
+          ambiente_id: string | null
+          canal: number
+          config: Json
+          created_at: string
+          created_by: string | null
+          device_id: string | null
+          h: number
+          icone: string | null
+          id: string
+          nome: string
+          tipo: string
+          updated_at: string
+          w: number
+          x: number
+          y: number
+        }
+        Insert: {
+          ambiente_id?: string | null
+          canal?: number
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          h?: number
+          icone?: string | null
+          id?: string
+          nome: string
+          tipo?: string
+          updated_at?: string
+          w?: number
+          x?: number
+          y?: number
+        }
+        Update: {
+          ambiente_id?: string | null
+          canal?: number
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          h?: number
+          icone?: string | null
+          id?: string
+          nome?: string
+          tipo?: string
+          updated_at?: string
+          w?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacao_blocos_ambiente_id_fkey"
+            columns: ["ambiente_id"]
+            isOneToOne: false
+            referencedRelation: "automacao_ambientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automacao_blocos_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "port_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automacoes_vendas: {
         Row: {
           ativo: boolean | null
