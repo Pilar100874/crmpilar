@@ -20,6 +20,12 @@ import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
 const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor"];
 
+/** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
+const TIPOS_SEM_DISPOSITIVO = [
+  "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
+  "interfone", "texto", "clima", "grafico",
+];
+
 
 
 interface Props {
