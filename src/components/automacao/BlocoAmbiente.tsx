@@ -89,24 +89,15 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
 
       <div className="relative h-full w-full">
         {src ? (
-          <>
-            <img
-              src={src}
-              alt={bloco.nome}
-              loading="lazy"
-              className={cn(
-                "h-full w-full object-cover transition-all duration-500",
-                aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.55]",
-              )}
-            />
-            <div
-              className={cn(
-                "pointer-events-none absolute inset-0 transition-opacity duration-500",
-                aceso ? "opacity-0" : "opacity-60",
-              )}
-              style={{ background: "#000" }}
-            />
-          </>
+          <img
+            src={src}
+            alt={bloco.nome}
+            loading="lazy"
+            className={cn(
+              "h-full w-full object-cover transition-all duration-500",
+              aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.45]",
+            )}
+          />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-white/5 text-white/40">
             <ImageIcon className="h-8 w-8" />
