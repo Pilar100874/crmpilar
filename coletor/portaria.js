@@ -131,6 +131,20 @@ async function shellyPulso(device, cred, canal) {
   return { mensagem: 'Relé acionado pelo Coletor local.', dados: texto.slice(0, 300) };
 }
 
+async function shellyLigar(device, cred, canal, ligar) {
+  const base = baseUrlShelly(device);
+  if (!base) throw new Error('Dispositivo sem IP/endpoint configurado.');
+  const geracao = String((device.config && device.config.geracao) || 'gen2').toLowerCase();
+  const headers = {};
+  if (cred && cred.usuario && cred.senha) {
+    headers.Authorization = 'Basic ' + Buffer.from(`${cred.usuario}:${cred.senha}`).toString('base64');
+  }
+  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? 'true' : 'false'}`;
+  const gen1 = `${base}/relay/${canal}?turn=${ligar ? 'on' : 'off'}`;
+  const texto = await tentarUrls(geracao === 'gen1' ? [gen1, rpc] : [rpc, gen1], headers);
+  return { mensagem: ligar ? 'Ligado pelo Coletor local.' : 'Desligado pelo Coletor local.', dados: texto.slice(0, 300) };
+}
+
 async function shellyStatus(device, cred, canal) {
   const base = baseUrlShelly(device);
   if (!base) throw new Error('Dispositivo sem IP/endpoint configurado.');
@@ -218,6 +232,10 @@ async function executarJob(job) {
   if (job.comando === 'capturar_camera') {
     if (!idface) throw new Error('Captura integrada disponível somente para o iDFace.');
     return await controlidCapturarCamera(device, cred);
+  }
+  if (job.comando === 'ligar' || job.comando === 'desligar') {
+    if (idface) throw new Error('Liga/desliga disponível somente para Shelly.');
+    return await shellyLigar(device, cred, Number(params.canal) || 0, job.comando === 'ligar');
   }
   if (job.comando === 'abrir') {
     return idface
