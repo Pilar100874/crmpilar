@@ -13,9 +13,12 @@ import BlocoIcone from "./BlocoIcone";
 import BlocoImagem from "./BlocoImagem";
 import BlocoRealista from "./BlocoRealista";
 import BlocoRastreamento from "./BlocoRastreamento";
+import BlocoPortaria from "./BlocoPortaria";
+import BlocoInterfone from "./BlocoInterfone";
+import BlocoPilarFone from "./BlocoPilarFone";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -57,6 +60,9 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
       bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
+      bloco.tipo === "portaria" ? <BlocoPortaria bloco={bloco} /> :
+      bloco.tipo === "interfone" ? <BlocoInterfone bloco={bloco} /> :
+      bloco.tipo === "pilarfone" ? <BlocoPilarFone bloco={bloco} /> :
       bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
       bloco.tipo === "imagem" ? <BlocoImagem bloco={bloco} /> :
       bloco.tipo === "icone" ? <BlocoIcone bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
@@ -68,7 +74,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && bloco.tipo !== "rastreamento" && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>
