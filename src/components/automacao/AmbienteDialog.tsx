@@ -1,10 +1,14 @@
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Monitor } from "lucide-react";
+import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Ambiente, PROPORCOES, TELA_PADRAO, salvarAmbiente } from "@/lib/automacao/api";
+import {
+  Ambiente, PROPORCOES, TELA_PADRAO, enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
+} from "@/lib/automacao/api";
 
 interface Props {
   ambiente: Partial<Ambiente> | null;
@@ -19,17 +23,52 @@ function proporcaoDe(l: number, a: number) {
   return `${Math.round(l / d)}:${Math.round(a / d)}`;
 }
 
+const AJUSTES = [
+  { valor: "cobrir", label: "Preencher a tela" },
+  { valor: "conter", label: "Mostrar a foto inteira" },
+  { valor: "esticar", label: "Esticar" },
+];
+
 export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const largura = ambiente?.tela_largura ?? TELA_PADRAO.largura;
   const altura = ambiente?.tela_altura ?? TELA_PADRAO.altura;
   const proporcao = proporcaoDe(largura, altura);
+  const opacidade = ambiente?.fundo_opacidade ?? 100;
+  const ajuste = ambiente?.fundo_ajuste ?? "cobrir";
+  const [previa, setPrevia] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const arquivoRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    const caminho = ambiente?.fundo_caminho;
+    if (!caminho) { setPrevia(null); return; }
+    if (/^https?:\/\//.test(caminho)) { setPrevia(caminho); return; }
+    urlImagemAutomacao(caminho).then((u) => { if (ativo) setPrevia(u); });
+    return () => { ativo = false; };
+  }, [ambiente?.fundo_caminho]);
 
   const aplicar = (l: number, a: number) =>
     onChange({ ...ambiente, tela_largura: Math.max(320, Math.round(l)), tela_altura: Math.max(240, Math.round(a)) });
 
+  const enviarFoto = async (arquivo: File) => {
+    if (arquivo.size > 20 * 1024 * 1024) { toast.error("A foto precisa ter até 20 MB."); return; }
+    setEnviando(true);
+    const caminho = await enviarImagemAutomacao(arquivo);
+    setEnviando(false);
+    if (!caminho) { toast.error("Não foi possível enviar a foto."); return; }
+    onChange({ ...ambiente, fundo_caminho: caminho });
+  };
+
   const gravar = async () => {
     if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
-    await salvarAmbiente({ ...ambiente, tela_largura: largura, tela_altura: altura });
+    await salvarAmbiente({
+      ...ambiente,
+      tela_largura: largura,
+      tela_altura: altura,
+      fundo_opacidade: opacidade,
+      fundo_ajuste: ajuste,
+    });
     onChange(null);
     toast.success("Ambiente salvo.");
     onSalvo();
