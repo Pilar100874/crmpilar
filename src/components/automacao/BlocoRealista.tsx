@@ -57,13 +57,13 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       onPointerLeave={() => setPressionado(false)}
       className={cn(
         "relative h-full w-full select-none overflow-hidden rounded-[22px] border p-3 text-left transition-all duration-150",
-        "border-white/10 bg-card",
+        "border-border bg-gradient-to-b from-muted/40 to-muted",
         pressionado && !edicao && "scale-[0.97]",
       )}
       style={{
         boxShadow: aceso
-          ? "12px 12px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -8px 16px rgba(255,255,255,0.06)"
-          : "8px 8px 16px rgba(0,0,0,0.28), inset 0 -6px 12px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.18)",
+          ? `0 10px 22px -8px ${cor}80, inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -8px 16px rgba(0,0,0,0.10)`
+          : "0 8px 16px -10px rgba(0,0,0,0.45), inset 0 -6px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)",
       }}
     >
       {/* brilho de vidro no topo */}
@@ -101,7 +101,7 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
           style={
             aceso
               ? { background: `${cor}33`, color: cor, boxShadow: `0 0 14px ${cor}55` }
-              : { background: "rgba(255,255,255,0.05)" }
+              : { background: "hsl(var(--background) / 0.6)" }
           }
         >
           {ocupado ? <Loader2 className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
