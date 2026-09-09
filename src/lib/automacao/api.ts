@@ -27,6 +27,12 @@ export interface Ambiente {
   tela_altura: number | null;
   /** Posicionamento dos elementos: "grade" ou "livre". */
   modo: "grade" | "livre" | null;
+  /** Foto de fundo do painel (caminho no armazenamento ou endereço da internet). */
+  fundo_caminho: string | null;
+  /** Transparência da foto de fundo, de 0 (invisível) a 100 (opaca). */
+  fundo_opacidade: number | null;
+  /** Como a foto ocupa a tela: "cobrir", "conter" ou "esticar". */
+  fundo_ajuste: string | null;
 }
 
 /** Guarda no banco como os elementos são posicionados no ambiente. */
@@ -141,6 +147,9 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     ordem: a.ordem ?? 0,
     tela_largura: a.tela_largura ?? null,
     tela_altura: a.tela_altura ?? null,
+    fundo_caminho: a.fundo_caminho ?? null,
+    fundo_opacidade: a.fundo_opacidade ?? 100,
+    fundo_ajuste: a.fundo_ajuste ?? "cobrir",
   };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();

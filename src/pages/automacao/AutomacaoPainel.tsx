@@ -14,7 +14,7 @@ import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
-  listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente,
+  listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
@@ -52,6 +52,7 @@ export default function AutomacaoPainel() {
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const [escala, setEscala] = useState(1);
+  const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
@@ -104,6 +105,18 @@ export default function AutomacaoPainel() {
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
   const telaL = ambienteAtual?.tela_largura ?? TELA_PADRAO.largura;
   const telaA = ambienteAtual?.tela_altura ?? TELA_PADRAO.altura;
+  const fundoAjuste = ambienteAtual?.fundo_ajuste ?? "cobrir";
+  const fundoOpacidade = Math.max(0, Math.min(100, ambienteAtual?.fundo_opacidade ?? 100)) / 100;
+
+  // Foto de fundo do ambiente (arquivo enviado ou endereço da internet).
+  useEffect(() => {
+    let ativo = true;
+    const caminho = ambienteAtual?.fundo_caminho;
+    if (!caminho) { setFundoUrl(null); return; }
+    if (/^https?:\/\//.test(caminho)) { setFundoUrl(caminho); return; }
+    urlImagemAutomacao(caminho).then((u) => { if (ativo) setFundoUrl(u); });
+    return () => { ativo = false; };
+  }, [ambienteAtual?.fundo_caminho]);
 
   useEffect(() => {
     const alvo = palcoRef.current;
@@ -372,6 +385,18 @@ export default function AutomacaoPainel() {
               }),
         }}
       >
+        {fundoUrl && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-2xl"
+            style={{
+              backgroundImage: `url(${fundoUrl})`,
+              backgroundSize: fundoAjuste === "conter" ? "contain" : fundoAjuste === "esticar" ? "100% 100%" : "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              opacity: fundoOpacidade,
+            }}
+          />
+        )}
         {doAmbiente.map((b) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
           return (

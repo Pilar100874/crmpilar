@@ -3339,6 +3339,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          fundo_ajuste: string
+          fundo_caminho: string | null
+          fundo_opacidade: number
           icone: string | null
           id: string
           modo: string
@@ -3351,6 +3354,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          fundo_ajuste?: string
+          fundo_caminho?: string | null
+          fundo_opacidade?: number
           icone?: string | null
           id?: string
           modo?: string
@@ -3363,6 +3369,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          fundo_ajuste?: string
+          fundo_caminho?: string | null
+          fundo_opacidade?: number
           icone?: string | null
           id?: string
           modo?: string
