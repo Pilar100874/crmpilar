@@ -204,6 +204,26 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             <div className="space-y-2">
               <Label>Elemento</Label>
               <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Cor ativada</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corAtivo as string) ?? "#3b82f6"}
+                    onChange={(e) => setCfg({ corAtivo: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Cor desativada</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corInativo as string) ?? "#64748b"}
+                    onChange={(e) => setCfg({ corInativo: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
+              </div>
               <div>
                 <Label className="text-xs">Tamanho do ícone ({cfg.tamanho ?? 0 ? `${cfg.tamanho}px` : "Automático"})</Label>
                 <input
