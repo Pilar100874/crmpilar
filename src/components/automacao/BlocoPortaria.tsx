@@ -50,7 +50,7 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
   if (modulo === "transportadoras") {
     const { data, count } = await db
       .from("transp_movimentos")
-      .select("id, placa, motorista_nome, transportadora, entrada_time", { count: "exact" })
+      .select("id, placa, motorista_nome, motivo, entrada_time", { count: "exact" })
       .neq("status", "saiu")
       .order("entrada_time", { ascending: false })
       .limit(4);
@@ -58,7 +58,7 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((m: any) => ({
         titulo: m.placa ?? "Veículo",
-        detalhe: m.transportadora ?? m.motorista_nome ?? "",
+        detalhe: m.motorista_nome ?? m.motivo ?? "",
       })),
     };
   }

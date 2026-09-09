@@ -44,13 +44,15 @@ export default function BlocoInterfone({ bloco }: { bloco: Bloco }) {
         </div>
       </button>
 
-      <InterfonePopup
-        aberto={aberto}
-        onFechar={() => setAberto(false)}
-        config={config}
-        unidadeId={unidadeId}
-        toqueId={toqueId}
-      />
+      {config && (
+        <InterfonePopup
+          aberto={aberto}
+          onFechar={() => setAberto(false)}
+          config={config}
+          unidadeId={unidadeId}
+          toqueId={toqueId}
+        />
+      )}
     </>
   );
 }
