@@ -67,12 +67,18 @@ export default function AutomacaoTela() {
   }, [ambienteAtual?.fundo_caminho]);
 
   // Encaixa a tela de parede inteira no espaço disponível, sem barra de rolagem.
+  const ultimaMedida = useRef({ l: 0, a: 0 });
+
   useEffect(() => {
     const alvo = palcoRef.current;
     if (!alvo) return;
+    ultimaMedida.current = { l: 0, a: 0 };
     const medir = () => {
       const l = alvo.clientWidth || telaL;
       const a = alvo.clientHeight || telaA;
+      // Ignora variações pequenas para a tela de fundo não recarregar em loop.
+      if (Math.abs(l - ultimaMedida.current.l) < 8 && Math.abs(a - ultimaMedida.current.a) < 8) return;
+      ultimaMedida.current = { l, a };
       setEscala(Math.max(0.05, Math.min(l / telaL, a / telaA)));
     };
     medir();
