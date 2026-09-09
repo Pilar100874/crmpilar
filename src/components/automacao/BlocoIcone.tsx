@@ -19,11 +19,14 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     animacao?: AnimacaoIcone;
     acao?: "ligar" | "desligar" | "pulso" | "alternar";
     cor?: string;
+    corAtivo?: string;
+    corInativo?: string;
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
     tamanho?: number;
   };
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
+  const corAtual = aceso ? (cfg.corAtivo ?? cfg.cor) : cfg.corInativo;
   const aceso = ligado === true;
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
@@ -62,7 +65,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
           ...(fixo
             ? { height: fixo + 16, width: fixo + 16 }
             : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
-          ...(aceso && cfg.cor ? { color: cfg.cor } : {}),
+          ...(corAtual ? { color: corAtual } : {}),
         }}
       >
         {ocupado ? (
