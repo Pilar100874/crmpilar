@@ -191,6 +191,7 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     fundo_caminho: a.fundo_caminho ?? null,
     fundo_opacidade: a.fundo_opacidade ?? 100,
     fundo_ajuste: a.fundo_ajuste ?? "cobrir",
+    ativo: a.ativo !== false,
   };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();
