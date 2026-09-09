@@ -403,6 +403,55 @@ export default function AutomacaoPainel() {
         </div>
       )}
 
+      {podeEditar && doAmbiente.length > 0 && (
+        <div className="rounded-xl border bg-card">
+          <div className="flex items-center gap-2 border-b px-3 py-2">
+            <Layers className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Camadas</span>
+            <span className="text-xs text-muted-foreground">de cima para baixo — o primeiro fica na frente</span>
+          </div>
+          <div className="max-h-56 overflow-y-auto divide-y">
+            {daFrenteParaTras.map((b) => {
+              const ativo = selecionado === b.id;
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => setSelecionado(b.id)}
+                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"}`}
+                >
+                  <span className="flex-1 truncate text-sm">{b.nome || "Sem nome"}</span>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title={estaTravado(b) ? "Liberar elemento" : "Bloquear elemento"}
+                    onClick={(e) => { e.stopPropagation(); alternarTravado(b); }}
+                  >
+                    {estaTravado(b)
+                      ? <Lock className="h-4 w-4 text-amber-500" />
+                      : <Unlock className="h-4 w-4 text-muted-foreground" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Trazer para a frente"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "frente"); }}>
+                    <ChevronsUp className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Avançar uma camada"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "subir"); }}>
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Recuar uma camada"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "descer"); }}>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar para o fundo"
+                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "fundo"); }}>
+                    <ChevronsDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Palco: reserva na página o espaço da tela de parede já reduzida. */}
       <div ref={palcoRef} className="w-full min-w-0 overflow-hidden" style={{ height: telaA * escala }}>
         <div
