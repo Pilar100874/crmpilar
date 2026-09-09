@@ -48,7 +48,7 @@ export default function AutomacaoPainel() {
   const [edicao, setEdicao] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [modo, setModo] = useState<Modo>("grade");
-  const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
   const [estados, setEstados] = useState<Record<string, boolean | null>>({});
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
@@ -90,7 +90,7 @@ export default function AutomacaoPainel() {
     const salvoBanco = ambientes.find((a) => a.id === ambienteId)?.modo;
     const salvo = salvoBanco ?? localStorage.getItem(`automacao_modo_${ambienteId}`);
     setModo(salvo === "livre" ? "livre" : "grade");
-    setSelecionado(null);
+    setSelecionados([]);
   }, [ambienteId, ambientes]);
 
   const trocarModo = (m: Modo) => {
@@ -188,9 +188,20 @@ export default function AutomacaoPainel() {
   const atualizarPos = (id: string, pos: PosLivre) =>
     setBlocos((ant) => ant.map((b) => (b.id === id ? { ...b, config: { ...(b.config ?? {}), pos } } : b)));
 
+  const estaSelecionado = (id: string) => selecionados.includes(id);
+
+  /** Clique simples troca a seleção; com Shift/Ctrl/Cmd soma ou tira da seleção. */
+  const selecionar = (id: string, e?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+    const juntar = !!(e?.shiftKey || e?.ctrlKey || e?.metaKey);
+    setSelecionados((ant) => {
+      if (!juntar) return ant.length === 1 && ant[0] === id ? ant : [id];
+      return ant.includes(id) ? ant.filter((x) => x !== id) : [...ant, id];
+    });
+  };
+
   const aoArrastar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
-    setSelecionado(bloco.id);
+    selecionar(bloco.id, e);
     if (estaTravado(bloco)) return;
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
@@ -200,7 +211,7 @@ export default function AutomacaoPainel() {
   const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar || estaTravado(bloco)) return;
     e.stopPropagation();
-    setSelecionado(bloco.id);
+    selecionar(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
     redim.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h, pw: p.w, ph: p.h };
@@ -266,36 +277,53 @@ export default function AutomacaoPainel() {
   };
 
   const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
-    const bloco = doAmbiente.find((b) => b.id === selecionado);
-    if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
-    if (estaTravado(bloco)) { toast.error("Este elemento está bloqueado. Libere o cadeado para movê-lo."); return; }
+    const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id));
+    if (!escolhidos.length) { toast.error("Escolha um ou mais elementos tocando neles."); return; }
+    const livres = escolhidos.filter((b) => !estaTravado(b));
+    if (!livres.length) { toast.error("Os elementos escolhidos estão bloqueados. Libere o cadeado para movê-los."); return; }
     const { cx } = celula();
+    const varios = livres.length > 1;
+
     if (modo === "livre") {
-      const largura = telaL;
-      const altura = telaA;
-      const p = posLivre(bloco, cx);
-      const novo: PosLivre = { ...p };
-      if (dir === "esq") novo.l = 0;
-      if (dir === "centroH") novo.l = Math.max(0, (largura - p.w) / 2);
-      if (dir === "dir") novo.l = Math.max(0, largura - p.w);
-      if (dir === "topo") novo.t = 0;
-      if (dir === "centroV") novo.t = Math.max(0, (altura - p.h) / 2);
-      if (dir === "base") novo.t = Math.max(0, altura - p.h);
-      atualizarPos(bloco.id, novo);
-      await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } });
+      const pos = livres.map((b) => ({ b, p: posLivre(b, cx) }));
+      // Com vários elementos, o alinhamento usa a área ocupada pela seleção;
+      // com um só, usa a tela de parede inteira.
+      const esq = varios ? Math.min(...pos.map((x) => x.p.l)) : 0;
+      const dirLim = varios ? Math.max(...pos.map((x) => x.p.l + x.p.w)) : telaL;
+      const topo = varios ? Math.min(...pos.map((x) => x.p.t)) : 0;
+      const baseLim = varios ? Math.max(...pos.map((x) => x.p.t + x.p.h)) : telaA;
+
+      for (const { b, p } of pos) {
+        const novo: PosLivre = { ...p };
+        if (dir === "esq") novo.l = esq;
+        if (dir === "centroH") novo.l = Math.max(0, esq + (dirLim - esq - p.w) / 2);
+        if (dir === "dir") novo.l = Math.max(0, dirLim - p.w);
+        if (dir === "topo") novo.t = topo;
+        if (dir === "centroV") novo.t = Math.max(0, topo + (baseLim - topo - p.h) / 2);
+        if (dir === "base") novo.t = Math.max(0, baseLim - p.h);
+        atualizarPos(b.id, novo);
+        await salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } });
+      }
     } else {
       const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
-      let { x, y } = bloco;
-      if (dir === "esq") x = 0;
-      if (dir === "centroH") x = Math.max(0, Math.round((COLUNAS - bloco.w) / 2));
-      if (dir === "dir") x = Math.max(0, COLUNAS - bloco.w);
-      if (dir === "topo") y = 0;
-      if (dir === "centroV") y = Math.max(0, Math.round((linhas - bloco.h) / 2));
-      if (dir === "base") y = Math.max(0, linhas - bloco.h);
-      setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-      await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+      const esq = varios ? Math.min(...livres.map((b) => b.x)) : 0;
+      const dirLim = varios ? Math.max(...livres.map((b) => b.x + b.w)) : COLUNAS;
+      const topo = varios ? Math.min(...livres.map((b) => b.y)) : 0;
+      const baseLim = varios ? Math.max(...livres.map((b) => b.y + b.h)) : linhas;
+
+      for (const bloco of livres) {
+        let { x, y } = bloco;
+        if (dir === "esq") x = esq;
+        if (dir === "centroH") x = Math.max(0, esq + Math.round((dirLim - esq - bloco.w) / 2));
+        if (dir === "dir") x = Math.max(0, dirLim - bloco.w);
+        if (dir === "topo") y = topo;
+        if (dir === "centroV") y = Math.max(0, topo + Math.round((baseLim - topo - bloco.h) / 2));
+        if (dir === "base") y = Math.max(0, baseLim - bloco.h);
+        setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
+        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+      }
     }
-    toast.success("Elemento alinhado.");
+    toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
   };
 
   const novoBloco = () =>
@@ -397,7 +425,11 @@ export default function AutomacaoPainel() {
           >
             <Monitor className="h-4 w-4 mr-1" /> Tela de parede ({telaL}×{telaA})
           </Button>
-          <span className="ml-2 text-xs text-muted-foreground">Alinhar elemento escolhido:</span>
+          <span className="ml-2 text-xs text-muted-foreground">
+            {selecionados.length > 1
+              ? `Alinhar ${selecionados.length} elementos escolhidos:`
+              : "Alinhar elemento escolhido (Shift ou Ctrl para escolher vários):"}
+          </span>
           {alinhamentos.map(({ dir, Icone, titulo }) => (
             <Button
               key={dir}
@@ -405,12 +437,22 @@ export default function AutomacaoPainel() {
               variant="outline"
               className="h-8 w-8"
               title={titulo}
-              disabled={!selecionado}
+              disabled={!selecionados.length}
               onClick={() => alinhar(dir)}
             >
               <Icone className="h-4 w-4" />
             </Button>
           ))}
+          {selecionados.length > 0 && (
+            <Button size="sm" variant="ghost" onClick={() => setSelecionados([])}>
+              Limpar seleção
+            </Button>
+          )}
+          {selecionados.length > 0 && doAmbiente.length > 1 && (
+            <Button size="sm" variant="ghost" onClick={() => setSelecionados(doAmbiente.map((b) => b.id))}>
+              Escolher todos
+            </Button>
+          )}
         </div>
       )}
 
@@ -444,12 +486,12 @@ export default function AutomacaoPainel() {
           {camadasAbertas && (
           <div className={`overflow-y-auto divide-y border-t ${camadasAmpliadas ? "max-h-[70vh]" : "max-h-56"}`}>
             {daFrenteParaTras.map((b, idx) => {
-              const ativo = selecionado === b.id;
+              const ativo = estaSelecionado(b.id);
               const visivel = estaVisivel(b);
               return (
                 <div
                   key={b.id}
-                  onClick={() => setSelecionado(b.id)}
+                  onClick={(e) => selecionar(b.id, e)}
                   className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
                   <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">{idx + 1}</span>
@@ -552,7 +594,7 @@ export default function AutomacaoPainel() {
             <div
               key={b.id}
               onPointerDown={(e) => aoArrastar(e, b)}
-              className={`relative ${podeEditar && selecionado === b.id ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
+              className={`relative ${podeEditar && estaSelecionado(b.id) ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
               style={
                 p
                   ? {
