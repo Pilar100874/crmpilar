@@ -1015,3 +1015,73 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
     </Dialog>
   );
 }
+
+/** Busca a cidade pelo nome (serviço público Open-Meteo) e preenche latitude/longitude. */
+function BuscaCidade({ cidade, onEscolher }: { cidade?: string; onEscolher: (c: { nome: string; lat: number; lon: number }) => void }) {
+  const [termo, setTermo] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const [itens, setItens] = useState<{ nome: string; lat: number; lon: number }[]>([]);
+
+  const buscar = async () => {
+    if (termo.trim().length < 2) return;
+    setBuscando(true);
+    try {
+      const r = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(termo.trim())}&count=6&language=pt&format=json`,
+      );
+      const j = await r.json();
+      setItens(
+        (j.results ?? []).map((x: any) => ({
+          nome: [x.name, x.admin1, x.country_code].filter(Boolean).join(", "),
+          lat: x.latitude,
+          lon: x.longitude,
+        })),
+      );
+      if (!j.results?.length) toast.error("Nenhuma cidade encontrada.");
+    } catch {
+      toast.error("Não foi possível buscar a cidade agora.");
+    } finally {
+      setBuscando(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs">Cidade {cidade ? `(atual: ${cidade})` : ""}</Label>
+      <div className="flex gap-2">
+        <Input
+          value={termo}
+          placeholder="Ex.: Campinas"
+          onChange={(e) => setTermo(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              buscar();
+            }
+          }}
+        />
+        <Button type="button" variant="outline" onClick={buscar} disabled={buscando}>
+          {buscando ? "Buscando..." : "Buscar"}
+        </Button>
+      </div>
+      {itens.length > 0 && (
+        <div className="max-h-40 space-y-1 overflow-auto rounded-md border p-1">
+          {itens.map((c) => (
+            <button
+              key={`${c.lat},${c.lon}`}
+              type="button"
+              className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-muted"
+              onClick={() => {
+                onEscolher(c);
+                setItens([]);
+                setTermo("");
+              }}
+            >
+              {c.nome}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
