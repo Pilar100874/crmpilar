@@ -425,7 +425,11 @@ export default function AutomacaoPainel() {
           >
             <Monitor className="h-4 w-4 mr-1" /> Tela de parede ({telaL}×{telaA})
           </Button>
-          <span className="ml-2 text-xs text-muted-foreground">Alinhar elemento escolhido:</span>
+          <span className="ml-2 text-xs text-muted-foreground">
+            {selecionados.length > 1
+              ? `Alinhar ${selecionados.length} elementos escolhidos:`
+              : "Alinhar elemento escolhido (Shift ou Ctrl para escolher vários):"}
+          </span>
           {alinhamentos.map(({ dir, Icone, titulo }) => (
             <Button
               key={dir}
@@ -433,12 +437,22 @@ export default function AutomacaoPainel() {
               variant="outline"
               className="h-8 w-8"
               title={titulo}
-              disabled={!selecionado}
+              disabled={!selecionados.length}
               onClick={() => alinhar(dir)}
             >
               <Icone className="h-4 w-4" />
             </Button>
           ))}
+          {selecionados.length > 0 && (
+            <Button size="sm" variant="ghost" onClick={() => setSelecionados([])}>
+              Limpar seleção
+            </Button>
+          )}
+          {selecionados.length > 0 && doAmbiente.length > 1 && (
+            <Button size="sm" variant="ghost" onClick={() => setSelecionados(doAmbiente.map((b) => b.id))}>
+              Escolher todos
+            </Button>
+          )}
         </div>
       )}
 
