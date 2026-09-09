@@ -6,7 +6,6 @@ import {
   Users,
   UserPlus,
   History,
-  Cpu,
   Settings,
   PhoneCall,
   ShieldCheck,

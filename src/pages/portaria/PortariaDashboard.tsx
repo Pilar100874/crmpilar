@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, UserPlus, Cpu, History, Loader2 } from "lucide-react";
+import { Users, UserPlus, History, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortariaPerfil } from "@/lib/portaria/api";
 import BotaoAbrirAcesso, { AcessoCard } from "@/components/portaria/BotaoAbrirAcesso";
