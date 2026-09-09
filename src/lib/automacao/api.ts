@@ -23,6 +23,7 @@ export type TipoBloco =
   | "ambiente"
   | "imagemluz"
   | "texto"
+  | "forma"
   | "clima";
 
 export interface Ambiente {
