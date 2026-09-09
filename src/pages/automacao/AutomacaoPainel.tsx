@@ -364,8 +364,13 @@ export default function AutomacaoPainel() {
             <Plus className="h-4 w-4 mr-1" /> Ambiente
           </Button>
         )}
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setTelaRemota(true)} title="Abrir o painel em uma TV, totem ou outro monitor">
+            <MonitorPlay className="h-4 w-4 mr-2" /> Tela remota
+          </Button>
+        </div>
         {admin && (
-          <div className="ml-auto flex gap-2">
+          <div className="flex gap-2">
             <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
               {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
             </Button>
