@@ -16,7 +16,10 @@ export type TipoBloco =
   | "grafico"
   | "icone"
   | "imagem"
-  | "rastreamento";
+  | "rastreamento"
+  | "portaria"
+  | "interfone"
+  | "pilarfone";
 
 export interface Ambiente {
   id: string;
@@ -112,6 +115,9 @@ export const TIPOS_BLOCO: {
   { valor: "camera", label: "Câmera ao vivo", descricao: "Mostra a imagem de uma câmera", grupo: "Informação" },
   { valor: "mapa", label: "Mapa", descricao: "Mostra um local no mapa", grupo: "Informação" },
   { valor: "rastreamento", label: "Rastreamento de veículos", descricao: "Mapa ao vivo com todos os veículos ou os de uma unidade", grupo: "Informação" },
+  { valor: "portaria", label: "Controle de portaria", descricao: "Visitantes, transportadoras, veículos internos, ocorrências ou encomendas", grupo: "Informação" },
+  { valor: "interfone", label: "Interfone", descricao: "Avisa a campainha e abre as câmeras em tela cheia", grupo: "Controle" },
+  { valor: "pilarfone", label: "Pilar Fone", descricao: "Atalho para ligar ou abrir o telefone do sistema", grupo: "Controle" },
   { valor: "imagem", label: "Imagem", descricao: "Planta da casa, foto do ambiente ou fundo", grupo: "Visual" },
 ];
 

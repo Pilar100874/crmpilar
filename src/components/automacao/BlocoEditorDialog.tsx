@@ -12,6 +12,7 @@ import {
 import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
 import BlocoCard from "@/components/automacao/BlocoCard";
+import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 
 interface Props {
   bloco: Partial<Bloco> | null;
@@ -403,7 +404,101 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
-          {!["camera", "mapa", "imagem", "rastreamento"].includes(blocoEdit?.tipo ?? "") && (
+          {blocoEdit?.tipo === "portaria" && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Controle de portaria</Label>
+              <Select value={cfg.modulo ?? "visitantes"} onValueChange={(v) => setCfg({ modulo: v })}>
+                <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  {MODULOS_PORTARIA.map((m) => (
+                    <SelectItem key={m.valor} value={m.valor}>
+                      <span className="flex flex-col items-start text-left">
+                        <span>{m.label}</span>
+                        <span className="text-[11px] text-muted-foreground">{m.descricao}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.mostrar_lista !== false}
+                  onChange={(e) => setCfg({ mostrar_lista: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Mostrar os últimos registros
+              </label>
+              <div>
+                <Label className="text-xs">Atualizar a cada (segundos)</Label>
+                <Input
+                  type="number" min={10}
+                  value={cfg.intervalo_seg ?? 30}
+                  onChange={(e) => setCfg({ intervalo_seg: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "interfone" && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Interfone</Label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.abrir_ao_tocar !== false}
+                  onChange={(e) => setCfg({ abrir_ao_tocar: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Abrir sozinho quando tocarem a campainha
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.som !== false}
+                  onChange={(e) => setCfg({ som: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Tocar aviso sonoro
+              </label>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "pilarfone" && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Pilar Fone</Label>
+              <div>
+                <Label className="text-xs">Número ou ramal (deixe vazio para só abrir o telefone)</Label>
+                <Input
+                  value={cfg.numero ?? ""}
+                  placeholder="1200"
+                  onChange={(e) => setCfg({ numero: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Nome do contato</Label>
+                <Input
+                  value={cfg.contato ?? ""}
+                  placeholder="Portaria"
+                  onChange={(e) => setCfg({ contato: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Tela que abre</Label>
+                <Select value={cfg.aba ?? "ramais"} onValueChange={(v) => setCfg({ aba: v })}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="ramais">Ramais do CRM</SelectItem>
+                    <SelectItem value="cadastros">Cadastros</SelectItem>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="chamadas">Chamadas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {!["camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone", "interfone"].includes(blocoEdit?.tipo ?? "") && (
             <div>
               <Label>Dispositivo</Label>
               <Select
