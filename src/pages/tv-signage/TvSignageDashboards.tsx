@@ -12,6 +12,14 @@ import { Plus, Pencil, Trash2, ExternalLink, MonitorPlay, PlayCircle } from "luc
 import { toast } from "sonner";
 import { ROTAS_INTERNAS, getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
 
+const TAMANHOS_AUTOMACAO = [
+  { id: "1920x1080", nome: "Full HD 1920×1080 (16:9)" },
+  { id: "3840x2160", nome: "4K 3840×2160 (16:9)" },
+  { id: "1280x720", nome: "HD 1280×720 (16:9)" },
+  { id: "1080x1920", nome: "Vertical 1080×1920 (9:16)" },
+  { id: "1024x768", nome: "Tablet 1024×768 (4:3)" },
+];
+
 export default function TvSignageDashboards() {
   const [list, setList] = useState<any[]>([]);
   const [edit, setEdit] = useState<any | null>(null);
