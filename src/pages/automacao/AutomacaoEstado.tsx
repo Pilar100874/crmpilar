@@ -45,9 +45,11 @@ export default function AutomacaoEstado() {
   const [leituras, setLeituras] = useState<Record<string, Leitura>>({});
   const [consultando, setConsultando] = useState<Record<string, boolean>>({});
   const [automatico, setAutomatico] = useState(true);
+  const [ritmo, setRitmo] = useState(3_000);
   const [atualizando, setAtualizando] = useState(false);
   const [tique, setTique] = useState(0);
   const montado = useRef(true);
+  const emAndamento = useRef(false);
 
   useEffect(() => {
     montado.current = true;
@@ -56,9 +58,9 @@ export default function AutomacaoEstado() {
     };
   }, []);
 
-  // Reescreve os textos de "há quanto tempo" a cada 15 segundos.
+  // Reescreve os textos de "há quanto tempo" a cada segundo.
   useEffect(() => {
-    const t = setInterval(() => setTique((n) => n + 1), 15_000);
+    const t = setInterval(() => setTique((n) => n + 1), 1_000);
     return () => clearInterval(t);
   }, []);
 
