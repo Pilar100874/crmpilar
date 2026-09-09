@@ -82,7 +82,14 @@ export default function BlocoRastreamento({ bloco }: { bloco: Bloco }) {
             Nenhum veículo com posição recebida.
           </div>
         ) : (
-          <LazyLogisticaMap veiculos={comPosicao} className="h-full w-full" fitBounds compactIcons />
+          <LazyLogisticaMap
+            veiculos={comPosicao}
+            className="h-full w-full"
+            fitBounds
+            compactIcons
+            zoomMaximoSempre
+            nuncaPausarAuto
+          />
         )}
       </div>
     </div>

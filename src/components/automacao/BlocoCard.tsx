@@ -81,7 +81,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
         )}
         {edicao && (
           <div
-            className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center gap-2"
+            className="absolute inset-0 z-[1200] bg-background/60 backdrop-blur-[1px] flex items-center justify-center gap-2"
             style={{ borderRadius: raio }}
           >
             <GripVertical className="h-5 w-5 text-muted-foreground" />
