@@ -796,7 +796,7 @@ export default function AutomacaoPainel() {
         dispositivos={dispositivos}
         cameras={cameras}
         onChange={setBlocoEdit}
-        onSalvo={carregar}
+        onSalvo={aoSalvarBloco}
       />
       <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
       <DeleteConfirmDialog
