@@ -15,6 +15,8 @@ import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
+import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
+
 
 interface Props {
   bloco: Partial<Bloco> | null;
