@@ -44,7 +44,8 @@ export default function AutomacaoTela() {
 
   useEffect(() => {
     (async () => {
-      const [a, b] = await Promise.all([listarAmbientes(), listarBlocos()]);
+      const [todosAmbientes, b] = await Promise.all([listarAmbientes(), listarBlocos()]);
+      const a = todosAmbientes.filter((x) => x.ativo !== false);
       setAmbientes(a);
       setBlocos(b);
       setAmbienteId((atual) => (a.some((x) => x.id === atual) ? atual : a[0]?.id || ""));
