@@ -21,11 +21,13 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     cor?: string;
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
+    tamanho?: number;
   };
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
+  const fixo = typeof cfg.tamanho === "number" && cfg.tamanho > 0 ? cfg.tamanho : null;
 
   const acionar = async () => {
     if (!bloco.device_id) {
@@ -50,23 +52,32 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
       <span
         className={cn(
           "flex items-center justify-center transition-all duration-300",
-          fundo === "circulo" && "h-12 w-12 rounded-full",
-          fundo === "quadrado" && "h-12 w-12 rounded-xl",
+          fundo === "circulo" && "rounded-full",
+          fundo === "quadrado" && "rounded-xl",
           fundo !== "nenhum" && (aceso
             ? "bg-primary/25 ring-2 ring-primary/50"
             : "bg-muted/60 ring-1 ring-border group-hover:ring-primary/40"),
         )}
-        style={aceso && cfg.cor ? { color: cfg.cor } : undefined}
+        style={{
+          ...(fixo
+            ? { height: fixo + 16, width: fixo + 16 }
+            : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
+          ...(aceso && cfg.cor ? { color: cfg.cor } : {}),
+        }}
       >
         {ocupado ? (
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2
+            className="animate-spin text-muted-foreground"
+            style={fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }}
+          />
         ) : (
           <Icon
             className={cn(
-              "h-6 w-6 transition-colors",
+              "transition-colors",
               aceso ? "text-primary" : "text-muted-foreground",
               classeAnimacao(cfg.animacao, aceso),
             )}
+            style={fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }}
           />
         )}
       </span>
