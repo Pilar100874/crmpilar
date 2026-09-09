@@ -4,7 +4,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff,
+  Eye, EyeOff, MonitorPlay,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
+import TelaRemotaDialog from "@/components/automacao/TelaRemotaDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
@@ -54,6 +55,7 @@ export default function AutomacaoPainel() {
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const [escala, setEscala] = useState(1);
+  const [telaRemota, setTelaRemota] = useState(false);
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
