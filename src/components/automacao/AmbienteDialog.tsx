@@ -134,7 +134,88 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
             </div>
             <p className="text-xs text-muted-foreground">Proporção atual: {proporcao}</p>
           </div>
+
+          <div className="rounded-xl border p-3 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ImageIcon className="h-4 w-4 text-primary" /> Foto de fundo
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Coloque uma foto da sua casa atrás dos elementos e escolha o quanto ela aparece.
+            </p>
+
+            {previa && (
+              <div
+                className="h-32 w-full rounded-lg border bg-muted"
+                style={{
+                  backgroundImage: `url(${previa})`,
+                  backgroundSize: ajuste === "conter" ? "contain" : ajuste === "esticar" ? "100% 100%" : "cover",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                  opacity: Math.max(0, Math.min(100, opacidade)) / 100,
+                }}
+              />
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant="outline" disabled={enviando} onClick={() => arquivoRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-1" /> {enviando ? "Enviando..." : previa ? "Trocar foto" : "Escolher foto"}
+              </Button>
+              {ambiente?.fundo_caminho && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive"
+                  onClick={() => onChange({ ...ambiente, fundo_caminho: null })}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Remover
+                </Button>
+              )}
+              <input
+                ref={arquivoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) enviarFoto(f); e.target.value = ""; }}
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">Endereço da foto na internet (opcional)</Label>
+              <Input
+                value={/^https?:\/\//.test(ambiente?.fundo_caminho ?? "") ? (ambiente?.fundo_caminho as string) : ""}
+                placeholder="https://..."
+                onChange={(e) => onChange({ ...ambiente, fundo_caminho: e.target.value.trim() || null })}
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">Transparência da foto: {opacidade}%</Label>
+              <Slider
+                value={[opacidade]}
+                min={0}
+                max={100}
+                step={5}
+                onValueChange={(v) => onChange({ ...ambiente, fundo_opacidade: v[0] })}
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {AJUSTES.map((a) => (
+                <Button
+                  key={a.valor}
+                  type="button"
+                  size="sm"
+                  variant={ajuste === a.valor ? "default" : "outline"}
+                  onClick={() => onChange({ ...ambiente, fundo_ajuste: a.valor })}
+                >
+                  {a.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
+
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
