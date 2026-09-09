@@ -20,6 +20,12 @@ import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
 const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor"];
 
+/** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
+const TIPOS_SEM_DISPOSITIVO = [
+  "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
+  "interfone", "texto", "clima", "grafico",
+];
+
 
 
 interface Props {
@@ -964,7 +970,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
-          {!["camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone", "interfone"].includes(blocoEdit?.tipo ?? "") && (
+          {!TIPOS_SEM_DISPOSITIVO.includes(blocoEdit?.tipo ?? "") && (
             <div>
               <Label>Dispositivo</Label>
               <Select
@@ -980,15 +986,18 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <Label>Canal</Label>
-              <Input
-                type="number" min={0}
-                value={blocoEdit?.canal ?? 0}
-                onChange={(e) => setBlocoEdit((b) => ({ ...b, canal: Number(e.target.value) }))}
-              />
-            </div>
+          <div className={TIPOS_SEM_DISPOSITIVO.includes(blocoEdit?.tipo ?? "") ? "grid grid-cols-2 gap-2" : "grid grid-cols-3 gap-2"}>
+            {!TIPOS_SEM_DISPOSITIVO.includes(blocoEdit?.tipo ?? "") && (
+              <div>
+                <Label>Canal</Label>
+                <Input
+                  type="number" min={0}
+                  value={blocoEdit?.canal ?? 0}
+                  onChange={(e) => setBlocoEdit((b) => ({ ...b, canal: Number(e.target.value) }))}
+                />
+              </div>
+            )}
+
             <div>
               <Label>Largura</Label>
               <Input
