@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
+  Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
   enviarImagemAutomacao, salvarBloco,
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";
@@ -15,14 +15,13 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 
 interface Props {
   bloco: Partial<Bloco> | null;
-  ambientes: Ambiente[];
   dispositivos: DispositivoSimples[];
   cameras: CameraSimples[];
   onChange: (b: Partial<Bloco> | null) => void;
   onSalvo: () => void;
 }
 
-export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, cameras, onChange, onSalvo }: Props) {
+export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
   const blocoEdit = bloco;
@@ -129,18 +128,6 @@ export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, came
             </p>
           </div>
 
-          <div>
-            <Label>Ambiente</Label>
-            <Select
-              value={blocoEdit?.ambiente_id ?? ""}
-              onValueChange={(v) => setBlocoEdit((b) => ({ ...b, ambiente_id: v }))}
-            >
-              <SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger>
-              <SelectContent className="bg-popover">
-                {ambientes.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-2 rounded-lg border p-3">
             <Label className="text-sm font-semibold">Aparência</Label>
             <div>
