@@ -42,6 +42,8 @@ export interface Ambiente {
   fundo_opacidade: number | null;
   /** Como a foto ocupa a tela: "cobrir", "conter" ou "esticar". */
   fundo_ajuste: string | null;
+  /** Painel ligado (aparece para todos) ou desativado (só administradores veem). */
+  ativo?: boolean | null;
 }
 
 /** Guarda no banco como os elementos são posicionados no ambiente. */
