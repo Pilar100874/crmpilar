@@ -63,6 +63,8 @@ export interface Bloco {
   y: number;
   w: number;
   h: number;
+  /** Define se o bloco é exibido no painel (true) ou fica oculto (false). */
+  visivel: boolean;
   config: Record<string, unknown>;
 }
 
