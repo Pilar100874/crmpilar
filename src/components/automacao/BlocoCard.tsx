@@ -16,9 +16,10 @@ import BlocoRastreamento from "./BlocoRastreamento";
 import BlocoPortaria from "./BlocoPortaria";
 import BlocoInterfone from "./BlocoInterfone";
 import BlocoPilarFone from "./BlocoPilarFone";
+import BlocoAmbiente from "./BlocoAmbiente";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -57,6 +58,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
 
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
+      bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
       bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
@@ -74,7 +76,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone"].includes(bloco.tipo) && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>

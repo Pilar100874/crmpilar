@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
   enviarImagemAutomacao, salvarBloco, listarUnidades, UnidadeSimples,
@@ -250,7 +251,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
-          {blocoEdit?.tipo === "imagem" && (
+          {(blocoEdit?.tipo === "imagem" || blocoEdit?.tipo === "ambiente") && (
             <div className="space-y-2">
               <Label>Imagem</Label>
               <Input
@@ -278,7 +279,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   onChange={(e) => setCfg({ url: e.target.value || undefined })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className={cn("grid grid-cols-2 gap-2", blocoEdit?.tipo === "ambiente" && "hidden")}>
                 <div>
                   <Label>Ajuste</Label>
                   <Select value={cfg.ajuste ?? "cobrir"} onValueChange={(v) => setCfg({ ajuste: v })}>
