@@ -22,7 +22,6 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
     raio?: number;
     legenda?: boolean;
   };
-  const cor = cfg.cor || "#facc15";
   const aceso = ligado === true;
   const [src, setSrc] = useState<string | null>(cfg.url ?? null);
   const [ocupado, setOcupado] = useState(false);
@@ -56,38 +55,29 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
 
   return (
     <div
-      className="relative h-full w-full select-none overflow-hidden bg-[#1c1c1e] text-left"
+      className="relative flex h-full w-full select-none flex-col overflow-hidden bg-[#1c1c1e] p-3 text-left"
       style={{ borderRadius: typeof cfg.raio === "number" ? cfg.raio : 24 }}
       onClick={alternar}
       role="button"
     >
       {cfg.legenda !== false && (
-        <div className="absolute left-0 right-0 top-0 z-10 px-4 pt-3">
-          <div
-            className="inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 backdrop-blur"
-            style={{ background: aceso ? `${cor}30` : "rgba(255,255,255,0.08)" }}
-          >
-            {ocupado ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-white/80" />
-            ) : (
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: aceso ? cor : "rgba(255,255,255,0.35)" }}
-              />
-            )}
-            <div className="min-w-0">
-              <p className={cn("truncate text-sm font-semibold leading-tight", aceso ? "text-white" : "text-white/60")}>
-                {bloco.nome}
-              </p>
-              <p className={cn("truncate text-[10px]", aceso ? "text-white/80" : "text-white/40")}>
-                {aceso ? "Ligado" : "Desligado"}
-              </p>
-            </div>
+        <div className="flex items-center gap-2 px-1 pb-2">
+          {ocupado && <Loader2 className="h-4 w-4 animate-spin text-white/70" />}
+          <div className="min-w-0">
+            <p className={cn("truncate text-lg font-bold leading-tight", aceso ? "text-white" : "text-white/45")}>
+              {bloco.nome}
+            </p>
+            <p className={cn("truncate text-xs font-medium", aceso ? "text-white/70" : "text-white/35")}>
+              {aceso ? "Ligado" : "Desligado"}
+            </p>
           </div>
         </div>
       )}
 
-      <div className="relative h-full w-full">
+      <div
+        className="relative min-h-0 flex-1 overflow-hidden"
+        style={{ borderRadius: "14px 50% 50% 14px / 14px 50% 50% 14px" }}
+      >
         {src ? (
           <img
             src={src}
@@ -95,7 +85,7 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
             loading="lazy"
             className={cn(
               "h-full w-full object-cover transition-all duration-500",
-              aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.45]",
+              aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.4]",
             )}
           />
         ) : (

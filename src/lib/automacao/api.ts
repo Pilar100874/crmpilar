@@ -20,7 +20,8 @@ export type TipoBloco =
   | "portaria"
   | "interfone"
   | "pilarfone"
-  | "ambiente";
+  | "ambiente"
+  | "texto";
 
 export interface Ambiente {
   id: string;
@@ -120,6 +121,7 @@ export const TIPOS_BLOCO: {
   { valor: "interfone", label: "Interfone", descricao: "Avisa a campainha e abre as câmeras em tela cheia", grupo: "Controle" },
   { valor: "pilarfone", label: "Pilar Fone", descricao: "Atalho para ligar ou abrir o telefone do sistema", grupo: "Controle" },
   { valor: "imagem", label: "Imagem", descricao: "Planta da casa, foto do ambiente ou fundo", grupo: "Visual" },
+  { valor: "texto", label: "Texto", descricao: "Escreva títulos, avisos ou legendas na tela", grupo: "Visual" },
   { valor: "ambiente", label: "Cartão de ambiente (foto)", descricao: "Foto que fica clara ao ligar e escura ao desligar", grupo: "Controle" },
 ];
 
