@@ -302,6 +302,86 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {blocoEdit?.tipo === "texto" && (
+            <div className="space-y-2">
+              <div>
+                <Label>Texto</Label>
+                <Textarea
+                  rows={3}
+                  value={cfg.texto ?? ""}
+                  placeholder="Escreva aqui..."
+                  onChange={(e) => setCfg({ texto: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Tamanho</Label>
+                  <Input
+                    type="number" min={8} max={200}
+                    value={cfg.tamanho ?? 20}
+                    onChange={(e) => setCfg({ tamanho: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Cor</Label>
+                  <Input
+                    type="color"
+                    value={cfg.cor ?? "#ffffff"}
+                    onChange={(e) => setCfg({ cor: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo</Label>
+                  <Input
+                    type="color"
+                    value={cfg.fundo ?? "#000000"}
+                    onChange={(e) => setCfg({ fundo: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Alinhamento</Label>
+                  <Select value={cfg.alinhamento ?? "left"} onValueChange={(v) => setCfg({ alinhamento: v })}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="left">À esquerda</SelectItem>
+                      <SelectItem value="center">Centralizado</SelectItem>
+                      <SelectItem value="right">À direita</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Posição na altura</Label>
+                  <Select value={cfg.vertical ?? "center"} onValueChange={(v) => setCfg({ vertical: v })}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="start">Em cima</SelectItem>
+                      <SelectItem value="center">No meio</SelectItem>
+                      <SelectItem value="end">Embaixo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.negrito !== false}
+                  onChange={(e) => setCfg({ negrito: e.target.checked })}
+                />
+                Texto em negrito
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={!cfg.fundo}
+                  onChange={(e) => setCfg({ fundo: e.target.checked ? undefined : "#000000" })}
+                />
+                Fundo transparente
+              </label>
+            </div>
+          )}
+
           {blocoEdit?.tipo === "rastreamento" && (
             <div className="space-y-2">
               <div>
