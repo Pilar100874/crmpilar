@@ -261,7 +261,7 @@ import LivroPalavrasChave from "./pages/livro-ocorrencia/LivroPalavrasChave";
 import PortariaLayout from "./pages/portaria/PortariaLayout";
 import AutomacaoLayout from "./pages/automacao/AutomacaoLayout";
 import AutomacaoPainel from "./pages/automacao/AutomacaoPainel";
-import AutomacaoConfiguracoes from "./pages/automacao/AutomacaoConfiguracoes";
+
 import PortariaDashboard from "./pages/portaria/PortariaDashboard";
 import PortariaAcessos from "./pages/portaria/PortariaAcessos";
 import PortariaPessoas from "./pages/portaria/PortariaPessoas";
@@ -850,8 +850,8 @@ const App = () => (
               <Route path="/app/interfone" element={<PortariaAtendimentoMobile />} />
               <Route path="/automacao" element={<AutomacaoLayout />}>
                 <Route index element={<AutomacaoPainel />} />
-                <Route path="configuracoes" element={<AutomacaoConfiguracoes />} />
               </Route>
+
               <Route path="/portaria" element={<PortariaLayout />}>
                 <Route index element={<PortariaInterfone />} />
                 <Route path="inicio" element={<PortariaDashboard />} />

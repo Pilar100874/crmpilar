@@ -1,16 +1,7 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutGrid, Settings, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-const itens = [
-  { to: "/automacao", label: "Painéis", icon: LayoutGrid, end: true },
-  { to: "/automacao/configuracoes", label: "Configuração", icon: Settings },
-];
+import { Outlet } from "react-router-dom";
+import { Home } from "lucide-react";
 
 export default function AutomacaoLayout() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-
   return (
     <div className="h-full flex flex-col bg-background text-foreground">
       <div className="border-b bg-gradient-to-r from-primary/10 via-card to-card px-3 sm:px-6 py-3 sm:py-4">
@@ -22,23 +13,6 @@ export default function AutomacaoLayout() {
               Luzes, tomadas, portões e sensores dos seus ambientes
             </p>
           </div>
-          <div className="ml-auto flex gap-1">
-            {itens.map((i) => {
-              const Icon = i.icon;
-              const ativo = i.end ? pathname === i.to : pathname.startsWith(i.to);
-              return (
-                <Button
-                  key={i.to}
-                  size="sm"
-                  variant={ativo ? "default" : "ghost"}
-                  onClick={() => navigate(i.to)}
-                >
-                  <Icon className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{i.label}</span>
-                </Button>
-              );
-            })}
-          </div>
         </div>
       </div>
 
@@ -48,3 +22,4 @@ export default function AutomacaoLayout() {
     </div>
   );
 }
+

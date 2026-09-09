@@ -1,0 +1,319 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import {
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
+  enviarImagemAutomacao, salvarBloco,
+} from "@/lib/automacao/api";
+import { ANIMACOES } from "@/lib/automacao/icones";
+import SeletorIcone from "@/components/automacao/SeletorIcone";
+
+interface Props {
+  bloco: Partial<Bloco> | null;
+  ambientes: Ambiente[];
+  dispositivos: DispositivoSimples[];
+  cameras: CameraSimples[];
+  onChange: (b: Partial<Bloco> | null) => void;
+  onSalvo: () => void;
+}
+
+export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, cameras, onChange, onSalvo }: Props) {
+  const [enviando, setEnviando] = useState(false);
+  const blocoEdit = bloco;
+  const setBlocoEdit = (fn: (b: Partial<Bloco> | null) => Partial<Bloco>) => onChange(fn(blocoEdit));
+  const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
+  const setCfg = (patch: Record<string, any>) =>
+    setBlocoEdit((b) => ({ ...b, config: { ...((b?.config ?? {}) as Record<string, any>), ...patch } }));
+
+  const gravar = async () => {
+    if (!blocoEdit?.nome?.trim()) { toast.error("Informe o nome do elemento."); return; }
+    if (!blocoEdit.ambiente_id) { toast.error("Escolha o ambiente."); return; }
+    await salvarBloco(blocoEdit);
+    onChange(null);
+    toast.success("Elemento salvo.");
+    onSalvo();
+  };
+
+  return (
+    <Dialog open={!!blocoEdit} onOpenChange={(o) => !o && onChange(null)}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{blocoEdit?.id ? "Editar elemento" : "Novo elemento"}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Nome</Label>
+            <Input
+              value={blocoEdit?.nome ?? ""}
+              placeholder="Luz da sala"
+              onChange={(e) => setBlocoEdit((b) => ({ ...b, nome: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label>Tipo</Label>
+            <Select
+              value={blocoEdit?.tipo ?? "luz"}
+              onValueChange={(v) => setBlocoEdit((b) => ({ ...b, tipo: v as TipoBloco }))}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover">
+                {TIPOS_BLOCO.map((t) => (
+                  <SelectItem key={t.valor} value={t.valor}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Ambiente</Label>
+            <Select
+              value={blocoEdit?.ambiente_id ?? ""}
+              onValueChange={(v) => setBlocoEdit((b) => ({ ...b, ambiente_id: v }))}
+            >
+              <SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger>
+              <SelectContent className="bg-popover">
+                {ambientes.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {["luz", "tomada", "portao", "sensor"].includes(blocoEdit?.tipo ?? "") && (
+            <div className="space-y-2">
+              <Label>Visual do bloco</Label>
+              <Select value={cfg.estilo ?? "padrao"} onValueChange={(v) => setCfg({ estilo: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="padrao">Padrão</SelectItem>
+                  <SelectItem value="realista">Botão realista (brilho 3D)</SelectItem>
+                </SelectContent>
+              </Select>
+              {cfg.estilo === "realista" && (
+                <div className="flex items-center gap-2">
+                  <Label>Cor do brilho</Label>
+                  <input
+                    type="color"
+                    value={cfg.cor ?? "#facc15"}
+                    onChange={(e) => setCfg({ cor: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          {blocoEdit?.tipo === "icone" && (
+            <div className="space-y-2">
+              <Label>Elemento</Label>
+              <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Animação</Label>
+                  <Select value={cfg.animacao ?? "brilho"} onValueChange={(v) => setCfg({ animacao: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {ANIMACOES.map((a) => <SelectItem key={a.valor} value={a.valor}>{a.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Fundo</Label>
+                  <Select value={cfg.fundo ?? "circulo"} onValueChange={(v) => setCfg({ fundo: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="circulo">Redondo</SelectItem>
+                      <SelectItem value="quadrado">Quadrado</SelectItem>
+                      <SelectItem value="nenhum">Sem fundo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>O que o elemento faz</Label>
+                <Select value={cfg.acao ?? "alternar"} onValueChange={(v) => setCfg({ acao: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="alternar">Liga e desliga</SelectItem>
+                    <SelectItem value="ligar">Somente ligar</SelectItem>
+                    <SelectItem value="desligar">Somente desligar</SelectItem>
+                    <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "imagem" && (
+            <div className="space-y-2">
+              <Label>Imagem</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                disabled={enviando}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  setEnviando(true);
+                  const caminho = await enviarImagemAutomacao(f);
+                  setEnviando(false);
+                  if (!caminho) return toast.error("Não foi possível enviar a imagem.");
+                  setCfg({ caminho, url: undefined });
+                  toast.success("Imagem enviada.");
+                }}
+              />
+              {enviando && <p className="text-xs text-muted-foreground">Enviando imagem...</p>}
+              {cfg.caminho && <p className="text-xs text-muted-foreground">Imagem enviada e salva.</p>}
+              <div>
+                <Label>Ou endereço da imagem (link)</Label>
+                <Input
+                  value={cfg.url ?? ""}
+                  placeholder="https://..."
+                  onChange={(e) => setCfg({ url: e.target.value || undefined })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Ajuste</Label>
+                  <Select value={cfg.ajuste ?? "cobrir"} onValueChange={(v) => setCfg({ ajuste: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="cobrir">Preencher o bloco</SelectItem>
+                      <SelectItem value="conter">Mostrar imagem inteira</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Opacidade (%)</Label>
+                  <Input
+                    type="number" min={10} max={100}
+                    value={cfg.opacidade ?? 100}
+                    onChange={(e) => setCfg({ opacidade: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "camera" && (
+            <div>
+              <Label>Câmera</Label>
+              <Select
+                value={cfg.camera_id ?? ""}
+                onValueChange={(v) => {
+                  const cam = cameras.find((c) => c.id === v);
+                  setCfg({ camera_id: v, filial_id: cam?.filial_id ?? null });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Escolha a câmera" /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  {cameras.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {!cameras.length && <p className="text-xs text-muted-foreground mt-1">Nenhuma câmera ativa cadastrada.</p>}
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "mapa" && (
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label>Latitude</Label>
+                <Input
+                  value={cfg.lat ?? ""}
+                  placeholder="-23.5505"
+                  onChange={(e) => setCfg({ lat: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>Longitude</Label>
+                <Input
+                  value={cfg.lng ?? ""}
+                  placeholder="-46.6333"
+                  onChange={(e) => setCfg({ lng: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>Zoom</Label>
+                <Input
+                  type="number" min={3} max={19}
+                  value={cfg.zoom ?? 15}
+                  onChange={(e) => setCfg({ zoom: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "cena" && (
+            <div>
+              <Label>O que o botão faz</Label>
+              <Select value={cfg.acao ?? "alternar"} onValueChange={(v) => setCfg({ acao: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="alternar">Liga e desliga</SelectItem>
+                  <SelectItem value="ligar">Somente ligar</SelectItem>
+                  <SelectItem value="desligar">Somente desligar</SelectItem>
+                  <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "grafico" && (
+            <div>
+              <Label>Ler o estado a cada (segundos)</Label>
+              <Input
+                type="number" min={10}
+                value={cfg.intervalo_seg ?? 30}
+                onChange={(e) => setCfg({ intervalo_seg: Number(e.target.value) })}
+              />
+            </div>
+          )}
+
+          {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && blocoEdit?.tipo !== "imagem" && (
+            <div>
+              <Label>Dispositivo</Label>
+              <Select
+                value={blocoEdit?.device_id ?? ""}
+                onValueChange={(v) => setBlocoEdit((b) => ({ ...b, device_id: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Escolha o equipamento" /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  {dispositivos.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.nome} {d.ip ? `· ${d.ip}` : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <Label>Canal</Label>
+              <Input
+                type="number" min={0}
+                value={blocoEdit?.canal ?? 0}
+                onChange={(e) => setBlocoEdit((b) => ({ ...b, canal: Number(e.target.value) }))}
+              />
+            </div>
+            <div>
+              <Label>Largura</Label>
+              <Input
+                type="number" min={2} max={12}
+                value={blocoEdit?.w ?? 3}
+                onChange={(e) => setBlocoEdit((b) => ({ ...b, w: Number(e.target.value) }))}
+              />
+            </div>
+            <div>
+              <Label>Altura</Label>
+              <Input
+                type="number" min={1} max={6}
+                value={blocoEdit?.h ?? 2}
+                onChange={(e) => setBlocoEdit((b) => ({ ...b, h: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
+          <Button onClick={gravar}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
