@@ -251,6 +251,8 @@ interface LogisticaMapInternalProps {
   focusTrigger?: number;
   /** Sempre reenquadra no maior zoom possível englobando todos os pontos (modo TV) */
   zoomMaximoSempre?: boolean;
+  /** Nunca pausa o auto-enquadramento, mesmo se o usuário interagir (painéis/TV) */
+  nuncaPausarAuto?: boolean;
   /** Modo foco: mantém o veículo selecionado centralizado e com zoom fixo */
   modoFoco?: boolean;
   /** Zoom aplicado ao focar/seguir um veículo (padrão 17) */
@@ -279,6 +281,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   focusVeiculoId,
   focusTrigger,
   zoomMaximoSempre = false,
+  nuncaPausarAuto = false,
   modoFoco = false,
   focoZoom = 17,
   trilhaMinutos = 0,
@@ -350,10 +353,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const movimentoProgramaticoRef = useRef(false);
 
   const pausarAuto = useCallback(() => {
-    if (autoPausadoRef.current) return;
+    if (nuncaPausarAuto || autoPausadoRef.current) return;
     autoPausadoRef.current = true;
     setAutoPausado(true);
-  }, []);
+  }, [nuncaPausarAuto]);
 
   // Reenquadra o mapa no maior zoom possível, mantendo tudo centralizado na área visível
   const enquadrarTudo = useCallback((forcar = false) => {
