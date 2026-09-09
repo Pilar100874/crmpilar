@@ -116,16 +116,19 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
           {ocupado ? <Loader2 className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
         </div>
 
-        <div className="mt-auto min-w-0">
-          <p className="truncate text-sm font-semibold">{bloco.nome}</p>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {bloco.tipo === "portao"
-              ? "Toque para acionar"
-              : bloco.tipo === "sensor"
-                ? ligado === null ? "Toque para ler" : aceso ? "Acionado" : "Normal"
-                : aceso ? "Ligado" : "Desligado"}
-          </p>
-        </div>
+        {comLegenda && (
+          <div className="mt-auto min-w-0">
+            <p className="truncate text-sm font-semibold">{bloco.nome}</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {bloco.tipo === "portao"
+                ? "Toque para acionar"
+                : bloco.tipo === "sensor"
+                  ? ligado === null ? "Toque para ler" : aceso ? "Acionado" : "Normal"
+                  : aceso ? "Ligado" : "Desligado"}
+            </p>
+          </div>
+        )}
+
       </div>
 
       {edicao && (
