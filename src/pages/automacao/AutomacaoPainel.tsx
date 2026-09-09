@@ -101,6 +101,46 @@ export default function AutomacaoPainel() {
   const podeEditar = admin && edicao;
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
+  // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
+  // junto do elemento, para voltar igual em qualquer aparelho.
+  const estaTravado = (b: Bloco) => !!(b.config as any)?.travado;
+  const camadaDe = (b: Bloco) => Number((b.config as any)?.camada ?? 0);
+  // Do fundo para a frente.
+  const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
+  const doFundoParaFrente = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
+
+  const gravarCamadas = async (ordem: Bloco[]) => {
+    const mapa = new Map(ordem.map((b, i) => [b.id, i]));
+    setBlocos((ant) =>
+      ant.map((b) => (mapa.has(b.id) ? { ...b, config: { ...(b.config ?? {}), camada: mapa.get(b.id) } } : b)),
+    );
+    await Promise.all(
+      ordem.map((b, i) =>
+        camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
+      ),
+    );
+  };
+
+  const moverCamada = async (id: string, acao: "frente" | "fundo" | "subir" | "descer") => {
+    const ordem = [...doFundoParaFrente];
+    const i = ordem.findIndex((b) => b.id === id);
+    if (i < 0) return;
+    const [item] = ordem.splice(i, 1);
+    const destino =
+      acao === "frente" ? ordem.length : acao === "fundo" ? 0 : acao === "subir" ? Math.min(ordem.length, i + 1) : Math.max(0, i - 1);
+    ordem.splice(destino, 0, item);
+    await gravarCamadas(ordem);
+  };
+
+  const alternarTravado = async (bloco: Bloco) => {
+    const novo = !estaTravado(bloco);
+    setBlocos((ant) =>
+      ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
+    );
+    await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } });
+    toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+  };
+
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
   // reduzido/ampliado para caber por inteiro no espaço disponível.
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
