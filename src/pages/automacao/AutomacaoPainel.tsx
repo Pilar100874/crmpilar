@@ -422,13 +422,26 @@ export default function AutomacaoPainel() {
           <div className="max-h-56 overflow-y-auto divide-y">
             {daFrenteParaTras.map((b) => {
               const ativo = selecionado === b.id;
+              const visivel = estaVisivel(b);
               return (
                 <div
                   key={b.id}
                   onClick={() => setSelecionado(b.id)}
-                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"}`}
+                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
-                  <span className="flex-1 truncate text-sm">{b.nome || "Sem nome"}</span>
+                  <span className={`flex-1 truncate text-sm ${!visivel ? "line-through" : ""}`}>
+                    {b.nome || "Sem nome"}
+                    {!visivel && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">oculto</span>}
+                  </span>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
+                    onClick={(e) => { e.stopPropagation(); alternarVisivel(b); }}
+                  >
+                    {visivel
+                      ? <Eye className="h-4 w-4 text-primary" />
+                      : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                  </Button>
                   <Button
                     size="icon" variant="ghost" className="h-7 w-7"
                     title={estaTravado(b) ? "Liberar elemento" : "Bloquear elemento"}
