@@ -12,9 +12,10 @@ import BlocoCena from "./BlocoCena";
 import BlocoIcone from "./BlocoIcone";
 import BlocoImagem from "./BlocoImagem";
 import BlocoRealista from "./BlocoRealista";
+import BlocoRastreamento from "./BlocoRastreamento";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -55,6 +56,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
     const conteudo =
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
+      bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
       bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
       bloco.tipo === "imagem" ? <BlocoImagem bloco={bloco} /> :
       bloco.tipo === "icone" ? <BlocoIcone bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
@@ -66,7 +68,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && bloco.tipo !== "rastreamento" && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>
