@@ -147,13 +147,13 @@ export default function AutomacaoPainel() {
         const p = posLivre(bloco, cx);
         atualizarPos(bloco.id, {
           ...p,
-          w: Math.max(40, r.pw + (e.clientX - r.ox)),
-          h: Math.max(40, r.ph + (e.clientY - r.oy)),
+          w: Math.max(40, r.pw + dx(e.clientX - r.ox)),
+          h: Math.max(40, r.ph + dx(e.clientY - r.oy)),
         });
         return;
       }
-      const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round((e.clientX - r.ox) / cx)));
-      const nh = Math.max(1, Math.min(12, r.bh + Math.round((e.clientY - r.oy) / cy)));
+      const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round(dx(e.clientX - r.ox) / cx)));
+      const nh = Math.max(1, Math.min(12, r.bh + Math.round(dx(e.clientY - r.oy) / cy)));
       if (nw !== bloco.w || nh !== bloco.h) {
         setBlocos((ant) => ant.map((b) => (b.id === r.id ? { ...b, w: nw, h: nh } : b)));
       }
@@ -167,13 +167,13 @@ export default function AutomacaoPainel() {
       const p = posLivre(bloco, cx);
       atualizarPos(bloco.id, {
         ...p,
-        l: Math.max(0, a.pl + (e.clientX - a.ox)),
-        t: Math.max(0, a.pt + (e.clientY - a.oy)),
+        l: Math.max(0, a.pl + dx(e.clientX - a.ox)),
+        t: Math.max(0, a.pt + dx(e.clientY - a.oy)),
       });
       return;
     }
-    const nx = Math.max(0, Math.min(COLUNAS - bloco.w, a.bx + Math.round((e.clientX - a.ox) / cx)));
-    const ny = Math.max(0, a.by + Math.round((e.clientY - a.oy) / cy));
+    const nx = Math.max(0, Math.min(COLUNAS - bloco.w, a.bx + Math.round(dx(e.clientX - a.ox) / cx)));
+    const ny = Math.max(0, a.by + Math.round(dx(e.clientY - a.oy) / cy));
     if (nx !== bloco.x || ny !== bloco.y) {
       setBlocos((ant) => ant.map((b) => (b.id === a.id ? { ...b, x: nx, y: ny } : b)));
     }
