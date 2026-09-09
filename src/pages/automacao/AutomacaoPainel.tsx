@@ -491,7 +491,7 @@ export default function AutomacaoPainel() {
               return (
                 <div
                   key={b.id}
-                  onClick={() => setSelecionado(b.id)}
+                  onClick={(e) => selecionar(b.id, e)}
                   className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
                   <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">{idx + 1}</span>
