@@ -277,36 +277,53 @@ export default function AutomacaoPainel() {
   };
 
   const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
-    const bloco = doAmbiente.find((b) => b.id === selecionado);
-    if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
-    if (estaTravado(bloco)) { toast.error("Este elemento está bloqueado. Libere o cadeado para movê-lo."); return; }
+    const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id));
+    if (!escolhidos.length) { toast.error("Escolha um ou mais elementos tocando neles."); return; }
+    const livres = escolhidos.filter((b) => !estaTravado(b));
+    if (!livres.length) { toast.error("Os elementos escolhidos estão bloqueados. Libere o cadeado para movê-los."); return; }
     const { cx } = celula();
+    const varios = livres.length > 1;
+
     if (modo === "livre") {
-      const largura = telaL;
-      const altura = telaA;
-      const p = posLivre(bloco, cx);
-      const novo: PosLivre = { ...p };
-      if (dir === "esq") novo.l = 0;
-      if (dir === "centroH") novo.l = Math.max(0, (largura - p.w) / 2);
-      if (dir === "dir") novo.l = Math.max(0, largura - p.w);
-      if (dir === "topo") novo.t = 0;
-      if (dir === "centroV") novo.t = Math.max(0, (altura - p.h) / 2);
-      if (dir === "base") novo.t = Math.max(0, altura - p.h);
-      atualizarPos(bloco.id, novo);
-      await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } });
+      const pos = livres.map((b) => ({ b, p: posLivre(b, cx) }));
+      // Com vários elementos, o alinhamento usa a área ocupada pela seleção;
+      // com um só, usa a tela de parede inteira.
+      const esq = varios ? Math.min(...pos.map((x) => x.p.l)) : 0;
+      const dirLim = varios ? Math.max(...pos.map((x) => x.p.l + x.p.w)) : telaL;
+      const topo = varios ? Math.min(...pos.map((x) => x.p.t)) : 0;
+      const baseLim = varios ? Math.max(...pos.map((x) => x.p.t + x.p.h)) : telaA;
+
+      for (const { b, p } of pos) {
+        const novo: PosLivre = { ...p };
+        if (dir === "esq") novo.l = esq;
+        if (dir === "centroH") novo.l = Math.max(0, esq + (dirLim - esq - p.w) / 2);
+        if (dir === "dir") novo.l = Math.max(0, dirLim - p.w);
+        if (dir === "topo") novo.t = topo;
+        if (dir === "centroV") novo.t = Math.max(0, topo + (baseLim - topo - p.h) / 2);
+        if (dir === "base") novo.t = Math.max(0, baseLim - p.h);
+        atualizarPos(b.id, novo);
+        await salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } });
+      }
     } else {
       const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
-      let { x, y } = bloco;
-      if (dir === "esq") x = 0;
-      if (dir === "centroH") x = Math.max(0, Math.round((COLUNAS - bloco.w) / 2));
-      if (dir === "dir") x = Math.max(0, COLUNAS - bloco.w);
-      if (dir === "topo") y = 0;
-      if (dir === "centroV") y = Math.max(0, Math.round((linhas - bloco.h) / 2));
-      if (dir === "base") y = Math.max(0, linhas - bloco.h);
-      setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-      await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+      const esq = varios ? Math.min(...livres.map((b) => b.x)) : 0;
+      const dirLim = varios ? Math.max(...livres.map((b) => b.x + b.w)) : COLUNAS;
+      const topo = varios ? Math.min(...livres.map((b) => b.y)) : 0;
+      const baseLim = varios ? Math.max(...livres.map((b) => b.y + b.h)) : linhas;
+
+      for (const bloco of livres) {
+        let { x, y } = bloco;
+        if (dir === "esq") x = esq;
+        if (dir === "centroH") x = Math.max(0, esq + Math.round((dirLim - esq - bloco.w) / 2));
+        if (dir === "dir") x = Math.max(0, dirLim - bloco.w);
+        if (dir === "topo") y = topo;
+        if (dir === "centroV") y = Math.max(0, topo + Math.round((baseLim - topo - bloco.h) / 2));
+        if (dir === "base") y = Math.max(0, baseLim - bloco.h);
+        setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
+        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+      }
     }
-    toast.success("Elemento alinhado.");
+    toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
   };
 
   const novoBloco = () =>
