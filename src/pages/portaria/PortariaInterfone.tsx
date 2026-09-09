@@ -35,9 +35,18 @@ export default function PortariaInterfone() {
 
   const [imagens, setImagens] = useState<Record<string, string>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
+  const [falhas, setFalhas] = useState<Record<string, number>>({});
   const [carregando, setCarregando] = useState<Record<string, boolean>>({});
   const [acionando, setAcionando] = useState<string | null>(null);
+  const [recarga, setRecarga] = useState(0);
   const emAndamento = useRef<Record<string, boolean>>({});
+
+  // Recarrega os pontos de acesso periodicamente para que um botão escondido
+  // por uma falha passageira volte assim que o equipamento responder de novo.
+  useEffect(() => {
+    const t = setInterval(() => setRecarga((n) => n + 1), 60000);
+    return () => clearInterval(t);
+  }, []);
 
   const extras = config?.cameras_extras ?? [];
   const chaveExtras = extras.join(",");
