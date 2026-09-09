@@ -21,11 +21,13 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     cor?: string;
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
+    tamanho?: number;
   };
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
+  const fixo = typeof cfg.tamanho === "number" && cfg.tamanho > 0 ? cfg.tamanho : null;
 
   const acionar = async () => {
     if (!bloco.device_id) {
