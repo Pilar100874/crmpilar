@@ -69,6 +69,22 @@ export interface DispositivoSimples {
   status: string | null;
 }
 
+export interface DispositivoDetalhado extends DispositivoSimples {
+  modelo: string | null;
+  porta: number | null;
+  localizacao: string | null;
+  ultima_comunicacao: string | null;
+}
+
+/** Lista os equipamentos com os dados usados na tela de estado. */
+export async function listarDispositivosDetalhados(): Promise<DispositivoDetalhado[]> {
+  const { data } = await db
+    .from("port_devices")
+    .select("id, nome, tipo, modelo, ip, porta, localizacao, habilitado, status, ultima_comunicacao")
+    .order("nome");
+  return (data ?? []) as DispositivoDetalhado[];
+}
+
 export const TIPOS_BLOCO: { valor: TipoBloco; label: string; descricao: string }[] = [
   { valor: "luz", label: "Luz", descricao: "Liga e desliga a iluminação" },
   { valor: "tomada", label: "Tomada", descricao: "Liga e desliga um equipamento" },
