@@ -182,6 +182,7 @@ export async function salvarBloco(b: Partial<Bloco>): Promise<Bloco | null> {
     y: b.y ?? 0,
     w: b.w ?? 2,
     h: b.h ?? 2,
+    visivel: b.visivel !== false,
     config: b.config ?? {},
   };
   if (b.id) {
