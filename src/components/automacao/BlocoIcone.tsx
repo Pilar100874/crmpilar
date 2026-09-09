@@ -19,12 +19,15 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     animacao?: AnimacaoIcone;
     acao?: "ligar" | "desligar" | "pulso" | "alternar";
     cor?: string;
+    corAtivo?: string;
+    corInativo?: string;
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
     tamanho?: number;
   };
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
+  const corAtual = aceso ? (cfg.corAtivo ?? cfg.cor) : cfg.corInativo;
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
   const fixo = typeof cfg.tamanho === "number" && cfg.tamanho > 0 ? cfg.tamanho : null;
@@ -62,7 +65,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
           ...(fixo
             ? { height: fixo + 16, width: fixo + 16 }
             : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
-          ...(aceso && cfg.cor ? { color: cfg.cor } : {}),
+          ...(corAtual ? { color: corAtual } : {}),
         }}
       >
         {ocupado ? (
@@ -74,10 +77,13 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
           <Icon
             className={cn(
               "transition-colors",
-              aceso ? "text-primary" : "text-muted-foreground",
+              !corAtual && (aceso ? "text-primary" : "text-muted-foreground"),
               classeAnimacao(cfg.animacao, aceso),
             )}
-            style={fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }}
+            style={{
+              ...(fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }),
+              ...(corAtual ? { color: corAtual } : {}),
+            }}
           />
         )}
       </span>
