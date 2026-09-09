@@ -83,12 +83,19 @@ export default function AutomacaoEstado() {
   }, []);
 
   const atualizarTudo = useCallback(async () => {
+    if (emAndamento.current) return;
+    emAndamento.current = true;
     setAtualizando(true);
     const lista = await listarDispositivosDetalhados();
-    if (!montado.current) return;
+    if (!montado.current) {
+      emAndamento.current = false;
+      return;
+    }
     setEquipamentos(lista);
     const ativos = lista.filter((e) => e.habilitado);
-    for (const e of ativos) await consultar(e);
+    // Consulta todos ao mesmo tempo para a tela reagir quase instantaneamente.
+    await Promise.all(ativos.map((e) => consultar(e)));
+    emAndamento.current = false;
     if (montado.current) setAtualizando(false);
   }, [consultar]);
 
@@ -98,9 +105,9 @@ export default function AutomacaoEstado() {
 
   useEffect(() => {
     if (!automatico) return;
-    const t = setInterval(() => atualizarTudo(), INTERVALO);
+    const t = setInterval(() => atualizarTudo(), ritmo);
     return () => clearInterval(t);
-  }, [automatico, atualizarTudo]);
+  }, [automatico, ritmo, atualizarTudo]);
 
   const ativos = equipamentos.filter((e) => e.habilitado);
   const desligadosDoSistema = equipamentos.filter((e) => !e.habilitado);
