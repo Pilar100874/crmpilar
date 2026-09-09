@@ -220,6 +220,15 @@ export const menuItems: MenuItem[] = [
       { id: "Portaria Relatorio Unidades", title: "Relatório por Unidade", url: "/portaria/relatorio-unidades", icon: LucideIcons.BarChart3 },
     ],
   },
+  {
+    id: "Automacao",
+    title: "Automação",
+    icon: LucideIcons.Home,
+    subItems: [
+      { id: "Automacao Paineis", title: "Painéis", url: "/automacao", icon: LucideIcons.LayoutGrid },
+      { id: "Automacao Configuracoes", title: "Configuração", url: "/automacao/configuracoes", icon: LucideIcons.Settings },
+    ],
+  },
   { id: "Operacional Hub", title: "Operacional Hub", url: "/operacional", icon: LucideIcons.ClipboardList },
   { id: "Pilar Ferramentas", title: "Pilar Ferramentas", url: "/ferramentas", icon: LucideIcons.Wrench },
 

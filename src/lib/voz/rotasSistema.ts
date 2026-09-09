@@ -124,6 +124,10 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Menu Principal - Livro de Ocorrência ============
   { path: "/livro-ocorrencia", titulo: "Livro de Ocorrência", aliases: ["livro portaria", "encomendas portaria"] },
 
+  // ============ Menu Principal - Automação ============
+  { path: "/automacao", titulo: "Automação - Painéis", aliases: ["automacao", "casa inteligente", "luzes", "tomadas", "paineis de automacao"] },
+  { path: "/automacao/configuracoes", titulo: "Automação - Configuração", aliases: ["configuracao automacao", "ambientes automacao", "blocos automacao"] },
+
   // ============ Menu Principal - Interfone ============
   { path: "/portaria", titulo: "Interfone", aliases: ["interfone", "portaria", "controle de acesso", "abrir portao", "abrir porta"] },
   { path: "/portaria/acessos", titulo: "Interfone - Acessos", aliases: ["acessos portaria", "acessos interfone", "abrir portao remoto"] },
