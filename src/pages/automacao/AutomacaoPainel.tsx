@@ -107,6 +107,16 @@ export default function AutomacaoPainel() {
   const fundoAjuste = ambienteAtual?.fundo_ajuste ?? "cobrir";
   const fundoOpacidade = Math.max(0, Math.min(100, ambienteAtual?.fundo_opacidade ?? 100)) / 100;
 
+  // Foto de fundo do ambiente (arquivo enviado ou endereço da internet).
+  useEffect(() => {
+    let ativo = true;
+    const caminho = ambienteAtual?.fundo_caminho;
+    if (!caminho) { setFundoUrl(null); return; }
+    if (/^https?:\/\//.test(caminho)) { setFundoUrl(caminho); return; }
+    urlImagemAutomacao(caminho).then((u) => { if (ativo) setFundoUrl(u); });
+    return () => { ativo = false; };
+  }, [ambienteAtual?.fundo_caminho]);
+
   useEffect(() => {
     const alvo = palcoRef.current;
     if (!alvo) return;
