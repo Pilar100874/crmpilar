@@ -65,7 +65,7 @@ export default function BlocoCard(props: Props) {
   );
 }
 
-function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) {
+function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
