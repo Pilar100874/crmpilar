@@ -10,9 +10,11 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
-  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos, listarCameras, listarDispositivos,
-  salvarAmbiente, salvarBloco,
+  enviarImagemAutomacao, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
+  listarCameras, listarDispositivos, salvarAmbiente, salvarBloco,
 } from "@/lib/automacao/api";
+import { ANIMACOES } from "@/lib/automacao/icones";
+import SeletorIcone from "@/components/automacao/SeletorIcone";
 
 export default function AutomacaoConfiguracoes() {
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
@@ -22,6 +24,7 @@ export default function AutomacaoConfiguracoes() {
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
   const carregar = useCallback(async () => {
     const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
@@ -143,7 +146,7 @@ export default function AutomacaoConfiguracoes() {
       </Dialog>
 
       <Dialog open={!!blocoEdit} onOpenChange={(o) => !o && setBlocoEdit(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{blocoEdit?.id ? "Editar bloco" : "Novo bloco"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
@@ -180,6 +183,98 @@ export default function AutomacaoConfiguracoes() {
                 </SelectContent>
               </Select>
             </div>
+            {blocoEdit?.tipo === "icone" && (
+              <div className="space-y-2">
+                <Label>Elemento</Label>
+                <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label>Animação</Label>
+                    <Select value={cfg.animacao ?? "brilho"} onValueChange={(v) => setCfg({ animacao: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {ANIMACOES.map((a) => <SelectItem key={a.valor} value={a.valor}>{a.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Fundo</Label>
+                    <Select value={cfg.fundo ?? "circulo"} onValueChange={(v) => setCfg({ fundo: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="circulo">Redondo</SelectItem>
+                        <SelectItem value="quadrado">Quadrado</SelectItem>
+                        <SelectItem value="nenhum">Sem fundo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>O que o elemento faz</Label>
+                  <Select value={cfg.acao ?? "alternar"} onValueChange={(v) => setCfg({ acao: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="alternar">Liga e desliga</SelectItem>
+                      <SelectItem value="ligar">Somente ligar</SelectItem>
+                      <SelectItem value="desligar">Somente desligar</SelectItem>
+                      <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {blocoEdit?.tipo === "imagem" && (
+              <div className="space-y-2">
+                <Label>Imagem</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  disabled={enviando}
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    setEnviando(true);
+                    const caminho = await enviarImagemAutomacao(f);
+                    setEnviando(false);
+                    if (!caminho) return toast.error("Não foi possível enviar a imagem.");
+                    setCfg({ caminho, url: undefined });
+                    toast.success("Imagem enviada.");
+                  }}
+                />
+                {enviando && <p className="text-xs text-muted-foreground">Enviando imagem...</p>}
+                {cfg.caminho && <p className="text-xs text-muted-foreground">Imagem enviada e salva.</p>}
+                <div>
+                  <Label>Ou endereço da imagem (link)</Label>
+                  <Input
+                    value={cfg.url ?? ""}
+                    placeholder="https://..."
+                    onChange={(e) => setCfg({ url: e.target.value || undefined })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label>Ajuste</Label>
+                    <Select value={cfg.ajuste ?? "cobrir"} onValueChange={(v) => setCfg({ ajuste: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="cobrir">Preencher o bloco</SelectItem>
+                        <SelectItem value="conter">Mostrar imagem inteira</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Opacidade (%)</Label>
+                    <Input
+                      type="number" min={10} max={100}
+                      value={cfg.opacidade ?? 100}
+                      onChange={(e) => setCfg({ opacidade: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {blocoEdit?.tipo === "camera" && (
               <div>
                 <Label>Câmera</Label>
@@ -254,7 +349,7 @@ export default function AutomacaoConfiguracoes() {
               </div>
             )}
 
-            {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && (
+            {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && blocoEdit?.tipo !== "imagem" && (
               <div>
                 <Label>Dispositivo</Label>
                 <Select

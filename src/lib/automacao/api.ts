@@ -13,7 +13,9 @@ export type TipoBloco =
   | "cena"
   | "camera"
   | "mapa"
-  | "grafico";
+  | "grafico"
+  | "icone"
+  | "imagem";
 
 export interface Ambiente {
   id: string;
@@ -55,7 +57,25 @@ export const TIPOS_BLOCO: { valor: TipoBloco; label: string; descricao: string }
   { valor: "camera", label: "Câmera ao vivo", descricao: "Mostra a imagem de uma câmera" },
   { valor: "mapa", label: "Mapa", descricao: "Mostra um local no mapa" },
   { valor: "grafico", label: "Gráfico", descricao: "Acompanha o estado do equipamento ao longo do tempo" },
+  { valor: "icone", label: "Elemento animado", descricao: "Lâmpada, tomada, ventilador... com animação" },
+  { valor: "imagem", label: "Imagem", descricao: "Planta da casa, foto do ambiente ou fundo" },
 ];
+
+/** Envia uma imagem para o painel e devolve o caminho salvo. */
+export async function enviarImagemAutomacao(arquivo: File): Promise<string | null> {
+  const ext = arquivo.name.split(".").pop()?.toLowerCase() || "png";
+  const caminho = `paineis/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("automacao").upload(caminho, arquivo, {
+    upsert: false,
+    contentType: arquivo.type || undefined,
+  });
+  return error ? null : caminho;
+}
+
+export async function urlImagemAutomacao(caminho: string): Promise<string | null> {
+  const { data } = await supabase.storage.from("automacao").createSignedUrl(caminho, 60 * 60 * 8);
+  return data?.signedUrl ?? null;
+}
 
 export interface CameraSimples {
   id: string;

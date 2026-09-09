@@ -9,6 +9,10 @@ import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
 import BlocoGrafico from "./BlocoGrafico";
 import BlocoCena from "./BlocoCena";
+import BlocoIcone from "./BlocoIcone";
+import BlocoImagem from "./BlocoImagem";
+
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -41,11 +45,13 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
     onEstado(r.ligado ?? (acao === "ligar" ? true : acao === "desligar" ? false : ligado));
   };
 
-  if (bloco.tipo === "camera" || bloco.tipo === "mapa" || bloco.tipo === "grafico" || bloco.tipo === "cena") {
+  if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
       bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
+      bloco.tipo === "imagem" ? <BlocoImagem bloco={bloco} /> :
+      bloco.tipo === "icone" ? <BlocoIcone bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
       <BlocoCena bloco={bloco} ligado={ligado} onEstado={onEstado} />;
 
     return (
