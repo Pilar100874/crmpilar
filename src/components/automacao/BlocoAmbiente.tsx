@@ -21,6 +21,12 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
     cor?: string;
     raio?: number;
     legenda?: boolean;
+    /** Cor do fundo do cartão. */
+    fundoCor?: string;
+    /** Transparência do fundo, de 0 (invisível) a 100 (cheio). */
+    fundoOpacidade?: number;
+    /** Remove totalmente o fundo do cartão. */
+    semFundo?: boolean;
   };
   const aceso = ligado === true;
   const [src, setSrc] = useState<string | null>(cfg.url ?? null);
