@@ -22,7 +22,21 @@ export interface Ambiente {
   nome: string;
   icone: string | null;
   ordem: number;
+  /** Tamanho da tela de parede em pontos (ex.: 1920 x 1080). */
+  tela_largura: number | null;
+  tela_altura: number | null;
 }
+
+/** Tamanho usado quando o ambiente ainda não tem tela definida. */
+export const TELA_PADRAO = { largura: 1920, altura: 1080 };
+
+export const PROPORCOES = [
+  { valor: "16:9", label: "16:9 — TV widescreen", largura: 1920, altura: 1080 },
+  { valor: "9:16", label: "9:16 — TV em pé (retrato)", largura: 1080, altura: 1920 },
+  { valor: "4:3", label: "4:3 — monitor clássico", largura: 1600, altura: 1200 },
+  { valor: "21:9", label: "21:9 — tela ultrawide", largura: 2560, altura: 1080 },
+  { valor: "1:1", label: "1:1 — quadrada", largura: 1200, altura: 1200 },
+] as const;
 
 export interface Bloco {
   id: string;
@@ -98,7 +112,13 @@ export async function listarAmbientes(): Promise<Ambiente[]> {
 }
 
 export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | null> {
-  const payload = { nome: a.nome, icone: a.icone ?? null, ordem: a.ordem ?? 0 };
+  const payload = {
+    nome: a.nome,
+    icone: a.icone ?? null,
+    ordem: a.ordem ?? 0,
+    tela_largura: a.tela_largura ?? null,
+    tela_altura: a.tela_altura ?? null,
+  };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();
     return data as Ambiente | null;
