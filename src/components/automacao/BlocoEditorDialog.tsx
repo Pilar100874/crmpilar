@@ -588,6 +588,102 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   onChange={(e) => setCfg({ intervalo_seg: Number(e.target.value) })}
                 />
               </div>
+
+              <div className="space-y-2 rounded-md border border-dashed p-2">
+                <Label className="text-xs font-semibold">Aparência</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Cor de fundo</Label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="color"
+                        className="h-8 w-9 cursor-pointer rounded border"
+                        value={cfg.cor_fundo || "#1c1f26"}
+                        onChange={(e) => setCfg({ cor_fundo: e.target.value })}
+                      />
+                      {cfg.cor_fundo && (
+                        <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setCfg({ cor_fundo: undefined })}>
+                          Padrão
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Cor do texto</Label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="color"
+                        className="h-8 w-9 cursor-pointer rounded border"
+                        value={cfg.cor_texto || "#f1f5f9"}
+                        onChange={(e) => setCfg({ cor_texto: e.target.value })}
+                      />
+                      {cfg.cor_texto && (
+                        <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setCfg({ cor_texto: undefined })}>
+                          Padrão
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Cor secundária</Label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="color"
+                        className="h-8 w-9 cursor-pointer rounded border"
+                        value={cfg.cor_secundaria || "#94a3b8"}
+                        onChange={(e) => setCfg({ cor_secundaria: e.target.value })}
+                      />
+                      {cfg.cor_secundaria && (
+                        <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setCfg({ cor_secundaria: undefined })}>
+                          Padrão
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Cor de destaque</Label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="color"
+                        className="h-8 w-9 cursor-pointer rounded border"
+                        value={cfg.cor_destaque || "#3b82f6"}
+                        onChange={(e) => setCfg({ cor_destaque: e.target.value })}
+                      />
+                      {cfg.cor_destaque && (
+                        <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setCfg({ cor_destaque: undefined })}>
+                          Padrão
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label className="text-xs">Título (px)</Label>
+                    <Input
+                      type="number" min={10} max={48}
+                      value={cfg.tamanho_titulo ?? 14}
+                      onChange={(e) => setCfg({ tamanho_titulo: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Texto (px)</Label>
+                    <Input
+                      type="number" min={9} max={40}
+                      value={cfg.tamanho_texto ?? 12}
+                      onChange={(e) => setCfg({ tamanho_texto: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Número (px)</Label>
+                    <Input
+                      type="number" min={14} max={96}
+                      value={cfg.tamanho_numero ?? 24}
+                      onChange={(e) => setCfg({ tamanho_numero: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

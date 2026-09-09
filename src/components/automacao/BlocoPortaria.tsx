@@ -129,12 +129,26 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
     mostrar_lista?: boolean;
     unidade_id?: string | null;
     limite?: number;
+    cor_fundo?: string;
+    cor_texto?: string;
+    cor_secundaria?: string;
+    cor_destaque?: string;
+    tamanho_titulo?: number;
+    tamanho_texto?: number;
+    tamanho_numero?: number;
   };
   const modulo: ModuloPortaria = cfg.modulo ?? "visitantes";
   const intervalo = Math.max(10, Number(cfg.intervalo_seg ?? 30));
   const mostrarLista = cfg.mostrar_lista !== false;
   const unidadeId = cfg.unidade_id ?? null;
   const limite = Math.min(20, Math.max(1, Number(cfg.limite ?? 4)));
+  const corFundo = cfg.cor_fundo || undefined;
+  const corTexto = cfg.cor_texto || undefined;
+  const corSecundaria = cfg.cor_secundaria || undefined;
+  const corDestaque = cfg.cor_destaque || undefined;
+  const tamTitulo = Math.min(48, Math.max(10, Number(cfg.tamanho_titulo ?? 14)));
+  const tamTexto = Math.min(40, Math.max(9, Number(cfg.tamanho_texto ?? 12)));
+  const tamNumero = Math.min(96, Math.max(14, Number(cfg.tamanho_numero ?? 24)));
   const info = MODULOS_PORTARIA.find((m) => m.valor === modulo)!;
   const Icon = ICONES[modulo];
   const [total, setTotal] = useState(0);
@@ -159,16 +173,35 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
   }, [carregar, intervalo]);
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left">
+    <div
+      className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left"
+      style={{
+        backgroundColor: corFundo,
+        color: corTexto,
+      }}
+    >
       <div className="flex items-center gap-2">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary"
+          style={corDestaque ? { backgroundColor: `${corDestaque}26`, color: corDestaque } : undefined}
+        >
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{bloco.nome || info.label}</p>
-          <p className="truncate text-[11px] text-muted-foreground">{info.descricao}</p>
+          <p className="truncate font-semibold" style={{ fontSize: tamTitulo }}>
+            {bloco.nome || info.label}
+          </p>
+          <p
+            className="truncate text-muted-foreground"
+            style={{ fontSize: Math.max(9, tamTexto - 1), color: corSecundaria }}
+          >
+            {info.descricao}
+          </p>
         </div>
-        <span className="shrink-0 text-2xl font-bold tabular-nums">
+        <span
+          className="shrink-0 font-bold tabular-nums"
+          style={{ fontSize: tamNumero, color: corDestaque ?? corTexto }}
+        >
           {carregando ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : total}
         </span>
       </div>
@@ -176,12 +209,28 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
       {mostrarLista && (
         <div className="mt-2 space-y-1">
           {itens.length === 0 && !carregando ? (
-            <p className="text-[11px] text-muted-foreground">Nada em aberto no momento.</p>
+            <p
+              className="text-muted-foreground"
+              style={{ fontSize: Math.max(9, tamTexto - 1), color: corSecundaria }}
+            >
+              Nada em aberto no momento.
+            </p>
           ) : (
             itens.map((i, n) => (
-              <div key={n} className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-2 py-1">
-                <span className="truncate text-xs font-medium">{i.titulo}</span>
-                <span className="shrink-0 truncate text-[11px] text-muted-foreground">{i.detalhe}</span>
+              <div
+                key={n}
+                className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-2 py-1"
+                style={corFundo ? { backgroundColor: "rgba(128,128,128,0.18)" } : undefined}
+              >
+                <span className="truncate font-medium" style={{ fontSize: tamTexto }}>
+                  {i.titulo}
+                </span>
+                <span
+                  className="shrink-0 truncate text-muted-foreground"
+                  style={{ fontSize: Math.max(9, tamTexto - 1), color: corSecundaria }}
+                >
+                  {i.detalhe}
+                </span>
               </div>
             ))
           )}
