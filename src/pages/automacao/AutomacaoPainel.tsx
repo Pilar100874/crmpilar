@@ -14,7 +14,7 @@ import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
-  listarCameras, listarDispositivos, moverBloco, salvarBloco,
+  listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente,
 } from "@/lib/automacao/api";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
