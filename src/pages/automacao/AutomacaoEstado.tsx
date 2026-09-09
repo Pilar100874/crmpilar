@@ -128,6 +128,19 @@ export default function AutomacaoEstado() {
             <Switch checked={automatico} onCheckedChange={setAutomatico} />
             Atualizar sozinho
           </label>
+          <select
+            value={ritmo}
+            onChange={(ev) => setRitmo(Number(ev.target.value))}
+            disabled={!automatico}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground disabled:opacity-50"
+            aria-label="A cada quanto tempo verificar"
+          >
+            {RITMOS.map((r) => (
+              <option key={r.valor} value={r.valor}>
+                A cada {r.label}
+              </option>
+            ))}
+          </select>
           <Button size="sm" variant="outline" onClick={atualizarTudo} disabled={atualizando}>
             <RefreshCw className={`h-4 w-4 mr-1 ${atualizando ? "animate-spin" : ""}`} />
             Atualizar agora
