@@ -183,6 +183,29 @@ export default function AutomacaoConfiguracoes() {
                 </SelectContent>
               </Select>
             </div>
+            {["luz", "tomada", "portao", "sensor"].includes(blocoEdit?.tipo ?? "") && (
+              <div className="space-y-2">
+                <Label>Visual do bloco</Label>
+                <Select value={cfg.estilo ?? "padrao"} onValueChange={(v) => setCfg({ estilo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="padrao">Padrão</SelectItem>
+                    <SelectItem value="realista">Botão realista (brilho 3D)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {cfg.estilo === "realista" && (
+                  <div className="flex items-center gap-2">
+                    <Label>Cor do brilho</Label>
+                    <input
+                      type="color"
+                      value={cfg.cor ?? "#facc15"}
+                      onChange={(e) => setCfg({ cor: e.target.value })}
+                      className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             {blocoEdit?.tipo === "icone" && (
               <div className="space-y-2">
                 <Label>Elemento</Label>
