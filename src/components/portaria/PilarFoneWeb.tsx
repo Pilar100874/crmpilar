@@ -7,6 +7,7 @@ import { useCampainha, useInterfoneConfig, tocarAlerta } from "@/lib/portaria/in
 import InterfonePopup from "./InterfonePopup";
 import PilarFone from "./PilarFone";
 import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
+import { toast } from "sonner";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
@@ -128,7 +129,12 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
 
   useEffect(() => {
     const abrir = (event: Event) => {
-      if (semAcessoRef.current) return;
+      if (semAcessoRef.current) {
+        toast.error("Telefone indisponível", {
+          description: "Seu usuário ainda não tem nenhuma aba do Pilar Fone liberada. Peça ao administrador para liberar em Usuários.",
+        });
+        return;
+      }
       const detail = (event as CustomEvent<{ numero?: string; aba?: AbaPilarFone; nome?: string }>).detail;
       setNumeroInicial(detail?.numero);
       setAbaInicial(detail?.aba);

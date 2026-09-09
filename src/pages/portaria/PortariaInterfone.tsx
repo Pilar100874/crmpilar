@@ -24,6 +24,8 @@ interface PontoAcesso {
 }
 
 const INTERVALO_MS = 2000;
+/** Falhas seguidas antes de esconder um quadro de imagem. */
+const LIMITE_FALHAS = 3;
 
 export default function PortariaInterfone() {
   const { unidadeId, unidadeNome } = useUnidadeAtual();
@@ -35,9 +37,18 @@ export default function PortariaInterfone() {
 
   const [imagens, setImagens] = useState<Record<string, string>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
+  const [falhas, setFalhas] = useState<Record<string, number>>({});
   const [carregando, setCarregando] = useState<Record<string, boolean>>({});
   const [acionando, setAcionando] = useState<string | null>(null);
+  const [recarga, setRecarga] = useState(0);
   const emAndamento = useRef<Record<string, boolean>>({});
+
+  // Recarrega os pontos de acesso periodicamente para que um botão escondido
+  // por uma falha passageira volte assim que o equipamento responder de novo.
+  useEffect(() => {
+    const t = setInterval(() => setRecarga((n) => n + 1), 60000);
+    return () => clearInterval(t);
+  }, []);
 
   const extras = config?.cameras_extras ?? [];
   const chaveExtras = extras.join(",");
@@ -70,7 +81,7 @@ export default function PortariaInterfone() {
     return () => {
       ativo = false;
     };
-  }, [unidadeId, config?.device_id]);
+  }, [unidadeId, config?.device_id, recarga]);
 
   // Câmeras adicionais selecionadas nas configurações
   useEffect(() => {
@@ -101,8 +112,10 @@ export default function PortariaInterfone() {
       if (!url) throw new Error((data as { error?: string } | null)?.error || "Câmera não respondeu.");
       setImagens((a) => ({ ...a, [id]: url }));
       setErros((a) => ({ ...a, [id]: "" }));
+      setFalhas((a) => ({ ...a, [id]: 0 }));
     } catch (e) {
       setErros((a) => ({ ...a, [id]: (e as Error).message || "Falha na imagem." }));
+      setFalhas((a) => ({ ...a, [id]: (a[id] ?? 0) + 1 }));
     } finally {
       emAndamento.current[`cam-${id}`] = false;
       marcar(id, false);
@@ -123,8 +136,10 @@ export default function PortariaInterfone() {
       const tipo = r.dados.content_type?.startsWith("image/") ? r.dados.content_type : "image/jpeg";
       setImagens((a) => ({ ...a, [id]: `data:${tipo};base64,${r.dados!.imagem_base64}` }));
       setErros((a) => ({ ...a, [id]: "" }));
+      setFalhas((a) => ({ ...a, [id]: 0 }));
     } catch (e) {
       setErros((a) => ({ ...a, [id]: (e as Error).message || "Falha na imagem do interfone." }));
+      setFalhas((a) => ({ ...a, [id]: (a[id] ?? 0) + 1 }));
     } finally {
       emAndamento.current[`idf-${id}`] = false;
       marcar(id, false);
@@ -154,8 +169,9 @@ export default function PortariaInterfone() {
       return;
     }
     toast.error(r.mensagem);
-    // Dispositivo falhou: esconde o botão até a tela ser recarregada.
-    setPontos((atual) => atual.filter((p) => p.id !== ponto.id));
+    // Falha passageira: o botão continua na tela para o porteiro tentar de novo.
+    // A lista é reconsultada a cada minuto e some sozinha se o equipamento ficar em erro.
+    setRecarga((n) => n + 1);
   };
 
   // Só mostra botões de dispositivos habilitados e sem erro registrado.
@@ -174,8 +190,11 @@ export default function PortariaInterfone() {
     </>
   ) : null;
 
-  const mostrarIdface = idface && !erros[idface.id];
-  const camerasVisiveis = cameras.filter((c) => !erros[c.id]);
+  // Falhas isoladas mantêm o quadro na tela (com o aviso de erro); só some após
+  // várias falhas seguidas, indicando equipamento realmente indisponível.
+  const indisponivel = (id: string) => (falhas[id] ?? 0) >= LIMITE_FALHAS;
+  const mostrarIdface = idface && !indisponivel(idface.id);
+  const camerasVisiveis = cameras.filter((c) => !indisponivel(c.id));
   const botoesAcessoVisiveis = !mostrarIdface && pontosVisiveis.length > 0;
 
   return (

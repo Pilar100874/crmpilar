@@ -25,18 +25,18 @@ export default function AdsHealthScore() {
         if (!estabId) return;
 
         const [accounts, autos, sched, insights] = await Promise.all([
-          supabase.from("ad_accounts").select("id, platform_id", { count: "exact" }).eq("estabelecimento_id", estabId),
+          supabase.from("ad_accounts").select("id, plataforma_id", { count: "exact" }).eq("estabelecimento_id", estabId),
           supabase.from("ads_automacoes").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true),
           supabase.from("ads_scheduler_config" as any).select("ativo").eq("estabelecimento_id", estabId).maybeSingle(),
-          supabase.from("ad_insights").select("spend, revenue, ctr").eq("estabelecimento_id", estabId).order("date", { ascending: false }).limit(30),
+          supabase.from("ad_insights").select("gastos, receita, ctr").eq("estabelecimento_id", estabId).order("data", { ascending: false }).limit(30),
         ]);
 
         const accountsCount = accounts.count || 0;
         const autosCount = autos.count || 0;
         const schedActive = !!(sched.data as any)?.ativo;
         const rows = (insights.data as any[]) || [];
-        const spend = rows.reduce((s, r) => s + (Number(r.spend) || 0), 0);
-        const revenue = rows.reduce((s, r) => s + (Number(r.revenue) || 0), 0);
+        const spend = rows.reduce((s, r) => s + (Number(r.gastos) || 0), 0);
+        const revenue = rows.reduce((s, r) => s + (Number(r.receita) || 0), 0);
         const roas = spend > 0 ? revenue / spend : 0;
         const avgCtr = rows.length ? rows.reduce((s, r) => s + (Number(r.ctr) || 0), 0) / rows.length : 0;
 
