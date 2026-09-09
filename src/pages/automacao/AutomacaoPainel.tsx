@@ -48,7 +48,7 @@ export default function AutomacaoPainel() {
   const [edicao, setEdicao] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [modo, setModo] = useState<Modo>("grade");
-  const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
   const [estados, setEstados] = useState<Record<string, boolean | null>>({});
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
