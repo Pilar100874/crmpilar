@@ -618,7 +618,18 @@ export default function AutomacaoPainel() {
                 ligado={estados[b.id] ?? null}
                 edicao={podeEditar}
                 onEditar={() => setBlocoEdit(b)}
-                onEstado={(v) => setEstados((s) => ({ ...s, [b.id]: v }))}
+                onEstado={(v) =>
+                  setEstados((s) => {
+                    // Propaga o estado para todos os blocos que usam o mesmo dispositivo
+                    const proximo = { ...s, [b.id]: v };
+                    if (b.device_id) {
+                      for (const outro of blocos) {
+                        if (outro.id !== b.id && outro.device_id === b.device_id) proximo[outro.id] = v;
+                      }
+                    }
+                    return proximo;
+                  })
+                }
               />
               {podeEditar && (
                 <>
