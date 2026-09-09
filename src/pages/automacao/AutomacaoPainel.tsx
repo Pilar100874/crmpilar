@@ -640,6 +640,12 @@ export default function AutomacaoPainel() {
         onSalvo={carregar}
       />
       <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
+      <TelaRemotaDialog
+        aberto={telaRemota}
+        onFechar={() => setTelaRemota(false)}
+        ambientes={ambientes}
+        ambienteAtual={ambienteId}
+      />
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
