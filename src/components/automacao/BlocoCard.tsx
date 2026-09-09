@@ -98,6 +98,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
       bloco.tipo === "texto" ? <BlocoTexto bloco={bloco} /> :
+      bloco.tipo === "forma" ? <BlocoForma bloco={bloco} /> :
       bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :
       bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
