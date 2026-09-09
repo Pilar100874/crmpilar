@@ -13,6 +13,7 @@ export default function BlocoImagem({ bloco }: { bloco: Bloco }) {
     mostrar_nome?: boolean;
     opacidade?: number;
     transparente?: boolean;
+    fundo_cor?: string;
   };
   const [src, setSrc] = useState<string | null>(cfg.url ?? null);
 
@@ -37,7 +38,13 @@ export default function BlocoImagem({ bloco }: { bloco: Bloco }) {
   }
 
   return (
-    <div className={cn("relative h-full overflow-hidden rounded-2xl", cfg.transparente ? "border-0 bg-transparent" : "border bg-card")}>
+    <div
+      className={cn(
+        "relative h-full overflow-hidden rounded-2xl",
+        cfg.fundo_cor ? "border-0" : "border-0 bg-transparent",
+      )}
+      style={cfg.fundo_cor ? { background: cfg.fundo_cor } : undefined}
+    >
       <img
         src={src}
         alt={bloco.nome}
