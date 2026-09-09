@@ -20,9 +20,10 @@ import BlocoAmbiente from "./BlocoAmbiente";
 import BlocoImagemLuz from "./BlocoImagemLuz";
 import BlocoTexto from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
+import BlocoForma from "./BlocoForma";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "clima"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
