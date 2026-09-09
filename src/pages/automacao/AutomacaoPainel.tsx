@@ -4,7 +4,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff,
+  Eye, EyeOff, Minus, Maximize2, Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +55,8 @@ export default function AutomacaoPainel() {
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const [escala, setEscala] = useState(1);
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
+  const [camadasAbertas, setCamadasAbertas] = useState(true);
+  const [camadasAmpliadas, setCamadasAmpliadas] = useState(false);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
