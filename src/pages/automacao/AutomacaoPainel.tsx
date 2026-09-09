@@ -367,8 +367,47 @@ export default function AutomacaoPainel() {
     toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
   };
 
+  /** Camada acima de todos os elementos do ambiente (fica na frente). */
+  const camadaDaFrente = () => (doAmbiente.length ? Math.max(...doAmbiente.map(camadaDe)) + 1 : 0);
+
   const novoBloco = () =>
-    setBlocoEdit({ nome: "", tipo: "luz", ambiente_id: ambienteId || ambientes[0]?.id, canal: 0, x: 0, y: 0, w: 3, h: 2 });
+    setBlocoEdit({
+      nome: "", tipo: "luz", ambiente_id: ambienteId || ambientes[0]?.id, canal: 0,
+      x: 0, y: 0, w: 3, h: 2, config: { camada: camadaDaFrente() },
+    });
+
+  /** Copia o elemento e coloca a cópia ao lado, já na frente e escolhida. */
+  const duplicarBloco = async (b: Bloco) => {
+    const camada = camadaDaFrente();
+    const base: Partial<Bloco> = { ...b, nome: `${b.nome || "Elemento"} (cópia)` };
+    delete (base as any).id;
+    delete (base as any).created_at;
+    delete (base as any).updated_at;
+    let copia: Partial<Bloco>;
+    if (modo === "livre") {
+      const p = posLivre(b, celula().cx);
+      const l = Math.max(0, Math.min(telaL - p.w, p.l + p.w + ESPACO));
+      copia = { ...base, config: { ...((b.config ?? {}) as any), camada, pos: { ...p, l, t: p.t } } };
+    } else {
+      copia = {
+        ...base,
+        x: Math.max(0, Math.min(COLUNAS - b.w, b.x + b.w)),
+        y: b.y,
+        config: { ...((b.config ?? {}) as any), camada },
+      };
+    }
+    const salvo = await salvarBloco(copia);
+    if (!salvo) { toast.error("Não foi possível duplicar o elemento."); return; }
+    await carregar();
+    setSelecionados([salvo.id]);
+    toast.success("Elemento duplicado.");
+  };
+
+  /** Depois de salvar no editor, o elemento novo já fica escolhido. */
+  const aoSalvarBloco = async (salvo?: Bloco | null) => {
+    await carregar();
+    if (salvo?.id) setSelecionados([salvo.id]);
+  };
 
   const confirmarExclusao = async () => {
     if (!excluir) return;
