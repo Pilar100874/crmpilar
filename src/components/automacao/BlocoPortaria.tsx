@@ -151,6 +151,7 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
   const mostrarLista = cfg.mostrar_lista !== false;
   const unidadeId = cfg.unidade_id ?? null;
   const limite = Math.min(20, Math.max(1, Number(cfg.limite ?? 4)));
+  const transparente = (cfg as { transparente?: boolean }).transparente === true;
   const corFundo = cfg.cor_fundo || undefined;
   const corTexto = cfg.cor_texto || undefined;
   const corSecundaria = cfg.cor_secundaria || undefined;
