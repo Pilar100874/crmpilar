@@ -4,6 +4,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
+  Eye, EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -104,6 +105,7 @@ export default function AutomacaoPainel() {
   // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
   // junto do elemento, para voltar igual em qualquer aparelho.
   const estaTravado = (b: Bloco) => !!(b.config as any)?.travado;
+  const estaVisivel = (b: Bloco) => b.visivel !== false;
   const camadaDe = (b: Bloco) => Number((b.config as any)?.camada ?? 0);
   // Do fundo para a frente.
   const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
@@ -139,6 +141,13 @@ export default function AutomacaoPainel() {
     );
     await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } });
     toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+  };
+
+  const alternarVisivel = async (bloco: Bloco) => {
+    const novo = !estaVisivel(bloco);
+    setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
+    await salvarBloco({ ...bloco, visivel: novo });
+    toast.success(novo ? "Elemento visível." : "Elemento oculto.");
   };
 
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
@@ -413,13 +422,26 @@ export default function AutomacaoPainel() {
           <div className="max-h-56 overflow-y-auto divide-y">
             {daFrenteParaTras.map((b) => {
               const ativo = selecionado === b.id;
+              const visivel = estaVisivel(b);
               return (
                 <div
                   key={b.id}
                   onClick={() => setSelecionado(b.id)}
-                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"}`}
+                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
-                  <span className="flex-1 truncate text-sm">{b.nome || "Sem nome"}</span>
+                  <span className={`flex-1 truncate text-sm ${!visivel ? "line-through" : ""}`}>
+                    {b.nome || "Sem nome"}
+                    {!visivel && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">oculto</span>}
+                  </span>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
+                    onClick={(e) => { e.stopPropagation(); alternarVisivel(b); }}
+                  >
+                    {visivel
+                      ? <Eye className="h-4 w-4 text-primary" />
+                      : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                  </Button>
                   <Button
                     size="icon" variant="ghost" className="h-7 w-7"
                     title={estaTravado(b) ? "Liberar elemento" : "Bloquear elemento"}
@@ -489,15 +511,16 @@ export default function AutomacaoPainel() {
             }}
           />
         )}
-        {doFundoParaFrente.map((b, indice) => {
+        {(podeEditar ? doFundoParaFrente : doFundoParaFrente.filter(estaVisivel)).map((b, indice) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
           const travado = estaTravado(b);
+          const visivel = estaVisivel(b);
           const zIndex = indice + 1;
           return (
             <div
               key={b.id}
               onPointerDown={(e) => aoArrastar(e, b)}
-              className={`relative ${podeEditar && selecionado === b.id ? "ring-2 ring-primary rounded-xl" : ""}`}
+              className={`relative ${podeEditar && selecionado === b.id ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
               style={
                 p
                   ? {
@@ -533,6 +556,16 @@ export default function AutomacaoPainel() {
                     onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
                   >
                     <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full shadow"
+                    title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => alternarVisivel(b)}
+                  >
+                    {visivel ? <Eye className="h-3 w-3 text-primary" /> : <EyeOff className="h-3 w-3 text-muted-foreground" />}
                   </Button>
                   <Button
                     size="icon"

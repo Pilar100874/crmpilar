@@ -3397,6 +3397,7 @@ export type Database = {
           nome: string
           tipo: string
           updated_at: string
+          visivel: boolean
           w: number
           x: number
           y: number
@@ -3414,6 +3415,7 @@ export type Database = {
           nome: string
           tipo?: string
           updated_at?: string
+          visivel?: boolean
           w?: number
           x?: number
           y?: number
@@ -3431,6 +3433,7 @@ export type Database = {
           nome?: string
           tipo?: string
           updated_at?: string
+          visivel?: boolean
           w?: number
           x?: number
           y?: number

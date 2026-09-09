@@ -63,6 +63,8 @@ export interface Bloco {
   y: number;
   w: number;
   h: number;
+  /** Define se o bloco é exibido no painel (true) ou fica oculto (false). */
+  visivel: boolean;
   config: Record<string, unknown>;
 }
 
@@ -180,6 +182,7 @@ export async function salvarBloco(b: Partial<Bloco>): Promise<Bloco | null> {
     y: b.y ?? 0,
     w: b.w ?? 2,
     h: b.h ?? 2,
+    visivel: b.visivel !== false,
     config: b.config ?? {},
   };
   if (b.id) {
