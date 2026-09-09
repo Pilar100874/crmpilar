@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import {
-  Ambiente, Bloco, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
-  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos, listarDispositivos,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
+  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos, listarCameras, listarDispositivos,
   salvarAmbiente, salvarBloco,
 } from "@/lib/automacao/api";
 
@@ -18,14 +18,19 @@ export default function AutomacaoConfiguracoes() {
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [blocos, setBlocos] = useState<Bloco[]>([]);
   const [dispositivos, setDispositivos] = useState<DispositivoSimples[]>([]);
+  const [cameras, setCameras] = useState<CameraSimples[]>([]);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
 
   const carregar = useCallback(async () => {
-    const [a, b, d] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos()]);
-    setAmbientes(a); setBlocos(b); setDispositivos(d);
+    const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
+    setAmbientes(a); setBlocos(b); setDispositivos(d); setCameras(c);
   }, []);
+
+  const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
+  const setCfg = (patch: Record<string, any>) =>
+    setBlocoEdit((b) => ({ ...b, config: { ...((b?.config ?? {}) as Record<string, any>), ...patch } }));
 
   useEffect(() => { carregar(); }, [carregar]);
 
@@ -175,20 +180,96 @@ export default function AutomacaoConfiguracoes() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Dispositivo</Label>
-              <Select
-                value={blocoEdit?.device_id ?? ""}
-                onValueChange={(v) => setBlocoEdit((b) => ({ ...b, device_id: v }))}
-              >
-                <SelectTrigger><SelectValue placeholder="Escolha o equipamento" /></SelectTrigger>
-                <SelectContent className="bg-popover">
-                  {dispositivos.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>{d.nome} {d.ip ? `· ${d.ip}` : ""}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {blocoEdit?.tipo === "camera" && (
+              <div>
+                <Label>Câmera</Label>
+                <Select
+                  value={cfg.camera_id ?? ""}
+                  onValueChange={(v) => {
+                    const cam = cameras.find((c) => c.id === v);
+                    setCfg({ camera_id: v, filial_id: cam?.filial_id ?? null });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Escolha a câmera" /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {cameras.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {!cameras.length && <p className="text-xs text-muted-foreground mt-1">Nenhuma câmera ativa cadastrada.</p>}
+              </div>
+            )}
+
+            {blocoEdit?.tipo === "mapa" && (
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label>Latitude</Label>
+                  <Input
+                    value={cfg.lat ?? ""}
+                    placeholder="-23.5505"
+                    onChange={(e) => setCfg({ lat: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Longitude</Label>
+                  <Input
+                    value={cfg.lng ?? ""}
+                    placeholder="-46.6333"
+                    onChange={(e) => setCfg({ lng: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Zoom</Label>
+                  <Input
+                    type="number" min={3} max={19}
+                    value={cfg.zoom ?? 15}
+                    onChange={(e) => setCfg({ zoom: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+            )}
+
+            {blocoEdit?.tipo === "cena" && (
+              <div>
+                <Label>O que o botão faz</Label>
+                <Select value={cfg.acao ?? "alternar"} onValueChange={(v) => setCfg({ acao: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="alternar">Liga e desliga</SelectItem>
+                    <SelectItem value="ligar">Somente ligar</SelectItem>
+                    <SelectItem value="desligar">Somente desligar</SelectItem>
+                    <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {blocoEdit?.tipo === "grafico" && (
+              <div>
+                <Label>Ler o estado a cada (segundos)</Label>
+                <Input
+                  type="number" min={10}
+                  value={cfg.intervalo_seg ?? 30}
+                  onChange={(e) => setCfg({ intervalo_seg: Number(e.target.value) })}
+                />
+              </div>
+            )}
+
+            {blocoEdit?.tipo !== "camera" && blocoEdit?.tipo !== "mapa" && (
+              <div>
+                <Label>Dispositivo</Label>
+                <Select
+                  value={blocoEdit?.device_id ?? ""}
+                  onValueChange={(v) => setBlocoEdit((b) => ({ ...b, device_id: v }))}
+                >
+                  <SelectTrigger><SelectValue placeholder="Escolha o equipamento" /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {dispositivos.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>{d.nome} {d.ip ? `· ${d.ip}` : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <Label>Canal</Label>

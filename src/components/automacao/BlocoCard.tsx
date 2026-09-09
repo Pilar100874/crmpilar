@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
+import BlocoCamera from "./BlocoCamera";
+import BlocoMapa from "./BlocoMapa";
+import BlocoGrafico from "./BlocoGrafico";
+import BlocoCena from "./BlocoCena";
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -36,6 +40,28 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
     if (acao === "pulso") toast.success(`${bloco.nome} acionado.`);
     onEstado(r.ligado ?? (acao === "ligar" ? true : acao === "desligar" ? false : ligado));
   };
+
+  if (bloco.tipo === "camera" || bloco.tipo === "mapa" || bloco.tipo === "grafico" || bloco.tipo === "cena") {
+    const conteudo =
+      bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
+      bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
+      bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
+      <BlocoCena bloco={bloco} ligado={ligado} onEstado={onEstado} />;
+
+    return (
+      <div className="relative h-full select-none">
+        {conteudo}
+        {edicao && (
+          <div className="absolute inset-0 rounded-2xl bg-background/60 backdrop-blur-[1px] flex items-center justify-center gap-2">
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+            <Button variant="secondary" size="icon" className="h-8 w-8" onClick={onEditar}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
