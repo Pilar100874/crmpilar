@@ -17,6 +17,10 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 
+/** Tipos em que o estado ligado/desligado faz sentido na simulação. */
+const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "sensor"];
+
+
 
 interface Props {
   bloco: Partial<Bloco> | null;
@@ -73,15 +77,17 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           <div className="rounded-lg border bg-muted/30 p-3">
             <div className="mb-2 flex items-center justify-between">
               <Label className="text-sm font-semibold">Simulação</Label>
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  checked={simLigado}
-                  onChange={(e) => setSimLigado(e.target.checked)}
-                  className="h-4 w-4 accent-primary"
-                />
-                Simular ligado
-              </label>
+              {TIPOS_COM_LIGADO.includes(blocoEdit?.tipo ?? "") && (
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={simLigado}
+                    onChange={(e) => setSimLigado(e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  Simular ligado
+                </label>
+              )}
             </div>
             <div className="flex items-center justify-center rounded-md bg-background/60 p-3">
               <div
