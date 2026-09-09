@@ -416,25 +416,54 @@ export default function AutomacaoPainel() {
 
       {podeEditar && doAmbiente.length > 0 && (
         <div className="rounded-xl border bg-card">
-          <div className="flex items-center gap-2 border-b px-3 py-2">
+          <div className="flex items-center gap-2 px-3 py-2">
             <Layers className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">Camadas</span>
-            <span className="text-xs text-muted-foreground">de cima para baixo — o primeiro fica na frente</span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              {doAmbiente.length} {doAmbiente.length === 1 ? "elemento" : "elementos"}
+            </span>
+            <span className="hidden sm:inline text-xs text-muted-foreground">de cima para baixo — o primeiro fica na frente</span>
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                size="icon" variant="ghost" className="h-7 w-7"
+                title={camadasAmpliadas ? "Altura normal" : "Ampliar lista de camadas"}
+                disabled={!camadasAbertas}
+                onClick={() => setCamadasAmpliadas((v) => !v)}
+              >
+                {camadasAmpliadas ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+              <Button
+                size="icon" variant="ghost" className="h-7 w-7"
+                title={camadasAbertas ? "Encolher camadas" : "Mostrar camadas"}
+                onClick={() => setCamadasAbertas((v) => !v)}
+              >
+                {camadasAbertas ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
-          <div className="max-h-56 overflow-y-auto divide-y">
-            {daFrenteParaTras.map((b) => {
+          {camadasAbertas && (
+          <div className={`overflow-y-auto divide-y border-t ${camadasAmpliadas ? "max-h-[70vh]" : "max-h-56"}`}>
+            {daFrenteParaTras.map((b, idx) => {
               const ativo = selecionado === b.id;
               const visivel = estaVisivel(b);
               return (
                 <div
                   key={b.id}
                   onClick={() => setSelecionado(b.id)}
-                  className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
+                  <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">{idx + 1}</span>
                   <span className={`flex-1 truncate text-sm ${!visivel ? "line-through" : ""}`}>
                     {b.nome || "Sem nome"}
                     {!visivel && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">oculto</span>}
                   </span>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title="Editar elemento"
+                    onClick={(e) => { e.stopPropagation(); setBlocoEdit(b); }}
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
                   <Button
                     size="icon" variant="ghost" className="h-7 w-7"
                     title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
