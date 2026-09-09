@@ -48,21 +48,18 @@ export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
 
   return (
     <>
-      <div
-        className={cn(
-          "relative h-full rounded-2xl border border-border bg-card overflow-hidden",
-          ampliado && "invisible"
-        )}
-      >
-        {tile}
-        {!edicao && (
-          <div
-            className="absolute inset-0 z-10 cursor-pointer"
-            onClick={alternar}
-            title="Toque para ampliar"
-          />
-        )}
-      </div>
+      {!ampliado && (
+        <div className="relative h-full rounded-2xl border border-border bg-card overflow-hidden">
+          {tile}
+          {!edicao && (
+            <div
+              className="absolute inset-0 z-10 cursor-pointer"
+              onClick={alternar}
+              title="Toque para ampliar"
+            />
+          )}
+        </div>
+      )}
 
       {ampliado &&
         createPortal(
