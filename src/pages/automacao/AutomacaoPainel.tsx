@@ -110,7 +110,7 @@ export default function AutomacaoPainel() {
     const ro = new ResizeObserver(medir);
     ro.observe(alvo);
     return () => ro.disconnect();
-  }, [telaL, telaA]);
+  }, [telaL, telaA, ambienteId, ambientes.length]);
 
   const celula = () => ({ cx: telaL / COLUNAS, cy: ALTURA_LINHA });
 
