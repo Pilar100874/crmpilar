@@ -93,10 +93,26 @@ export default function AutomacaoPainel() {
   const podeEditar = admin && edicao;
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
-  const celula = () => {
-    const largura = gradeRef.current?.clientWidth ?? 1;
-    return { cx: largura / COLUNAS, cy: ALTURA_LINHA };
-  };
+  // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
+  // reduzido/ampliado para caber por inteiro no espaço disponível.
+  const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
+  const telaL = ambienteAtual?.tela_largura ?? TELA_PADRAO.largura;
+  const telaA = ambienteAtual?.tela_altura ?? TELA_PADRAO.altura;
+
+  useEffect(() => {
+    const alvo = palcoRef.current;
+    if (!alvo) return;
+    const medir = () => {
+      const disponivel = alvo.clientWidth || telaL;
+      setEscala(Math.max(0.1, Math.min(disponivel / telaL, 1)));
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(alvo);
+    return () => ro.disconnect();
+  }, [telaL, telaA]);
+
+  const celula = () => ({ cx: telaL / COLUNAS, cy: ALTURA_LINHA });
 
   const atualizarPos = (id: string, pos: PosLivre) =>
     setBlocos((ant) => ant.map((b) => (b.id === id ? { ...b, config: { ...(b.config ?? {}), pos } } : b)));
