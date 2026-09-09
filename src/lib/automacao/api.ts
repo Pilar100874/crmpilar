@@ -42,6 +42,8 @@ export interface Ambiente {
   fundo_opacidade: number | null;
   /** Como a foto ocupa a tela: "cobrir", "conter" ou "esticar". */
   fundo_ajuste: string | null;
+  /** Painel ligado (aparece para todos) ou desativado (só administradores veem). */
+  ativo?: boolean | null;
 }
 
 /** Guarda no banco como os elementos são posicionados no ambiente. */
@@ -189,6 +191,7 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     fundo_caminho: a.fundo_caminho ?? null,
     fundo_opacidade: a.fundo_opacidade ?? 100,
     fundo_ajuste: a.fundo_ajuste ?? "cobrir",
+    ativo: a.ativo !== false,
   };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();
@@ -200,6 +203,48 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
 
 export async function excluirAmbiente(id: string) {
   await db.from("automacao_ambientes").delete().eq("id", id);
+}
+
+/** Liga ou desliga um painel sem apagar nada. */
+export async function definirAtivoAmbiente(id: string, ativo: boolean) {
+  await db.from("automacao_ambientes").update({ ativo }).eq("id", id);
+}
+
+/** Cria uma cópia completa do painel, com todos os elementos. */
+export async function duplicarAmbiente(a: Ambiente): Promise<Ambiente | null> {
+  const { data: novo } = await db
+    .from("automacao_ambientes")
+    .insert({
+      nome: `${a.nome} (cópia)`,
+      icone: a.icone ?? null,
+      ordem: (a.ordem ?? 0) + 1,
+      tela_largura: a.tela_largura,
+      tela_altura: a.tela_altura,
+      modo: a.modo ?? "grade",
+      fundo_caminho: a.fundo_caminho,
+      fundo_opacidade: a.fundo_opacidade ?? 100,
+      fundo_ajuste: a.fundo_ajuste ?? "cobrir",
+      ativo: a.ativo !== false,
+    })
+    .select()
+    .maybeSingle();
+  const criado = novo as Ambiente | null;
+  if (!criado) return null;
+
+  const { data: originais } = await db.from("automacao_blocos").select("*").eq("ambiente_id", a.id);
+  const copias = ((originais ?? []) as Bloco[]).map((b) => ({
+    ambiente_id: criado.id,
+    tipo: b.tipo,
+    nome: b.nome,
+    icone: b.icone,
+    device_id: b.device_id,
+    canal: b.canal ?? 0,
+    x: b.x, y: b.y, w: b.w, h: b.h,
+    visivel: b.visivel !== false,
+    config: b.config ?? {},
+  }));
+  if (copias.length) await db.from("automacao_blocos").insert(copias);
+  return criado;
 }
 
 export async function listarBlocos(): Promise<Bloco[]> {

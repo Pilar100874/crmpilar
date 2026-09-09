@@ -4,7 +4,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy,
+  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +15,7 @@ import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
-  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
+  definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
@@ -59,6 +59,7 @@ export default function AutomacaoPainel() {
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const [camadasAbertas, setCamadasAbertas] = useState(true);
   const [camadasAmpliadas, setCamadasAmpliadas] = useState(false);
+  const [salvandoPainel, setSalvandoPainel] = useState(false);
   const [regras, setRegras] = useState<Regra[]>([]);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
@@ -143,6 +144,8 @@ export default function AutomacaoPainel() {
   };
 
   const podeEditar = admin && edicao;
+  /** Painéis desativados continuam visíveis só para administradores. */
+  const ambientesVisiveis = admin ? ambientes : ambientes.filter((a) => a.ativo !== false);
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
   // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
@@ -410,6 +413,45 @@ export default function AutomacaoPainel() {
     toast.success("Elemento duplicado.");
   };
 
+  /** Cria uma cópia completa do painel atual, com todos os elementos. */
+  const duplicarPainel = async () => {
+    if (!ambienteAtual) return;
+    setSalvandoPainel(true);
+    try {
+      const novo = await duplicarAmbiente(ambienteAtual);
+      if (!novo) { toast.error("Não foi possível duplicar o painel."); return; }
+      await carregar();
+      setAmbienteId(novo.id);
+      setSelecionados([]);
+      toast.success("Painel duplicado.");
+    } finally {
+      setSalvandoPainel(false);
+    }
+  };
+
+  /** Grava no sistema a posição e o formato de todos os elementos do painel. */
+  const salvarPainel = async () => {
+    if (!ambienteAtual) return;
+    setSalvandoPainel(true);
+    try {
+      await Promise.all(doAmbiente.map((b) => salvarBloco(b)));
+      toast.success("Painel salvo.");
+    } catch {
+      toast.error("Não foi possível salvar o painel.");
+    } finally {
+      setSalvandoPainel(false);
+    }
+  };
+
+  /** Desativa (ou reativa) o painel: desativado, só administradores enxergam. */
+  const alternarAtivoPainel = async () => {
+    if (!ambienteAtual) return;
+    const novo = ambienteAtual.ativo === false;
+    setAmbientes((ant) => ant.map((a) => (a.id === ambienteAtual.id ? { ...a, ativo: novo } : a)));
+    await definirAtivoAmbiente(ambienteAtual.id, novo);
+    toast.success(novo ? "Painel ativado." : "Painel desativado — só administradores veem.");
+  };
+
   /** Depois de salvar no editor, o elemento novo já fica escolhido. */
   const aoSalvarBloco = async (salvo?: Bloco | null) => {
     await carregar();
@@ -457,9 +499,9 @@ export default function AutomacaoPainel() {
       <div className="flex flex-wrap items-center gap-2">
         <Tabs value={ambienteId} onValueChange={setAmbienteId} className="min-w-0">
           <TabsList className="flex-wrap h-auto">
-            {ambientes.map((a) => (
+            {ambientesVisiveis.map((a) => (
               <TabsTrigger key={a.id} value={a.id} className="gap-1">
-                {a.nome}
+                <span className={a.ativo === false ? "line-through opacity-60" : ""}>{a.nome}</span>
                 {podeEditar && (
                   <>
                     <Pencil
@@ -487,9 +529,28 @@ export default function AutomacaoPainel() {
               {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
             </Button>
             {edicao && (
-              <Button size="sm" onClick={novoBloco}>
-                <Plus className="h-4 w-4 mr-2" /> Novo elemento
-              </Button>
+              <>
+                <Button size="sm" onClick={novoBloco}>
+                  <Plus className="h-4 w-4 mr-2" /> Novo elemento
+                </Button>
+                <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={salvarPainel}>
+                  <Save className="h-4 w-4 mr-2" /> Salvar painel
+                </Button>
+                <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={duplicarPainel}>
+                  <CopyPlus className="h-4 w-4 mr-2" /> Duplicar painel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!ambienteAtual}
+                  onClick={alternarAtivoPainel}
+                  title="Painel desativado fica escondido para os outros usuários"
+                >
+                  {ambienteAtual?.ativo === false
+                    ? <><Power className="h-4 w-4 mr-2" /> Ativar painel</>
+                    : <><PowerOff className="h-4 w-4 mr-2" /> Desativar painel</>}
+                </Button>
+              </>
             )}
           </div>
         )}
