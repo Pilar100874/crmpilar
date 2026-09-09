@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import {
-  Ambiente, Bloco, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
-  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos, listarDispositivos,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
+  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos, listarCameras, listarDispositivos,
   salvarAmbiente, salvarBloco,
 } from "@/lib/automacao/api";
 
