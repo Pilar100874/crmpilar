@@ -679,9 +679,29 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
   })();
   const inferredName = decodeURIComponent(lastPath);
   const ln = inferredName.toLowerCase();
-  const mime = ln.endsWith(".pdf") ? "application/pdf"
-    : ln.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    : "application/octet-stream";
+  const MIMES: Record<string, string> = {
+    pdf: "application/pdf",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xls: "application/vnd.ms-excel",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    csv: "text/csv",
+    txt: "text/plain",
+    zip: "application/zip",
+    jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif",
+    mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm",
+    mp3: "audio/mpeg", ogg: "audio/ogg", oga: "audio/ogg", m4a: "audio/mp4", wav: "audio/wav",
+  };
+  const ext = (ln.split(".").pop() || "").split("?")[0];
+  // Sem extensão reconhecida, usa um mimetype coerente com o tipo pedido —
+  // o provedor rejeita "application/octet-stream" para imagem/vídeo/áudio.
+  const padraoPorTipo: Record<string, string> = {
+    image: "image/jpeg",
+    video: "video/mp4",
+    audio: "audio/mpeg",
+    document: "application/octet-stream",
+  };
+  const mime = MIMES[ext] ?? padraoPorTipo[evoType] ?? "application/octet-stream";
 
   let lastResult: SendOut = { ok: false, reason: "evolution_sem_tentativa" };
   for (const [index, variant] of (await buildEvolutionVariantsWithCanonicalJid(base, apiKey, sessionName, number)).entries()) {
