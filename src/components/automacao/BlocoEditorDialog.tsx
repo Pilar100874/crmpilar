@@ -964,7 +964,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
-          {!["camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone", "interfone"].includes(blocoEdit?.tipo ?? "") && (
+          {!TIPOS_SEM_DISPOSITIVO.includes(blocoEdit?.tipo ?? "") && (
             <div>
               <Label>Dispositivo</Label>
               <Select
@@ -980,15 +980,18 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <Label>Canal</Label>
-              <Input
-                type="number" min={0}
-                value={blocoEdit?.canal ?? 0}
-                onChange={(e) => setBlocoEdit((b) => ({ ...b, canal: Number(e.target.value) }))}
-              />
-            </div>
+          <div className={TIPOS_SEM_DISPOSITIVO.includes(blocoEdit?.tipo ?? "") ? "grid grid-cols-2 gap-2" : "grid grid-cols-3 gap-2"}>
+            {!TIPOS_SEM_DISPOSITIVO.includes(blocoEdit?.tipo ?? "") && (
+              <div>
+                <Label>Canal</Label>
+                <Input
+                  type="number" min={0}
+                  value={blocoEdit?.canal ?? 0}
+                  onChange={(e) => setBlocoEdit((b) => ({ ...b, canal: Number(e.target.value) }))}
+                />
+              </div>
+            )}
+
             <div>
               <Label>Largura</Label>
               <Input
