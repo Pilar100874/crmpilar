@@ -5,7 +5,15 @@ const db = supabase as unknown as {
   from: (t: string) => any;
 };
 
-export type TipoBloco = "luz" | "tomada" | "portao" | "sensor";
+export type TipoBloco =
+  | "luz"
+  | "tomada"
+  | "portao"
+  | "sensor"
+  | "cena"
+  | "camera"
+  | "mapa"
+  | "grafico";
 
 export interface Ambiente {
   id: string;
@@ -43,7 +51,26 @@ export const TIPOS_BLOCO: { valor: TipoBloco; label: string; descricao: string }
   { valor: "tomada", label: "Tomada", descricao: "Liga e desliga um equipamento" },
   { valor: "portao", label: "Portão / Porta", descricao: "Acionamento por pulso" },
   { valor: "sensor", label: "Sensor / Status", descricao: "Mostra o estado do equipamento" },
+  { valor: "cena", label: "Botão animado", descricao: "Botão grande com animação ao acionar" },
+  { valor: "camera", label: "Câmera ao vivo", descricao: "Mostra a imagem de uma câmera" },
+  { valor: "mapa", label: "Mapa", descricao: "Mostra um local no mapa" },
+  { valor: "grafico", label: "Gráfico", descricao: "Acompanha o estado do equipamento ao longo do tempo" },
 ];
+
+export interface CameraSimples {
+  id: string;
+  nome: string;
+  filial_id: string | null;
+}
+
+export async function listarCameras(): Promise<CameraSimples[]> {
+  const { data } = await db
+    .from("cv_cameras")
+    .select("id, nome, filial_id")
+    .eq("ativo", true)
+    .order("nome");
+  return (data ?? []) as CameraSimples[];
+}
 
 export async function listarAmbientes(): Promise<Ambiente[]> {
   const { data } = await db.from("automacao_ambientes").select("*").order("ordem").order("nome");
