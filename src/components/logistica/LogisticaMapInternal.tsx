@@ -353,10 +353,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const movimentoProgramaticoRef = useRef(false);
 
   const pausarAuto = useCallback(() => {
-    if (autoPausadoRef.current) return;
+    if (nuncaPausarAuto || autoPausadoRef.current) return;
     autoPausadoRef.current = true;
     setAutoPausado(true);
-  }, []);
+  }, [nuncaPausarAuto]);
 
   // Reenquadra o mapa no maior zoom possível, mantendo tudo centralizado na área visível
   const enquadrarTudo = useCallback((forcar = false) => {
