@@ -14,7 +14,7 @@ import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
-  listarCameras, listarDispositivos, moverBloco, salvarBloco,
+  listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente,
 } from "@/lib/automacao/api";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
@@ -78,16 +78,22 @@ export default function AutomacaoPainel() {
     })();
   }, []);
 
+  // O modo fica guardado no banco, junto do ambiente, para voltar igual
+  // em qualquer aparelho depois do login.
   useEffect(() => {
     if (!ambienteId) return;
-    const salvo = localStorage.getItem(`automacao_modo_${ambienteId}`);
+    const salvoBanco = ambientes.find((a) => a.id === ambienteId)?.modo;
+    const salvo = salvoBanco ?? localStorage.getItem(`automacao_modo_${ambienteId}`);
     setModo(salvo === "livre" ? "livre" : "grade");
     setSelecionado(null);
-  }, [ambienteId]);
+  }, [ambienteId, ambientes]);
 
   const trocarModo = (m: Modo) => {
     setModo(m);
-    if (ambienteId) localStorage.setItem(`automacao_modo_${ambienteId}`, m);
+    if (!ambienteId) return;
+    localStorage.setItem(`automacao_modo_${ambienteId}`, m);
+    setAmbientes((atual) => atual.map((a) => (a.id === ambienteId ? { ...a, modo: m } : a)));
+    salvarModoAmbiente(ambienteId, m);
   };
 
   const podeEditar = admin && edicao;

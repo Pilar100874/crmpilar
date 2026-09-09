@@ -25,6 +25,13 @@ export interface Ambiente {
   /** Tamanho da tela de parede em pontos (ex.: 1920 x 1080). */
   tela_largura: number | null;
   tela_altura: number | null;
+  /** Posicionamento dos elementos: "grade" ou "livre". */
+  modo: "grade" | "livre" | null;
+}
+
+/** Guarda no banco como os elementos são posicionados no ambiente. */
+export async function salvarModoAmbiente(id: string, modo: "grade" | "livre") {
+  await db.from("automacao_ambientes").update({ modo }).eq("id", id);
 }
 
 /** Tamanho usado quando o ambiente ainda não tem tela definida. */
