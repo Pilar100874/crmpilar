@@ -155,7 +155,19 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
   if ((bloco.config as Record<string, unknown> | null)?.estilo === "realista") {
     return (
-      <BlocoRealista bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} onEditar={onEditar} />
+      <div className="relative h-full">
+        <BlocoRealista bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} onEditar={onEditar} />
+        {edicao && onDuplicar && (
+          <Button
+            variant="secondary" size="icon" className="absolute top-1 right-1 z-[1200] h-8 w-8 shadow"
+            title="Duplicar elemento"
+            onClick={(e) => { e.stopPropagation(); onDuplicar(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
     );
   }
 
@@ -194,9 +206,20 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         )}
 
         {edicao && (
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onEditar}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex shrink-0 gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Editar elemento" onClick={onEditar}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            {onDuplicar && (
+              <Button
+                variant="ghost" size="icon" className="h-7 w-7" title="Duplicar elemento"
+                onClick={(e) => { e.stopPropagation(); onDuplicar(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         )}
       </div>
 

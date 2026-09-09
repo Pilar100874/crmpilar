@@ -712,6 +712,7 @@ export default function AutomacaoPainel() {
                 ligado={estados[b.id] ?? null}
                 edicao={podeEditar}
                 onEditar={() => setBlocoEdit(b)}
+                onDuplicar={() => duplicarBloco(b)}
                 onAcionar={() => { if (!podeEditar) dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null }); }}
                 onEstado={(v) => {
                   aplicarEstado(b.device_id, b.id, v);
