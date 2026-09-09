@@ -32,6 +32,8 @@ export default function AutomacaoPainel() {
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number } | null>(null);
+  const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number } | null>(null);
+
 
   const carregar = useCallback(async () => {
     const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
