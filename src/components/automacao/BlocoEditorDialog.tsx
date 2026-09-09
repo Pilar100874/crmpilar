@@ -11,6 +11,7 @@ import {
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
+import BlocoCard from "@/components/automacao/BlocoCard";
 
 interface Props {
   bloco: Partial<Bloco> | null;
