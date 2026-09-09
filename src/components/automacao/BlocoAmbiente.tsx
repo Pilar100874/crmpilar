@@ -55,55 +55,42 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
 
   return (
     <div
-      className="relative flex h-full w-full select-none flex-col overflow-hidden bg-[#1c1c1e] p-3 text-left"
-      style={{ borderRadius: typeof cfg.raio === "number" ? cfg.raio : 24 }}
+      className="relative flex aspect-square h-full w-auto select-none flex-col overflow-hidden rounded-full bg-[#1c1c1e] text-left shadow-xl"
       onClick={alternar}
       role="button"
     >
-      {cfg.legenda !== false && (
-        <div className="flex items-center gap-2 px-1 pb-2">
-          {ocupado && <Loader2 className="h-4 w-4 animate-spin text-white/70" />}
-          <div className="min-w-0">
-            <p className={cn("truncate text-lg font-bold leading-tight", aceso ? "text-white" : "text-white/45")}>
-              {bloco.nome}
-            </p>
-            <p className={cn("truncate text-xs font-medium", aceso ? "text-white/70" : "text-white/35")}>
-              {aceso ? "Ligado" : "Desligado"}
-            </p>
+      {/* Imagem de fundo preenche todo o círculo */}
+      <div className="absolute inset-0 overflow-hidden rounded-full">
+        {src ? (
+          <img
+            src={src}
+            alt={bloco.nome}
+            loading="lazy"
+            className={cn(
+              "h-full w-full object-cover transition-all duration-500",
+              aceso ? "grayscale-0 brightness-110" : "grayscale brightness-[0.35]",
+            )}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#1c1c1e] text-white/40">
+            <ImageIcon className="h-8 w-8" />
+            <span className="px-4 text-center text-xs">Escolha uma foto</span>
           </div>
+        )}
+      </div>
+
+      {/* Legenda opcional como overlay no topo */}
+      {cfg.legenda !== false && (
+        <div className="relative z-10 flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-black/70 via-black/40 to-transparent px-4 pb-6 pt-4 text-center">
+          {ocupado && <Loader2 className="h-4 w-4 animate-spin text-white/80" />}
+          <p className={cn("truncate text-base font-bold leading-tight", aceso ? "text-white" : "text-white/70")}>
+            {bloco.nome}
+          </p>
+          <p className={cn("truncate text-xs font-medium", aceso ? "text-white/90" : "text-white/55")}>
+            {aceso ? "Ligado" : "Desligado"}
+          </p>
         </div>
       )}
-
-      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
-        <div
-          className={cn(
-            "relative overflow-hidden rounded-full shadow-inner transition-all duration-500",
-            aceso ? "shadow-white/20" : "shadow-black/40",
-          )}
-          style={{
-            width: "min(100%, 100%)",
-            height: "min(100%, 100%)",
-            aspectRatio: "1 / 1",
-          }}
-        >
-          {src ? (
-            <img
-              src={src}
-              alt={bloco.nome}
-              loading="lazy"
-              className={cn(
-                "h-full w-full object-cover transition-all duration-500",
-                aceso ? "grayscale-0 brightness-110" : "grayscale brightness-[0.35]",
-              )}
-            />
-          ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-white/5 text-white/40">
-              <ImageIcon className="h-8 w-8" />
-              <span className="text-xs text-center px-2">Escolha uma foto</span>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
