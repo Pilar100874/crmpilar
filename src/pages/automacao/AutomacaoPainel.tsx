@@ -136,6 +136,9 @@ export default function AutomacaoPainel() {
 
   const aoMover = (e: React.PointerEvent) => {
     const { cx, cy } = celula();
+    // O painel pode estar reduzido na tela: converte o movimento do dedo/mouse
+    // para o tamanho real da tela de parede.
+    const dx = (px: number) => px / escala;
     const r = redim.current;
     if (r) {
       const bloco = blocos.find((b) => b.id === r.id);
