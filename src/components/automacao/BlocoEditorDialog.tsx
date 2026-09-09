@@ -77,6 +77,37 @@ export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, came
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2 rounded-lg border p-3">
+            <Label className="text-sm font-semibold">Aparência</Label>
+            <div>
+              <Label className="text-xs">Curvatura das bordas ({cfg.raio ?? 16}px)</Label>
+              <input
+                type="range" min={0} max={40} step={1}
+                value={cfg.raio ?? 16}
+                onChange={(e) => setCfg({ raio: Number(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={cfg.transparente === true}
+                onChange={(e) => setCfg({ transparente: e.target.checked })}
+                className="h-4 w-4 accent-primary"
+              />
+              Fundo transparente
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={cfg.legenda !== false}
+                onChange={(e) => setCfg({ legenda: e.target.checked })}
+                className="h-4 w-4 accent-primary"
+              />
+              Mostrar legenda (nome e situação)
+            </label>
+          </div>
+
           {["luz", "tomada", "portao", "sensor"].includes(blocoEdit?.tipo ?? "") && (
             <div className="space-y-2">
               <Label>Visual do bloco</Label>
