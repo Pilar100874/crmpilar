@@ -180,13 +180,14 @@ export default function AutomacaoPainel() {
   const aoArrastar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
     setSelecionado(bloco.id);
+    if (estaTravado(bloco)) return;
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
     arrasto.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bx: bloco.x, by: bloco.y, pl: p.l, pt: p.t };
   };
 
   const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
-    if (!podeEditar) return;
+    if (!podeEditar || estaTravado(bloco)) return;
     e.stopPropagation();
     setSelecionado(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
