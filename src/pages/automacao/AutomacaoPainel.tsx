@@ -104,6 +104,8 @@ export default function AutomacaoPainel() {
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
   const telaL = ambienteAtual?.tela_largura ?? TELA_PADRAO.largura;
   const telaA = ambienteAtual?.tela_altura ?? TELA_PADRAO.altura;
+  const fundoAjuste = ambienteAtual?.fundo_ajuste ?? "cobrir";
+  const fundoOpacidade = Math.max(0, Math.min(100, ambienteAtual?.fundo_opacidade ?? 100)) / 100;
 
   useEffect(() => {
     const alvo = palcoRef.current;
