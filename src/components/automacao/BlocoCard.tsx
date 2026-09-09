@@ -30,6 +30,10 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
   const [ocupado, setOcupado] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
+  const cfg = (bloco.config ?? {}) as Record<string, any>;
+  const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
+  const transparente = cfg.transparente === true;
+  const comLegenda = cfg.legenda !== false;
 
   const enviar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
     if (!bloco.device_id) {
@@ -57,10 +61,21 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
       <BlocoCena bloco={bloco} ligado={ligado} onEstado={onEstado} />;
 
     return (
-      <div className="relative h-full select-none">
+      <div
+        className="relative h-full select-none overflow-hidden"
+        style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
+      >
         {conteudo}
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && (
+          <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
+            {bloco.nome}
+          </span>
+        )}
         {edicao && (
-          <div className="absolute inset-0 rounded-2xl bg-background/60 backdrop-blur-[1px] flex items-center justify-center gap-2">
+          <div
+            className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center gap-2"
+            style={{ borderRadius: raio }}
+          >
             <GripVertical className="h-5 w-5 text-muted-foreground" />
             <Button variant="secondary" size="icon" className="h-8 w-8" onClick={onEditar}>
               <Pencil className="h-4 w-4" />
@@ -80,10 +95,14 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
   return (
     <div
       className={cn(
-        "h-full rounded-2xl border p-3 flex flex-col gap-2 transition-colors select-none",
-        aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
+        "h-full border p-3 flex flex-col gap-2 transition-colors select-none",
+        transparente
+          ? "bg-transparent border-transparent"
+          : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
       )}
+      style={{ borderRadius: raio }}
     >
+
       <div className="flex items-start gap-2">
         {edicao && <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />}
         <div
