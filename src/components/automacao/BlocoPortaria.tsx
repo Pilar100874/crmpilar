@@ -33,26 +33,38 @@ interface Item {
 
 const db = supabase as unknown as { from: (t: string) => any };
 
-async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; itens: Item[] }> {
+const porUnidade = (q: any, unidadeId?: string | null) => (unidadeId ? q.eq("unidade_id", unidadeId) : q);
+
+async function carregarModulo(
+  modulo: ModuloPortaria,
+  unidadeId?: string | null,
+  limite = 4,
+): Promise<{ total: number; itens: Item[] }> {
   if (modulo === "visitantes") {
-    const { data, count } = await db
-      .from("port_visitors")
-      .select("id, nome, documento, created_at", { count: "exact" })
-      .eq("status", "ativo")
+    const { data, count } = await porUnidade(
+      db
+        .from("port_visitors")
+        .select("id, nome, documento, created_at", { count: "exact" })
+        .eq("status", "ativo"),
+      unidadeId,
+    )
       .order("created_at", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((v: any) => ({ titulo: v.nome ?? "Visitante", detalhe: v.documento ?? "" })),
     };
   }
   if (modulo === "transportadoras") {
-    const { data, count } = await db
-      .from("transp_movimentos")
-      .select("id, placa, motorista_nome, motivo, entrada_time", { count: "exact" })
-      .neq("status", "saiu")
+    const { data, count } = await porUnidade(
+      db
+        .from("transp_movimentos")
+        .select("id, placa, motorista_nome, motivo, entrada_time", { count: "exact" })
+        .neq("status", "saiu"),
+      unidadeId,
+    )
       .order("entrada_time", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((m: any) => ({
@@ -62,12 +74,15 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
     };
   }
   if (modulo === "veiculos") {
-    const { data, count } = await db
-      .from("cv_vehicle_movements")
-      .select("id, exit_time, vehicle:cv_vehicles(placa, modelo)", { count: "exact" })
-      .eq("status", "out")
+    const { data, count } = await porUnidade(
+      db
+        .from("cv_vehicle_movements")
+        .select("id, exit_time, vehicle:cv_vehicles(placa, modelo)", { count: "exact" })
+        .eq("status", "out"),
+      unidadeId,
+    )
       .order("exit_time", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((m: any) => ({
@@ -77,23 +92,29 @@ async function carregarModulo(modulo: ModuloPortaria): Promise<{ total: number; 
     };
   }
   if (modulo === "ocorrencias") {
-    const { data, count } = await db
-      .from("livro_ocorrencias")
-      .select("id, tipo, gravidade, local, data_hora", { count: "exact" })
-      .eq("status", "aberta")
+    const { data, count } = await porUnidade(
+      db
+        .from("livro_ocorrencias")
+        .select("id, tipo, gravidade, local, data_hora", { count: "exact" })
+        .eq("status", "aberta"),
+      unidadeId,
+    )
       .order("data_hora", { ascending: false })
-      .limit(4);
+      .limit(limite);
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((o: any) => ({ titulo: o.tipo ?? "Ocorrência", detalhe: o.local ?? "" })),
     };
   }
-  const { data, count } = await db
-    .from("livro_encomendas")
-    .select("id, destinatario, transportadora, data_recebimento", { count: "exact" })
-    .is("data_entrega", null)
+  const { data, count } = await porUnidade(
+    db
+      .from("livro_encomendas")
+      .select("id, destinatario, transportadora, data_recebimento", { count: "exact" })
+      .is("data_entrega", null),
+    unidadeId,
+  )
     .order("data_recebimento", { ascending: false })
-    .limit(4);
+    .limit(limite);
   return {
     total: count ?? (data?.length ?? 0),
     itens: (data ?? []).map((e: any) => ({ titulo: e.destinatario ?? "Encomenda", detalhe: e.transportadora ?? "" })),
