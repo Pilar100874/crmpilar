@@ -113,16 +113,19 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
         >
           {ocupado ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold truncate">{bloco.nome}</p>
-          <p className="text-[11px] text-muted-foreground truncate">
-            {bloco.tipo === "portao"
-              ? "Toque para acionar"
-              : bloco.tipo === "sensor"
-                ? ligado === null ? "Sem leitura" : aceso ? "Acionado" : "Normal"
-                : aceso ? "Ligado" : "Desligado"}
-          </p>
-        </div>
+        {comLegenda && (
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold truncate">{bloco.nome}</p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {bloco.tipo === "portao"
+                ? "Toque para acionar"
+                : bloco.tipo === "sensor"
+                  ? ligado === null ? "Sem leitura" : aceso ? "Acionado" : "Normal"
+                  : aceso ? "Ligado" : "Desligado"}
+            </p>
+          </div>
+        )}
+
         {edicao && (
           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onEditar}>
             <Pencil className="h-3.5 w-3.5" />
