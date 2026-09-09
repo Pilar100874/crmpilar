@@ -123,10 +123,18 @@ async function carregarModulo(
 
 /** Mostra no painel o resumo ao vivo de um controle da portaria. */
 export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
-  const cfg = (bloco.config ?? {}) as { modulo?: ModuloPortaria; intervalo_seg?: number; mostrar_lista?: boolean };
+  const cfg = (bloco.config ?? {}) as {
+    modulo?: ModuloPortaria;
+    intervalo_seg?: number;
+    mostrar_lista?: boolean;
+    unidade_id?: string | null;
+    limite?: number;
+  };
   const modulo: ModuloPortaria = cfg.modulo ?? "visitantes";
   const intervalo = Math.max(10, Number(cfg.intervalo_seg ?? 30));
   const mostrarLista = cfg.mostrar_lista !== false;
+  const unidadeId = cfg.unidade_id ?? null;
+  const limite = Math.min(20, Math.max(1, Number(cfg.limite ?? 4)));
   const info = MODULOS_PORTARIA.find((m) => m.valor === modulo)!;
   const Icon = ICONES[modulo];
   const [total, setTotal] = useState(0);
@@ -135,13 +143,13 @@ export default function BlocoPortaria({ bloco }: { bloco: Bloco }) {
 
   const carregar = useCallback(async () => {
     try {
-      const r = await carregarModulo(modulo);
+      const r = await carregarModulo(modulo, unidadeId, limite);
       setTotal(r.total);
       setItens(r.itens);
     } finally {
       setCarregando(false);
     }
-  }, [modulo]);
+  }, [modulo, unidadeId, limite]);
 
   useEffect(() => {
     setCarregando(true);
