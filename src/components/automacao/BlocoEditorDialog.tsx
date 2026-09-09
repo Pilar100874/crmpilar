@@ -240,6 +240,15 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 />
                 <p className="text-[11px] text-muted-foreground">Em "Automático" o ícone cresce junto com o bloco.</p>
               </div>
+              <div>
+                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <input
+                  type="range" min={0} max={100} step={5}
+                  value={cfg.opacidade ?? 100}
+                  onChange={(e) => setCfg({ opacidade: Number(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label>Animação</Label>
