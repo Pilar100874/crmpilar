@@ -4,7 +4,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff,
+  Eye, EyeOff, MonitorPlay,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
+import TelaRemotaDialog from "@/components/automacao/TelaRemotaDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
@@ -54,6 +55,7 @@ export default function AutomacaoPainel() {
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const [escala, setEscala] = useState(1);
+  const [telaRemota, setTelaRemota] = useState(false);
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
@@ -364,8 +366,13 @@ export default function AutomacaoPainel() {
             <Plus className="h-4 w-4 mr-1" /> Ambiente
           </Button>
         )}
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setTelaRemota(true)} title="Abrir o painel em uma TV, totem ou outro monitor">
+            <MonitorPlay className="h-4 w-4 mr-2" /> Tela remota
+          </Button>
+        </div>
         {admin && (
-          <div className="ml-auto flex gap-2">
+          <div className="flex gap-2">
             <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
               {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
             </Button>
@@ -633,6 +640,12 @@ export default function AutomacaoPainel() {
         onSalvo={carregar}
       />
       <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
+      <TelaRemotaDialog
+        aberto={telaRemota}
+        onFechar={() => setTelaRemota(false)}
+        ambientes={ambientes}
+        ambienteAtual={ambienteId}
+      />
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
