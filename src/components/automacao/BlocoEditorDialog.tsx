@@ -33,7 +33,7 @@ interface Props {
   dispositivos: DispositivoSimples[];
   cameras: CameraSimples[];
   onChange: (b: Partial<Bloco> | null) => void;
-  onSalvo: () => void;
+  onSalvo: (salvo?: Bloco | null) => void;
 }
 
 export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo }: Props) {
@@ -55,10 +55,10 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const gravar = async () => {
     if (!blocoEdit?.nome?.trim()) { toast.error("Informe o nome do elemento."); return; }
     if (!blocoEdit.ambiente_id) { toast.error("Escolha o ambiente."); return; }
-    await salvarBloco(blocoEdit);
+    const salvo = await salvarBloco(blocoEdit);
     onChange(null);
     toast.success("Elemento salvo.");
-    onSalvo();
+    onSalvo(salvo);
   };
 
   const blocoPreview = {

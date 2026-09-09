@@ -4,7 +4,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff, Minus, Maximize2, Minimize2,
+  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -367,8 +367,47 @@ export default function AutomacaoPainel() {
     toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
   };
 
+  /** Camada acima de todos os elementos do ambiente (fica na frente). */
+  const camadaDaFrente = () => (doAmbiente.length ? Math.max(...doAmbiente.map(camadaDe)) + 1 : 0);
+
   const novoBloco = () =>
-    setBlocoEdit({ nome: "", tipo: "luz", ambiente_id: ambienteId || ambientes[0]?.id, canal: 0, x: 0, y: 0, w: 3, h: 2 });
+    setBlocoEdit({
+      nome: "", tipo: "luz", ambiente_id: ambienteId || ambientes[0]?.id, canal: 0,
+      x: 0, y: 0, w: 3, h: 2, config: { camada: camadaDaFrente() },
+    });
+
+  /** Copia o elemento e coloca a cópia ao lado, já na frente e escolhida. */
+  const duplicarBloco = async (b: Bloco) => {
+    const camada = camadaDaFrente();
+    const base: Partial<Bloco> = { ...b, nome: `${b.nome || "Elemento"} (cópia)` };
+    delete (base as any).id;
+    delete (base as any).created_at;
+    delete (base as any).updated_at;
+    let copia: Partial<Bloco>;
+    if (modo === "livre") {
+      const p = posLivre(b, celula().cx);
+      const l = Math.max(0, Math.min(telaL - p.w, p.l + p.w + ESPACO));
+      copia = { ...base, config: { ...((b.config ?? {}) as any), camada, pos: { ...p, l, t: p.t } } };
+    } else {
+      copia = {
+        ...base,
+        x: Math.max(0, Math.min(COLUNAS - b.w, b.x + b.w)),
+        y: b.y,
+        config: { ...((b.config ?? {}) as any), camada },
+      };
+    }
+    const salvo = await salvarBloco(copia);
+    if (!salvo) { toast.error("Não foi possível duplicar o elemento."); return; }
+    await carregar();
+    setSelecionados([salvo.id]);
+    toast.success("Elemento duplicado.");
+  };
+
+  /** Depois de salvar no editor, o elemento novo já fica escolhido. */
+  const aoSalvarBloco = async (salvo?: Bloco | null) => {
+    await carregar();
+    if (salvo?.id) setSelecionados([salvo.id]);
+  };
 
   const confirmarExclusao = async () => {
     if (!excluir) return;
@@ -549,6 +588,13 @@ export default function AutomacaoPainel() {
                   </Button>
                   <Button
                     size="icon" variant="ghost" className="h-7 w-7"
+                    title="Duplicar elemento"
+                    onClick={(e) => { e.stopPropagation(); duplicarBloco(b); }}
+                  >
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
                     title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
                     onClick={(e) => { e.stopPropagation(); alternarVisivel(b); }}
                   >
@@ -697,6 +743,16 @@ export default function AutomacaoPainel() {
                   >
                     {travado ? <Lock className="h-3 w-3 text-amber-500" /> : <Unlock className="h-3 w-3" />}
                   </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -bottom-2 -left-2 h-6 w-6 rounded-full shadow"
+                    title="Duplicar elemento"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => duplicarBloco(b)}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
                 </>
               )}
               {podeEditar && !travado && (
@@ -750,7 +806,7 @@ export default function AutomacaoPainel() {
         dispositivos={dispositivos}
         cameras={cameras}
         onChange={setBlocoEdit}
-        onSalvo={carregar}
+        onSalvo={aoSalvarBloco}
       />
       <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
       <DeleteConfirmDialog

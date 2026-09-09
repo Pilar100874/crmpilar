@@ -76,10 +76,10 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
   return (
     <Dialog open={!!ambiente} onOpenChange={(o) => !o && onChange(null)}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{ambiente?.id ? "Editar ambiente" : "Novo ambiente"}</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0"><DialogTitle>{ambiente?.id ? "Editar ambiente" : "Novo ambiente"}</DialogTitle></DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-1">
           <div>
             <Label>Nome</Label>
             <Input
@@ -217,7 +217,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
         </div>
 
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 border-t pt-3 bg-background">
           <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
