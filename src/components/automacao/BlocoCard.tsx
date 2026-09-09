@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
+import BlocoCamera from "./BlocoCamera";
+import BlocoMapa from "./BlocoMapa";
+import BlocoGrafico from "./BlocoGrafico";
+import BlocoCena from "./BlocoCena";
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
