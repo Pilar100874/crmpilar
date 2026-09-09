@@ -227,6 +227,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "Automacao Paineis", title: "Painéis", url: "/automacao", icon: LucideIcons.LayoutGrid },
       { id: "Automacao Estado", title: "Estado dos Equipamentos", url: "/automacao/estado", icon: LucideIcons.Activity },
+      { id: "Automacao Dispositivos", title: "Dispositivos", url: "/automacao/dispositivos", icon: LucideIcons.Cpu },
 
 
     ],

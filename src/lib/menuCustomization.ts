@@ -306,6 +306,7 @@ const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds
     programIds: [
       "Automacao Paineis",
       "Automacao Estado",
+      "Automacao Dispositivos",
 
 
     ],

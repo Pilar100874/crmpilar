@@ -64,7 +64,6 @@ export default function PortariaDashboard() {
   const cards = [
     { label: "Pessoas ativas", valor: totais.pessoas, icon: Users, to: "/portaria/pessoas", visivel: isStaff },
     { label: "Visitantes ativos", valor: totais.visitantes, icon: UserPlus, to: "/portaria/visitantes", visivel: isStaff },
-    { label: "Dispositivos", valor: totais.dispositivos, icon: Cpu, to: "/portaria/dispositivos", visivel: isGestor },
     { label: "Eventos hoje", valor: totais.eventos, icon: History, to: "/portaria/historico", visivel: isStaff },
   ].filter((c) => c.visivel);
 
