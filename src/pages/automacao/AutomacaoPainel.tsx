@@ -18,8 +18,10 @@ import {
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
+import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
+
 
 const COLUNAS = 12;
 const ALTURA_LINHA = 74;
@@ -57,21 +59,60 @@ export default function AutomacaoPainel() {
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const [camadasAbertas, setCamadasAbertas] = useState(true);
   const [camadasAmpliadas, setCamadasAmpliadas] = useState(false);
+  const [regras, setRegras] = useState<Regra[]>([]);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
+  const estadosRef = useRef<Record<string, boolean | null>>({});
+  const blocosRef = useRef<Bloco[]>([]);
+  const regrasRef = useRef<Regra[]>([]);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
   const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
 
+
   const carregar = useCallback(async () => {
-    const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
+    const [a, b, d, c, r] = await Promise.all([
+      listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras(), listarRegras(),
+    ]);
     setAmbientes(a);
     setBlocos(b);
     setDispositivos(d);
     setCameras(c);
+    setRegras(r);
     setAmbienteId((atual) => (a.some((x) => x.id === atual) ? atual : a[0]?.id || ""));
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Guarda o estado mais recente para as automações consultarem durante a execução.
+  useEffect(() => { estadosRef.current = estados; }, [estados]);
+  useEffect(() => { blocosRef.current = blocos; regrasRef.current = regras; }, [blocos, regras]);
+
+  /** Aplica o estado no elemento e em todos os outros que usam o mesmo equipamento. */
+  const aplicarEstado = useCallback((deviceId: string | null, blocoId: string | null, ligado: boolean | null) => {
+    setEstados((s) => {
+      const proximo = { ...s };
+      if (blocoId) proximo[blocoId] = ligado;
+      if (deviceId) {
+        for (const outro of blocosRef.current) {
+          if (outro.device_id === deviceId) proximo[outro.id] = ligado;
+        }
+      }
+      estadosRef.current = proximo;
+      return proximo;
+    });
+  }, []);
+
+  const dispararRegras = useCallback((ev: EventoPainel) => {
+    if (!regrasRef.current.length) return;
+    rodarRegras(ev, {
+      regras: regrasRef.current,
+      blocos: blocosRef.current,
+      estados: estadosRef.current,
+      aplicarEstado,
+      aviso: (t, erro) => (erro ? toast.error(t) : toast.info(t)),
+    }).catch(() => toast.error("Não foi possível concluir a automação."));
+  }, [aplicarEstado]);
+
 
   useEffect(() => {
     (async () => {
@@ -618,19 +659,13 @@ export default function AutomacaoPainel() {
                 ligado={estados[b.id] ?? null}
                 edicao={podeEditar}
                 onEditar={() => setBlocoEdit(b)}
-                onEstado={(v) =>
-                  setEstados((s) => {
-                    // Propaga o estado para todos os blocos que usam o mesmo dispositivo
-                    const proximo = { ...s, [b.id]: v };
-                    if (b.device_id) {
-                      for (const outro of blocos) {
-                        if (outro.id !== b.id && outro.device_id === b.device_id) proximo[outro.id] = v;
-                      }
-                    }
-                    return proximo;
-                  })
-                }
+                onAcionar={() => { if (!podeEditar) dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null }); }}
+                onEstado={(v) => {
+                  aplicarEstado(b.device_id, b.id, v);
+                  if (!podeEditar) dispararRegras({ tipo: "mudanca", bloco: b, ligado: v });
+                }}
               />
+
               {podeEditar && (
                 <>
                   <Button

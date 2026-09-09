@@ -126,6 +126,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Menu Principal - Automação ============
   { path: "/automacao", titulo: "Automação - Painéis", aliases: ["automacao", "casa inteligente", "luzes", "tomadas", "paineis de automacao"] },
+  { path: "/automacao/regras", titulo: "Automação - Automações", aliases: ["automacoes", "regras de automacao", "workflow automacao", "cenas"] },
   { path: "/automacao/configuracoes", titulo: "Automação - Configuração", aliases: ["configuracao automacao", "ambientes automacao", "blocos automacao"] },
 
   // ============ Menu Principal - Interfone ============

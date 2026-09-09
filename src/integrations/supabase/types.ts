@@ -3455,6 +3455,59 @@ export type Database = {
           },
         ]
       }
+      automacao_regras: {
+        Row: {
+          acoes: Json
+          ambiente_id: string | null
+          ativo: boolean
+          combinador: string
+          condicoes: Json
+          created_at: string
+          created_by: string | null
+          gatilho: Json
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          acoes?: Json
+          ambiente_id?: string | null
+          ativo?: boolean
+          combinador?: string
+          condicoes?: Json
+          created_at?: string
+          created_by?: string | null
+          gatilho?: Json
+          id?: string
+          nome: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          acoes?: Json
+          ambiente_id?: string | null
+          ativo?: boolean
+          combinador?: string
+          condicoes?: Json
+          created_at?: string
+          created_by?: string | null
+          gatilho?: Json
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacao_regras_ambiente_id_fkey"
+            columns: ["ambiente_id"]
+            isOneToOne: false
+            referencedRelation: "automacao_ambientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automacoes_vendas: {
         Row: {
           ativo: boolean | null
