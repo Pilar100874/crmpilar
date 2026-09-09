@@ -33,7 +33,7 @@ interface Props {
   dispositivos: DispositivoSimples[];
   cameras: CameraSimples[];
   onChange: (b: Partial<Bloco> | null) => void;
-  onSalvo: () => void;
+  onSalvo: (salvo?: Bloco | null) => void;
 }
 
 export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo }: Props) {
