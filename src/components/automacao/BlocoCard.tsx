@@ -19,9 +19,10 @@ import BlocoPilarFone from "./BlocoPilarFone";
 import BlocoAmbiente from "./BlocoAmbiente";
 import BlocoImagemLuz from "./BlocoImagemLuz";
 import BlocoTexto from "./BlocoTexto";
+import BlocoClima from "./BlocoClima";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "clima"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -93,6 +94,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) 
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
       bloco.tipo === "texto" ? <BlocoTexto bloco={bloco} /> :
+      bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :
       bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
@@ -112,7 +114,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) 
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto"].includes(bloco.tipo) && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "clima"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>
