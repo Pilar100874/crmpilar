@@ -325,6 +325,25 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   />
                 </div>
               </div>
+              {blocoEdit?.tipo === "imagem" && (
+                <div className="rounded-md border p-3 space-y-2">
+                  <Label className="text-sm font-semibold">Fundo do bloco</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Deixe sem cor para usar imagens PNG com fundo transparente.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      className="h-10 w-14 p-1"
+                      value={(cfg.fundo_cor as string) ?? "#000000"}
+                      onChange={(e) => setCfg({ fundo_cor: e.target.value })}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCfg({ fundo_cor: undefined })}>
+                      Sem fundo
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
