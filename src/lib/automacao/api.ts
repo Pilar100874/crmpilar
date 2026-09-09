@@ -19,7 +19,8 @@ export type TipoBloco =
   | "rastreamento"
   | "portaria"
   | "interfone"
-  | "pilarfone";
+  | "pilarfone"
+  | "ambiente";
 
 export interface Ambiente {
   id: string;
