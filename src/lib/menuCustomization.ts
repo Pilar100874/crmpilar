@@ -300,6 +300,15 @@ function migrateTitle(title: string | undefined): string | undefined {
 // garantimos que existam, movendo os programas para dentro deles.
 const ENFORCED_GROUPS: { id: string; title: string; iconName: string; programIds: string[] }[] = [
   {
+    id: "c-Automacao",
+    title: "Automação",
+    iconName: "Home",
+    programIds: [
+      "Automacao Paineis",
+      "Automacao Configuracoes",
+    ],
+  },
+  {
     id: "c-Atendimento Portaria",
     title: "Portaria",
     iconName: "ShieldCheck",
