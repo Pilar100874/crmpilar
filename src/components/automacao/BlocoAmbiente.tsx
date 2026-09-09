@@ -7,6 +7,16 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 
+/** Converte #rrggbb + opacidade (0-100) em rgba(). */
+function hexParaRgba(hex: string, opacidade: number) {
+  const h = hex.replace("#", "");
+  const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const n = parseInt(v, 16);
+  if (Number.isNaN(n)) return hex;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(100, opacidade)) / 100})`;
+}
+
 interface Props {
   bloco: Bloco;
   ligado: boolean | null;
@@ -21,6 +31,12 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
     cor?: string;
     raio?: number;
     legenda?: boolean;
+    /** Cor do fundo do cartão. */
+    fundoCor?: string;
+    /** Transparência do fundo, de 0 (invisível) a 100 (cheio). */
+    fundoOpacidade?: number;
+    /** Remove totalmente o fundo do cartão. */
+    semFundo?: boolean;
   };
   const aceso = ligado === true;
   const [src, setSrc] = useState<string | null>(cfg.url ?? null);
@@ -53,11 +69,17 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
   };
 
   const raioCartao = typeof cfg.raio === "number" ? cfg.raio : 20;
+  const fundoOpac = typeof cfg.fundoOpacidade === "number" ? cfg.fundoOpacidade : 100;
+  const fundo = cfg.semFundo ? "transparent" : hexParaRgba(cfg.fundoCor || "#1c1c1e", fundoOpac);
 
   return (
     <div
-      className="relative flex h-full w-full select-none flex-col overflow-hidden bg-[#1c1c1e] text-left shadow-xl"
-      style={{ borderRadius: raioCartao }}
+      className="relative flex h-full w-full select-none flex-col overflow-hidden text-left"
+      style={{
+        borderRadius: raioCartao,
+        background: fundo,
+        boxShadow: cfg.semFundo ? "none" : undefined,
+      }}
       onClick={alternar}
       role="button"
     >

@@ -17,10 +17,11 @@ import BlocoPortaria from "./BlocoPortaria";
 import BlocoInterfone from "./BlocoInterfone";
 import BlocoPilarFone from "./BlocoPilarFone";
 import BlocoAmbiente from "./BlocoAmbiente";
+import BlocoImagemLuz from "./BlocoImagemLuz";
 import BlocoTexto from "./BlocoTexto";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -61,6 +62,7 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
     const conteudo =
       bloco.tipo === "texto" ? <BlocoTexto bloco={bloco} /> :
       bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
+      bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
       bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
