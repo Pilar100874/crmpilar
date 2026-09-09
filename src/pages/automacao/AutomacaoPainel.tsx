@@ -188,9 +188,20 @@ export default function AutomacaoPainel() {
   const atualizarPos = (id: string, pos: PosLivre) =>
     setBlocos((ant) => ant.map((b) => (b.id === id ? { ...b, config: { ...(b.config ?? {}), pos } } : b)));
 
+  const estaSelecionado = (id: string) => selecionados.includes(id);
+
+  /** Clique simples troca a seleção; com Shift/Ctrl/Cmd soma ou tira da seleção. */
+  const selecionar = (id: string, e?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+    const juntar = !!(e?.shiftKey || e?.ctrlKey || e?.metaKey);
+    setSelecionados((ant) => {
+      if (!juntar) return ant.length === 1 && ant[0] === id ? ant : [id];
+      return ant.includes(id) ? ant.filter((x) => x !== id) : [...ant, id];
+    });
+  };
+
   const aoArrastar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
-    setSelecionado(bloco.id);
+    selecionar(bloco.id, e);
     if (estaTravado(bloco)) return;
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
@@ -200,7 +211,7 @@ export default function AutomacaoPainel() {
   const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar || estaTravado(bloco)) return;
     e.stopPropagation();
-    setSelecionado(bloco.id);
+    selecionar(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
     redim.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h, pw: p.w, ph: p.h };
