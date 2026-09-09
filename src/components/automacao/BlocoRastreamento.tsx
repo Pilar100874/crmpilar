@@ -94,15 +94,17 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
         </span>
         <span className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground">
           {carregando ? "carregando..." : `${veiculos.length} veículos · ${movendo} em movimento`}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={(e) => { e.stopPropagation(); setAmpliado((v) => !v); onAcionar?.(); }}
-            title={ampliado ? "Reduzir" : "Ampliar"}
-          >
-            {ampliado ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-          </Button>
+          {!ampliado && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={(e) => { e.stopPropagation(); setAmpliado(true); onAcionar?.(); }}
+              title="Ampliar"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </span>
       </div>
       <div className="relative flex-1 min-h-0">
