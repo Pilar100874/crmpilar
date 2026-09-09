@@ -41,9 +41,9 @@ export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
 
-  if (!semDispositivo || !onAcionar || edicao) {
+  if (!semDispositivo || !onAcionar || edicao || bloco.tipo === "camera") {
     return (
-      <div className="h-full" onClick={() => !edicao && onAcionar?.()}>
+      <div className="h-full" onClick={() => !edicao && bloco.tipo !== "camera" && onAcionar?.()}>
         <BlocoCardInterno {...props} />
       </div>
     );
@@ -65,7 +65,7 @@ export default function BlocoCard(props: Props) {
   );
 }
 
-function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) {
+function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onAcionar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
@@ -97,7 +97,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar }: Props) 
       bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :
       bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
-      bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} /> :
+      bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} /> :
       bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} /> :
       bloco.tipo === "portaria" ? <BlocoPortaria bloco={bloco} /> :
