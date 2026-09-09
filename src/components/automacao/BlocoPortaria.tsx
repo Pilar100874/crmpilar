@@ -191,9 +191,11 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
 
   const conteudo = (
     <div
-      className="h-full w-full overflow-hidden rounded-2xl border border-border bg-card p-3 text-left flex flex-col"
+      className={`h-full w-full overflow-hidden rounded-2xl p-3 text-left flex flex-col ${
+        transparente ? "border border-transparent bg-transparent" : "border border-border bg-card"
+      }`}
       style={{
-        backgroundColor: corFundo,
+        backgroundColor: transparente ? "transparent" : corFundo,
         color: corTexto,
       }}
     >
