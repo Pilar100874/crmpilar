@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Move, Plus, Check, Pencil, Trash2 } from "lucide-react";
+import {
+  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2,
+  AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
+  AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
@@ -10,13 +14,28 @@ import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
-  listarCameras, listarDispositivos, moverBloco,
+  listarCameras, listarDispositivos, moverBloco, salvarBloco,
 } from "@/lib/automacao/api";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
 
 const COLUNAS = 12;
 const ALTURA_LINHA = 74;
+const ESPACO = 8;
+
+type Modo = "grade" | "livre";
+interface PosLivre { l: number; t: number; w: number; h: number }
+
+const posLivre = (b: Bloco, cx: number): PosLivre => {
+  const p = (b.config as any)?.pos;
+  if (p && typeof p.l === "number") return p as PosLivre;
+  return {
+    l: b.x * cx,
+    t: b.y * (ALTURA_LINHA + ESPACO),
+    w: Math.max(60, b.w * cx - ESPACO),
+    h: b.h * ALTURA_LINHA + (b.h - 1) * ESPACO,
+  };
+};
 
 export default function AutomacaoPainel() {
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
@@ -26,14 +45,15 @@ export default function AutomacaoPainel() {
   const [ambienteId, setAmbienteId] = useState<string>("");
   const [edicao, setEdicao] = useState(false);
   const [admin, setAdmin] = useState(false);
+  const [modo, setModo] = useState<Modo>("grade");
+  const [selecionado, setSelecionado] = useState<string | null>(null);
   const [estados, setEstados] = useState<Record<string, boolean | null>>({});
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
-  const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number } | null>(null);
-  const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number } | null>(null);
-
+  const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
+  const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
 
   const carregar = useCallback(async () => {
     const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
@@ -56,6 +76,18 @@ export default function AutomacaoPainel() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!ambienteId) return;
+    const salvo = localStorage.getItem(`automacao_modo_${ambienteId}`);
+    setModo(salvo === "livre" ? "livre" : "grade");
+    setSelecionado(null);
+  }, [ambienteId]);
+
+  const trocarModo = (m: Modo) => {
+    setModo(m);
+    if (ambienteId) localStorage.setItem(`automacao_modo_${ambienteId}`, m);
+  };
+
   const podeEditar = admin && edicao;
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
@@ -64,17 +96,24 @@ export default function AutomacaoPainel() {
     return { cx: largura / COLUNAS, cy: ALTURA_LINHA };
   };
 
+  const atualizarPos = (id: string, pos: PosLivre) =>
+    setBlocos((ant) => ant.map((b) => (b.id === id ? { ...b, config: { ...(b.config ?? {}), pos } } : b)));
+
   const aoArrastar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
+    setSelecionado(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    arrasto.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bx: bloco.x, by: bloco.y };
+    const p = posLivre(bloco, celula().cx);
+    arrasto.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bx: bloco.x, by: bloco.y, pl: p.l, pt: p.t };
   };
 
   const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
     e.stopPropagation();
+    setSelecionado(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    redim.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h };
+    const p = posLivre(bloco, celula().cx);
+    redim.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h, pw: p.w, ph: p.h };
   };
 
   const aoMover = (e: React.PointerEvent) => {
@@ -83,6 +122,15 @@ export default function AutomacaoPainel() {
     if (r) {
       const bloco = blocos.find((b) => b.id === r.id);
       if (!bloco) return;
+      if (modo === "livre") {
+        const p = posLivre(bloco, cx);
+        atualizarPos(bloco.id, {
+          ...p,
+          w: Math.max(40, r.pw + (e.clientX - r.ox)),
+          h: Math.max(40, r.ph + (e.clientY - r.oy)),
+        });
+        return;
+      }
       const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round((e.clientX - r.ox) / cx)));
       const nh = Math.max(1, Math.min(12, r.bh + Math.round((e.clientY - r.oy) / cy)));
       if (nw !== bloco.w || nh !== bloco.h) {
@@ -94,11 +142,25 @@ export default function AutomacaoPainel() {
     if (!a) return;
     const bloco = blocos.find((b) => b.id === a.id);
     if (!bloco) return;
+    if (modo === "livre") {
+      const p = posLivre(bloco, cx);
+      atualizarPos(bloco.id, {
+        ...p,
+        l: Math.max(0, a.pl + (e.clientX - a.ox)),
+        t: Math.max(0, a.pt + (e.clientY - a.oy)),
+      });
+      return;
+    }
     const nx = Math.max(0, Math.min(COLUNAS - bloco.w, a.bx + Math.round((e.clientX - a.ox) / cx)));
     const ny = Math.max(0, a.by + Math.round((e.clientY - a.oy) / cy));
     if (nx !== bloco.x || ny !== bloco.y) {
       setBlocos((ant) => ant.map((b) => (b.id === a.id ? { ...b, x: nx, y: ny } : b)));
     }
+  };
+
+  const gravarBloco = async (bloco: Bloco) => {
+    if (modo === "livre") await salvarBloco(bloco);
+    else await moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h });
   };
 
   const aoSoltar = async () => {
@@ -107,9 +169,40 @@ export default function AutomacaoPainel() {
     arrasto.current = null;
     if (!alvo) return;
     const bloco = blocos.find((b) => b.id === alvo.id);
-    if (bloco) await moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h });
+    if (bloco) await gravarBloco(bloco);
   };
 
+  const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
+    const bloco = doAmbiente.find((b) => b.id === selecionado);
+    if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
+    const { cx } = celula();
+    if (modo === "livre") {
+      const largura = gradeRef.current?.clientWidth ?? 0;
+      const altura = gradeRef.current?.clientHeight ?? 0;
+      const p = posLivre(bloco, cx);
+      const novo: PosLivre = { ...p };
+      if (dir === "esq") novo.l = 0;
+      if (dir === "centroH") novo.l = Math.max(0, (largura - p.w) / 2);
+      if (dir === "dir") novo.l = Math.max(0, largura - p.w);
+      if (dir === "topo") novo.t = 0;
+      if (dir === "centroV") novo.t = Math.max(0, (altura - p.h) / 2);
+      if (dir === "base") novo.t = Math.max(0, altura - p.h);
+      atualizarPos(bloco.id, novo);
+      await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } });
+    } else {
+      const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
+      let { x, y } = bloco;
+      if (dir === "esq") x = 0;
+      if (dir === "centroH") x = Math.max(0, Math.round((COLUNAS - bloco.w) / 2));
+      if (dir === "dir") x = Math.max(0, COLUNAS - bloco.w);
+      if (dir === "topo") y = 0;
+      if (dir === "centroV") y = Math.max(0, Math.round((linhas - bloco.h) / 2));
+      if (dir === "base") y = Math.max(0, linhas - bloco.h);
+      setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
+      await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+    }
+    toast.success("Elemento alinhado.");
+  };
 
   const novoBloco = () =>
     setBlocoEdit({ nome: "", tipo: "luz", ambiente_id: ambienteId || ambientes[0]?.id, canal: 0, x: 0, y: 0, w: 3, h: 2 });
@@ -140,6 +233,15 @@ export default function AutomacaoPainel() {
       </>
     );
   }
+
+  const alinhamentos = [
+    { dir: "esq", Icone: AlignHorizontalJustifyStart, titulo: "Alinhar à esquerda" },
+    { dir: "centroH", Icone: AlignHorizontalJustifyCenter, titulo: "Centralizar na horizontal" },
+    { dir: "dir", Icone: AlignHorizontalJustifyEnd, titulo: "Alinhar à direita" },
+    { dir: "topo", Icone: AlignVerticalJustifyStart, titulo: "Alinhar em cima" },
+    { dir: "centroV", Icone: AlignVerticalJustifyCenter, titulo: "Centralizar na vertical" },
+    { dir: "base", Icone: AlignVerticalJustifyEnd, titulo: "Alinhar embaixo" },
+  ] as const;
 
   return (
     <div className="space-y-4">
@@ -184,73 +286,118 @@ export default function AutomacaoPainel() {
         )}
       </div>
 
+      {podeEditar && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
+          <span className="text-xs text-muted-foreground">Posicionamento:</span>
+          <Button size="sm" variant={modo === "grade" ? "default" : "outline"} onClick={() => trocarModo("grade")}>
+            <Grid3X3 className="h-4 w-4 mr-1" /> Alinhar à grade
+          </Button>
+          <Button size="sm" variant={modo === "livre" ? "default" : "outline"} onClick={() => trocarModo("livre")}>
+            <MousePointer2 className="h-4 w-4 mr-1" /> Livre
+          </Button>
+          <span className="ml-2 text-xs text-muted-foreground">Alinhar elemento escolhido:</span>
+          {alinhamentos.map(({ dir, Icone, titulo }) => (
+            <Button
+              key={dir}
+              size="icon"
+              variant="outline"
+              className="h-8 w-8"
+              title={titulo}
+              disabled={!selecionado}
+              onClick={() => alinhar(dir)}
+            >
+              <Icone className="h-4 w-4" />
+            </Button>
+          ))}
+        </div>
+      )}
+
       <div
         ref={gradeRef}
         onPointerMove={aoMover}
         onPointerUp={aoSoltar}
         onPointerCancel={aoSoltar}
-        className="relative rounded-2xl border bg-muted/20 p-2 grid gap-2"
-        style={{
-          gridTemplateColumns: `repeat(${COLUNAS}, minmax(0, 1fr))`,
-          gridAutoRows: `${ALTURA_LINHA}px`,
-          minHeight: 320,
-        }}
+        className={
+          modo === "livre"
+            ? "relative rounded-2xl border bg-muted/20 p-2 overflow-hidden"
+            : "relative rounded-2xl border bg-muted/20 p-2 grid gap-2"
+        }
+        style={
+          modo === "livre"
+            ? { minHeight: 420 }
+            : {
+                gridTemplateColumns: `repeat(${COLUNAS}, minmax(0, 1fr))`,
+                gridAutoRows: `${ALTURA_LINHA}px`,
+                minHeight: 320,
+              }
+        }
       >
-        {doAmbiente.map((b) => (
-          <div
-            key={b.id}
-            onPointerDown={(e) => aoArrastar(e, b)}
-            className="relative"
-            style={{
-              gridColumn: `${b.x + 1} / span ${b.w}`,
-              gridRow: `${b.y + 1} / span ${b.h}`,
-              cursor: podeEditar ? "grab" : undefined,
-              touchAction: podeEditar ? "none" : undefined,
-            }}
-          >
-            <BlocoCard
-              bloco={b}
-              ligado={estados[b.id] ?? null}
-              edicao={podeEditar}
-              onEditar={() => setBlocoEdit(b)}
-              onEstado={(v) => setEstados((s) => ({ ...s, [b.id]: v }))}
-            />
-            {podeEditar && (
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
-              >
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </Button>
-            )}
-            {podeEditar && (
-              <>
-                <div
-                  onPointerDown={(e) => aoRedimensionar(e, b)}
-                  title="Arraste para redimensionar"
-                  className="absolute -bottom-1 -right-1 h-5 w-5 cursor-nwse-resize rounded-full border-2 border-primary bg-background shadow"
-                  style={{ touchAction: "none" }}
-                />
-                <div
-                  onPointerDown={(e) => aoRedimensionar(e, b)}
-                  title="Arraste para mudar a largura"
-                  className="absolute top-1/2 -right-1 h-8 w-2 -translate-y-1/2 cursor-ew-resize rounded-full bg-primary/70"
-                  style={{ touchAction: "none" }}
-                />
-                <div
-                  onPointerDown={(e) => aoRedimensionar(e, b)}
-                  title="Arraste para mudar a altura"
-                  className="absolute -bottom-1 left-1/2 h-2 w-8 -translate-x-1/2 cursor-ns-resize rounded-full bg-primary/70"
-                  style={{ touchAction: "none" }}
-                />
-              </>
-            )}
-          </div>
-
-        ))}
+        {doAmbiente.map((b) => {
+          const p = modo === "livre" ? posLivre(b, celula().cx) : null;
+          return (
+            <div
+              key={b.id}
+              onPointerDown={(e) => aoArrastar(e, b)}
+              className={`relative ${podeEditar && selecionado === b.id ? "ring-2 ring-primary rounded-xl" : ""}`}
+              style={
+                p
+                  ? {
+                      position: "absolute",
+                      left: p.l, top: p.t, width: p.w, height: p.h,
+                      cursor: podeEditar ? "grab" : undefined,
+                      touchAction: podeEditar ? "none" : undefined,
+                    }
+                  : {
+                      gridColumn: `${b.x + 1} / span ${b.w}`,
+                      gridRow: `${b.y + 1} / span ${b.h}`,
+                      cursor: podeEditar ? "grab" : undefined,
+                      touchAction: podeEditar ? "none" : undefined,
+                    }
+              }
+            >
+              <BlocoCard
+                bloco={b}
+                ligado={estados[b.id] ?? null}
+                edicao={podeEditar}
+                onEditar={() => setBlocoEdit(b)}
+                onEstado={(v) => setEstados((s) => ({ ...s, [b.id]: v }))}
+              />
+              {podeEditar && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => setExcluir({ tipo: "bloco", id: b.id, nome: b.nome })}
+                >
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </Button>
+              )}
+              {podeEditar && (
+                <>
+                  <div
+                    onPointerDown={(e) => aoRedimensionar(e, b)}
+                    title="Arraste para redimensionar"
+                    className="absolute -bottom-1 -right-1 h-5 w-5 cursor-nwse-resize rounded-full border-2 border-primary bg-background shadow"
+                    style={{ touchAction: "none" }}
+                  />
+                  <div
+                    onPointerDown={(e) => aoRedimensionar(e, b)}
+                    title="Arraste para mudar a largura"
+                    className="absolute top-1/2 -right-1 h-8 w-2 -translate-y-1/2 cursor-ew-resize rounded-full bg-primary/70"
+                    style={{ touchAction: "none" }}
+                  />
+                  <div
+                    onPointerDown={(e) => aoRedimensionar(e, b)}
+                    title="Arraste para mudar a altura"
+                    className="absolute -bottom-1 left-1/2 h-2 w-8 -translate-x-1/2 cursor-ns-resize rounded-full bg-primary/70"
+                    style={{ touchAction: "none" }}
+                  />
+                </>
+              )}
+            </div>
+          );
+        })}
         {!doAmbiente.length && (
           <div className="col-span-full flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground py-16">
             Nenhum elemento neste ambiente ainda.
@@ -265,7 +412,9 @@ export default function AutomacaoPainel() {
 
       {podeEditar && (
         <p className="text-xs text-muted-foreground">
-          Arraste os elementos para reposicionar. A posição é salva automaticamente.
+          {modo === "livre"
+            ? "Modo livre: arraste os elementos para qualquer ponto da tela. A posição é salva automaticamente."
+            : "Modo grade: os elementos encaixam nas colunas e linhas. A posição é salva automaticamente."}
         </p>
       )}
 
