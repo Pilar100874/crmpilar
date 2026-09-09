@@ -527,9 +527,28 @@ export default function AutomacaoPainel() {
               {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
             </Button>
             {edicao && (
-              <Button size="sm" onClick={novoBloco}>
-                <Plus className="h-4 w-4 mr-2" /> Novo elemento
-              </Button>
+              <>
+                <Button size="sm" onClick={novoBloco}>
+                  <Plus className="h-4 w-4 mr-2" /> Novo elemento
+                </Button>
+                <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={salvarPainel}>
+                  <Save className="h-4 w-4 mr-2" /> Salvar painel
+                </Button>
+                <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={duplicarPainel}>
+                  <CopyPlus className="h-4 w-4 mr-2" /> Duplicar painel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!ambienteAtual}
+                  onClick={alternarAtivoPainel}
+                  title="Painel desativado fica escondido para os outros usuários"
+                >
+                  {ambienteAtual?.ativo === false
+                    ? <><Power className="h-4 w-4 mr-2" /> Ativar painel</>
+                    : <><PowerOff className="h-4 w-4 mr-2" /> Desativar painel</>}
+                </Button>
+              </>
             )}
           </div>
         )}
