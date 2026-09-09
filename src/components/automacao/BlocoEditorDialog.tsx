@@ -16,6 +16,7 @@ import SeletorIcone from "@/components/automacao/SeletorIcone";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
+import { FORMAS } from "@/components/automacao/BlocoForma";
 
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
 const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor"];
