@@ -18,8 +18,10 @@ import {
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
+import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
+
 
 const COLUNAS = 12;
 const ALTURA_LINHA = 74;
