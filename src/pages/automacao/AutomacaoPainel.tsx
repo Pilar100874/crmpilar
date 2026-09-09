@@ -70,10 +70,28 @@ export default function AutomacaoPainel() {
     arrasto.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bx: bloco.x, by: bloco.y };
   };
 
+  const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
+    if (!podeEditar) return;
+    e.stopPropagation();
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    redim.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h };
+  };
+
   const aoMover = (e: React.PointerEvent) => {
+    const { cx, cy } = celula();
+    const r = redim.current;
+    if (r) {
+      const bloco = blocos.find((b) => b.id === r.id);
+      if (!bloco) return;
+      const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round((e.clientX - r.ox) / cx)));
+      const nh = Math.max(1, Math.min(12, r.bh + Math.round((e.clientY - r.oy) / cy)));
+      if (nw !== bloco.w || nh !== bloco.h) {
+        setBlocos((ant) => ant.map((b) => (b.id === r.id ? { ...b, w: nw, h: nh } : b)));
+      }
+      return;
+    }
     const a = arrasto.current;
     if (!a) return;
-    const { cx, cy } = celula();
     const bloco = blocos.find((b) => b.id === a.id);
     if (!bloco) return;
     const nx = Math.max(0, Math.min(COLUNAS - bloco.w, a.bx + Math.round((e.clientX - a.ox) / cx)));
@@ -84,12 +102,14 @@ export default function AutomacaoPainel() {
   };
 
   const aoSoltar = async () => {
-    const a = arrasto.current;
+    const alvo = redim.current ?? arrasto.current;
+    redim.current = null;
     arrasto.current = null;
-    if (!a) return;
-    const bloco = blocos.find((b) => b.id === a.id);
+    if (!alvo) return;
+    const bloco = blocos.find((b) => b.id === alvo.id);
     if (bloco) await moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h });
   };
+
 
   const novoBloco = () =>
     setBlocoEdit({ nome: "", tipo: "luz", ambiente_id: ambienteId || ambientes[0]?.id, canal: 0, x: 0, y: 0, w: 3, h: 2 });
