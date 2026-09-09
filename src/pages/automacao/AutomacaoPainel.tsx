@@ -144,6 +144,8 @@ export default function AutomacaoPainel() {
   };
 
   const podeEditar = admin && edicao;
+  /** Painéis desativados continuam visíveis só para administradores. */
+  const ambientesVisiveis = admin ? ambientes : ambientes.filter((a) => a.ativo !== false);
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
   // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
