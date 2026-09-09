@@ -11,6 +11,8 @@ import BlocoGrafico from "./BlocoGrafico";
 import BlocoCena from "./BlocoCena";
 import BlocoIcone from "./BlocoIcone";
 import BlocoImagem from "./BlocoImagem";
+import BlocoRealista from "./BlocoRealista";
+
 
 const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem"];
 
