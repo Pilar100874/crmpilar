@@ -18,7 +18,12 @@ interface Leitura {
   ms: number;
 }
 
-const INTERVALO = 30_000;
+const RITMOS = [
+  { valor: 3_000, label: "3 segundos" },
+  { valor: 5_000, label: "5 segundos" },
+  { valor: 15_000, label: "15 segundos" },
+  { valor: 30_000, label: "30 segundos" },
+];
 
 function haQuantoTempo(quando: number | string | null): string {
   if (!quando) return "sem registro";
