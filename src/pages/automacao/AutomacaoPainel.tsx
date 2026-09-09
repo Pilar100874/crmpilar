@@ -63,15 +63,49 @@ export default function AutomacaoPainel() {
   const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
 
   const carregar = useCallback(async () => {
-    const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
+    const [a, b, d, c, r] = await Promise.all([
+      listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras(), listarRegras(),
+    ]);
     setAmbientes(a);
     setBlocos(b);
     setDispositivos(d);
     setCameras(c);
+    setRegras(r);
     setAmbienteId((atual) => (a.some((x) => x.id === atual) ? atual : a[0]?.id || ""));
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Guarda o estado mais recente para as automações consultarem durante a execução.
+  useEffect(() => { estadosRef.current = estados; }, [estados]);
+  useEffect(() => { blocosRef.current = blocos; regrasRef.current = regras; }, [blocos, regras]);
+
+  /** Aplica o estado no elemento e em todos os outros que usam o mesmo equipamento. */
+  const aplicarEstado = useCallback((deviceId: string | null, blocoId: string | null, ligado: boolean | null) => {
+    setEstados((s) => {
+      const proximo = { ...s };
+      if (blocoId) proximo[blocoId] = ligado;
+      if (deviceId) {
+        for (const outro of blocosRef.current) {
+          if (outro.device_id === deviceId) proximo[outro.id] = ligado;
+        }
+      }
+      estadosRef.current = proximo;
+      return proximo;
+    });
+  }, []);
+
+  const dispararRegras = useCallback((ev: EventoPainel) => {
+    if (!regrasRef.current.length) return;
+    rodarRegras(ev, {
+      regras: regrasRef.current,
+      blocos: blocosRef.current,
+      estados: estadosRef.current,
+      aplicarEstado,
+      aviso: (t, erro) => (erro ? toast.error(t) : toast.info(t)),
+    }).catch(() => toast.error("Não foi possível concluir a automação."));
+  }, [aplicarEstado]);
+
 
   useEffect(() => {
     (async () => {
