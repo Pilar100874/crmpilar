@@ -7,6 +7,7 @@ import { useCampainha, useInterfoneConfig, tocarAlerta } from "@/lib/portaria/in
 import InterfonePopup from "./InterfonePopup";
 import PilarFone from "./PilarFone";
 import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
+import { toast } from "sonner";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
