@@ -77,10 +77,13 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
           <Icon
             className={cn(
               "transition-colors",
-              aceso ? "text-primary" : "text-muted-foreground",
+              !corAtual && (aceso ? "text-primary" : "text-muted-foreground"),
               classeAnimacao(cfg.animacao, aceso),
             )}
-            style={fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }}
+            style={{
+              ...(fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }),
+              ...(corAtual ? { color: corAtual } : {}),
+            }}
           />
         )}
       </span>
