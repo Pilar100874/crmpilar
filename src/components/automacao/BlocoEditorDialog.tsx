@@ -135,6 +135,16 @@ export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, came
             <div className="space-y-2">
               <Label>Elemento</Label>
               <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
+              <div>
+                <Label className="text-xs">Tamanho do ícone ({cfg.tamanho ?? 0 ? `${cfg.tamanho}px` : "Automático"})</Label>
+                <input
+                  type="range" min={0} max={128} step={4}
+                  value={cfg.tamanho ?? 0}
+                  onChange={(e) => setCfg({ tamanho: Number(e.target.value) || undefined })}
+                  className="w-full accent-primary"
+                />
+                <p className="text-[11px] text-muted-foreground">Em "Automático" o ícone cresce junto com o bloco.</p>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label>Animação</Label>
