@@ -100,7 +100,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
               value={blocoEdit?.tipo ?? "luz"}
               onValueChange={(v) => setBlocoEdit((b) => ({ ...b, tipo: v as TipoBloco }))}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-popover">
                 {(["Controle", "Informação", "Visual"] as const).map((grupo) => {
                   const itens = TIPOS_BLOCO.filter(
@@ -112,7 +112,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                       <SelectLabel>{grupo}</SelectLabel>
                       {itens.map((t) => (
                         <SelectItem key={t.valor} value={t.valor}>
-                          <span className="flex flex-col">
+                          <span className="flex flex-col items-start text-left">
                             <span>{t.label}</span>
                             <span className="text-[11px] text-muted-foreground">{t.descricao}</span>
                           </span>
