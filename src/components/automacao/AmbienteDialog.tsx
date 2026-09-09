@@ -217,7 +217,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
         </div>
 
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 border-t pt-3 bg-background">
           <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
