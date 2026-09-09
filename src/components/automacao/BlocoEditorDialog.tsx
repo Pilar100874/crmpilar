@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
+  Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
   enviarImagemAutomacao, salvarBloco,
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";

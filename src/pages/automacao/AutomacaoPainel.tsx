@@ -627,7 +627,6 @@ export default function AutomacaoPainel() {
 
       <BlocoEditorDialog
         bloco={blocoEdit}
-        ambientes={ambientes}
         dispositivos={dispositivos}
         cameras={cameras}
         onChange={setBlocoEdit}
