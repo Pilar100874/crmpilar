@@ -226,7 +226,30 @@ export default function AutomacaoPainel() {
                 <Trash2 className="h-3 w-3 text-destructive" />
               </Button>
             )}
+            {podeEditar && (
+              <>
+                <div
+                  onPointerDown={(e) => aoRedimensionar(e, b)}
+                  title="Arraste para redimensionar"
+                  className="absolute -bottom-1 -right-1 h-5 w-5 cursor-nwse-resize rounded-full border-2 border-primary bg-background shadow"
+                  style={{ touchAction: "none" }}
+                />
+                <div
+                  onPointerDown={(e) => aoRedimensionar(e, b)}
+                  title="Arraste para mudar a largura"
+                  className="absolute top-1/2 -right-1 h-8 w-2 -translate-y-1/2 cursor-ew-resize rounded-full bg-primary/70"
+                  style={{ touchAction: "none" }}
+                />
+                <div
+                  onPointerDown={(e) => aoRedimensionar(e, b)}
+                  title="Arraste para mudar a altura"
+                  className="absolute -bottom-1 left-1/2 h-2 w-8 -translate-x-1/2 cursor-ns-resize rounded-full bg-primary/70"
+                  style={{ touchAction: "none" }}
+                />
+              </>
+            )}
           </div>
+
         ))}
         {!doAmbiente.length && (
           <div className="col-span-full flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground py-16">
