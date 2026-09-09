@@ -71,6 +71,12 @@ export default function BlocoCard({ bloco, ligado, onEstado, edicao, onEditar }:
     );
   }
 
+  if ((bloco.config as Record<string, unknown> | null)?.estilo === "realista") {
+    return (
+      <BlocoRealista bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} onEditar={onEditar} />
+    );
+  }
+
   return (
     <div
       className={cn(
