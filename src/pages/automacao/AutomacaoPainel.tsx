@@ -511,15 +511,16 @@ export default function AutomacaoPainel() {
             }}
           />
         )}
-        {doFundoParaFrente.map((b, indice) => {
+        {(podeEditar ? doFundoParaFrente : doFundoParaFrente.filter(estaVisivel)).map((b, indice) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
           const travado = estaTravado(b);
+          const visivel = estaVisivel(b);
           const zIndex = indice + 1;
           return (
             <div
               key={b.id}
               onPointerDown={(e) => aoArrastar(e, b)}
-              className={`relative ${podeEditar && selecionado === b.id ? "ring-2 ring-primary rounded-xl" : ""}`}
+              className={`relative ${podeEditar && selecionado === b.id ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
               style={
                 p
                   ? {
