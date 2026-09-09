@@ -105,6 +105,7 @@ export default function AutomacaoPainel() {
   // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
   // junto do elemento, para voltar igual em qualquer aparelho.
   const estaTravado = (b: Bloco) => !!(b.config as any)?.travado;
+  const estaVisivel = (b: Bloco) => b.visivel !== false;
   const camadaDe = (b: Bloco) => Number((b.config as any)?.camada ?? 0);
   // Do fundo para a frente.
   const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
@@ -140,6 +141,13 @@ export default function AutomacaoPainel() {
     );
     await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } });
     toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+  };
+
+  const alternarVisivel = async (bloco: Bloco) => {
+    const novo = !estaVisivel(bloco);
+    setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
+    await salvarBloco({ ...bloco, visivel: novo });
+    toast.success(novo ? "Elemento visível." : "Elemento oculto.");
   };
 
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
