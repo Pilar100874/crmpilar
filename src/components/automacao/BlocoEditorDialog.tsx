@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
@@ -103,12 +103,32 @@ export default function BlocoEditorDialog({ bloco, ambientes, dispositivos, came
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="bg-popover">
-                {TIPOS_BLOCO.map((t) => (
-                  <SelectItem key={t.valor} value={t.valor}>{t.label}</SelectItem>
-                ))}
+                {(["Controle", "Informação", "Visual"] as const).map((grupo) => {
+                  const itens = TIPOS_BLOCO.filter(
+                    (t) => t.grupo === grupo && (!t.legado || t.valor === blocoEdit?.tipo),
+                  );
+                  if (!itens.length) return null;
+                  return (
+                    <SelectGroup key={grupo}>
+                      <SelectLabel>{grupo}</SelectLabel>
+                      {itens.map((t) => (
+                        <SelectItem key={t.valor} value={t.valor}>
+                          <span className="flex flex-col">
+                            <span>{t.label}</span>
+                            <span className="text-[11px] text-muted-foreground">{t.descricao}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })}
               </SelectContent>
             </Select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {TIPOS_BLOCO.find((t) => t.valor === (blocoEdit?.tipo ?? "luz"))?.descricao}
+            </p>
           </div>
+
           <div>
             <Label>Ambiente</Label>
             <Select

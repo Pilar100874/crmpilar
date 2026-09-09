@@ -93,18 +93,26 @@ export async function listarDispositivosDetalhados(): Promise<DispositivoDetalha
   return (data ?? []) as DispositivoDetalhado[];
 }
 
-export const TIPOS_BLOCO: { valor: TipoBloco; label: string; descricao: string }[] = [
-  { valor: "luz", label: "Luz", descricao: "Liga e desliga a iluminação" },
-  { valor: "tomada", label: "Tomada", descricao: "Liga e desliga um equipamento" },
-  { valor: "portao", label: "Portão / Porta", descricao: "Acionamento por pulso" },
-  { valor: "sensor", label: "Sensor / Status", descricao: "Mostra o estado do equipamento" },
-  { valor: "cena", label: "Botão animado", descricao: "Botão grande com animação ao acionar" },
-  { valor: "camera", label: "Câmera ao vivo", descricao: "Mostra a imagem de uma câmera" },
-  { valor: "mapa", label: "Mapa", descricao: "Mostra um local no mapa" },
-  { valor: "grafico", label: "Gráfico", descricao: "Acompanha o estado do equipamento ao longo do tempo" },
-  { valor: "icone", label: "Elemento animado", descricao: "Lâmpada, tomada, ventilador... com animação" },
-  { valor: "imagem", label: "Imagem", descricao: "Planta da casa, foto do ambiente ou fundo" },
+export const TIPOS_BLOCO: {
+  valor: TipoBloco;
+  label: string;
+  descricao: string;
+  grupo: "Controle" | "Visual" | "Informação";
+  /** Tipos antigos que foram substituídos: só aparecem se o elemento já usa. */
+  legado?: boolean;
+}[] = [
+  { valor: "luz", label: "Luz", descricao: "Liga e desliga a iluminação", grupo: "Controle" },
+  { valor: "tomada", label: "Tomada", descricao: "Liga e desliga um equipamento", grupo: "Controle" },
+  { valor: "portao", label: "Portão / Porta", descricao: "Um toque abre (acionamento por pulso)", grupo: "Controle" },
+  { valor: "icone", label: "Elemento animado", descricao: "Escolha o desenho (lâmpada, ventilador, portão...) e a animação", grupo: "Controle" },
+  { valor: "cena", label: "Botão animado", descricao: "Substituído por Elemento animado", grupo: "Controle", legado: true },
+  { valor: "sensor", label: "Sensor / Status", descricao: "Só mostra a situação, sem acionar", grupo: "Informação" },
+  { valor: "grafico", label: "Gráfico", descricao: "Acompanha a situação ao longo do tempo", grupo: "Informação" },
+  { valor: "camera", label: "Câmera ao vivo", descricao: "Mostra a imagem de uma câmera", grupo: "Informação" },
+  { valor: "mapa", label: "Mapa", descricao: "Mostra um local no mapa", grupo: "Informação" },
+  { valor: "imagem", label: "Imagem", descricao: "Planta da casa, foto do ambiente ou fundo", grupo: "Visual" },
 ];
+
 
 /** Envia uma imagem para o painel e devolve o caminho salvo. */
 export async function enviarImagemAutomacao(arquivo: File): Promise<string | null> {
