@@ -743,6 +743,16 @@ export default function AutomacaoPainel() {
                   >
                     {travado ? <Lock className="h-3 w-3 text-amber-500" /> : <Unlock className="h-3 w-3" />}
                   </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -bottom-2 -left-2 h-6 w-6 rounded-full shadow"
+                    title="Duplicar elemento"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => duplicarBloco(b)}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
                 </>
               )}
               {podeEditar && !travado && (
