@@ -12,6 +12,14 @@ import { Plus, Pencil, Trash2, ExternalLink, MonitorPlay, PlayCircle } from "luc
 import { toast } from "sonner";
 import { ROTAS_INTERNAS, getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
 
+const TAMANHOS_AUTOMACAO = [
+  { id: "1920x1080", nome: "Full HD 1920×1080 (16:9)" },
+  { id: "3840x2160", nome: "4K 3840×2160 (16:9)" },
+  { id: "1280x720", nome: "HD 1280×720 (16:9)" },
+  { id: "1080x1920", nome: "Vertical 1080×1920 (9:16)" },
+  { id: "1024x768", nome: "Tablet 1024×768 (4:3)" },
+];
+
 export default function TvSignageDashboards() {
   const [list, setList] = useState<any[]>([]);
   const [edit, setEdit] = useState<any | null>(null);
@@ -20,6 +28,7 @@ export default function TvSignageDashboards() {
   const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [gruposVeiculos, setGruposVeiculos] = useState<any[]>([]);
   const [murais, setMurais] = useState<any[]>([]);
+  const [ambientesAuto, setAmbientesAuto] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
@@ -32,6 +41,7 @@ export default function TvSignageDashboards() {
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
     supabase.from("unidades").select("id,nome").order("nome").then(({ data }) => setGruposVeiculos(data || []));
     supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
+    supabase.from("automacao_ambientes").select("id,nome").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
   }, []);
 
 
@@ -62,6 +72,30 @@ export default function TvSignageDashboards() {
   const isVeiculosRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/veiculos";
   const isMuralRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/mural";
   const isPortariaRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/portaria";
+  const isAutomacaoRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/automacao";
+
+  // Painel de Automação na TV: ambiente exibido, tamanho da tela e abas.
+  const autoCfg = (() => {
+    const r = edit?.rota_interna || "";
+    const q = r.indexOf("?");
+    const sp = new URLSearchParams(q < 0 ? "" : r.slice(q + 1));
+    return {
+      ambiente: sp.get("ambiente") || "todos",
+      largura: parseInt(sp.get("largura") || "1920") || 1920,
+      altura: parseInt(sp.get("altura") || "1080") || 1080,
+      barra: sp.get("barra") !== "0",
+    };
+  })();
+  const updateAutoCfg = (patch: Partial<typeof autoCfg>) => {
+    const cfg = { ...autoCfg, ...patch };
+    const sp = new URLSearchParams({
+      ambiente: cfg.ambiente,
+      largura: String(cfg.largura),
+      altura: String(cfg.altura),
+    });
+    if (!cfg.barra) sp.set("barra", "0");
+    setEdit({ ...edit, rota_interna: `/tv/automacao?${sp.toString()}` });
+  };
   const portariaUnidade = (() => {
     const r = edit?.rota_interna || "";
     if (!isPortariaRoute(r)) return "";
@@ -396,6 +430,51 @@ export default function TvSignageDashboards() {
                         </p>
                       </div>
 
+                    </div>
+                  )}
+                  {isAutomacaoRoute(edit.rota_interna) && (
+                    <div className="space-y-3 rounded-md border p-3 bg-muted/30">
+                      <div className="text-xs font-medium">Painel de automação exibido</div>
+                      <div>
+                        <Label className="text-xs">Ambiente</Label>
+                        <Select value={autoCfg.ambiente} onValueChange={(v) => updateAutoCfg({ ambiente: v })}>
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todos">Todos (com abas para trocar)</SelectItem>
+                            {ambientesAuto.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Tamanho da tela</Label>
+                        <Select
+                          value={`${autoCfg.largura}x${autoCfg.altura}`}
+                          onValueChange={(v) => {
+                            const [l, a] = v.split("x").map((n) => parseInt(n) || 0);
+                            updateAutoCfg({ largura: l, altura: a });
+                          }}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {TAMANHOS_AUTOMACAO.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          O painel encolhe ou aumenta sozinho para caber inteiro na tela, sem barra de rolagem.
+                        </p>
+                      </div>
+                      <label className="flex items-center gap-2 text-xs">
+                        <Switch
+                          checked={autoCfg.barra}
+                          onCheckedChange={(v) => updateAutoCfg({ barra: v })}
+                        />
+                        Mostrar abas de ambiente na TV
+                      </label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Na TV o painel continua clicável com mouse ou toque, mas não permite editar.
+                      </p>
                     </div>
                   )}
                 </>
