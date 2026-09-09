@@ -28,7 +28,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
 
   useEffect(() => {
-    if (bloco?.tipo === "rastreamento" && unidades.length === 0) {
+    if ((bloco?.tipo === "rastreamento" || bloco?.tipo === "portaria") && unidades.length === 0) {
       listarUnidades().then(setUnidades);
     }
   }, [bloco?.tipo, unidades.length]);
@@ -420,6 +420,27 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   ))}
                 </SelectContent>
               </Select>
+              <div>
+                <Label>Unidade</Label>
+                <Select
+                  value={cfg.unidade_id ?? "todas"}
+                  onValueChange={(v) => setCfg({ unidade_id: v === "todas" ? null : v })}
+                >
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="todas">Todas as unidades</SelectItem>
+                    {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Quantidade de registros na lista</Label>
+                <Input
+                  type="number" min={1} max={20}
+                  value={cfg.limite ?? 4}
+                  onChange={(e) => setCfg({ limite: Math.min(20, Math.max(1, Number(e.target.value) || 1)) })}
+                />
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
