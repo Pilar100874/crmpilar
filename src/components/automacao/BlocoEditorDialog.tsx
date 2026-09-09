@@ -314,6 +314,19 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   onChange={(e) => setCfg({ texto: e.target.value })}
                 />
               </div>
+              <div>
+                <Label className="text-xs">Fonte da letra</Label>
+                <Select value={cfg.fonte ?? "system"} onValueChange={(v) => setCfg({ fonte: v })}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {FONTES_TEXTO.map((f) => (
+                      <SelectItem key={f.valor} value={f.valor} className="text-left">
+                        <span style={{ fontFamily: f.css }}>{f.rotulo}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <Label className="text-xs">Tamanho</Label>
@@ -324,20 +337,35 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Cor</Label>
-                  <Input
-                    type="color"
-                    value={cfg.cor ?? "#ffffff"}
-                    onChange={(e) => setCfg({ cor: e.target.value })}
-                  />
+                  <Label className="text-xs">Cor da letra</Label>
+                  <div className="flex gap-1">
+                    <Input
+                      type="color"
+                      className="w-12 p-1"
+                      value={cfg.cor ?? "#ffffff"}
+                      onChange={(e) => setCfg({ cor: e.target.value })}
+                    />
+                    <Input
+                      value={cfg.cor ?? "#ffffff"}
+                      onChange={(e) => setCfg({ cor: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label className="text-xs">Fundo</Label>
-                  <Input
-                    type="color"
-                    value={cfg.fundo ?? "#000000"}
-                    onChange={(e) => setCfg({ fundo: e.target.value })}
-                  />
+                  <Label className="text-xs">Cor do fundo</Label>
+                  <div className="flex gap-1">
+                    <Input
+                      type="color"
+                      className="w-12 p-1"
+                      value={cfg.fundo ?? "#000000"}
+                      onChange={(e) => setCfg({ fundo: e.target.value })}
+                    />
+                    <Input
+                      value={cfg.fundo ?? ""}
+                      placeholder="transparente"
+                      onChange={(e) => setCfg({ fundo: e.target.value || undefined })}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -364,14 +392,41 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </Select>
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={cfg.negrito !== false}
-                  onChange={(e) => setCfg({ negrito: e.target.checked })}
-                />
-                Texto em negrito
-              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={cfg.negrito !== false}
+                    onChange={(e) => setCfg({ negrito: e.target.checked })}
+                  />
+                  Negrito
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={cfg.italico === true}
+                    onChange={(e) => setCfg({ italico: e.target.checked })}
+                  />
+                  Itálico
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={cfg.sublinhado === true}
+                    onChange={(e) => setCfg({ sublinhado: e.target.checked })}
+                  />
+                  Sublinhado
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={cfg.sombra === true}
+                    onChange={(e) => setCfg({ sombra: e.target.checked })}
+                  />
+                  Sombra no texto
+                </label>
+              </div>
+
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
