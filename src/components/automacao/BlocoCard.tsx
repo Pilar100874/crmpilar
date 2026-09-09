@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Lightbulb, Plug, DoorOpen, Activity, Loader2, GripVertical, Pencil } from "lucide-react";
+import { Lightbulb, Plug, DoorOpen, Activity, Loader2, GripVertical, Pencil, Copy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,8 @@ interface Props {
   onEstado: (ligado: boolean | null) => void;
   edicao?: boolean;
   onEditar?: () => void;
+  /** Duplica o elemento sem sair do painel. */
+  onDuplicar?: () => void;
   /** Avisa o painel que o elemento foi tocado (usado pelas automações). */
   onAcionar?: () => void;
 }
