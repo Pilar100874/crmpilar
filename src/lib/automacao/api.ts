@@ -147,6 +147,9 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     ordem: a.ordem ?? 0,
     tela_largura: a.tela_largura ?? null,
     tela_altura: a.tela_altura ?? null,
+    fundo_caminho: a.fundo_caminho ?? null,
+    fundo_opacidade: a.fundo_opacidade ?? 100,
+    fundo_ajuste: a.fundo_ajuste ?? "cobrir",
   };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();
