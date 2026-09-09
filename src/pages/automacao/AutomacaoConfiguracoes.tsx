@@ -10,9 +10,11 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
-  excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos, listarCameras, listarDispositivos,
-  salvarAmbiente, salvarBloco,
+  enviarImagemAutomacao, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
+  listarCameras, listarDispositivos, salvarAmbiente, salvarBloco,
 } from "@/lib/automacao/api";
+import { ANIMACOES } from "@/lib/automacao/icones";
+import SeletorIcone from "@/components/automacao/SeletorIcone";
 
 export default function AutomacaoConfiguracoes() {
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
@@ -22,6 +24,7 @@ export default function AutomacaoConfiguracoes() {
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
   const carregar = useCallback(async () => {
     const [a, b, d, c] = await Promise.all([listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras()]);
