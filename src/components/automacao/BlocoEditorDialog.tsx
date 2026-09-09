@@ -414,6 +414,107 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {blocoEdit?.tipo === "clima" && (
+            <div className="space-y-3">
+              <BuscaCidade
+                cidade={cfg.cidade}
+                onEscolher={(c) => setCfg({ cidade: c.nome, latitude: c.lat, longitude: c.lon })}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Latitude</Label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={cfg.latitude ?? ""}
+                    placeholder="-23.5505"
+                    onChange={(e) => setCfg({ latitude: e.target.value === "" ? undefined : Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Longitude</Label>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    value={cfg.longitude ?? ""}
+                    placeholder="-46.6333"
+                    onChange={(e) => setCfg({ longitude: e.target.value === "" ? undefined : Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_hora !== false} onChange={(e) => setCfg({ mostrar_hora: e.target.checked })} />
+                  Mostrar hora
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_data !== false} onChange={(e) => setCfg({ mostrar_data: e.target.checked })} />
+                  Mostrar data
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_clima !== false} onChange={(e) => setCfg({ mostrar_clima: e.target.checked })} />
+                  Mostrar clima
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_detalhes !== false} onChange={(e) => setCfg({ mostrar_detalhes: e.target.checked })} />
+                  Umidade e vento
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.segundos === true} onChange={(e) => setCfg({ segundos: e.target.checked })} />
+                  Mostrar segundos
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.layout === "horizontal"} onChange={(e) => setCfg({ layout: e.target.checked ? "horizontal" : "vertical" })} />
+                  Lado a lado
+                </label>
+              </div>
+              <div>
+                <Label className="text-xs">Fonte</Label>
+                <Select value={cfg.fonte ?? "system"} onValueChange={(v) => setCfg({ fonte: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {FONTES_TEXTO.map((f) => (
+                      <SelectItem key={f.valor} value={f.valor}>{f.rotulo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Cor do texto</Label>
+                  <input type="color" value={cfg.cor || "#f1f5f9"} onChange={(e) => setCfg({ cor: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                </div>
+                <div>
+                  <Label className="text-xs">Cor secundária</Label>
+                  <input type="color" value={cfg.cor_secundaria || "#94a3b8"} onChange={(e) => setCfg({ cor_secundaria: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo</Label>
+                  <input type="color" value={cfg.fundo || "#1c1f26"} onChange={(e) => setCfg({ fundo: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                  {cfg.fundo && (
+                    <button type="button" className="text-[11px] text-muted-foreground underline" onClick={() => setCfg({ fundo: undefined })}>
+                      remover
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Tamanho da hora ({cfg.tamanho_hora ?? 44}px)</Label>
+                  <input type="range" min={12} max={120} value={cfg.tamanho_hora ?? 44} onChange={(e) => setCfg({ tamanho_hora: Number(e.target.value) })} className="w-full accent-primary" />
+                </div>
+                <div>
+                  <Label className="text-xs">Tamanho da data ({cfg.tamanho_data ?? 14}px)</Label>
+                  <input type="range" min={8} max={48} value={cfg.tamanho_data ?? 14} onChange={(e) => setCfg({ tamanho_data: Number(e.target.value) })} className="w-full accent-primary" />
+                </div>
+                <div>
+                  <Label className="text-xs">Tamanho da temperatura ({cfg.tamanho_temp ?? 28}px)</Label>
+                  <input type="range" min={12} max={96} value={cfg.tamanho_temp ?? 28} onChange={(e) => setCfg({ tamanho_temp: Number(e.target.value) })} className="w-full accent-primary" />
+                </div>
+              </div>
+            </div>
+          )}
+
           {blocoEdit?.tipo === "texto" && (
             <div className="space-y-2">
               <div>
