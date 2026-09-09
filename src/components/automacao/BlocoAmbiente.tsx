@@ -1,7 +1,7 @@
 // Cartão de ambiente com foto: a imagem fica clara quando está ligado
 // e escura (sem cor) quando está desligado.
 import { useEffect, useState } from "react";
-import { Lightbulb, Home, PersonStanding, Loader2, ImageIcon, LampCeiling } from "lucide-react";
+import { Loader2, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -56,89 +56,54 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
 
   return (
     <div
-      className="relative h-full w-full select-none overflow-hidden bg-[#1c1c1e] p-3 text-left"
+      className="relative h-full w-full select-none overflow-hidden bg-[#1c1c1e] text-left"
       style={{ borderRadius: typeof cfg.raio === "number" ? cfg.raio : 24 }}
       onClick={alternar}
       role="button"
     >
-      <div className="flex h-full gap-2">
-        <div className="flex min-w-0 flex-1 flex-col">
-          {cfg.legenda !== false && (
-            <div className="min-w-0 pl-1">
-              <p className={cn("truncate text-base font-bold leading-tight", aceso ? "text-white" : "text-white/50")}>
+      {cfg.legenda !== false && (
+        <div className="absolute left-0 right-0 top-0 z-10 px-4 pt-3">
+          <div
+            className="inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 backdrop-blur"
+            style={{ background: aceso ? `${cor}30` : "rgba(255,255,255,0.08)" }}
+          >
+            {ocupado ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-white/80" />
+            ) : (
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ background: aceso ? cor : "rgba(255,255,255,0.35)" }}
+              />
+            )}
+            <div className="min-w-0">
+              <p className={cn("truncate text-sm font-semibold leading-tight", aceso ? "text-white" : "text-white/60")}>
                 {bloco.nome}
               </p>
-              <p className={cn("truncate text-xs", aceso ? "text-white/70" : "text-white/35")}>
+              <p className={cn("truncate text-[10px]", aceso ? "text-white/80" : "text-white/40")}>
                 {aceso ? "Ligado" : "Desligado"}
               </p>
             </div>
-          )}
-
-          <div className="relative mt-2 min-h-0 flex-1 overflow-hidden rounded-t-[999px]">
-            {src ? (
-              <img
-                src={src}
-                alt={bloco.nome}
-                loading="lazy"
-                className={cn(
-                  "h-full w-full object-cover transition-all duration-500",
-                  aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.45]",
-                )}
-              />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-white/5 text-white/40">
-                <ImageIcon className="h-6 w-6" />
-                <span className="text-[11px]">Escolha uma foto</span>
-              </div>
-            )}
           </div>
         </div>
+      )}
 
-        <div className="flex shrink-0 flex-col items-center justify-start gap-2 py-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              alternar();
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300"
-            style={
-              aceso
-                ? { background: cor, color: "#1c1c1e", boxShadow: `0 0 18px ${cor}80` }
-                : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }
-            }
-          >
-            {ocupado ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lightbulb className="h-5 w-5" />}
-          </button>
-
-          <span
+      <div className="relative h-full w-full">
+        {src ? (
+          <img
+            src={src}
+            alt={bloco.nome}
+            loading="lazy"
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300",
-              aceso ? "bg-blue-500 text-white" : "bg-white/[0.06] text-white/40",
+              "h-full w-full object-cover transition-all duration-500",
+              aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.45]",
             )}
-          >
-            <Home className="h-5 w-5" />
-          </span>
-
-          <span
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300",
-              aceso ? "bg-white/15 text-white" : "bg-white/[0.06] text-white/40",
-            )}
-          >
-            <PersonStanding className="h-5 w-5" />
-          </span>
-
-          <span
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300",
-              aceso ? "bg-emerald-600 text-white" : "bg-white/[0.06] text-white/40",
-            )}
-          >
-            <LampCeiling className="h-5 w-5" />
-          </span>
-        </div>
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-white/5 text-white/40">
+            <ImageIcon className="h-8 w-8" />
+            <span className="text-xs">Escolha uma foto</span>
+          </div>
+        )}
       </div>
     </div>
   );
