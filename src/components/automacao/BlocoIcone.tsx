@@ -68,6 +68,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
             ? { height: fixo + 16, width: fixo + 16 }
             : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
           ...(corAtual ? { color: corAtual } : {}),
+          opacity: opacidade / 100,
         }}
       >
         {ocupado ? (
