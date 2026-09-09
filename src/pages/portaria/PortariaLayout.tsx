@@ -6,7 +6,6 @@ import {
   Users,
   UserPlus,
   History,
-  Cpu,
   Settings,
   PhoneCall,
   ShieldCheck,
@@ -28,7 +27,6 @@ interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; 
 
 const navItems: NavItem[] = [
   { to: "/portaria", label: "Interfone", icon: PhoneCall, end: true },
-  { to: "/portaria/dispositivos", label: "Dispositivos", icon: Cpu, gestor: true },
   { to: "/portaria/configuracoes", label: "Configurações", icon: Settings, gestor: true },
 ];
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, UserPlus, Cpu, History, Loader2 } from "lucide-react";
+import { Users, UserPlus, History, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortariaPerfil } from "@/lib/portaria/api";
 import BotaoAbrirAcesso, { AcessoCard } from "@/components/portaria/BotaoAbrirAcesso";
@@ -64,7 +64,6 @@ export default function PortariaDashboard() {
   const cards = [
     { label: "Pessoas ativas", valor: totais.pessoas, icon: Users, to: "/portaria/pessoas", visivel: isStaff },
     { label: "Visitantes ativos", valor: totais.visitantes, icon: UserPlus, to: "/portaria/visitantes", visivel: isStaff },
-    { label: "Dispositivos", valor: totais.dispositivos, icon: Cpu, to: "/portaria/dispositivos", visivel: isGestor },
     { label: "Eventos hoje", valor: totais.eventos, icon: History, to: "/portaria/historico", visivel: isStaff },
   ].filter((c) => c.visivel);
 

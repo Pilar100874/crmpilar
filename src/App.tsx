@@ -852,6 +852,7 @@ const App = () => (
               <Route path="/automacao" element={<AutomacaoLayout />}>
                 <Route index element={<AutomacaoPainel />} />
                 <Route path="estado" element={<AutomacaoEstado />} />
+                <Route path="dispositivos" element={<PortariaDispositivos />} />
               </Route>
 
               <Route path="/portaria" element={<PortariaLayout />}>
@@ -864,7 +865,7 @@ const App = () => (
                 <Route path="painel" element={<PortariaPainel />} />
                 <Route path="pendencias" element={<PortariaPendencias />} />
                 <Route path="relatorio-unidades" element={<PortariaRelatorioUnidades />} />
-                <Route path="dispositivos" element={<PortariaDispositivos />} />
+                <Route path="dispositivos" element={<Navigate to="/automacao/dispositivos" replace />} />
                 <Route path="interfone" element={<PortariaInterfone />} />
                 <Route path="permissoes" element={<PortariaPermissoes />} />
                 <Route path="configuracoes" element={<PortariaConfiguracoes />} />
