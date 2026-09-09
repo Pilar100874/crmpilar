@@ -24,6 +24,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
     tamanho?: number;
+    opacidade?: number;
   };
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
@@ -31,6 +32,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
   const fixo = typeof cfg.tamanho === "number" && cfg.tamanho > 0 ? cfg.tamanho : null;
+  const opacidade = typeof cfg.opacidade === "number" ? cfg.opacidade : 100;
 
   const acionar = async () => {
     if (!bloco.device_id) {
@@ -66,6 +68,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
             ? { height: fixo + 16, width: fixo + 16 }
             : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
           ...(corAtual ? { color: corAtual } : {}),
+          opacity: opacidade / 100,
         }}
       >
         {ocupado ? (
