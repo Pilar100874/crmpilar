@@ -3341,6 +3341,7 @@ export type Database = {
           created_by: string | null
           icone: string | null
           id: string
+          modo: string
           nome: string
           ordem: number
           tela_altura: number | null
@@ -3352,6 +3353,7 @@ export type Database = {
           created_by?: string | null
           icone?: string | null
           id?: string
+          modo?: string
           nome: string
           ordem?: number
           tela_altura?: number | null
@@ -3363,6 +3365,7 @@ export type Database = {
           created_by?: string | null
           icone?: string | null
           id?: string
+          modo?: string
           nome?: string
           ordem?: number
           tela_altura?: number | null
