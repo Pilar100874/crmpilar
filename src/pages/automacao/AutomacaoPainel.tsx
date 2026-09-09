@@ -257,6 +257,7 @@ export default function AutomacaoPainel() {
   const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
     const bloco = doAmbiente.find((b) => b.id === selecionado);
     if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
+    if (estaTravado(bloco)) { toast.error("Este elemento está bloqueado. Libere o cadeado para movê-lo."); return; }
     const { cx } = celula();
     if (modo === "livre") {
       const largura = telaL;
