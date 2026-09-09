@@ -512,11 +512,11 @@ export default function AutomacaoPainel() {
           >
             <Monitor className="h-4 w-4 mr-1" /> Tela de parede ({telaL}×{telaA})
           </Button>
-          <span className="ml-2 text-xs text-muted-foreground">
-            {selecionados.length > 1
-              ? `Alinhar ${selecionados.length} elementos escolhidos:`
-              : "Alinhar elemento escolhido (Shift ou Ctrl para escolher vários):"}
-          </span>
+          {selecionados.length > 1 && (
+            <span className="ml-2 text-xs text-muted-foreground">
+              {selecionados.length} selecionados
+            </span>
+          )}
           {alinhamentos.map(({ dir, Icone, titulo }) => (
             <Button
               key={dir}
