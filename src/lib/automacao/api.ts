@@ -13,7 +13,9 @@ export type TipoBloco =
   | "cena"
   | "camera"
   | "mapa"
-  | "grafico";
+  | "grafico"
+  | "icone"
+  | "imagem";
 
 export interface Ambiente {
   id: string;
