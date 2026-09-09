@@ -41,9 +41,11 @@ export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
 
-  if (!semDispositivo || !onAcionar || edicao || bloco.tipo === "camera") {
+  const proprioClick = ["camera", "rastreamento", "portaria"].includes(bloco.tipo);
+
+  if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
-      <div className="h-full" onClick={() => !edicao && bloco.tipo !== "camera" && onAcionar?.()}>
+      <div className="h-full" onClick={() => !edicao && !proprioClick && onAcionar?.()}>
         <BlocoCardInterno {...props} />
       </div>
     );
