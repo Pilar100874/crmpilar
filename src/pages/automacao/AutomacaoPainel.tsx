@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2,
+  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
 } from "lucide-react";
@@ -442,6 +442,7 @@ export default function AutomacaoPainel() {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {podeEditar && (
