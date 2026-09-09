@@ -74,26 +74,35 @@ export default function BlocoAmbiente({ bloco, ligado, onEstado, edicao }: Props
         </div>
       )}
 
-      <div
-        className="relative min-h-0 flex-1 overflow-hidden"
-        style={{ borderRadius: "14px 50% 50% 14px / 14px 50% 50% 14px" }}
-      >
-        {src ? (
-          <img
-            src={src}
-            alt={bloco.nome}
-            loading="lazy"
-            className={cn(
-              "h-full w-full object-cover transition-all duration-500",
-              aceso ? "grayscale-0 brightness-105" : "grayscale brightness-[0.4]",
-            )}
-          />
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-white/5 text-white/40">
-            <ImageIcon className="h-8 w-8" />
-            <span className="text-xs">Escolha uma foto</span>
-          </div>
-        )}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-full shadow-inner transition-all duration-500",
+            aceso ? "shadow-white/20" : "shadow-black/40",
+          )}
+          style={{
+            width: "min(100%, 100%)",
+            height: "min(100%, 100%)",
+            aspectRatio: "1 / 1",
+          }}
+        >
+          {src ? (
+            <img
+              src={src}
+              alt={bloco.nome}
+              loading="lazy"
+              className={cn(
+                "h-full w-full object-cover transition-all duration-500",
+                aceso ? "grayscale-0 brightness-110" : "grayscale brightness-[0.35]",
+              )}
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-white/5 text-white/40">
+              <ImageIcon className="h-8 w-8" />
+              <span className="text-xs text-center px-2">Escolha uma foto</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
