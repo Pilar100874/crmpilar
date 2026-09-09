@@ -486,7 +486,7 @@ export default function AutomacaoPainel() {
           {camadasAbertas && (
           <div className={`overflow-y-auto divide-y border-t ${camadasAmpliadas ? "max-h-[70vh]" : "max-h-56"}`}>
             {daFrenteParaTras.map((b, idx) => {
-              const ativo = selecionado === b.id;
+              const ativo = estaSelecionado(b.id);
               const visivel = estaVisivel(b);
               return (
                 <div
