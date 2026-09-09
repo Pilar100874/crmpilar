@@ -77,7 +77,7 @@ async function carregarModulo(
     const { data, count } = await porUnidade(
       db
         .from("cv_vehicle_movements")
-        .select("id, exit_time, vehicle:cv_vehicles(placa, modelo)", { count: "exact" })
+        .select("id, exit_time, vehicle:cv_vehicles(plate, name)", { count: "exact" })
         .eq("status", "out"),
       unidadeId,
     )
@@ -86,8 +86,8 @@ async function carregarModulo(
     return {
       total: count ?? (data?.length ?? 0),
       itens: (data ?? []).map((m: any) => ({
-        titulo: m.vehicle?.placa ?? "Veículo",
-        detalhe: m.vehicle?.modelo ?? "",
+        titulo: m.vehicle?.plate ?? "Veículo",
+        detalhe: m.vehicle?.name ?? "",
       })),
     };
   }

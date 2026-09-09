@@ -20,7 +20,8 @@ export type TipoBloco =
   | "portaria"
   | "interfone"
   | "pilarfone"
-  | "ambiente";
+  | "ambiente"
+  | "texto";
 
 export interface Ambiente {
   id: string;
