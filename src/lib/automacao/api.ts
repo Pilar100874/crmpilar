@@ -21,6 +21,7 @@ export type TipoBloco =
   | "interfone"
   | "pilarfone"
   | "ambiente"
+  | "imagemluz"
   | "texto";
 
 export interface Ambiente {
