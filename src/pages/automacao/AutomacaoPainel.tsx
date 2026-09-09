@@ -489,8 +489,10 @@ export default function AutomacaoPainel() {
             }}
           />
         )}
-        {doAmbiente.map((b) => {
+        {doFundoParaFrente.map((b, indice) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
+          const travado = estaTravado(b);
+          const zIndex = indice + 1;
           return (
             <div
               key={b.id}
@@ -501,14 +503,16 @@ export default function AutomacaoPainel() {
                   ? {
                       position: "absolute",
                       left: p.l, top: p.t, width: p.w, height: p.h,
-                      cursor: podeEditar ? "grab" : undefined,
-                      touchAction: podeEditar ? "none" : undefined,
+                      zIndex,
+                      cursor: podeEditar ? (travado ? "not-allowed" : "grab") : undefined,
+                      touchAction: podeEditar && !travado ? "none" : undefined,
                     }
                   : {
                       gridColumn: `${b.x + 1} / span ${b.w}`,
                       gridRow: `${b.y + 1} / span ${b.h}`,
-                      cursor: podeEditar ? "grab" : undefined,
-                      touchAction: podeEditar ? "none" : undefined,
+                      zIndex,
+                      cursor: podeEditar ? (travado ? "not-allowed" : "grab") : undefined,
+                      touchAction: podeEditar && !travado ? "none" : undefined,
                     }
               }
             >
