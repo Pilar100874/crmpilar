@@ -34,6 +34,7 @@ interface LazyLogisticaMapProps {
   focusVeiculoId?: string;
   focusTrigger?: number;
   zoomMaximoSempre?: boolean;
+  nuncaPausarAuto?: boolean;
   modoFoco?: boolean;
   focoZoom?: number;
   trilhaMinutos?: number;
