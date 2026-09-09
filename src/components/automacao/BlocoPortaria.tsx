@@ -230,15 +230,17 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
           style={{ fontSize: tamNumero, color: corDestaque ?? corTexto }}
         >
           {carregando ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : total}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={(e) => { e.stopPropagation(); setAmpliado((v) => !v); onAcionar?.(); }}
-            title={ampliado ? "Reduzir" : "Ampliar"}
-          >
-            {ampliado ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-          </Button>
+          {!ampliado && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={(e) => { e.stopPropagation(); setAmpliado(true); onAcionar?.(); }}
+              title="Ampliar"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </span>
       </div>
 
