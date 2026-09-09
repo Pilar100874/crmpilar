@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2,
+  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
 } from "lucide-react";
@@ -12,7 +12,7 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
   excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco,
 } from "@/lib/automacao/api";
@@ -51,6 +51,8 @@ export default function AutomacaoPainel() {
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
+  const [escala, setEscala] = useState(1);
+  const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
   const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
@@ -91,10 +93,26 @@ export default function AutomacaoPainel() {
   const podeEditar = admin && edicao;
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
-  const celula = () => {
-    const largura = gradeRef.current?.clientWidth ?? 1;
-    return { cx: largura / COLUNAS, cy: ALTURA_LINHA };
-  };
+  // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
+  // reduzido/ampliado para caber por inteiro no espaço disponível.
+  const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
+  const telaL = ambienteAtual?.tela_largura ?? TELA_PADRAO.largura;
+  const telaA = ambienteAtual?.tela_altura ?? TELA_PADRAO.altura;
+
+  useEffect(() => {
+    const alvo = palcoRef.current;
+    if (!alvo) return;
+    const medir = () => {
+      const disponivel = alvo.clientWidth || telaL;
+      setEscala(Math.max(0.1, Math.min(disponivel / telaL, 1)));
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(alvo);
+    return () => ro.disconnect();
+  }, [telaL, telaA, ambienteId, ambientes.length]);
+
+  const celula = () => ({ cx: telaL / COLUNAS, cy: ALTURA_LINHA });
 
   const atualizarPos = (id: string, pos: PosLivre) =>
     setBlocos((ant) => ant.map((b) => (b.id === id ? { ...b, config: { ...(b.config ?? {}), pos } } : b)));
@@ -118,6 +136,9 @@ export default function AutomacaoPainel() {
 
   const aoMover = (e: React.PointerEvent) => {
     const { cx, cy } = celula();
+    // O painel pode estar reduzido na tela: converte o movimento do dedo/mouse
+    // para o tamanho real da tela de parede.
+    const dx = (px: number) => px / escala;
     const r = redim.current;
     if (r) {
       const bloco = blocos.find((b) => b.id === r.id);
@@ -126,13 +147,13 @@ export default function AutomacaoPainel() {
         const p = posLivre(bloco, cx);
         atualizarPos(bloco.id, {
           ...p,
-          w: Math.max(40, r.pw + (e.clientX - r.ox)),
-          h: Math.max(40, r.ph + (e.clientY - r.oy)),
+          w: Math.max(40, r.pw + dx(e.clientX - r.ox)),
+          h: Math.max(40, r.ph + dx(e.clientY - r.oy)),
         });
         return;
       }
-      const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round((e.clientX - r.ox) / cx)));
-      const nh = Math.max(1, Math.min(12, r.bh + Math.round((e.clientY - r.oy) / cy)));
+      const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round(dx(e.clientX - r.ox) / cx)));
+      const nh = Math.max(1, Math.min(12, r.bh + Math.round(dx(e.clientY - r.oy) / cy)));
       if (nw !== bloco.w || nh !== bloco.h) {
         setBlocos((ant) => ant.map((b) => (b.id === r.id ? { ...b, w: nw, h: nh } : b)));
       }
@@ -146,13 +167,13 @@ export default function AutomacaoPainel() {
       const p = posLivre(bloco, cx);
       atualizarPos(bloco.id, {
         ...p,
-        l: Math.max(0, a.pl + (e.clientX - a.ox)),
-        t: Math.max(0, a.pt + (e.clientY - a.oy)),
+        l: Math.max(0, a.pl + dx(e.clientX - a.ox)),
+        t: Math.max(0, a.pt + dx(e.clientY - a.oy)),
       });
       return;
     }
-    const nx = Math.max(0, Math.min(COLUNAS - bloco.w, a.bx + Math.round((e.clientX - a.ox) / cx)));
-    const ny = Math.max(0, a.by + Math.round((e.clientY - a.oy) / cy));
+    const nx = Math.max(0, Math.min(COLUNAS - bloco.w, a.bx + Math.round(dx(e.clientX - a.ox) / cx)));
+    const ny = Math.max(0, a.by + Math.round(dx(e.clientY - a.oy) / cy));
     if (nx !== bloco.x || ny !== bloco.y) {
       setBlocos((ant) => ant.map((b) => (b.id === a.id ? { ...b, x: nx, y: ny } : b)));
     }
@@ -177,8 +198,8 @@ export default function AutomacaoPainel() {
     if (!bloco) { toast.error("Escolha um elemento tocando nele."); return; }
     const { cx } = celula();
     if (modo === "livre") {
-      const largura = gradeRef.current?.clientWidth ?? 0;
-      const altura = gradeRef.current?.clientHeight ?? 0;
+      const largura = telaL;
+      const altura = telaA;
       const p = posLivre(bloco, cx);
       const novo: PosLivre = { ...p };
       if (dir === "esq") novo.l = 0;
@@ -295,6 +316,14 @@ export default function AutomacaoPainel() {
           <Button size="sm" variant={modo === "livre" ? "default" : "outline"} onClick={() => trocarModo("livre")}>
             <MousePointer2 className="h-4 w-4 mr-1" /> Livre
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => ambienteAtual && setAmbienteEdit(ambienteAtual)}
+            title="Definir o tamanho e a proporção da tela de parede"
+          >
+            <Monitor className="h-4 w-4 mr-1" /> Tela de parede ({telaL}×{telaA})
+          </Button>
           <span className="ml-2 text-xs text-muted-foreground">Alinhar elemento escolhido:</span>
           {alinhamentos.map(({ dir, Icone, titulo }) => (
             <Button
@@ -312,7 +341,9 @@ export default function AutomacaoPainel() {
         </div>
       )}
 
-      <div
+      {/* Palco: reserva na página o espaço da tela de parede já reduzida. */}
+      <div ref={palcoRef} className="w-full min-w-0 overflow-hidden" style={{ height: telaA * escala }}>
+        <div
         ref={gradeRef}
         onPointerMove={aoMover}
         onPointerUp={aoSoltar}
@@ -322,15 +353,18 @@ export default function AutomacaoPainel() {
             ? "relative rounded-2xl border bg-muted/20 p-2 overflow-hidden"
             : "relative rounded-2xl border bg-muted/20 p-2 grid gap-2"
         }
-        style={
-          modo === "livre"
-            ? { minHeight: 420 }
+        style={{
+          width: telaL,
+          height: telaA,
+          transform: `scale(${escala})`,
+          transformOrigin: "top left",
+          ...(modo === "livre"
+            ? {}
             : {
                 gridTemplateColumns: `repeat(${COLUNAS}, minmax(0, 1fr))`,
                 gridAutoRows: `${ALTURA_LINHA}px`,
-                minHeight: 320,
-              }
-        }
+              }),
+        }}
       >
         {doAmbiente.map((b) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
@@ -408,6 +442,7 @@ export default function AutomacaoPainel() {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {podeEditar && (
