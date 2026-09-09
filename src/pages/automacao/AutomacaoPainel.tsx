@@ -59,6 +59,7 @@ export default function AutomacaoPainel() {
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const [camadasAbertas, setCamadasAbertas] = useState(true);
   const [camadasAmpliadas, setCamadasAmpliadas] = useState(false);
+  const [salvandoPainel, setSalvandoPainel] = useState(false);
   const [regras, setRegras] = useState<Regra[]>([]);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
