@@ -179,178 +179,181 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
             />
           </div>
 
-          <div className="rounded-xl border p-3 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Monitor className="h-4 w-4 text-primary" /> Onde este painel vai aparecer
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Escolha o aparelho e o formato na lista. O painel aparece automaticamente para quem abrir
-              a tela de parede nesse aparelho, e o retângulo do editor fica exatamente nesse formato.
-            </p>
+          <Tabs defaultValue="tela" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="tela">
+                <Monitor className="h-4 w-4 mr-2" /> Onde aparece
+              </TabsTrigger>
+              <TabsTrigger value="fundo">
+                <ImageIcon className="h-4 w-4 mr-2" /> Foto de fundo
+              </TabsTrigger>
+            </TabsList>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs">Aparelho</Label>
-                <Select value={tipoTela} onValueChange={(v) => trocarTipo(v as TipoTela)}>
-                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    {TIPOS_TELA.map((t) => (
-                      <SelectItem key={t.valor} value={t.valor}>{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <TabsContent value="tela" className="space-y-3 rounded-xl border p-3 mt-3">
+              <p className="text-xs text-muted-foreground">
+                Escolha o aparelho e o formato na lista. O painel aparece automaticamente para quem abrir
+                a tela de parede nesse aparelho, e o retângulo do editor fica exatamente nesse formato.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Aparelho</Label>
+                  <Select value={tipoTela} onValueChange={(v) => trocarTipo(v as TipoTela)}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {TIPOS_TELA.map((t) => (
+                        <SelectItem key={t.valor} value={t.valor}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Formato da tela</Label>
+                  <Select
+                    value={FORMATOS_TELA[tipoTela].find((p) => p.largura === largura && p.altura === altura)?.valor ?? "personalizado"}
+                    onValueChange={(v) => {
+                      const p = FORMATOS_TELA[tipoTela].find((f) => f.valor === v);
+                      if (p) aplicar(p.largura, p.altura);
+                    }}
+                  >
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {FORMATOS_TELA[tipoTela].map((p) => (
+                        <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>
+                      ))}
+                      <SelectItem value="personalizado">Tamanho personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Formato da tela</Label>
-                <Select
-                  value={FORMATOS_TELA[tipoTela].find((p) => p.largura === largura && p.altura === altura)?.valor ?? "personalizado"}
-                  onValueChange={(v) => {
-                    const p = FORMATOS_TELA[tipoTela].find((f) => f.valor === v);
-                    if (p) aplicar(p.largura, p.altura);
-                  }}
-                >
-                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    {FORMATOS_TELA[tipoTela].map((p) => (
-                      <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>
-                    ))}
-                    <SelectItem value="personalizado">Tamanho personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="h-4 w-4"
-                checked={ambiente?.mostrar_abas !== false}
-                onChange={(e) => onChange({ ...ambiente, mostrar_abas: e.target.checked })}
-              />
-              Mostrar as abas das telas deste mesmo aparelho
-            </label>
-
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Largura</Label>
-                <Input
-                  type="number"
-                  min={320}
-                  value={largura}
-                  onChange={(e) => aplicar(Number(e.target.value) || TELA_PADRAO.largura, altura)}
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={ambiente?.mostrar_abas !== false}
+                  onChange={(e) => onChange({ ...ambiente, mostrar_abas: e.target.checked })}
                 />
+                Mostrar as abas das telas deste mesmo aparelho
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Largura</Label>
+                  <Input
+                    type="number"
+                    min={320}
+                    value={largura}
+                    onChange={(e) => aplicar(Number(e.target.value) || TELA_PADRAO.largura, altura)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Altura</Label>
+                  <Input
+                    type="number"
+                    min={240}
+                    value={altura}
+                    onChange={(e) => aplicar(largura, Number(e.target.value) || TELA_PADRAO.altura)}
+                  />
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Altura</Label>
-                <Input
-                  type="number"
-                  min={240}
-                  value={altura}
-                  onChange={(e) => aplicar(largura, Number(e.target.value) || TELA_PADRAO.altura)}
-                />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">Proporção atual: {proporcao}</p>
+              <p className="text-xs text-muted-foreground">Proporção atual: {proporcao}</p>
 
-            {(tipoTela === "tablet" || tipoTela === "celular") && (
-              <div className="rounded-lg bg-muted/50 p-2 space-y-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={rolagem ? "default" : "outline"}
-                  onClick={() => onChange({ ...ambiente, rolagem: !rolagem })}
-                >
-                  {rolagem ? "Rolagem para baixo ligada" : "Rolagem para baixo desligada"}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Com a rolagem ligada, o painel ocupa toda a largura do aparelho e a pessoa desliza para
-                  baixo para ver o resto. Deixe a altura maior que a da tela para ganhar mais espaço.
-                </p>
-              </div>
-            )}
-          </div>
-
-
-          <div className="rounded-xl border p-3 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <ImageIcon className="h-4 w-4 text-primary" /> Foto de fundo
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Coloque uma foto da sua casa atrás dos elementos e escolha o quanto ela aparece.
-            </p>
-
-            {previa && (
-              <div
-                className="h-32 w-full rounded-lg border bg-muted"
-                style={{
-                  backgroundImage: `url(${previa})`,
-                  backgroundSize: ajuste === "conter" ? "contain" : ajuste === "esticar" ? "100% 100%" : "cover",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                  opacity: Math.max(0, Math.min(100, opacidade)) / 100,
-                }}
-              />
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="outline" disabled={enviando} onClick={() => arquivoRef.current?.click()}>
-                <Upload className="h-4 w-4 mr-1" /> {enviando ? "Enviando..." : previa ? "Trocar foto" : "Escolher foto"}
-              </Button>
-              {ambiente?.fundo_caminho && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="text-destructive"
-                  onClick={() => onChange({ ...ambiente, fundo_caminho: null })}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" /> Remover
-                </Button>
+              {(tipoTela === "tablet" || tipoTela === "celular") && (
+                <div className="rounded-lg bg-muted/50 p-2 space-y-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={rolagem ? "default" : "outline"}
+                    onClick={() => onChange({ ...ambiente, rolagem: !rolagem })}
+                  >
+                    {rolagem ? "Rolagem para baixo ligada" : "Rolagem para baixo desligada"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Com a rolagem ligada, o painel ocupa toda a largura do aparelho e a pessoa desliza para
+                    baixo para ver o resto. Deixe a altura maior que a da tela para ganhar mais espaço.
+                  </p>
+                </div>
               )}
-              <input
-                ref={arquivoRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) enviarFoto(f); e.target.value = ""; }}
-              />
-            </div>
+            </TabsContent>
 
-            <div>
-              <Label className="text-xs">Endereço da foto na internet (opcional)</Label>
-              <Input
-                value={/^https?:\/\//.test(ambiente?.fundo_caminho ?? "") ? (ambiente?.fundo_caminho as string) : ""}
-                placeholder="https://..."
-                onChange={(e) => onChange({ ...ambiente, fundo_caminho: e.target.value.trim() || null })}
-              />
-            </div>
+            <TabsContent value="fundo" className="space-y-3 rounded-xl border p-3 mt-3">
+              <p className="text-xs text-muted-foreground">
+                Coloque uma foto da sua casa atrás dos elementos e escolha o quanto ela aparece.
+              </p>
 
-            <div>
-              <Label className="text-xs">Transparência da foto: {opacidade}%</Label>
-              <Slider
-                value={[opacidade]}
-                min={0}
-                max={100}
-                step={5}
-                onValueChange={(v) => onChange({ ...ambiente, fundo_opacidade: v[0] })}
-              />
-            </div>
+              {previa && (
+                <div
+                  className="h-32 w-full rounded-lg border bg-muted"
+                  style={{
+                    backgroundImage: `url(${previa})`,
+                    backgroundSize: ajuste === "conter" ? "contain" : ajuste === "esticar" ? "100% 100%" : "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    opacity: Math.max(0, Math.min(100, opacidade)) / 100,
+                  }}
+                />
+              )}
 
-            <div className="flex flex-wrap gap-2">
-              {AJUSTES.map((a) => (
-                <Button
-                  key={a.valor}
-                  type="button"
-                  size="sm"
-                  variant={ajuste === a.valor ? "default" : "outline"}
-                  onClick={() => onChange({ ...ambiente, fundo_ajuste: a.valor })}
-                >
-                  {a.label}
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="outline" disabled={enviando} onClick={() => arquivoRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-1" /> {enviando ? "Enviando..." : previa ? "Trocar foto" : "Escolher foto"}
                 </Button>
-              ))}
-            </div>
-          </div>
+                {ambiente?.fundo_caminho && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive"
+                    onClick={() => onChange({ ...ambiente, fundo_caminho: null })}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" /> Remover
+                  </Button>
+                )}
+                <input
+                  ref={arquivoRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) enviarFoto(f); e.target.value = ""; }}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Endereço da foto na internet (opcional)</Label>
+                <Input
+                  value={/^https?:\/\//.test(ambiente?.fundo_caminho ?? "") ? (ambiente?.fundo_caminho as string) : ""}
+                  placeholder="https://..."
+                  onChange={(e) => onChange({ ...ambiente, fundo_caminho: e.target.value.trim() || null })}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Transparência da foto: {opacidade}%</Label>
+                <Slider
+                  value={[opacidade]}
+                  min={0}
+                  max={100}
+                  step={5}
+                  onValueChange={(v) => onChange({ ...ambiente, fundo_opacidade: v[0] })}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {AJUSTES.map((a) => (
+                  <Button
+                    key={a.valor}
+                    type="button"
+                    size="sm"
+                    variant={ajuste === a.valor ? "default" : "outline"}
+                    onClick={() => onChange({ ...ambiente, fundo_ajuste: a.valor })}
+                  >
+                    {a.label}
+                  </Button>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
 
