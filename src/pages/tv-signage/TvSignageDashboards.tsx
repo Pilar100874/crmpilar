@@ -74,7 +74,7 @@ export default function TvSignageDashboards() {
   const isPortariaRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/portaria";
   const isAutomacaoRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/automacao";
 
-  // Painel de Automação na TV: ambiente exibido, tamanho da tela e abas.
+  // Painel de Automação na TV: tela exibida e abas. O tamanho vem da própria tela cadastrada.
   const autoCfg = (() => {
     const r = edit?.rota_interna || "";
     const q = r.indexOf("?");
@@ -82,22 +82,18 @@ export default function TvSignageDashboards() {
     return {
       tela: sp.get("tela") || "",
       ambiente: sp.get("ambiente") || "todos",
-      largura: parseInt(sp.get("largura") || "1920") || 1920,
-      altura: parseInt(sp.get("altura") || "1080") || 1080,
       barra: sp.get("barra") !== "0",
     };
   })();
   const updateAutoCfg = (patch: Partial<typeof autoCfg>) => {
     const cfg = { ...autoCfg, ...patch };
-    const sp = new URLSearchParams({
-      largura: String(cfg.largura),
-      altura: String(cfg.altura),
-    });
+    const sp = new URLSearchParams();
     if (cfg.tela) sp.set("tela", cfg.tela);
     else sp.set("ambiente", cfg.ambiente);
     if (!cfg.barra) sp.set("barra", "0");
     setEdit({ ...edit, rota_interna: `/tv/automacao?${sp.toString()}` });
   };
+
 
   // Telas de automação (grupos de abas) disponíveis, com o aparelho de cada uma.
   const telasAuto = (() => {
