@@ -1,6 +1,6 @@
 // Bloco de página web: embute um site inteiro dentro do painel.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Globe, RefreshCw } from "lucide-react";
+import { ExternalLink, Globe, Lock, LockOpen, RefreshCw } from "lucide-react";
 import { Bloco } from "@/lib/automacao/api";
 import { fonteCss } from "./BlocoTexto";
 
