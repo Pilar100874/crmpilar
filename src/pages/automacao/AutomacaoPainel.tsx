@@ -14,7 +14,7 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO, TIPOS_TELA,
   definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
@@ -569,10 +569,13 @@ export default function AutomacaoPainel() {
             size="sm"
             variant="outline"
             onClick={() => ambienteAtual && setAmbienteEdit(ambienteAtual)}
-            title="Definir o tamanho e a proporção da tela de parede"
+            title="Escolher o tipo de aparelho e o formato da tela deste painel"
           >
-            <Monitor className="h-4 w-4 mr-1" /> Tela de parede ({telaL}×{telaA})
+            <Monitor className="h-4 w-4 mr-1" />
+            {TIPOS_TELA.find((t) => t.valor === (ambienteAtual?.dispositivo ?? "tv"))?.label} ({telaL}×{telaA})
+            {ambienteAtual?.rolagem ? " · rola para baixo" : ""}
           </Button>
+
           {selecionados.length > 1 && (
             <span className="ml-2 text-xs text-muted-foreground">
               {selecionados.length} selecionados
