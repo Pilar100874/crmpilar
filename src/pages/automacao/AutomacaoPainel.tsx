@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor,
+  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor, Image as ImageIcon,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
@@ -62,6 +62,7 @@ export default function AutomacaoPainel() {
   const [estados, setEstados] = useState<Record<string, boolean | null>>({});
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
+  const [abaAmbienteEdit, setAbaAmbienteEdit] = useState<"tela" | "fundo">("tela");
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const [escala, setEscala] = useState(1);
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
@@ -511,7 +512,7 @@ export default function AutomacaoPainel() {
             <p className="text-sm text-muted-foreground">Peça a um administrador para montar o painel.</p>
           )}
         </div>
-        <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
+        <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} abaInicial={abaAmbienteEdit} />
       </>
     );
   }
@@ -575,6 +576,22 @@ export default function AutomacaoPainel() {
               }
             >
               <Workflow className="h-4 w-4 mr-2" /> Automações
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!ambienteAtual}
+              onClick={() => { setAbaAmbienteEdit("tela"); ambienteAtual && setAmbienteEdit(ambienteAtual); }}
+            >
+              <Monitor className="h-4 w-4 mr-2" /> Onde aparece
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!ambienteAtual}
+              onClick={() => { setAbaAmbienteEdit("fundo"); ambienteAtual && setAmbienteEdit(ambienteAtual); }}
+            >
+              <ImageIcon className="h-4 w-4 mr-2" /> Foto de fundo
             </Button>
             <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
               {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
@@ -965,7 +982,7 @@ export default function AutomacaoPainel() {
         onChange={setBlocoEdit}
         onSalvo={aoSalvarBloco}
       />
-      <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
+      <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} abaInicial={abaAmbienteEdit} />
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}

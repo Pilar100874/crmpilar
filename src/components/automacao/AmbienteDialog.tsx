@@ -26,6 +26,7 @@ interface Props {
   ambiente: Partial<Ambiente> | null;
   onChange: (a: Partial<Ambiente> | null) => void;
   onSalvo: () => void;
+  abaInicial?: "tela" | "fundo";
 }
 
 /** Reduz a proporção para o formato "16:9". */
@@ -41,7 +42,7 @@ const AJUSTES = [
   { valor: "esticar", label: "Esticar" },
 ];
 
-export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
+export default function AmbienteDialog({ ambiente, onChange, onSalvo, abaInicial = "tela" }: Props) {
   const largura = ambiente?.tela_largura ?? TELA_PADRAO.largura;
   const altura = ambiente?.tela_altura ?? TELA_PADRAO.altura;
   const proporcao = proporcaoDe(largura, altura);
@@ -57,6 +58,10 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const arquivoRef = useRef<HTMLInputElement | null>(null);
   /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
   const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
+
+  useEffect(() => {
+    setAbaAtiva(abaInicial);
+  }, [ambiente?.id, abaInicial]);
 
   useEffect(() => {
     if (!ambiente) { original.current = null; return; }
