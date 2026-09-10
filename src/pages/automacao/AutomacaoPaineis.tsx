@@ -51,6 +51,7 @@ export default function AutomacaoPaineis() {
   const [edit, setEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluirTela, setExcluirTela] = useState<TelaGrupo | null>(null);
   const [renomear, setRenomear] = useState<TelaGrupo | null>(null);
+  const [configTela, setConfigTela] = useState<TelaGrupo | null>(null);
   const [novoNomeTela, setNovoNomeTela] = useState("");
 
   const carregar = useCallback(async () => {
