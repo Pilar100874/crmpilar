@@ -506,9 +506,20 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </SelectContent>
                 </Select>
                 {(cfg.layout ?? "livre") === "livre" && (
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    No modo de edição arraste e redimensione cada item vinculado; ao abrir, eles aparecem exatamente assim.
-                  </p>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Defina no popup abaixo onde e com que tamanho cada item aparece ao tocar no botão.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!((cfg.vinculados ?? []) as string[]).length}
+                      onClick={() => setAjustarPosicoes(true)}
+                    >
+                      Ajustar posição dos itens
+                    </Button>
+                  </div>
                 )}
               </div>
 
