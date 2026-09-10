@@ -42,6 +42,7 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
   const largura = cfg.larguraItem ?? 170;
   const altura = cfg.alturaItem ?? 68;
   const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
+  const livre = (cfg.layout ?? "livre") === "livre";
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
 
   // Fecha ao tocar fora do grupo.
