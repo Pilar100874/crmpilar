@@ -549,6 +549,7 @@ export default function AutomacaoPainel() {
   return (
     <AmbientesNavContext.Provider value={{ ambientes: ambientesVisiveis, ambienteId, trocar: setAmbienteId }}>
     <div className="space-y-4">
+      {/* Cabeçalho: navegação e alternância de edição */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
         <Button size="sm" variant="ghost" onClick={() => navegar("/automacao")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Telas
@@ -557,15 +558,15 @@ export default function AutomacaoPainel() {
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.label} ·{" "}
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
         </span>
-        {podeEditar && (
-          <Button size="sm" className="ml-auto" onClick={novaTela}>
-            <Plus className="h-4 w-4 mr-1" /> Nova tela
+        {admin && (
+          <Button variant={edicao ? "default" : "outline"} size="sm" className="ml-auto" onClick={() => setEdicao((v) => !v)}>
+            {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
           </Button>
         )}
       </div>
 
-
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Abas do ambiente */}
+      <div className="flex flex-wrap items-end gap-2">
         <Tabs value={ambienteId} onValueChange={setAmbienteId} className="min-w-0">
           <TabsList className="flex-wrap h-auto">
             {ambientesVisiveis.map((a) => (
@@ -592,45 +593,39 @@ export default function AutomacaoPainel() {
             <Plus className="h-4 w-4 mr-1" /> Aba
           </Button>
         )}
-
-        {admin && (
-          <div className="ml-auto flex gap-2">
-            <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
-              {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
-            </Button>
-            {edicao && (
-              <>
-                <Button size="sm" onClick={novoBloco}>
-                  <Plus className="h-4 w-4 mr-2" /> Novo elemento
-                </Button>
-                <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={salvarPainel}>
-                  <Save className="h-4 w-4 mr-2" /> Salvar painel
-                </Button>
-                <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={duplicarPainel}>
-                  <CopyPlus className="h-4 w-4 mr-2" /> Duplicar painel
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!ambienteAtual}
-                  onClick={alternarAtivoPainel}
-                  title="Painel desativado fica escondido para os outros usuários"
-                >
-                  {ambienteAtual?.ativo === false
-                    ? <><Power className="h-4 w-4 mr-2" /> Ativar painel</>
-                    : <><PowerOff className="h-4 w-4 mr-2" /> Desativar painel</>}
-                </Button>
-              </>
-            )}
-          </div>
-        )}
       </div>
 
+      {/* Toolbar de edição */}
       {podeEditar && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
-          <span className="text-xs text-muted-foreground">Posicionamento:</span>
+          <Button size="sm" onClick={novoBloco}>
+            <Plus className="h-4 w-4 mr-2" /> Novo elemento
+          </Button>
+
+          <div className="hidden sm:block h-6 w-px bg-border" />
+
+          <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={salvarPainel}>
+            <Save className="h-4 w-4 mr-2" /> Salvar painel
+          </Button>
+          <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={duplicarPainel}>
+            <CopyPlus className="h-4 w-4 mr-2" /> Duplicar painel
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!ambienteAtual}
+            onClick={alternarAtivoPainel}
+            title="Painel desativado fica escondido para os outros usuários"
+          >
+            {ambienteAtual?.ativo === false
+              ? <><Power className="h-4 w-4 mr-2" /> Ativar painel</>
+              : <><PowerOff className="h-4 w-4 mr-2" /> Desativar painel</>}
+          </Button>
+
+          <div className="hidden sm:block h-6 w-px bg-border" />
+
           <Button size="sm" variant={modo === "grade" ? "default" : "outline"} onClick={() => trocarModo("grade")}>
-            <Grid3X3 className="h-4 w-4 mr-1" /> Alinhar à grade
+            <Grid3X3 className="h-4 w-4 mr-1" /> Grade
           </Button>
           <Button size="sm" variant={modo === "livre" ? "default" : "outline"} onClick={() => trocarModo("livre")}>
             <MousePointer2 className="h-4 w-4 mr-1" /> Livre
@@ -643,11 +638,13 @@ export default function AutomacaoPainel() {
           >
             <Monitor className="h-4 w-4 mr-1" />
             {TIPOS_TELA.find((t) => t.valor === (ambienteAtual?.dispositivo ?? "tv"))?.label} ({telaL}×{telaA})
-            {ambienteAtual?.rolagem ? " · rola para baixo" : ""}
+            {ambienteAtual?.rolagem ? " · rola" : ""}
           </Button>
 
+          <div className="hidden sm:block h-6 w-px bg-border" />
+
           {selecionados.length > 1 && (
-            <span className="ml-2 text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {selecionados.length} selecionados
             </span>
           )}
