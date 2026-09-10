@@ -219,9 +219,6 @@ export default function AutomacaoPaineis() {
                           <Button size="sm" variant="ghost" onClick={() => primeira && navegar(`/automacao/painel/${primeira.id}`)}>
                             Abrir
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => novaAba(grupo)}>
-                            <Plus className="h-4 w-4 mr-1" /> Aba
-                          </Button>
                           <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Renomear tela"
                             onClick={() => { setRenomear(grupo); setNovoNomeTela(grupo.nome); }}
