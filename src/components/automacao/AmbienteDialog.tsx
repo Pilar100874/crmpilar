@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Ambiente, PROPORCOES, TELA_PADRAO, enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
+  Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
+  enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 
 interface Props {
