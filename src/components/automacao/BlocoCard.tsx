@@ -103,11 +103,14 @@ export default function BlocoCard(props: Props) {
       onClickCapture={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        onEstado(!(ligado === true));
-        onAcionar();
+        pedir(() => {
+          onEstado(!(ligado === true));
+          onAcionar();
+        });
       }}
     >
       <BlocoCardInterno {...props} />
+      {dialogo}
     </div>
   );
 }
