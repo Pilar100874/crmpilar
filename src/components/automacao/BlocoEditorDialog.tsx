@@ -569,6 +569,42 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                       />
                     </div>
                   </div>
+
+                  {((cfg.vinculados ?? []) as string[]).length > 0 && (
+                    <div className="space-y-1 rounded-md border p-2">
+                      <Label className="text-xs">Tamanho de cada item (deixe vazio para usar o padrão acima)</Label>
+                      {((cfg.vinculados ?? []) as string[]).map((id) => {
+                        const filho = blocosAmbiente.find((b) => b.id === id);
+                        if (!filho) return null;
+                        const tamanhos = (cfg.tamanhos ?? {}) as Record<string, { w?: number; h?: number }>;
+                        const t = tamanhos[id] ?? {};
+                        const definir = (campo: "w" | "h", valor: string) => {
+                          const numero = valor ? Number(valor) : undefined;
+                          const proximo = { ...tamanhos, [id]: { ...t, [campo]: numero } };
+                          if (!proximo[id].w && !proximo[id].h) delete proximo[id];
+                          setCfg({ tamanhos: Object.keys(proximo).length ? proximo : undefined });
+                        };
+                        return (
+                          <div key={id} className="flex items-center gap-2 text-xs">
+                            <span className="min-w-0 flex-1 truncate">{filho.nome}</span>
+                            <Input
+                              type="number" min={40} max={800} placeholder="Larg."
+                              value={t.w ?? ""}
+                              onChange={(e) => definir("w", e.target.value)}
+                              className="h-7 w-20 px-2 text-xs"
+                            />
+                            <span className="text-muted-foreground">×</span>
+                            <Input
+                              type="number" min={30} max={600} placeholder="Alt."
+                              value={t.h ?? ""}
+                              onChange={(e) => definir("h", e.target.value)}
+                              className="h-7 w-20 px-2 text-xs"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </>
               )}
 
