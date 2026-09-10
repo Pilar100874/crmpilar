@@ -132,13 +132,14 @@ function loadConfig() {
 function saveConfig(cfg) {
   const cur = loadConfig();
   const conteudo = JSON.stringify({ ...cur, ...cfg }, null, 2);
-  fs.writeFileSync(CONFIG_PATH, conteudo);
+  try { fs.writeFileSync(CONFIG_PATH, conteudo); } catch {}
   // Espelha a configuração (best-effort) para sobreviver a atualizações
-  try {
-    fs.mkdirSync(path.dirname(CONFIG_BACKUP), { recursive: true });
-    fs.writeFileSync(CONFIG_BACKUP, conteudo);
-    fs.writeFileSync(CONFIG_BACKUP_BAK, conteudo);
-  } catch {}
+  for (const destino of CONFIG_BACKUPS) {
+    try {
+      fs.mkdirSync(path.dirname(destino), { recursive: true });
+      fs.writeFileSync(destino, conteudo);
+    } catch {}
+  }
 }
 
 // Ao abrir o app (inclusive logo após uma atualização) grava de volta a
