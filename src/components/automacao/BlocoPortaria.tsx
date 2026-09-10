@@ -184,6 +184,8 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
   }, [carregar, intervalo]);
 
   const podeAmpliar = (cfg as { permitir_ampliar?: boolean }).permitir_ampliar !== false;
+  const interativo = (cfg as { permitir_interacao?: boolean }).permitir_interacao !== false;
+  const mostrarBarra = (cfg as { mostrar_barra?: boolean }).mostrar_barra !== false;
 
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
