@@ -4,6 +4,7 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 import {
   Ambiente, Bloco, TELA_PADRAO, TipoTela, detectarTipoTela, listarAmbientes, listarBlocos, urlImagemAutomacao,
 } from "@/lib/automacao/api";
+import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 
 const COLUNAS = 12;
 const ALTURA_LINHA = 74;
@@ -75,6 +76,10 @@ export default function AutomacaoTela() {
   }, [ambientes, tipoAparelho]);
 
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
+  // Abas só dos ambientes montados para este mesmo tipo de tela.
+  const doTipo = ambientes.filter((a) => (a.dispositivo ?? "tv") === tipoAparelho);
+  const abas = doTipo.length ? doTipo : ambientes;
+  const mostrarAbas = mostrarBarra && ambienteAtual?.mostrar_abas !== false && abas.length > 1;
   const telaL = Number(params.get("largura")) || ambienteAtual?.tela_largura || TELA_PADRAO.largura;
   const telaA = Number(params.get("altura")) || ambienteAtual?.tela_altura || TELA_PADRAO.altura;
   const rolar = ambienteAtual?.rolagem === true;
@@ -132,10 +137,11 @@ export default function AutomacaoTela() {
     : { width: telaL, height: telaA, transform: `translate(-50%, -50%) scale(${escala})` };
 
   return (
+    <AmbientesNavContext.Provider value={{ ambientes: abas, ambienteId, trocar: trocarAmbiente }}>
     <div className="fixed inset-0 flex flex-col bg-background text-foreground">
-      {mostrarBarra && todos && ambientes.length > 1 && (
+      {mostrarAbas && (
         <div className="flex flex-wrap items-center gap-2 border-b bg-card/60 px-3 py-2">
-          {ambientes.map((a) => (
+          {abas.map((a) => (
             <button
               key={a.id}
               onClick={() => trocarAmbiente(a.id)}
@@ -207,5 +213,6 @@ export default function AutomacaoTela() {
         </div>
       </div>
     </div>
+    </AmbientesNavContext.Provider>
   );
 }
