@@ -496,7 +496,25 @@ export default function AutomacaoPainel() {
     );
   }
 
+  /**
+   * Nova tela do mesmo tipo já nasce com o mesmo formato das que existem,
+   * para as abas do aparelho ficarem todas iguais.
+   */
+  const novaTela = () => {
+    const irmao = todosVisiveis.find((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
+    setAmbienteEdit({
+      nome: "",
+      ordem: ambientes.length,
+      dispositivo: tipoTelaFiltro,
+      tela_largura: irmao?.tela_largura ?? FORMATOS_TELA[tipoTelaFiltro][0].largura,
+      tela_altura: irmao?.tela_altura ?? FORMATOS_TELA[tipoTelaFiltro][0].altura,
+      rolagem: irmao?.rolagem ?? (tipoTelaFiltro === "celular"),
+      mostrar_abas: irmao?.mostrar_abas !== false,
+    });
+  };
+
   const alinhamentos = [
+
     { dir: "esq", Icone: AlignHorizontalJustifyStart, titulo: "Alinhar à esquerda" },
     { dir: "centroH", Icone: AlignHorizontalJustifyCenter, titulo: "Centralizar na horizontal" },
     { dir: "dir", Icone: AlignHorizontalJustifyEnd, titulo: "Alinhar à direita" },
