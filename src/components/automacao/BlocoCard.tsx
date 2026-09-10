@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
 import ReloginhoPulso from "./ReloginhoPulso";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
