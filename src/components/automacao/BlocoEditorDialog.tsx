@@ -287,6 +287,107 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {blocoEdit?.tipo === "bubble" && (
+            <div className="space-y-3 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Bubble Card</Label>
+              <div>
+                <Label className="text-xs">Ícone</Label>
+                <SeletorIcone valor={cfg.icone ?? blocoEdit?.icone} onChange={(n) => setCfg({ icone: n })} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Fundo ativado</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.corFundoAtivo ?? "rgba(59, 130, 246, 0.22)"} onChange={(e) => setCfg({ corFundoAtivo: e.target.value })} />
+                    <Input value={cfg.corFundoAtivo ?? ""} placeholder="rgba(59,130,246,0.22)" onChange={(e) => setCfg({ corFundoAtivo: e.target.value || undefined })} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo desativado</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.corFundoInativo ?? "rgba(255, 255, 255, 0.05)"} onChange={(e) => setCfg({ corFundoInativo: e.target.value })} />
+                    <Input value={cfg.corFundoInativo ?? ""} placeholder="rgba(255,255,255,0.05)" onChange={(e) => setCfg({ corFundoInativo: e.target.value || undefined })} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Ícone ativado</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.corIconeAtivo ?? "#3b82f6"} onChange={(e) => setCfg({ corIconeAtivo: e.target.value })} />
+                    <Input value={cfg.corIconeAtivo ?? ""} placeholder="#3b82f6" onChange={(e) => setCfg({ corIconeAtivo: e.target.value || undefined })} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Ícone desativado</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.corIconeInativo ?? "#94a3b8"} onChange={(e) => setCfg({ corIconeInativo: e.target.value })} />
+                    <Input value={cfg.corIconeInativo ?? ""} placeholder="#94a3b8" onChange={(e) => setCfg({ corIconeInativo: e.target.value || undefined })} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Texto ativado</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.corTextoAtivo ?? "#ffffff"} onChange={(e) => setCfg({ corTextoAtivo: e.target.value })} />
+                    <Input value={cfg.corTextoAtivo ?? ""} placeholder="#ffffff" onChange={(e) => setCfg({ corTextoAtivo: e.target.value || undefined })} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Texto desativado</Label>
+                  <div className="flex gap-1">
+                    <Input type="color" className="w-12 p-1" value={cfg.corTextoInativo ?? "#e2e8f0"} onChange={(e) => setCfg({ corTextoInativo: e.target.value })} />
+                    <Input value={cfg.corTextoInativo ?? ""} placeholder="#e2e8f0" onChange={(e) => setCfg({ corTextoInativo: e.target.value || undefined })} />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Tamanho do ícone ({cfg.tamanho_icone ?? 28}px)</Label>
+                <input type="range" min={16} max={64} step={2} value={cfg.tamanho_icone ?? 28} onChange={(e) => setCfg({ tamanho_icone: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+              <div>
+                <Label className="text-xs">Arredondamento ({cfg.arredondamento ?? 20}px)</Label>
+                <input type="range" min={0} max={40} step={1} value={cfg.arredondamento ?? 20} onChange={(e) => setCfg({ arredondamento: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+              <div>
+                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <input type="range" min={0} max={100} step={5} value={cfg.opacidade ?? 100} onChange={(e) => setCfg({ opacidade: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+              <div>
+                <Label>Animação</Label>
+                <Select value={cfg.animacao ?? "brilho"} onValueChange={(v) => setCfg({ animacao: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {ANIMACOES.map((a) => <SelectItem key={a.valor} value={a.valor}>{a.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>O que o elemento faz</Label>
+                <Select value={cfg.acao ?? "alternar"} onValueChange={(v) => setCfg({ acao: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="alternar">Liga e desliga</SelectItem>
+                    <SelectItem value="ligar">Somente ligar</SelectItem>
+                    <SelectItem value="desligar">Somente desligar</SelectItem>
+                    <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_nome !== false} onChange={(e) => setCfg({ mostrar_nome: e.target.checked })} className="h-4 w-4 accent-primary" />
+                  Mostrar nome
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_estado !== false} onChange={(e) => setCfg({ mostrar_estado: e.target.checked })} className="h-4 w-4 accent-primary" />
+                  Mostrar estado
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_slider === true} onChange={(e) => setCfg({ mostrar_slider: e.target.checked })} className="h-4 w-4 accent-primary" />
+                  Mostrar slider
+                </label>
+              </div>
+            </div>
+          )}
+
           {(blocoEdit?.tipo === "imagem" || blocoEdit?.tipo === "ambiente" || blocoEdit?.tipo === "imagemluz") && (
             <div className="space-y-2">
               <Label>Imagem</Label>
