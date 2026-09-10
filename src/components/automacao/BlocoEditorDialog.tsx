@@ -293,6 +293,90 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {blocoEdit?.tipo === "bubble" && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Bubble Card</Label>
+              <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Cor ativada</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corAtivo as string) ?? "#fbbf24"}
+                    onChange={(e) => setCfg({ corAtivo: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Cor desativada</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corInativo as string) ?? "#64748b"}
+                    onChange={(e) => setCfg({ corInativo: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Cor do fundo</Label>
+                <input
+                  type="color"
+                  value={(cfg.corFundo as string) ?? "#1e293b"}
+                  onChange={(e) => setCfg({ corFundo: e.target.value, transparente: false })}
+                  className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                />
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCfg({ corFundo: undefined })}>
+                  Padrão
+                </Button>
+              </div>
+              <div>
+                <Label className="text-xs">Tamanho do ícone ({cfg.tamanhoIcone ?? 22}px)</Label>
+                <input
+                  type="range" min={14} max={48} step={2}
+                  value={cfg.tamanhoIcone ?? 22}
+                  onChange={(e) => setCfg({ tamanhoIcone: Number(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <input
+                  type="range" min={10} max={100} step={5}
+                  value={cfg.opacidade ?? 100}
+                  onChange={(e) => setCfg({ opacidade: Number(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
+              <div>
+                <Label>Animação</Label>
+                <Select value={cfg.animacao ?? "brilho"} onValueChange={(v) => setCfg({ animacao: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {ANIMACOES.map((a) => <SelectItem key={a.valor} value={a.valor}>{a.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Texto secundário (opcional)</Label>
+                <Input
+                  value={(cfg.subtitulo as string) ?? ""}
+                  onChange={(e) => setCfg({ subtitulo: e.target.value })}
+                  placeholder="Ex.: Sala de estar"
+                />
+                <p className="text-[11px] text-muted-foreground">Vazio mostra Ligado/Desligado.</p>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.mostrarBotao !== false}
+                  onChange={(e) => setCfg({ mostrarBotao: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Mostrar botão liga/desliga à direita
+              </label>
+            </div>
+          )}
+
           {(blocoEdit?.tipo === "imagem" || blocoEdit?.tipo === "ambiente" || blocoEdit?.tipo === "imagemluz") && (
             <div className="space-y-2">
               <Label>Imagem</Label>
