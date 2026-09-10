@@ -445,6 +445,16 @@ export default function PortariaDispositivos() {
               </div>
             )}
 
+            {form.tipo === "shelly" && (config.modo_saida as string) === "momentary" && (
+              <div className="sm:col-span-2 rounded-md border px-3 py-2 bg-card">
+                <Label>Duração do pulso (ms)</Label>
+                <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Input type="number" min={100} step={100} value={form.pulso_ms ?? 1000} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} className="sm:max-w-44" />
+                  <p className="text-[11px] text-muted-foreground">Tempo em que o contato permanece acionado antes de desligar sozinho.</p>
+                </div>
+              </div>
+            )}
+
             <div className="sm:col-span-2 rounded-md border px-3 py-2">
               <div className="flex items-center justify-between gap-3">
                 <div>
