@@ -49,7 +49,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const [confirmarGrupo, setConfirmarGrupo] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
   /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
-  const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number } | null>(null);
+  const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
 
   useEffect(() => {
     if (!ambiente) { original.current = null; return; }
@@ -59,6 +59,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       dispositivo: (ambiente.dispositivo as TipoTela) ?? "tv",
       largura: ambiente.tela_largura ?? TELA_PADRAO.largura,
       altura: ambiente.tela_altura ?? TELA_PADRAO.altura,
+      telaNome: ambiente.tela_nome ?? null,
     };
   }, [ambiente]);
 
@@ -106,6 +107,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const salvar = async (aplicarNoGrupo: boolean) => {
     await salvarAmbiente({
       ...ambiente,
+      tela_nome: ambiente?.tela_nome?.trim() || ambiente?.nome?.trim() || null,
       tela_largura: largura,
       tela_altura: altura,
       fundo_opacidade: opacidade,
@@ -120,7 +122,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
         tela_largura: largura,
         tela_altura: altura,
         rolagem,
-      });
+      }, original.current.telaNome);
     }
     setConfirmarGrupo(false);
     onChange(null);
@@ -141,7 +143,19 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
         <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-1">
           <div>
-            <Label>Nome</Label>
+            <Label>Nome da tela</Label>
+            <Input
+              value={ambiente?.tela_nome ?? ""}
+              placeholder="Painel da Portaria, Casa, Filial..."
+              onChange={(e) => onChange({ ...ambiente, tela_nome: e.target.value })}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Telas com o mesmo nome (no mesmo aparelho) viram abas dentro do mesmo cartão.
+            </p>
+          </div>
+
+          <div>
+            <Label>Nome da aba</Label>
             <Input
               value={ambiente?.nome ?? ""}
               placeholder="Sala, Garagem, Portaria..."

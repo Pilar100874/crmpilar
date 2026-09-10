@@ -169,8 +169,14 @@ export default function AutomacaoPainel() {
   const podeEditar = admin && edicao;
   /** Painéis desativados continuam visíveis só para administradores. */
   const todosVisiveis = admin ? ambientes : ambientes.filter((a) => a.ativo !== false);
-  /** Cada tipo de tela tem o seu próprio conjunto de abas de ambiente. */
-  const ambientesVisiveis = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
+  /** Nome da tela (grupo de abas) do ambiente aberto — sem nome, usa o da própria aba. */
+  const nomeTelaDe = (a: Ambiente) => a.tela_nome?.trim() || a.nome;
+  const ambienteAberto = todosVisiveis.find((a) => a.id === ambienteId);
+  const telaNomeAtual = ambienteAberto ? nomeTelaDe(ambienteAberto) : "";
+  /** Cada tela tem o seu próprio conjunto de abas de ambiente. */
+  const ambientesVisiveis = todosVisiveis.filter(
+    (a) => (a.dispositivo ?? "tv") === tipoTelaFiltro && (!telaNomeAtual || nomeTelaDe(a) === telaNomeAtual),
+  );
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
   // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
@@ -511,13 +517,16 @@ export default function AutomacaoPainel() {
   }
 
   /**
-   * Nova tela do mesmo tipo já nasce com o mesmo formato das que existem,
-   * para as abas do aparelho ficarem todas iguais.
+   * Nova aba da mesma tela já nasce com o mesmo nome de tela e formato
+   * das que existem, para as abas ficarem sempre iguais.
    */
   const novaTela = () => {
-    const irmao = todosVisiveis.find((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
+    const irmao = todosVisiveis.find(
+      (a) => (a.dispositivo ?? "tv") === tipoTelaFiltro && nomeTelaDe(a) === telaNomeAtual,
+    ) ?? todosVisiveis.find((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
     setAmbienteEdit({
       nome: "",
+      tela_nome: telaNomeAtual || irmao?.tela_nome || "",
       ordem: ambientes.length,
       dispositivo: tipoTelaFiltro,
       tela_largura: irmao?.tela_largura ?? FORMATOS_TELA[tipoTelaFiltro][0].largura,
