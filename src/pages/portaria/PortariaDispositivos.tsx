@@ -383,18 +383,24 @@ export default function PortariaDispositivos() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                    <Label className="text-sm">Auto-desligar</Label>
-                    <Switch checked={!!config.auto_off} onCheckedChange={(v) => setConfig("auto_off", v)} />
-                  </div>
-                  <div>
-                    <Label>Tempo para auto-desligar (segundos)</Label>
-                    <Input type="number" min={0} value={Number(config.auto_off_delay ?? 0)} onChange={(e) => setConfig("auto_off_delay", Number(e.target.value))} disabled={!config.auto_off} />
-                  </div>
+                  {(config.modo_saida as string) !== "momentary" && (
+                    <>
+                      <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                        <Label className="text-sm">Auto-desligar</Label>
+                        <Switch checked={!!config.auto_off} onCheckedChange={(v) => setConfig("auto_off", v)} />
+                      </div>
+                      <div>
+                        <Label>Tempo para auto-desligar (segundos)</Label>
+                        <Input type="number" min={0} value={Number(config.auto_off_delay ?? 0)} onChange={(e) => setConfig("auto_off_delay", Number(e.target.value))} disabled={!config.auto_off} />
+                      </div>
+                    </>
+                  )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Use <strong>Alternância</strong> para luzes e tomadas, e <strong>Pulso</strong> para portões e fechaduras.
-                  O auto-desligar apaga sozinho após o tempo, mesmo no modo alternância.
+                  {(config.modo_saida as string) === "momentary"
+                    ? " No modo Pulso o próprio pulso já desliga sozinho, então o auto-desligar fica desativado."
+                    : " O auto-desligar apaga sozinho após o tempo, no modo alternância."}
                 </p>
                 <Button
                   type="button"
