@@ -2,16 +2,20 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { adminClient, autenticar } from "../_shared/portaria/auth.ts";
-import { shellyStatus, shellyPulso } from "../_shared/portaria/shelly.ts";
+import { shellyStatus, shellyPulso, shellyConfigurarSaida } from "../_shared/portaria/shelly.ts";
 import { ControlIDService } from "../_shared/portaria/controlid.ts";
 import { executarViaColetor } from "../_shared/portaria/coletor.ts";
 
 const BodySchema = z.object({
-  acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste", "capturar_camera"]),
+  acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste", "capturar_camera", "configurar"]),
   device_id: z.string().uuid(),
   usuario: z.string().max(200).optional(),
   senha: z.string().max(300).optional(),
   token: z.string().max(500).optional(),
+  modo_saida: z.enum(["toggle", "momentary"]).optional(),
+  auto_off: z.boolean().optional(),
+  auto_off_delay: z.number().int().min(0).optional(),
+  power_on_state: z.enum(["restore_last", "on", "off"]).optional(),
 });
 
 const JSON_HEADERS = { ...corsHeaders, "Content-Type": "application/json" };
@@ -59,6 +63,43 @@ Deno.serve(async (req) => {
     .select("usuario, senha, token")
     .eq("device_id", device_id)
     .maybeSingle();
+
+  if (acao === "configurar") {
+    if (device.tipo !== "shelly") {
+      return responder(400, { error: "Configuração de saída só é suportada para Shelly." });
+    }
+    const canal = device.canal_rele ?? 0;
+    const cfg = {
+      modo: parsed.data.modo_saida,
+      auto_off: parsed.data.auto_off,
+      auto_off_delay: parsed.data.auto_off_delay,
+      power_on_state: parsed.data.power_on_state,
+    };
+
+    if (device.via_coletor) {
+      const r = await executarViaColetor(admin, {
+        device_id,
+        comando: "configurar_saida",
+        parametros: { canal, ...cfg },
+        solicitado_por: ctx.userId,
+      });
+      ok = r.ok; mensagem = r.mensagem; dados = r.dados;
+    } else {
+      const r = await shellyConfigurarSaida(device as never, cred ?? {}, canal, cfg);
+      ok = r.ok; mensagem = r.mensagem; dados = r.detalhes;
+    }
+
+    const configAtual = (device.config ?? {}) as Record<string, unknown>;
+    await admin.from("port_devices").update({
+      config: { ...configAtual, ...cfg },
+    }).eq("id", device_id);
+
+    return responder(200, {
+      ok,
+      mensagem: mensagem ?? (ok ? "Configuração aplicada." : "Não foi possível aplicar a configuração."),
+      dados,
+    });
+  }
 
   let ok = false;
   let mensagem: string | undefined;

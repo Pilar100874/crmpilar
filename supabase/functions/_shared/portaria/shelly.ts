@@ -177,6 +177,73 @@ export async function shellyLigar(
   }
 }
 
+export interface ConfigSaidaShelly {
+  modo?: "toggle" | "momentary";
+  auto_off?: boolean;
+  auto_off_delay?: number;
+  power_on_state?: "restore_last" | "on" | "off";
+}
+
+/** Configura o modo da saída (toggle/pulso), auto-off e estado ao ligar. */
+export async function shellyConfigurarSaida(
+  device: ShellyDevice,
+  cred: ShellyCredentials,
+  canal: number,
+  cfg: ConfigSaidaShelly,
+): Promise<ComandoResultado> {
+  const base = baseUrl(device);
+  if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
+  const geracao = ((device.config?.geracao as string) || "gen2").toLowerCase();
+
+  try {
+    if (geracao === "gen1") {
+      const params = new URLSearchParams();
+      if (cfg.modo) params.set("btn_type", cfg.modo);
+      if (cfg.auto_off !== undefined) params.set("auto_off", cfg.auto_off ? "true" : "false");
+      if (cfg.auto_off_delay !== undefined) params.set("auto_off_delay", String(cfg.auto_off_delay));
+      if (cfg.power_on_state) {
+        params.set("power_on_state", cfg.power_on_state === "restore_last" ? "last" : cfg.power_on_state);
+      }
+      const url = `${base}/settings/relay/${canal}?${params.toString()}`;
+      const resp = await fetchComTimeout(url, { method: "GET", headers: authHeaders(cred) });
+      const texto = await resp.text();
+      return {
+        ok: resp.ok,
+        status: resp.status,
+        mensagem: resp.ok ? undefined : `Shelly respondeu ${resp.status}`,
+        detalhes: texto.slice(0, 500),
+      };
+    }
+
+    const configRpc: Record<string, unknown> = {};
+    if (cfg.modo) configRpc.in_mode = cfg.modo;
+    if (cfg.auto_off !== undefined) configRpc.auto_off = cfg.auto_off;
+    if (cfg.auto_off_delay !== undefined) configRpc.auto_off_delay = cfg.auto_off_delay;
+
+    let powerOnState: number | undefined;
+    if (cfg.power_on_state === "off") powerOnState = 0;
+    else if (cfg.power_on_state === "on") powerOnState = 1;
+    else if (cfg.power_on_state === "restore_last") powerOnState = 2;
+    if (powerOnState !== undefined) configRpc.power_on_state = powerOnState;
+
+    const url = `${base}/rpc/Switch.SetConfig`;
+    const resp = await fetchComTimeout(url, {
+      method: "POST",
+      headers: { ...authHeaders(cred), "Content-Type": "application/json" },
+      body: JSON.stringify({ id: canal, config: configRpc }),
+    });
+    const texto = await resp.text();
+    return {
+      ok: resp.ok,
+      status: resp.status,
+      mensagem: resp.ok ? undefined : `Shelly respondeu ${resp.status}`,
+      detalhes: texto.slice(0, 500),
+    };
+  } catch (e) {
+    return { ok: false, mensagem: (e as Error).message || "Falha de comunicação com o Shelly." };
+  }
+}
+
 /** Extrai o estado ligado/desligado de um canal a partir da resposta de status. */
 export function estadoDoCanal(detalhes: unknown, canal: number): boolean | null {
   let obj: Record<string, unknown> | null = null;

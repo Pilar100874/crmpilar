@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { STATUS_CORES, salvarCredenciais, testarDispositivo } from "@/lib/portaria/api";
+import { STATUS_CORES, salvarCredenciais, testarDispositivo, configurarSaidaDispositivo } from "@/lib/portaria/api";
 import { SHELLY_MODELOS, getShellyModelo, rotuloShelly, portaPadraoDispositivo } from "@/lib/portaria/shellyModelos";
 
 
@@ -339,6 +339,92 @@ export default function PortariaDispositivos() {
                   </>
                 )}
               </>
+            )}
+
+            {form.tipo === "shelly" && form.funcao === "saida" && (
+              <div className="sm:col-span-2 rounded-md border p-3 space-y-3 bg-muted/30">
+                <p className="text-sm font-medium">Configuração da saída</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Modo do botão / saída</Label>
+                    <Select value={(config.modo_saida as string) ?? "toggle"} onValueChange={(v) => setConfig("modo_saida", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="toggle">Alternância (liga/desliga)</SelectItem>
+                        <SelectItem value="momentary">Pulso (aciona e desliga sozinho)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Estado ao ligar (Power-on)</Label>
+                    <Select value={(config.power_on_state as string) ?? "restore_last"} onValueChange={(v) => setConfig("power_on_state", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="restore_last">Restaurar último estado</SelectItem>
+                        <SelectItem value="on">Ligar</SelectItem>
+                        <SelectItem value="off">Desligar</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                    <Label className="text-sm">Auto-desligar</Label>
+                    <Switch checked={!!config.auto_off} onCheckedChange={(v) => setConfig("auto_off", v)} />
+                  </div>
+                  <div>
+                    <Label>Tempo para auto-desligar (segundos)</Label>
+                    <Input type="number" min={0} value={Number(config.auto_off_delay ?? 0)} onChange={(e) => setConfig("auto_off_delay", Number(e.target.value))} disabled={!config.auto_off} />
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Use <strong>Alternância</strong> para luzes e tomadas, e <strong>Pulso</strong> para portões e fechaduras.
+                  O auto-desligar apaga sozinho após o tempo, mesmo no modo alternância.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  disabled={salvando || !form.id}
+                  onClick={async () => {
+                    if (!form.id) {
+                      toast({ title: "Salve o dispositivo primeiro.", variant: "destructive" });
+                      return;
+                    }
+                    setSalvando(true);
+                    const configAtual = (form.config ?? {}) as Record<string, unknown>;
+                    const novoConfig = {
+                      ...configAtual,
+                      modo_saida: (config.modo_saida as string) ?? "toggle",
+                      auto_off: !!config.auto_off,
+                      auto_off_delay: Number(config.auto_off_delay ?? 0),
+                      power_on_state: (config.power_on_state as string) ?? "restore_last",
+                    };
+                    const { error } = await supabase.from("port_devices").update({ config: novoConfig }).eq("id", form.id);
+                    if (error) {
+                      setSalvando(false);
+                      toast({ title: "Erro ao salvar configuração", description: error.message, variant: "destructive" });
+                      return;
+                    }
+                    setForm({ ...form, config: novoConfig });
+                    const r = await configurarSaidaDispositivo(form.id, {
+                      modo_saida: novoConfig.modo_saida as "toggle" | "momentary",
+                      auto_off: novoConfig.auto_off,
+                      auto_off_delay: novoConfig.auto_off_delay,
+                      power_on_state: novoConfig.power_on_state as "restore_last" | "on" | "off",
+                    });
+                    setSalvando(false);
+                    toast({
+                      title: r.ok ? "Configuração aplicada" : "Falha ao configurar",
+                      description: r.mensagem,
+                      variant: r.ok ? undefined : "destructive",
+                    });
+                    carregar();
+                  }}
+                >
+                  {salvando && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Aplicar no dispositivo
+                </Button>
+              </div>
             )}
 
             <div className="sm:col-span-2 rounded-md border px-3 py-2">
