@@ -272,13 +272,19 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         transparente
           ? "bg-transparent border-transparent"
           : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
-        (pulsando || contagemAuto) && "pb-8",
       )}
         style={{ borderRadius: raio }}
       >
 
-      {pulsando && porPulso && (
-        <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+      {(pulsando || contagemAuto) && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+          {pulsando && porPulso && (
+            <ReloginhoPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+          )}
+          {contagemAuto && !porPulso && aceso && modoDispositivo?.autoDesligarMs && (
+            <ReloginhoPulso duracaoMs={modoDispositivo.autoDesligarMs} onFim={fimDoAutoDesligar} />
+          )}
+        </div>
       )}
 
       <div className="flex items-start gap-2">
@@ -347,14 +353,6 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
           )}
         </div>
-      )}
-      {/* barra de acompanhamento do auto-desligar */}
-      {!edicao && contagemAuto && !porPulso && aceso && modoDispositivo?.autoDesligarMs && (
-        <BarraPulso
-          duracaoMs={modoDispositivo.autoDesligarMs}
-          onFim={fimDoAutoDesligar}
-          rotulo="Desliga em…"
-        />
       )}
     </div>
   );

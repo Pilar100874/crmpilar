@@ -130,18 +130,16 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
         style={aceso ? { boxShadow: "0 0 8px rgba(74,222,128,0.9)" } : undefined}
       />
 
-      {/* barra de acompanhamento do pulso */}
-      {pulsando && porPulso && (
-        <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
-      )}
-
-      {/* barra de acompanhamento do auto-desligar */}
-      {contagemAuto && !porPulso && aceso && modoDispositivo?.autoDesligarMs && (
-        <BarraPulso
-          duracaoMs={modoDispositivo.autoDesligarMs}
-          onFim={fimDoAutoDesligar}
-          rotulo="Desliga em…"
-        />
+      {/* relóginho de acompanhamento do pulso / auto-desligar */}
+      {(pulsando || contagemAuto) && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+          {pulsando && porPulso && (
+            <ReloginhoPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+          )}
+          {contagemAuto && !porPulso && aceso && modoDispositivo?.autoDesligarMs && (
+            <ReloginhoPulso duracaoMs={modoDispositivo.autoDesligarMs} onFim={fimDoAutoDesligar} />
+          )}
+        </div>
       )}
 
       <div className="relative flex h-full flex-col">
