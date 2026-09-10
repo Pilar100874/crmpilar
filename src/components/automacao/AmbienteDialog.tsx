@@ -132,8 +132,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
   const gravar = async () => {
     if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
-    if (mudouFormato()) { setConfirmarGrupo(true); return; }
-    await salvar(false);
+    await salvar(mudouFormato());
   };
 
   return (
