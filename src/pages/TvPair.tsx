@@ -5,7 +5,8 @@ import { Download, Smartphone, QrCode as QrIcon, CheckCircle2 } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadApk } from "@/lib/downloadApk";
-import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME, TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 export default function TvPair() {
   const [params] = useSearchParams();
