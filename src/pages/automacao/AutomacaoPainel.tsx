@@ -93,7 +93,13 @@ export default function AutomacaoPainel() {
     // Já mostra os botões com a situação real dos equipamentos.
     lerEstadosDosBlocos(b)
       .then((e) => setEstados((s) => {
-        const proximo = { ...e, ...s };
+        const proximo = { ...s };
+        // Uma leitura confirmada do aparelho é sempre a fonte principal.
+        // Se ele estiver temporariamente inacessível, preserva a última
+        // situação exibida em vez de trocar por um estado desconhecido.
+        for (const [blocoId, ligado] of Object.entries(e)) {
+          if (ligado !== null || !(blocoId in proximo)) proximo[blocoId] = ligado;
+        }
         estadosRef.current = proximo;
         return proximo;
       }))

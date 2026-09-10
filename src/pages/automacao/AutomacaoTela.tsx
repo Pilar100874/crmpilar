@@ -67,7 +67,13 @@ export default function AutomacaoTela() {
       setAmbientes(a);
       setBlocos(b);
       // Já mostra os botões com a situação real dos equipamentos.
-      lerEstadosDosBlocos(b).then((e) => setEstados((s) => ({ ...e, ...s }))).catch(() => {});
+      lerEstadosDosBlocos(b).then((e) => setEstados((s) => {
+        const proximo = { ...s };
+        for (const [blocoId, ligado] of Object.entries(e)) {
+          if (ligado !== null || !(blocoId in proximo)) proximo[blocoId] = ligado;
+        }
+        return proximo;
+      })).catch(() => {});
     })();
   }, []);
 
