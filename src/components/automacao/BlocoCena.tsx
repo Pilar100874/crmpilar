@@ -17,7 +17,11 @@ export default function BlocoCena({ bloco, ligado, onEstado }: Props) {
   const modo = cfg.acao ?? "alternar";
   const aceso = ligado === true;
 
-  const acionar = async () => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const acionar = () => pedir(executar);
+
+  const executar = async () => {
     if (!bloco.device_id) {
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
