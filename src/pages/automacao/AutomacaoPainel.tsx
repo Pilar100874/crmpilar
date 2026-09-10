@@ -576,10 +576,11 @@ export default function AutomacaoPainel() {
           </TabsList>
         </Tabs>
         {podeEditar && (
-          <Button size="sm" variant="ghost" onClick={() => setAmbienteEdit({ nome: "", ordem: ambientes.length, dispositivo: tipoTelaFiltro })}>
-            <Plus className="h-4 w-4 mr-1" /> Ambiente
+          <Button size="sm" variant="ghost" onClick={novaTela}>
+            <Plus className="h-4 w-4 mr-1" /> Aba
           </Button>
         )}
+
         {admin && (
           <div className="ml-auto flex gap-2">
             <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
