@@ -114,26 +114,35 @@ export async function shellyPulso(
 export async function shellyStatus(
   device: ShellyDevice,
   cred: ShellyCredentials,
+  canal = 0,
 ): Promise<ComandoResultado> {
   const base = baseUrl(device);
   if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
   const geracao = ((device.config?.geracao as string) || "gen2").toLowerCase();
-  const urls = geracao === "gen1"
-    ? [`${base}/status`, `${base}/rpc/Shelly.GetStatus`]
-    : [`${base}/rpc/Shelly.GetStatus`, `${base}/status`];
+  const gen2 = [
+    `${base}/rpc/Switch.GetStatus?id=${canal}`,
+    `${base}/rpc/Shelly.GetStatus`,
+    `${base}/status`,
+  ];
+  const gen1 = [`${base}/status`, `${base}/rpc/Switch.GetStatus?id=${canal}`, `${base}/rpc/Shelly.GetStatus`];
+  const urls = geracao === "gen1" ? gen1 : gen2;
   try {
     let ultima: Response | null = null;
     let texto = "";
     for (const url of urls) {
       ultima = await fetchComTimeout(url, { headers: authHeaders(cred) }, 6000);
       texto = await ultima.text();
-      if (ultima.ok || (ultima.status !== 404 && ultima.status !== 400)) break;
+      // Só aceita a resposta se ela realmente disser o estado do canal.
+      if (ultima.ok && estadoDoCanal(texto, canal) !== null) break;
+      if (ultima.ok) continue;
+      if (ultima.status !== 404 && ultima.status !== 400) break;
     }
-    return { ok: !!ultima?.ok, status: ultima?.status, detalhes: texto.slice(0, 1000) };
+    return { ok: !!ultima?.ok, status: ultima?.status, detalhes: texto.slice(0, 8000) };
   } catch (e) {
     return { ok: false, mensagem: (e as Error).message };
   }
 }
+
 
 
 /** Liga ou desliga o relé de forma permanente (luz/tomada). */
@@ -172,18 +181,50 @@ export async function shellyLigar(
 export function estadoDoCanal(detalhes: unknown, canal: number): boolean | null {
   let obj: Record<string, unknown> | null = null;
   if (typeof detalhes === "string") {
-    try { obj = JSON.parse(detalhes); } catch { return null; }
+    const txt = detalhes.trim();
+    if (!txt) return null;
+    try { obj = JSON.parse(txt); } catch {
+      // Resposta cortada ou não-JSON: procura o estado por texto.
+      const m = txt.match(/"(?:output|ison|on)"\s*:\s*(true|false)/i);
+      return m ? m[1].toLowerCase() === "true" : null;
+    }
   } else if (detalhes && typeof detalhes === "object") {
     obj = detalhes as Record<string, unknown>;
   }
   if (!obj) return null;
-  const gen2 = obj[`switch:${canal}`] as { output?: boolean } | undefined;
-  if (gen2 && typeof gen2.output === "boolean") return gen2.output;
-  const rels = obj["relays"] as Array<{ ison?: boolean }> | undefined;
-  if (Array.isArray(rels) && rels[canal] && typeof rels[canal].ison === "boolean") {
-    return !!rels[canal].ison;
+
+  const bool = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null);
+
+  // Respostas embrulhadas (coletor local, RPC, etc.)
+  for (const chave of ["result", "data", "status", "detalhes", "resposta"]) {
+    const dentro = obj[chave];
+    if (dentro && typeof dentro === "object") {
+      const r = estadoDoCanal(dentro, canal);
+      if (r !== null) return r;
+    } else if (typeof dentro === "string" && dentro.trim().startsWith("{")) {
+      const r = estadoDoCanal(dentro, canal);
+      if (r !== null) return r;
+    }
   }
+
+  const sw = obj[`switch:${canal}`] as { output?: boolean } | undefined;
+  if (sw && bool(sw.output) !== null) return sw.output as boolean;
+
+  const rels = obj["relays"] as Array<{ ison?: boolean }> | undefined;
+  if (Array.isArray(rels) && rels[canal] && bool(rels[canal].ison) !== null) return !!rels[canal].ison;
+
+  const lights = obj["lights"] as Array<{ ison?: boolean }> | undefined;
+  if (Array.isArray(lights) && lights[canal] && bool(lights[canal].ison) !== null) return !!lights[canal].ison;
+
+  // Switch.GetStatus devolve o canal direto na raiz.
+  if (bool(obj["output"]) !== null) return obj["output"] as boolean;
+  if (bool(obj["ison"]) !== null) return obj["ison"] as boolean;
+  if (bool(obj["on"]) !== null) return obj["on"] as boolean;
+  if (bool(obj["ligado"]) !== null) return obj["ligado"] as boolean;
+
   const inputs = obj[`input:${canal}`] as { state?: boolean } | undefined;
-  if (inputs && typeof inputs.state === "boolean") return inputs.state;
+  if (inputs && bool(inputs.state) !== null) return inputs.state as boolean;
+  if (bool(obj["state"]) !== null) return obj["state"] as boolean;
   return null;
+
 }
