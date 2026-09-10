@@ -48,7 +48,7 @@ export default function AutomacaoPaineis() {
   const navegar = useNavigate();
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [admin, setAdmin] = useState(false);
-  const [edit, setEdit] = useState<Partial<Ambiente> | null>(null);
+  const [novaTela, setNovaTela] = useState<{ tipo: TipoTela } | null>(null);
   const [excluirTela, setExcluirTela] = useState<TelaGrupo | null>(null);
   const [renomear, setRenomear] = useState<TelaGrupo | null>(null);
   const [configTela, setConfigTela] = useState<TelaGrupo | null>(null);
