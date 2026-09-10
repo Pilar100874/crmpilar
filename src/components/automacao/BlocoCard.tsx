@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
+import BarraPulso from "./BarraPulso";
 
 import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
@@ -109,6 +110,9 @@ export default function BlocoCard(props: Props) {
 
 function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplicar, onAcionar }: Props) {
   const [ocupado, setOcupado] = useState(false);
+  // Quando o dispositivo trabalha em modo pulso, mostra a barra de
+  // acompanhamento enquanto o pulso está ativo.
+  const [pulsando, setPulsando] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
   const cfg = (bloco.config ?? {}) as Record<string, any>;
@@ -140,8 +144,17 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       toast.error(r.mensagem);
       return;
     }
-    if (acao === "pulso") toast.success(`${bloco.nome} acionado.`);
+    if (acao === "pulso") {
+      toast.success(`${bloco.nome} acionado.`);
+      setPulsando(true);
+    }
     onEstado(r.ligado ?? (acao === "ligar" ? true : acao === "desligar" ? false : ligado));
+  };
+
+  const fimDoPulso = () => {
+    setPulsando(false);
+    // Depois do pulso o equipamento volta para desligado.
+    onEstado(false);
   };
 
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
