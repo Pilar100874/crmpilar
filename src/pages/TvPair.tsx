@@ -54,6 +54,7 @@ export default function TvPair() {
                 <CardTitle className="text-base flex items-center gap-2">
                   <span className="inline-flex w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs items-center justify-center">1</span>
                   Baixe e instale o app
+                  <VersaoAppBadge manifesto={TV_SIGNAGE_MANIFEST_URL} className="ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
