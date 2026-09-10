@@ -341,7 +341,7 @@ export default function PortariaDispositivos() {
               </>
             )}
 
-            {form.tipo === "shelly" && form.funcao === "saida" && (
+            {form.tipo === "shelly" && (form.funcao ?? (config.funcao as string) ?? "saida") !== "entrada" && (
               <div className="sm:col-span-2 rounded-md border p-3 space-y-3 bg-muted/30">
                 <p className="text-sm font-medium">Configuração da saída</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
