@@ -89,33 +89,9 @@ export default function AutomacaoPaineis() {
     return Array.from(mapa.values());
   };
 
-  /** Cria uma tela nova (a primeira aba nasce junto, com o nome da tela). */
+  /** Abre o diálogo para criar uma tela nova com nome e formato. */
   const nova = (tipo: TipoTela) => {
-    setEdit({
-      nome: "",
-      tela_nome: "",
-      ordem: ambientes.length,
-      dispositivo: tipo,
-      tela_largura: FORMATOS_TELA[tipo][0].largura,
-      tela_altura: FORMATOS_TELA[tipo][0].altura,
-      rolagem: tipo === "celular",
-      mostrar_abas: true,
-    });
-  };
-
-  /** Cria uma aba nova dentro de uma tela já existente, herdando o formato dela. */
-  const novaAba = (grupo: TelaGrupo) => {
-    const base = grupo.abas[0];
-    setEdit({
-      nome: "",
-      tela_nome: grupo.nome,
-      ordem: ambientes.length,
-      dispositivo: grupo.dispositivo,
-      tela_largura: base?.tela_largura ?? FORMATOS_TELA[grupo.dispositivo][0].largura,
-      tela_altura: base?.tela_altura ?? FORMATOS_TELA[grupo.dispositivo][0].altura,
-      rolagem: base?.rolagem === true,
-      mostrar_abas: base?.mostrar_abas !== false,
-    });
+    setNovaTela({ tipo });
   };
 
   const confirmarRenomear = async () => {
