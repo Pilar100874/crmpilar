@@ -437,22 +437,7 @@ export async function copiarAmbienteParaTela(
   const criado = novo as Ambiente | null;
   if (!criado) return null;
 
-  const { data: originais } = await db.from("automacao_blocos").select("*").eq("ambiente_id", origem.id);
-  const copias = ((originais ?? []) as Bloco[]).map((b) => ({
-    ambiente_id: criado.id,
-    tipo: b.tipo,
-    nome: b.nome,
-    icone: b.icone,
-    device_id: b.device_id,
-    canal: b.canal ?? 0,
-    x: Math.round((b.x ?? 0) * fx),
-    y: Math.round((b.y ?? 0) * fy),
-    w: Math.max(1, Math.round((b.w ?? 1) * fx)),
-    h: Math.max(1, Math.round((b.h ?? 1) * fy)),
-    visivel: b.visivel !== false,
-    config: b.config ?? {},
-  }));
-  if (copias.length) await db.from("automacao_blocos").insert(copias);
+  await copiarBlocosERegras(origem.id, criado.id, fx, fy);
   return criado;
 }
 
