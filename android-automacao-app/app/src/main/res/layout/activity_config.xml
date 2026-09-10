@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B1220"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pilar Automação"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Endereço do sistema"
+            android:textColor="#93A4C3" />
+
+        <EditText
+            android:id="@+id/campo_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="https://crmpilar.lovable.app"
+            android:inputType="textUri"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#5B6B8A" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Ambiente (deixe vazio para escolher automaticamente)"
+            android:textColor="#93A4C3" />
+
+        <EditText
+            android:id="@+id/campo_ambiente"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="código do ambiente"
+            android:inputType="text"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#5B6B8A" />
+
+        <CheckBox
+            android:id="@+id/campo_rolagem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:checked="true"
+            android:text="Permitir rolar a tela para baixo"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn_salvar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Salvar" />
+    </LinearLayout>
+</ScrollView>
