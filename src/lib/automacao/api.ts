@@ -26,7 +26,8 @@ export type TipoBloco =
   | "forma"
   | "clima"
   | "abas"
-  | "bubble";
+  | "bubble"
+  | "expansivel";
 
 export interface Ambiente {
   id: string;
@@ -181,6 +182,7 @@ export const TIPOS_BLOCO: {
   { valor: "ambiente", label: "Cartão de ambiente (foto)", descricao: "Foto que fica clara ao ligar e escura ao desligar", grupo: "Controle" },
   { valor: "imagemluz", label: "Imagem acesa / apagada", descricao: "Imagem com fundo transparente que aparece ao ligar (ideal para sobrepor)", grupo: "Controle" },
   { valor: "bubble", label: "Controle Rápido", descricao: "Ícone, estado e botão de ação", grupo: "Controle" },
+  { valor: "expansivel", label: "Grupo expansível", descricao: "Um toque abre outros elementos escolhidos", grupo: "Controle" },
 ];
 
 
