@@ -9,10 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
   aplicarFormatoGrupo, enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
@@ -46,7 +42,6 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [confirmarGrupo, setConfirmarGrupo] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
   /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
   const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
@@ -124,9 +119,8 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
         rolagem,
       }, original.current.telaNome);
     }
-    setConfirmarGrupo(false);
     onChange(null);
-    toast.success(aplicarNoGrupo ? "Telas do grupo atualizadas." : "Ambiente salvo.");
+    toast.success(aplicarNoGrupo ? "Formato aplicado a todas as telas do grupo." : "Ambiente salvo.");
     onSalvo();
   };
 
@@ -342,26 +336,6 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
 
-        <AlertDialog open={confirmarGrupo} onOpenChange={setConfirmarGrupo}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Mudar o formato de todas as telas?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Você mudou o aparelho ou o formato desta tela. Como as telas do mesmo grupo precisam ter
-                o mesmo tamanho, <strong>todas as telas de {TIPOS_TELA.find((t) => t.valor === original.current?.dispositivo)?.label}</strong>{" "}
-                vão passar para {TIPOS_TELA.find((t) => t.valor === tipoTela)?.label} em {largura} × {altura}.
-                Os elementos podem precisar de ajuste depois.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <Button variant="outline" onClick={() => salvar(false)}>Só esta tela</Button>
-              <AlertDialogAction onClick={(e) => { e.preventDefault(); salvar(true); }}>
-                Mudar todas
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
