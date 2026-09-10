@@ -119,15 +119,21 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
             f,
             p: cfg.posicoes?.[f.id] ?? { x: f.x - bloco.x, y: f.y - bloco.y, w: f.w, h: f.h },
           }));
-          const esc = ancora.escala || 1;
           const minX = Math.min(0, ...itens.map((i) => i.p.x));
           const minY = Math.min(0, ...itens.map((i) => i.p.y));
           const maxX = Math.max(0, ...itens.map((i) => i.p.x + i.p.w));
           const maxY = Math.max(0, ...itens.map((i) => i.p.y + i.p.h));
+          const margem = 24;
+          const dispW = Math.max(120, window.innerWidth - margem * 2);
+          const dispH = Math.max(120, window.innerHeight - margem * 2);
+          // Nunca deixa o conjunto maior que a janela.
+          const esc = Math.min(
+            ancora.escala || 1,
+            dispW / Math.max(1, maxX - minX),
+            dispH / Math.max(1, maxY - minY),
+          );
           const larg = (maxX - minX) * esc;
           const alt = (maxY - minY) * esc;
-          // Mantém tudo visível dentro da janela.
-          const margem = 12;
           const baseLeft = Math.min(
             Math.max(margem, ancora.left + minX * esc),
             Math.max(margem, window.innerWidth - larg - margem),
