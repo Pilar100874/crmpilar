@@ -232,6 +232,7 @@ export async function listarAmbientes(): Promise<Ambiente[]> {
 export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | null> {
   const payload = {
     nome: a.nome,
+    tela_nome: a.tela_nome?.trim() || null,
     icone: a.icone ?? null,
     ordem: a.ordem ?? 0,
     tela_largura: a.tela_largura ?? null,
@@ -264,8 +265,20 @@ export async function excluirAmbiente(id: string) {
 export async function aplicarFormatoGrupo(
   dispositivoAtual: TipoTela,
   campos: { dispositivo: TipoTela; tela_largura: number; tela_altura: number; rolagem: boolean },
+  telaNome?: string | null,
 ) {
-  await db.from("automacao_ambientes").update(campos).eq("dispositivo", dispositivoAtual);
+  let q = db.from("automacao_ambientes").update(campos).eq("dispositivo", dispositivoAtual);
+  if (telaNome) q = q.eq("tela_nome", telaNome);
+  await q;
+}
+
+/** Renomeia a tela (grupo de abas) inteira de uma vez. */
+export async function renomearTela(dispositivo: TipoTela, telaNome: string, novoNome: string) {
+  await db
+    .from("automacao_ambientes")
+    .update({ tela_nome: novoNome.trim() })
+    .eq("dispositivo", dispositivo)
+    .eq("tela_nome", telaNome);
 }
 
 /** Liga ou desliga um painel sem apagar nada. */
@@ -279,6 +292,7 @@ export async function duplicarAmbiente(a: Ambiente): Promise<Ambiente | null> {
     .from("automacao_ambientes")
     .insert({
       nome: `${a.nome} (cópia)`,
+      tela_nome: a.tela_nome ?? null,
       icone: a.icone ?? null,
       ordem: (a.ordem ?? 0) + 1,
       tela_largura: a.tela_largura,
