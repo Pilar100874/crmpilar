@@ -494,50 +494,70 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Abrir para</Label>
-                  <Select value={cfg.direcao ?? "baixo"} onValueChange={(v) => setCfg({ direcao: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      <SelectItem value="baixo">Abaixo</SelectItem>
-                      <SelectItem value="cima">Acima</SelectItem>
-                      <SelectItem value="direita">À direita</SelectItem>
-                      <SelectItem value="esquerda">À esquerda</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Colunas ({cfg.colunas ?? 1})</Label>
-                  <input
-                    type="range" min={1} max={4} step={1}
-                    value={cfg.colunas ?? 1}
-                    onChange={(e) => setCfg({ colunas: Number(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
+              <div>
+                <Label className="text-xs">Como mostrar os itens</Label>
+                <Select value={(cfg.layout as string) ?? "livre"} onValueChange={(v) => setCfg({ layout: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="livre">Livre — cada item no tamanho e lugar que você deixou no painel</SelectItem>
+                    <SelectItem value="grade">Em lista organizada ao lado do botão</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(cfg.layout ?? "livre") === "livre" && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    No modo de edição arraste e redimensione cada item vinculado; ao abrir, eles aparecem exatamente assim.
+                  </p>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Largura de cada item ({cfg.larguraItem ?? 170}px)</Label>
-                  <input
-                    type="range" min={90} max={360} step={10}
-                    value={cfg.larguraItem ?? 170}
-                    onChange={(e) => setCfg({ larguraItem: Number(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Altura de cada item ({cfg.alturaItem ?? 68}px)</Label>
-                  <input
-                    type="range" min={40} max={240} step={4}
-                    value={cfg.alturaItem ?? 68}
-                    onChange={(e) => setCfg({ alturaItem: Number(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
-              </div>
+              {(cfg.layout ?? "livre") === "grade" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Abrir para</Label>
+                      <Select value={cfg.direcao ?? "baixo"} onValueChange={(v) => setCfg({ direcao: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-popover">
+                          <SelectItem value="baixo">Abaixo</SelectItem>
+                          <SelectItem value="cima">Acima</SelectItem>
+                          <SelectItem value="direita">À direita</SelectItem>
+                          <SelectItem value="esquerda">À esquerda</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Colunas ({cfg.colunas ?? 1})</Label>
+                      <input
+                        type="range" min={1} max={4} step={1}
+                        value={cfg.colunas ?? 1}
+                        onChange={(e) => setCfg({ colunas: Number(e.target.value) })}
+                        className="w-full accent-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Largura de cada item ({cfg.larguraItem ?? 170}px)</Label>
+                      <input
+                        type="range" min={90} max={360} step={10}
+                        value={cfg.larguraItem ?? 170}
+                        onChange={(e) => setCfg({ larguraItem: Number(e.target.value) })}
+                        className="w-full accent-primary"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Altura de cada item ({cfg.alturaItem ?? 68}px)</Label>
+                      <input
+                        type="range" min={40} max={240} step={4}
+                        value={cfg.alturaItem ?? 68}
+                        onChange={(e) => setCfg({ alturaItem: Number(e.target.value) })}
+                        className="w-full accent-primary"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
