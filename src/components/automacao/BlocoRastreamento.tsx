@@ -13,6 +13,9 @@ interface Cfg {
   intervalo_seg?: number;
   mostrar_lista?: boolean;
   permitir_ampliar?: boolean;
+  permitir_interacao?: boolean;
+  mostrar_barra?: boolean;
+  transparente?: boolean;
 }
 
 interface Props {
@@ -70,6 +73,8 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
   }, [carregar, intervalo]);
 
   const podeAmpliar = cfg.permitir_ampliar !== false;
+  const interativo = cfg.permitir_interacao !== false;
+  const mostrarBarra = cfg.mostrar_barra !== false;
 
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -82,7 +87,13 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
   const movendo = veiculos.filter((v) => v.status === "movendo").length;
 
   const conteudo = (
-    <div className="h-full rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
+    <div
+      className={cn(
+        "h-full rounded-2xl overflow-hidden flex flex-col",
+        cfg.transparente ? "border border-transparent bg-transparent" : "border border-border bg-card"
+      )}
+    >
+      {mostrarBarra && (
       <div
         className={cn(
           "flex items-center justify-between gap-2 px-3 py-2 select-none",
