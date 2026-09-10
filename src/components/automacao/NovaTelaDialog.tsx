@@ -157,16 +157,6 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
             </div>
           )}
 
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={mostrarAbas}
-              onChange={(e) => setMostrarAbas(e.target.checked)}
-            />
-            Mostrar as abas das telas deste mesmo aparelho
-          </label>
-
           {(tipoTela === "tablet" || tipoTela === "celular") && (
             <label className="flex items-center gap-2 text-sm">
               <input
