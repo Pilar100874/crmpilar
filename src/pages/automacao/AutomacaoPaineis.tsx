@@ -127,16 +127,16 @@ export default function AutomacaoPaineis() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">Telas de automação</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-base font-semibold sm:text-lg">Telas de automação</h2>
+          <p className="text-xs text-muted-foreground sm:text-sm">
             Cada tela tem um nome e reúne as abas (ambientes) dela em um único cartão.
           </p>
         </div>
         {admin && (
-          <Button className="ml-auto" onClick={() => nova("tv")}>
+          <Button className="w-full sm:ml-auto sm:w-auto" onClick={() => nova("tv")}>
             <Plus className="h-4 w-4 mr-1" /> Nova tela
           </Button>
         )}
@@ -146,27 +146,27 @@ export default function AutomacaoPaineis() {
         const telas = telasDe(tipo.valor);
         const Icone = ICONE_TIPO[tipo.valor];
         return (
-          <section key={tipo.valor} className="rounded-2xl border bg-card">
-            <header className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
-              <Icone className="h-5 w-5 text-primary" />
-              <div className="min-w-0">
-                <h3 className="font-semibold leading-tight">{tipo.label}</h3>
-                <p className="text-xs text-muted-foreground">{tipo.descricao}</p>
+          <section key={tipo.valor} className="overflow-hidden rounded-2xl border bg-card">
+            <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b px-3 py-3 sm:px-4">
+              <Icone className="h-5 w-5 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate font-semibold leading-tight">{tipo.label}</h3>
+                <p className="truncate text-xs text-muted-foreground">{tipo.descricao}</p>
               </div>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
                 {telas.length} {telas.length === 1 ? "tela" : "telas"}
               </span>
               {admin && (
-                <Button size="sm" variant="outline" className="ml-auto" onClick={() => nova(tipo.valor)}>
-                  <Plus className="h-4 w-4 mr-1" /> Novo
+                <Button size="sm" variant="outline" className="shrink-0" onClick={() => nova(tipo.valor)}>
+                  <Plus className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Novo</span>
                 </Button>
               )}
             </header>
 
             {telas.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-muted-foreground">Nenhuma tela criada para este aparelho.</p>
+              <p className="px-3 py-6 text-sm text-muted-foreground sm:px-4">Nenhuma tela criada para este aparelho.</p>
             ) : (
-              <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-3 2xl:grid-cols-4">
                 {telas.map((grupo) => {
                   const primeira = grupo.abas[0];
                   return (
@@ -207,19 +207,19 @@ export default function AutomacaoPaineis() {
                       </div>
 
                       {admin && (
-                        <div className="mt-2 flex items-center gap-1 border-t pt-2">
-                          <Button size="sm" variant="ghost" onClick={() => primeira && navegar(`/automacao/painel/${primeira.id}`)}>
+                        <div className="mt-2 flex flex-wrap items-center gap-1 border-t pt-2">
+                          <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => primeira && navegar(`/automacao/painel/${primeira.id}`)}>
                             Abrir
                           </Button>
                           <Button
-                            size="sm" variant="ghost" title="Automações desta tela"
+                            size="sm" variant="ghost" className="h-8 px-2" title="Automações desta tela"
                             onClick={() =>
                               navegar(
                                 `/automacao/regras?ambiente=${grupo.abas.map((a) => a.id).join(",")}&nome=${encodeURIComponent(grupo.nome)}`,
                               )
                             }
                           >
-                            <Workflow className="h-4 w-4 mr-1" /> Automações
+                            <Workflow className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Automações</span>
                           </Button>
                           <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Duplicar tela e todas as abas"
