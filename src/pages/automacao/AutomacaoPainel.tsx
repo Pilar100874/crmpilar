@@ -560,43 +560,9 @@ export default function AutomacaoPainel() {
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
         </span>
         {admin && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-auto"
-              disabled={!ambienteAtual}
-              onClick={() =>
-                ambienteAtual &&
-                navegar(
-                  `/automacao/regras?ambiente=${ambientesVisiveis.map((a) => a.id).join(",")}&nome=${encodeURIComponent(
-                    ambienteAtual.tela_nome || ambienteAtual.nome,
-                  )}`,
-                )
-              }
-            >
-              <Workflow className="h-4 w-4 mr-2" /> Automações
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!ambienteAtual}
-              onClick={() => { setAbaAmbienteEdit("tela"); ambienteAtual && setAmbienteEdit(ambienteAtual); }}
-            >
-              <Monitor className="h-4 w-4 mr-2" /> Onde aparece
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!ambienteAtual}
-              onClick={() => { setAbaAmbienteEdit("fundo"); ambienteAtual && setAmbienteEdit(ambienteAtual); }}
-            >
-              <ImageIcon className="h-4 w-4 mr-2" /> Foto de fundo
-            </Button>
-            <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
-              {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
-            </Button>
-          </>
+          <Button variant={edicao ? "default" : "outline"} size="sm" className="ml-auto" onClick={() => setEdicao((v) => !v)}>
+            {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
+          </Button>
         )}
       </div>
 
