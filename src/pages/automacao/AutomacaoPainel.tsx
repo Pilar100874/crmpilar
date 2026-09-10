@@ -629,12 +629,14 @@ export default function AutomacaoPainel() {
             size="sm"
             variant="outline"
             onClick={() => ambienteAtual && setAmbienteEdit(ambienteAtual)}
-            title="Escolher o tipo de aparelho e o formato da tela deste painel"
+            title="Configurar foto de fundo desta aba"
           >
-            <Monitor className="h-4 w-4 mr-1" />
-            {TIPOS_TELA.find((t) => t.valor === (ambienteAtual?.dispositivo ?? "tv"))?.label} ({telaL}×{telaA})
-            {ambienteAtual?.rolagem ? " · rola" : ""}
+            <Monitor className="h-4 w-4 mr-1" /> Fundo da tela
           </Button>
+          <span className="hidden sm:inline text-xs text-muted-foreground">
+            {TIPOS_TELA.find((t) => t.valor === (ambienteAtual?.dispositivo ?? "tv"))?.label} · {telaL}×{telaA}
+            {ambienteAtual?.rolagem ? " · rola" : ""}
+          </span>
 
           <div className="hidden sm:block h-6 w-px bg-border" />
 
