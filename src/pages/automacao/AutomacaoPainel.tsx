@@ -919,5 +919,6 @@ export default function AutomacaoPainel() {
         itemName={excluir?.nome}
       />
     </div>
+    </AmbientesNavContext.Provider>
   );
 }
