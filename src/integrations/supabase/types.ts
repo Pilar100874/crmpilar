@@ -3340,6 +3340,7 @@ export type Database = {
           ativo: boolean
           created_at: string
           created_by: string | null
+          dispositivo: string
           fundo_ajuste: string
           fundo_caminho: string | null
           fundo_opacidade: number
@@ -3348,6 +3349,7 @@ export type Database = {
           modo: string
           nome: string
           ordem: number
+          rolagem: boolean
           tela_altura: number | null
           tela_largura: number | null
           updated_at: string
@@ -3356,6 +3358,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           created_by?: string | null
+          dispositivo?: string
           fundo_ajuste?: string
           fundo_caminho?: string | null
           fundo_opacidade?: number
@@ -3364,6 +3367,7 @@ export type Database = {
           modo?: string
           nome: string
           ordem?: number
+          rolagem?: boolean
           tela_altura?: number | null
           tela_largura?: number | null
           updated_at?: string
@@ -3372,6 +3376,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           created_by?: string | null
+          dispositivo?: string
           fundo_ajuste?: string
           fundo_caminho?: string | null
           fundo_opacidade?: number
@@ -3380,6 +3385,7 @@ export type Database = {
           modo?: string
           nome?: string
           ordem?: number
+          rolagem?: boolean
           tela_altura?: number | null
           tela_largura?: number | null
           updated_at?: string
