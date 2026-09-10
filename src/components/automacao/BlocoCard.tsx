@@ -252,10 +252,11 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   return (
     <div
       className={cn(
-        "h-full border p-3 flex flex-col gap-2 transition-colors select-none",
+        "relative h-full border p-3 flex flex-col gap-2 transition-colors select-none",
         transparente
           ? "bg-transparent border-transparent"
           : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
+        pulsando && "pb-8",
       )}
         style={{ borderRadius: raio }}
       >
