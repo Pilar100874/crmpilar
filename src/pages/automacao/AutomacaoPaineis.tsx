@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, LayoutTemplate, Monitor, Pencil, Plus, Settings, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
+import { ClipboardCopy, Copy, LayoutTemplate, Monitor, Pencil, Plus, Settings, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import NovaTelaDialog from "@/components/automacao/NovaTelaDialog";
+import CopiarAmbienteDialog from "@/components/automacao/CopiarAmbienteDialog";
 import TelaConfigDialog from "@/components/automacao/TelaConfigDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
@@ -52,6 +53,7 @@ export default function AutomacaoPaineis() {
   const [excluirTela, setExcluirTela] = useState<TelaGrupo | null>(null);
   const [renomear, setRenomear] = useState<TelaGrupo | null>(null);
   const [configTela, setConfigTela] = useState<TelaGrupo | null>(null);
+  const [copiarAba, setCopiarAba] = useState<TelaGrupo | null>(null);
   const [novoNomeTela, setNovoNomeTela] = useState("");
 
   const carregar = useCallback(async () => {
@@ -227,6 +229,12 @@ export default function AutomacaoPaineis() {
                             <Copy className="h-4 w-4" />
                           </Button>
                           <Button
+                            size="icon" variant="ghost" className="h-8 w-8" title="Copiar uma aba para outra tela"
+                            onClick={() => setCopiarAba(grupo)}
+                          >
+                            <ClipboardCopy className="h-4 w-4" />
+                          </Button>
+                          <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Configurar tela (formato/aparelho)"
                             onClick={() => setConfigTela(grupo)}
                           >
@@ -264,6 +272,14 @@ export default function AutomacaoPaineis() {
           carregar();
           if (id) navegar(`/automacao/painel/${id}`);
         }}
+      />
+
+      <CopiarAmbienteDialog
+        aberto={!!copiarAba}
+        origem={copiarAba?.abas ?? []}
+        todos={visiveis}
+        onFechar={() => setCopiarAba(null)}
+        onCopiado={carregar}
       />
 
       <TelaConfigDialog
