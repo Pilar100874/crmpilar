@@ -26,3 +26,5 @@ export async function getLatestTvSignageApkUrl(): Promise<string> {
 }
 
 export const TV_SIGNAGE_APK_FILENAME = "pareamento-pilar-remotas.apk";
+
+export const TV_SIGNAGE_MANIFEST_URL = MANIFEST_URL;
