@@ -234,17 +234,31 @@ export async function shellyConfigurarSaida(
     if (cfg.power_on_state) configRpc.initial_state = cfg.power_on_state;
 
     const url = `${base}/rpc/Switch.SetConfig`;
-    const resp = await fetchComTimeout(url, {
-      method: "POST",
-      headers: { ...authHeaders(cred), "Content-Type": "application/json" },
-      body: JSON.stringify({ id: canal, config: configRpc }),
-    });
-    const texto = await resp.text();
+    const enviar = async (corpo: Record<string, unknown>) => {
+      const resp = await fetchComTimeout(url, {
+        method: "POST",
+        headers: { ...authHeaders(cred), "Content-Type": "application/json" },
+        body: JSON.stringify({ id: canal, config: corpo }),
+      });
+      const texto = await resp.text();
+      // Alguns modelos respondem 200 com {"error": ...}: isso também é falha.
+      const falhaNoCorpo = /"error"\s*:/.test(texto);
+      return { ok: resp.ok && !falhaNoCorpo, status: resp.status, texto };
+    };
+
+    // 1ª tentativa: tudo junto. Se o modelo recusar alguma chave (ex.: in_mode
+    // em aparelhos sem entrada), tenta só o auto-desligar, que é o essencial.
+    let r = await enviar(configRpc);
+    if (!r.ok) {
+      const somenteAutoOff: Record<string, unknown> = { auto_off: !!cfg.auto_off };
+      if (cfg.auto_off) somenteAutoOff.auto_off_delay = Math.max(1, Number(cfg.auto_off_delay ?? 1));
+      r = await enviar(somenteAutoOff);
+    }
     return {
-      ok: resp.ok,
-      status: resp.status,
-      mensagem: resp.ok ? undefined : `Shelly respondeu ${resp.status}`,
-      detalhes: texto.slice(0, 500),
+      ok: r.ok,
+      status: r.status,
+      mensagem: r.ok ? undefined : `Shelly respondeu ${r.status}`,
+      detalhes: r.texto.slice(0, 500),
     };
   } catch (e) {
     return { ok: false, mensagem: (e as Error).message || "Falha de comunicação com o Shelly." };
