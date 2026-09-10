@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone } from "lucide-react";
 import { downloadApk } from "@/lib/downloadApk";
-import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME, TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 export default function TvSignageApi() {
   const [apkUrl, setApkUrl] = useState<string>("");
