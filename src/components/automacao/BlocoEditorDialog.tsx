@@ -496,34 +496,11 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 </div>
               </div>
 
-              <div>
-                <Label className="text-xs">Como mostrar os itens</Label>
-                <Select value={(cfg.layout as string) ?? "livre"} onValueChange={(v) => setCfg({ layout: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    <SelectItem value="livre">Livre — cada item no tamanho e lugar que você deixou no painel</SelectItem>
-                    <SelectItem value="grade">Em lista organizada ao lado do botão</SelectItem>
-                  </SelectContent>
-                </Select>
-                {(cfg.layout ?? "livre") === "livre" && (
-                  <div className="mt-2 space-y-2">
-                    <p className="text-[11px] text-muted-foreground">
-                      Defina no popup abaixo onde e com que tamanho cada item aparece ao tocar no botão.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={!((cfg.vinculados ?? []) as string[]).length}
-                      onClick={() => setAjustarPosicoes(true)}
-                    >
-                      Ajustar posição dos itens
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {(cfg.layout ?? "livre") === "grade" && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs">Como mostrar os itens</Label>
+                  <p className="text-[11px] text-muted-foreground">Em lista organizada ao lado do botão.</p>
+                </div>
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
