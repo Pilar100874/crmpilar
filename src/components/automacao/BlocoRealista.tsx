@@ -28,6 +28,8 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
   const [pressionado, setPressionado] = useState(false);
   // Barra de acompanhamento enquanto o pulso está ativo.
   const [pulsando, setPulsando] = useState(false);
+  // Contagem do auto-desligar (aparelho desliga sozinho após o tempo).
+  const [contagemAuto, setContagemAuto] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
   const cfg = (bloco.config ?? {}) as Record<string, any>;
