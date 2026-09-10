@@ -111,33 +111,44 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   };
 
   const salvar = async (aplicarNoGrupo: boolean) => {
-    await salvarAmbiente({
-      ...ambiente,
-      tela_nome: ambiente?.tela_nome?.trim() || ambiente?.nome?.trim() || null,
-      tela_largura: largura,
-      tela_altura: altura,
-      fundo_opacidade: opacidade,
-      fundo_ajuste: ajuste,
-      dispositivo: tipoTela,
-      rolagem,
-      mostrar_abas: ambiente?.mostrar_abas !== false,
-    });
-    if (aplicarNoGrupo && original.current) {
-      await aplicarFormatoGrupo(original.current.dispositivo, {
-        dispositivo: tipoTela,
+    if (isSalvando) return;
+    setIsSalvando(true);
+    try {
+      await salvarAmbiente({
+        ...ambiente,
+        tela_nome: ambiente?.tela_nome?.trim() || ambiente?.nome?.trim() || null,
         tela_largura: largura,
         tela_altura: altura,
+        fundo_opacidade: opacidade,
+        fundo_ajuste: ajuste,
+        dispositivo: tipoTela,
         rolagem,
-      }, original.current.telaNome);
+        mostrar_abas: ambiente?.mostrar_abas !== false,
+      });
+      if (aplicarNoGrupo && original.current) {
+        await aplicarFormatoGrupo(original.current.dispositivo, {
+          dispositivo: tipoTela,
+          tela_largura: largura,
+          tela_altura: altura,
+          rolagem,
+        }, original.current.telaNome);
+      }
+      onChange(null);
+      toast.success(aplicarNoGrupo ? "Formato aplicado a todas as telas do grupo." : "Ambiente salvo.");
+      onSalvo();
+    } finally {
+      setIsSalvando(false);
+      setConfirmarFormatoAberto(false);
     }
-    onChange(null);
-    toast.success(aplicarNoGrupo ? "Formato aplicado a todas as telas do grupo." : "Ambiente salvo.");
-    onSalvo();
   };
 
   const gravar = async () => {
     if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
-    await salvar(mudouFormato());
+    if (mudouFormato()) {
+      setConfirmarFormatoAberto(true);
+      return;
+    }
+    await salvar(false);
   };
 
   return (
