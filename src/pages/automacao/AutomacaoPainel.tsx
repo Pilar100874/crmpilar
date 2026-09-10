@@ -527,22 +527,31 @@ export default function AutomacaoPainel() {
     <AmbientesNavContext.Provider value={{ ambientes: ambientesVisiveis, ambienteId, trocar: setAmbienteId }}>
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
-        <span className="text-xs text-muted-foreground">Tipo de tela:</span>
-        {TIPOS_TELA.map((t) => {
-          const qtd = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === t.valor).length;
-          return (
-            <Button
-              key={t.valor}
-              size="sm"
-              title={t.descricao}
-              variant={tipoTelaFiltro === t.valor ? "default" : "outline"}
-              onClick={() => setTipoTelaFiltro(t.valor)}
-            >
-              {t.label} ({qtd})
-            </Button>
-          );
-        })}
+        <Monitor className="h-4 w-4 text-primary" />
+        <span className="text-xs text-muted-foreground">Aparelho:</span>
+        <Select value={tipoTelaFiltro} onValueChange={(v) => setTipoTelaFiltro(v as TipoTela)}>
+          <SelectTrigger className="h-9 w-[260px] text-left"><SelectValue /></SelectTrigger>
+          <SelectContent className="bg-popover">
+            {TIPOS_TELA.map((t) => {
+              const qtd = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === t.valor).length;
+              return (
+                <SelectItem key={t.valor} value={t.valor}>
+                  {t.label} — {qtd} {qtd === 1 ? "tela" : "telas"}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground">
+          {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
+        </span>
+        {podeEditar && (
+          <Button size="sm" className="ml-auto" onClick={novaTela}>
+            <Plus className="h-4 w-4 mr-1" /> Nova tela para este aparelho
+          </Button>
+        )}
       </div>
+
 
       <div className="flex flex-wrap items-center gap-2">
         <Tabs value={ambienteId} onValueChange={setAmbienteId} className="min-w-0">
