@@ -19,6 +19,8 @@ import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 import { FORMAS } from "@/components/automacao/BlocoForma";
 import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
 import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
+import ExpansivelTamanhosDialog from "@/components/automacao/ExpansivelTamanhosDialog";
+
 
 
 
@@ -46,6 +48,8 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
   const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
+  const [ajustarTamanhos, setAjustarTamanhos] = useState(false);
+
   
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
 
