@@ -183,9 +183,11 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
     return () => clearInterval(t);
   }, [carregar, intervalo]);
 
+  const podeAmpliar = (cfg as { permitir_ampliar?: boolean }).permitir_ampliar !== false;
+
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (edicao) return;
+    if (edicao || !podeAmpliar) return;
     setAmpliado((v) => !v);
     onAcionar?.();
   };
@@ -203,10 +205,10 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
       <div
         className={cn(
           "flex items-center gap-2 select-none",
-          !edicao && "cursor-pointer hover:opacity-90 transition-opacity"
+          !edicao && podeAmpliar && "cursor-pointer hover:opacity-90 transition-opacity"
         )}
         onClick={alternar}
-        title="Toque para ampliar"
+        title={podeAmpliar ? "Toque para ampliar" : undefined}
       >
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary"
@@ -230,7 +232,7 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
           style={{ fontSize: tamNumero, color: corDestaque ?? corTexto }}
         >
           {carregando ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : total}
-          {!ampliado && (
+          {!ampliado && podeAmpliar && (
             <Button
               variant="ghost"
               size="icon"
