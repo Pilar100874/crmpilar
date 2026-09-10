@@ -91,40 +91,48 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
         <ChevronDown className={cn("h-4 w-4 shrink-0 opacity-70 transition-transform", aberto && "rotate-180")} />
       </button>
 
-      {aberto && !edicao && livre && (
+      {aberto && !edicao && livre && createPortal(
         <div
           data-cheio
-          className="absolute z-[1400]"
-          style={{ left: -bloco.x, top: -bloco.y, width: 0, height: 0 }}
-          onClick={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-[1400]"
+          onClick={() => setAberto(false)}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {!filhos.length && (
             <p className="absolute w-56 rounded-lg border border-border bg-card px-2 py-3 text-xs text-muted-foreground shadow"
-               style={{ left: bloco.x, top: bloco.y + bloco.h + 8 }}>
+               style={{ left: ancora.left, top: ancora.top + ancora.height + 8 }}>
               Nenhum elemento vinculado ainda.
             </p>
           )}
           <Suspense fallback={null}>
             {filhos.map((f) => {
               // Posição definida no popup (relativa ao botão) ou a do próprio painel.
-              const p = cfg.posicoes?.[f.id];
-              const caixa = p
-                ? { left: bloco.x + p.x, top: bloco.y + p.y, width: p.w, height: p.h }
-                : { left: f.x, top: f.y, width: f.w, height: f.h };
+              const p = cfg.posicoes?.[f.id] ?? { x: f.x - bloco.x, y: f.y - bloco.y, w: f.w, h: f.h };
               return (
-              <div key={f.id} className="absolute" style={caixa}>
-                <BlocoCardLazy
-                  bloco={f}
-                  ligado={estados[f.id] ?? null}
-                  onEstado={(v) => aplicarEstado(f, v)}
-                  onAcionar={() => acionar?.(f)}
-                />
-              </div>
+                <div
+                  key={f.id}
+                  className="absolute origin-top-left"
+                  style={{
+                    left: ancora.left + p.x * ancora.escala,
+                    top: ancora.top + p.y * ancora.escala,
+                    width: p.w,
+                    height: p.h,
+                    transform: `scale(${ancora.escala})`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <BlocoCardLazy
+                    bloco={f}
+                    ligado={estados[f.id] ?? null}
+                    onEstado={(v) => aplicarEstado(f, v)}
+                    onAcionar={() => acionar?.(f)}
+                  />
+                </div>
               );
             })}
           </Suspense>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {aberto && !edicao && !livre && (
