@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Pencil, Trash2, Play, Workflow } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Play, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import RegraEditorDialog from "@/components/automacao/RegraEditorDialog";
 import {
@@ -13,6 +14,14 @@ import {
 } from "@/lib/automacao/workflow";
 
 export default function AutomacaoRegras() {
+  const navegar = useNavigate();
+  const [params] = useSearchParams();
+  const idsPainel = useMemo(
+    () => (params.get("ambiente") || "").split(",").map((s) => s.trim()).filter(Boolean),
+    [params],
+  );
+  const nomePainel = params.get("nome") || "";
+
   const [regras, setRegras] = useState<Regra[]>([]);
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [blocos, setBlocos] = useState<Bloco[]>([]);
@@ -31,6 +40,26 @@ export default function AutomacaoRegras() {
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  /** Só as automações deste painel (quando veio de um painel). */
+  const regrasVisiveis = useMemo(
+    () => (idsPainel.length ? regras.filter((r) => r.ambiente_id && idsPainel.includes(r.ambiente_id)) : regras),
+    [regras, idsPainel],
+  );
+  const blocosVisiveis = useMemo(
+    () => (idsPainel.length ? blocos.filter((b) => b.ambiente_id && idsPainel.includes(b.ambiente_id)) : blocos),
+    [blocos, idsPainel],
+  );
+  const novaRegra = () =>
+    setEdit({
+      nome: "",
+      ativo: true,
+      combinador: "todas",
+      ambiente_id: idsPainel[0] ?? null,
+      gatilho: { tipo: "bloco_clicado" },
+      condicoes: [],
+      acoes: [],
+    });
 
   const nomeBloco = (id?: string | null) => blocos.find((b) => b.id === id)?.nome || "qualquer elemento";
   const nomeDispositivo = (id?: string | null) => dispositivos.find((d) => d.id === id)?.nome || "equipamento";
@@ -87,31 +116,40 @@ export default function AutomacaoRegras() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
+        {!!idsPainel.length && (
+          <Button size="sm" variant="ghost" onClick={() => navegar(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+          </Button>
+        )}
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">Automações</h2>
+          <h2 className="text-lg font-semibold">
+            Automações{nomePainel ? ` · ${nomePainel}` : ""}
+          </h2>
           <p className="text-sm text-muted-foreground">
             Ao tocar em um elemento (mesmo sem equipamento) ou quando algo ligar, aciona outros equipamentos.
           </p>
         </div>
-        <Button className="ml-auto" onClick={() => setEdit({ nome: "", ativo: true, combinador: "todas", gatilho: { tipo: "bloco_clicado" }, condicoes: [], acoes: [] })}>
+        <Button className="ml-auto" onClick={novaRegra}>
           <Plus className="h-4 w-4 mr-2" /> Nova automação
         </Button>
       </div>
 
       {carregando && <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">Carregando…</div>}
 
-      {!carregando && !regras.length && (
+      {!carregando && !regrasVisiveis.length && (
         <div className="rounded-xl border bg-card p-10 text-center">
           <Workflow className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-          <p className="mb-3 text-sm text-muted-foreground">Você ainda não criou nenhuma automação.</p>
-          <Button onClick={() => setEdit({ nome: "", ativo: true, combinador: "todas", gatilho: { tipo: "bloco_clicado" }, condicoes: [], acoes: [] })}>
+          <p className="mb-3 text-sm text-muted-foreground">
+            {nomePainel ? `Nenhuma automação criada em ${nomePainel}.` : "Você ainda não criou nenhuma automação."}
+          </p>
+          <Button onClick={novaRegra}>
             <Plus className="h-4 w-4 mr-2" /> Criar a primeira
           </Button>
         </div>
       )}
 
       <div className="grid gap-3">
-        {regras.map((r) => (
+        {regrasVisiveis.map((r) => (
           <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Workflow className="h-5 w-5" />
@@ -142,8 +180,8 @@ export default function AutomacaoRegras() {
 
       <RegraEditorDialog
         regra={edit}
-        ambientes={ambientes}
-        blocos={blocos}
+        ambientes={idsPainel.length ? ambientes.filter((a) => idsPainel.includes(a.id)) : ambientes}
+        blocos={blocosVisiveis}
         dispositivos={dispositivos}
         onChange={setEdit}
         onSalvo={carregar}

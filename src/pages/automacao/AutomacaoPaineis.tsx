@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv } from "lucide-react";
+import { LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,6 +218,16 @@ export default function AutomacaoPaineis() {
                         <div className="mt-2 flex items-center gap-1 border-t pt-2">
                           <Button size="sm" variant="ghost" onClick={() => primeira && navegar(`/automacao/painel/${primeira.id}`)}>
                             Abrir
+                          </Button>
+                          <Button
+                            size="sm" variant="ghost" title="Automações desta tela"
+                            onClick={() =>
+                              navegar(
+                                `/automacao/regras?ambiente=${grupo.abas.map((a) => a.id).join(",")}&nome=${encodeURIComponent(grupo.nome)}`,
+                              )
+                            }
+                          >
+                            <Workflow className="h-4 w-4 mr-1" /> Automações
                           </Button>
                           <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Renomear tela"
