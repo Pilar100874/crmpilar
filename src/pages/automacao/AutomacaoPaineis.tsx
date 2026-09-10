@@ -8,6 +8,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import NovaTelaDialog from "@/components/automacao/NovaTelaDialog";
+import CopiarAmbienteDialog from "@/components/automacao/CopiarAmbienteDialog";
 import TelaConfigDialog from "@/components/automacao/TelaConfigDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
