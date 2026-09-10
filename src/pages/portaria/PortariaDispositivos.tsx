@@ -349,13 +349,6 @@ export default function PortariaDispositivos() {
                   </Select>
                 </div>
                 <div><Label>Canal do relé</Label><Input type="number" value={form.canal_rele ?? 0} onChange={(e) => setForm({ ...form, canal_rele: Number(e.target.value) })} /></div>
-                <div>
-                  <Label>Duração do pulso (ms)</Label>
-                  <Input type="number" value={form.pulso_ms ?? 1000} disabled={(config.modo_saida as string) !== "momentary"} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} />
-                  {(config.modo_saida as string) !== "momentary" && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">Disponível apenas no modo Pulso.</p>
-                  )}
-                </div>
                 {config.geracao === "cloud" && (
                   <>
                     <div><Label>Servidor Cloud</Label><Input value={(config.cloud_server as string) ?? ""} onChange={(e) => setConfig("cloud_server", e.target.value)} placeholder="shelly-XX-eu.shelly.cloud" /></div>
