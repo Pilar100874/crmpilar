@@ -121,7 +121,8 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
                   onAcionar={() => acionar?.(f)}
                 />
               </div>
-            ))}
+              );
+            })}
           </Suspense>
         </div>
       )}
