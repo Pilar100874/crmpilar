@@ -190,6 +190,76 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </label>
           </div>
 
+          <div className="space-y-3 rounded-lg border p-3">
+            <Label className="text-sm font-semibold">Letras deste elemento</Label>
+            <div>
+              <Label className="text-xs">Tipo de letra</Label>
+              <Select
+                value={cfg.fonteGeral ?? "padrao"}
+                onValueChange={(v) => setCfg({ fonteGeral: v === "padrao" ? undefined : v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="padrao">Manter a do sistema</SelectItem>
+                  {FONTES_TEXTO.map((f) => (
+                    <SelectItem key={f.valor} value={f.valor}>{f.rotulo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={!!cfg.corTextoGeral}
+                  onChange={(e) => setCfg({ corTextoGeral: e.target.checked ? "#ffffff" : undefined })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Cor das letras
+              </label>
+              {cfg.corTextoGeral && (
+                <input
+                  type="color"
+                  value={cfg.corTextoGeral as string}
+                  onChange={(e) => setCfg({ corTextoGeral: e.target.value })}
+                  className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                />
+              )}
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={cfg.negritoGeral === true}
+                  onChange={(e) => setCfg({ negritoGeral: e.target.checked || undefined })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Negrito
+              </label>
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={typeof cfg.tamanhoTextoGeral === "number"}
+                  onChange={(e) => setCfg({ tamanhoTextoGeral: e.target.checked ? 14 : undefined })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Definir tamanho das letras
+                {typeof cfg.tamanhoTextoGeral === "number" && ` (${cfg.tamanhoTextoGeral}px)`}
+              </label>
+              {typeof cfg.tamanhoTextoGeral === "number" && (
+                <input
+                  type="range" min={8} max={64} step={1}
+                  value={cfg.tamanhoTextoGeral}
+                  onChange={(e) => setCfg({ tamanhoTextoGeral: Number(e.target.value) })}
+                  className="mt-1 w-full accent-primary"
+                />
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Vale para todos os textos deste elemento, seja qual for o tipo.
+            </p>
+          </div>
+
           {["luz", "tomada", "portao", "sensor"].includes(blocoEdit?.tipo ?? "") && (
             <div className="space-y-2">
               <Label>Visual do bloco</Label>

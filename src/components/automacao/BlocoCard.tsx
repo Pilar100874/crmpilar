@@ -18,7 +18,7 @@ import BlocoInterfone from "./BlocoInterfone";
 import BlocoPilarFone from "./BlocoPilarFone";
 import BlocoAmbiente from "./BlocoAmbiente";
 import BlocoImagemLuz from "./BlocoImagemLuz";
-import BlocoTexto from "./BlocoTexto";
+import BlocoTexto, { fonteCss } from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
 import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
@@ -28,6 +28,31 @@ import BlocoBubble from "./BlocoBubble";
 const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas", "bubble"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
+
+/**
+ * Fonte, cor e tamanho das letras válidos para QUALQUER elemento do painel.
+ * As classes forçam os textos internos a herdarem o que foi escolhido.
+ */
+function estiloLetras(bloco: Bloco) {
+  const cfg = (bloco.config ?? {}) as Record<string, any>;
+  const style: React.CSSProperties = {};
+  const classes: string[] = [];
+
+  if (cfg.fonteGeral) style.fontFamily = fonteCss(cfg.fonteGeral);
+  if (cfg.corTextoGeral) {
+    style.color = cfg.corTextoGeral as string;
+    classes.push("[&_*:not(svg):not(svg_*)]:!text-[color:inherit]");
+  }
+  if (typeof cfg.tamanhoTextoGeral === "number") {
+    style.fontSize = cfg.tamanhoTextoGeral;
+    classes.push("[&_*]:!text-[length:inherit] [&_*]:!leading-tight");
+  }
+  if (cfg.negritoGeral) {
+    style.fontWeight = 700;
+    classes.push("[&_*]:!font-bold");
+  }
+  return { style, className: classes.join(" ") };
+}
 
 interface Props {
   bloco: Bloco;
@@ -45,13 +70,18 @@ interface Props {
 export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
+  const letras = estiloLetras(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
   const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
-      <div className="h-full" onClick={() => !edicao && !proprioClick && onAcionar?.()}>
+      <div
+        className={cn("h-full", letras.className)}
+        style={letras.style}
+        onClick={() => !edicao && !proprioClick && onAcionar?.()}
+      >
         <BlocoCardInterno {...props} />
       </div>
     );
@@ -60,7 +90,8 @@ export default function BlocoCard(props: Props) {
   // Elemento sem equipamento: o toque só serve para disparar as automações.
   return (
     <div
-      className="h-full cursor-pointer"
+      className={cn("h-full cursor-pointer", letras.className)}
+      style={letras.style}
       onClickCapture={(e) => {
         e.preventDefault();
         e.stopPropagation();
