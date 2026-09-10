@@ -113,6 +113,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
   const transparente = cfg.transparente === true;
   const comLegenda = cfg.legenda !== false;
+  const mostrarNome = comLegenda && cfg.mostrarNome !== false;
+  const mostrarSituacao = comLegenda && cfg.mostrarSituacao !== false;
 
 
   const enviar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
