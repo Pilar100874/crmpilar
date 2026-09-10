@@ -316,8 +316,8 @@ export async function duplicarAmbienteComNome(
   const { data: novo } = await db
     .from("automacao_ambientes")
     .insert({
-      nome: `${a.nome} (cópia)`,
-      tela_nome: a.tela_nome ?? null,
+      nome: novoNome,
+      tela_nome: novaTelaNome,
       icone: a.icone ?? null,
       ordem: (a.ordem ?? 0) + 1,
       tela_largura: a.tela_largura,
