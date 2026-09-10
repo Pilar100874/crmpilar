@@ -113,6 +113,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   // Quando o dispositivo trabalha em modo pulso, mostra a barra de
   // acompanhamento enquanto o pulso está ativo.
   const [pulsando, setPulsando] = useState(false);
+  // Contagem do auto-desligar (aparelho liga e desliga sozinho após o tempo).
+  const [contagemAuto, setContagemAuto] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
   const cfg = (bloco.config ?? {}) as Record<string, any>;
@@ -148,12 +150,22 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       toast.success(`${bloco.nome} acionado.`);
       setPulsando(true);
     }
+    if (acao === "ligar" && modoDispositivo?.autoDesligarMs) {
+      // O aparelho desliga sozinho: acompanha com a mesma barra.
+      setContagemAuto(true);
+    }
+    if (acao === "desligar") setContagemAuto(false);
     onEstado(r.ligado ?? (acao === "ligar" ? true : acao === "desligar" ? false : ligado));
   };
 
   const fimDoPulso = () => {
     setPulsando(false);
     // Depois do pulso o equipamento volta para desligado.
+    onEstado(false);
+  };
+
+  const fimDoAutoDesligar = () => {
+    setContagemAuto(false);
     onEstado(false);
   };
 
@@ -256,7 +268,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         transparente
           ? "bg-transparent border-transparent"
           : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
-        pulsando && "pb-8",
+        (pulsando || contagemAuto) && "pb-8",
       )}
         style={{ borderRadius: raio }}
       >
@@ -331,6 +343,14 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
           )}
         </div>
+      )}
+      {/* barra de acompanhamento do auto-desligar */}
+      {!edicao && contagemAuto && !porPulso && aceso && modoDispositivo?.autoDesligarMs && (
+        <BarraPulso
+          duracaoMs={modoDispositivo.autoDesligarMs}
+          onFim={fimDoAutoDesligar}
+          rotulo="Desliga em…"
+        />
       )}
     </div>
   );
