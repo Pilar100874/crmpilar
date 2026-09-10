@@ -370,16 +370,12 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
         <AlertDialogHeader>
           <AlertDialogTitle>Mudar formato em todas as telas?</AlertDialogTitle>
           <AlertDialogDescription>
-            Você alterou o aparelho ou formato desta tela. Isso afeta todas as abas
-            do grupo “{original.current?.telaNome || "sem nome"}”.
-            Deseja aplicar a mudança em todas as telas ou somente nesta?
+            Você alterou o aparelho ou formato desta tela. A mudança será aplicada
+            em todas as abas do grupo “{original.current?.telaNome || "sem nome"}".
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isSalvando}>Cancelar</AlertDialogCancel>
-          <Button variant="outline" disabled={isSalvando} onClick={() => salvar(false)}>
-            Só esta tela
-          </Button>
           <AlertDialogAction
             disabled={isSalvando}
             onClick={(e) => { e.preventDefault(); salvar(true); }}
