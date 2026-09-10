@@ -15,7 +15,7 @@ import { Bloco } from "@/lib/automacao/api";
 export function useConfirmacaoBloco(bloco: Bloco) {
   const cfg = (bloco.config ?? {}) as { confirmar?: boolean; textoConfirmacao?: string };
   const [aberto, setAberto] = useState(false);
-  const acaoRef = useRef<null | (() => void | Promise<void>)>(null);
+  const acaoRef = useRef<null | (() => unknown)>(null);
 
   /** Executa direto ou abre a confirmação, conforme a configuração do elemento. */
   const pedir = (acao: () => void | Promise<void>) => {
