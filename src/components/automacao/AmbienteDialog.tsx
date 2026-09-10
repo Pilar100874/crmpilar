@@ -354,11 +354,36 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
 
         <DialogFooter className="shrink-0 border-t pt-3 bg-background">
-          <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
-          <Button onClick={gravar}>Salvar</Button>
+          <Button variant="outline" disabled={isSalvando} onClick={() => onChange(null)}>Cancelar</Button>
+          <Button disabled={isSalvando} onClick={gravar}>{isSalvando ? "Salvando..." : "Salvar"}</Button>
         </DialogFooter>
 
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={confirmarFormatoAberto} onOpenChange={setConfirmarFormatoAberto}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Mudar formato em todas as telas?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Você alterou o aparelho ou formato desta tela. Isso afeta todas as abas
+            do grupo “{original.current?.telaNome || "sem nome"}”.
+            Deseja aplicar a mudança em todas as telas ou somente nesta?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isSalvando}>Cancelar</AlertDialogCancel>
+          <Button variant="outline" disabled={isSalvando} onClick={() => salvar(false)}>
+            Só esta tela
+          </Button>
+          <AlertDialogAction
+            disabled={isSalvando}
+            onClick={(e) => { e.preventDefault(); salvar(true); }}
+          >
+            {isSalvando ? "Salvando..." : "Aplicar em todas"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
