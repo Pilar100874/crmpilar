@@ -1,6 +1,7 @@
 // Bloco de página web: embute um site inteiro dentro do painel.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Globe, Lock, LockOpen, RefreshCw } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ExternalLink, Globe, Lock, LockOpen, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { Bloco } from "@/lib/automacao/api";
 import { fonteCss } from "./BlocoTexto";
 
@@ -9,6 +10,8 @@ interface ConfigWeb {
   titulo?: string;
   mostrar_barra?: boolean;
   permitir_interacao?: boolean;
+  /** Quando ativo, permite abrir o site em tela cheia. */
+  permitir_ampliar?: boolean;
   /** Zoom da página dentro do quadro (100 = tamanho normal). */
   zoom?: number;
   /** Recarrega sozinho a cada X segundos (0 = nunca). */
