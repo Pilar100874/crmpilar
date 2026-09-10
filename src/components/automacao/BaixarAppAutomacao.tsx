@@ -43,7 +43,10 @@ export default function BaixarAppAutomacao({ ambienteId, ambienteNome }: { ambie
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Aplicativo Pilar Automação</DialogTitle>
+          <DialogTitle className="flex flex-wrap items-center gap-2">
+            Aplicativo Pilar Automação
+            <VersaoAppBadge manifesto="/apps/pilar-automacao-latest.json" />
+          </DialogTitle>
           <DialogDescription>
             Instale no celular ou tablet para abrir direto o painel escolhido, em tela cheia.
           </DialogDescription>
