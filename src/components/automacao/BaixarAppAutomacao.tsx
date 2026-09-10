@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Smartphone, Copy } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
