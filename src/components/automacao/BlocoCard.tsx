@@ -116,6 +116,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
       bloco.tipo === "imagem" ? <BlocoImagem bloco={bloco} /> :
       bloco.tipo === "icone" ? <BlocoIcone bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
+      bloco.tipo === "bubble" ? <BlocoBubble bloco={bloco} ligado={ligado} onEstado={onEstado} onAcionar={onAcionar} edicao={edicao} /> :
       <BlocoCena bloco={bloco} ligado={ligado} onEstado={onEstado} />;
 
     return (
@@ -127,7 +128,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima"].includes(bloco.tipo) && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "bubble"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>
