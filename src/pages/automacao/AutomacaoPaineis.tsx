@@ -251,6 +251,12 @@ export default function AutomacaoPaineis() {
                             <Copy className="h-4 w-4" />
                           </Button>
                           <Button
+                            size="icon" variant="ghost" className="h-8 w-8" title="Configurar tela (formato/aparelho)"
+                            onClick={() => setConfigTela(grupo)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Renomear tela"
                             onClick={() => { setRenomear(grupo); setNovoNomeTela(grupo.nome); }}
                           >
