@@ -141,7 +141,12 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
 
 
-  const enviar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const enviar = (acao: "ligar" | "desligar" | "pulso" | "status") =>
+    acao === "status" ? executar(acao) : pedir(() => executar(acao));
+
+  const executar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
     if (!bloco.device_id) {
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
