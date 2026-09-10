@@ -68,6 +68,7 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
         borderColor: cfg.corFundo ? "transparent" : undefined,
       }}
     >
+      {dialogo}
       <span
         className={cn(
           "flex shrink-0 items-center justify-center rounded-lg transition-colors",
