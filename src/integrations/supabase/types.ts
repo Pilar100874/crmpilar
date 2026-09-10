@@ -22083,6 +22083,7 @@ export type Database = {
           status: string
           tipo: string
           ultima_comunicacao: string | null
+          ultimo_estado: Json
           unidade_id: string | null
           updated_at: string
           via_coletor: boolean
@@ -22105,6 +22106,7 @@ export type Database = {
           status?: string
           tipo?: string
           ultima_comunicacao?: string | null
+          ultimo_estado?: Json
           unidade_id?: string | null
           updated_at?: string
           via_coletor?: boolean
@@ -22127,6 +22129,7 @@ export type Database = {
           status?: string
           tipo?: string
           ultima_comunicacao?: string | null
+          ultimo_estado?: Json
           unidade_id?: string | null
           updated_at?: string
           via_coletor?: boolean

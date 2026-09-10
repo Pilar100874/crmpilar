@@ -153,10 +153,14 @@ async function shellyStatus(device, cred, canal) {
   if (cred && cred.usuario && cred.senha) {
     headers.Authorization = 'Basic ' + Buffer.from(`${cred.usuario}:${cred.senha}`).toString('base64');
   }
+  // Pergunta o estado do canal certo. A resposta completa é devolvida para o
+  // CRM saber se o equipamento está ligado ou desligado.
+  const canalUrl = `${base}/rpc/Switch.GetStatus?id=${Number(canal) || 0}`;
   const rpc = `${base}/rpc/Shelly.GetStatus`;
   const gen1 = `${base}/status`;
-  const texto = await tentarUrls(geracao === 'gen1' ? [gen1, rpc] : [rpc, gen1], headers);
-  return { mensagem: 'Dispositivo respondeu na rede local.', dados: texto.slice(0, 300) };
+  const urls = geracao === 'gen1' ? [gen1, canalUrl, rpc] : [canalUrl, rpc, gen1];
+  const texto = await tentarUrls(urls, headers);
+  return { mensagem: 'Dispositivo respondeu na rede local.', dados: texto.slice(0, 8000) };
 }
 
 

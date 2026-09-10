@@ -1,0 +1,1 @@
+ALTER TABLE public.port_devices ADD COLUMN IF NOT EXISTS ultimo_estado jsonb NOT NULL DEFAULT '{}'::jsonb;
