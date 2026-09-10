@@ -268,7 +268,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         transparente
           ? "bg-transparent border-transparent"
           : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
-        pulsando && "pb-8",
+        (pulsando || contagemAuto) && "pb-8",
       )}
         style={{ borderRadius: raio }}
       >
