@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
+import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -31,6 +32,8 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
   const raio = typeof cfg.raio === "number" ? cfg.raio : 22;
   const transparente = cfg.transparente === true;
   const comLegenda = cfg.legenda !== false;
+  const modoDispositivo = useModoDispositivo(bloco.device_id);
+  const porPulso = modoDispositivo ? modoDispositivo.modo === "momentary" : bloco.tipo === "portao";
 
 
   const acao = async () => {
@@ -39,8 +42,9 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
     }
-    const comando =
-      bloco.tipo === "portao" ? "pulso" : bloco.tipo === "sensor" ? "status" : aceso ? "desligar" : "ligar";
+    // Segue o que foi configurado no dispositivo: pulso ou liga/desliga.
+    const comando: "ligar" | "desligar" | "pulso" | "status" =
+      bloco.tipo === "sensor" ? "status" : porPulso ? "pulso" : aceso ? "desligar" : "ligar";
     setOcupado(true);
     const r = await comandoAutomacao(bloco.device_id, comando, bloco.canal);
     setOcupado(false);

@@ -406,7 +406,8 @@ export default function PortariaDispositivos() {
                       return;
                     }
                     setForm({ ...form, config: novoConfig });
-                    const r = await configurarSaidaDispositivo(form.id, {
+                    limparCacheModos();
+        const r = await configurarSaidaDispositivo(form.id, {
                       modo_saida: novoConfig.modo_saida as "toggle" | "momentary",
                       auto_off: novoConfig.auto_off,
                       auto_off_delay: novoConfig.auto_off_delay,
