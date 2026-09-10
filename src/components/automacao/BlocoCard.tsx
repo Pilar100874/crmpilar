@@ -166,10 +166,22 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       >
 
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "expansivel"].includes(bloco.tipo) && (
-          <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
-            {bloco.nome}
-          </span>
+        {(mostrarNome || mostrarSituacao) && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "expansivel"].includes(bloco.tipo) && (
+          <div className="pointer-events-none absolute bottom-1 left-2 right-2 flex items-center justify-between gap-1">
+            {mostrarNome && (
+              <span className="min-w-0 flex-1 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
+                {bloco.nome}
+              </span>
+            )}
+            {mostrarSituacao && bloco.device_id && (
+              <span className={cn(
+                "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold",
+                aceso ? "bg-primary/85 text-primary-foreground" : "bg-background/70 text-muted-foreground",
+              )}>
+                {aceso ? "Ligado" : "Desligado"}
+              </span>
+            )}
+          </div>
         )}
         {edicao && (
           <div
@@ -234,16 +246,18 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         >
           {ocupado ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
         </div>
-        {comLegenda && (
+        {(mostrarNome || mostrarSituacao) && (
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold truncate">{bloco.nome}</p>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {bloco.tipo === "portao"
-                ? "Toque para acionar"
-                : bloco.tipo === "sensor"
-                  ? ligado === null ? "Sem leitura" : aceso ? "Acionado" : "Normal"
-                  : aceso ? "Ligado" : "Desligado"}
-            </p>
+            {mostrarNome && <p className="text-sm font-semibold truncate">{bloco.nome}</p>}
+            {mostrarSituacao && (
+              <p className="text-[11px] text-muted-foreground truncate">
+                {bloco.tipo === "portao"
+                  ? "Toque para acionar"
+                  : bloco.tipo === "sensor"
+                    ? ligado === null ? "Sem leitura" : aceso ? "Acionado" : "Normal"
+                    : aceso ? "Ligado" : "Desligado"}
+              </p>
+            )}
           </div>
         )}
 
