@@ -470,11 +470,25 @@ export default function TvSignageDashboards() {
                             <SelectItem value="__todas__">Automática (segue o aparelho, com abas)</SelectItem>
                             {telasAuto.map((t) => (
                               <SelectItem key={t.nome} value={t.nome}>
-                                {t.nome} — {ROTULO_APARELHO[t.dispositivo] || t.dispositivo} · {t.abas} aba(s)
+                                {t.nome} — {ROTULO_APARELHO[t.dispositivo] || t.dispositivo} · {t.abas} aba(s) · {t.largura || "?"}×{t.altura || "?"}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+                        {telaSelecionada && telaSelecionada !== "__todas__" && (() => {
+                          const tela = telasAuto.find((t) => t.nome === telaSelecionada);
+                          if (!tela) return null;
+                          return (
+                            <div className="mt-2 flex items-center gap-2 text-[11px]">
+                              <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 font-medium text-primary">
+                                {tela.largura || "?"} × {tela.altura || "?"} px
+                              </span>
+                              <span className="text-muted-foreground">
+                                {tela.rolagem ? "Rolagem vertical" : "Tela fixa"}
+                              </span>
+                            </div>
+                          );
+                        })()}
                         <p className="text-[11px] text-muted-foreground mt-1">
                           A TV abre essa tela com as abas dela, pronta para toque ou mouse.
                         </p>
