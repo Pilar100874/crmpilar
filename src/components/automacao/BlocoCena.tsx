@@ -3,6 +3,7 @@ import { Power, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 interface Props {
   bloco: Bloco;
