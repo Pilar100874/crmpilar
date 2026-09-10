@@ -116,6 +116,28 @@ export async function salvarCredenciais(
   return { ok: true, mensagem: "Credenciais salvas com segurança no backend." };
 }
 
+export interface ConfigSaidaDispositivo {
+  modo_saida?: "toggle" | "momentary";
+  auto_off?: boolean;
+  auto_off_delay?: number;
+  power_on_state?: "restore_last" | "on" | "off";
+}
+
+export async function configurarSaidaDispositivo(
+  deviceId: string,
+  config: ConfigSaidaDispositivo,
+): Promise<RespostaComando> {
+  const { data, error } = await supabase.functions.invoke("portaria-dispositivo", {
+    body: { acao: "configurar", device_id: deviceId, ...config },
+  });
+  if (error) return { ok: false, mensagem: mensagemErro(error, "Falha ao configurar o dispositivo.") };
+  const r = data as { ok?: boolean; mensagem?: string } | null;
+  return {
+    ok: !!r?.ok,
+    mensagem: r?.mensagem || (r?.ok ? "Configuração aplicada." : "Não foi possível aplicar a configuração."),
+  };
+}
+
 export async function comandoControlId(
   body: Record<string, unknown>,
 ): Promise<RespostaComando & { dados?: unknown }> {
