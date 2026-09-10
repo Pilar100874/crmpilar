@@ -33,7 +33,9 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
   const transparente = cfg.transparente === true;
   const comLegenda = cfg.legenda !== false;
   const modoDispositivo = useModoDispositivo(bloco.device_id);
-  const porPulso = modoDispositivo ? modoDispositivo.modo === "momentary" : bloco.tipo === "portao";
+  // O padrão é alternância; somente trata como pulso após ler essa
+  // configuração no cadastro do dispositivo.
+  const porPulso = modoDispositivo?.modo === "momentary";
 
 
   const acao = async () => {
@@ -124,11 +126,9 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
           <div className="mt-auto min-w-0">
             <p className="truncate text-sm font-semibold">{bloco.nome}</p>
             <p className="truncate text-[11px] text-muted-foreground">
-              {bloco.tipo === "portao"
-                ? "Toque para acionar"
-                : bloco.tipo === "sensor"
+              {bloco.tipo === "sensor"
                   ? ligado === null ? "Toque para ler" : aceso ? "Acionado" : "Normal"
-                  : aceso ? "Ligado" : "Desligado"}
+                  : porPulso ? "Toque para acionar" : aceso ? "Ligado" : "Desligado"}
             </p>
           </div>
         )}

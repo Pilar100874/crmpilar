@@ -120,9 +120,10 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
   // O comportamento do botão vem do que foi configurado no dispositivo.
   const modoDispositivo = useModoDispositivo(bloco.device_id);
-  const porPulso = modoDispositivo
-    ? modoDispositivo.modo === "momentary"
-    : bloco.tipo === "portao";
+  // Enquanto a configuração carrega, usa alternância, que também é o padrão
+  // do backend. Assim um portão configurado como liga/desliga nunca dispara
+  // um pulso só por ter sido tocado logo após abrir a tela.
+  const porPulso = modoDispositivo?.modo === "momentary";
 
 
 
