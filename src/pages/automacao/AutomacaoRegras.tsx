@@ -180,8 +180,8 @@ export default function AutomacaoRegras() {
 
       <RegraEditorDialog
         regra={edit}
-        ambientes={ambientes}
-        blocos={blocos}
+        ambientes={idsPainel.length ? ambientes.filter((a) => idsPainel.includes(a.id)) : ambientes}
+        blocos={blocosVisiveis}
         dispositivos={dispositivos}
         onChange={setEdit}
         onSalvo={carregar}
