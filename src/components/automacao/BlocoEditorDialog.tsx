@@ -19,6 +19,8 @@ import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 import { FORMAS } from "@/components/automacao/BlocoForma";
 import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
 import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
+import ExpansivelTamanhosDialog from "@/components/automacao/ExpansivelTamanhosDialog";
+
 
 
 
@@ -46,6 +48,8 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
   const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
+  const [ajustarTamanhos, setAjustarTamanhos] = useState(false);
+
   
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
 
@@ -548,40 +552,30 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </div>
 
                   {((cfg.vinculados ?? []) as string[]).length > 0 && (
-                    <div className="space-y-1 rounded-md border p-2">
-                      <Label className="text-xs">Tamanho de cada item (deixe vazio para usar o padrão acima)</Label>
-                      {((cfg.vinculados ?? []) as string[]).map((id) => {
-                        const filho = blocosAmbiente.find((b) => b.id === id);
-                        if (!filho) return null;
-                        const tamanhos = (cfg.tamanhos ?? {}) as Record<string, { w?: number; h?: number }>;
-                        const t = tamanhos[id] ?? {};
-                        const definir = (campo: "w" | "h", valor: string) => {
-                          const numero = valor ? Number(valor) : undefined;
-                          const proximo = { ...tamanhos, [id]: { ...t, [campo]: numero } };
-                          if (!proximo[id].w && !proximo[id].h) delete proximo[id];
-                          setCfg({ tamanhos: Object.keys(proximo).length ? proximo : undefined });
-                        };
-                        return (
-                          <div key={id} className="flex items-center gap-2 text-xs">
-                            <span className="min-w-0 flex-1 truncate">{filho.nome}</span>
-                            <Input
-                              type="number" min={40} max={800} placeholder="Larg."
-                              value={t.w ?? ""}
-                              onChange={(e) => definir("w", e.target.value)}
-                              className="h-7 w-20 px-2 text-xs"
-                            />
-                            <span className="text-muted-foreground">×</span>
-                            <Input
-                              type="number" min={30} max={600} placeholder="Alt."
-                              value={t.h ?? ""}
-                              onChange={(e) => definir("h", e.target.value)}
-                              className="h-7 w-20 px-2 text-xs"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setAjustarTamanhos(true)}
+                    >
+                      Ajustar tamanho dos itens na tela
+                    </Button>
                   )}
+
+                  <ExpansivelTamanhosDialog
+                    aberto={ajustarTamanhos}
+                    onFechar={() => setAjustarTamanhos(false)}
+                    itens={((cfg.vinculados ?? []) as string[])
+                      .map((id) => blocosAmbiente.find((b) => b.id === id))
+                      .filter(Boolean) as Bloco[]}
+                    colunas={Math.max(1, (cfg.colunas as number) ?? 1)}
+                    larguraPadrao={(cfg.larguraItem as number) ?? 170}
+                    alturaPadrao={(cfg.alturaItem as number) ?? 68}
+                    tamanhos={(cfg.tamanhos ?? {}) as Record<string, { w?: number; h?: number }>}
+                    onChange={(t) => setCfg({ tamanhos: Object.keys(t).length ? t : undefined })}
+                  />
+
+
+
                 </>
               </div>
 
