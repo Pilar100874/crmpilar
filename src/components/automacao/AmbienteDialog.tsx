@@ -113,23 +113,40 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
               <Monitor className="h-4 w-4 text-primary" /> Onde este painel vai aparecer
             </div>
             <p className="text-xs text-muted-foreground">
-              Escolha o tipo de aparelho e o formato da tela. O painel aparece automaticamente para quem
-              abrir a tela de parede nesse tipo de aparelho, e o retângulo do editor fica exatamente nesse formato.
+              Escolha o aparelho e o formato na lista. O painel aparece automaticamente para quem abrir
+              a tela de parede nesse aparelho, e o retângulo do editor fica exatamente nesse formato.
             </p>
 
-            <div className="flex flex-wrap gap-2">
-              {TIPOS_TELA.map((t) => (
-                <Button
-                  key={t.valor}
-                  type="button"
-                  size="sm"
-                  title={t.descricao}
-                  variant={tipoTela === t.valor ? "default" : "outline"}
-                  onClick={() => trocarTipo(t.valor)}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="text-xs">Aparelho</Label>
+                <Select value={tipoTela} onValueChange={(v) => trocarTipo(v as TipoTela)}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {TIPOS_TELA.map((t) => (
+                      <SelectItem key={t.valor} value={t.valor}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Formato da tela</Label>
+                <Select
+                  value={FORMATOS_TELA[tipoTela].find((p) => p.largura === largura && p.altura === altura)?.valor ?? "personalizado"}
+                  onValueChange={(v) => {
+                    const p = FORMATOS_TELA[tipoTela].find((f) => f.valor === v);
+                    if (p) aplicar(p.largura, p.altura);
+                  }}
                 >
-                  {t.label}
-                </Button>
-              ))}
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {FORMATOS_TELA[tipoTela].map((p) => (
+                      <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>
+                    ))}
+                    <SelectItem value="personalizado">Tamanho personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <label className="flex items-center gap-2 text-sm">
@@ -139,22 +156,9 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
                 checked={ambiente?.mostrar_abas !== false}
                 onChange={(e) => onChange({ ...ambiente, mostrar_abas: e.target.checked })}
               />
-              Mostrar as abas dos ambientes deste tipo de tela
+              Mostrar as abas das telas deste mesmo aparelho
             </label>
 
-            <div className="flex flex-wrap gap-2">
-              {FORMATOS_TELA[tipoTela].map((p) => (
-                <Button
-                  key={p.valor}
-                  type="button"
-                  size="sm"
-                  variant={largura === p.largura && altura === p.altura ? "default" : "outline"}
-                  onClick={() => aplicar(p.largura, p.altura)}
-                >
-                  {p.label}
-                </Button>
-              ))}
-            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
