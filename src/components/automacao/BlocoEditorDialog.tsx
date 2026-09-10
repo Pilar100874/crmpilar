@@ -17,6 +17,9 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 import { FORMAS } from "@/components/automacao/BlocoForma";
+import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
+import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
+
 
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
 const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor"];
@@ -41,6 +44,9 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
+  const { ambientes: ambientesNav } = useNavegacaoAmbientes();
+
+
 
   useEffect(() => {
     if ((bloco?.tipo === "rastreamento" || bloco?.tipo === "portaria") && unidades.length === 0) {
