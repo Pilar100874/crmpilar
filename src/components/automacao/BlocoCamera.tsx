@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
-import { Camera as CameraIcon, X } from "lucide-react";
+import { Camera as CameraIcon, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Bloco } from "@/lib/automacao/api";
@@ -14,8 +14,17 @@ interface Props {
 
 export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
   const [ampliado, setAmpliado] = useState(false);
-  const cfg = (bloco.config ?? {}) as { camera_id?: string; filial_id?: string | null; permitir_ampliar?: boolean };
+  const cfg = (bloco.config ?? {}) as {
+    camera_id?: string;
+    filial_id?: string | null;
+    permitir_ampliar?: boolean;
+    permitir_interacao?: boolean;
+    mostrar_barra?: boolean;
+    transparente?: boolean;
+  };
   const podeAmpliar = cfg.permitir_ampliar !== false;
+  const interativo = cfg.permitir_interacao !== false;
+  const mostrarBarra = cfg.mostrar_barra !== false;
 
   if (!cfg.camera_id) {
     return (
@@ -28,7 +37,7 @@ export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
 
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (edicao || !podeAmpliar) return;
+    if (edicao || !podeAmpliar || !interativo) return;
     setAmpliado((v) => !v);
     onAcionar?.();
   };
@@ -38,7 +47,7 @@ export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
       cameraId={cfg.camera_id}
       cameraNome={bloco.nome}
       filialId={cfg.filial_id ?? null}
-      className={cn("h-full w-full", ampliado && "h-screen w-screen rounded-none")}
+      className={cn("h-full w-full", ampliado && "h-screen w-screen rounded-none", !interativo && "pointer-events-none")}
     />
   );
 
@@ -50,9 +59,30 @@ export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
   return (
     <>
       {!ampliado && (
-        <div className="relative h-full rounded-2xl border border-border bg-card overflow-hidden">
+        <div
+          className={cn(
+            "relative h-full rounded-2xl overflow-hidden",
+            cfg.transparente ? "border border-transparent bg-transparent" : "border border-border bg-card"
+          )}
+        >
           {tile}
-          {!edicao && podeAmpliar && (
+          {mostrarBarra && (
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent px-3 py-2 text-sm font-semibold text-white select-none">
+              <span className="truncate">{bloco.nome}</span>
+              {podeAmpliar && !edicao && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="pointer-events-auto h-6 w-6 shrink-0 text-white hover:bg-white/20"
+                  onClick={(e) => { e.stopPropagation(); setAmpliado(true); onAcionar?.(); }}
+                  title="Ampliar"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          )}
+          {!edicao && podeAmpliar && interativo && (
             <div
               className="absolute inset-0 z-10 cursor-pointer"
               onClick={alternar}

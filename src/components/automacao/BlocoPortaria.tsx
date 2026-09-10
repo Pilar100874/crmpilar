@@ -184,6 +184,8 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
   }, [carregar, intervalo]);
 
   const podeAmpliar = (cfg as { permitir_ampliar?: boolean }).permitir_ampliar !== false;
+  const interativo = (cfg as { permitir_interacao?: boolean }).permitir_interacao !== false;
+  const mostrarBarra = (cfg as { mostrar_barra?: boolean }).mostrar_barra !== false;
 
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -202,6 +204,7 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
         color: corTexto,
       }}
     >
+      {mostrarBarra && (
       <div
         className={cn(
           "flex items-center gap-2 select-none",
@@ -245,9 +248,10 @@ export default function BlocoPortaria({ bloco, edicao, onAcionar }: Props) {
           )}
         </span>
       </div>
+      )}
 
       {mostrarLista && (
-        <div className="mt-2 space-y-1 overflow-auto">
+        <div className={cn("mt-2 space-y-1 overflow-auto", !interativo && "pointer-events-none")}>
           {itens.length === 0 && !carregando ? (
             <p
               className="text-muted-foreground"
