@@ -203,21 +203,14 @@ export default function AutomacaoPaineis() {
                       {/* Abas da tela */}
                       <div className="mt-2 flex flex-wrap gap-1">
                         {grupo.abas.map((a) => (
-                          <span key={a.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs">
-                            <button
-                              type="button"
-                              className={a.ativo === false ? "line-through opacity-60" : "hover:text-primary"}
-                              onClick={() => navegar(`/automacao/painel/${a.id}`)}
-                            >
-                              {a.nome}
-                            </button>
-                            {admin && (
-                              <Pencil
-                                className="h-3 w-3 cursor-pointer opacity-50 hover:opacity-100"
-                                onClick={() => setEdit(a)}
-                              />
-                            )}
-                          </span>
+                          <button
+                            key={a.id}
+                            type="button"
+                            className={`rounded-full border px-2 py-0.5 text-xs ${a.ativo === false ? "line-through opacity-60" : "hover:text-primary"}`}
+                            onClick={() => navegar(`/automacao/painel/${a.id}`)}
+                          >
+                            {a.nome}
+                          </button>
                         ))}
                       </div>
 
