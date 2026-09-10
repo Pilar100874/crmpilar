@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
-import BarraPulso from "./BarraPulso";
+import ReloginhoPulso from "./ReloginhoPulso";
 
 import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
