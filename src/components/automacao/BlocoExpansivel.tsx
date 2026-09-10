@@ -32,6 +32,7 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
     subtitulo?: string;
     layout?: "livre" | "grade";
     posicoes?: Record<string, { x: number; y: number; w: number; h: number }>;
+    tamanhos?: Record<string, { w: number; h: number }>;
   };
   const { blocos, estados, aplicarEstado, acionar } = usePainelBlocos();
   const [aberto, setAberto] = useState(false);
@@ -159,7 +160,15 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
         <div
           data-cheio
           className="absolute z-[1400] rounded-2xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur"
-          style={{ ...posicao, display: "grid", gridTemplateColumns: `repeat(${colunas}, ${largura}px)`, gap: 8 }}
+          style={{
+            ...posicao,
+            display: "grid",
+            gridTemplateColumns: `repeat(${colunas}, ${Math.max(
+              largura,
+              ...filhos.map((f) => cfg.tamanhos?.[f.id]?.w ?? 0),
+            )}px)`,
+            gap: 8,
+          }}
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -167,16 +176,19 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
             <p className="px-2 py-3 text-xs text-muted-foreground">Nenhum elemento vinculado ainda.</p>
           )}
           <Suspense fallback={null}>
-            {filhos.map((f) => (
-              <div key={f.id} style={{ width: largura, height: altura }}>
-                <BlocoCardLazy
-                  bloco={f}
-                  ligado={estados[f.id] ?? null}
-                  onEstado={(v) => aplicarEstado(f, v)}
-                  onAcionar={() => acionar?.(f)}
-                />
-              </div>
-            ))}
+            {filhos.map((f) => {
+              const t = cfg.tamanhos?.[f.id];
+              return (
+                <div key={f.id} style={{ width: t?.w ?? largura, height: t?.h ?? altura }}>
+                  <BlocoCardLazy
+                    bloco={f}
+                    ligado={estados[f.id] ?? null}
+                    onEstado={(v) => aplicarEstado(f, v)}
+                    onAcionar={() => acionar?.(f)}
+                  />
+                </div>
+              );
+            })}
           </Suspense>
         </div>
       )}
