@@ -285,6 +285,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       )}
         style={{ borderRadius: raio }}
       >
+      {dialogo}
+
 
       {(pulsando || contagemAuto) && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
