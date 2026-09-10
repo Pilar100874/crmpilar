@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, LayoutTemplate, Monitor, Pencil, Plus, Settings, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
+import { ClipboardCopy, Copy, LayoutTemplate, Monitor, Pencil, Plus, Settings, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
