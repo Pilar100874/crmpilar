@@ -459,14 +459,24 @@ export default function TvSignageDashboards() {
                     <div className="space-y-3 rounded-md border p-3 bg-muted/30">
                       <div className="text-xs font-medium">Painel de automação exibido</div>
                       <div>
-                        <Label className="text-xs">Ambiente</Label>
-                        <Select value={autoCfg.ambiente} onValueChange={(v) => updateAutoCfg({ ambiente: v })}>
-                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                        <Label className="text-xs">Tela de automação</Label>
+                        <Select
+                          value={telaSelecionada || "__todas__"}
+                          onValueChange={(v) => updateAutoCfg(v === "__todas__" ? { tela: "", ambiente: "todos" } : { tela: v })}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="todos">Todos (com abas para trocar)</SelectItem>
-                            {ambientesAuto.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+                            <SelectItem value="__todas__">Automática (segue o aparelho, com abas)</SelectItem>
+                            {telasAuto.map((t) => (
+                              <SelectItem key={t.nome} value={t.nome}>
+                                {t.nome} — {ROTULO_APARELHO[t.dispositivo] || t.dispositivo} · {t.abas} aba(s)
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          A TV abre essa tela com as abas dela, pronta para toque ou mouse.
+                        </p>
                       </div>
                       <div>
                         <Label className="text-xs">Tamanho da tela</Label>
