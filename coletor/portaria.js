@@ -163,6 +163,44 @@ async function shellyStatus(device, cred, canal) {
   return { mensagem: 'Dispositivo respondeu na rede local.', dados: texto.slice(0, 8000) };
 }
 
+async function shellyConfigurarSaida(device, cred, canal, cfg) {
+  const base = baseUrlShelly(device);
+  if (!base) throw new Error('Dispositivo sem IP/endpoint configurado.');
+  const geracao = String((device.config && device.config.geracao) || 'gen2').toLowerCase();
+  const headers = {};
+  if (cred && cred.usuario && cred.senha) {
+    headers.Authorization = 'Basic ' + Buffer.from(`${cred.usuario}:${cred.senha}`).toString('base64');
+  }
+  if (geracao === 'gen1') {
+    const params = new URLSearchParams();
+    if (cfg.modo) params.set('btn_type', cfg.modo);
+    if (cfg.auto_off !== undefined) params.set('auto_off', cfg.auto_off ? 'true' : 'false');
+    if (cfg.auto_off_delay !== undefined) params.set('auto_off_delay', String(cfg.auto_off_delay));
+    if (cfg.power_on_state) {
+      params.set('power_on_state', cfg.power_on_state === 'restore_last' ? 'last' : cfg.power_on_state);
+    }
+    const url = `${base}/settings/relay/${canal}?${params.toString()}`;
+    const texto = await requisicao(url, { headers });
+    return { mensagem: 'Configuração de saída aplicada pelo Coletor local.', dados: texto.slice(0, 300) };
+  }
+  const configRpc = {};
+  if (cfg.modo) configRpc.in_mode = cfg.modo;
+  if (cfg.auto_off !== undefined) configRpc.auto_off = cfg.auto_off;
+  if (cfg.auto_off_delay !== undefined) configRpc.auto_off_delay = cfg.auto_off_delay;
+  let powerOnState;
+  if (cfg.power_on_state === 'off') powerOnState = 0;
+  else if (cfg.power_on_state === 'on') powerOnState = 1;
+  else if (cfg.power_on_state === 'restore_last') powerOnState = 2;
+  if (powerOnState !== undefined) configRpc.power_on_state = powerOnState;
+  const url = `${base}/rpc/Switch.SetConfig`;
+  const texto = await requisicao(url, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: canal, config: configRpc }),
+  });
+  return { mensagem: 'Configuração de saída aplicada pelo Coletor local.', dados: texto.slice(0, 300) };
+}
+
 
 async function controlidAbrir(device, cred, porta) {
   const alvo = resolverProtocolo({ ip: device.ip, porta: device.porta, https: false });
