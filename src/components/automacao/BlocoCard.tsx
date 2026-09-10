@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
+import BarraPulso from "./BarraPulso";
 
 import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
@@ -109,6 +110,9 @@ export default function BlocoCard(props: Props) {
 
 function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplicar, onAcionar }: Props) {
   const [ocupado, setOcupado] = useState(false);
+  // Quando o dispositivo trabalha em modo pulso, mostra a barra de
+  // acompanhamento enquanto o pulso está ativo.
+  const [pulsando, setPulsando] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
   const cfg = (bloco.config ?? {}) as Record<string, any>;
@@ -140,8 +144,17 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       toast.error(r.mensagem);
       return;
     }
-    if (acao === "pulso") toast.success(`${bloco.nome} acionado.`);
+    if (acao === "pulso") {
+      toast.success(`${bloco.nome} acionado.`);
+      setPulsando(true);
+    }
     onEstado(r.ligado ?? (acao === "ligar" ? true : acao === "desligar" ? false : ligado));
+  };
+
+  const fimDoPulso = () => {
+    setPulsando(false);
+    // Depois do pulso o equipamento volta para desligado.
+    onEstado(false);
   };
 
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
@@ -239,13 +252,18 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   return (
     <div
       className={cn(
-        "h-full border p-3 flex flex-col gap-2 transition-colors select-none",
+        "relative h-full border p-3 flex flex-col gap-2 transition-colors select-none",
         transparente
           ? "bg-transparent border-transparent"
           : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
+        pulsando && "pb-8",
       )}
-      style={{ borderRadius: raio }}
-    >
+        style={{ borderRadius: raio }}
+      >
+
+      {pulsando && porPulso && (
+        <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+      )}
 
       <div className="flex items-start gap-2">
         {edicao && <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />}
@@ -298,8 +316,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
               Atualizar
             </Button>
           ) : porPulso ? (
-            <Button size="sm" className="w-full" disabled={ocupado} onClick={() => enviar("pulso")}>
-              Acionar
+            <Button size="sm" className="w-full" disabled={ocupado || pulsando} onClick={() => enviar("pulso")}>
+              {pulsando ? "Acionando…" : "Acionar"}
             </Button>
           ) : (
             <>

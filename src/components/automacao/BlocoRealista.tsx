@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
+import BarraPulso from "./BarraPulso";
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -25,6 +26,8 @@ interface Props {
 export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEditar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const [pressionado, setPressionado] = useState(false);
+  // Barra de acompanhamento enquanto o pulso está ativo.
+  const [pulsando, setPulsando] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
   const cfg = (bloco.config ?? {}) as Record<string, any>;
@@ -54,15 +57,23 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       toast.error(r.mensagem);
       return;
     }
-    if (comando === "pulso") toast.success(`${bloco.nome} acionado.`);
+    if (comando === "pulso") {
+      toast.success(`${bloco.nome} acionado.`);
+      setPulsando(true);
+    }
     onEstado(r.ligado ?? (comando === "ligar" ? true : comando === "desligar" ? false : ligado));
+  };
+
+  const fimDoPulso = () => {
+    setPulsando(false);
+    onEstado(false);
   };
 
   return (
     <button
       type="button"
       onClick={acao}
-      disabled={ocupado}
+      disabled={ocupado || pulsando}
       onPointerDown={() => setPressionado(true)}
       onPointerUp={() => setPressionado(false)}
       onPointerLeave={() => setPressionado(false)}
@@ -107,6 +118,11 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
         style={aceso ? { boxShadow: "0 0 8px rgba(74,222,128,0.9)" } : undefined}
       />
 
+      {/* barra de acompanhamento do pulso */}
+      {pulsando && porPulso && (
+        <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+      )}
+
       <div className="relative flex h-full flex-col">
         <div
           className={cn(
@@ -128,7 +144,7 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
             <p className="truncate text-[11px] text-muted-foreground">
               {bloco.tipo === "sensor"
                   ? ligado === null ? "Toque para ler" : aceso ? "Acionado" : "Normal"
-                  : porPulso ? "Toque para acionar" : aceso ? "Ligado" : "Desligado"}
+                  : porPulso ? (pulsando ? "Acionando…" : "Toque para acionar") : aceso ? "Ligado" : "Desligado"}
             </p>
           </div>
         )}
