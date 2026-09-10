@@ -36,6 +36,8 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const proporcao = proporcaoDe(largura, altura);
   const opacidade = ambiente?.fundo_opacidade ?? 100;
   const ajuste = ambiente?.fundo_ajuste ?? "cobrir";
+  const tipoTela: TipoTela = (ambiente?.dispositivo as TipoTela) ?? "tv";
+  const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
