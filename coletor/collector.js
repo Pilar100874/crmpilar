@@ -78,6 +78,7 @@ const lastNSRByEquip = {};
 let timerPonto = null;
 let timerCameras = null;
 let timerPortaria = null;
+let timerJobs = null;
 
 function loadConfig() {
   const saved = lerArquivoConfig();
