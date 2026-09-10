@@ -41,7 +41,7 @@ export default function TvSignageDashboards() {
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
     supabase.from("unidades").select("id,nome").order("nome").then(({ data }) => setGruposVeiculos(data || []));
     supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
-    supabase.from("automacao_ambientes").select("id,nome").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
+    supabase.from("automacao_ambientes").select("id,nome,tela_nome,dispositivo,ativo").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
   }, []);
 
 
@@ -80,6 +80,7 @@ export default function TvSignageDashboards() {
     const q = r.indexOf("?");
     const sp = new URLSearchParams(q < 0 ? "" : r.slice(q + 1));
     return {
+      tela: sp.get("tela") || "",
       ambiente: sp.get("ambiente") || "todos",
       largura: parseInt(sp.get("largura") || "1920") || 1920,
       altura: parseInt(sp.get("altura") || "1080") || 1080,
@@ -89,13 +90,35 @@ export default function TvSignageDashboards() {
   const updateAutoCfg = (patch: Partial<typeof autoCfg>) => {
     const cfg = { ...autoCfg, ...patch };
     const sp = new URLSearchParams({
-      ambiente: cfg.ambiente,
       largura: String(cfg.largura),
       altura: String(cfg.altura),
     });
+    if (cfg.tela) sp.set("tela", cfg.tela);
+    else sp.set("ambiente", cfg.ambiente);
     if (!cfg.barra) sp.set("barra", "0");
     setEdit({ ...edit, rota_interna: `/tv/automacao?${sp.toString()}` });
   };
+
+  // Telas de automação (grupos de abas) disponíveis, com o aparelho de cada uma.
+  const telasAuto = (() => {
+    const mapa = new Map<string, { nome: string; dispositivo: string; abas: number }>();
+    for (const a of ambientesAuto) {
+      if (a.ativo === false) continue;
+      const nome = (a.tela_nome || a.nome || "").trim();
+      if (!nome) continue;
+      const atual = mapa.get(nome);
+      if (atual) atual.abas += 1;
+      else mapa.set(nome, { nome, dispositivo: a.dispositivo || "tv", abas: 1 });
+    }
+    return Array.from(mapa.values());
+  })();
+  const ROTULO_APARELHO: Record<string, string> = { tv: "TV", computador: "Computador", tablet: "Tablet", celular: "Celular" };
+  // Valor selecionado: prefere a tela salva; rotas antigas com ambiente mostram a tela dele.
+  const telaSelecionada = autoCfg.tela
+    || (autoCfg.ambiente !== "todos"
+      ? ((ambientesAuto.find((a) => a.id === autoCfg.ambiente)?.tela_nome
+          || ambientesAuto.find((a) => a.id === autoCfg.ambiente)?.nome) ?? "")
+      : "");
   const portariaUnidade = (() => {
     const r = edit?.rota_interna || "";
     if (!isPortariaRoute(r)) return "";
