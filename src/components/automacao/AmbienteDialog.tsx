@@ -46,7 +46,22 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [confirmarGrupo, setConfirmarGrupo] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
+  /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
+  const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number } | null>(null);
+
+  useEffect(() => {
+    if (!ambiente) { original.current = null; return; }
+    if (original.current?.id === ambiente.id) return;
+    original.current = {
+      id: ambiente.id,
+      dispositivo: (ambiente.dispositivo as TipoTela) ?? "tv",
+      largura: ambiente.tela_largura ?? TELA_PADRAO.largura,
+      altura: ambiente.tela_altura ?? TELA_PADRAO.altura,
+    };
+  }, [ambiente]);
+
 
   useEffect(() => {
     let ativo = true;
