@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
+import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
+
 import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
 import BlocoGrafico from "./BlocoGrafico";
@@ -115,6 +117,14 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   const comLegenda = cfg.legenda !== false;
   const mostrarNome = comLegenda && cfg.mostrarNome !== false;
   const mostrarSituacao = comLegenda && cfg.mostrarSituacao !== false;
+
+  // O comportamento do botão vem do que foi configurado no dispositivo.
+  const modoDispositivo = useModoDispositivo(bloco.device_id);
+  const porPulso = modoDispositivo
+    ? modoDispositivo.modo === "momentary"
+    : bloco.tipo === "portao";
+
+
 
 
   const enviar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
@@ -251,13 +261,14 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
             {mostrarNome && <p className="text-sm font-semibold truncate">{bloco.nome}</p>}
             {mostrarSituacao && (
               <p className="text-[11px] text-muted-foreground truncate">
-                {bloco.tipo === "portao"
-                  ? "Toque para acionar"
-                  : bloco.tipo === "sensor"
-                    ? ligado === null ? "Sem leitura" : aceso ? "Acionado" : "Normal"
+                {bloco.tipo === "sensor"
+                  ? ligado === null ? "Sem leitura" : aceso ? "Acionado" : "Normal"
+                  : porPulso
+                    ? "Toque para acionar"
                     : aceso ? "Ligado" : "Desligado"}
               </p>
             )}
+
           </div>
         )}
 
@@ -281,13 +292,13 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
       {!edicao && (
         <div className="mt-auto flex items-center justify-between gap-2">
-          {bloco.tipo === "portao" ? (
-            <Button size="sm" className="w-full" disabled={ocupado} onClick={() => enviar("pulso")}>
-              Acionar
-            </Button>
-          ) : bloco.tipo === "sensor" ? (
+          {bloco.tipo === "sensor" ? (
             <Button size="sm" variant="outline" className="w-full" disabled={ocupado} onClick={() => enviar("status")}>
               Atualizar
+            </Button>
+          ) : porPulso ? (
+            <Button size="sm" className="w-full" disabled={ocupado} onClick={() => enviar("pulso")}>
+              Acionar
             </Button>
           ) : (
             <>
@@ -298,6 +309,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
                 onCheckedChange={(v) => enviar(v ? "ligar" : "desligar")}
               />
             </>
+
           )}
         </div>
       )}

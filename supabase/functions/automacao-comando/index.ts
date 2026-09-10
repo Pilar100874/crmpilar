@@ -50,7 +50,9 @@ Deno.serve(async (req) => {
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return responder(400, { error: "Dados inválidos" });
-  const { acao, device_id } = parsed.data;
+  const { device_id } = parsed.data;
+  let acao = parsed.data.acao;
+
 
   const admin = adminClient();
   const { data: device } = await admin.from("port_devices").select("*").eq("id", device_id).maybeSingle();
@@ -58,6 +60,13 @@ Deno.serve(async (req) => {
   if (device.habilitado === false) return responder(200, { ok: false, error: "Dispositivo desabilitado." });
 
   const canal = parsed.data.canal ?? device.canal_rele ?? 0;
+
+  // O botão do painel segue o que foi configurado no dispositivo:
+  // "momentary" (pulso) aciona pelo tempo definido; "toggle" liga e desliga.
+  const cfgDispositivo = (device.config ?? {}) as Record<string, unknown>;
+  const modoSaida = cfgDispositivo.modo_saida === "momentary" ? "momentary" : "toggle";
+  if (modoSaida === "momentary" && acao === "ligar") acao = "pulso";
+
   const { data: cred } = await admin
     .from("port_device_credentials")
     .select("usuario, senha, token")
@@ -116,5 +125,7 @@ Deno.serve(async (req) => {
     error: ok ? undefined : mensagemAmigavel(mensagem, device.ip),
     mensagem: mensagem ?? null,
     ligado,
+    modo_saida: modoSaida,
   });
 });
+
