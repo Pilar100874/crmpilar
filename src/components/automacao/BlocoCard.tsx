@@ -257,8 +257,12 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
           ? "bg-transparent border-transparent"
           : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
       )}
-      style={{ borderRadius: raio }}
-    >
+        style={{ borderRadius: raio }}
+      >
+
+      {pulsando && porPulso && (
+        <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+      )}
 
       <div className="flex items-start gap-2">
         {edicao && <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />}
@@ -311,8 +315,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
               Atualizar
             </Button>
           ) : porPulso ? (
-            <Button size="sm" className="w-full" disabled={ocupado} onClick={() => enviar("pulso")}>
-              Acionar
+            <Button size="sm" className="w-full" disabled={ocupado || pulsando} onClick={() => enviar("pulso")}>
+              {pulsando ? "Acionando…" : "Acionar"}
             </Button>
           ) : (
             <>
