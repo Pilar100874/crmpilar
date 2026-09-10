@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -851,19 +852,34 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   <Input type="number" min={0} value={cfg.cantos ?? 0} onChange={(e) => setCfg({ cantos: Number(e.target.value) })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={cfg.mostrar_barra !== false} onChange={(e) => setCfg({ mostrar_barra: e.target.checked })} />
-                  Mostrar barra com título
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={cfg.permitir_interacao !== false} onChange={(e) => setCfg({ permitir_interacao: e.target.checked })} />
-                  Permitir clicar no site
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={cfg.transparente === true} onChange={(e) => setCfg({ transparente: e.target.checked })} />
-                  Fundo transparente
-                </label>
+              <div className="space-y-2 rounded-lg border p-3">
+                <Label className="text-sm font-semibold">Comportamento</Label>
+                <div className="flex flex-col gap-3 text-sm">
+                  <label className="flex items-center justify-between gap-3">
+                    <span className="flex flex-col">
+                      <span>Permitir interação</span>
+                      <span className="text-[11px] text-muted-foreground">Deixa clicar e navegar dentro do site</span>
+                    </span>
+                    <Switch
+                      checked={cfg.permitir_interacao !== false}
+                      onCheckedChange={(v) => setCfg({ permitir_interacao: v })}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-3">
+                    <span>Mostrar barra com título</span>
+                    <Switch
+                      checked={cfg.mostrar_barra !== false}
+                      onCheckedChange={(v) => setCfg({ mostrar_barra: v })}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-3">
+                    <span>Fundo transparente</span>
+                    <Switch
+                      checked={cfg.transparente === true}
+                      onCheckedChange={(v) => setCfg({ transparente: v })}
+                    />
+                  </label>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
