@@ -353,6 +353,64 @@ export async function duplicarAmbienteComNome(
   return criado;
 }
 
+/**
+ * Copia uma aba (ambiente) para outra tela, mesmo que o formato seja diferente.
+ * Os elementos são reposicionados proporcionalmente ao novo tamanho.
+ */
+export async function copiarAmbienteParaTela(
+  origem: Ambiente,
+  destino: Ambiente,
+  novoNome?: string,
+): Promise<Ambiente | null> {
+  const larguraOrigem = origem.tela_largura ?? TELA_PADRAO.largura;
+  const alturaOrigem = origem.tela_altura ?? TELA_PADRAO.altura;
+  const larguraDestino = destino.tela_largura ?? TELA_PADRAO.largura;
+  const alturaDestino = destino.tela_altura ?? TELA_PADRAO.altura;
+  const fx = larguraOrigem > 0 ? larguraDestino / larguraOrigem : 1;
+  const fy = alturaOrigem > 0 ? alturaDestino / alturaOrigem : 1;
+
+  const { data: novo } = await db
+    .from("automacao_ambientes")
+    .insert({
+      nome: (novoNome?.trim() || origem.nome),
+      tela_nome: destino.tela_nome?.trim() || destino.nome,
+      icone: origem.icone ?? null,
+      ordem: (destino.ordem ?? 0) + 1,
+      tela_largura: larguraDestino,
+      tela_altura: alturaDestino,
+      modo: origem.modo ?? "grade",
+      fundo_caminho: origem.fundo_caminho,
+      fundo_opacidade: origem.fundo_opacidade ?? 100,
+      fundo_ajuste: origem.fundo_ajuste ?? "cobrir",
+      ativo: true,
+      dispositivo: destino.dispositivo ?? "tv",
+      rolagem: destino.rolagem === true,
+      mostrar_abas: destino.mostrar_abas !== false,
+    })
+    .select()
+    .maybeSingle();
+  const criado = novo as Ambiente | null;
+  if (!criado) return null;
+
+  const { data: originais } = await db.from("automacao_blocos").select("*").eq("ambiente_id", origem.id);
+  const copias = ((originais ?? []) as Bloco[]).map((b) => ({
+    ambiente_id: criado.id,
+    tipo: b.tipo,
+    nome: b.nome,
+    icone: b.icone,
+    device_id: b.device_id,
+    canal: b.canal ?? 0,
+    x: Math.round((b.x ?? 0) * fx),
+    y: Math.round((b.y ?? 0) * fy),
+    w: Math.max(1, Math.round((b.w ?? 1) * fx)),
+    h: Math.max(1, Math.round((b.h ?? 1) * fy)),
+    visivel: b.visivel !== false,
+    config: b.config ?? {},
+  }));
+  if (copias.length) await db.from("automacao_blocos").insert(copias);
+  return criado;
+}
+
 export async function listarBlocos(): Promise<Bloco[]> {
   const { data } = await db.from("automacao_blocos").select("*").order("y").order("x");
   return (data ?? []) as Bloco[];
