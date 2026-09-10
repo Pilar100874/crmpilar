@@ -121,6 +121,7 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
           )}
         </span>
       </div>
+      )}
       <div className="relative flex-1 min-h-0">
         {carregando ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -138,6 +139,7 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
             compactIcons
             zoomMaximoSempre
             nuncaPausarAuto
+            disableInteraction={!interativo}
           />
         )}
       </div>
