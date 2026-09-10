@@ -21,9 +21,10 @@ import BlocoImagemLuz from "./BlocoImagemLuz";
 import BlocoTexto from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
 import BlocoForma from "./BlocoForma";
+import BlocoAbas from "./BlocoAbas";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -45,7 +46,7 @@ export default function BlocoCard(props: Props) {
   const semDispositivo = !bloco.device_id;
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
-  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa"].includes(bloco.tipo);
+  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
@@ -99,6 +100,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
+      bloco.tipo === "abas" ? <BlocoAbas bloco={bloco} edicao={edicao} /> :
       bloco.tipo === "texto" ? <BlocoTexto bloco={bloco} /> :
       bloco.tipo === "forma" ? <BlocoForma bloco={bloco} /> :
       bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :

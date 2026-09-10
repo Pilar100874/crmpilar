@@ -24,7 +24,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "forma", "clima", "grafico",
+  "interfone", "texto", "forma", "clima", "grafico", "abas",
 ];
 
 
