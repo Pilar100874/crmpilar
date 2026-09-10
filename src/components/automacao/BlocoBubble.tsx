@@ -36,7 +36,11 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
   const opacidade = typeof cfg.opacidade === "number" ? cfg.opacidade : 100;
   const tamIcone = typeof cfg.tamanhoIcone === "number" ? cfg.tamanhoIcone : 20;
 
-  const alternar = async () => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const alternar = () => pedir(executar);
+
+  const executar = async () => {
     if (!bloco.device_id) {
       onEstado(!aceso);
       return;
