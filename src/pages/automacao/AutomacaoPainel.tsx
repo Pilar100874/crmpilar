@@ -62,6 +62,7 @@ export default function AutomacaoPainel() {
   const [estados, setEstados] = useState<Record<string, boolean | null>>({});
   const [blocoEdit, setBlocoEdit] = useState<Partial<Bloco> | null>(null);
   const [ambienteEdit, setAmbienteEdit] = useState<Partial<Ambiente> | null>(null);
+  const [abaAmbienteEdit, setAbaAmbienteEdit] = useState<"tela" | "fundo">("tela");
   const [excluir, setExcluir] = useState<{ tipo: "ambiente" | "bloco"; id: string; nome: string } | null>(null);
   const [escala, setEscala] = useState(1);
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
