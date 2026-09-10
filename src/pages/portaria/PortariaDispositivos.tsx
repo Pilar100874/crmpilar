@@ -349,13 +349,6 @@ export default function PortariaDispositivos() {
                   </Select>
                 </div>
                 <div><Label>Canal do relé</Label><Input type="number" value={form.canal_rele ?? 0} onChange={(e) => setForm({ ...form, canal_rele: Number(e.target.value) })} /></div>
-                <div>
-                  <Label>Duração do pulso (ms)</Label>
-                  <Input type="number" value={form.pulso_ms ?? 1000} disabled={(config.modo_saida as string) !== "momentary"} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} />
-                  {(config.modo_saida as string) !== "momentary" && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">Disponível apenas no modo Pulso.</p>
-                  )}
-                </div>
                 {config.geracao === "cloud" && (
                   <>
                     <div><Label>Servidor Cloud</Label><Input value={(config.cloud_server as string) ?? ""} onChange={(e) => setConfig("cloud_server", e.target.value)} placeholder="shelly-XX-eu.shelly.cloud" /></div>
@@ -449,6 +442,16 @@ export default function PortariaDispositivos() {
                   {salvando && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   Aplicar no dispositivo
                 </Button>
+              </div>
+            )}
+
+            {form.tipo === "shelly" && (config.modo_saida as string) === "momentary" && (
+              <div className="sm:col-span-2 rounded-md border px-3 py-2 bg-card">
+                <Label>Duração do pulso (ms)</Label>
+                <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Input type="number" min={100} step={100} value={form.pulso_ms ?? 1000} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} className="sm:max-w-44" />
+                  <p className="text-[11px] text-muted-foreground">Tempo em que o contato permanece acionado antes de desligar sozinho.</p>
+                </div>
               </div>
             )}
 
