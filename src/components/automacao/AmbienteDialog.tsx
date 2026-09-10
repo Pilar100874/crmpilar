@@ -51,6 +51,8 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [isSalvando, setIsSalvando] = useState(false);
+  const [confirmarFormatoAberto, setConfirmarFormatoAberto] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
   /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
   const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
