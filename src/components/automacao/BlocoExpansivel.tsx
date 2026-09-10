@@ -30,6 +30,7 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
     raio?: number;
     subtitulo?: string;
     layout?: "livre" | "grade";
+    posicoes?: Record<string, { x: number; y: number; w: number; h: number }>;
   };
   const { blocos, estados, aplicarEstado, acionar } = usePainelBlocos();
   const [aberto, setAberto] = useState(false);
@@ -105,8 +106,14 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
             </p>
           )}
           <Suspense fallback={null}>
-            {filhos.map((f) => (
-              <div key={f.id} className="absolute" style={{ left: f.x, top: f.y, width: f.w, height: f.h }}>
+            {filhos.map((f) => {
+              // Posição definida no popup (relativa ao botão) ou a do próprio painel.
+              const p = cfg.posicoes?.[f.id];
+              const caixa = p
+                ? { left: bloco.x + p.x, top: bloco.y + p.y, width: p.w, height: p.h }
+                : { left: f.x, top: f.y, width: f.w, height: f.h };
+              return (
+              <div key={f.id} className="absolute" style={caixa}>
                 <BlocoCardLazy
                   bloco={f}
                   ligado={estados[f.id] ?? null}
@@ -114,7 +121,8 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
                   onAcionar={() => acionar?.(f)}
                 />
               </div>
-            ))}
+              );
+            })}
           </Suspense>
         </div>
       )}

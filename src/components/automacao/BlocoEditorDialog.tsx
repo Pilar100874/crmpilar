@@ -19,6 +19,7 @@ import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 import { FORMAS } from "@/components/automacao/BlocoForma";
 import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
 import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
+import ExpansivelPosicoesDialog, { PosicaoItem } from "@/components/automacao/ExpansivelPosicoesDialog";
 
 
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
@@ -45,6 +46,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
   const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
+  const [ajustarPosicoes, setAjustarPosicoes] = useState(false);
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
 
 
@@ -504,9 +506,20 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </SelectContent>
                 </Select>
                 {(cfg.layout ?? "livre") === "livre" && (
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    No modo de edição arraste e redimensione cada item vinculado; ao abrir, eles aparecem exatamente assim.
-                  </p>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Defina no popup abaixo onde e com que tamanho cada item aparece ao tocar no botão.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!((cfg.vinculados ?? []) as string[]).length}
+                      onClick={() => setAjustarPosicoes(true)}
+                    >
+                      Ajustar posição dos itens
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -1558,6 +1571,15 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
+
+      <ExpansivelPosicoesDialog
+        aberto={ajustarPosicoes}
+        onOpenChange={setAjustarPosicoes}
+        grupo={blocoEdit}
+        filhos={blocosAmbiente.filter((b) => ((cfg.vinculados ?? []) as string[]).includes(b.id))}
+        posicoes={(cfg.posicoes ?? {}) as Record<string, PosicaoItem>}
+        onSalvar={(p) => setCfg({ posicoes: p })}
+      />
     </Dialog>
   );
 }
