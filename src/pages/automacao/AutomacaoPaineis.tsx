@@ -274,6 +274,14 @@ export default function AutomacaoPaineis() {
         }}
       />
 
+      <CopiarAmbienteDialog
+        aberto={!!copiarAba}
+        origem={copiarAba?.abas ?? []}
+        todos={visiveis}
+        onFechar={() => setCopiarAba(null)}
+        onCopiado={carregar}
+      />
+
       <TelaConfigDialog
         abas={configTela?.abas ?? []}
         aberto={!!configTela}
