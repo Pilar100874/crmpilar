@@ -75,7 +75,7 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
         tela_altura: altura,
         dispositivo: tipoTela,
         rolagem,
-        mostrar_abas: mostrarAbas,
+        mostrar_abas: true,
         ativo: true,
       });
       if (!criado) { toast.error("Não foi possível criar a tela."); return; }
