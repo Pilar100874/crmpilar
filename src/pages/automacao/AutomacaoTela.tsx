@@ -5,6 +5,7 @@ import {
   Ambiente, Bloco, TELA_PADRAO, TipoTela, detectarTipoTela, listarAmbientes, listarBlocos, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
+import { supabase } from "@/integrations/supabase/client";
 
 const COLUNAS = 12;
 const ALTURA_LINHA = 74;
@@ -65,15 +66,37 @@ export default function AutomacaoTela() {
     })();
   }, []);
 
+  // Painel definido para o usuário logado (celular e tablet).
+  const [ambienteDoUsuario, setAmbienteDoUsuario] = useState<string>("");
+
+  useEffect(() => {
+    (async () => {
+      if (tipoAparelho !== "celular" && tipoAparelho !== "tablet") { setAmbienteDoUsuario(""); return; }
+      const { data: sessao } = await supabase.auth.getUser();
+      const authId = sessao?.user?.id;
+      if (!authId) return;
+      const { data } = await supabase
+        .from("usuarios")
+        .select("automacao_ambiente_celular, automacao_ambiente_tablet")
+        .eq("auth_user_id", authId)
+        .maybeSingle();
+      const escolhido = tipoAparelho === "celular"
+        ? (data as any)?.automacao_ambiente_celular
+        : (data as any)?.automacao_ambiente_tablet;
+      setAmbienteDoUsuario((escolhido as string) || "");
+    })();
+  }, [tipoAparelho]);
+
   // Escolhe sozinho o painel feito para este tipo de aparelho.
   useEffect(() => {
     if (!ambientes.length) return;
     setAmbienteId((atual) => {
+      if (todos && ambienteDoUsuario && ambientes.some((x) => x.id === ambienteDoUsuario)) return ambienteDoUsuario;
       if (atual && ambientes.some((x) => x.id === atual)) return atual;
       const doTipo = ambientes.find((x) => (x.dispositivo ?? "tv") === tipoAparelho);
       return doTipo?.id || ambientes[0]?.id || "";
     });
-  }, [ambientes, tipoAparelho]);
+  }, [ambientes, tipoAparelho, ambienteDoUsuario, todos]);
 
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
   // Abas só dos ambientes montados para este mesmo tipo de tela.
