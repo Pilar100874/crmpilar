@@ -29,6 +29,31 @@ const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "r
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
+/**
+ * Fonte, cor e tamanho das letras válidos para QUALQUER elemento do painel.
+ * As classes forçam os textos internos a herdarem o que foi escolhido.
+ */
+function estiloLetras(bloco: Bloco) {
+  const cfg = (bloco.config ?? {}) as Record<string, any>;
+  const style: React.CSSProperties = {};
+  const classes: string[] = [];
+
+  if (cfg.fonteGeral) style.fontFamily = fonteCss(cfg.fonteGeral);
+  if (cfg.corTextoGeral) {
+    style.color = cfg.corTextoGeral as string;
+    classes.push("[&_*:not(svg):not(svg_*)]:!text-[color:inherit]");
+  }
+  if (typeof cfg.tamanhoTextoGeral === "number") {
+    style.fontSize = cfg.tamanhoTextoGeral;
+    classes.push("[&_*]:!text-[length:inherit] [&_*]:!leading-tight");
+  }
+  if (cfg.negritoGeral) {
+    style.fontWeight = 700;
+    classes.push("[&_*]:!font-bold");
+  }
+  return { style, className: classes.join(" ") };
+}
+
 interface Props {
   bloco: Bloco;
   ligado: boolean | null;
