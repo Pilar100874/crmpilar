@@ -1496,6 +1496,22 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             </div>
           )}
 
+          {["camera", "rastreamento", "mapa", "portaria"].includes(blocoEdit?.tipo ?? "") && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Comportamento</Label>
+              <label className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex flex-col">
+                  <span>Permitir ampliar</span>
+                  <span className="text-[11px] text-muted-foreground">Ao clicar, o elemento abre em tela cheia</span>
+                </span>
+                <Switch
+                  checked={cfg.permitir_ampliar !== false}
+                  onCheckedChange={(v) => setCfg({ permitir_ampliar: v })}
+                />
+              </label>
+            </div>
+          )}
+
           {blocoEdit?.tipo === "cena" && (
             <div>
               <Label>O que o botão faz</Label>

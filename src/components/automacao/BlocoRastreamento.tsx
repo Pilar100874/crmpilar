@@ -12,6 +12,7 @@ interface Cfg {
   unidade_id?: string | null;
   intervalo_seg?: number;
   mostrar_lista?: boolean;
+  permitir_ampliar?: boolean;
 }
 
 interface Props {
@@ -68,9 +69,11 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
     return () => clearInterval(t);
   }, [carregar, intervalo]);
 
+  const podeAmpliar = cfg.permitir_ampliar !== false;
+
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (edicao) return;
+    if (edicao || !podeAmpliar) return;
     setAmpliado((v) => !v);
     onAcionar?.();
   };
@@ -83,10 +86,10 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
       <div
         className={cn(
           "flex items-center justify-between gap-2 px-3 py-2 select-none",
-          !edicao && "cursor-pointer hover:bg-muted/40 transition-colors"
+          !edicao && podeAmpliar && "cursor-pointer hover:bg-muted/40 transition-colors"
         )}
         onClick={alternar}
-        title="Toque para ampliar"
+        title={podeAmpliar ? "Toque para ampliar" : undefined}
       >
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
           <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -94,7 +97,7 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
         </span>
         <span className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground">
           {carregando ? "carregando..." : `${veiculos.length} veículos · ${movendo} em movimento`}
-          {!ampliado && (
+          {!ampliado && podeAmpliar && (
             <Button
               variant="ghost"
               size="icon"

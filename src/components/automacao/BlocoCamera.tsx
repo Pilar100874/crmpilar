@@ -14,7 +14,8 @@ interface Props {
 
 export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
   const [ampliado, setAmpliado] = useState(false);
-  const cfg = (bloco.config ?? {}) as { camera_id?: string; filial_id?: string | null };
+  const cfg = (bloco.config ?? {}) as { camera_id?: string; filial_id?: string | null; permitir_ampliar?: boolean };
+  const podeAmpliar = cfg.permitir_ampliar !== false;
 
   if (!cfg.camera_id) {
     return (
@@ -27,7 +28,7 @@ export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
 
   const alternar = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (edicao) return;
+    if (edicao || !podeAmpliar) return;
     setAmpliado((v) => !v);
     onAcionar?.();
   };
@@ -51,7 +52,7 @@ export default function BlocoCamera({ bloco, edicao, onAcionar }: Props) {
       {!ampliado && (
         <div className="relative h-full rounded-2xl border border-border bg-card overflow-hidden">
           {tile}
-          {!edicao && (
+          {!edicao && podeAmpliar && (
             <div
               className="absolute inset-0 z-10 cursor-pointer"
               onClick={alternar}
