@@ -12,13 +12,8 @@ import { Plus, Pencil, Trash2, ExternalLink, MonitorPlay, PlayCircle } from "luc
 import { toast } from "sonner";
 import { ROTAS_INTERNAS, getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
 
-const TAMANHOS_AUTOMACAO = [
-  { id: "1920x1080", nome: "Full HD 1920×1080 (16:9)" },
-  { id: "3840x2160", nome: "4K 3840×2160 (16:9)" },
-  { id: "1280x720", nome: "HD 1280×720 (16:9)" },
-  { id: "1080x1920", nome: "Vertical 1080×1920 (9:16)" },
-  { id: "1024x768", nome: "Tablet 1024×768 (4:3)" },
-];
+
+
 
 export default function TvSignageDashboards() {
   const [list, setList] = useState<any[]>([]);
@@ -74,7 +69,7 @@ export default function TvSignageDashboards() {
   const isPortariaRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/portaria";
   const isAutomacaoRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/automacao";
 
-  // Painel de Automação na TV: ambiente exibido, tamanho da tela e abas.
+  // Painel de Automação na TV: tela exibida e abas. O tamanho vem da própria tela cadastrada.
   const autoCfg = (() => {
     const r = edit?.rota_interna || "";
     const q = r.indexOf("?");
@@ -82,22 +77,18 @@ export default function TvSignageDashboards() {
     return {
       tela: sp.get("tela") || "",
       ambiente: sp.get("ambiente") || "todos",
-      largura: parseInt(sp.get("largura") || "1920") || 1920,
-      altura: parseInt(sp.get("altura") || "1080") || 1080,
       barra: sp.get("barra") !== "0",
     };
   })();
   const updateAutoCfg = (patch: Partial<typeof autoCfg>) => {
     const cfg = { ...autoCfg, ...patch };
-    const sp = new URLSearchParams({
-      largura: String(cfg.largura),
-      altura: String(cfg.altura),
-    });
+    const sp = new URLSearchParams();
     if (cfg.tela) sp.set("tela", cfg.tela);
     else sp.set("ambiente", cfg.ambiente);
     if (!cfg.barra) sp.set("barra", "0");
     setEdit({ ...edit, rota_interna: `/tv/automacao?${sp.toString()}` });
   };
+
 
   // Telas de automação (grupos de abas) disponíveis, com o aparelho de cada uma.
   const telasAuto = (() => {
@@ -476,26 +467,6 @@ export default function TvSignageDashboards() {
                         </Select>
                         <p className="text-[11px] text-muted-foreground mt-1">
                           A TV abre essa tela com as abas dela, pronta para toque ou mouse.
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Tamanho da tela</Label>
-                        <Select
-                          value={`${autoCfg.largura}x${autoCfg.altura}`}
-                          onValueChange={(v) => {
-                            const [l, a] = v.split("x").map((n) => parseInt(n) || 0);
-                            updateAutoCfg({ largura: l, altura: a });
-                          }}
-                        >
-                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {TAMANHOS_AUTOMACAO.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          O painel encolhe ou aumenta sozinho para caber inteiro na tela, sem barra de rolagem.
                         </p>
                       </div>
                       <label className="flex items-center gap-2 text-xs">
