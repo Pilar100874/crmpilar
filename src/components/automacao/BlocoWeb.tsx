@@ -66,6 +66,17 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
           </span>
           <button
             type="button"
+            title={interativo ? "Bloquear cliques na página" : "Permitir clicar e navegar"}
+            className={`opacity-70 hover:opacity-100 ${interativo ? "" : "text-amber-500 opacity-100"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setLivre((v) => !v);
+            }}
+          >
+            {interativo ? <LockOpen className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            type="button"
             title="Recarregar"
             className="opacity-70 hover:opacity-100"
             onClick={(e) => {
