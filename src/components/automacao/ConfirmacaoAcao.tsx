@@ -18,7 +18,7 @@ export function useConfirmacaoBloco(bloco: Bloco) {
   const acaoRef = useRef<null | (() => unknown)>(null);
 
   /** Executa direto ou abre a confirmação, conforme a configuração do elemento. */
-  const pedir = (acao: () => void | Promise<void>) => {
+  const pedir = (acao: () => unknown) => {
     if (cfg.confirmar !== true) {
       void acao();
       return;
