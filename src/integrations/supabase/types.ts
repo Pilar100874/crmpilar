@@ -3353,6 +3353,7 @@ export type Database = {
           rolagem: boolean
           tela_altura: number | null
           tela_largura: number | null
+          tela_nome: string | null
           updated_at: string
         }
         Insert: {
@@ -3372,6 +3373,7 @@ export type Database = {
           rolagem?: boolean
           tela_altura?: number | null
           tela_largura?: number | null
+          tela_nome?: string | null
           updated_at?: string
         }
         Update: {
@@ -3391,6 +3393,7 @@ export type Database = {
           rolagem?: boolean
           tela_altura?: number | null
           tela_largura?: number | null
+          tela_nome?: string | null
           updated_at?: string
         }
         Relationships: []
