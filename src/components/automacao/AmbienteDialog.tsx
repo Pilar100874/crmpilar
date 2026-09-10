@@ -26,6 +26,7 @@ interface Props {
   ambiente: Partial<Ambiente> | null;
   onChange: (a: Partial<Ambiente> | null) => void;
   onSalvo: () => void;
+  abaInicial?: "tela" | "fundo";
 }
 
 /** Reduz a proporção para o formato "16:9". */
