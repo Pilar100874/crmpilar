@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import BlocoCard from "@/components/automacao/BlocoCard";
@@ -15,7 +17,7 @@ import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO, TIPOS_TELA, TipoTela,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
   definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
