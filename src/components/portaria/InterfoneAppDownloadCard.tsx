@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Info, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 const FALLBACK = {
   version: "1.0.0",
