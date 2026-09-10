@@ -234,6 +234,9 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     fundo_opacidade: a.fundo_opacidade ?? 100,
     fundo_ajuste: a.fundo_ajuste ?? "cobrir",
     ativo: a.ativo !== false,
+    dispositivo: a.dispositivo ?? "tv",
+    rolagem: a.rolagem === true,
+
   };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();
@@ -267,6 +270,9 @@ export async function duplicarAmbiente(a: Ambiente): Promise<Ambiente | null> {
       fundo_opacidade: a.fundo_opacidade ?? 100,
       fundo_ajuste: a.fundo_ajuste ?? "cobrir",
       ativo: a.ativo !== false,
+      dispositivo: a.dispositivo ?? "tv",
+      rolagem: a.rolagem === true,
+
     })
     .select()
     .maybeSingle();
