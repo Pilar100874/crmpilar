@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Pencil, Trash2, Play, Workflow } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Play, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import RegraEditorDialog from "@/components/automacao/RegraEditorDialog";
 import {
@@ -13,6 +14,14 @@ import {
 } from "@/lib/automacao/workflow";
 
 export default function AutomacaoRegras() {
+  const navegar = useNavigate();
+  const [params] = useSearchParams();
+  const idsPainel = useMemo(
+    () => (params.get("ambiente") || "").split(",").map((s) => s.trim()).filter(Boolean),
+    [params],
+  );
+  const nomePainel = params.get("nome") || "";
+
   const [regras, setRegras] = useState<Regra[]>([]);
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [blocos, setBlocos] = useState<Bloco[]>([]);
@@ -31,6 +40,26 @@ export default function AutomacaoRegras() {
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  /** Só as automações deste painel (quando veio de um painel). */
+  const regrasVisiveis = useMemo(
+    () => (idsPainel.length ? regras.filter((r) => r.ambiente_id && idsPainel.includes(r.ambiente_id)) : regras),
+    [regras, idsPainel],
+  );
+  const blocosVisiveis = useMemo(
+    () => (idsPainel.length ? blocos.filter((b) => b.ambiente_id && idsPainel.includes(b.ambiente_id)) : blocos),
+    [blocos, idsPainel],
+  );
+  const novaRegra = () =>
+    setEdit({
+      nome: "",
+      ativo: true,
+      combinador: "todas",
+      ambiente_id: idsPainel[0] ?? null,
+      gatilho: { tipo: "bloco_clicado" },
+      condicoes: [],
+      acoes: [],
+    });
 
   const nomeBloco = (id?: string | null) => blocos.find((b) => b.id === id)?.nome || "qualquer elemento";
   const nomeDispositivo = (id?: string | null) => dispositivos.find((d) => d.id === id)?.nome || "equipamento";
