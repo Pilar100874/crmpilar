@@ -26,6 +26,7 @@ import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/
 import { supabase } from "@/integrations/supabase/client";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
+import { useEstadosAoVivo } from "@/lib/automacao/estadoAoVivo";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
 
 
@@ -107,6 +108,23 @@ export default function AutomacaoPainel() {
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Mantém a situação real dos equipamentos na tela, sem recarregar.
+  useEstadosAoVivo(blocos, (novos) => {
+    setEstados((s) => {
+      const proximo = { ...s };
+      let mudou = false;
+      for (const [blocoId, ligado] of Object.entries(novos)) {
+        if (ligado === null && blocoId in proximo) continue;
+        if (proximo[blocoId] === ligado) continue;
+        proximo[blocoId] = ligado;
+        mudou = true;
+      }
+      if (!mudou) return s;
+      estadosRef.current = proximo;
+      return proximo;
+    });
+  });
 
   // Abre a tela escolhida na lista de telas.
   useEffect(() => {
