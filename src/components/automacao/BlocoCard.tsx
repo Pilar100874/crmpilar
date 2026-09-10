@@ -24,13 +24,14 @@ import BlocoImagemLuz from "./BlocoImagemLuz";
 import BlocoTexto, { fonteCss } from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
 import BlocoMoeda from "./BlocoMoeda";
+import BlocoWeb from "./BlocoWeb";
 import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
 import BlocoBubble from "./BlocoBubble";
 import BlocoExpansivel from "./BlocoExpansivel";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "moeda", "abas", "bubble", "expansivel"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "moeda", "web", "abas", "bubble", "expansivel"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -78,7 +79,7 @@ export default function BlocoCard(props: Props) {
   const letras = estiloLetras(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
-  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
+  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "moeda", "web", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
@@ -179,6 +180,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       bloco.tipo === "forma" ? <BlocoForma bloco={bloco} /> :
       bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :
       bloco.tipo === "moeda" ? <BlocoMoeda bloco={bloco} /> :
+      bloco.tipo === "web" ? <BlocoWeb bloco={bloco} edicao={edicao} /> :
       bloco.tipo === "ambiente" ? <BlocoAmbiente bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "imagemluz" ? <BlocoImagemLuz bloco={bloco} ligado={ligado} onEstado={onEstado} edicao={edicao} /> :
       bloco.tipo === "camera" ? <BlocoCamera bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
@@ -204,7 +206,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       >
 
         {conteudo}
-        {(mostrarNome || mostrarSituacao) && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "moeda", "expansivel"].includes(bloco.tipo) && (
+        {(mostrarNome || mostrarSituacao) && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "moeda", "web", "expansivel"].includes(bloco.tipo) && (
           <div className="pointer-events-none absolute bottom-1 left-2 right-2 flex items-center justify-between gap-1">
             {mostrarNome && (
               <span className="min-w-0 flex-1 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">

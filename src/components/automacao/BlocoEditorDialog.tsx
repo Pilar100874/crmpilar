@@ -31,7 +31,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "forma", "clima", "moeda", "grafico", "abas", "expansivel",
+  "interfone", "texto", "forma", "clima", "moeda", "web", "grafico", "abas", "expansivel",
 ];
 
 
@@ -817,6 +817,67 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 />
                 Mostrar o nome sobre a imagem
               </label>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "web" && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Endereço do site</Label>
+                <Input
+                  value={cfg.url ?? ""}
+                  placeholder="https://www.exemplo.com.br"
+                  onChange={(e) => setCfg({ url: e.target.value })}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Alguns sites (como bancos) bloqueiam a exibição dentro de outras páginas. Nesses casos o quadro aparece em branco.
+                </p>
+              </div>
+              <div>
+                <Label className="text-xs">Título (opcional)</Label>
+                <Input value={cfg.titulo ?? ""} placeholder="Painel do fornecedor" onChange={(e) => setCfg({ titulo: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Zoom (%)</Label>
+                  <Input type="number" min={25} max={300} value={cfg.zoom ?? 100} onChange={(e) => setCfg({ zoom: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Recarregar a cada (s)</Label>
+                  <Input type="number" min={0} value={cfg.recarregar ?? 0} onChange={(e) => setCfg({ recarregar: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Cantos arredondados</Label>
+                  <Input type="number" min={0} value={cfg.cantos ?? 0} onChange={(e) => setCfg({ cantos: Number(e.target.value) })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_barra !== false} onChange={(e) => setCfg({ mostrar_barra: e.target.checked })} />
+                  Mostrar barra com título
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.permitir_interacao !== false} onChange={(e) => setCfg({ permitir_interacao: e.target.checked })} />
+                  Permitir clicar no site
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.transparente === true} onChange={(e) => setCfg({ transparente: e.target.checked })} />
+                  Fundo transparente
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Cor do texto</Label>
+                  <input type="color" value={cfg.cor || "#f1f5f9"} onChange={(e) => setCfg({ cor: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo</Label>
+                  <input type="color" value={cfg.fundo || "#1c1f26"} onChange={(e) => setCfg({ fundo: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                  {cfg.fundo && (
+                    <button type="button" className="text-[11px] text-muted-foreground underline" onClick={() => setCfg({ fundo: undefined })}>remover</button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
