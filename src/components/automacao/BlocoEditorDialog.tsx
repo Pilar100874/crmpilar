@@ -295,7 +295,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
 
           {blocoEdit?.tipo === "bubble" && (
             <div className="space-y-2 rounded-lg border p-3">
-              <Label className="text-sm font-semibold">Bubble Card</Label>
+              <Label className="text-sm font-semibold">Controle Rápido</Label>
               <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-2">
