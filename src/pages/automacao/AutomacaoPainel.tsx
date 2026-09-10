@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
-import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
+
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO, TIPOS_TELA, TipoTela,
   definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
@@ -553,7 +553,6 @@ export default function AutomacaoPainel() {
             <Plus className="h-4 w-4 mr-1" /> Ambiente
           </Button>
         )}
-        <BaixarAppAutomacao ambienteId={ambienteAtual?.id} ambienteNome={ambienteAtual?.nome} />
         {admin && (
           <div className="ml-auto flex gap-2">
             <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>

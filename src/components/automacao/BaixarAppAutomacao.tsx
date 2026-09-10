@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Smartphone, Copy } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
@@ -37,8 +37,8 @@ export default function BaixarAppAutomacao({ ambienteId, ambienteNome }: { ambie
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" title="Baixar o aplicativo para celular ou tablet">
-          <Smartphone className="h-4 w-4 mr-1" /> Baixar app
+        <Button size="sm" className="w-full gap-2 sm:w-auto" title="Baixar o aplicativo para celular ou tablet">
+          <Download className="h-4 w-4" /> Baixar app
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
