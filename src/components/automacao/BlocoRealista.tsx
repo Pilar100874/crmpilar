@@ -73,7 +73,7 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
     <button
       type="button"
       onClick={acao}
-      disabled={ocupado}
+      disabled={ocupado || pulsando}
       onPointerDown={() => setPressionado(true)}
       onPointerUp={() => setPressionado(false)}
       onPointerLeave={() => setPressionado(false)}
@@ -144,7 +144,7 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
             <p className="truncate text-[11px] text-muted-foreground">
               {bloco.tipo === "sensor"
                   ? ligado === null ? "Toque para ler" : aceso ? "Acionado" : "Normal"
-                  : porPulso ? "Toque para acionar" : aceso ? "Ligado" : "Desligado"}
+                  : porPulso ? (pulsando ? "Acionando…" : "Toque para acionar") : aceso ? "Ligado" : "Desligado"}
             </p>
           </div>
         )}
