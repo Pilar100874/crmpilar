@@ -53,6 +53,7 @@ export default function AutomacaoPaineis() {
   const [excluirTela, setExcluirTela] = useState<TelaGrupo | null>(null);
   const [renomear, setRenomear] = useState<TelaGrupo | null>(null);
   const [configTela, setConfigTela] = useState<TelaGrupo | null>(null);
+  const [copiarAba, setCopiarAba] = useState<TelaGrupo | null>(null);
   const [novoNomeTela, setNovoNomeTela] = useState("");
 
   const carregar = useCallback(async () => {
