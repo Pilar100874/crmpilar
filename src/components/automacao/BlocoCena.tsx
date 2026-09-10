@@ -51,6 +51,7 @@ export default function BlocoCena({ bloco, ligado, onEstado }: Props) {
           : "border-border bg-card hover:border-primary/40",
       )}
     >
+      {dialogo}
       {pulsando && (
         <span className="pointer-events-none absolute inset-0 rounded-2xl bg-primary/25 animate-ping" />
       )}
