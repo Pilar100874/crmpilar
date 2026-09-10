@@ -30,7 +30,6 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
   const [largura, setLargura] = useState(TELA_PADRAO.largura);
   const [altura, setAltura] = useState(TELA_PADRAO.altura);
   const [rolagem, setRolagem] = useState(false);
-  const [mostrarAbas, setMostrarAbas] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
