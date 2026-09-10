@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0B1220"
+    android:background="@color/bg_page"
     android:fitsSystemWindows="true">
 
     <LinearLayout
@@ -11,60 +11,101 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="52dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:contentDescription="Pilar"
+            android:src="@drawable/logo_pilar" />
+
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Pilar Automação"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Endereço do sistema"
-            android:textColor="#93A4C3" />
+            android:gravity="center"
+            android:layout_marginTop="4dp"
+            android:text="Celular e tablet"
+            android:textColor="@color/text_muted"
+            android:textSize="13sp" />
 
-        <EditText
-            android:id="@+id/campo_url"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="https://crmpilar.lovable.app"
-            android:inputType="textUri"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#5B6B8A" />
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Ambiente (deixe vazio para escolher automaticamente)"
-            android:textColor="#93A4C3" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Endereço do sistema"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
 
-        <EditText
-            android:id="@+id/campo_ambiente"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="código do ambiente"
-            android:inputType="text"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#5B6B8A" />
+            <EditText
+                android:id="@+id/campo_url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input"
+                android:hint="https://crmpilar.lovable.app"
+                android:inputType="textUri"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="#5B6B8A" />
 
-        <CheckBox
-            android:id="@+id/campo_rolagem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:checked="true"
-            android:text="Permitir rolar a tela para baixo"
-            android:textColor="#FFFFFF" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="Painel a abrir"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/campo_ambiente"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input"
+                android:hint="deixe vazio para usar o painel do seu usuário"
+                android:inputType="text"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="#5B6B8A" />
+
+            <CheckBox
+                android:id="@+id/campo_rolagem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:buttonTint="@color/accent_blue"
+                android:checked="true"
+                android:text="Permitir rolar a tela para baixo"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_salvar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Salvar" />
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/btn_primary"
+            android:text="Salvar"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </ScrollView>

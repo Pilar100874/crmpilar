@@ -2,8 +2,9 @@
 <resources>
     <style name="Theme.PilarAutomacao" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:statusBarColor">#0B1220</item>
-        <item name="android:navigationBarColor">#0B1220</item>
-        <item name="android:windowBackground">#0B1220</item>
+        <item name="android:statusBarColor">@color/bg_page</item>
+        <item name="android:navigationBarColor">@color/bg_page</item>
+        <item name="android:windowBackground">@color/bg_page</item>
+        <item name="android:textColor">@color/text_primary</item>
     </style>
 </resources>
