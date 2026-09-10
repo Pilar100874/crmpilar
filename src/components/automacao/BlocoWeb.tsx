@@ -1,6 +1,6 @@
 // Bloco de página web: embute um site inteiro dentro do painel.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Globe, RefreshCw } from "lucide-react";
+import { ExternalLink, Globe, Lock, LockOpen, RefreshCw } from "lucide-react";
 import { Bloco } from "@/lib/automacao/api";
 import { fonteCss } from "./BlocoTexto";
 
@@ -41,7 +41,11 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
   }, [recarregarSeg]);
 
   const zoom = Math.min(300, Math.max(25, Number(cfg.zoom ?? 100))) / 100;
-  const interativo = cfg.permitir_interacao !== false && !edicao;
+  // Cadeado na barra permite ligar/desligar a navegação em tempo real;
+  // o valor inicial vem da configuração do bloco.
+  const [livre, setLivre] = useState(cfg.permitir_interacao !== false);
+  useEffect(() => setLivre(cfg.permitir_interacao !== false), [cfg.permitir_interacao]);
+  const interativo = livre && !edicao;
   const cor = cfg.cor || "hsl(var(--foreground))";
 
   return (
@@ -60,6 +64,17 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
           <span className="min-w-0 flex-1 truncate text-xs opacity-80">
             {cfg.titulo || url || "Página web"}
           </span>
+          <button
+            type="button"
+            title={interativo ? "Bloquear cliques na página" : "Permitir clicar e navegar"}
+            className={`opacity-70 hover:opacity-100 ${interativo ? "" : "text-amber-500 opacity-100"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setLivre((v) => !v);
+            }}
+          >
+            {interativo ? <LockOpen className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+          </button>
           <button
             type="button"
             title="Recarregar"
