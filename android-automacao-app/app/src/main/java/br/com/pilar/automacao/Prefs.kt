@@ -33,7 +33,7 @@ object Prefs {
     /** Monta a URL da tela de parede para este aparelho. */
     fun urlTela(ctx: Context, tipo: String): String {
         val base = baseUrl(ctx)
-        val amb = ambiente(ctx).ifBlank { "auto" }
+        val amb = ambiente(ctx).ifBlank { "todos" }
         val barra = if (rolagem(ctx)) "1" else "0"
         return "$base/automacao/tela?ambiente=$amb&tipo=$tipo&barra=$barra&app=1"
     }
