@@ -155,8 +155,18 @@ export async function shellyLigar(
   const base = baseUrl(device);
   if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
   const geracao = ((device.config?.geracao as string) || "gen2").toLowerCase();
-  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? "true" : "false"}`;
-  const gen1 = `${base}/relay/${canal}?turn=${ligar ? "on" : "off"}`;
+  // Auto-desligar: além da configuração gravada no aparelho, o tempo também é
+  // enviado junto do comando de ligar. Assim o desligamento sozinho funciona
+  // mesmo em modelos que não aceitam gravar a configuração.
+  const autoOffAtivo = device.config?.auto_off === true || device.config?.auto_off === "true";
+  const autoOffSeg = Math.max(0, Math.round(Number(device.config?.auto_off_delay ?? 0)));
+  const comTempo = ligar && autoOffAtivo && autoOffSeg > 0;
+  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? "true" : "false"}${
+    comTempo ? `&toggle_after=${autoOffSeg}` : ""
+  }`;
+  const gen1 = `${base}/relay/${canal}?turn=${ligar ? "on" : "off"}${
+    comTempo ? `&timer=${autoOffSeg}` : ""
+  }`;
   const urls = geracao === "gen1" ? [gen1, rpc] : [rpc, gen1];
   try {
     let ultima: Response | null = null;
@@ -224,17 +234,31 @@ export async function shellyConfigurarSaida(
     if (cfg.power_on_state) configRpc.initial_state = cfg.power_on_state;
 
     const url = `${base}/rpc/Switch.SetConfig`;
-    const resp = await fetchComTimeout(url, {
-      method: "POST",
-      headers: { ...authHeaders(cred), "Content-Type": "application/json" },
-      body: JSON.stringify({ id: canal, config: configRpc }),
-    });
-    const texto = await resp.text();
+    const enviar = async (corpo: Record<string, unknown>) => {
+      const resp = await fetchComTimeout(url, {
+        method: "POST",
+        headers: { ...authHeaders(cred), "Content-Type": "application/json" },
+        body: JSON.stringify({ id: canal, config: corpo }),
+      });
+      const texto = await resp.text();
+      // Alguns modelos respondem 200 com {"error": ...}: isso também é falha.
+      const falhaNoCorpo = /"error"\s*:/.test(texto);
+      return { ok: resp.ok && !falhaNoCorpo, status: resp.status, texto };
+    };
+
+    // 1ª tentativa: tudo junto. Se o modelo recusar alguma chave (ex.: in_mode
+    // em aparelhos sem entrada), tenta só o auto-desligar, que é o essencial.
+    let r = await enviar(configRpc);
+    if (!r.ok) {
+      const somenteAutoOff: Record<string, unknown> = { auto_off: !!cfg.auto_off };
+      if (cfg.auto_off) somenteAutoOff.auto_off_delay = Math.max(1, Number(cfg.auto_off_delay ?? 1));
+      r = await enviar(somenteAutoOff);
+    }
     return {
-      ok: resp.ok,
-      status: resp.status,
-      mensagem: resp.ok ? undefined : `Shelly respondeu ${resp.status}`,
-      detalhes: texto.slice(0, 500),
+      ok: r.ok,
+      status: r.status,
+      mensagem: r.ok ? undefined : `Shelly respondeu ${r.status}`,
+      detalhes: r.texto.slice(0, 500),
     };
   } catch (e) {
     return { ok: false, mensagem: (e as Error).message || "Falha de comunicação com o Shelly." };
