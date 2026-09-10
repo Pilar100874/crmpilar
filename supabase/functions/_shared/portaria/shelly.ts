@@ -155,8 +155,18 @@ export async function shellyLigar(
   const base = baseUrl(device);
   if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
   const geracao = ((device.config?.geracao as string) || "gen2").toLowerCase();
-  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? "true" : "false"}`;
-  const gen1 = `${base}/relay/${canal}?turn=${ligar ? "on" : "off"}`;
+  // Auto-desligar: além da configuração gravada no aparelho, o tempo também é
+  // enviado junto do comando de ligar. Assim o desligamento sozinho funciona
+  // mesmo em modelos que não aceitam gravar a configuração.
+  const autoOffAtivo = device.config?.auto_off === true || device.config?.auto_off === "true";
+  const autoOffSeg = Math.max(0, Math.round(Number(device.config?.auto_off_delay ?? 0)));
+  const comTempo = ligar && autoOffAtivo && autoOffSeg > 0;
+  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? "true" : "false"}${
+    comTempo ? `&toggle_after=${autoOffSeg}` : ""
+  }`;
+  const gen1 = `${base}/relay/${canal}?turn=${ligar ? "on" : "off"}${
+    comTempo ? `&timer=${autoOffSeg}` : ""
+  }`;
   const urls = geracao === "gen1" ? [gen1, rpc] : [rpc, gen1];
   try {
     let ultima: Response | null = null;
