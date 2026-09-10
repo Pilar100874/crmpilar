@@ -1571,6 +1571,15 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
+
+      <ExpansivelPosicoesDialog
+        aberto={ajustarPosicoes}
+        onOpenChange={setAjustarPosicoes}
+        grupo={blocoEdit}
+        filhos={blocosAmbiente.filter((b) => ((cfg.vinculados ?? []) as string[]).includes(b.id))}
+        posicoes={(cfg.posicoes ?? {}) as Record<string, PosicaoItem>}
+        onSalvar={(p) => setCfg({ posicoes: p })}
+      />
     </Dialog>
   );
 }
