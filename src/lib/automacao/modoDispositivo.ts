@@ -7,6 +7,12 @@ export interface ModoDispositivo {
   modo: ModoSaida;
   /** Tempo do pulso em milissegundos (usado apenas no modo pulso). */
   pulsoMs: number;
+  /**
+   * Tempo do auto-desligar em milissegundos (null quando o aparelho
+   * não tem auto-desligar configurado). Vem do cadastro do dispositivo
+   * (config.auto_off / config.auto_off_delay em segundos).
+   */
+  autoDesligarMs: number | null;
 }
 
 const cache = new Map<string, ModoDispositivo>();
@@ -26,9 +32,13 @@ export async function lerModoDispositivo(deviceId: string): Promise<ModoDisposit
       .eq("id", deviceId)
       .maybeSingle();
     const cfg = (data?.config ?? {}) as Record<string, unknown>;
+    const autoOffAtivo = cfg.auto_off === true || cfg.auto_off === "true";
+    const autoOffSegundos = Number(cfg.auto_off_delay ?? 0);
     const resultado: ModoDispositivo = {
       modo: cfg.modo_saida === "momentary" ? "momentary" : "toggle",
       pulsoMs: Number(data?.pulso_ms ?? 1000) || 1000,
+      autoDesligarMs:
+        autoOffAtivo && autoOffSegundos > 0 ? Math.round(autoOffSegundos * 1000) : null,
     };
     cache.set(deviceId, resultado);
     pendentes.delete(deviceId);
