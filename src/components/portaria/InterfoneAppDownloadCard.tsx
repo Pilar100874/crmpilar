@@ -57,9 +57,12 @@ export default function InterfoneAppDownloadCard() {
           </span>
         </div>
 
-        <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">
-          Pilar Fone (App Android)
-        </h2>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+            Pilar Fone (App Android)
+          </h2>
+          <VersaoAppBadge manifesto="/coletor/interfone-version.json" versaoPadrao={FALLBACK.version} />
+        </div>
         <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
           Atenda a campainha pelo celular: câmeras do interfone, botões de abrir porta/portão,
           áudio ao vivo com quem está na entrada e alerta em tempo real.
