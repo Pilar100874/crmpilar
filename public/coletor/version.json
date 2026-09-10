@@ -1,6 +1,6 @@
 {
-  "version": "2.0.2",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.2/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.2/ColetorPilar-Linux.AppImage",
-  "notas": "2.0.2: o campo \"Coletor de Portaria\" agora se chama \"Coletor Automação\"."
+  "version": "2.0.3",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.3/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.3/ColetorPilar-Linux.AppImage",
+  "notas": "2.0.3: o auto-desligar agora é enviado junto do comando de ligar, garantindo que o equipamento desligue sozinho no tempo configurado."
 }
