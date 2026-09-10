@@ -105,11 +105,33 @@ Deno.serve(async (req) => {
   // para a tela não mostrar "desligado" só porque a leitura não veio.
   const anterior = typeof memoria[String(canal)] === "boolean" ? memoria[String(canal)] : null;
 
+  // Coletor antigo não conhece liga/desliga e devolve apenas a leitura do
+  // equipamento: o relé não muda. Nesse caso avisa em vez de fingir sucesso.
+  const esperado = acao === "ligar" ? true : acao === "desligar" ? false : null;
+  if (local && ok && esperado !== null && lido !== null && lido !== esperado) {
+    await admin
+      .from("port_devices")
+      .update({
+        status: "online",
+        ultima_comunicacao: new Date().toISOString(),
+        ultimo_estado: { ...memoria, [String(canal)]: lido },
+      })
+      .eq("id", device_id);
+    return responder(200, {
+      ok: false,
+      error:
+        "O Coletor Pilar instalado nesta rede é antigo e ainda não faz liga/desliga. Atualize o Coletor para a versão mais nova e tente de novo.",
+      ligado: lido,
+      modo_saida: modoSaida,
+    });
+  }
+
   let ligado: boolean | null = lido;
   if (acao === "ligar") ligado = true;
   else if (acao === "desligar") ligado = false;
   else if (acao === "pulso") ligado = lido;
   else if (ligado === null) ligado = anterior;
+
 
   const atualizacao: Record<string, unknown> = {
     status: ok ? "online" : "erro",

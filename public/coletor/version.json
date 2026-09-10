@@ -1,6 +1,6 @@
 {
-  "version": "1.9.8",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.8/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.8/ColetorPilar-Linux.AppImage",
-  "notas": "1.9.8: nova seção \"Dispositivos do interfone\" na tela do Coletor, mostrando se cada dispositivo está ativo ou inativo, com IP, porta e tempo de resposta."
+  "version": "1.9.9",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.9/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.9/ColetorPilar-Linux.AppImage",
+  "notas": "1.9.9: liga/desliga (alternância) dos Shelly pela rede local, além do pulso, e envio das configurações de saída ao aparelho."
 }
