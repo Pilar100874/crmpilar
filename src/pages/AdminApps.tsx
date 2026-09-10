@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
+import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock, Tablet } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
 import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
+import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
 
 
 // Sempre a build mais recente publicada pelos workflows do GitHub Actions.
@@ -181,11 +182,54 @@ export default function AdminApps() {
 
       <InterfoneAppDownloadCard />
 
+      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 sm:h-14 sm:w-14 sm:rounded-2xl">
+              <Tablet className="h-8 w-8" />
+            </div>
+            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
+              Android · Tablet / Celular
+            </span>
+          </div>
 
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Automação</h2>
+          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
+            Aplicativo dedicado para abrir os painéis de automação em celular ou tablet.
+            Instale o APK no Android e escolha qual ambiente deve abrir em cada aparelho.
+          </div>
 
+          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
+                APK Android
+              </span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">pilar-automacao.apk</span>
+            </div>
+            <BaixarAppAutomacao />
+          </div>
+        </CardContent>
 
-      
-
+        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Como usar
+          </h3>
+          <ol className="space-y-4">
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e instale o APK no celular ou tablet Android (permita fontes desconhecidas).</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Ao abrir, informe o endereço do sistema e, se quiser, cole o código do painel desejado.</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">O app abre o painel em tela cheia. Você pode definir qual ambiente cada usuário vê em <Link to="/config/usuarios" className="text-primary underline">Configurações → Usuários</Link>.</p>
+            </li>
+          </ol>
+        </div>
+      </Card>
 
       <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
         <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
