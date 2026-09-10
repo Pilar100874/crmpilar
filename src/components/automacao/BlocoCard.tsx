@@ -344,6 +344,16 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
           )}
         </div>
       )}
+      {!edicao && contagemAuto && modoDispositivo?.autoDesligarMs && aceso && (
+        <div className="mt-1.5">
+          <BarraPulso
+            duracaoMs={modoDispositivo.autoDesligarMs}
+            ativo={contagemAuto}
+            onFim={fimDoAutoDesligar}
+            texto="Desliga em…"
+          />
+        </div>
+      )}
     </div>
   );
 }
