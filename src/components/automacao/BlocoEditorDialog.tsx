@@ -622,11 +622,76 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           )}
 
           {blocoEdit?.tipo === "abas" && (
-            <div className="space-y-2 rounded-xl border p-3">
-              <p className="text-xs text-muted-foreground">
-                Mostra os ambientes deste mesmo tipo de tela como botões. Ao tocar, o painel troca de ambiente.
-              </p>
+            <div className="space-y-3 rounded-xl border p-3">
+              <div>
+                <Label className="text-xs">Como funciona</Label>
+                <Select value={cfg.modo ?? "abas"} onValueChange={(v) => setCfg({ modo: v })}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="abas">Abas: um botão para cada tela</SelectItem>
+                    <SelectItem value="botao">Botão único: vai para uma tela escolhida</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {cfg.modo === "botao" ? (
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs">Ir para qual tela</Label>
+                    <Select value={cfg.destino ?? ""} onValueChange={(v) => setCfg({ destino: v })}>
+                      <SelectTrigger className="text-left"><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {ambientesNav.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Texto do botão (opcional)</Label>
+                    <Input value={cfg.rotulo ?? ""} placeholder="Ex.: Ir para a Garagem"
+                      onChange={(e) => setCfg({ rotulo: e.target.value })} />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Label className="text-xs">Quais telas aparecem (nenhuma marcada = todas)</Label>
+                  <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border p-2">
+                    {ambientesNav.map((a) => {
+                      const escolhidas: string[] = Array.isArray(cfg.ambientes) ? cfg.ambientes : [];
+                      const marcado = escolhidas.includes(a.id);
+                      return (
+                        <label key={a.id} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={marcado}
+                            onChange={() =>
+                              setCfg({ ambientes: marcado ? escolhidas.filter((x) => x !== a.id) : [...escolhidas, a.id] })
+                            }
+                          />
+                          {a.nome}
+                        </label>
+                      );
+                    })}
+                    {!ambientesNav.length && (
+                      <p className="text-xs text-muted-foreground">Nenhuma tela criada ainda.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Modelo do botão</Label>
+                  <Select value={cfg.estilo ?? "pilula"} onValueChange={(v) => setCfg({ estilo: v })}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {ESTILOS_ABAS.map((e) => (
+                        <SelectItem key={e.valor} value={e.valor}>{e.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label className="text-xs">Disposição</Label>
                   <Select value={cfg.orientacao ?? "horizontal"} onValueChange={(v) => setCfg({ orientacao: v })}>
@@ -637,17 +702,14 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label className="text-xs">Formato</Label>
-                  <Select value={cfg.formato ?? "redondo"} onValueChange={(v) => setCfg({ formato: v })}>
-                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      <SelectItem value="redondo">Arredondado</SelectItem>
-                      <SelectItem value="reto">Cantos retos</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
+
+              <div>
+                <Label className="text-xs">Cantos arredondados ({cfg.cantos ?? 999}px)</Label>
+                <input type="range" min={0} max={999} value={cfg.cantos ?? 999}
+                  onChange={(e) => setCfg({ cantos: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Tamanho da letra</Label>
@@ -665,13 +727,19 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     onChange={(e) => setCfg({ fundo: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Fundo do ambiente aberto</Label>
+                  <Label className="text-xs">Cor da tela aberta</Label>
                   <Input type="color" className="p-1" value={cfg.corAtiva ?? "#2563eb"}
                     onChange={(e) => setCfg({ corAtiva: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Letra da tela aberta</Label>
+                  <Input type="color" className="p-1" value={cfg.corTextoAtivo ?? "#ffffff"}
+                    onChange={(e) => setCfg({ corTextoAtivo: e.target.value })} />
                 </div>
               </div>
             </div>
           )}
+
 
           {blocoEdit?.tipo === "texto" && (
             <div className="space-y-2">
