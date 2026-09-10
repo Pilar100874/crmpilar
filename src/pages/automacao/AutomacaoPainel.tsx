@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor, Image as ImageIcon,
+  Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff, ArrowLeft, Workflow,
+  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
