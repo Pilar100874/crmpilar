@@ -337,20 +337,65 @@ export async function duplicarAmbienteComNome(
   const criado = novo as Ambiente | null;
   if (!criado) return null;
 
-  const { data: originais } = await db.from("automacao_blocos").select("*").eq("ambiente_id", a.id);
-  const copias = ((originais ?? []) as Bloco[]).map((b) => ({
-    ambiente_id: criado.id,
-    tipo: b.tipo,
-    nome: b.nome,
-    icone: b.icone,
-    device_id: b.device_id,
-    canal: b.canal ?? 0,
-    x: b.x, y: b.y, w: b.w, h: b.h,
-    visivel: b.visivel !== false,
-    config: b.config ?? {},
-  }));
-  if (copias.length) await db.from("automacao_blocos").insert(copias);
+  await copiarBlocosERegras(a.id, criado.id);
   return criado;
+}
+
+/** Troca os ids de elementos antigos pelos novos dentro do JSON da automação. */
+function trocarBlocoId<T extends { bloco_id?: string | null }>(item: T, mapa: Map<string, string>): T {
+  if (!item?.bloco_id) return item;
+  const novo = mapa.get(item.bloco_id);
+  return novo ? { ...item, bloco_id: novo } : item;
+}
+
+/**
+ * Copia todos os elementos de um ambiente e também as automações dele,
+ * já apontando para os elementos novos para funcionarem de imediato.
+ */
+async function copiarBlocosERegras(
+  origemId: string,
+  destinoId: string,
+  fx = 1,
+  fy = 1,
+): Promise<void> {
+  const { data: originais } = await db.from("automacao_blocos").select("*").eq("ambiente_id", origemId);
+  const blocos = (originais ?? []) as Bloco[];
+  const mapa = new Map<string, string>();
+
+  for (const b of blocos) {
+    const { data: novoBloco } = await db
+      .from("automacao_blocos")
+      .insert({
+        ambiente_id: destinoId,
+        tipo: b.tipo,
+        nome: b.nome,
+        icone: b.icone,
+        device_id: b.device_id,
+        canal: b.canal ?? 0,
+        x: Math.round((b.x ?? 0) * fx),
+        y: Math.round((b.y ?? 0) * fy),
+        w: Math.max(1, Math.round((b.w ?? 1) * fx)),
+        h: Math.max(1, Math.round((b.h ?? 1) * fy)),
+        visivel: b.visivel !== false,
+        config: b.config ?? {},
+      })
+      .select("id")
+      .maybeSingle();
+    if (novoBloco?.id) mapa.set(b.id, novoBloco.id as string);
+  }
+
+  const { data: regras } = await db.from("automacao_regras").select("*").eq("ambiente_id", origemId);
+  const copiasRegras = ((regras ?? []) as any[]).map((r) => ({
+    ambiente_id: destinoId,
+    nome: r.nome,
+    ativo: r.ativo !== false,
+    ordem: r.ordem ?? 0,
+    combinador: r.combinador ?? "todas",
+    gatilho: trocarBlocoId(r.gatilho ?? {}, mapa),
+    condicoes: Array.isArray(r.condicoes) ? r.condicoes.map((c: any) => trocarBlocoId(c, mapa)) : [],
+    acoes: Array.isArray(r.acoes) ? r.acoes.map((ac: any) => trocarBlocoId(ac, mapa)) : [],
+  }));
+  if (copiasRegras.length) await db.from("automacao_regras").insert(copiasRegras);
 }
 
 /**
@@ -392,22 +437,7 @@ export async function copiarAmbienteParaTela(
   const criado = novo as Ambiente | null;
   if (!criado) return null;
 
-  const { data: originais } = await db.from("automacao_blocos").select("*").eq("ambiente_id", origem.id);
-  const copias = ((originais ?? []) as Bloco[]).map((b) => ({
-    ambiente_id: criado.id,
-    tipo: b.tipo,
-    nome: b.nome,
-    icone: b.icone,
-    device_id: b.device_id,
-    canal: b.canal ?? 0,
-    x: Math.round((b.x ?? 0) * fx),
-    y: Math.round((b.y ?? 0) * fy),
-    w: Math.max(1, Math.round((b.w ?? 1) * fx)),
-    h: Math.max(1, Math.round((b.h ?? 1) * fy)),
-    visivel: b.visivel !== false,
-    config: b.config ?? {},
-  }));
-  if (copias.length) await db.from("automacao_blocos").insert(copias);
+  await copiarBlocosERegras(origem.id, criado.id, fx, fy);
   return criado;
 }
 
