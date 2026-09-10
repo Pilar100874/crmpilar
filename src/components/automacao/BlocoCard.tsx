@@ -45,13 +45,18 @@ interface Props {
 export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
+  const letras = estiloLetras(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
   const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
-      <div className="h-full" onClick={() => !edicao && !proprioClick && onAcionar?.()}>
+      <div
+        className={cn("h-full", letras.className)}
+        style={letras.style}
+        onClick={() => !edicao && !proprioClick && onAcionar?.()}
+      >
         <BlocoCardInterno {...props} />
       </div>
     );
@@ -60,7 +65,8 @@ export default function BlocoCard(props: Props) {
   // Elemento sem equipamento: o toque só serve para disparar as automações.
   return (
     <div
-      className="h-full cursor-pointer"
+      className={cn("h-full cursor-pointer", letras.className)}
+      style={letras.style}
       onClickCapture={(e) => {
         e.preventDefault();
         e.stopPropagation();
