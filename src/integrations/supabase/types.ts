@@ -3347,6 +3347,7 @@ export type Database = {
           icone: string | null
           id: string
           modo: string
+          mostrar_abas: boolean
           nome: string
           ordem: number
           rolagem: boolean
@@ -3365,6 +3366,7 @@ export type Database = {
           icone?: string | null
           id?: string
           modo?: string
+          mostrar_abas?: boolean
           nome: string
           ordem?: number
           rolagem?: boolean
@@ -3383,6 +3385,7 @@ export type Database = {
           icone?: string | null
           id?: string
           modo?: string
+          mostrar_abas?: boolean
           nome?: string
           ordem?: number
           rolagem?: boolean
