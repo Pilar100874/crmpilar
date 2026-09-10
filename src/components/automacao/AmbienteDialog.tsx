@@ -60,6 +60,10 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo, abaInicial
   const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
 
   useEffect(() => {
+    setAbaAtiva(abaInicial);
+  }, [ambiente?.id, abaInicial]);
+
+  useEffect(() => {
     if (!ambiente) { original.current = null; return; }
     if (original.current?.id === ambiente.id) return;
     original.current = {
