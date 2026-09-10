@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import AmbienteDialog from "@/components/automacao/AmbienteDialog";
+import NovaTelaDialog from "@/components/automacao/NovaTelaDialog";
 import TelaConfigDialog from "@/components/automacao/TelaConfigDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
@@ -48,7 +48,7 @@ export default function AutomacaoPaineis() {
   const navegar = useNavigate();
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [admin, setAdmin] = useState(false);
-  const [edit, setEdit] = useState<Partial<Ambiente> | null>(null);
+  const [novaTela, setNovaTela] = useState<{ tipo: TipoTela } | null>(null);
   const [excluirTela, setExcluirTela] = useState<TelaGrupo | null>(null);
   const [renomear, setRenomear] = useState<TelaGrupo | null>(null);
   const [configTela, setConfigTela] = useState<TelaGrupo | null>(null);
@@ -89,33 +89,9 @@ export default function AutomacaoPaineis() {
     return Array.from(mapa.values());
   };
 
-  /** Cria uma tela nova (a primeira aba nasce junto, com o nome da tela). */
+  /** Abre o diálogo para criar uma tela nova com nome e formato. */
   const nova = (tipo: TipoTela) => {
-    setEdit({
-      nome: "",
-      tela_nome: "",
-      ordem: ambientes.length,
-      dispositivo: tipo,
-      tela_largura: FORMATOS_TELA[tipo][0].largura,
-      tela_altura: FORMATOS_TELA[tipo][0].altura,
-      rolagem: tipo === "celular",
-      mostrar_abas: true,
-    });
-  };
-
-  /** Cria uma aba nova dentro de uma tela já existente, herdando o formato dela. */
-  const novaAba = (grupo: TelaGrupo) => {
-    const base = grupo.abas[0];
-    setEdit({
-      nome: "",
-      tela_nome: grupo.nome,
-      ordem: ambientes.length,
-      dispositivo: grupo.dispositivo,
-      tela_largura: base?.tela_largura ?? FORMATOS_TELA[grupo.dispositivo][0].largura,
-      tela_altura: base?.tela_altura ?? FORMATOS_TELA[grupo.dispositivo][0].altura,
-      rolagem: base?.rolagem === true,
-      mostrar_abas: base?.mostrar_abas !== false,
-    });
+    setNovaTela({ tipo });
   };
 
   const confirmarRenomear = async () => {
@@ -280,7 +256,15 @@ export default function AutomacaoPaineis() {
         );
       })}
 
-      <AmbienteDialog ambiente={edit} onChange={setEdit} onSalvo={carregar} />
+      <NovaTelaDialog
+        aberto={!!novaTela}
+        tipoInicial={novaTela?.tipo ?? "tv"}
+        onFechar={() => setNovaTela(null)}
+        onSalvo={(id) => {
+          carregar();
+          if (id) navegar(`/automacao/painel/${id}`);
+        }}
+      />
 
       <TelaConfigDialog
         abas={configTela?.abas ?? []}
