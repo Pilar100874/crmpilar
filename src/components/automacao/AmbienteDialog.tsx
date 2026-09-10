@@ -42,7 +42,7 @@ const AJUSTES = [
   { valor: "esticar", label: "Esticar" },
 ];
 
-export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
+export default function AmbienteDialog({ ambiente, onChange, onSalvo, abaInicial = "tela" }: Props) {
   const largura = ambiente?.tela_largura ?? TELA_PADRAO.largura;
   const altura = ambiente?.tela_altura ?? TELA_PADRAO.altura;
   const proporcao = proporcaoDe(largura, altura);
