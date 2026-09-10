@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STATUS_CORES, salvarCredenciais, testarDispositivo, configurarSaidaDispositivo } from "@/lib/portaria/api";
+import { comandoAutomacao } from "@/lib/automacao/api";
 import { SHELLY_MODELOS, getShellyModelo, rotuloShelly, portaPadraoDispositivo } from "@/lib/portaria/shellyModelos";
 import { limparCacheModos } from "@/lib/automacao/modoDispositivo";
 
@@ -34,6 +35,7 @@ type Dispositivo = {
   via_coletor: boolean | null;
   status: string | null;
   ultima_comunicacao: string | null;
+  ultimo_estado: Record<string, boolean> | null;
   config: Record<string, unknown> | null;
 };
 
@@ -127,6 +129,18 @@ export default function PortariaDispositivos() {
     carregar();
   };
 
+  /** Aciona conforme o modo configurado no dispositivo: pulso ou liga/desliga. */
+  const acionarSaida = async (d: Dispositivo) => {
+    const porPulso = (d.config?.modo_saida as string) === "momentary";
+    if (porPulso) return testar(d, "pulso_teste");
+    setTestando(d.id + "pulso_teste");
+    const ligado = d.ultimo_estado?.[String(d.canal_rele ?? 0)] === true;
+    const r = await comandoAutomacao(d.id, ligado ? "desligar" : "ligar", d.canal_rele ?? 0);
+    setTestando(null);
+    toast({ title: r.ok ? (r.ligado ? "Dispositivo ligado." : "Dispositivo desligado.") : "Falha na comunicação", description: r.ok ? undefined : r.mensagem, variant: r.ok ? undefined : "destructive" });
+    carregar();
+  };
+
   const confirmarExclusao = async () => {
     if (!excluir) return;
     const { error } = await supabase.from("port_devices").delete().eq("id", excluir.id);
@@ -196,9 +210,11 @@ export default function PortariaDispositivos() {
                   {testando === d.id + "status" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Activity className="h-4 w-4 mr-2" />}
                   Testar dispositivo
                 </Button>
-                <Button variant="secondary" size="sm" className="flex-1" disabled={testando === d.id + "pulso_teste"} onClick={() => testar(d, "pulso_teste")}>
+                <Button variant="secondary" size="sm" className="flex-1" disabled={testando === d.id + "pulso_teste"} onClick={() => acionarSaida(d)}>
                   {testando === d.id + "pulso_teste" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
-                  Acionar (pulso)
+                  {(d.config?.modo_saida as string) === "momentary"
+                    ? "Acionar (pulso)"
+                    : d.ultimo_estado?.[String(d.canal_rele ?? 0)] === true ? "Desligar" : "Ligar"}
                 </Button>
               </div>
             </div>
@@ -333,7 +349,13 @@ export default function PortariaDispositivos() {
                   </Select>
                 </div>
                 <div><Label>Canal do relé</Label><Input type="number" value={form.canal_rele ?? 0} onChange={(e) => setForm({ ...form, canal_rele: Number(e.target.value) })} /></div>
-                <div><Label>Duração do pulso (ms)</Label><Input type="number" value={form.pulso_ms ?? 1000} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} /></div>
+                <div>
+                  <Label>Duração do pulso (ms)</Label>
+                  <Input type="number" value={form.pulso_ms ?? 1000} disabled={(config.modo_saida as string) !== "momentary"} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} />
+                  {(config.modo_saida as string) !== "momentary" && (
+                    <p className="mt-1 text-[11px] text-muted-foreground">Disponível apenas no modo Pulso.</p>
+                  )}
+                </div>
                 {config.geracao === "cloud" && (
                   <>
                     <div><Label>Servidor Cloud</Label><Input value={(config.cloud_server as string) ?? ""} onChange={(e) => setConfig("cloud_server", e.target.value)} placeholder="shelly-XX-eu.shelly.cloud" /></div>
