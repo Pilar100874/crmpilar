@@ -541,6 +541,9 @@ export default function AutomacaoPainel() {
     <AmbientesNavContext.Provider value={{ ambientes: ambientesVisiveis, ambienteId, trocar: setAmbienteId }}>
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
+        <Button size="sm" variant="ghost" onClick={() => navegar("/automacao")}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Telas
+        </Button>
         <Monitor className="h-4 w-4 text-primary" />
         <span className="text-xs text-muted-foreground">Aparelho:</span>
         <Select value={tipoTelaFiltro} onValueChange={(v) => setTipoTelaFiltro(v as TipoTela)}>
