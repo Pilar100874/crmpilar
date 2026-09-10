@@ -478,26 +478,6 @@ export default function TvSignageDashboards() {
                           A TV abre essa tela com as abas dela, pronta para toque ou mouse.
                         </p>
                       </div>
-                      <div>
-                        <Label className="text-xs">Tamanho da tela</Label>
-                        <Select
-                          value={`${autoCfg.largura}x${autoCfg.altura}`}
-                          onValueChange={(v) => {
-                            const [l, a] = v.split("x").map((n) => parseInt(n) || 0);
-                            updateAutoCfg({ largura: l, altura: a });
-                          }}
-                        >
-                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {TAMANHOS_AUTOMACAO.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          O painel encolhe ou aumenta sozinho para caber inteiro na tela, sem barra de rolagem.
-                        </p>
-                      </div>
                       <label className="flex items-center gap-2 text-xs">
                         <Switch
                           checked={autoCfg.barra}
