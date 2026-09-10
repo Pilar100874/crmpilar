@@ -288,6 +288,31 @@ export async function definirAtivoAmbiente(id: string, ativo: boolean) {
 
 /** Cria uma cópia completa do painel, com todos os elementos. */
 export async function duplicarAmbiente(a: Ambiente): Promise<Ambiente | null> {
+  return duplicarAmbienteComNome(a, `${a.nome} (cópia)`, a.tela_nome ?? null);
+}
+
+/**
+ * Duplica uma tela inteira (todas as abas do grupo), criando um novo grupo
+ * com o nome da tela seguido de "(cópia)".
+ */
+export async function duplicarTela(abas: Ambiente[]): Promise<number> {
+  const primeira = abas[0];
+  if (!primeira) return 0;
+  const novaTelaNome = `${primeira.tela_nome?.trim() || primeira.nome} (cópia)`;
+  let criados = 0;
+  for (const aba of abas) {
+    const novo = await duplicarAmbienteComNome(aba, aba.nome, novaTelaNome);
+    if (novo) criados++;
+  }
+  return criados;
+}
+
+/** Cria uma cópia completa do painel, com todos os elementos, usando os nomes informados. */
+export async function duplicarAmbienteComNome(
+  a: Ambiente,
+  novoNome: string,
+  novaTelaNome: string | null,
+): Promise<Ambiente | null> {
   const { data: novo } = await db
     .from("automacao_ambientes")
     .insert({
