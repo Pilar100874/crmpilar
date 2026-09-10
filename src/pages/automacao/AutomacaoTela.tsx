@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import {
-  Ambiente, Bloco, TELA_PADRAO, TipoTela, detectarTipoTela, listarAmbientes, listarBlocos, urlImagemAutomacao,
+  Ambiente, Bloco, TELA_PADRAO, TipoTela, detectarTipoTela, lerEstadosDosBlocos, listarAmbientes, listarBlocos, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
@@ -66,6 +66,8 @@ export default function AutomacaoTela() {
       const a = todosAmbientes.filter((x) => x.ativo !== false);
       setAmbientes(a);
       setBlocos(b);
+      // Já mostra os botões com a situação real dos equipamentos.
+      lerEstadosDosBlocos(b).then((e) => setEstados((s) => ({ ...e, ...s }))).catch(() => {});
     })();
   }, []);
 

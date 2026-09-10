@@ -495,6 +495,42 @@ export interface RespostaAutomacao {
   ligado?: boolean | null;
 }
 
+/**
+ * Lê no equipamento a situação atual (ligado/desligado) de cada elemento do painel.
+ * Consulta uma vez por equipamento+canal e devolve o resultado por elemento,
+ * para os botões já aparecerem com a condição real assim que a tela abre.
+ */
+export async function lerEstadosDosBlocos(
+  blocos: Bloco[],
+): Promise<Record<string, boolean | null>> {
+  const alvos = new Map<string, { deviceId: string; canal: number }>();
+  for (const b of blocos) {
+    if (!b.device_id) continue;
+    const chave = `${b.device_id}:${b.canal ?? 0}`;
+    if (!alvos.has(chave)) alvos.set(chave, { deviceId: b.device_id, canal: b.canal ?? 0 });
+  }
+  if (!alvos.size) return {};
+
+  const porChave: Record<string, boolean | null> = {};
+  await Promise.all(
+    [...alvos.entries()].map(async ([chave, alvo]) => {
+      try {
+        const r = await comandoAutomacao(alvo.deviceId, "status", alvo.canal);
+        porChave[chave] = r.ok ? r.ligado ?? null : null;
+      } catch {
+        porChave[chave] = null;
+      }
+    }),
+  );
+
+  const saida: Record<string, boolean | null> = {};
+  for (const b of blocos) {
+    if (!b.device_id) continue;
+    saida[b.id] = porChave[`${b.device_id}:${b.canal ?? 0}`] ?? null;
+  }
+  return saida;
+}
+
 export async function comandoAutomacao(
   deviceId: string,
   acao: "ligar" | "desligar" | "pulso" | "status",
