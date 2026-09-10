@@ -146,27 +146,27 @@ export default function AutomacaoPaineis() {
         const telas = telasDe(tipo.valor);
         const Icone = ICONE_TIPO[tipo.valor];
         return (
-          <section key={tipo.valor} className="rounded-2xl border bg-card">
-            <header className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
-              <Icone className="h-5 w-5 text-primary" />
-              <div className="min-w-0">
-                <h3 className="font-semibold leading-tight">{tipo.label}</h3>
-                <p className="text-xs text-muted-foreground">{tipo.descricao}</p>
+          <section key={tipo.valor} className="overflow-hidden rounded-2xl border bg-card">
+            <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b px-3 py-3 sm:px-4">
+              <Icone className="h-5 w-5 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate font-semibold leading-tight">{tipo.label}</h3>
+                <p className="truncate text-xs text-muted-foreground">{tipo.descricao}</p>
               </div>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
                 {telas.length} {telas.length === 1 ? "tela" : "telas"}
               </span>
               {admin && (
-                <Button size="sm" variant="outline" className="ml-auto" onClick={() => nova(tipo.valor)}>
-                  <Plus className="h-4 w-4 mr-1" /> Novo
+                <Button size="sm" variant="outline" className="shrink-0" onClick={() => nova(tipo.valor)}>
+                  <Plus className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Novo</span>
                 </Button>
               )}
             </header>
 
             {telas.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-muted-foreground">Nenhuma tela criada para este aparelho.</p>
+              <p className="px-3 py-6 text-sm text-muted-foreground sm:px-4">Nenhuma tela criada para este aparelho.</p>
             ) : (
-              <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-3 2xl:grid-cols-4">
                 {telas.map((grupo) => {
                   const primeira = grupo.abas[0];
                   return (
