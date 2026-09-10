@@ -19,6 +19,7 @@ import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 import { FORMAS } from "@/components/automacao/BlocoForma";
 import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
 import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
+import ExpansivelPosicoesDialog, { PosicaoItem } from "@/components/automacao/ExpansivelPosicoesDialog";
 
 
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
