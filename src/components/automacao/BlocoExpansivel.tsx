@@ -1,5 +1,6 @@
 // Grupo expansível: um toque abre os elementos vinculados ao lado do botão.
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Bloco } from "@/lib/automacao/api";
