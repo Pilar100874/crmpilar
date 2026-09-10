@@ -7,11 +7,15 @@ import { ControlIDService } from "../_shared/portaria/controlid.ts";
 import { executarViaColetor } from "../_shared/portaria/coletor.ts";
 
 const BodySchema = z.object({
-  acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste", "capturar_camera"]),
+  acao: z.enum(["salvar_credenciais", "testar", "status", "pulso_teste", "capturar_camera", "configurar"]),
   device_id: z.string().uuid(),
   usuario: z.string().max(200).optional(),
   senha: z.string().max(300).optional(),
   token: z.string().max(500).optional(),
+  modo_saida: z.enum(["toggle", "momentary"]).optional(),
+  auto_off: z.boolean().optional(),
+  auto_off_delay: z.number().int().min(0).optional(),
+  power_on_state: z.enum(["restore_last", "on", "off"]).optional(),
 });
 
 const JSON_HEADERS = { ...corsHeaders, "Content-Type": "application/json" };
