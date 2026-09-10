@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.0/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.0/ColetorPilar-Linux.AppImage",
-  "notas": "2.0.0: resposta quase imediata dos botões — o Coletor busca comandos a cada 0,4s e executa vários ao mesmo tempo."
+  "version": "2.0.1",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.1/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.1/ColetorPilar-Linux.AppImage",
+  "notas": "2.0.1: as opções ligadas (ponto, câmeras, portaria e unidade) continuam ativas depois de atualizar o Coletor."
 }

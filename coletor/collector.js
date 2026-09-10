@@ -28,10 +28,29 @@ const DEFAULT_URL = process.env.PONTO_SUPABASE_URL || 'https://ioxugupvxlcdweldo
 const DEFAULT_ANON_KEY = process.env.PONTO_SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 const CONFIG_PATH = path.join(require('os').homedir(), '.ponto-coletor.json');
-// Cópias de segurança no appliance: sobrevivem a qualquer troca de usuário/HOME
-// numa atualização, para não perder unidade, câmeras ligadas, portaria etc.
-const CONFIG_BACKUP = '/opt/coletor/config/ponto-coletor.json';
-const CONFIG_BACKUP_BAK = '/opt/coletor/config/ponto-coletor.json.bak';
+
+// Cópias de segurança: sobrevivem a qualquer troca de usuário/HOME ou
+// reinstalação, para não perder unidade, câmeras ligadas, portaria etc.
+// Em Windows e macOS também guardamos fora da pasta do usuário/instalação.
+function locaisBackup() {
+  const home = require('os').homedir();
+  const lista = [];
+  if (process.platform === 'win32') {
+    const programData = process.env.ProgramData || 'C:\\ProgramData';
+    const appData = process.env.APPDATA || path.join(home, 'AppData', 'Roaming');
+    lista.push(path.join(programData, 'ColetorPilar', 'ponto-coletor.json'));
+    lista.push(path.join(appData, 'ColetorPilar', 'ponto-coletor.json'));
+  } else if (process.platform === 'darwin') {
+    lista.push(path.join(home, 'Library', 'Application Support', 'ColetorPilar', 'ponto-coletor.json'));
+  } else {
+    lista.push('/opt/coletor/config/ponto-coletor.json');
+    lista.push('/opt/coletor/config/ponto-coletor.json.bak');
+    lista.push(path.join(home, '.config', 'coletor-pilar', 'ponto-coletor.json'));
+  }
+  return lista;
+}
+
+const CONFIG_BACKUPS = locaisBackup();
 const CONFIG_HOME_PADRAO = '/home/pilar/.ponto-coletor.json';
 
 function lerArquivo(p) {
@@ -46,15 +65,23 @@ function lerArquivo(p) {
 }
 
 // Lê TODOS os locais possíveis e mescla, dando prioridade ao arquivo mais
-// recente. Assim, se a atualização criar um arquivo novo/vazio ou mudar o HOME,
-// as opções já habilitadas (ponto, câmeras, portaria, unidade) não se perdem.
+// recente. Campos vazios (undefined/null/"") de um arquivo mais novo NÃO
+// apagam um valor já existente — assim uma atualização que grave um arquivo
+// incompleto não desliga o que estava habilitado.
 function lerArquivoConfig() {
-  const encontrados = [CONFIG_PATH, CONFIG_HOME_PADRAO, CONFIG_BACKUP, CONFIG_BACKUP_BAK]
+  const encontrados = [CONFIG_PATH, CONFIG_HOME_PADRAO, ...CONFIG_BACKUPS]
     .map(lerArquivo)
     .filter(Boolean)
     .sort((a, b) => a.mtime - b.mtime); // mais antigo primeiro; mais novo sobrescreve
   if (!encontrados.length) return {};
-  return encontrados.reduce((acc, f) => ({ ...acc, ...f.obj }), {});
+  const final = {};
+  for (const f of encontrados) {
+    for (const [k, v] of Object.entries(f.obj)) {
+      if (v === undefined || v === null || v === '') continue;
+      final[k] = v;
+    }
+  }
+  return final;
 }
 
 const STATE = {
@@ -105,13 +132,14 @@ function loadConfig() {
 function saveConfig(cfg) {
   const cur = loadConfig();
   const conteudo = JSON.stringify({ ...cur, ...cfg }, null, 2);
-  fs.writeFileSync(CONFIG_PATH, conteudo);
+  try { fs.writeFileSync(CONFIG_PATH, conteudo); } catch {}
   // Espelha a configuração (best-effort) para sobreviver a atualizações
-  try {
-    fs.mkdirSync(path.dirname(CONFIG_BACKUP), { recursive: true });
-    fs.writeFileSync(CONFIG_BACKUP, conteudo);
-    fs.writeFileSync(CONFIG_BACKUP_BAK, conteudo);
-  } catch {}
+  for (const destino of CONFIG_BACKUPS) {
+    try {
+      fs.mkdirSync(path.dirname(destino), { recursive: true });
+      fs.writeFileSync(destino, conteudo);
+    } catch {}
+  }
 }
 
 // Ao abrir o app (inclusive logo após uma atualização) grava de volta a
