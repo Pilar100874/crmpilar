@@ -41,7 +41,11 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
   }, [recarregarSeg]);
 
   const zoom = Math.min(300, Math.max(25, Number(cfg.zoom ?? 100))) / 100;
-  const interativo = cfg.permitir_interacao !== false && !edicao;
+  // Cadeado na barra permite ligar/desligar a navegação em tempo real;
+  // o valor inicial vem da configuração do bloco.
+  const [livre, setLivre] = useState(cfg.permitir_interacao !== false);
+  useEffect(() => setLivre(cfg.permitir_interacao !== false), [cfg.permitir_interacao]);
+  const interativo = livre && !edicao;
   const cor = cfg.cor || "hsl(var(--foreground))";
 
   return (
