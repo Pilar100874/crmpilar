@@ -26,6 +26,7 @@ import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/
 import { supabase } from "@/integrations/supabase/client";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
+import { useEstadosAoVivo } from "@/lib/automacao/estadoAoVivo";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
 
 
