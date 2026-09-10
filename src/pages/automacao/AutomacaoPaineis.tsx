@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
+import { Copy, LayoutTemplate, Monitor, Pencil, Plus, Settings, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
+import TelaConfigDialog from "@/components/automacao/TelaConfigDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
   duplicarTela, excluirAmbiente, listarAmbientes, renomearTela,
@@ -50,6 +51,7 @@ export default function AutomacaoPaineis() {
   const [edit, setEdit] = useState<Partial<Ambiente> | null>(null);
   const [excluirTela, setExcluirTela] = useState<TelaGrupo | null>(null);
   const [renomear, setRenomear] = useState<TelaGrupo | null>(null);
+  const [configTela, setConfigTela] = useState<TelaGrupo | null>(null);
   const [novoNomeTela, setNovoNomeTela] = useState("");
 
   const carregar = useCallback(async () => {
@@ -249,6 +251,12 @@ export default function AutomacaoPaineis() {
                             <Copy className="h-4 w-4" />
                           </Button>
                           <Button
+                            size="icon" variant="ghost" className="h-8 w-8" title="Configurar tela (formato/aparelho)"
+                            onClick={() => setConfigTela(grupo)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Renomear tela"
                             onClick={() => { setRenomear(grupo); setNovoNomeTela(grupo.nome); }}
                           >
@@ -273,6 +281,13 @@ export default function AutomacaoPaineis() {
       })}
 
       <AmbienteDialog ambiente={edit} onChange={setEdit} onSalvo={carregar} />
+
+      <TelaConfigDialog
+        abas={configTela?.abas ?? []}
+        aberto={!!configTela}
+        onFechar={() => setConfigTela(null)}
+        onSalvo={carregar}
+      />
 
       <Dialog open={!!renomear} onOpenChange={(o) => !o && setRenomear(null)}>
         <DialogContent className="max-w-sm">
