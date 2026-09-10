@@ -114,26 +114,35 @@ export async function shellyPulso(
 export async function shellyStatus(
   device: ShellyDevice,
   cred: ShellyCredentials,
+  canal = 0,
 ): Promise<ComandoResultado> {
   const base = baseUrl(device);
   if (!base) return { ok: false, mensagem: "Dispositivo sem IP/endpoint configurado." };
   const geracao = ((device.config?.geracao as string) || "gen2").toLowerCase();
-  const urls = geracao === "gen1"
-    ? [`${base}/status`, `${base}/rpc/Shelly.GetStatus`]
-    : [`${base}/rpc/Shelly.GetStatus`, `${base}/status`];
+  const gen2 = [
+    `${base}/rpc/Switch.GetStatus?id=${canal}`,
+    `${base}/rpc/Shelly.GetStatus`,
+    `${base}/status`,
+  ];
+  const gen1 = [`${base}/status`, `${base}/rpc/Switch.GetStatus?id=${canal}`, `${base}/rpc/Shelly.GetStatus`];
+  const urls = geracao === "gen1" ? gen1 : gen2;
   try {
     let ultima: Response | null = null;
     let texto = "";
     for (const url of urls) {
       ultima = await fetchComTimeout(url, { headers: authHeaders(cred) }, 6000);
       texto = await ultima.text();
-      if (ultima.ok || (ultima.status !== 404 && ultima.status !== 400)) break;
+      // Só aceita a resposta se ela realmente disser o estado do canal.
+      if (ultima.ok && estadoDoCanal(texto, canal) !== null) break;
+      if (ultima.ok) continue;
+      if (ultima.status !== 404 && ultima.status !== 400) break;
     }
-    return { ok: !!ultima?.ok, status: ultima?.status, detalhes: texto.slice(0, 1000) };
+    return { ok: !!ultima?.ok, status: ultima?.status, detalhes: texto.slice(0, 8000) };
   } catch (e) {
     return { ok: false, mensagem: (e as Error).message };
   }
 }
+
 
 
 /** Liga ou desliga o relé de forma permanente (luz/tomada). */
