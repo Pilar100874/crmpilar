@@ -215,16 +215,13 @@ export async function shellyConfigurarSaida(
       };
     }
 
+    // Gen2/Gen3: in_mode aceita momentary | follow | flip | detached.
+    // "Alternância" = flip (a saída fica ligada até novo comando).
     const configRpc: Record<string, unknown> = {};
-    if (cfg.modo) configRpc.in_mode = cfg.modo;
-    if (cfg.auto_off !== undefined) configRpc.auto_off = cfg.auto_off;
-    if (cfg.auto_off_delay !== undefined) configRpc.auto_off_delay = cfg.auto_off_delay;
-
-    let powerOnState: number | undefined;
-    if (cfg.power_on_state === "off") powerOnState = 0;
-    else if (cfg.power_on_state === "on") powerOnState = 1;
-    else if (cfg.power_on_state === "restore_last") powerOnState = 2;
-    if (powerOnState !== undefined) configRpc.power_on_state = powerOnState;
+    if (cfg.modo) configRpc.in_mode = cfg.modo === "momentary" ? "momentary" : "flip";
+    configRpc.auto_off = !!cfg.auto_off;
+    if (cfg.auto_off) configRpc.auto_off_delay = Math.max(1, Number(cfg.auto_off_delay ?? 1));
+    if (cfg.power_on_state) configRpc.initial_state = cfg.power_on_state;
 
     const url = `${base}/rpc/Switch.SetConfig`;
     const resp = await fetchComTimeout(url, {
