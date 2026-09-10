@@ -47,15 +47,34 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
   const livre = (cfg.layout ?? "livre") === "livre";
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
 
-  // Fecha ao tocar fora do grupo.
+  // Posição real do botão na tela e escala aplicada pelo painel.
+  const [ancora, setAncora] = useState({ left: 0, top: 0, height: 0, escala: 1 });
+  const medir = useCallback(() => {
+    const r = raiz.current?.getBoundingClientRect();
+    if (!r) return;
+    setAncora({ left: r.left, top: r.top, height: r.height, escala: bloco.w ? r.width / bloco.w : 1 });
+  }, [bloco.w]);
+
+  useLayoutEffect(() => { if (aberto) medir(); }, [aberto, medir]);
   useEffect(() => {
     if (!aberto) return;
+    window.addEventListener("resize", medir);
+    window.addEventListener("scroll", medir, true);
+    return () => {
+      window.removeEventListener("resize", medir);
+      window.removeEventListener("scroll", medir, true);
+    };
+  }, [aberto, medir]);
+
+  // Fecha ao tocar fora do grupo (apenas no modo em grade, que abre junto ao botão).
+  useEffect(() => {
+    if (!aberto || (cfg.layout ?? "livre") === "livre") return;
     const fora = (e: MouseEvent) => {
       if (raiz.current && !raiz.current.contains(e.target as Node)) setAberto(false);
     };
     document.addEventListener("mousedown", fora);
     return () => document.removeEventListener("mousedown", fora);
-  }, [aberto]);
+  }, [aberto, cfg.layout]);
 
   useEffect(() => { if (edicao) setAberto(false); }, [edicao]);
 
