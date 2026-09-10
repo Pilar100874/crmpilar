@@ -152,14 +152,17 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       bloco.tipo === "icone" ? <BlocoIcone bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
       <BlocoCena bloco={bloco} ligado={ligado} onEstado={onEstado} />;
 
+    const semCorte = bloco.tipo === "expansivel";
     return (
       <div
         className={cn(
-          "relative h-full select-none overflow-hidden",
+          "relative h-full select-none",
+          semCorte ? "overflow-visible z-[1300]" : "overflow-hidden",
           transparente && "[&>*:not([data-cheio])]:!bg-transparent [&>*:not([data-cheio])]:!border-transparent",
         )}
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
+
         {conteudo}
         {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "expansivel"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
