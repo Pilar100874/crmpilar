@@ -5,6 +5,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 type Manifesto = {
   url: string;
