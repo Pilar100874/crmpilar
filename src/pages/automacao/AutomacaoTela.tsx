@@ -45,6 +45,8 @@ export default function AutomacaoTela() {
 
   const pedido = params.get("ambiente") || "todos";
   const todos = pedido === "todos";
+  // Nome da tela (grupo de abas) pedido na URL — tem prioridade sobre "ambiente".
+  const telaPedida = (params.get("tela") || "").trim();
   const mostrarBarra = params.get("barra") !== "0";
   const [ambienteId, setAmbienteId] = useState<string>(todos ? "" : pedido);
 
