@@ -108,6 +108,23 @@ export default function AutomacaoPainel() {
 
   useEffect(() => { carregar(); }, [carregar]);
 
+  // Mantém a situação real dos equipamentos na tela, sem recarregar.
+  useEstadosAoVivo(blocos, (novos) => {
+    setEstados((s) => {
+      const proximo = { ...s };
+      let mudou = false;
+      for (const [blocoId, ligado] of Object.entries(novos)) {
+        if (ligado === null && blocoId in proximo) continue;
+        if (proximo[blocoId] === ligado) continue;
+        proximo[blocoId] = ligado;
+        mudou = true;
+      }
+      if (!mudou) return s;
+      estadosRef.current = proximo;
+      return proximo;
+    });
+  });
+
   // Abre a tela escolhida na lista de telas.
   useEffect(() => {
     if (!idRota || !ambientes.length) return;
