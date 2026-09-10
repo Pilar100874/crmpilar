@@ -567,7 +567,11 @@ export default function AutomacaoPainel() {
               disabled={!ambienteAtual}
               onClick={() =>
                 ambienteAtual &&
-                navegar(`/automacao/regras?ambiente=${ambienteAtual.id}&nome=${encodeURIComponent(ambienteAtual.nome)}`)
+                navegar(
+                  `/automacao/regras?ambiente=${ambientesVisiveis.map((a) => a.id).join(",")}&nome=${encodeURIComponent(
+                    ambienteAtual.tela_nome || ambienteAtual.nome,
+                  )}`,
+                )
               }
             >
               <Workflow className="h-4 w-4 mr-2" /> Automações
