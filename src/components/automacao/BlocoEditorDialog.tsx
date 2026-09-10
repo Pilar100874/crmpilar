@@ -24,7 +24,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "forma", "clima", "grafico",
+  "interfone", "texto", "forma", "clima", "grafico", "abas",
 ];
 
 
@@ -617,6 +617,58 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   <input type="checkbox" checked={cfg.sombra === true} onChange={(e) => setCfg({ sombra: e.target.checked })} />
                   Sombra
                 </label>
+              </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "abas" && (
+            <div className="space-y-2 rounded-xl border p-3">
+              <p className="text-xs text-muted-foreground">
+                Mostra os ambientes deste mesmo tipo de tela como botões. Ao tocar, o painel troca de ambiente.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Disposição</Label>
+                  <Select value={cfg.orientacao ?? "horizontal"} onValueChange={(v) => setCfg({ orientacao: v })}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="horizontal">Lado a lado</SelectItem>
+                      <SelectItem value="vertical">Em coluna</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Formato</Label>
+                  <Select value={cfg.formato ?? "redondo"} onValueChange={(v) => setCfg({ formato: v })}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="redondo">Arredondado</SelectItem>
+                      <SelectItem value="reto">Cantos retos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Tamanho da letra</Label>
+                  <Input type="number" min={8} max={80} value={cfg.tamanho ?? 16}
+                    onChange={(e) => setCfg({ tamanho: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Cor da letra</Label>
+                  <Input type="color" className="p-1" value={cfg.cor ?? "#e5e7eb"}
+                    onChange={(e) => setCfg({ cor: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo do botão</Label>
+                  <Input type="color" className="p-1" value={cfg.fundo ?? "#1f2937"}
+                    onChange={(e) => setCfg({ fundo: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo do ambiente aberto</Label>
+                  <Input type="color" className="p-1" value={cfg.corAtiva ?? "#2563eb"}
+                    onChange={(e) => setCfg({ corAtiva: e.target.value })} />
+                </div>
               </div>
             </div>
           )}

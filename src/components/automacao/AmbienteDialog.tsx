@@ -85,6 +85,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       fundo_ajuste: ajuste,
       dispositivo: tipoTela,
       rolagem,
+      mostrar_abas: ambiente?.mostrar_abas !== false,
 
     });
     onChange(null);
@@ -130,6 +131,16 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
                 </Button>
               ))}
             </div>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={ambiente?.mostrar_abas !== false}
+                onChange={(e) => onChange({ ...ambiente, mostrar_abas: e.target.checked })}
+              />
+              Mostrar as abas dos ambientes deste tipo de tela
+            </label>
 
             <div className="flex flex-wrap gap-2">
               {FORMATOS_TELA[tipoTela].map((p) => (

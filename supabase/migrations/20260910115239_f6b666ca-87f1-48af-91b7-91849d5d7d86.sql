@@ -1,0 +1,1 @@
+ALTER TABLE public.automacao_ambientes ADD COLUMN IF NOT EXISTS mostrar_abas boolean NOT NULL DEFAULT true;

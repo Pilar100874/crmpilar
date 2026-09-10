@@ -15,12 +15,13 @@ import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO, TIPOS_TELA,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO, TIPOS_TELA, TipoTela,
   definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
 import { supabase } from "@/integrations/supabase/client";
+import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
 
 
@@ -48,6 +49,7 @@ export default function AutomacaoPainel() {
   const [dispositivos, setDispositivos] = useState<DispositivoSimples[]>([]);
   const [cameras, setCameras] = useState<CameraSimples[]>([]);
   const [ambienteId, setAmbienteId] = useState<string>("");
+  const [tipoTelaFiltro, setTipoTelaFiltro] = useState<TipoTela>("tv");
   const [edicao, setEdicao] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [modo, setModo] = useState<Modo>("grade");
@@ -84,6 +86,12 @@ export default function AutomacaoPainel() {
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Ao trocar de tipo de tela, abre o primeiro ambiente daquele tipo.
+  useEffect(() => {
+    const lista = ambientes.filter((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
+    setAmbienteId((atual) => (lista.some((a) => a.id === atual) ? atual : lista[0]?.id || ""));
+  }, [ambientes, tipoTelaFiltro]);
 
   // Guarda o estado mais recente para as automações consultarem durante a execução.
   useEffect(() => { estadosRef.current = estados; }, [estados]);
@@ -146,7 +154,9 @@ export default function AutomacaoPainel() {
 
   const podeEditar = admin && edicao;
   /** Painéis desativados continuam visíveis só para administradores. */
-  const ambientesVisiveis = admin ? ambientes : ambientes.filter((a) => a.ativo !== false);
+  const todosVisiveis = admin ? ambientes : ambientes.filter((a) => a.ativo !== false);
+  /** Cada tipo de tela tem o seu próprio conjunto de abas de ambiente. */
+  const ambientesVisiveis = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId);
 
   // Camadas (como no Photoshop) e bloqueio de elementos ficam guardados
@@ -496,7 +506,26 @@ export default function AutomacaoPainel() {
   ] as const;
 
   return (
+    <AmbientesNavContext.Provider value={{ ambientes: ambientesVisiveis, ambienteId, trocar: setAmbienteId }}>
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
+        <span className="text-xs text-muted-foreground">Tipo de tela:</span>
+        {TIPOS_TELA.map((t) => {
+          const qtd = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === t.valor).length;
+          return (
+            <Button
+              key={t.valor}
+              size="sm"
+              title={t.descricao}
+              variant={tipoTelaFiltro === t.valor ? "default" : "outline"}
+              onClick={() => setTipoTelaFiltro(t.valor)}
+            >
+              {t.label} ({qtd})
+            </Button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <Tabs value={ambienteId} onValueChange={setAmbienteId} className="min-w-0">
           <TabsList className="flex-wrap h-auto">
@@ -520,7 +549,7 @@ export default function AutomacaoPainel() {
           </TabsList>
         </Tabs>
         {podeEditar && (
-          <Button size="sm" variant="ghost" onClick={() => setAmbienteEdit({ nome: "", ordem: ambientes.length })}>
+          <Button size="sm" variant="ghost" onClick={() => setAmbienteEdit({ nome: "", ordem: ambientes.length, dispositivo: tipoTelaFiltro })}>
             <Plus className="h-4 w-4 mr-1" /> Ambiente
           </Button>
         )}
@@ -890,5 +919,6 @@ export default function AutomacaoPainel() {
         itemName={excluir?.nome}
       />
     </div>
+    </AmbientesNavContext.Provider>
   );
 }
