@@ -96,8 +96,14 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
     onChange({ ...ambiente, fundo_caminho: caminho });
   };
 
-  const gravar = async () => {
-    if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
+  /** Mudou o aparelho ou o formato de uma tela que já existia? */
+  const mudouFormato = () => {
+    const o = original.current;
+    if (!o?.id) return false;
+    return o.dispositivo !== tipoTela || o.largura !== largura || o.altura !== altura;
+  };
+
+  const salvar = async (aplicarNoGrupo: boolean) => {
     await salvarAmbiente({
       ...ambiente,
       tela_largura: largura,
@@ -107,11 +113,25 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       dispositivo: tipoTela,
       rolagem,
       mostrar_abas: ambiente?.mostrar_abas !== false,
-
     });
+    if (aplicarNoGrupo && original.current) {
+      await aplicarFormatoGrupo(original.current.dispositivo, {
+        dispositivo: tipoTela,
+        tela_largura: largura,
+        tela_altura: altura,
+        rolagem,
+      });
+    }
+    setConfirmarGrupo(false);
     onChange(null);
-    toast.success("Ambiente salvo.");
+    toast.success(aplicarNoGrupo ? "Telas do grupo atualizadas." : "Ambiente salvo.");
     onSalvo();
+  };
+
+  const gravar = async () => {
+    if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
+    if (mudouFormato()) { setConfirmarGrupo(true); return; }
+    await salvar(false);
   };
 
   return (
