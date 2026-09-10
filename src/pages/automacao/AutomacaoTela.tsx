@@ -6,6 +6,7 @@ import {
 } from "@/lib/automacao/api";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
+import { useEstadosAoVivo } from "@/lib/automacao/estadoAoVivo";
 import { supabase } from "@/integrations/supabase/client";
 
 const COLUNAS = 12;
