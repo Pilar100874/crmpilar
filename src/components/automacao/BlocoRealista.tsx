@@ -43,8 +43,14 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
   const porPulso = modoDispositivo?.modo === "momentary";
 
 
-  const acao = async () => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const acao = () => {
     if (edicao) return;
+    pedir(executar);
+  };
+
+  const executar = async () => {
     if (!bloco.device_id) {
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
