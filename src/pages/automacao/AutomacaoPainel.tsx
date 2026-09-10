@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Move, Plus, Check, Pencil, Trash2, Grid3X3, MousePointer2, Monitor,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff,
+  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,6 +47,8 @@ const posLivre = (b: Bloco, cx: number): PosLivre => {
 };
 
 export default function AutomacaoPainel() {
+  const { id: idRota } = useParams();
+  const navegar = useNavigate();
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [blocos, setBlocos] = useState<Bloco[]>([]);
   const [dispositivos, setDispositivos] = useState<DispositivoSimples[]>([]);
@@ -88,6 +91,15 @@ export default function AutomacaoPainel() {
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Abre a tela escolhida na lista de telas.
+  useEffect(() => {
+    if (!idRota || !ambientes.length) return;
+    const alvo = ambientes.find((a) => a.id === idRota);
+    if (!alvo) return;
+    setTipoTelaFiltro((alvo.dispositivo as TipoTela) ?? "tv");
+    setAmbienteId(alvo.id);
+  }, [idRota, ambientes]);
 
   // Ao trocar de tipo de tela, abre o primeiro ambiente daquele tipo.
   useEffect(() => {
