@@ -118,6 +118,11 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
         style={aceso ? { boxShadow: "0 0 8px rgba(74,222,128,0.9)" } : undefined}
       />
 
+      {/* barra de acompanhamento do pulso */}
+      {pulsando && porPulso && (
+        <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+      )}
+
       <div className="relative flex h-full flex-col">
         <div
           className={cn(
