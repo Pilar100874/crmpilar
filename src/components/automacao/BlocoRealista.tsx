@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
+import BarraPulso from "./BarraPulso";
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -25,6 +26,8 @@ interface Props {
 export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEditar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const [pressionado, setPressionado] = useState(false);
+  // Barra de acompanhamento enquanto o pulso está ativo.
+  const [pulsando, setPulsando] = useState(false);
   const Icon = ICONES[bloco.tipo] ?? Activity;
   const aceso = ligado === true;
   const cfg = (bloco.config ?? {}) as Record<string, any>;
@@ -54,8 +57,16 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       toast.error(r.mensagem);
       return;
     }
-    if (comando === "pulso") toast.success(`${bloco.nome} acionado.`);
+    if (comando === "pulso") {
+      toast.success(`${bloco.nome} acionado.`);
+      setPulsando(true);
+    }
     onEstado(r.ligado ?? (comando === "ligar" ? true : comando === "desligar" ? false : ligado));
+  };
+
+  const fimDoPulso = () => {
+    setPulsando(false);
+    onEstado(false);
   };
 
   return (
