@@ -89,21 +89,32 @@ export default function AutomacaoTela() {
     })();
   }, [tipoAparelho]);
 
+  // Ambientes da tela (grupo de abas) pedida na URL.
+  const grupoTela = telaPedida
+    ? ambientes.filter((a) => ((a as any).tela_nome || a.nome) === telaPedida)
+    : [];
+
   // Escolhe sozinho o painel feito para este tipo de aparelho.
   useEffect(() => {
     if (!ambientes.length) return;
     setAmbienteId((atual) => {
+      if (telaPedida) {
+        if (atual && grupoTela.some((x) => x.id === atual)) return atual;
+        return grupoTela[0]?.id || ambientes[0]?.id || "";
+      }
       if (todos && ambienteDoUsuario && ambientes.some((x) => x.id === ambienteDoUsuario)) return ambienteDoUsuario;
       if (atual && ambientes.some((x) => x.id === atual)) return atual;
       const doTipo = ambientes.find((x) => (x.dispositivo ?? "tv") === tipoAparelho);
       return doTipo?.id || ambientes[0]?.id || "";
     });
-  }, [ambientes, tipoAparelho, ambienteDoUsuario, todos]);
+  }, [ambientes, tipoAparelho, ambienteDoUsuario, todos, telaPedida]);
 
   const ambienteAtual = ambientes.find((a) => a.id === ambienteId);
-  // Abas só dos ambientes montados para este mesmo tipo de tela.
+  // Abas: da tela pedida, ou só dos ambientes montados para este mesmo tipo de tela.
   const doTipo = ambientes.filter((a) => (a.dispositivo ?? "tv") === tipoAparelho);
-  const abas = doTipo.length ? doTipo : ambientes;
+  const abas = telaPedida
+    ? (grupoTela.length ? grupoTela : ambientes)
+    : (doTipo.length ? doTipo : ambientes);
   const mostrarAbas = mostrarBarra && ambienteAtual?.mostrar_abas !== false && abas.length > 1;
   const telaL = Number(params.get("largura")) || ambienteAtual?.tela_largura || TELA_PADRAO.largura;
   const telaA = Number(params.get("altura")) || ambienteAtual?.tela_altura || TELA_PADRAO.altura;
