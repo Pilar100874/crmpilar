@@ -111,6 +111,7 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       }}
 
     >
+      {dialogo}
       {/* brilho de vidro no topo */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[22px]"
