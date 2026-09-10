@@ -1,6 +1,6 @@
 {
-  "version": "1.9.9",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.9/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.9.9/ColetorPilar-Linux.AppImage",
-  "notas": "1.9.9: liga/desliga (alternância) dos Shelly pela rede local, além do pulso, e envio das configurações de saída ao aparelho."
+  "version": "2.0.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.0/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.0/ColetorPilar-Linux.AppImage",
+  "notas": "2.0.0: resposta quase imediata dos botões — o Coletor busca comandos a cada 0,4s e executa vários ao mesmo tempo."
 }

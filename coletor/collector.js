@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
 const { verificarCameras, listarCameras } = require('./cameras');
-const { pollPortariaOnce, ESTADO: PORTARIA_STATE } = require('./portaria');
+const { pollPortariaOnce, pollJobsOnce, ESTADO: PORTARIA_STATE } = require('./portaria');
 // Carregamento preguiçoso do módulo de streaming (werift). Se a dependência
 // estiver quebrada no pacote instalado, o app NÃO deve travar na abertura —
 // apenas o streaming ao vivo das câmeras fica indisponível.
@@ -78,6 +78,7 @@ const lastNSRByEquip = {};
 let timerPonto = null;
 let timerCameras = null;
 let timerPortaria = null;
+let timerJobs = null;
 
 function loadConfig() {
   const saved = lerArquivoConfig();
@@ -344,19 +345,28 @@ async function pollPortaria() {
   const st = await pollPortariaOnce(cfg);
   STATE.portaria = { ...st, ativo: true };
 }
+// Laço rápido só para comandos: o botão do painel responde quase na hora.
+async function pollJobsRapido() {
+  const cfg = loadConfig();
+  const st = await pollJobsOnce(cfg);
+  STATE.portaria = { ...st, ativo: true };
+}
 function startPortaria() {
   if (timerPortaria) return;
   saveConfig({ portariaEnabled: true });
   STATE.portariaEnabled = true;
   STATE.running = true;
   pollPortaria();
-  timerPortaria = setInterval(pollPortaria, 3_000);
+  timerPortaria = setInterval(pollPortaria, 5_000);
+  timerJobs = setInterval(pollJobsRapido, 400);
 }
 function stopPortaria() {
   saveConfig({ portariaEnabled: false });
   STATE.portariaEnabled = false;
   if (timerPortaria) clearInterval(timerPortaria);
   timerPortaria = null;
+  if (timerJobs) clearInterval(timerJobs);
+  timerJobs = null;
   STATE.running = !!timerPonto || !!timerCameras;
 }
 

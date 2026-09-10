@@ -41,8 +41,10 @@ export async function aguardarJob(
   timeoutMs = 15000,
 ): Promise<ResultadoJob> {
   const limite = Date.now() + timeoutMs;
+  let espera = 120; // começa rápido: o Coletor busca comandos a cada 400ms
   while (Date.now() < limite) {
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, espera));
+    espera = Math.min(espera + 80, 500);
     const { data } = await admin
       .from("port_device_jobs")
       .select("status, resultado, erro")
