@@ -36,7 +36,7 @@ export default function TvSignageDashboards() {
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
     supabase.from("unidades").select("id,nome").order("nome").then(({ data }) => setGruposVeiculos(data || []));
     supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
-    supabase.from("automacao_ambientes").select("id,nome,tela_nome,dispositivo,ativo").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
+    supabase.from("automacao_ambientes").select("id,nome,tela_nome,dispositivo,ativo,tela_largura,tela_altura,rolagem").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
   }, []);
 
 
@@ -92,14 +92,24 @@ export default function TvSignageDashboards() {
 
   // Telas de automação (grupos de abas) disponíveis, com o aparelho de cada uma.
   const telasAuto = (() => {
-    const mapa = new Map<string, { nome: string; dispositivo: string; abas: number }>();
+    const mapa = new Map<string, { nome: string; dispositivo: string; abas: number; largura: number; altura: number; rolagem: boolean }>();
     for (const a of ambientesAuto) {
       if (a.ativo === false) continue;
       const nome = (a.tela_nome || a.nome || "").trim();
       if (!nome) continue;
       const atual = mapa.get(nome);
-      if (atual) atual.abas += 1;
-      else mapa.set(nome, { nome, dispositivo: a.dispositivo || "tv", abas: 1 });
+      if (atual) {
+        atual.abas += 1;
+      } else {
+        mapa.set(nome, {
+          nome,
+          dispositivo: a.dispositivo || "tv",
+          abas: 1,
+          largura: a.tela_largura || 0,
+          altura: a.tela_altura || 0,
+          rolagem: a.rolagem === true,
+        });
+      }
     }
     return Array.from(mapa.values());
   })();
@@ -460,11 +470,25 @@ export default function TvSignageDashboards() {
                             <SelectItem value="__todas__">Automática (segue o aparelho, com abas)</SelectItem>
                             {telasAuto.map((t) => (
                               <SelectItem key={t.nome} value={t.nome}>
-                                {t.nome} — {ROTULO_APARELHO[t.dispositivo] || t.dispositivo} · {t.abas} aba(s)
+                                {t.nome} — {ROTULO_APARELHO[t.dispositivo] || t.dispositivo} · {t.abas} aba(s) · {t.largura || "?"}×{t.altura || "?"}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+                        {telaSelecionada && telaSelecionada !== "__todas__" && (() => {
+                          const tela = telasAuto.find((t) => t.nome === telaSelecionada);
+                          if (!tela) return null;
+                          return (
+                            <div className="mt-2 flex items-center gap-2 text-[11px]">
+                              <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 font-medium text-primary">
+                                {tela.largura || "?"} × {tela.altura || "?"} px
+                              </span>
+                              <span className="text-muted-foreground">
+                                {tela.rolagem ? "Rolagem vertical" : "Tela fixa"}
+                              </span>
+                            </div>
+                          );
+                        })()}
                         <p className="text-[11px] text-muted-foreground mt-1">
                           A TV abre essa tela com as abas dela, pronta para toque ou mouse.
                         </p>
