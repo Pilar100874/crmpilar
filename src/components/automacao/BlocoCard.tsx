@@ -18,7 +18,7 @@ import BlocoInterfone from "./BlocoInterfone";
 import BlocoPilarFone from "./BlocoPilarFone";
 import BlocoAmbiente from "./BlocoAmbiente";
 import BlocoImagemLuz from "./BlocoImagemLuz";
-import BlocoTexto from "./BlocoTexto";
+import BlocoTexto, { fonteCss } from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
 import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
