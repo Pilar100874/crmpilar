@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { AnimacaoIcone, classeAnimacao, iconePorNome } from "@/lib/automacao/icones";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 interface Props {
   bloco: Bloco;
