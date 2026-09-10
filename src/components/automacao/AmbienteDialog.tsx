@@ -54,6 +54,18 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const aplicar = (l: number, a: number) =>
     onChange({ ...ambiente, tela_largura: Math.max(320, Math.round(l)), tela_altura: Math.max(240, Math.round(a)) });
 
+  /** Ao trocar o tipo de aparelho, já aplica o formato mais comum dele. */
+  const trocarTipo = (t: TipoTela) => {
+    const primeiro = FORMATOS_TELA[t][0];
+    onChange({
+      ...ambiente,
+      dispositivo: t,
+      tela_largura: primeiro.largura,
+      tela_altura: primeiro.altura,
+      rolagem: t === "celular" ? true : t === "tablet" ? rolagem : false,
+    });
+  };
+
   const enviarFoto = async (arquivo: File) => {
     if (arquivo.size > 20 * 1024 * 1024) { toast.error("A foto precisa ter até 20 MB."); return; }
     setEnviando(true);
@@ -71,6 +83,9 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       tela_altura: altura,
       fundo_opacidade: opacidade,
       fundo_ajuste: ajuste,
+      dispositivo: tipoTela,
+      rolagem,
+
     });
     onChange(null);
     toast.success("Ambiente salvo.");
