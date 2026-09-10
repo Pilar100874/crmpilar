@@ -69,13 +69,27 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
     const painelW = painel.current?.offsetWidth ?? colunas * largura + 24;
     const painelH = painel.current?.offsetHeight ?? altura + 24;
     const margem = 12;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     let left = r.left;
     let top = r.bottom + 8;
     if (direcao === "cima") top = r.top - painelH - 8;
     if (direcao === "direita") { left = r.right + 8; top = r.top; }
     if (direcao === "esquerda") { left = r.left - painelW - 8; top = r.top; }
-    left = Math.min(Math.max(left, margem), Math.max(margem, window.innerWidth - painelW - margem));
-    top = Math.min(Math.max(top, margem), Math.max(margem, window.innerHeight - painelH - margem));
+
+    // Se não couber na direção escolhida, inverte para o lado oposto antes de limitar,
+    // evitando que a caixa sobreponha o botão clicado.
+    const cabeBaixo = r.bottom + 8 + painelH <= vh - margem;
+    const cabeCima = r.top - 8 - painelH >= margem;
+    const cabeDireita = r.right + 8 + painelW <= vw - margem;
+    const cabeEsquerda = r.left - 8 - painelW >= margem;
+    if (direcao === "baixo" && !cabeBaixo && cabeCima) top = r.top - painelH - 8;
+    if (direcao === "cima" && !cabeCima && cabeBaixo) top = r.bottom + 8;
+    if (direcao === "direita" && !cabeDireita && cabeEsquerda) left = r.left - painelW - 8;
+    if (direcao === "esquerda" && !cabeEsquerda && cabeDireita) left = r.right + 8;
+
+    left = Math.min(Math.max(left, margem), Math.max(margem, vw - painelW - margem));
+    top = Math.min(Math.max(top, margem), Math.max(margem, vh - painelH - margem));
     setPos({ left, top });
   }, [direcao, colunas, largura, altura]);
 
