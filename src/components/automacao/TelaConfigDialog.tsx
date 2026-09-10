@@ -31,7 +31,7 @@ interface Props {
 }
 
 /** Configurações de formato/aparelho que valem para todas as abas da tela. */
-export default function TelaConfigDialog({ abas, aberto, onFechar, onSalvo }: Props {
+export default function TelaConfigDialog({ abas, aberto, onFechar, onSalvo }: Props) {
   const db = supabase as unknown as { from: (t: string) => any };
 
   const primeira = abas[0];
