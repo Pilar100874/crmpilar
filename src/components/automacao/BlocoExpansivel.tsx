@@ -29,6 +29,7 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
     transparente?: boolean;
     raio?: number;
     subtitulo?: string;
+    layout?: "livre" | "grade";
   };
   const { blocos, estados, aplicarEstado, acionar } = usePainelBlocos();
   const [aberto, setAberto] = useState(false);
@@ -41,6 +42,7 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
   const largura = cfg.larguraItem ?? 170;
   const altura = cfg.alturaItem ?? 68;
   const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
+  const livre = (cfg.layout ?? "livre") === "livre";
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
 
   // Fecha ao tocar fora do grupo.
@@ -88,7 +90,36 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
         <ChevronDown className={cn("h-4 w-4 shrink-0 opacity-70 transition-transform", aberto && "rotate-180")} />
       </button>
 
-      {aberto && !edicao && (
+      {aberto && !edicao && livre && (
+        <div
+          data-cheio
+          className="absolute z-[1400]"
+          style={{ left: -bloco.x, top: -bloco.y, width: 0, height: 0 }}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {!filhos.length && (
+            <p className="absolute w-56 rounded-lg border border-border bg-card px-2 py-3 text-xs text-muted-foreground shadow"
+               style={{ left: bloco.x, top: bloco.y + bloco.h + 8 }}>
+              Nenhum elemento vinculado ainda.
+            </p>
+          )}
+          <Suspense fallback={null}>
+            {filhos.map((f) => (
+              <div key={f.id} className="absolute" style={{ left: f.x, top: f.y, width: f.w, height: f.h }}>
+                <BlocoCardLazy
+                  bloco={f}
+                  ligado={estados[f.id] ?? null}
+                  onEstado={(v) => aplicarEstado(f, v)}
+                  onAcionar={() => acionar?.(f)}
+                />
+              </div>
+            ))}
+          </Suspense>
+        </div>
+      )}
+
+      {aberto && !edicao && !livre && (
         <div
           data-cheio
           className="absolute z-[1400] rounded-2xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur"
