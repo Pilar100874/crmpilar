@@ -149,7 +149,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       setConfirmarFormatoAberto(true);
       return;
     }
-    await salvar(false);
+    await salvar(true);
   };
 
   return (<>
