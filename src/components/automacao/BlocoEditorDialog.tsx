@@ -561,6 +561,21 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     </Button>
                   )}
 
+                  <ExpansivelTamanhosDialog
+                    aberto={ajustarTamanhos}
+                    onFechar={() => setAjustarTamanhos(false)}
+                    itens={((cfg.vinculados ?? []) as string[])
+                      .map((id) => blocosAmbiente.find((b) => b.id === id))
+                      .filter(Boolean) as Bloco[]}
+                    colunas={Math.max(1, (cfg.colunas as number) ?? 1)}
+                    larguraPadrao={(cfg.larguraItem as number) ?? 170}
+                    alturaPadrao={(cfg.alturaItem as number) ?? 68}
+                    tamanhos={(cfg.tamanhos ?? {}) as Record<string, { w?: number; h?: number }>}
+                    onChange={(t) => setCfg({ tamanhos: Object.keys(t).length ? t : undefined })}
+                  />
+
+
+
                 </>
               </div>
 
