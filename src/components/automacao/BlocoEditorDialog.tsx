@@ -46,7 +46,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
   const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
-  const [ajustarPosicoes, setAjustarPosicoes] = useState(false);
+  
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
 
 
@@ -1583,16 +1583,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
-      </DialogContent>
-
-      <ExpansivelPosicoesDialog
-        aberto={ajustarPosicoes}
-        onOpenChange={setAjustarPosicoes}
-        grupo={blocoEdit}
-        filhos={blocosAmbiente.filter((b) => ((cfg.vinculados ?? []) as string[]).includes(b.id))}
-        posicoes={(cfg.posicoes ?? {}) as Record<string, PosicaoItem>}
-        onSalvar={(p) => setCfg({ posicoes: p })}
-      />
+    </DialogContent>
     </Dialog>
   );
 }
