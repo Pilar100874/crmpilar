@@ -197,11 +197,20 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={cfg.legenda !== false}
-                onChange={(e) => setCfg({ legenda: e.target.checked })}
+                checked={cfg.legenda !== false && cfg.mostrarNome !== false}
+                onChange={(e) => setCfg({ legenda: true, mostrarNome: e.target.checked })}
                 className="h-4 w-4 accent-primary"
               />
-              Mostrar legenda (nome e situação)
+              Mostrar nome
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={cfg.legenda !== false && cfg.mostrarSituacao !== false}
+                onChange={(e) => setCfg({ legenda: true, mostrarSituacao: e.target.checked })}
+                className="h-4 w-4 accent-primary"
+              />
+              Mostrar situação (ligado/desligado)
             </label>
           </div>
 
