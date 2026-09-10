@@ -113,46 +113,69 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
       </button>
 
       {aberto && !edicao && livre && createPortal(
-        <div
-          data-cheio
-          className="fixed inset-0 z-[1400]"
-          onClick={() => setAberto(false)}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {!filhos.length && (
-            <p className="absolute w-56 rounded-lg border border-border bg-card px-2 py-3 text-xs text-muted-foreground shadow"
-               style={{ left: ancora.left, top: ancora.top + ancora.height + 8 }}>
-              Nenhum elemento vinculado ainda.
-            </p>
-          )}
-          <Suspense fallback={null}>
-            {filhos.map((f) => {
-              // Posição definida no popup (relativa ao botão) ou a do próprio painel.
-              const p = cfg.posicoes?.[f.id] ?? { x: f.x - bloco.x, y: f.y - bloco.y, w: f.w, h: f.h };
-              return (
-                <div
-                  key={f.id}
-                  className="absolute origin-top-left"
-                  style={{
-                    left: ancora.left + p.x * ancora.escala,
-                    top: ancora.top + p.y * ancora.escala,
-                    width: p.w,
-                    height: p.h,
-                    transform: `scale(${ancora.escala})`,
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <BlocoCardLazy
-                    bloco={f}
-                    ligado={estados[f.id] ?? null}
-                    onEstado={(v) => aplicarEstado(f, v)}
-                    onAcionar={() => acionar?.(f)}
-                  />
-                </div>
-              );
-            })}
-          </Suspense>
-        </div>,
+        (() => {
+          // Posições definidas no popup (relativas ao botão) ou as do próprio painel.
+          const itens = filhos.map((f) => ({
+            f,
+            p: cfg.posicoes?.[f.id] ?? { x: f.x - bloco.x, y: f.y - bloco.y, w: f.w, h: f.h },
+          }));
+          const esc = ancora.escala || 1;
+          const minX = Math.min(0, ...itens.map((i) => i.p.x));
+          const minY = Math.min(0, ...itens.map((i) => i.p.y));
+          const maxX = Math.max(0, ...itens.map((i) => i.p.x + i.p.w));
+          const maxY = Math.max(0, ...itens.map((i) => i.p.y + i.p.h));
+          const larg = (maxX - minX) * esc;
+          const alt = (maxY - minY) * esc;
+          // Mantém tudo visível dentro da janela.
+          const margem = 12;
+          const baseLeft = Math.min(
+            Math.max(margem, ancora.left + minX * esc),
+            Math.max(margem, window.innerWidth - larg - margem),
+          );
+          const baseTop = Math.min(
+            Math.max(margem, ancora.top + minY * esc),
+            Math.max(margem, window.innerHeight - alt - margem),
+          );
+          return (
+            <div
+              data-cheio
+              className="fixed inset-0 z-[1400] bg-background/40 backdrop-blur-[2px]"
+              onClick={() => setAberto(false)}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {!filhos.length && (
+                <p className="absolute w-56 rounded-lg border border-border bg-card px-2 py-3 text-xs text-muted-foreground shadow"
+                   style={{ left: baseLeft, top: baseTop }}>
+                  Nenhum elemento vinculado ainda.
+                </p>
+              )}
+              <Suspense fallback={null}>
+                {itens.map(({ f, p }) => (
+                  <div
+                    key={f.id}
+                    className="absolute origin-top-left"
+                    style={{
+                      left: baseLeft + (p.x - minX) * esc,
+                      top: baseTop + (p.y - minY) * esc,
+                      width: p.w,
+                      height: p.h,
+                      transform: `scale(${esc})`,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <BlocoCardLazy
+                      bloco={f}
+                      ligado={estados[f.id] ?? null}
+                      onEstado={(v) => aplicarEstado(f, v)}
+                      onAcionar={() => acionar?.(f)}
+                    />
+                  </div>
+                ))}
+              </Suspense>
+            </div>
+          );
+        })(),
         document.body,
       )}
 
