@@ -217,6 +217,30 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           </div>
 
           <div className="space-y-3 rounded-lg border p-3">
+            <Label className="text-sm font-semibold">Confirmação antes de acionar</Label>
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span className="flex flex-col">
+                <span>Pedir confirmação ao clicar</span>
+                <span className="text-[11px] text-muted-foreground">Mostra uma pergunta antes de executar a ação</span>
+              </span>
+              <Switch
+                checked={cfg.confirmar === true}
+                onCheckedChange={(v) => setCfg({ confirmar: v || undefined })}
+              />
+            </label>
+            {cfg.confirmar === true && (
+              <div>
+                <Label className="text-xs">Texto da confirmação</Label>
+                <Input
+                  value={cfg.textoConfirmacao ?? ""}
+                  placeholder="Deseja mesmo abrir o portão?"
+                  onChange={(e) => setCfg({ textoConfirmacao: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3 rounded-lg border p-3">
             <Label className="text-sm font-semibold">Letras deste elemento</Label>
             <div>
               <Label className="text-xs">Tipo de letra</Label>

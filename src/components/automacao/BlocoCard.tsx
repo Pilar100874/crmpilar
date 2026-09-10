@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
 import ReloginhoPulso from "./ReloginhoPulso";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 import BlocoCamera from "./BlocoCamera";
 import BlocoMapa from "./BlocoMapa";
@@ -77,6 +78,7 @@ export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
   const letras = estiloLetras(bloco);
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
   const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "moeda", "web", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
@@ -101,11 +103,14 @@ export default function BlocoCard(props: Props) {
       onClickCapture={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        onEstado(!(ligado === true));
-        onAcionar();
+        pedir(() => {
+          onEstado(!(ligado === true));
+          onAcionar();
+        });
       }}
     >
       <BlocoCardInterno {...props} />
+      {dialogo}
     </div>
   );
 }
@@ -136,7 +141,12 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
 
 
-  const enviar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const enviar = (acao: "ligar" | "desligar" | "pulso" | "status") =>
+    acao === "status" ? executar(acao) : pedir(() => executar(acao));
+
+  const executar = async (acao: "ligar" | "desligar" | "pulso" | "status") => {
     if (!bloco.device_id) {
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
@@ -275,6 +285,8 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       )}
         style={{ borderRadius: raio }}
       >
+      {dialogo}
+
 
       {(pulsando || contagemAuto) && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">

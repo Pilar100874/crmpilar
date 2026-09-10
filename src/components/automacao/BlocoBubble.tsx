@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { AnimacaoIcone, classeAnimacao, iconePorNome } from "@/lib/automacao/icones";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 interface Props {
   bloco: Bloco;
@@ -36,7 +37,11 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
   const opacidade = typeof cfg.opacidade === "number" ? cfg.opacidade : 100;
   const tamIcone = typeof cfg.tamanhoIcone === "number" ? cfg.tamanhoIcone : 20;
 
-  const alternar = async () => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const alternar = () => pedir(executar);
+
+  const executar = async () => {
     if (!bloco.device_id) {
       onEstado(!aceso);
       return;
@@ -63,6 +68,7 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
         borderColor: cfg.corFundo ? "transparent" : undefined,
       }}
     >
+      {dialogo}
       <span
         className={cn(
           "flex shrink-0 items-center justify-center rounded-lg transition-colors",

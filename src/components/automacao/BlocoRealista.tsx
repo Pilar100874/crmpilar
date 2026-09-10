@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { useModoDispositivo } from "@/lib/automacao/modoDispositivo";
 import ReloginhoPulso from "./ReloginhoPulso";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -43,8 +44,14 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
   const porPulso = modoDispositivo?.modo === "momentary";
 
 
-  const acao = async () => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const acao = () => {
     if (edicao) return;
+    pedir(executar);
+  };
+
+  const executar = async () => {
     if (!bloco.device_id) {
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
@@ -104,6 +111,7 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       }}
 
     >
+      {dialogo}
       {/* brilho de vidro no topo */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[22px]"

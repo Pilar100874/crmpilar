@@ -3,6 +3,7 @@ import { Power, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
+import { useConfirmacaoBloco } from "./ConfirmacaoAcao";
 
 interface Props {
   bloco: Bloco;
@@ -17,7 +18,11 @@ export default function BlocoCena({ bloco, ligado, onEstado }: Props) {
   const modo = cfg.acao ?? "alternar";
   const aceso = ligado === true;
 
-  const acionar = async () => {
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
+
+  const acionar = () => pedir(executar);
+
+  const executar = async () => {
     if (!bloco.device_id) {
       toast.error("Este bloco ainda não tem um dispositivo escolhido.");
       return;
@@ -46,6 +51,7 @@ export default function BlocoCena({ bloco, ligado, onEstado }: Props) {
           : "border-border bg-card hover:border-primary/40",
       )}
     >
+      {dialogo}
       {pulsando && (
         <span className="pointer-events-none absolute inset-0 rounded-2xl bg-primary/25 animate-ping" />
       )}
