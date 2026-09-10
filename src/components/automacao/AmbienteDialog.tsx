@@ -4,7 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -42,6 +51,8 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [isSalvando, setIsSalvando] = useState(false);
+  const [confirmarFormatoAberto, setConfirmarFormatoAberto] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
   /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
   const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
@@ -100,36 +111,47 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   };
 
   const salvar = async (aplicarNoGrupo: boolean) => {
-    await salvarAmbiente({
-      ...ambiente,
-      tela_nome: ambiente?.tela_nome?.trim() || ambiente?.nome?.trim() || null,
-      tela_largura: largura,
-      tela_altura: altura,
-      fundo_opacidade: opacidade,
-      fundo_ajuste: ajuste,
-      dispositivo: tipoTela,
-      rolagem,
-      mostrar_abas: ambiente?.mostrar_abas !== false,
-    });
-    if (aplicarNoGrupo && original.current) {
-      await aplicarFormatoGrupo(original.current.dispositivo, {
-        dispositivo: tipoTela,
+    if (isSalvando) return;
+    setIsSalvando(true);
+    try {
+      await salvarAmbiente({
+        ...ambiente,
+        tela_nome: ambiente?.tela_nome?.trim() || ambiente?.nome?.trim() || null,
         tela_largura: largura,
         tela_altura: altura,
+        fundo_opacidade: opacidade,
+        fundo_ajuste: ajuste,
+        dispositivo: tipoTela,
         rolagem,
-      }, original.current.telaNome);
+        mostrar_abas: ambiente?.mostrar_abas !== false,
+      });
+      if (aplicarNoGrupo && original.current) {
+        await aplicarFormatoGrupo(original.current.dispositivo, {
+          dispositivo: tipoTela,
+          tela_largura: largura,
+          tela_altura: altura,
+          rolagem,
+        }, original.current.telaNome);
+      }
+      onChange(null);
+      toast.success(aplicarNoGrupo ? "Formato aplicado a todas as telas do grupo." : "Ambiente salvo.");
+      onSalvo();
+    } finally {
+      setIsSalvando(false);
+      setConfirmarFormatoAberto(false);
     }
-    onChange(null);
-    toast.success(aplicarNoGrupo ? "Formato aplicado a todas as telas do grupo." : "Ambiente salvo.");
-    onSalvo();
   };
 
   const gravar = async () => {
     if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
-    await salvar(mudouFormato());
+    if (mudouFormato()) {
+      setConfirmarFormatoAberto(true);
+      return;
+    }
+    await salvar(false);
   };
 
-  return (
+  return (<>
     <Dialog open={!!ambiente} onOpenChange={(o) => !o && onChange(null)}>
       <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0"><DialogTitle>{ambiente?.id ? "Editar ambiente" : "Novo ambiente"}</DialogTitle></DialogHeader>
@@ -332,11 +354,36 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
 
         <DialogFooter className="shrink-0 border-t pt-3 bg-background">
-          <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
-          <Button onClick={gravar}>Salvar</Button>
+          <Button variant="outline" disabled={isSalvando} onClick={() => onChange(null)}>Cancelar</Button>
+          <Button disabled={isSalvando} onClick={gravar}>{isSalvando ? "Salvando..." : "Salvar"}</Button>
         </DialogFooter>
 
       </DialogContent>
     </Dialog>
-  );
+
+    <AlertDialog open={confirmarFormatoAberto} onOpenChange={setConfirmarFormatoAberto}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Mudar formato em todas as telas?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Você alterou o aparelho ou formato desta tela. Isso afeta todas as abas
+            do grupo “{original.current?.telaNome || "sem nome"}”.
+            Deseja aplicar a mudança em todas as telas ou somente nesta?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isSalvando}>Cancelar</AlertDialogCancel>
+          <Button variant="outline" disabled={isSalvando} onClick={() => salvar(false)}>
+            Só esta tela
+          </Button>
+          <AlertDialogAction
+            disabled={isSalvando}
+            onClick={(e) => { e.preventDefault(); salvar(true); }}
+          >
+            {isSalvando ? "Salvando..." : "Aplicar em todas"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>);
 }
