@@ -345,19 +345,28 @@ async function pollPortaria() {
   const st = await pollPortariaOnce(cfg);
   STATE.portaria = { ...st, ativo: true };
 }
+// Laço rápido só para comandos: o botão do painel responde quase na hora.
+async function pollJobsRapido() {
+  const cfg = loadConfig();
+  const st = await pollJobsOnce(cfg);
+  STATE.portaria = { ...st, ativo: true };
+}
 function startPortaria() {
   if (timerPortaria) return;
   saveConfig({ portariaEnabled: true });
   STATE.portariaEnabled = true;
   STATE.running = true;
   pollPortaria();
-  timerPortaria = setInterval(pollPortaria, 3_000);
+  timerPortaria = setInterval(pollPortaria, 5_000);
+  timerJobs = setInterval(pollJobsRapido, 400);
 }
 function stopPortaria() {
   saveConfig({ portariaEnabled: false });
   STATE.portariaEnabled = false;
   if (timerPortaria) clearInterval(timerPortaria);
   timerPortaria = null;
+  if (timerJobs) clearInterval(timerJobs);
+  timerJobs = null;
   STATE.running = !!timerPonto || !!timerCameras;
 }
 
