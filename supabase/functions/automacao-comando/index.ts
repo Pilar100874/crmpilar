@@ -90,17 +90,31 @@ Deno.serve(async (req) => {
     ok = r.ok; mensagem = r.mensagem; dados = r.detalhes;
   }
 
-  await admin
-    .from("port_devices")
-    .update({ status: ok ? "online" : "erro", ultima_comunicacao: new Date().toISOString() })
-    .eq("id", device_id);
+  const lido = ok ? estadoDoCanal(dados, canal) : null;
+  const memoria = (device.ultimo_estado ?? {}) as Record<string, boolean>;
+  // Última situação conhecida: usada quando o equipamento não informa o estado,
+  // para a tela não mostrar "desligado" só porque a leitura não veio.
+  const anterior = typeof memoria[String(canal)] === "boolean" ? memoria[String(canal)] : null;
 
-  const ligado = ok ? estadoDoCanal(dados, canal) : null;
+  let ligado: boolean | null = lido;
+  if (acao === "ligar") ligado = true;
+  else if (acao === "desligar") ligado = false;
+  else if (acao === "pulso") ligado = lido;
+  else if (ligado === null) ligado = anterior;
+
+  const atualizacao: Record<string, unknown> = {
+    status: ok ? "online" : "erro",
+    ultima_comunicacao: new Date().toISOString(),
+  };
+  if (ok && typeof ligado === "boolean" && acao !== "pulso") {
+    atualizacao.ultimo_estado = { ...memoria, [String(canal)]: ligado };
+  }
+  await admin.from("port_devices").update(atualizacao).eq("id", device_id);
 
   return responder(200, {
     ok,
     error: ok ? undefined : mensagemAmigavel(mensagem, device.ip),
     mensagem: mensagem ?? null,
-    ligado: acao === "ligar" ? true : acao === "desligar" ? false : ligado,
+    ligado,
   });
 });
