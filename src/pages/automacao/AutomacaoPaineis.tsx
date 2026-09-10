@@ -282,6 +282,13 @@ export default function AutomacaoPaineis() {
 
       <AmbienteDialog ambiente={edit} onChange={setEdit} onSalvo={carregar} />
 
+      <TelaConfigDialog
+        abas={configTela?.abas ?? []}
+        aberto={!!configTela}
+        onFechar={() => setConfigTela(null)}
+        onSalvo={carregar}
+      />
+
       <Dialog open={!!renomear} onOpenChange={(o) => !o && setRenomear(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Renomear tela</DialogTitle></DialogHeader>
