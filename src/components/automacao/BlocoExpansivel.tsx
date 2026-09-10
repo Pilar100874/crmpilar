@@ -32,6 +32,8 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
     raio?: number;
     subtitulo?: string;
     tamanhos?: Record<string, { w: number; h: number }>;
+    corFundoCaixa?: string;
+    opacidadeCaixa?: number;
   };
   const { blocos, estados, aplicarEstado, acionar } = usePainelBlocos();
   const [aberto, setAberto] = useState(false);
@@ -47,6 +49,17 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
   const altura = cfg.alturaItem ?? 68;
   const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
+
+  // Fundo da caixa que abre: cor própria com opacidade, ou o padrão do tema.
+  const fundoCaixa = cfg.corFundoCaixa
+    ? (() => {
+        const hex = cfg.corFundoCaixa.replace("#", "");
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${(cfg.opacidadeCaixa ?? 95) / 100})`;
+      })()
+    : undefined;
 
   // Posição calculada a partir do botão, limitada à janela visível.
   const atualizarPos = useCallback(() => {
@@ -126,10 +139,14 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
         <div
           ref={painel}
           data-cheio
-          className="fixed z-[99999] rounded-2xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur"
+          className={cn(
+            "fixed z-[99999] rounded-2xl border border-border p-2 shadow-xl backdrop-blur",
+            !fundoCaixa && "bg-card/95",
+          )}
           style={{
             left: pos.left,
             top: pos.top,
+            background: fundoCaixa,
             display: "grid",
             gridTemplateColumns: `repeat(${colunas}, ${Math.max(
               largura,
