@@ -22,9 +22,10 @@ import BlocoTexto from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
 import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
+import BlocoBubble from "./BlocoBubble";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas", "bubble"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -101,6 +102,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
       bloco.tipo === "abas" ? <BlocoAbas bloco={bloco} edicao={edicao} /> :
+      bloco.tipo === "bubble" ? <BlocoBubble bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
       bloco.tipo === "texto" ? <BlocoTexto bloco={bloco} /> :
       bloco.tipo === "forma" ? <BlocoForma bloco={bloco} /> :
       bloco.tipo === "clima" ? <BlocoClima bloco={bloco} /> :
