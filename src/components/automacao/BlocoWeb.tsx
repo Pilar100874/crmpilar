@@ -50,8 +50,10 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
   useEffect(() => setLivre(cfg.permitir_interacao !== false), [cfg.permitir_interacao]);
   const interativo = livre && !edicao;
   const cor = cfg.cor || "hsl(var(--foreground))";
+  const podeAmpliar = cfg.permitir_ampliar !== false;
+  const [ampliado, setAmpliado] = useState(false);
 
-  return (
+  const conteudo = (
     <div
       className="flex h-full w-full flex-col overflow-hidden"
       style={{
