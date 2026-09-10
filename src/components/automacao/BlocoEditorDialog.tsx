@@ -46,6 +46,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
   const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
+  const [ajustarPosicoes, setAjustarPosicoes] = useState(false);
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
 
 
