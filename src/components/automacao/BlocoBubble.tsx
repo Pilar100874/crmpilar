@@ -1,5 +1,4 @@
-// Cartão estilo "Bubble Card" do Home Assistant: fundo translúcido,
-// ícone circular colorido à esquerda, nome/estado e ação à direita.
+// Cartão de controle rápido: ícone, nome/estado e ação em uma linha limpa.
 import { useState } from "react";
 import { Loader2, Power } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,10 +31,10 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
   };
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
-  const corIcone = aceso ? (cfg.corAtivo ?? "#fbbf24") : (cfg.corInativo ?? "#64748b");
-  const raio = typeof cfg.raio === "number" ? cfg.raio : 22;
+  const corIcone = aceso ? (cfg.corAtivo ?? "#3b82f6") : (cfg.corInativo ?? "#64748b");
+  const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
   const opacidade = typeof cfg.opacidade === "number" ? cfg.opacidade : 100;
-  const tamIcone = typeof cfg.tamanhoIcone === "number" ? cfg.tamanhoIcone : 22;
+  const tamIcone = typeof cfg.tamanhoIcone === "number" ? cfg.tamanhoIcone : 20;
 
   const alternar = async () => {
     if (!bloco.device_id) {
@@ -54,7 +53,7 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
       onClick={alternar}
       disabled={ocupado}
       className={cn(
-        "group relative h-full w-full flex items-center gap-3 px-4 text-left transition-all active:scale-[0.98]",
+        "group relative h-full w-full flex items-center gap-3 px-3 text-left transition-all active:scale-[0.98]",
         !cfg.transparente && !cfg.corFundo && "bg-card border border-border shadow-sm",
       )}
       style={{
@@ -64,20 +63,14 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
         borderColor: cfg.corFundo ? "transparent" : undefined,
       }}
     >
-      {/* brilho de fundo quando ligado */}
-      {aceso && (
-        <span
-          className="pointer-events-none absolute inset-0 transition-opacity"
-          style={{ borderRadius: raio, background: `radial-gradient(circle at 18% 50%, ${corIcone}33, transparent 65%)` }}
-        />
-      )}
-
       <span
-        className={cn("flex shrink-0 items-center justify-center rounded-full transition-colors")}
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-lg transition-colors",
+          aceso ? "bg-primary/15" : "bg-muted",
+        )}
         style={{
-          width: tamIcone * 2,
-          height: tamIcone * 2,
-          background: `${corIcone}26`,
+          width: tamIcone * 2.2,
+          height: tamIcone * 2.2,
           color: corIcone,
         }}
       >
@@ -98,12 +91,12 @@ export default function BlocoBubble({ bloco, ligado, onEstado }: Props) {
       {(cfg.mostrarBotao ?? true) && (
         <span
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors",
-            aceso ? "text-white" : "text-muted-foreground",
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors",
+            aceso ? "border-transparent text-primary-foreground" : "text-muted-foreground hover:text-foreground",
           )}
           style={{
             background: aceso ? corIcone : "transparent",
-            borderColor: aceso ? corIcone : "currentColor",
+            borderColor: aceso ? corIcone : undefined,
           }}
         >
           <Power className="h-4 w-4" />
