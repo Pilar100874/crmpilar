@@ -256,7 +256,15 @@ export default function AutomacaoPaineis() {
         );
       })}
 
-      <AmbienteDialog ambiente={edit} onChange={setEdit} onSalvo={carregar} />
+      <NovaTelaDialog
+        aberto={!!novaTela}
+        tipoInicial={novaTela?.tipo ?? "tv"}
+        onFechar={() => setNovaTela(null)}
+        onSalvo={(id) => {
+          carregar();
+          if (id) navegar(`/automacao/painel/${id}`);
+        }}
+      />
 
       <TelaConfigDialog
         abas={configTela?.abas ?? []}
