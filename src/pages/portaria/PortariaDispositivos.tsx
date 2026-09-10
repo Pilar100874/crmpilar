@@ -12,6 +12,8 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STATUS_CORES, salvarCredenciais, testarDispositivo, configurarSaidaDispositivo } from "@/lib/portaria/api";
 import { SHELLY_MODELOS, getShellyModelo, rotuloShelly, portaPadraoDispositivo } from "@/lib/portaria/shellyModelos";
+import { limparCacheModos } from "@/lib/automacao/modoDispositivo";
+
 
 
 type Dispositivo = {
