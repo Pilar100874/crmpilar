@@ -78,6 +78,21 @@ export default function AutomacaoTela() {
     })();
   }, []);
 
+  // Mantém a situação real dos equipamentos na tela, sem recarregar.
+  useEstadosAoVivo(blocos, (novos) => {
+    setEstados((s) => {
+      const proximo = { ...s };
+      let mudou = false;
+      for (const [blocoId, ligado] of Object.entries(novos)) {
+        if (ligado === null && blocoId in proximo) continue;
+        if (proximo[blocoId] === ligado) continue;
+        proximo[blocoId] = ligado;
+        mudou = true;
+      }
+      return mudou ? proximo : s;
+    });
+  });
+
   // Painel definido para o usuário logado (celular e tablet).
   const [ambienteDoUsuario, setAmbienteDoUsuario] = useState<string>("");
 
