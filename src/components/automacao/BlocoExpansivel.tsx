@@ -148,7 +148,12 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
               const t = cfg.tamanhos?.[f.id];
               return (
                 <div key={f.id} style={{ width: t?.w ?? largura, height: t?.h ?? altura }}>
-                  <BlocoCardLazy bloco={f} estado={estados[f.id]} onAcionar={acionar} onEstado={aplicarEstado} />
+                  <BlocoCardLazy
+                    bloco={f}
+                    ligado={estados[f.id] ?? null}
+                    onEstado={(lig) => aplicarEstado(f, lig)}
+                    onAcionar={() => acionar(f)}
+                  />
                 </div>
               );
             })}
