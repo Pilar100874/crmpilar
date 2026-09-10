@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
     const r = await shellyPulso({ ...device, canal_rele: canal } as never, cred ?? {});
     ok = r.ok; mensagem = r.mensagem; dados = r.detalhes;
   } else if (acao === "status") {
-    const r = await shellyStatus(device as never, cred ?? {});
+    const r = await shellyStatus(device as never, cred ?? {}, canal);
     ok = r.ok; mensagem = r.mensagem; dados = r.detalhes;
   } else {
     const r = await shellyLigar(device as never, cred ?? {}, canal, acao === "ligar");
