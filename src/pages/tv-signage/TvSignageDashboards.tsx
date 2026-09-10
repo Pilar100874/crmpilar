@@ -36,7 +36,7 @@ export default function TvSignageDashboards() {
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
     supabase.from("unidades").select("id,nome").order("nome").then(({ data }) => setGruposVeiculos(data || []));
     supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
-    supabase.from("automacao_ambientes").select("id,nome,tela_nome,dispositivo,ativo").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
+    supabase.from("automacao_ambientes").select("id,nome,tela_nome,dispositivo,ativo,tela_largura,tela_altura,rolagem").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
   }, []);
 
 
