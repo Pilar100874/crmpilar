@@ -28838,6 +28838,8 @@ export type Database = {
         Row: {
           ativo: boolean
           auth_user_id: string | null
+          automacao_ambiente_celular: string | null
+          automacao_ambiente_tablet: string | null
           created_at: string | null
           email: string | null
           estabelecimento_id: string | null
@@ -28878,6 +28880,8 @@ export type Database = {
         Insert: {
           ativo?: boolean
           auth_user_id?: string | null
+          automacao_ambiente_celular?: string | null
+          automacao_ambiente_tablet?: string | null
           created_at?: string | null
           email?: string | null
           estabelecimento_id?: string | null
@@ -28918,6 +28922,8 @@ export type Database = {
         Update: {
           ativo?: boolean
           auth_user_id?: string | null
+          automacao_ambiente_celular?: string | null
+          automacao_ambiente_tablet?: string | null
           created_at?: string | null
           email?: string | null
           estabelecimento_id?: string | null
@@ -28956,6 +28962,20 @@ export type Database = {
           whatsapp_status_reason?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "usuarios_automacao_ambiente_celular_fkey"
+            columns: ["automacao_ambiente_celular"]
+            isOneToOne: false
+            referencedRelation: "automacao_ambientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_automacao_ambiente_tablet_fkey"
+            columns: ["automacao_ambiente_tablet"]
+            isOneToOne: false
+            referencedRelation: "automacao_ambientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "usuarios_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
