@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import AmbienteDialog from "@/components/automacao/AmbienteDialog";
+import NovaTelaDialog from "@/components/automacao/NovaTelaDialog";
 import TelaConfigDialog from "@/components/automacao/TelaConfigDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
