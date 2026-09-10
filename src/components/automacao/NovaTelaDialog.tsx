@@ -30,7 +30,6 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
   const [largura, setLargura] = useState(TELA_PADRAO.largura);
   const [altura, setAltura] = useState(TELA_PADRAO.altura);
   const [rolagem, setRolagem] = useState(false);
-  const [mostrarAbas, setMostrarAbas] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -43,7 +42,6 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
     setLargura(primeiro.largura);
     setAltura(primeiro.altura);
     setRolagem(t === "celular");
-    setMostrarAbas(true);
   }, [aberto, tipoInicial]);
 
   const trocarTipo = (t: TipoTela) => {
@@ -77,7 +75,7 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
         tela_altura: altura,
         dispositivo: tipoTela,
         rolagem,
-        mostrar_abas: mostrarAbas,
+        mostrar_abas: true,
         ativo: true,
       });
       if (!criado) { toast.error("Não foi possível criar a tela."); return; }
@@ -158,16 +156,6 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
               </div>
             </div>
           )}
-
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={mostrarAbas}
-              onChange={(e) => setMostrarAbas(e.target.checked)}
-            />
-            Mostrar as abas das telas deste mesmo aparelho
-          </label>
 
           {(tipoTela === "tablet" || tipoTela === "celular") && (
             <label className="flex items-center gap-2 text-sm">
