@@ -5,7 +5,7 @@ import {
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   Lock, Unlock, Layers, ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff, ArrowLeft,
+  Eye, EyeOff, Minus, Maximize2, Minimize2, Copy, CopyPlus, Save, Power, PowerOff, ArrowLeft, Workflow,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -559,9 +559,23 @@ export default function AutomacaoPainel() {
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
         </span>
         {admin && (
-          <Button variant={edicao ? "default" : "outline"} size="sm" className="ml-auto" onClick={() => setEdicao((v) => !v)}>
-            {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              disabled={!ambienteAtual}
+              onClick={() =>
+                ambienteAtual &&
+                navegar(`/automacao/regras?ambiente=${ambienteAtual.id}&nome=${encodeURIComponent(ambienteAtual.nome)}`)
+              }
+            >
+              <Workflow className="h-4 w-4 mr-2" /> Automações
+            </Button>
+            <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>
+              {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
+            </Button>
+          </>
         )}
       </div>
 
