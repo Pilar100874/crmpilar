@@ -2,7 +2,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { adminClient, autenticar } from "../_shared/portaria/auth.ts";
-import { shellyStatus, shellyPulso } from "../_shared/portaria/shelly.ts";
+import { shellyStatus, shellyPulso, shellyConfigurarSaida } from "../_shared/portaria/shelly.ts";
 import { ControlIDService } from "../_shared/portaria/controlid.ts";
 import { executarViaColetor } from "../_shared/portaria/coletor.ts";
 
