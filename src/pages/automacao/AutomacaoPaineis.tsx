@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
+import { Copy, LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
-  excluirAmbiente, listarAmbientes, renomearTela,
+  duplicarTela, excluirAmbiente, listarAmbientes, renomearTela,
 } from "@/lib/automacao/api";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
@@ -126,6 +126,18 @@ export default function AutomacaoPaineis() {
     carregar();
   };
 
+  const [duplicando, setDuplicando] = useState(false);
+
+  /** Duplica a tela inteira (todas as abas e elementos) em um novo cartão "(cópia)". */
+  const confirmarDuplicacao = async (grupo: TelaGrupo) => {
+    setDuplicando(true);
+    const criados = await duplicarTela(grupo.abas);
+    setDuplicando(false);
+    if (criados > 0) toast.success(`Tela duplicada com ${criados} ${criados === 1 ? "aba" : "abas"}.`);
+    else toast.error("Não foi possível duplicar a tela.");
+    carregar();
+  };
+
   const confirmarExclusao = async () => {
     if (!excluirTela) return;
     for (const aba of excluirTela.abas) await excluirAmbiente(aba.id);
@@ -228,6 +240,13 @@ export default function AutomacaoPaineis() {
                             }
                           >
                             <Workflow className="h-4 w-4 mr-1" /> Automações
+                          </Button>
+                          <Button
+                            size="icon" variant="ghost" className="h-8 w-8" title="Duplicar tela e todas as abas"
+                            disabled={duplicando}
+                            onClick={() => confirmarDuplicacao(grupo)}
+                          >
+                            <Copy className="h-4 w-4" />
                           </Button>
                           <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Renomear tela"
