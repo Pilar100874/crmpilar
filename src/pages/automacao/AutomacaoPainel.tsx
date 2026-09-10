@@ -19,7 +19,7 @@ import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
-  definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
+  definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, lerEstadosDosBlocos, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
@@ -90,6 +90,14 @@ export default function AutomacaoPainel() {
     setCameras(c);
     setRegras(r);
     setAmbienteId((atual) => (a.some((x) => x.id === atual) ? atual : a[0]?.id || ""));
+    // Já mostra os botões com a situação real dos equipamentos.
+    lerEstadosDosBlocos(b)
+      .then((e) => setEstados((s) => {
+        const proximo = { ...e, ...s };
+        estadosRef.current = proximo;
+        return proximo;
+      }))
+      .catch(() => {});
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
