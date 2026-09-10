@@ -207,19 +207,19 @@ export default function AutomacaoPaineis() {
                       </div>
 
                       {admin && (
-                        <div className="mt-2 flex items-center gap-1 border-t pt-2">
-                          <Button size="sm" variant="ghost" onClick={() => primeira && navegar(`/automacao/painel/${primeira.id}`)}>
+                        <div className="mt-2 flex flex-wrap items-center gap-1 border-t pt-2">
+                          <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => primeira && navegar(`/automacao/painel/${primeira.id}`)}>
                             Abrir
                           </Button>
                           <Button
-                            size="sm" variant="ghost" title="Automações desta tela"
+                            size="sm" variant="ghost" className="h-8 px-2" title="Automações desta tela"
                             onClick={() =>
                               navegar(
                                 `/automacao/regras?ambiente=${grupo.abas.map((a) => a.id).join(",")}&nome=${encodeURIComponent(grupo.nome)}`,
                               )
                             }
                           >
-                            <Workflow className="h-4 w-4 mr-1" /> Automações
+                            <Workflow className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Automações</span>
                           </Button>
                           <Button
                             size="icon" variant="ghost" className="h-8 w-8" title="Duplicar tela e todas as abas"
