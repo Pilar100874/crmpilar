@@ -139,8 +139,14 @@ async function shellyLigar(device, cred, canal, ligar) {
   if (cred && cred.usuario && cred.senha) {
     headers.Authorization = 'Basic ' + Buffer.from(`${cred.usuario}:${cred.senha}`).toString('base64');
   }
-  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? 'true' : 'false'}`;
-  const gen1 = `${base}/relay/${canal}?turn=${ligar ? 'on' : 'off'}`;
+  // Auto-desligar também vai junto do comando de ligar, garantindo que o
+  // aparelho desligue sozinho mesmo se a configuração gravada não pegar.
+  const cfgDev = (device.config || {});
+  const autoOffAtivo = cfgDev.auto_off === true || cfgDev.auto_off === 'true';
+  const autoOffSeg = Math.max(0, Math.round(Number(cfgDev.auto_off_delay || 0)));
+  const comTempo = ligar && autoOffAtivo && autoOffSeg > 0;
+  const rpc = `${base}/rpc/Switch.Set?id=${canal}&on=${ligar ? 'true' : 'false'}${comTempo ? `&toggle_after=${autoOffSeg}` : ''}`;
+  const gen1 = `${base}/relay/${canal}?turn=${ligar ? 'on' : 'off'}${comTempo ? `&timer=${autoOffSeg}` : ''}`;
   const texto = await tentarUrls(geracao === 'gen1' ? [gen1, rpc] : [rpc, gen1], headers);
   return { mensagem: ligar ? 'Ligado pelo Coletor local.' : 'Desligado pelo Coletor local.', dados: texto.slice(0, 300) };
 }
