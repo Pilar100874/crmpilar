@@ -1497,18 +1497,44 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           )}
 
           {["camera", "rastreamento", "mapa", "portaria"].includes(blocoEdit?.tipo ?? "") && (
-            <div className="space-y-2 rounded-lg border p-3">
+            <div className="space-y-3 rounded-lg border p-3">
               <Label className="text-sm font-semibold">Comportamento</Label>
-              <label className="flex items-center justify-between gap-3 text-sm">
-                <span className="flex flex-col">
-                  <span>Permitir ampliar</span>
-                  <span className="text-[11px] text-muted-foreground">Ao clicar, o elemento abre em tela cheia</span>
-                </span>
-                <Switch
-                  checked={cfg.permitir_ampliar !== false}
-                  onCheckedChange={(v) => setCfg({ permitir_ampliar: v })}
-                />
-              </label>
+              <div className="flex flex-col gap-3 text-sm">
+                <label className="flex items-center justify-between gap-3">
+                  <span className="flex flex-col">
+                    <span>Permitir interação</span>
+                    <span className="text-[11px] text-muted-foreground">Deixa clicar e mexer no conteúdo (mapa, vídeo, lista)</span>
+                  </span>
+                  <Switch
+                    checked={cfg.permitir_interacao !== false}
+                    onCheckedChange={(v) => setCfg({ permitir_interacao: v })}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Mostrar barra com título</span>
+                  <Switch
+                    checked={cfg.mostrar_barra !== false}
+                    onCheckedChange={(v) => setCfg({ mostrar_barra: v })}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Fundo transparente</span>
+                  <Switch
+                    checked={cfg.transparente === true}
+                    onCheckedChange={(v) => setCfg({ transparente: v })}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span className="flex flex-col">
+                    <span>Permitir maximizar</span>
+                    <span className="text-[11px] text-muted-foreground">Ao clicar, o elemento abre em tela cheia</span>
+                  </span>
+                  <Switch
+                    checked={cfg.permitir_ampliar !== false}
+                    onCheckedChange={(v) => setCfg({ permitir_ampliar: v })}
+                  />
+                </label>
+              </div>
             </div>
           )}
 
