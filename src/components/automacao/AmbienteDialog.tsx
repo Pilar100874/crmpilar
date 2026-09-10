@@ -151,7 +151,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
     await salvar(false);
   };
 
-  return (
+  return (<>
     <Dialog open={!!ambiente} onOpenChange={(o) => !o && onChange(null)}>
       <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0"><DialogTitle>{ambiente?.id ? "Editar ambiente" : "Novo ambiente"}</DialogTitle></DialogHeader>
@@ -385,5 +385,5 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  </>);
 }
