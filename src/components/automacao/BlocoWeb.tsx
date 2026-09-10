@@ -55,7 +55,7 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
 
   const conteudo = (
     <div
-      className="flex h-full w-full flex-col overflow-hidden"
+      className="relative flex h-full w-full flex-col overflow-hidden"
       style={{
         background: cfg.transparente ? "transparent" : cfg.fundo || "hsl(var(--card))",
         color: cor,

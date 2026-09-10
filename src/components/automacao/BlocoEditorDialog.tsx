@@ -903,6 +903,16 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                       onCheckedChange={(v) => setCfg({ transparente: v })}
                     />
                   </label>
+                  <label className="flex items-center justify-between gap-3">
+                    <span className="flex flex-col">
+                      <span>Permitir maximizar</span>
+                      <span className="text-[11px] text-muted-foreground">Mostra o botão para abrir o site em tela cheia</span>
+                    </span>
+                    <Switch
+                      checked={cfg.permitir_ampliar !== false}
+                      onCheckedChange={(v) => setCfg({ permitir_ampliar: v })}
+                    />
+                  </label>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
