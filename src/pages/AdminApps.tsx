@@ -193,7 +193,10 @@ export default function AdminApps() {
             </span>
           </div>
 
-          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Automação</h2>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <h2 className="text-xl font-bold text-foreground sm:text-2xl">Pilar Automação</h2>
+            <VersaoAppBadge manifesto="/apps/pilar-automacao-latest.json" />
+          </div>
           <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
             Aplicativo dedicado para abrir os painéis de automação em celular ou tablet.
             Instale o APK no Android e escolha qual ambiente deve abrir em cada aparelho.
