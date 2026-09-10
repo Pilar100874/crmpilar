@@ -279,6 +279,15 @@ async function executarJob(job) {
     if (idface) throw new Error('Liga/desliga disponível somente para Shelly.');
     return await shellyLigar(device, cred, Number(params.canal) || 0, job.comando === 'ligar');
   }
+  if (job.comando === 'configurar_saida') {
+    if (idface) throw new Error('Configuração de saída disponível somente para Shelly.');
+    return await shellyConfigurarSaida(device, cred, Number(params.canal) || 0, {
+      modo: params.modo,
+      auto_off: params.auto_off,
+      auto_off_delay: params.auto_off_delay,
+      power_on_state: params.power_on_state,
+    });
+  }
   if (job.comando === 'abrir') {
     return idface
       ? await controlidAbrir(device, cred, Number(params.porta) || 1)
