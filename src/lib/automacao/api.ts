@@ -25,7 +25,8 @@ export type TipoBloco =
   | "texto"
   | "forma"
   | "clima"
-  | "abas";
+  | "abas"
+  | "bubble";
 
 export interface Ambiente {
   id: string;
@@ -175,6 +176,7 @@ export const TIPOS_BLOCO: {
   { valor: "forma", label: "Retângulo / bola", descricao: "Desenho simples com cor de fundo, borda e cantos ajustáveis", grupo: "Visual" },
   { valor: "abas", label: "Abas de ambientes", descricao: "Botões para trocar de ambiente dentro do próprio painel", grupo: "Visual" },
   { valor: "clima", label: "Data, hora e clima", descricao: "Relógio com data e a previsão do tempo da cidade", grupo: "Informação" },
+  { valor: "bubble", label: "Bubble Card", descricao: "Cartão redondo estilo Home Assistant com ícone, estado e slider", grupo: "Controle" },
   { valor: "ambiente", label: "Cartão de ambiente (foto)", descricao: "Foto que fica clara ao ligar e escura ao desligar", grupo: "Controle" },
   { valor: "imagemluz", label: "Imagem acesa / apagada", descricao: "Imagem com fundo transparente que aparece ao ligar (ideal para sobrepor)", grupo: "Controle" },
 ];

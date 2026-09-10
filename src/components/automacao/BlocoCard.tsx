@@ -22,9 +22,10 @@ import BlocoTexto from "./BlocoTexto";
 import BlocoClima from "./BlocoClima";
 import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
+import BlocoBubble from "./BlocoBubble";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas", "bubble"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -46,7 +47,7 @@ export default function BlocoCard(props: Props) {
   const semDispositivo = !bloco.device_id;
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
-  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas"].includes(bloco.tipo);
+  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas", "bubble"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
