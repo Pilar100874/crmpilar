@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone } from "lucide-react";
 import { downloadApk } from "@/lib/downloadApk";
-import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME, TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 export default function TvSignageApi() {
   const [apkUrl, setApkUrl] = useState<string>("");
@@ -18,7 +19,10 @@ export default function TvSignageApi() {
               <Smartphone className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-base">App Android TV / Google TV</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-semibold text-base">App Android TV / Google TV</h2>
+                <VersaoAppBadge manifesto={TV_SIGNAGE_MANIFEST_URL} />
+              </div>
               <p className="text-sm text-muted-foreground">
                 Baixe o APK e instale na sua TV para exibir os dashboards em tela cheia.
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas

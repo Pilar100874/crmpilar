@@ -5,7 +5,8 @@ import { Download, Smartphone, QrCode as QrIcon, CheckCircle2 } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadApk } from "@/lib/downloadApk";
-import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME, TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 export default function TvPair() {
   const [params] = useSearchParams();
@@ -53,6 +54,7 @@ export default function TvPair() {
                 <CardTitle className="text-base flex items-center gap-2">
                   <span className="inline-flex w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs items-center justify-center">1</span>
                   Baixe e instale o app
+                  <VersaoAppBadge manifesto={TV_SIGNAGE_MANIFEST_URL} className="ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">

@@ -5,6 +5,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 type Manifesto = {
   url: string;
@@ -43,7 +44,10 @@ export default function BaixarAppAutomacao({ ambienteId, ambienteNome }: { ambie
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Aplicativo Pilar Automação</DialogTitle>
+          <DialogTitle className="flex flex-wrap items-center gap-2">
+            Aplicativo Pilar Automação
+            <VersaoAppBadge manifesto="/apps/pilar-automacao-latest.json" />
+          </DialogTitle>
           <DialogDescription>
             Instale no celular ou tablet para abrir direto o painel escolhido, em tela cheia.
           </DialogDescription>
