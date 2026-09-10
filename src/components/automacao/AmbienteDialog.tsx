@@ -15,7 +15,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -54,6 +53,7 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [isSalvando, setIsSalvando] = useState(false);
   const [confirmarFormatoAberto, setConfirmarFormatoAberto] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState<"tela" | "fundo">("tela");
   const arquivoRef = useRef<HTMLInputElement | null>(null);
   /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
   const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number; telaNome: string | null } | null>(null);
@@ -179,17 +179,29 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
             />
           </div>
 
-          <Tabs defaultValue="tela" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="tela">
-                <Monitor className="h-4 w-4 mr-2" /> Onde aparece
-              </TabsTrigger>
-              <TabsTrigger value="fundo">
-                <ImageIcon className="h-4 w-4 mr-2" /> Foto de fundo
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={abaAtiva === "tela" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAbaAtiva("tela")}
+              className="flex-1"
+            >
+              <Monitor className="h-4 w-4 mr-2" /> Onde aparece
+            </Button>
+            <Button
+              type="button"
+              variant={abaAtiva === "fundo" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAbaAtiva("fundo")}
+              className="flex-1"
+            >
+              <ImageIcon className="h-4 w-4 mr-2" /> Foto de fundo
+            </Button>
+          </div>
 
-            <TabsContent value="tela" className="space-y-3 rounded-xl border p-3 mt-3">
+          {abaAtiva === "tela" && (
+            <div className="space-y-3 rounded-xl border p-3">
               <p className="text-xs text-muted-foreground">
                 Escolha o aparelho e o formato na lista. O painel aparece automaticamente para quem abrir
                 a tela de parede nesse aparelho, e o retângulo do editor fica exatamente nesse formato.
@@ -275,9 +287,11 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
                   </p>
                 </div>
               )}
-            </TabsContent>
+            </div>
+          )}
 
-            <TabsContent value="fundo" className="space-y-3 rounded-xl border p-3 mt-3">
+          {abaAtiva === "fundo" && (
+            <div className="space-y-3 rounded-xl border p-3">
               <p className="text-xs text-muted-foreground">
                 Coloque uma foto da sua casa atrás dos elementos e escolha o quanto ela aparece.
               </p>
@@ -352,8 +366,8 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
                   </Button>
                 ))}
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
 
 
