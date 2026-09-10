@@ -77,6 +77,7 @@ export default function BlocoCard(props: Props) {
   const { bloco, ligado, onEstado, edicao, onAcionar } = props;
   const semDispositivo = !bloco.device_id;
   const letras = estiloLetras(bloco);
+  const { pedir, dialogo } = useConfirmacaoBloco(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
   const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "moeda", "web", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
