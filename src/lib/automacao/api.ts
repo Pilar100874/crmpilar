@@ -30,6 +30,8 @@ export type TipoBloco =
 export interface Ambiente {
   id: string;
   nome: string;
+  /** Nome da tela (grupo de abas) a que este ambiente pertence. */
+  tela_nome?: string | null;
   icone: string | null;
   ordem: number;
   /** Tamanho da tela de parede em pontos (ex.: 1920 x 1080). */
