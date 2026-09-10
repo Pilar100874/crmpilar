@@ -18,7 +18,10 @@ export default function TvSignageApi() {
               <Smartphone className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-base">App Android TV / Google TV</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-semibold text-base">App Android TV / Google TV</h2>
+                <VersaoAppBadge manifesto={TV_SIGNAGE_MANIFEST_URL} />
+              </div>
               <p className="text-sm text-muted-foreground">
                 Baixe o APK e instale na sua TV para exibir os dashboards em tela cheia.
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
