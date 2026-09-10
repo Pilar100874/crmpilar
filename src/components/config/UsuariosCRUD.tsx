@@ -127,6 +127,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isPorteiro, setIsPorteiro] = useState(false);
   
   const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
+  const [ambienteCelular, setAmbienteCelular] = useState<string>("");
+  const [ambienteTablet, setAmbienteTablet] = useState<string>("");
+  const [ambientesAutomacao, setAmbientesAutomacao] = useState<{ id: string; nome: string; dispositivo: string | null }[]>([]);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -150,6 +153,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   useEffect(() => {
     fetchData();
   }, [estabelecimentoId]);
+
+  // Painéis de automação disponíveis para celular e tablet
+  useEffect(() => {
+    supabase
+      .from("automacao_ambientes")
+      .select("id, nome, dispositivo, ativo")
+      .order("nome")
+      .then(({ data }) =>
+        setAmbientesAutomacao(
+          (data || [])
+            .filter((a: any) => a.ativo !== false)
+            .map((a: any) => ({ id: a.id, nome: a.nome, dispositivo: a.dispositivo ?? null })),
+        ),
+      );
+  }, []);
 
 
   const fetchData = async () => {
@@ -383,6 +401,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
+      automacao_ambiente_celular: ambienteCelular || null,
+      automacao_ambiente_tablet: ambienteTablet || null,
     };
 
     if (editingId) {
@@ -684,6 +704,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAtendente(false);
     setIsPorteiro(false);
     setAbasPilarFone([]);
+    setAmbienteCelular("");
+    setAmbienteTablet("");
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -721,6 +743,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
+    setAmbienteCelular(((usuario as any).automacao_ambiente_celular as string) || "");
+    setAmbienteTablet(((usuario as any).automacao_ambiente_tablet as string) || "");
     setEditingId(usuario.id);
     setFormOpen(true);
 
@@ -1126,6 +1150,46 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                   </label>
                 );
               })}
+            </div>
+          <div className="mt-4 rounded-lg border border-border p-3">
+            <Label>Telas de automação no celular e no tablet</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Escolha qual painel de automação este usuário abre no aplicativo. Deixe vazio para o aplicativo
+              escolher sozinho.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="usuario-ambiente-celular">Painel no celular</Label>
+                <Select value={ambienteCelular || "nenhum"} onValueChange={(v) => setAmbienteCelular(v === "nenhum" ? "" : v)}>
+                  <SelectTrigger id="usuario-ambiente-celular">
+                    <SelectValue placeholder="Escolher automaticamente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Escolher automaticamente</SelectItem>
+                    {ambientesAutomacao
+                      .filter((a) => !a.dispositivo || a.dispositivo === "celular")
+                      .map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="usuario-ambiente-tablet">Painel no tablet</Label>
+                <Select value={ambienteTablet || "nenhum"} onValueChange={(v) => setAmbienteTablet(v === "nenhum" ? "" : v)}>
+                  <SelectTrigger id="usuario-ambiente-tablet">
+                    <SelectValue placeholder="Escolher automaticamente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Escolher automaticamente</SelectItem>
+                    {ambientesAutomacao
+                      .filter((a) => !a.dispositivo || a.dispositivo === "tablet")
+                      .map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
