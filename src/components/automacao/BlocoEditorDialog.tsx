@@ -16,6 +16,7 @@ import SeletorIcone from "@/components/automacao/SeletorIcone";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
+import { MOEDAS } from "@/components/automacao/BlocoMoeda";
 import { FORMAS } from "@/components/automacao/BlocoForma";
 import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
 import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
@@ -30,7 +31,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "forma", "clima", "grafico", "abas", "expansivel",
+  "interfone", "texto", "forma", "clima", "moeda", "grafico", "abas", "expansivel",
 ];
 
 
@@ -816,6 +817,101 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 />
                 Mostrar o nome sobre a imagem
               </label>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "moeda" && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">De (moeda de origem)</Label>
+                  <Select value={cfg.de ?? "USD"} onValueChange={(v) => setCfg({ de: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {MOEDAS.map((m) => (<SelectItem key={m.valor} value={m.valor}>{m.rotulo}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Para (moeda de destino)</Label>
+                  <Select value={cfg.para ?? "BRL"} onValueChange={(v) => setCfg({ para: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {MOEDAS.map((m) => (<SelectItem key={m.valor} value={m.valor}>{m.rotulo}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Quantidade</Label>
+                  <Input type="number" min={1} value={cfg.quantidade ?? 1} onChange={(e) => setCfg({ quantidade: Number(e.target.value) || 1 })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Casas decimais</Label>
+                  <Input type="number" min={0} max={8} value={cfg.casas ?? 2} onChange={(e) => setCfg({ casas: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Atualizar a cada (s)</Label>
+                  <Input type="number" min={10} value={cfg.intervalo ?? 60} onChange={(e) => setCfg({ intervalo: Number(e.target.value) })} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Título (opcional)</Label>
+                <Input value={cfg.titulo ?? ""} placeholder="Dólar comercial" onChange={(e) => setCfg({ titulo: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_variacao !== false} onChange={(e) => setCfg({ mostrar_variacao: e.target.checked })} />
+                  Mostrar variação do dia
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_maxmin === true} onChange={(e) => setCfg({ mostrar_maxmin: e.target.checked })} />
+                  Mostrar máxima e mínima
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.mostrar_atualizacao !== false} onChange={(e) => setCfg({ mostrar_atualizacao: e.target.checked })} />
+                  Mostrar hora da cotação
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cfg.layout === "horizontal"} onChange={(e) => setCfg({ layout: e.target.checked ? "horizontal" : "vertical" })} />
+                  Lado a lado
+                </label>
+              </div>
+              <div>
+                <Label className="text-xs">Fonte</Label>
+                <Select value={cfg.fonte ?? "system"} onValueChange={(v) => setCfg({ fonte: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {FONTES_TEXTO.map((f) => (<SelectItem key={f.valor} value={f.valor}>{f.rotulo}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Cor do texto</Label>
+                  <input type="color" value={cfg.cor || "#f1f5f9"} onChange={(e) => setCfg({ cor: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                </div>
+                <div>
+                  <Label className="text-xs">Cor secundária</Label>
+                  <input type="color" value={cfg.cor_secundaria || "#94a3b8"} onChange={(e) => setCfg({ cor_secundaria: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                </div>
+                <div>
+                  <Label className="text-xs">Fundo</Label>
+                  <input type="color" value={cfg.fundo || "#1c1f26"} onChange={(e) => setCfg({ fundo: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
+                  {cfg.fundo && (
+                    <button type="button" className="text-[11px] text-muted-foreground underline" onClick={() => setCfg({ fundo: undefined })}>remover</button>
+                  )}
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={cfg.transparente === true} onChange={(e) => setCfg({ transparente: e.target.checked })} />
+                Fundo transparente
+              </label>
+              <div>
+                <Label className="text-xs">Tamanho do valor</Label>
+                <Input type="number" min={12} value={cfg.tamanho_valor ?? 34} onChange={(e) => setCfg({ tamanho_valor: Number(e.target.value) })} />
+              </div>
             </div>
           )}
 

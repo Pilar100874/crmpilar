@@ -25,6 +25,7 @@ export type TipoBloco =
   | "texto"
   | "forma"
   | "clima"
+  | "moeda"
   | "abas"
   | "bubble"
   | "expansivel";
@@ -178,6 +179,7 @@ export const TIPOS_BLOCO: {
   { valor: "texto", label: "Texto", descricao: "Escreva títulos, avisos ou legendas na tela", grupo: "Visual" },
   { valor: "forma", label: "Retângulo / bola", descricao: "Desenho simples com cor de fundo, borda e cantos ajustáveis", grupo: "Visual" },
   { valor: "abas", label: "Abas de ambientes", descricao: "Botões para trocar de ambiente dentro do próprio painel", grupo: "Visual" },
+  { valor: "moeda", label: "Cotação de moeda", descricao: "Variação em tempo real de uma moeda para outra (ex.: dólar em real)", grupo: "Informação" },
   { valor: "clima", label: "Data, hora e clima", descricao: "Relógio com data e a previsão do tempo da cidade", grupo: "Informação" },
   { valor: "ambiente", label: "Cartão de ambiente (foto)", descricao: "Foto que fica clara ao ligar e escura ao desligar", grupo: "Controle" },
   { valor: "imagemluz", label: "Imagem acesa / apagada", descricao: "Imagem com fundo transparente que aparece ao ligar (ideal para sobrepor)", grupo: "Controle" },
