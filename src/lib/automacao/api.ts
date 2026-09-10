@@ -44,6 +44,10 @@ export interface Ambiente {
   fundo_ajuste: string | null;
   /** Painel ligado (aparece para todos) ou desativado (só administradores veem). */
   ativo?: boolean | null;
+  /** Para qual tipo de tela este painel foi montado. */
+  dispositivo?: TipoTela | null;
+  /** Em tablet/celular, permite que a tela role para baixo. */
+  rolagem?: boolean | null;
 }
 
 /** Guarda no banco como os elementos são posicionados no ambiente. */
@@ -54,13 +58,51 @@ export async function salvarModoAmbiente(id: string, modo: "grade" | "livre") {
 /** Tamanho usado quando o ambiente ainda não tem tela definida. */
 export const TELA_PADRAO = { largura: 1920, altura: 1080 };
 
-export const PROPORCOES = [
-  { valor: "16:9", label: "16:9 — TV widescreen", largura: 1920, altura: 1080 },
-  { valor: "9:16", label: "9:16 — TV em pé (retrato)", largura: 1080, altura: 1920 },
-  { valor: "4:3", label: "4:3 — monitor clássico", largura: 1600, altura: 1200 },
-  { valor: "21:9", label: "21:9 — tela ultrawide", largura: 2560, altura: 1080 },
-  { valor: "1:1", label: "1:1 — quadrada", largura: 1200, altura: 1200 },
-] as const;
+export type TipoTela = "tv" | "computador" | "tablet" | "celular";
+
+export const TIPOS_TELA: { valor: TipoTela; label: string; descricao: string }[] = [
+  { valor: "tv", label: "TV / painel de parede", descricao: "Televisão ou monitor grande fixo na parede" },
+  { valor: "computador", label: "Computador", descricao: "Notebook ou monitor de mesa" },
+  { valor: "tablet", label: "Tablet", descricao: "iPad e similares, com rolagem opcional" },
+  { valor: "celular", label: "Celular", descricao: "Telefone, com rolagem para baixo" },
+];
+
+/** Formatos de tela sugeridos para cada tipo de aparelho. */
+export const FORMATOS_TELA: Record<TipoTela, { valor: string; label: string; largura: number; altura: number }[]> = {
+  tv: [
+    { valor: "16:9", label: "16:9 — TV widescreen", largura: 1920, altura: 1080 },
+    { valor: "9:16", label: "9:16 — TV em pé", largura: 1080, altura: 1920 },
+    { valor: "21:9", label: "21:9 — ultrawide", largura: 2560, altura: 1080 },
+    { valor: "4:3", label: "4:3 — clássica", largura: 1600, altura: 1200 },
+  ],
+  computador: [
+    { valor: "1920", label: "Full HD (1920 × 1080)", largura: 1920, altura: 1080 },
+    { valor: "1440", label: "Notebook (1440 × 900)", largura: 1440, altura: 900 },
+    { valor: "1366", label: "Notebook menor (1366 × 768)", largura: 1366, altura: 768 },
+    { valor: "2560", label: "Monitor grande (2560 × 1440)", largura: 2560, altura: 1440 },
+  ],
+  tablet: [
+    { valor: "tablet-retrato", label: "Tablet em pé (834 × 1194)", largura: 834, altura: 1194 },
+    { valor: "tablet-paisagem", label: "Tablet deitado (1194 × 834)", largura: 1194, altura: 834 },
+    { valor: "tablet-android", label: "Tablet Android (800 × 1280)", largura: 800, altura: 1280 },
+  ],
+  celular: [
+    { valor: "cel-medio", label: "Celular comum (390 × 844)", largura: 390, altura: 844 },
+    { valor: "cel-grande", label: "Celular grande (430 × 932)", largura: 430, altura: 932 },
+    { valor: "cel-longo", label: "Celular com rolagem (390 × 1400)", largura: 390, altura: 1400 },
+  ],
+};
+
+/** Descobre o tipo de tela pelo tamanho da janela do aparelho. */
+export function detectarTipoTela(largura = typeof window === "undefined" ? 1920 : window.innerWidth): TipoTela {
+  if (largura < 640) return "celular";
+  if (largura < 1024) return "tablet";
+  if (largura < 1600) return "computador";
+  return "tv";
+}
+
+export const PROPORCOES = FORMATOS_TELA.tv;
+
 
 export interface Bloco {
   id: string;
@@ -192,6 +234,9 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     fundo_opacidade: a.fundo_opacidade ?? 100,
     fundo_ajuste: a.fundo_ajuste ?? "cobrir",
     ativo: a.ativo !== false,
+    dispositivo: a.dispositivo ?? "tv",
+    rolagem: a.rolagem === true,
+
   };
   if (a.id) {
     const { data } = await db.from("automacao_ambientes").update(payload).eq("id", a.id).select().maybeSingle();
@@ -225,6 +270,9 @@ export async function duplicarAmbiente(a: Ambiente): Promise<Ambiente | null> {
       fundo_opacidade: a.fundo_opacidade ?? 100,
       fundo_ajuste: a.fundo_ajuste ?? "cobrir",
       ativo: a.ativo !== false,
+      dispositivo: a.dispositivo ?? "tv",
+      rolagem: a.rolagem === true,
+
     })
     .select()
     .maybeSingle();

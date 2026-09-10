@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Ambiente, PROPORCOES, TELA_PADRAO, enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
+  Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
+  enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 
 interface Props {
@@ -35,6 +36,8 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const proporcao = proporcaoDe(largura, altura);
   const opacidade = ambiente?.fundo_opacidade ?? 100;
   const ajuste = ambiente?.fundo_ajuste ?? "cobrir";
+  const tipoTela: TipoTela = (ambiente?.dispositivo as TipoTela) ?? "tv";
+  const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
@@ -50,6 +53,18 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
   const aplicar = (l: number, a: number) =>
     onChange({ ...ambiente, tela_largura: Math.max(320, Math.round(l)), tela_altura: Math.max(240, Math.round(a)) });
+
+  /** Ao trocar o tipo de aparelho, já aplica o formato mais comum dele. */
+  const trocarTipo = (t: TipoTela) => {
+    const primeiro = FORMATOS_TELA[t][0];
+    onChange({
+      ...ambiente,
+      dispositivo: t,
+      tela_largura: primeiro.largura,
+      tela_altura: primeiro.altura,
+      rolagem: t === "celular" ? true : t === "tablet" ? rolagem : false,
+    });
+  };
 
   const enviarFoto = async (arquivo: File) => {
     if (arquivo.size > 20 * 1024 * 1024) { toast.error("A foto precisa ter até 20 MB."); return; }
@@ -68,6 +83,9 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       tela_altura: altura,
       fundo_opacidade: opacidade,
       fundo_ajuste: ajuste,
+      dispositivo: tipoTela,
+      rolagem,
+
     });
     onChange(null);
     toast.success("Ambiente salvo.");
@@ -91,20 +109,35 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
 
           <div className="rounded-xl border p-3 space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Monitor className="h-4 w-4 text-primary" /> Tela de parede
+              <Monitor className="h-4 w-4 text-primary" /> Onde este painel vai aparecer
             </div>
             <p className="text-xs text-muted-foreground">
-              Escolha o formato da tela onde este painel será exibido. Os elementos se ajustam sozinhos
-              ao tamanho definido, sem sobrar espaço nem cortar nada.
+              Escolha o tipo de aparelho e o formato da tela. O painel aparece automaticamente para quem
+              abrir a tela de parede nesse tipo de aparelho, e o retângulo do editor fica exatamente nesse formato.
             </p>
 
             <div className="flex flex-wrap gap-2">
-              {PROPORCOES.map((p) => (
+              {TIPOS_TELA.map((t) => (
+                <Button
+                  key={t.valor}
+                  type="button"
+                  size="sm"
+                  title={t.descricao}
+                  variant={tipoTela === t.valor ? "default" : "outline"}
+                  onClick={() => trocarTipo(t.valor)}
+                >
+                  {t.label}
+                </Button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {FORMATOS_TELA[tipoTela].map((p) => (
                 <Button
                   key={p.valor}
                   type="button"
                   size="sm"
-                  variant={proporcao === p.valor ? "default" : "outline"}
+                  variant={largura === p.largura && altura === p.altura ? "default" : "outline"}
                   onClick={() => aplicar(p.largura, p.altura)}
                 >
                   {p.label}
@@ -133,7 +166,25 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">Proporção atual: {proporcao}</p>
+
+            {(tipoTela === "tablet" || tipoTela === "celular") && (
+              <div className="rounded-lg bg-muted/50 p-2 space-y-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={rolagem ? "default" : "outline"}
+                  onClick={() => onChange({ ...ambiente, rolagem: !rolagem })}
+                >
+                  {rolagem ? "Rolagem para baixo ligada" : "Rolagem para baixo desligada"}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Com a rolagem ligada, o painel ocupa toda a largura do aparelho e a pessoa desliza para
+                  baixo para ver o resto. Deixe a altura maior que a da tela para ganhar mais espaço.
+                </p>
+              </div>
+            )}
           </div>
+
 
           <div className="rounded-xl border p-3 space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
