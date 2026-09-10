@@ -1,6 +1,7 @@
 // Bloco de página web: embute um site inteiro dentro do painel.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Globe, Lock, LockOpen, RefreshCw } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ExternalLink, Globe, Lock, LockOpen, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { Bloco } from "@/lib/automacao/api";
 import { fonteCss } from "./BlocoTexto";
 
@@ -9,6 +10,8 @@ interface ConfigWeb {
   titulo?: string;
   mostrar_barra?: boolean;
   permitir_interacao?: boolean;
+  /** Quando ativo, permite abrir o site em tela cheia. */
+  permitir_ampliar?: boolean;
   /** Zoom da página dentro do quadro (100 = tamanho normal). */
   zoom?: number;
   /** Recarrega sozinho a cada X segundos (0 = nunca). */
@@ -47,10 +50,12 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
   useEffect(() => setLivre(cfg.permitir_interacao !== false), [cfg.permitir_interacao]);
   const interativo = livre && !edicao;
   const cor = cfg.cor || "hsl(var(--foreground))";
+  const podeAmpliar = cfg.permitir_ampliar !== false;
+  const [ampliado, setAmpliado] = useState(false);
 
-  return (
+  const conteudo = (
     <div
-      className="flex h-full w-full flex-col overflow-hidden"
+      className="relative flex h-full w-full flex-col overflow-hidden"
       style={{
         background: cfg.transparente ? "transparent" : cfg.fundo || "hsl(var(--card))",
         color: cor,
@@ -98,6 +103,19 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           )}
+          {!ampliado && podeAmpliar && !edicao && (
+            <button
+              type="button"
+              title="Ampliar em tela cheia"
+              className="opacity-70 hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAmpliado(true);
+              }}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       )}
 
@@ -128,6 +146,51 @@ export default function BlocoWeb({ bloco, edicao }: { bloco: Bloco; edicao?: boo
           />
         )}
       </div>
+
+      {/* Botão flutuante de ampliar quando a barra está oculta */}
+      {cfg.mostrar_barra === false && !ampliado && podeAmpliar && !edicao && (
+        <button
+          type="button"
+          title="Ampliar em tela cheia"
+          className="absolute right-2 top-2 z-10 rounded-full bg-black/60 p-1.5 text-white opacity-70 hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            setAmpliado(true);
+          }}
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
+      )}
     </div>
+  );
+
+  if (!ampliado) return conteudo;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex flex-col bg-black p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          e.stopPropagation();
+          setAmpliado(false);
+        }
+      }}
+    >
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-card">
+        {conteudo}
+        <button
+          type="button"
+          title="Voltar ao painel"
+          className="absolute right-4 top-4 z-20 rounded-full bg-black/70 p-2.5 text-white hover:bg-black/90"
+          onClick={(e) => {
+            e.stopPropagation();
+            setAmpliado(false);
+          }}
+        >
+          <Minimize2 className="h-5 w-5" />
+        </button>
+      </div>
+    </div>,
+    document.body
   );
 }
