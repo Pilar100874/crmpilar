@@ -551,6 +551,30 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Cor de fundo da caixa</Label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={cfg.corFundoCaixa ?? "#1a1a2e"}
+                          onChange={(e) => setCfg({ corFundoCaixa: e.target.value })}
+                          className="h-8 w-10 cursor-pointer rounded border"
+                        />
+                        <span className="text-xs text-muted-foreground">{cfg.corFundoCaixa ?? "padrão"}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Opacidade da caixa ({cfg.opacidadeCaixa ?? 95}%)</Label>
+                      <input
+                        type="range" min={0} max={100} step={5}
+                        value={cfg.opacidadeCaixa ?? 95}
+                        onChange={(e) => setCfg({ opacidadeCaixa: Number(e.target.value) })}
+                        className="w-full accent-primary"
+                      />
+                    </div>
+                  </div>
+
                   {((cfg.vinculados ?? []) as string[]).length > 0 && (
                     <Button
                       variant="outline"
