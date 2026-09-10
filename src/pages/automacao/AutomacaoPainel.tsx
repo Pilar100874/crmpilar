@@ -25,6 +25,7 @@ import {
 import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
 import { supabase } from "@/integrations/supabase/client";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
+import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
 
 
@@ -549,6 +550,17 @@ export default function AutomacaoPainel() {
 
   return (
     <AmbientesNavContext.Provider value={{ ambientes: ambientesVisiveis, ambienteId, trocar: setAmbienteId }}>
+    <PainelBlocosContext.Provider
+      value={{
+        blocos: doAmbiente,
+        estados,
+        aplicarEstado: (b, v) => {
+          aplicarEstado(b.device_id, b.id, v);
+          if (!podeEditar) dispararRegras({ tipo: "mudanca", bloco: b, ligado: v });
+        },
+        acionar: (b) => { if (!podeEditar) dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null }); },
+      }}
+    >
     <div className="space-y-4">
       {/* Cabeçalho: navegação e alternância de edição */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
@@ -807,7 +819,10 @@ export default function AutomacaoPainel() {
             }}
           />
         )}
-        {(podeEditar ? doFundoParaFrente : doFundoParaFrente.filter(estaVisivel)).map((b, indice) => {
+        {(podeEditar
+          ? doFundoParaFrente
+          : doFundoParaFrente.filter((b) => estaVisivel(b) && !idsDentroDeExpansiveis(doAmbiente).has(b.id))
+        ).map((b, indice) => {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
           const travado = estaTravado(b);
           const visivel = estaVisivel(b);
@@ -952,6 +967,7 @@ export default function AutomacaoPainel() {
         itemName={excluir?.nome}
       />
     </div>
+    </PainelBlocosContext.Provider>
     </AmbientesNavContext.Provider>
   );
 }

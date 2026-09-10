@@ -5,6 +5,7 @@ import {
   Ambiente, Bloco, TELA_PADRAO, TipoTela, detectarTipoTela, listarAmbientes, listarBlocos, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
+import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
 import { supabase } from "@/integrations/supabase/client";
 
 const COLUNAS = 12;
@@ -155,7 +156,8 @@ export default function AutomacaoTela() {
 
   const doAmbiente = blocos.filter((b) => b.ambiente_id === ambienteId && b.visivel !== false);
   const camadaDe = (b: Bloco) => Number((b.config as any)?.camada ?? 0);
-  const ordenados = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
+  const ocultos = idsDentroDeExpansiveis(doAmbiente);
+  const ordenados = [...doAmbiente].filter((b) => !ocultos.has(b.id)).sort((a, b) => camadaDe(a) - camadaDe(b));
   const cx = telaL / COLUNAS;
   const livre = (ambienteAtual?.modo ?? "grade") === "livre";
 
@@ -174,6 +176,13 @@ export default function AutomacaoTela() {
 
   return (
     <AmbientesNavContext.Provider value={{ ambientes: abas, ambienteId, trocar: trocarAmbiente }}>
+    <PainelBlocosContext.Provider
+      value={{
+        blocos: doAmbiente,
+        estados,
+        aplicarEstado: (b, v) => setEstados((s) => ({ ...s, [b.id]: v })),
+      }}
+    >
     <div className="fixed inset-0 flex flex-col bg-background text-foreground">
       {mostrarAbas && (
         <div className="flex flex-wrap items-center gap-2 border-b bg-card/60 px-3 py-2">
@@ -249,6 +258,7 @@ export default function AutomacaoTela() {
         </div>
       </div>
     </div>
+    </PainelBlocosContext.Provider>
     </AmbientesNavContext.Provider>
   );
 }

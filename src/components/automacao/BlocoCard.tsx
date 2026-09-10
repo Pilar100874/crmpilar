@@ -23,9 +23,10 @@ import BlocoClima from "./BlocoClima";
 import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
 import BlocoBubble from "./BlocoBubble";
+import BlocoExpansivel from "./BlocoExpansivel";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas", "bubble"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "abas", "bubble", "expansivel"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -73,7 +74,7 @@ export default function BlocoCard(props: Props) {
   const letras = estiloLetras(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
-  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas"].includes(bloco.tipo);
+  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
@@ -132,6 +133,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
 
   if (TIPOS_LIVRES.includes(bloco.tipo)) {
     const conteudo =
+      bloco.tipo === "expansivel" ? <BlocoExpansivel bloco={bloco} edicao={edicao} /> :
       bloco.tipo === "abas" ? <BlocoAbas bloco={bloco} edicao={edicao} /> :
       bloco.tipo === "bubble" ? <BlocoBubble bloco={bloco} ligado={ligado} onEstado={onEstado} /> :
       bloco.tipo === "texto" ? <BlocoTexto bloco={bloco} /> :
@@ -159,7 +161,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
       >
         {conteudo}
-        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima"].includes(bloco.tipo) && (
+        {comLegenda && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "expansivel"].includes(bloco.tipo) && (
           <span className="pointer-events-none absolute bottom-1 left-2 right-2 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
             {bloco.nome}
           </span>

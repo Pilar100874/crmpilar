@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
-  enviarImagemAutomacao, salvarBloco, listarUnidades, UnidadeSimples,
+  enviarImagemAutomacao, salvarBloco, listarUnidades, listarBlocos, UnidadeSimples,
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
@@ -27,7 +27,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "forma", "clima", "grafico", "abas",
+  "interfone", "texto", "forma", "clima", "grafico", "abas", "expansivel",
 ];
 
 
@@ -44,6 +44,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
+  const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
 
 
@@ -53,6 +54,14 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
       listarUnidades().then(setUnidades);
     }
   }, [bloco?.tipo, unidades.length]);
+  // Lista os outros elementos do mesmo ambiente para o grupo expansível.
+  useEffect(() => {
+    if (bloco?.tipo !== "expansivel" || !bloco?.ambiente_id) return;
+    listarBlocos().then((todos) =>
+      setBlocosAmbiente(todos.filter((b) => b.ambiente_id === bloco.ambiente_id && b.id !== bloco.id)),
+    );
+  }, [bloco?.tipo, bloco?.ambiente_id, bloco?.id]);
+
   const blocoEdit = bloco;
   const setBlocoEdit = (fn: (b: Partial<Bloco> | null) => Partial<Bloco>) => onChange(fn(blocoEdit));
   const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
@@ -443,6 +452,134 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   className="h-4 w-4 accent-primary"
                 />
                 Mostrar botão liga/desliga à direita
+              </label>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "expansivel" && (
+            <div className="space-y-3 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Grupo expansível</Label>
+              <SeletorIcone valor={cfg.icone} onChange={(n) => setCfg({ icone: n })} />
+
+              <div>
+                <Label className="text-xs">Elementos que abrem ao tocar</Label>
+                <div className="mt-1 max-h-48 space-y-1 overflow-y-auto rounded-md border p-2">
+                  {!blocosAmbiente.length && (
+                    <p className="text-xs text-muted-foreground">
+                      Salve este elemento e crie outros no mesmo ambiente para vincular aqui.
+                    </p>
+                  )}
+                  {blocosAmbiente.map((b) => {
+                    const marcados = (cfg.vinculados ?? []) as string[];
+                    const dentro = marcados.includes(b.id);
+                    return (
+                      <label key={b.id} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={dentro}
+                          onChange={(e) =>
+                            setCfg({
+                              vinculados: e.target.checked
+                                ? [...marcados, b.id]
+                                : marcados.filter((id) => id !== b.id),
+                            })
+                          }
+                          className="h-4 w-4 accent-primary"
+                        />
+                        <span className="truncate">{b.nome}</span>
+                        <span className="ml-auto text-[11px] text-muted-foreground">{b.tipo}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Abrir para</Label>
+                  <Select value={cfg.direcao ?? "baixo"} onValueChange={(v) => setCfg({ direcao: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="baixo">Abaixo</SelectItem>
+                      <SelectItem value="cima">Acima</SelectItem>
+                      <SelectItem value="direita">À direita</SelectItem>
+                      <SelectItem value="esquerda">À esquerda</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Colunas ({cfg.colunas ?? 1})</Label>
+                  <input
+                    type="range" min={1} max={4} step={1}
+                    value={cfg.colunas ?? 1}
+                    onChange={(e) => setCfg({ colunas: Number(e.target.value) })}
+                    className="w-full accent-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Largura de cada item ({cfg.larguraItem ?? 170}px)</Label>
+                  <input
+                    type="range" min={90} max={360} step={10}
+                    value={cfg.larguraItem ?? 170}
+                    onChange={(e) => setCfg({ larguraItem: Number(e.target.value) })}
+                    className="w-full accent-primary"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Altura de cada item ({cfg.alturaItem ?? 68}px)</Label>
+                  <input
+                    type="range" min={40} max={240} step={4}
+                    value={cfg.alturaItem ?? 68}
+                    onChange={(e) => setCfg({ alturaItem: Number(e.target.value) })}
+                    className="w-full accent-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Cor do fundo</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corFundo as string) ?? "#1e293b"}
+                    onChange={(e) => setCfg({ corFundo: e.target.value, transparente: false })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCfg({ corFundo: undefined })}>
+                    Padrão
+                  </Button>
+                </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={cfg.transparente === true}
+                    onChange={(e) => setCfg({ transparente: e.target.checked })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  Sem fundo
+                </label>
+              </div>
+
+              <div>
+                <Label className="text-xs">Texto secundário (opcional)</Label>
+                <Input
+                  value={(cfg.subtitulo as string) ?? ""}
+                  onChange={(e) => setCfg({ subtitulo: e.target.value })}
+                  placeholder="Ex.: Luzes da sala"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.ocultarFora !== false}
+                  onChange={(e) => setCfg({ ocultarFora: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Esconder os elementos vinculados do painel (só aparecem ao abrir)
               </label>
             </div>
           )}
