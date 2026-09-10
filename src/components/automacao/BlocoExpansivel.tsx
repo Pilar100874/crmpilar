@@ -30,6 +30,7 @@ export default function BlocoExpansivel({ bloco, edicao }: Props) {
     raio?: number;
     subtitulo?: string;
     layout?: "livre" | "grade";
+    posicoes?: Record<string, { x: number; y: number; w: number; h: number }>;
   };
   const { blocos, estados, aplicarEstado, acionar } = usePainelBlocos();
   const [aberto, setAberto] = useState(false);
