@@ -328,6 +328,27 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
           <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
+
+        <AlertDialog open={confirmarGrupo} onOpenChange={setConfirmarGrupo}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mudar o formato de todas as telas?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você mudou o aparelho ou o formato desta tela. Como as telas do mesmo grupo precisam ter
+                o mesmo tamanho, <strong>todas as telas de {TIPOS_TELA.find((t) => t.valor === original.current?.dispositivo)?.label}</strong>{" "}
+                vão passar para {TIPOS_TELA.find((t) => t.valor === tipoTela)?.label} em {largura} × {altura}.
+                Os elementos podem precisar de ajuste depois.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <Button variant="outline" onClick={() => salvar(false)}>Só esta tela</Button>
+              <AlertDialogAction onClick={(e) => { e.preventDefault(); salvar(true); }}>
+                Mudar todas
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
