@@ -461,6 +461,43 @@ async function verificarCampainha(cfg, dispositivos) {
   }
 }
 
+/** Busca e executa apenas os comandos pendentes (laço rápido, sem handshake). */
+let jobsEmAndamento = false;
+async function pollJobsOnce(cfg) {
+  if (jobsEmAndamento) return ESTADO;
+  jobsEmAndamento = true;
+  try {
+    const unidadeId = cfg.filialId || null;
+    const { jobs } = await chamar(cfg, { acao: 'jobs', limite: 5, unidade_id: unidadeId });
+    // Executa em paralelo: um equipamento lento não segura os demais.
+    await Promise.all(
+      (jobs || []).map(async (job) => {
+        let ok = true;
+        let mensagem = '';
+        let dados = null;
+        try {
+          const r = await executarJob(job);
+          mensagem = r.mensagem;
+          dados = r.dados;
+          ESTADO.executados++;
+        } catch (e) {
+          ok = false;
+          mensagem = e.message;
+          ESTADO.erros++;
+          ESTADO.ultimoErro = e.message;
+        }
+        await chamar(cfg, { acao: 'resultado', job_id: job.id, ok, mensagem, dados });
+      }),
+    );
+  } catch (e) {
+    ESTADO.ultimoErro = e.message;
+    ESTADO.erros++;
+  } finally {
+    jobsEmAndamento = false;
+  }
+  return ESTADO;
+}
+
 async function pollPortariaOnce(cfg) {
   try {
     await garantirRegistro(cfg);
@@ -474,31 +511,14 @@ async function pollPortariaOnce(cfg) {
     ESTADO.dispositivos = handshake.dispositivos || [];
     try { await verificarSaude(ESTADO.dispositivos); } catch {}
     await verificarCampainha(cfg, ESTADO.dispositivos);
-    const { jobs } = await chamar(cfg, { acao: 'jobs', limite: 5, unidade_id: unidadeId });
-    for (const job of jobs || []) {
-      let ok = true;
-      let mensagem = '';
-      let dados = null;
-      try {
-        const r = await executarJob(job);
-        mensagem = r.mensagem;
-        dados = r.dados;
-        ESTADO.executados++;
-      } catch (e) {
-        ok = false;
-        mensagem = e.message;
-        ESTADO.erros++;
-        ESTADO.ultimoErro = e.message;
-      }
-      await chamar(cfg, { acao: 'resultado', job_id: job.id, ok, mensagem, dados });
-    }
     ESTADO.ultimaSync = new Date().toISOString();
-    ESTADO.ultimoErro = ESTADO.ultimoErro && !jobs?.length ? ESTADO.ultimoErro : ESTADO.ultimoErro;
   } catch (e) {
     ESTADO.ultimoErro = e.message;
     ESTADO.erros++;
   }
+  await pollJobsOnce(cfg);
   return ESTADO;
 }
 
-module.exports = { pollPortariaOnce, garantirRegistro, verificarCampainha, verificarSaude, ESTADO };
+module.exports = { pollPortariaOnce, pollJobsOnce, garantirRegistro, verificarCampainha, verificarSaude, ESTADO };
+
