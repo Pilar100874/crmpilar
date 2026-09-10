@@ -42,7 +42,6 @@ export default function NovaTelaDialog({ aberto, tipoInicial, onFechar, onSalvo 
     setLargura(primeiro.largura);
     setAltura(primeiro.altura);
     setRolagem(t === "celular");
-    setMostrarAbas(true);
   }, [aberto, tipoInicial]);
 
   const trocarTipo = (t: TipoTela) => {
