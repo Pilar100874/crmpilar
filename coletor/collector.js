@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
 const { verificarCameras, listarCameras } = require('./cameras');
-const { pollPortariaOnce, ESTADO: PORTARIA_STATE } = require('./portaria');
+const { pollPortariaOnce, pollJobsOnce, ESTADO: PORTARIA_STATE } = require('./portaria');
 // Carregamento preguiçoso do módulo de streaming (werift). Se a dependência
 // estiver quebrada no pacote instalado, o app NÃO deve travar na abertura —
 // apenas o streaming ao vivo das câmeras fica indisponível.
