@@ -544,27 +544,13 @@ export default function AutomacaoPainel() {
         <Button size="sm" variant="ghost" onClick={() => navegar("/automacao")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Telas
         </Button>
-        <Monitor className="h-4 w-4 text-primary" />
-        <span className="text-xs text-muted-foreground">Aparelho:</span>
-        <Select value={tipoTelaFiltro} onValueChange={(v) => setTipoTelaFiltro(v as TipoTela)}>
-          <SelectTrigger className="h-9 w-[260px] text-left"><SelectValue /></SelectTrigger>
-          <SelectContent className="bg-popover">
-            {TIPOS_TELA.map((t) => {
-              const qtd = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === t.valor).length;
-              return (
-                <SelectItem key={t.valor} value={t.valor}>
-                  {t.label} — {qtd} {qtd === 1 ? "tela" : "telas"}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
         <span className="text-xs text-muted-foreground">
+          {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.label} ·{" "}
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
         </span>
         {podeEditar && (
           <Button size="sm" className="ml-auto" onClick={novaTela}>
-            <Plus className="h-4 w-4 mr-1" /> Nova tela para este aparelho
+            <Plus className="h-4 w-4 mr-1" /> Nova tela
           </Button>
         )}
       </div>
