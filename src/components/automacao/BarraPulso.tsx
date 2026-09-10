@@ -5,13 +5,15 @@ interface Props {
   duracaoMs: number;
   /** Chamado quando a barra chega em 100%. */
   onFim?: () => void;
+  /** Texto exibido antes da porcentagem (ex.: "Desliga em…"). */
+  rotulo?: string;
 }
 
 /**
  * Barra de porcentagem que acompanha um pulso: vai de 0% a 100%
  * no tempo configurado no dispositivo e some ao terminar.
  */
-export default function BarraPulso({ duracaoMs, onFim }: Props) {
+export default function BarraPulso({ duracaoMs, onFim, rotulo }: Props) {
   const [porcentagem, setPorcentagem] = useState(0);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function BarraPulso({ duracaoMs, onFim }: Props) {
         />
       </div>
       <p className="mt-0.5 text-center text-[10px] font-semibold text-muted-foreground">
-        {porcentagem}%
+        {rotulo ? `${rotulo} ${porcentagem}%` : `${porcentagem}%`}
       </p>
     </div>
   );

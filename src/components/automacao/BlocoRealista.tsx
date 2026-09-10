@@ -63,11 +63,21 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       toast.success(`${bloco.nome} acionado.`);
       setPulsando(true);
     }
+    if (comando === "ligar" && modoDispositivo?.autoDesligarMs) {
+      // O aparelho desliga sozinho: acompanha com a mesma barra.
+      setContagemAuto(true);
+    }
+    if (comando === "desligar") setContagemAuto(false);
     onEstado(r.ligado ?? (comando === "ligar" ? true : comando === "desligar" ? false : ligado));
   };
 
   const fimDoPulso = () => {
     setPulsando(false);
+    onEstado(false);
+  };
+
+  const fimDoAutoDesligar = () => {
+    setContagemAuto(false);
     onEstado(false);
   };
 
@@ -123,6 +133,15 @@ export default function BlocoRealista({ bloco, ligado, onEstado, edicao, onEdita
       {/* barra de acompanhamento do pulso */}
       {pulsando && porPulso && (
         <BarraPulso duracaoMs={modoDispositivo?.pulsoMs ?? 1000} onFim={fimDoPulso} />
+      )}
+
+      {/* barra de acompanhamento do auto-desligar */}
+      {contagemAuto && !porPulso && aceso && modoDispositivo?.autoDesligarMs && (
+        <BarraPulso
+          duracaoMs={modoDispositivo.autoDesligarMs}
+          onFim={fimDoAutoDesligar}
+          rotulo="Desliga em…"
+        />
       )}
 
       <div className="relative flex h-full flex-col">
