@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
+import { Copy, LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Tv, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
-  excluirAmbiente, listarAmbientes, renomearTela,
+  duplicarTela, excluirAmbiente, listarAmbientes, renomearTela,
 } from "@/lib/automacao/api";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdministradorSistema } from "@/lib/portaria/porteiros";
