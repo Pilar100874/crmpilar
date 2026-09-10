@@ -129,6 +129,18 @@ export default function PortariaDispositivos() {
     carregar();
   };
 
+  /** Aciona conforme o modo configurado no dispositivo: pulso ou liga/desliga. */
+  const acionarSaida = async (d: Dispositivo) => {
+    const porPulso = (d.config?.modo_saida as string) === "momentary";
+    if (porPulso) return testar(d, "pulso_teste");
+    setTestando(d.id + "pulso_teste");
+    const ligado = d.ultimo_estado?.[String(d.canal_rele ?? 0)] === true;
+    const r = await comandoAutomacao(d.id, ligado ? "desligar" : "ligar", d.canal_rele ?? 0);
+    setTestando(null);
+    toast({ title: r.ok ? (r.ligado ? "Dispositivo ligado." : "Dispositivo desligado.") : "Falha na comunicação", description: r.ok ? undefined : r.mensagem, variant: r.ok ? undefined : "destructive" });
+    carregar();
+  };
+
   const confirmarExclusao = async () => {
     if (!excluir) return;
     const { error } = await supabase.from("port_devices").delete().eq("id", excluir.id);
@@ -198,9 +210,11 @@ export default function PortariaDispositivos() {
                   {testando === d.id + "status" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Activity className="h-4 w-4 mr-2" />}
                   Testar dispositivo
                 </Button>
-                <Button variant="secondary" size="sm" className="flex-1" disabled={testando === d.id + "pulso_teste"} onClick={() => testar(d, "pulso_teste")}>
+                <Button variant="secondary" size="sm" className="flex-1" disabled={testando === d.id + "pulso_teste"} onClick={() => acionarSaida(d)}>
                   {testando === d.id + "pulso_teste" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
-                  Acionar (pulso)
+                  {(d.config?.modo_saida as string) === "momentary"
+                    ? "Acionar (pulso)"
+                    : d.ultimo_estado?.[String(d.canal_rele ?? 0)] === true ? "Desligar" : "Ligar"}
                 </Button>
               </div>
             </div>
