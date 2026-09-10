@@ -512,7 +512,7 @@ export default function AutomacaoPainel() {
             <p className="text-sm text-muted-foreground">Peça a um administrador para montar o painel.</p>
           )}
         </div>
-        <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
+        <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} abaInicial={abaAmbienteEdit} />
       </>
     );
   }
@@ -982,7 +982,7 @@ export default function AutomacaoPainel() {
         onChange={setBlocoEdit}
         onSalvo={aoSalvarBloco}
       />
-      <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} />
+      <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} abaInicial={abaAmbienteEdit} />
       <DeleteConfirmDialog
         open={!!excluir}
         onOpenChange={(o) => !o && setExcluir(null)}
