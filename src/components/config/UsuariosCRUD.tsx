@@ -1151,6 +1151,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 );
               })}
             </div>
+          </div>
+
           <div className="mt-4 rounded-lg border border-border p-3">
             <Label>Telas de automação no celular e no tablet</Label>
             <p className="text-xs text-muted-foreground mb-3">
