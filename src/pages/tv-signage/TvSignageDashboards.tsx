@@ -41,7 +41,7 @@ export default function TvSignageDashboards() {
     supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
     supabase.from("unidades").select("id,nome").order("nome").then(({ data }) => setGruposVeiculos(data || []));
     supabase.from("tv_murais").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setMurais(data || []));
-    supabase.from("automacao_ambientes").select("id,nome").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
+    supabase.from("automacao_ambientes").select("id,nome,tela_nome,dispositivo,ativo").order("ordem").then(({ data }) => setAmbientesAuto(data || []));
   }, []);
 
 
@@ -80,6 +80,7 @@ export default function TvSignageDashboards() {
     const q = r.indexOf("?");
     const sp = new URLSearchParams(q < 0 ? "" : r.slice(q + 1));
     return {
+      tela: sp.get("tela") || "",
       ambiente: sp.get("ambiente") || "todos",
       largura: parseInt(sp.get("largura") || "1920") || 1920,
       altura: parseInt(sp.get("altura") || "1080") || 1080,
@@ -89,13 +90,35 @@ export default function TvSignageDashboards() {
   const updateAutoCfg = (patch: Partial<typeof autoCfg>) => {
     const cfg = { ...autoCfg, ...patch };
     const sp = new URLSearchParams({
-      ambiente: cfg.ambiente,
       largura: String(cfg.largura),
       altura: String(cfg.altura),
     });
+    if (cfg.tela) sp.set("tela", cfg.tela);
+    else sp.set("ambiente", cfg.ambiente);
     if (!cfg.barra) sp.set("barra", "0");
     setEdit({ ...edit, rota_interna: `/tv/automacao?${sp.toString()}` });
   };
+
+  // Telas de automação (grupos de abas) disponíveis, com o aparelho de cada uma.
+  const telasAuto = (() => {
+    const mapa = new Map<string, { nome: string; dispositivo: string; abas: number }>();
+    for (const a of ambientesAuto) {
+      if (a.ativo === false) continue;
+      const nome = (a.tela_nome || a.nome || "").trim();
+      if (!nome) continue;
+      const atual = mapa.get(nome);
+      if (atual) atual.abas += 1;
+      else mapa.set(nome, { nome, dispositivo: a.dispositivo || "tv", abas: 1 });
+    }
+    return Array.from(mapa.values());
+  })();
+  const ROTULO_APARELHO: Record<string, string> = { tv: "TV", computador: "Computador", tablet: "Tablet", celular: "Celular" };
+  // Valor selecionado: prefere a tela salva; rotas antigas com ambiente mostram a tela dele.
+  const telaSelecionada = autoCfg.tela
+    || (autoCfg.ambiente !== "todos"
+      ? ((ambientesAuto.find((a) => a.id === autoCfg.ambiente)?.tela_nome
+          || ambientesAuto.find((a) => a.id === autoCfg.ambiente)?.nome) ?? "")
+      : "");
   const portariaUnidade = (() => {
     const r = edit?.rota_interna || "";
     if (!isPortariaRoute(r)) return "";
@@ -436,14 +459,24 @@ export default function TvSignageDashboards() {
                     <div className="space-y-3 rounded-md border p-3 bg-muted/30">
                       <div className="text-xs font-medium">Painel de automação exibido</div>
                       <div>
-                        <Label className="text-xs">Ambiente</Label>
-                        <Select value={autoCfg.ambiente} onValueChange={(v) => updateAutoCfg({ ambiente: v })}>
-                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                        <Label className="text-xs">Tela de automação</Label>
+                        <Select
+                          value={telaSelecionada || "__todas__"}
+                          onValueChange={(v) => updateAutoCfg(v === "__todas__" ? { tela: "", ambiente: "todos" } : { tela: v })}
+                        >
+                          <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="todos">Todos (com abas para trocar)</SelectItem>
-                            {ambientesAuto.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+                            <SelectItem value="__todas__">Automática (segue o aparelho, com abas)</SelectItem>
+                            {telasAuto.map((t) => (
+                              <SelectItem key={t.nome} value={t.nome}>
+                                {t.nome} — {ROTULO_APARELHO[t.dispositivo] || t.dispositivo} · {t.abas} aba(s)
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          A TV abre essa tela com as abas dela, pronta para toque ou mouse.
+                        </p>
                       </div>
                       <div>
                         <Label className="text-xs">Tamanho da tela</Label>
