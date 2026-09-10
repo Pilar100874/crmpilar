@@ -415,11 +415,12 @@ export default function PortariaDispositivos() {
                     }
                     setSalvando(true);
                     const configAtual = (form.config ?? {}) as Record<string, unknown>;
+                    const modoSaida = (config.modo_saida as string) ?? "toggle";
                     const novoConfig = {
                       ...configAtual,
-                      modo_saida: (config.modo_saida as string) ?? "toggle",
-                      auto_off: !!config.auto_off,
-                      auto_off_delay: Number(config.auto_off_delay ?? 0),
+                      modo_saida: modoSaida,
+                      auto_off: modoSaida === "momentary" ? false : !!config.auto_off,
+                      auto_off_delay: modoSaida === "momentary" ? 0 : Number(config.auto_off_delay ?? 0),
                       power_on_state: (config.power_on_state as string) ?? "restore_last",
                     };
                     const { error } = await supabase.from("port_devices").update({ config: novoConfig }).eq("id", form.id);
