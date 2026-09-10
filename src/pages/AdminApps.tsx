@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
 import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
 import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
+import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 
 // Sempre a build mais recente publicada pelos workflows do GitHub Actions.
