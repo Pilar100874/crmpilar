@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "sonner";
 import BlocoCard from "@/components/automacao/BlocoCard";
@@ -15,7 +17,7 @@ import BlocoEditorDialog from "@/components/automacao/BlocoEditorDialog";
 import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 
 import {
-  Ambiente, Bloco, CameraSimples, DispositivoSimples, TELA_PADRAO, TIPOS_TELA, TipoTela,
+  Ambiente, Bloco, CameraSimples, DispositivoSimples, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
   definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, listarAmbientes, listarBlocos,
   listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
@@ -496,7 +498,25 @@ export default function AutomacaoPainel() {
     );
   }
 
+  /**
+   * Nova tela do mesmo tipo já nasce com o mesmo formato das que existem,
+   * para as abas do aparelho ficarem todas iguais.
+   */
+  const novaTela = () => {
+    const irmao = todosVisiveis.find((a) => (a.dispositivo ?? "tv") === tipoTelaFiltro);
+    setAmbienteEdit({
+      nome: "",
+      ordem: ambientes.length,
+      dispositivo: tipoTelaFiltro,
+      tela_largura: irmao?.tela_largura ?? FORMATOS_TELA[tipoTelaFiltro][0].largura,
+      tela_altura: irmao?.tela_altura ?? FORMATOS_TELA[tipoTelaFiltro][0].altura,
+      rolagem: irmao?.rolagem ?? (tipoTelaFiltro === "celular"),
+      mostrar_abas: irmao?.mostrar_abas !== false,
+    });
+  };
+
   const alinhamentos = [
+
     { dir: "esq", Icone: AlignHorizontalJustifyStart, titulo: "Alinhar à esquerda" },
     { dir: "centroH", Icone: AlignHorizontalJustifyCenter, titulo: "Centralizar na horizontal" },
     { dir: "dir", Icone: AlignHorizontalJustifyEnd, titulo: "Alinhar à direita" },
@@ -509,22 +529,31 @@ export default function AutomacaoPainel() {
     <AmbientesNavContext.Provider value={{ ambientes: ambientesVisiveis, ambienteId, trocar: setAmbienteId }}>
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
-        <span className="text-xs text-muted-foreground">Tipo de tela:</span>
-        {TIPOS_TELA.map((t) => {
-          const qtd = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === t.valor).length;
-          return (
-            <Button
-              key={t.valor}
-              size="sm"
-              title={t.descricao}
-              variant={tipoTelaFiltro === t.valor ? "default" : "outline"}
-              onClick={() => setTipoTelaFiltro(t.valor)}
-            >
-              {t.label} ({qtd})
-            </Button>
-          );
-        })}
+        <Monitor className="h-4 w-4 text-primary" />
+        <span className="text-xs text-muted-foreground">Aparelho:</span>
+        <Select value={tipoTelaFiltro} onValueChange={(v) => setTipoTelaFiltro(v as TipoTela)}>
+          <SelectTrigger className="h-9 w-[260px] text-left"><SelectValue /></SelectTrigger>
+          <SelectContent className="bg-popover">
+            {TIPOS_TELA.map((t) => {
+              const qtd = todosVisiveis.filter((a) => (a.dispositivo ?? "tv") === t.valor).length;
+              return (
+                <SelectItem key={t.valor} value={t.valor}>
+                  {t.label} — {qtd} {qtd === 1 ? "tela" : "telas"}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground">
+          {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
+        </span>
+        {podeEditar && (
+          <Button size="sm" className="ml-auto" onClick={novaTela}>
+            <Plus className="h-4 w-4 mr-1" /> Nova tela para este aparelho
+          </Button>
+        )}
       </div>
+
 
       <div className="flex flex-wrap items-center gap-2">
         <Tabs value={ambienteId} onValueChange={setAmbienteId} className="min-w-0">
@@ -549,10 +578,11 @@ export default function AutomacaoPainel() {
           </TabsList>
         </Tabs>
         {podeEditar && (
-          <Button size="sm" variant="ghost" onClick={() => setAmbienteEdit({ nome: "", ordem: ambientes.length, dispositivo: tipoTelaFiltro })}>
-            <Plus className="h-4 w-4 mr-1" /> Ambiente
+          <Button size="sm" variant="ghost" onClick={novaTela}>
+            <Plus className="h-4 w-4 mr-1" /> Aba
           </Button>
         )}
+
         {admin && (
           <div className="ml-auto flex gap-2">
             <Button variant={edicao ? "default" : "outline"} size="sm" onClick={() => setEdicao((v) => !v)}>

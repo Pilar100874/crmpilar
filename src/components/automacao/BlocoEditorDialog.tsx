@@ -17,9 +17,12 @@ import BlocoCard from "@/components/automacao/BlocoCard";
 import { MODULOS_PORTARIA } from "@/components/automacao/BlocoPortaria";
 import { FONTES_TEXTO } from "@/components/automacao/BlocoTexto";
 import { FORMAS } from "@/components/automacao/BlocoForma";
+import { ESTILOS_ABAS } from "@/components/automacao/BlocoAbas";
+import { useNavegacaoAmbientes } from "@/lib/automacao/navegacao";
+
 
 /** Tipos em que o estado ligado/desligado faz sentido na simulação. */
-const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor", "bubble"];
+const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imagemluz", "sensor"];
 
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
@@ -41,6 +44,9 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
+  const { ambientes: ambientesNav } = useNavegacaoAmbientes();
+
+
 
   useEffect(() => {
     if ((bloco?.tipo === "rastreamento" || bloco?.tipo === "portaria") && unidades.length === 0) {
@@ -283,107 +289,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-          )}
-
-          {blocoEdit?.tipo === "bubble" && (
-            <div className="space-y-3 rounded-lg border p-3">
-              <Label className="text-sm font-semibold">Bubble Card</Label>
-              <div>
-                <Label className="text-xs">Ícone</Label>
-                <SeletorIcone valor={cfg.icone ?? blocoEdit?.icone} onChange={(n) => setCfg({ icone: n })} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Fundo ativado</Label>
-                  <div className="flex gap-1">
-                    <Input type="color" className="w-12 p-1" value={cfg.corFundoAtivo ?? "rgba(59, 130, 246, 0.22)"} onChange={(e) => setCfg({ corFundoAtivo: e.target.value })} />
-                    <Input value={cfg.corFundoAtivo ?? ""} placeholder="rgba(59,130,246,0.22)" onChange={(e) => setCfg({ corFundoAtivo: e.target.value || undefined })} />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Fundo desativado</Label>
-                  <div className="flex gap-1">
-                    <Input type="color" className="w-12 p-1" value={cfg.corFundoInativo ?? "rgba(255, 255, 255, 0.05)"} onChange={(e) => setCfg({ corFundoInativo: e.target.value })} />
-                    <Input value={cfg.corFundoInativo ?? ""} placeholder="rgba(255,255,255,0.05)" onChange={(e) => setCfg({ corFundoInativo: e.target.value || undefined })} />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Ícone ativado</Label>
-                  <div className="flex gap-1">
-                    <Input type="color" className="w-12 p-1" value={cfg.corIconeAtivo ?? "#3b82f6"} onChange={(e) => setCfg({ corIconeAtivo: e.target.value })} />
-                    <Input value={cfg.corIconeAtivo ?? ""} placeholder="#3b82f6" onChange={(e) => setCfg({ corIconeAtivo: e.target.value || undefined })} />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Ícone desativado</Label>
-                  <div className="flex gap-1">
-                    <Input type="color" className="w-12 p-1" value={cfg.corIconeInativo ?? "#94a3b8"} onChange={(e) => setCfg({ corIconeInativo: e.target.value })} />
-                    <Input value={cfg.corIconeInativo ?? ""} placeholder="#94a3b8" onChange={(e) => setCfg({ corIconeInativo: e.target.value || undefined })} />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Texto ativado</Label>
-                  <div className="flex gap-1">
-                    <Input type="color" className="w-12 p-1" value={cfg.corTextoAtivo ?? "#ffffff"} onChange={(e) => setCfg({ corTextoAtivo: e.target.value })} />
-                    <Input value={cfg.corTextoAtivo ?? ""} placeholder="#ffffff" onChange={(e) => setCfg({ corTextoAtivo: e.target.value || undefined })} />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Texto desativado</Label>
-                  <div className="flex gap-1">
-                    <Input type="color" className="w-12 p-1" value={cfg.corTextoInativo ?? "#e2e8f0"} onChange={(e) => setCfg({ corTextoInativo: e.target.value })} />
-                    <Input value={cfg.corTextoInativo ?? ""} placeholder="#e2e8f0" onChange={(e) => setCfg({ corTextoInativo: e.target.value || undefined })} />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs">Tamanho do ícone ({cfg.tamanho_icone ?? 28}px)</Label>
-                <input type="range" min={16} max={64} step={2} value={cfg.tamanho_icone ?? 28} onChange={(e) => setCfg({ tamanho_icone: Number(e.target.value) })} className="w-full accent-primary" />
-              </div>
-              <div>
-                <Label className="text-xs">Arredondamento ({cfg.arredondamento ?? 20}px)</Label>
-                <input type="range" min={0} max={40} step={1} value={cfg.arredondamento ?? 20} onChange={(e) => setCfg({ arredondamento: Number(e.target.value) })} className="w-full accent-primary" />
-              </div>
-              <div>
-                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
-                <input type="range" min={0} max={100} step={5} value={cfg.opacidade ?? 100} onChange={(e) => setCfg({ opacidade: Number(e.target.value) })} className="w-full accent-primary" />
-              </div>
-              <div>
-                <Label>Animação</Label>
-                <Select value={cfg.animacao ?? "brilho"} onValueChange={(v) => setCfg({ animacao: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    {ANIMACOES.map((a) => <SelectItem key={a.valor} value={a.valor}>{a.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>O que o elemento faz</Label>
-                <Select value={cfg.acao ?? "alternar"} onValueChange={(v) => setCfg({ acao: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    <SelectItem value="alternar">Liga e desliga</SelectItem>
-                    <SelectItem value="ligar">Somente ligar</SelectItem>
-                    <SelectItem value="desligar">Somente desligar</SelectItem>
-                    <SelectItem value="pulso">Pulso (portão/porta)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={cfg.mostrar_nome !== false} onChange={(e) => setCfg({ mostrar_nome: e.target.checked })} className="h-4 w-4 accent-primary" />
-                  Mostrar nome
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={cfg.mostrar_estado !== false} onChange={(e) => setCfg({ mostrar_estado: e.target.checked })} className="h-4 w-4 accent-primary" />
-                  Mostrar estado
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={cfg.mostrar_slider === true} onChange={(e) => setCfg({ mostrar_slider: e.target.checked })} className="h-4 w-4 accent-primary" />
-                  Mostrar slider
-                </label>
               </div>
             </div>
           )}
@@ -723,11 +628,76 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           )}
 
           {blocoEdit?.tipo === "abas" && (
-            <div className="space-y-2 rounded-xl border p-3">
-              <p className="text-xs text-muted-foreground">
-                Mostra os ambientes deste mesmo tipo de tela como botões. Ao tocar, o painel troca de ambiente.
-              </p>
+            <div className="space-y-3 rounded-xl border p-3">
+              <div>
+                <Label className="text-xs">Como funciona</Label>
+                <Select value={cfg.modo ?? "abas"} onValueChange={(v) => setCfg({ modo: v })}>
+                  <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="abas">Abas: um botão para cada tela</SelectItem>
+                    <SelectItem value="botao">Botão único: vai para uma tela escolhida</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {cfg.modo === "botao" ? (
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs">Ir para qual tela</Label>
+                    <Select value={cfg.destino ?? ""} onValueChange={(v) => setCfg({ destino: v })}>
+                      <SelectTrigger className="text-left"><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {ambientesNav.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Texto do botão (opcional)</Label>
+                    <Input value={cfg.rotulo ?? ""} placeholder="Ex.: Ir para a Garagem"
+                      onChange={(e) => setCfg({ rotulo: e.target.value })} />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Label className="text-xs">Quais telas aparecem (nenhuma marcada = todas)</Label>
+                  <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border p-2">
+                    {ambientesNav.map((a) => {
+                      const escolhidas: string[] = Array.isArray(cfg.ambientes) ? cfg.ambientes : [];
+                      const marcado = escolhidas.includes(a.id);
+                      return (
+                        <label key={a.id} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={marcado}
+                            onChange={() =>
+                              setCfg({ ambientes: marcado ? escolhidas.filter((x) => x !== a.id) : [...escolhidas, a.id] })
+                            }
+                          />
+                          {a.nome}
+                        </label>
+                      );
+                    })}
+                    {!ambientesNav.length && (
+                      <p className="text-xs text-muted-foreground">Nenhuma tela criada ainda.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Modelo do botão</Label>
+                  <Select value={cfg.estilo ?? "pilula"} onValueChange={(v) => setCfg({ estilo: v })}>
+                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {ESTILOS_ABAS.map((e) => (
+                        <SelectItem key={e.valor} value={e.valor}>{e.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label className="text-xs">Disposição</Label>
                   <Select value={cfg.orientacao ?? "horizontal"} onValueChange={(v) => setCfg({ orientacao: v })}>
@@ -738,17 +708,14 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label className="text-xs">Formato</Label>
-                  <Select value={cfg.formato ?? "redondo"} onValueChange={(v) => setCfg({ formato: v })}>
-                    <SelectTrigger className="text-left"><SelectValue /></SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      <SelectItem value="redondo">Arredondado</SelectItem>
-                      <SelectItem value="reto">Cantos retos</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
+
+              <div>
+                <Label className="text-xs">Cantos arredondados ({cfg.cantos ?? 999}px)</Label>
+                <input type="range" min={0} max={999} value={cfg.cantos ?? 999}
+                  onChange={(e) => setCfg({ cantos: Number(e.target.value) })} className="w-full accent-primary" />
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Tamanho da letra</Label>
@@ -766,13 +733,19 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     onChange={(e) => setCfg({ fundo: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Fundo do ambiente aberto</Label>
+                  <Label className="text-xs">Cor da tela aberta</Label>
                   <Input type="color" className="p-1" value={cfg.corAtiva ?? "#2563eb"}
                     onChange={(e) => setCfg({ corAtiva: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Letra da tela aberta</Label>
+                  <Input type="color" className="p-1" value={cfg.corTextoAtivo ?? "#ffffff"}
+                    onChange={(e) => setCfg({ corTextoAtivo: e.target.value })} />
                 </div>
               </div>
             </div>
           )}
+
 
           {blocoEdit?.tipo === "texto" && (
             <div className="space-y-2">
