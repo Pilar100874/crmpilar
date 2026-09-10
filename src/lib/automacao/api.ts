@@ -255,6 +255,17 @@ export async function excluirAmbiente(id: string) {
   await db.from("automacao_ambientes").delete().eq("id", id);
 }
 
+/**
+ * Aplica o mesmo aparelho e formato a todas as telas do grupo, para as abas
+ * de um mesmo aparelho ficarem sempre no mesmo tamanho.
+ */
+export async function aplicarFormatoGrupo(
+  dispositivoAtual: TipoTela,
+  campos: { dispositivo: TipoTela; tela_largura: number; tela_altura: number; rolagem: boolean },
+) {
+  await db.from("automacao_ambientes").update(campos).eq("dispositivo", dispositivoAtual);
+}
+
 /** Liga ou desliga um painel sem apagar nada. */
 export async function definirAtivoAmbiente(id: string, ativo: boolean) {
   await db.from("automacao_ambientes").update({ ativo }).eq("id", id);

@@ -261,6 +261,7 @@ import LivroPalavrasChave from "./pages/livro-ocorrencia/LivroPalavrasChave";
 import PortariaLayout from "./pages/portaria/PortariaLayout";
 import AutomacaoLayout from "./pages/automacao/AutomacaoLayout";
 import AutomacaoPainel from "./pages/automacao/AutomacaoPainel";
+import AutomacaoPaineis from "./pages/automacao/AutomacaoPaineis";
 import AutomacaoEstado from "./pages/automacao/AutomacaoEstado";
 import AutomacaoRegras from "./pages/automacao/AutomacaoRegras";
 import AutomacaoTela from "./pages/automacao/AutomacaoTela";
@@ -853,7 +854,9 @@ const App = () => (
               <Route path="/app/interfone" element={<PortariaAtendimentoMobile />} />
               <Route path="/automacao/tela" element={<AutomacaoTela />} />
               <Route path="/automacao" element={<AutomacaoLayout />}>
-                <Route index element={<AutomacaoPainel />} />
+                <Route index element={<AutomacaoPaineis />} />
+                <Route path="painel" element={<AutomacaoPainel />} />
+                <Route path="painel/:id" element={<AutomacaoPainel />} />
                 <Route path="regras" element={<AutomacaoRegras />} />
                 <Route path="estado" element={<AutomacaoEstado />} />
                 <Route path="dispositivos" element={<PortariaDispositivos />} />

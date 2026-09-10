@@ -9,8 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Image as ImageIcon, Monitor, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Ambiente, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
-  enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
+  aplicarFormatoGrupo, enviarImagemAutomacao, salvarAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 
 interface Props {
@@ -42,7 +46,22 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
   const rolagem = ambiente?.rolagem === true;
   const [previa, setPrevia] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [confirmarGrupo, setConfirmarGrupo] = useState(false);
   const arquivoRef = useRef<HTMLInputElement | null>(null);
+  /** Guarda como a tela estava ao abrir, para saber se o formato mudou. */
+  const original = useRef<{ id?: string; dispositivo: TipoTela; largura: number; altura: number } | null>(null);
+
+  useEffect(() => {
+    if (!ambiente) { original.current = null; return; }
+    if (original.current?.id === ambiente.id) return;
+    original.current = {
+      id: ambiente.id,
+      dispositivo: (ambiente.dispositivo as TipoTela) ?? "tv",
+      largura: ambiente.tela_largura ?? TELA_PADRAO.largura,
+      altura: ambiente.tela_altura ?? TELA_PADRAO.altura,
+    };
+  }, [ambiente]);
+
 
   useEffect(() => {
     let ativo = true;
@@ -77,8 +96,14 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
     onChange({ ...ambiente, fundo_caminho: caminho });
   };
 
-  const gravar = async () => {
-    if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
+  /** Mudou o aparelho ou o formato de uma tela que já existia? */
+  const mudouFormato = () => {
+    const o = original.current;
+    if (!o?.id) return false;
+    return o.dispositivo !== tipoTela || o.largura !== largura || o.altura !== altura;
+  };
+
+  const salvar = async (aplicarNoGrupo: boolean) => {
     await salvarAmbiente({
       ...ambiente,
       tela_largura: largura,
@@ -88,11 +113,25 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
       dispositivo: tipoTela,
       rolagem,
       mostrar_abas: ambiente?.mostrar_abas !== false,
-
     });
+    if (aplicarNoGrupo && original.current) {
+      await aplicarFormatoGrupo(original.current.dispositivo, {
+        dispositivo: tipoTela,
+        tela_largura: largura,
+        tela_altura: altura,
+        rolagem,
+      });
+    }
+    setConfirmarGrupo(false);
     onChange(null);
-    toast.success("Ambiente salvo.");
+    toast.success(aplicarNoGrupo ? "Telas do grupo atualizadas." : "Ambiente salvo.");
     onSalvo();
+  };
+
+  const gravar = async () => {
+    if (!ambiente?.nome?.trim()) { toast.error("Informe o nome do ambiente."); return; }
+    if (mudouFormato()) { setConfirmarGrupo(true); return; }
+    await salvar(false);
   };
 
   return (
@@ -289,6 +328,27 @@ export default function AmbienteDialog({ ambiente, onChange, onSalvo }: Props) {
           <Button variant="outline" onClick={() => onChange(null)}>Cancelar</Button>
           <Button onClick={gravar}>Salvar</Button>
         </DialogFooter>
+
+        <AlertDialog open={confirmarGrupo} onOpenChange={setConfirmarGrupo}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mudar o formato de todas as telas?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você mudou o aparelho ou o formato desta tela. Como as telas do mesmo grupo precisam ter
+                o mesmo tamanho, <strong>todas as telas de {TIPOS_TELA.find((t) => t.valor === original.current?.dispositivo)?.label}</strong>{" "}
+                vão passar para {TIPOS_TELA.find((t) => t.valor === tipoTela)?.label} em {largura} × {altura}.
+                Os elementos podem precisar de ajuste depois.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <Button variant="outline" onClick={() => salvar(false)}>Só esta tela</Button>
+              <AlertDialogAction onClick={(e) => { e.preventDefault(); salvar(true); }}>
+                Mudar todas
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
