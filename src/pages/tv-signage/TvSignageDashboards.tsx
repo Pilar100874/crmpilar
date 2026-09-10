@@ -92,14 +92,24 @@ export default function TvSignageDashboards() {
 
   // Telas de automação (grupos de abas) disponíveis, com o aparelho de cada uma.
   const telasAuto = (() => {
-    const mapa = new Map<string, { nome: string; dispositivo: string; abas: number }>();
+    const mapa = new Map<string, { nome: string; dispositivo: string; abas: number; largura: number; altura: number; rolagem: boolean }>();
     for (const a of ambientesAuto) {
       if (a.ativo === false) continue;
       const nome = (a.tela_nome || a.nome || "").trim();
       if (!nome) continue;
       const atual = mapa.get(nome);
-      if (atual) atual.abas += 1;
-      else mapa.set(nome, { nome, dispositivo: a.dispositivo || "tv", abas: 1 });
+      if (atual) {
+        atual.abas += 1;
+      } else {
+        mapa.set(nome, {
+          nome,
+          dispositivo: a.dispositivo || "tv",
+          abas: 1,
+          largura: a.tela_largura || 0,
+          altura: a.tela_altura || 0,
+          rolagem: a.rolagem === true,
+        });
+      }
     }
     return Array.from(mapa.values());
   })();
