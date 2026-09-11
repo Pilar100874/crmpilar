@@ -7,6 +7,9 @@ import * as LucideIcons from "lucide-react";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertCircle } from "lucide-react";
 
 type ConversaResumo = { id: string; canal: string; chat_status: string | null; created_at: string | null; tempo_encerramento: string | null };
 
@@ -16,14 +19,17 @@ export default function Dashboard() {
   const [conversas, setConversas] = useState<ConversaResumo[]>([]);
   const [totalConversas, setTotalConversas] = useState(0);
   const [loadingMetricas, setLoadingMetricas] = useState(true);
+  const [periodoDias, setPeriodoDias] = useState(30);
+  const [erroMetricas, setErroMetricas] = useState<string | null>(null);
 
   useEffect(() => {
     const carregarMetricas = async () => {
       setLoadingMetricas(true);
+      setErroMetricas(null);
       const estabelecimentoId = await getEstabelecimentoId();
-      if (!estabelecimentoId) { setLoadingMetricas(false); return; }
+      if (!estabelecimentoId) { setErroMetricas("Não foi possível identificar o estabelecimento."); setLoadingMetricas(false); return; }
       const desde = new Date();
-      desde.setDate(desde.getDate() - 30);
+      desde.setDate(desde.getDate() - periodoDias);
       const { data, count, error } = await supabase
         .from('conversations')
         .select('id, canal, chat_status, created_at, tempo_encerramento', { count: 'exact' })
@@ -31,14 +37,12 @@ export default function Dashboard() {
         .gte('created_at', desde.toISOString())
         .order('created_at', { ascending: false })
         .limit(1000);
-      if (!error) {
-        setConversas(data || []);
-        setTotalConversas(count || 0);
-      }
+      if (error) setErroMetricas("Não foi possível carregar os indicadores. Tente novamente em instantes.");
+      else { setConversas(data || []); setTotalConversas(count || 0); }
       setLoadingMetricas(false);
     };
     void carregarMetricas();
-  }, []);
+  }, [periodoDias]);
 
   const metricas = useMemo(() => {
     const ativas = conversas.filter((item) => item.chat_status !== 'encerrado').length;
@@ -67,14 +71,14 @@ export default function Dashboard() {
     {
       title: "Conversas Ativas",
       value: loadingMetricas ? "—" : metricas.ativas.toLocaleString('pt-BR'),
-      description: "Em atendimento nos últimos 30 dias",
+      description: `Em atendimento nos últimos ${periodoDias} dias`,
       icon: MessageSquare,
       color: "text-primary",
     },
     {
       title: "Clientes Atendidos",
       value: loadingMetricas ? "—" : totalConversas.toLocaleString('pt-BR'),
-      description: "Conversas recebidas nos últimos 30 dias",
+      description: `Conversas recebidas nos últimos ${periodoDias} dias`,
       icon: Users,
       color: "text-success",
     },
@@ -99,15 +103,35 @@ export default function Dashboard() {
       {/* Header com gradiente */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
         <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
-        <div className="relative">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             Dashboard
           </h1>
           <p className="text-muted-foreground mt-1">
             Visão geral do seu atendimento omnicanal
           </p>
+          </div>
+          <Select value={String(periodoDias)} onValueChange={(value) => setPeriodoDias(Number(value))}>
+            <SelectTrigger className="w-full bg-background/80 sm:w-44" aria-label="Período dos indicadores">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+
+      {erroMetricas && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Indicadores indisponíveis</AlertTitle>
+          <AlertDescription>{erroMetricas}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Atalhos Rápidos */}
       {!atalhosLoading && atalhos.length > 0 && (
@@ -201,6 +225,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+                {!loadingMetricas && !erroMetricas && conversas.length === 0 && (
+                  <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma conversa encontrada no período.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -235,6 +262,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+                {!loadingMetricas && !erroMetricas && canais.length === 0 && (
+                  <p className="py-6 text-center text-sm text-muted-foreground">Nenhum canal ativo no período.</p>
+                )}
             </div>
           </CardContent>
         </Card>
