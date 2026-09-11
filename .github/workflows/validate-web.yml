@@ -1,0 +1,23 @@
+name: Validar CRM Web
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+      - name: Instalação reproduzível
+        run: bun install --frozen-lockfile
+      - name: Verificação de tipos
+        run: bun run typecheck
+      - name: Testes
+        run: bun run test
+      - name: Build
+        run: bun run build

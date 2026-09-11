@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build",
+    "build": "bun run typecheck && NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "build:dev": "NODE_OPTIONS=--max-old-space-size=8192 vite build --mode development",
+    "typecheck": "tsgo --noEmit",
+    "test": "vitest run",
+    "check": "bun run typecheck && bun run lint && bun run test && bun run build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -152,6 +155,7 @@
     "@types/node": "^24.7.2",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
     "axe-core": "^4.12.1",

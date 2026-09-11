@@ -26,6 +26,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return responder(405, { error: "Método não permitido" });
 
+  try {
+
   const ctx = await autenticar(req);
   if (!ctx) return responder(401, { error: "Não autenticado" });
 
@@ -64,6 +66,10 @@ Deno.serve(async (req) => {
     .eq("device_id", device_id)
     .maybeSingle();
 
+  let ok = false;
+  let mensagem: string | undefined;
+  let dados: unknown;
+
   if (acao === "configurar") {
     if (device.tipo !== "shelly") {
       return responder(400, { error: "Configuração de saída só é suportada para Shelly." });
@@ -100,10 +106,6 @@ Deno.serve(async (req) => {
       dados,
     });
   }
-
-  let ok = false;
-  let mensagem: string | undefined;
-  let dados: unknown;
 
   if (device.via_coletor) {
     const r = await executarViaColetor(admin, {
@@ -147,4 +149,11 @@ Deno.serve(async (req) => {
   // Falha do equipamento não é erro HTTP: devolvemos 200 com ok=false para o app
   // exibir a mensagem amigável em vez de estourar erro de função.
   return responder(200, { ok, mensagem: mensagem ?? null, dados });
+  } catch (erro) {
+    console.error("[portaria-dispositivo]", erro);
+    return responder(500, {
+      ok: false,
+      error: "Não foi possível concluir a operação com o dispositivo.",
+    });
+  }
 });

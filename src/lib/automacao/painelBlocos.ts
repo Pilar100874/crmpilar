@@ -6,13 +6,14 @@ export interface PainelBlocosValor {
   blocos: Bloco[];
   estados: Record<string, boolean | null>;
   aplicarEstado: (bloco: Bloco, ligado: boolean | null) => void;
-  acionar?: (bloco: Bloco) => void;
+  acionar: (bloco: Bloco) => void;
 }
 
 export const PainelBlocosContext = createContext<PainelBlocosValor>({
   blocos: [],
   estados: {},
   aplicarEstado: () => {},
+  acionar: () => {},
 });
 
 export const usePainelBlocos = () => useContext(PainelBlocosContext);
