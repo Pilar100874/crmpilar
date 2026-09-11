@@ -99,6 +99,9 @@ export default function OrcamentoBoard({ columns, onOrcamentoMove, onOrcamentoCl
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
+                      {column.orcamentos.length === 0 && (
+                        <p className="py-6 text-center text-sm text-muted-foreground">Nenhum orçamento nesta etapa</p>
+                      )}
                       {column.orcamentos.map((orcamento) => (
                         <OrcamentoCard
                           key={orcamento.id}

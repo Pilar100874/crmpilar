@@ -21,6 +21,7 @@ import OrcamentoBoard from "@/components/orcamento/OrcamentoBoard";
 import OrcamentoListView from "@/components/orcamento/OrcamentoListView";
 import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
 import POSView from "@/components/orcamento/POSView";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type ViewMode = 'kanban' | 'list' | 'pos';
 
@@ -46,6 +47,8 @@ export default function Orcamentos() {
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [orcamentoToDelete, setOrcamentoToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Carregar ID do usuário logado
   useEffect(() => {
@@ -88,11 +91,7 @@ export default function Orcamentos() {
           empresa:empresas!left(id, nome_fantasia, cnpj),
           cliente:customers!left(id, nome, email, telefone),
           vendedor:usuarios!left(id, nome),
-          condicao_pagamento:condicoes_pagamento!left(id, nome),
-          itens:orcamento_itens(
-            *,
-            produto:produtos(id, nome, foto_url)
-          )
+          condicao_pagamento:condicoes_pagamento!left(id, nome)
         `, { count: 'exact' })
         .eq('estabelecimento_id', estabId);
 
@@ -169,9 +168,8 @@ export default function Orcamentos() {
   };
 
   const handleOrcamentoDelete = async (orcamentoId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este orçamento?")) return;
-
     try {
+      setDeleting(true);
       // Primeiro deletar os itens
       const { error: itensError } = await supabase
         .from('orcamento_itens')
@@ -189,10 +187,13 @@ export default function Orcamentos() {
       if (error) throw error;
 
       setOrcamentos(prev => prev.filter(o => o.id !== orcamentoId));
+      setOrcamentoToDelete(null);
       toast.success("Orçamento excluído com sucesso");
     } catch (error: any) {
       console.error('Erro ao excluir orçamento:', error);
       toast.error("Erro ao excluir orçamento");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -254,6 +255,8 @@ export default function Orcamentos() {
                 <SelectItem value="orcamento">Orçamento</SelectItem>
                 <SelectItem value="negociacao">Negociação</SelectItem>
                 <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+                <SelectItem value="perdido">Perdido</SelectItem>
+                <SelectItem value="finalizado">Finalizado</SelectItem>
               </SelectContent>
             </Select>
 
@@ -285,6 +288,7 @@ export default function Orcamentos() {
                 size="icon"
                 onClick={() => setViewMode('kanban')}
                 title="Kanban"
+                aria-label="Exibir orçamentos em quadro"
               >
                 <LayoutGrid className="w-4 h-4" />
               </Button>
@@ -293,6 +297,7 @@ export default function Orcamentos() {
                 size="icon"
                 onClick={() => setViewMode('list')}
                 title="Lista"
+                aria-label="Exibir orçamentos em lista"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -351,7 +356,7 @@ export default function Orcamentos() {
               columns={columns}
               onOrcamentoMove={handleOrcamentoMove}
               onOrcamentoClick={handleOrcamentoClick}
-              onOrcamentoDelete={handleOrcamentoDelete}
+              onOrcamentoDelete={setOrcamentoToDelete}
               etapas={ETAPAS_CONFIG}
             />
           ) : (
@@ -403,6 +408,14 @@ export default function Orcamentos() {
           </Pagination>
         </div>
       )}
+      <DeleteConfirmDialog
+        open={Boolean(orcamentoToDelete)}
+        onOpenChange={(open) => !open && setOrcamentoToDelete(null)}
+        onConfirm={() => orcamentoToDelete && void handleOrcamentoDelete(orcamentoToDelete)}
+        title="Excluir orçamento"
+        description="Tem certeza que deseja excluir este orçamento e seus itens? Esta ação não pode ser desfeita."
+        isLoading={deleting}
+      />
     </div>
   );
 }

@@ -337,29 +337,12 @@ export default function Funil() {
   const handleSaveStages = async (stages: StageConfig[], moves: { from: string; to: string }[]): Promise<boolean> => {
     if (!selectedFunilId) return false;
     try {
-      const atuais = new Set(stagesConfig.map((stage) => stage.id));
-      const idsPersistidos = new Map<string, string>();
-      for (const [ordem, stage] of stages.entries()) {
-        if (atuais.has(stage.id)) {
-          const { error } = await supabase.from('funil_stages').update({ nome: stage.title, ordem }).eq('id', stage.id).eq('funil_id', selectedFunilId);
-          if (error) throw error;
-          idsPersistidos.set(stage.id, stage.id);
-        } else {
-          const { data, error } = await supabase.from('funil_stages').insert({ funil_id: selectedFunilId, nome: stage.title, ordem }).select('id').single();
-          if (error) throw error;
-          idsPersistidos.set(stage.id, data.id);
-        }
-      }
-      for (const move of moves) {
-        const destino = idsPersistidos.get(move.to) || move.to;
-        const { error } = await supabase.from('funil_deals').update({ stage_id: destino, dias_parado: 0, ultima_interacao: new Date().toISOString() }).eq('stage_id', move.from).eq('funil_id', selectedFunilId);
-        if (error) throw error;
-      }
-      const mantidos = new Set(stages.map((stage) => stage.id));
-      for (const antiga of stagesConfig.filter((stage) => !mantidos.has(stage.id))) {
-        const { error } = await supabase.from('funil_stages').delete().eq('id', antiga.id).eq('funil_id', selectedFunilId);
-        if (error) throw error;
-      }
+      const { error } = await supabase.rpc('salvar_etapas_funil', {
+        p_funil_id: selectedFunilId,
+        p_stages: stages.map((stage) => ({ id: stage.id, title: stage.title })),
+        p_moves: moves,
+      });
+      if (error) throw error;
       await Promise.all([loadStages(), loadDeals()]);
       toast({ title: 'Etapas configuradas', description: `${stages.length} etapas foram salvas.` });
       return true;

@@ -31193,6 +31193,10 @@ export type Database = {
         Returns: number
       }
       roles_present: { Args: never; Returns: boolean }
+      salvar_etapas_funil: {
+        Args: { p_funil_id: string; p_moves?: Json; p_stages: Json }
+        Returns: Json
+      }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
       visita_haversine_metros: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
