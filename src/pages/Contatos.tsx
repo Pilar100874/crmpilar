@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User, AlertCircle, NotebookPen } from "lucide-react";
 import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
@@ -114,6 +115,10 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [notasContato, setNotasContato] = useState<Contact | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null); // Contato selecionado para visualização no painel lateral
@@ -512,15 +517,16 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   }, [location.state, searchParams, contacts]);
 
   // Carregar contatos do backend
-  const loadContacts = async () => {
+    const loadContacts = async () => {
     try {
+      setLoading(true);
       const estabId = await getEstabelecimentoId();
       if (!estabId) {
         setContacts([]);
         return;
       }
 
-      const { data: rows, error } = await supabase
+      let query = supabase
         .from('customers')
         .select(`
           *,
@@ -530,50 +536,32 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             nome,
             cnpj
           )
-        `)
-        .eq('estabelecimento_id', estabId)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .eq('estabelecimento_id', estabId);
 
-      if (error) {
-        console.error('Erro ao carregar contatos:', error);
-        toast.error('Erro ao carregar contatos');
-        return;
+      if (searchFilters.unifiedSearch) {
+        const search = `%${searchFilters.unifiedSearch}%`;
+        query = query.or(`nome.ilike.${search},email.ilike.${search},telefone.ilike.${search}`);
       }
 
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data: rows, count, error } = await query
+        .range(from, to)
+        .order(sortConfig?.key || 'created_at', { ascending: sortConfig?.direction === 'asc' });
+
+      if (error) throw error;
+      setTotalCount(count || 0);
+
       // Carregar usuários
-      const { data: usuariosData, error: usuariosError } = await supabase
+      const { data: usuariosData } = await supabase
         .from('usuarios')
         .select('id, nome')
         .eq('estabelecimento_id', estabId)
         .eq('tipo', 'gerente')
         .order('nome');
-
-      if (!usuariosError) {
-        setUsuarios(usuariosData || []);
-      }
-
-      // Carregar vínculos
-      const { data: vinculosData, error: vinculosError } = await supabase
-        .from('customer_vinculos')
-        .select('*')
-        .eq('estabelecimento_id', estabId);
-
-      if (!vinculosError) {
-        setVinculos(vinculosData || []);
-      }
-
-      let segmentsByCustomer: Record<string, string[]> = {};
-      if (rows && rows.length > 0) {
-        const { data: segRows } = await supabase
-          .from('customer_segmentos')
-          .select('customer_id, segmento_id')
-          .in('customer_id', rows.map((r: any) => r.id));
-
-        (segRows || []).forEach((r: any) => {
-          if (!segmentsByCustomer[r.customer_id]) segmentsByCustomer[r.customer_id] = [];
-          segmentsByCustomer[r.customer_id].push(r.segmento_id);
-        });
-      }
+      if (usuariosData) setUsuarios(usuariosData);
 
       const mapped: Contact[] = (rows || []).map((r: any) => ({
         id: r.id,
@@ -589,31 +577,23 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         createdBy: 'Sistema',
         modifiedAt: r.created_at,
         modifiedBy: 'Sistema',
-        customFields: {
-          ...r.custom_fields,
-          empresa_id: r.empresa_id,
-          tipo_operador: r.tipo_operador,
-          company_name: r.empresas?.nome_fantasia || r.custom_fields?.company_name,
-          company_fantasia: r.empresas?.nome_fantasia || r.custom_fields?.company_fantasia,
-          cpf_cnpj: r.empresas?.cnpj || r.custom_fields?.cpf_cnpj,
-        },
-
+        customFields: { ...r.custom_fields, empresa_id: r.empresa_id },
         active: true,
-        segmentos: segmentsByCustomer[r.id] || [],
       }));
-
 
       setContacts(mapped);
     } catch (e) {
       console.error('Erro ao carregar contatos:', e);
       toast.error('Erro ao carregar contatos');
+    } finally {
+      setLoading(false);
     }
   };
 
 
   useEffect(() => {
     loadContacts();
-  }, []);
+  }, [page, sortConfig, searchFilters.unifiedSearch]);
 
   // Salvar configuração de campos de empresa no Supabase
   useEffect(() => {
@@ -2261,7 +2241,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
-          {sortedContacts.length === 0 ? (
+          {!loading && sortedContacts.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center px-4">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3 sm:mb-4">
@@ -2392,6 +2372,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                    </tr>
                 </thead>
                 <tbody>
+                  {loading && <TableRow><TableCell colSpan={tableColumns.length} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /><span className="sr-only">Carregando...</span></TableCell></TableRow>}
                   {sortedContacts.map((contact) => (
                     <tr key={contact.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
                       {tableColumns.filter(col => col.visible).map((column, index) => {

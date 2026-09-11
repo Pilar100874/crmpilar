@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BlocoCard from "@/components/automacao/BlocoCard";
 import {
@@ -7,7 +7,9 @@ import {
 import { AmbientesNavContext } from "@/lib/automacao/navegacao";
 import { PainelBlocosContext, idsDentroDeExpansiveis } from "@/lib/automacao/painelBlocos";
 import { useEstadosAoVivo } from "@/lib/automacao/estadoAoVivo";
+import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const COLUNAS = 12;
 const ALTURA_LINHA = 74;
@@ -38,12 +40,16 @@ export default function AutomacaoTela() {
   const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [blocos, setBlocos] = useState<Bloco[]>([]);
   const [estados, setEstados] = useState<Record<string, boolean | null>>({});
+  const [regras, setRegras] = useState<Regra[]>([]);
   const [fundoUrl, setFundoUrl] = useState<string | null>(null);
   const [escala, setEscala] = useState(1);
   const [tipoAparelho, setTipoAparelho] = useState<TipoTela>(() =>
     (params.get("tipo") as TipoTela) || detectarTipoTela(),
   );
   const palcoRef = useRef<HTMLDivElement | null>(null);
+  const estadosRef = useRef<Record<string, boolean | null>>({});
+  const blocosRef = useRef<Bloco[]>([]);
+  const regrasRef = useRef<Regra[]>([]);
 
   const pedido = params.get("ambiente") || "todos";
   const todos = pedido === "todos";
@@ -63,10 +69,11 @@ export default function AutomacaoTela() {
 
   useEffect(() => {
     (async () => {
-      const [todosAmbientes, b] = await Promise.all([listarAmbientes(), listarBlocos()]);
+      const [todosAmbientes, b, r] = await Promise.all([listarAmbientes(), listarBlocos(), listarRegras()]);
       const a = todosAmbientes.filter((x) => x.ativo !== false);
       setAmbientes(a);
       setBlocos(b);
+      setRegras(r);
       // Já mostra os botões com a situação real dos equipamentos.
       lerEstadosDosBlocos(b).then((e) => setEstados((s) => {
         const proximo = { ...s };
@@ -77,6 +84,34 @@ export default function AutomacaoTela() {
       })).catch(() => {});
     })();
   }, []);
+
+  useEffect(() => { estadosRef.current = estados; }, [estados]);
+  useEffect(() => { blocosRef.current = blocos; regrasRef.current = regras; }, [blocos, regras]);
+
+  const aplicarEstado = useCallback((deviceId: string | null, blocoId: string | null, ligado: boolean | null) => {
+    setEstados((atuais) => {
+      const proximos = { ...atuais };
+      if (blocoId) proximos[blocoId] = ligado;
+      if (deviceId) {
+        for (const outro of blocosRef.current) {
+          if (outro.device_id === deviceId) proximos[outro.id] = ligado;
+        }
+      }
+      estadosRef.current = proximos;
+      return proximos;
+    });
+  }, []);
+
+  const dispararRegras = useCallback((evento: EventoPainel) => {
+    if (!regrasRef.current.length) return;
+    void rodarRegras(evento, {
+      regras: regrasRef.current,
+      blocos: blocosRef.current,
+      estados: estadosRef.current,
+      aplicarEstado,
+      aviso: (texto, erro) => erro ? toast.error(texto) : toast.info(texto),
+    }).catch(() => toast.error("Não foi possível concluir a automação."));
+  }, [aplicarEstado]);
 
   // Mantém a situação real dos equipamentos na tela, sem recarregar.
   useEstadosAoVivo(blocos, (novos) => {
@@ -204,7 +239,11 @@ export default function AutomacaoTela() {
       value={{
         blocos: doAmbiente,
         estados,
-        aplicarEstado: (b, v) => setEstados((s) => ({ ...s, [b.id]: v })),
+        aplicarEstado: (b, v) => {
+          aplicarEstado(b.device_id, b.id, v);
+          dispararRegras({ tipo: "mudanca", bloco: b, ligado: v });
+        },
+        acionar: (b) => dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null }),
       }}
     >
     <div className="fixed inset-0 flex flex-col bg-background text-foreground">
@@ -268,7 +307,11 @@ export default function AutomacaoTela() {
                     bloco={b}
                     ligado={estados[b.id] ?? null}
                     edicao={false}
-                    onEstado={(v) => setEstados((s) => ({ ...s, [b.id]: v }))}
+                    onAcionar={() => dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null })}
+                    onEstado={(v) => {
+                      aplicarEstado(b.device_id, b.id, v);
+                      dispararRegras({ tipo: "mudanca", bloco: b, ligado: v });
+                    }}
                   />
                 </div>
               );

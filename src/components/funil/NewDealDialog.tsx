@@ -34,10 +34,11 @@ interface Empresa {
 interface NewDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (deal: Omit<Deal, 'id'>) => void;
+  onSave: (deal: Omit<Deal, 'id'>) => Promise<boolean>;
+  stages: Array<{ id: string; title: string }>;
 }
 
-export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps) {
+export function NewDealDialog({ open, onOpenChange, onSave, stages }: NewDealDialogProps) {
   const [formData, setFormData] = useState({
     cliente: '',
     valor: '',
@@ -53,11 +54,13 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
   const [searchQuery, setSearchQuery] = useState('');
   const [showEmpresasList, setShowEmpresasList] = useState(false);
   const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [saving, setSaving] = useState(false);
 
   // Carregar empresas
   useEffect(() => {
     if (open) {
-      loadEmpresas();
+      void Promise.all([loadEmpresas(), loadUsuarios()]);
     }
   }, [open]);
 
@@ -74,6 +77,17 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
         setEmpresas(data);
       }
     }
+  };
+
+  const loadUsuarios = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+    const { data } = await supabase
+      .from('usuarios')
+      .select('id, nome')
+      .eq('estabelecimento_id', estabId)
+      .order('nome');
+    setUsuarios(data || []);
   };
 
   // Filtrar empresas baseado na busca
@@ -109,14 +123,16 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
     setFormData({ ...formData, cliente: '' });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    onSave({
+    setSaving(true);
+    const saved = await onSave({
       cliente: formData.cliente,
+      clienteId: selectedEmpresa?.id ?? null,
       valor: parseFloat(formData.valor) || 0,
       dataEstimada: formData.dataEstimada,
-      responsavel: formData.responsavel,
+      responsavel: usuarios.find((u) => u.id === formData.responsavel)?.nome || 'Sem responsável',
+      responsavelId: formData.responsavel || null,
       origem: formData.origem,
       segmento: formData.segmento,
       cluster: formData.cluster,
@@ -125,7 +141,11 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
       diasParado: 0,
       prioridade: 50,
       tags: [],
+      stage: formData.stage,
     });
+
+    setSaving(false);
+    if (!saved) return;
 
     // Reset form
     setFormData({
@@ -236,10 +256,9 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Marcos">Marcos</SelectItem>
-                  <SelectItem value="João">João</SelectItem>
-                  <SelectItem value="Maria">Maria</SelectItem>
-                  <SelectItem value="Pedro">Pedro</SelectItem>
+                  {usuarios.map((usuario) => (
+                    <SelectItem key={usuario.id} value={usuario.id}>{usuario.nome}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -304,11 +323,9 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="lead">Lead</SelectItem>
-                  <SelectItem value="qualificacao">Qualificação</SelectItem>
-                  <SelectItem value="proposta">Proposta</SelectItem>
-                  <SelectItem value="negociacao">Negociação</SelectItem>
-                  <SelectItem value="fechamento">Fechamento</SelectItem>
+                  {stages.map((stage) => (
+                    <SelectItem key={stage.id} value={stage.id}>{stage.title}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -318,7 +335,7 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">Criar Lead</Button>
+            <Button type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Criar Lead'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

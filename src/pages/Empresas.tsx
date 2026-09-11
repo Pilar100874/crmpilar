@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DeleteWithDependenciesDialog } from "@/components/common/DeleteWithDependenciesDialog";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye, NotebookPen } from "lucide-react";
 import { NotasEntidadeDialog } from "@/components/notas/NotasEntidadeDialog";
@@ -98,6 +99,10 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const pageSize = 20;
   const [empresasParaVincular, setEmpresasParaVincular] = useState<Array<{ id: string; nome_fantasia: string; nome: string; cnpj?: string }>>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [notasEmpresa, setNotasEmpresa] = useState<Empresa | null>(null);
@@ -244,7 +249,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     } catch {
       try { localStorage.removeItem(key); } catch {}
     }
-  }, []);
+  }, [page, sortConfig, searchTerm, statusFilter]);
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
@@ -504,7 +509,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     };
     fetchEstabelecimento();
-  }, []);
+  }, [page, sortConfig, searchTerm, statusFilter]);
 
   // Detectar se há um ID de empresa para editar vindo da navegação (via state ou URL params)
   useEffect(() => {
@@ -522,28 +527,41 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   }, [location.state, searchParams, empresas]);
 
-  const fetchEmpresas = async (estabId: string) => {
-    let query = supabase
-      .from('empresas')
-      .select('*')
-      .eq('estabelecimento_id', estabId)
-      .order('nome_fantasia');
+    const fetchEmpresas = async (estabId: string) => {
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('empresas')
+        .select('*', { count: 'exact' })
+        .eq('estabelecimento_id', estabId);
 
-    if (variant === "empresa") {
-      // Excluir vendedores e transportadoras da lista de empresas
-      query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
-    } else {
-      query = query.eq('tipo_cliente', entityConfig.tipo_cliente);
-    }
+      if (variant === "empresa") {
+        query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
+      } else {
+        query = query.eq('tipo_cliente', entityConfig.tipo_cliente);
+      }
 
-    const { data, error } = await query;
+      if (searchTerm) {
+        const search = `%${searchTerm}%`;
+        query = query.or(`nome_fantasia.ilike.${search},nome.ilike.${search},cnpj.ilike.${search}`);
+      }
 
-    if (error) {
-      console.error('Erro ao carregar empresas:', error);
-      return;
-    }
+      if (statusFilter !== "all" && variant === "empresa") {
+        if (statusFilter === "nao_prospect") query = query.neq('status_comercial', 'prospect');
+        else if (statusFilter === "somente_prospect") query = query.eq('status_comercial', 'prospect');
+        else query = query.eq('status_comercial', statusFilter);
+      }
 
-    setEmpresas(data || []);
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, count, error } = await query
+        .range(from, to)
+        .order(sortConfig?.key || 'nome_fantasia', { ascending: sortConfig?.direction !== 'desc' });
+
+      if (error) throw error;
+      setEmpresas(data || []);
+      setTotalCount(count || 0);
 
     // Carregar usuários
     const { data: usuariosData, error: usuariosError } = await supabase
@@ -596,6 +614,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
     if (!vinculosError) {
       setVinculos(vinculosData || []);
+    }
+    } catch (e) {
+      console.error('Erro ao carregar empresas:', e);
+      toast.error('Erro ao carregar empresas');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2051,7 +2075,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
-          {sortedEmpresas.length === 0 ? (
+          {!loading && sortedEmpresas.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center px-4">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3 sm:mb-4">
@@ -2186,6 +2210,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   </tr>
                 </thead>
                 <tbody>
+                  {loading && <TableRow><TableCell colSpan={tableColumns.length} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /><span className="sr-only">Carregando...</span></TableCell></TableRow>}
                   {sortedEmpresas.map((empresa) => (
                     <tr key={empresa.id} className="border-b border-border/30 hover:bg-muted/40 transition-colors duration-150 group">
                       {tableColumns.filter(col => col.visible).map((column, index) => {

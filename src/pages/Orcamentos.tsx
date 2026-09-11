@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import OrcamentoBoard from "@/components/orcamento/OrcamentoBoard";
@@ -34,6 +35,9 @@ const ETAPAS_CONFIG = [
 export default function Orcamentos() {
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
   const [searchQuery, setSearchQuery] = useState("");
   const [filterVendedor, setFilterVendedor] = useState<string>("");
   const [filterEtapa, setFilterEtapa] = useState<string>("");
@@ -63,21 +67,19 @@ export default function Orcamentos() {
 
   useEffect(() => {
     loadOrcamentos();
-  }, []);
+  }, [page, searchQuery, filterEtapa]);
 
-  const loadOrcamentos = async () => {
+    const loadOrcamentos = async () => {
     try {
       setLoading(true);
       const estabId = await getEstabelecimentoId();
-      
       if (!estabId) {
         toast.error("Selecione um estabelecimento");
         return;
       }
-
       setEstabelecimentoId(estabId);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('orcamentos')
         .select(`
           *,
@@ -89,42 +91,28 @@ export default function Orcamentos() {
             *,
             produto:produtos(id, nome, foto_url)
           )
-        `)
-        .eq('estabelecimento_id', estabId)
+        `, { count: 'exact' })
+        .eq('estabelecimento_id', estabId);
+
+      if (searchQuery) {
+        const search = `%${searchQuery}%`;
+        query = query.or(`id.ilike.${search}`); // Simplified search for ID
+      }
+
+      if (filterEtapa && filterEtapa !== 'all') {
+        query = query.eq('etapa', filterEtapa);
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, count, error } = await query
+        .range(from, to)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Buscar vínculos dos clientes para filtro "Meus"
-      const clienteIds = data?.map(o => o.cliente_id).filter(Boolean) || [];
-      let vinculosMap: Record<string, any[]> = {};
-      
-      if (clienteIds.length > 0) {
-        const { data: vinculosData } = await supabase
-          .from('customer_vinculos')
-          .select('customer_id, usuario_id')
-          .in('customer_id', clienteIds);
-        
-        if (vinculosData) {
-          vinculosData.forEach(v => {
-            if (!vinculosMap[v.customer_id]) {
-              vinculosMap[v.customer_id] = [];
-            }
-            vinculosMap[v.customer_id].push(v);
-          });
-        }
-      }
-      
-      // Adicionar vínculos aos orçamentos
-      const orcamentosComVinculos = (data || []).map(orc => ({
-        ...orc,
-        cliente: orc.cliente ? {
-          ...orc.cliente,
-          customer_vinculos: vinculosMap[orc.cliente_id] || []
-        } : null
-      }));
-      
-      setOrcamentos(orcamentosComVinculos as any);
+      setTotalCount(count || 0);
+      setOrcamentos(data as any);
     } catch (error: any) {
       console.error('Erro ao carregar orçamentos:', error);
       toast.error("Erro ao carregar orçamentos");
@@ -394,6 +382,37 @@ export default function Orcamentos() {
           onOpenChange={(open) => !open && setSelectedOrcamento(null)}
           onSave={handleOrcamentoSaved}
         />
+      )}
+      {totalCount > pageSize && (
+        <div className="py-4 border-t bg-card px-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.ceil(totalCount / pageSize) }).map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink 
+                    isActive={page === i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className="cursor-pointer"
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )).slice(Math.max(0, page - 3), Math.min(Math.ceil(totalCount / pageSize), page + 2))}
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setPage(p => Math.min(Math.ceil(totalCount / pageSize), p + 1))}
+                  className={page === Math.ceil(totalCount / pageSize) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
     </div>
   );
