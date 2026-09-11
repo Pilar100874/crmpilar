@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import * as React from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { EditorPopupProvider } from "@/lib/editores/editorPopup";
 import AvisoCreditosIA from "@/components/ai/AvisoCreditosIA";
