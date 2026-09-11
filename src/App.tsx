@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 const Index = React.lazy(() => import("./pages/Index"));
 const Login = React.lazy(() => import("./pages/Login"));
 const OAuthConsent = React.lazy(() => import("./pages/OAuthConsent"));
@@ -481,7 +482,7 @@ const App = () => (
           <WakeLockManager />
           <GlobalOpenInNewTabButton />
           <GlobalBackToTelaButton />
-          <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>}><Routes>
+          <RouteErrorBoundary><React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>}><Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dev/lookup-e2e" element={<DevLookupE2E />} />
@@ -960,7 +961,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes></React.Suspense>
+          </Routes></React.Suspense></RouteErrorBoundary>
           </UnsavedChangesProvider>
         </BrowserRouter>
       </TooltipProvider>

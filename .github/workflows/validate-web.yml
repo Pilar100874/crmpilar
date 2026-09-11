@@ -17,6 +17,8 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Verificação de tipos
         run: bun run typecheck
+      - name: Qualidade do código
+        run: bun run lint
       - name: Testes
         run: bun run test
       - name: Build
