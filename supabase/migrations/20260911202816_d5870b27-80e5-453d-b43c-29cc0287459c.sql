@@ -1,0 +1,1 @@
+ALTER FUNCTION public.salvar_etapas_funil(uuid, jsonb, jsonb) SECURITY INVOKER;
