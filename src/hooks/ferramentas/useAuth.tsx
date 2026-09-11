@@ -35,43 +35,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string, authEmail?: string | null, nome?: string | null) => {
     setIsProfileLoading(true);
     try {
+      const { error: provisionError } = await supabase.rpc("ferr_provision_current_user", {
+        p_email: authEmail ?? "",
+        p_full_name: nome || (authEmail ? authEmail.split("@")[0] : "Usuário"),
+      });
+      if (provisionError) throw provisionError;
+
       let { data: profileData } = await supabase
         .from("ferr_profiles")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
 
-      // Provisiona automaticamente o perfil do usuário do CRM no módulo.
-      if (!profileData) {
-        const { data: criado } = await supabase
-          .from("ferr_profiles")
-          .upsert({
-            id: userId,
-            email: authEmail ?? "",
-            full_name: nome || (authEmail ? authEmail.split("@")[0] : "Usuário"),
-            is_approved: true,
-            is_active: true,
-            qr_code: crypto.randomUUID(),
-          })
-          .select("*")
-          .maybeSingle();
-        profileData = criado ?? null;
-      }
-
       let { data: roleData } = await supabase
         .from("ferr_user_roles")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
-
-      if (!roleData) {
-        const { data: criadoRole } = await supabase
-          .from("ferr_user_roles")
-          .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" })
-          .select("*")
-          .maybeSingle();
-        roleData = criadoRole ?? null;
-      }
 
       if (profileData) {
         setProfile(profileData as Profile);
@@ -196,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: isLoading || isProfileLoading,
     isAdmin: role === "admin",
     isAlmoxarifado: role === "almoxarifado",
-    isApproved: profile?.is_approved ?? true,
+    isApproved: profile?.is_approved ?? false,
     isSuperAdmin: role === "admin",
     isCompanyActive,
     companyStatus,

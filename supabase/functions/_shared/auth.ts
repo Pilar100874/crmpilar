@@ -6,6 +6,9 @@ export interface AuthContext {
   usuarioId: string | null;
   estabelecimentoId: string | null;
   isAdmin: boolean;
+  isManager: boolean;
+  isSystemAdmin: boolean;
+  isServiceRole: boolean;
 }
 
 export function serviceClient() {
@@ -25,6 +28,17 @@ export async function getAuthContext(req: Request): Promise<AuthContext | null> 
   if (!token) return null;
 
   const svc = serviceClient();
+  if (token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+    return {
+      userId: "service_role",
+      usuarioId: null,
+      estabelecimentoId: null,
+      isAdmin: true,
+      isManager: true,
+      isSystemAdmin: true,
+      isServiceRole: true,
+    };
+  }
   const { data, error } = await svc.auth.getUser(token);
   if (error || !data?.user) return null;
 
@@ -35,21 +49,31 @@ export async function getAuthContext(req: Request): Promise<AuthContext | null> 
     .maybeSingle();
 
   let isAdmin = false;
+  let isManager = false;
   if (usuario?.id) {
-    const { data: role } = await svc
+    const { data: roles } = await svc
       .from("user_roles")
       .select("role")
       .eq("user_id", usuario.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    isAdmin = !!role;
+      .in("role", ["admin", "gestor"]);
+    isAdmin = (roles ?? []).some((item) => item.role === "admin");
+    isManager = (roles ?? []).some((item) => item.role === "gestor");
   }
+
+  const { data: systemAdmin } = await svc
+    .from("administradores")
+    .select("id")
+    .eq("id", data.user.id)
+    .maybeSingle();
 
   return {
     userId: data.user.id,
     usuarioId: usuario?.id ?? null,
     estabelecimentoId: usuario?.estabelecimento_id ?? null,
     isAdmin,
+    isManager,
+    isSystemAdmin: !!systemAdmin,
+    isServiceRole: false,
   };
 }
 

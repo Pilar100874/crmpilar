@@ -33,6 +33,7 @@ export type TipoBloco =
 
 export interface Ambiente {
   id: string;
+  estabelecimento_id?: string | null;
   nome: string;
   /** Nome da tela (grupo de abas) a que este ambiente pertence. */
   tela_nome?: string | null;
@@ -238,6 +239,17 @@ export async function listarAmbientes(): Promise<Ambiente[]> {
 }
 
 export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | null> {
+  const { data: authData } = await supabase.auth.getUser();
+  const authUserId = authData.user?.id;
+  let estabelecimentoId = a.estabelecimento_id ?? null;
+  if (!a.id && !estabelecimentoId && authUserId) {
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("estabelecimento_id")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+    estabelecimentoId = usuario?.estabelecimento_id ?? null;
+  }
   const payload = {
     nome: a.nome,
     tela_nome: a.tela_nome?.trim() || null,
@@ -252,6 +264,7 @@ export async function salvarAmbiente(a: Partial<Ambiente>): Promise<Ambiente | n
     dispositivo: a.dispositivo ?? "tv",
     rolagem: a.rolagem === true,
     mostrar_abas: a.mostrar_abas !== false,
+    ...(!a.id ? { estabelecimento_id: estabelecimentoId } : {}),
 
   };
   if (a.id) {
@@ -338,6 +351,7 @@ export async function duplicarAmbienteComNome(
       dispositivo: a.dispositivo ?? "tv",
       rolagem: a.rolagem === true,
       mostrar_abas: a.mostrar_abas !== false,
+      estabelecimento_id: a.estabelecimento_id ?? null,
 
     })
     .select()
