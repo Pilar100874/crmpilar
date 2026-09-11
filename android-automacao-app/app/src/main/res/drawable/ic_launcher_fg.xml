@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Casa com botao de energia, no mesmo estilo do icone do Pilar Fone -->
     <item
         android:gravity="center"
-        android:width="150dp"
-        android:height="60dp">
+        android:width="58dp"
+        android:height="58dp"
+        android:bottom="8dp">
         <bitmap
-            android:src="@drawable/logo_pilar"
+            android:src="@drawable/ic_automacao_fg"
             android:gravity="center" />
     </item>
 </layer-list>
