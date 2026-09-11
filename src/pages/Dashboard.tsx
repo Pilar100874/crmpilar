@@ -1,40 +1,94 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Users, TrendingUp, Clock, Settings2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useAtalhos } from "@/hooks/useAtalhos";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+
+type ConversaResumo = { id: string; canal: string; chat_status: string | null; created_at: string | null; tempo_encerramento: string | null };
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { atalhos, loading: atalhosLoading } = useAtalhos();
+  const [conversas, setConversas] = useState<ConversaResumo[]>([]);
+  const [totalConversas, setTotalConversas] = useState(0);
+  const [loadingMetricas, setLoadingMetricas] = useState(true);
+
+  useEffect(() => {
+    const carregarMetricas = async () => {
+      setLoadingMetricas(true);
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) { setLoadingMetricas(false); return; }
+      const desde = new Date();
+      desde.setDate(desde.getDate() - 30);
+      const { data, count, error } = await supabase
+        .from('conversations')
+        .select('id, canal, chat_status, created_at, tempo_encerramento', { count: 'exact' })
+        .eq('estabelecimento_id', estabelecimentoId)
+        .gte('created_at', desde.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1000);
+      if (!error) {
+        setConversas(data || []);
+        setTotalConversas(count || 0);
+      }
+      setLoadingMetricas(false);
+    };
+    void carregarMetricas();
+  }, []);
+
+  const metricas = useMemo(() => {
+    const ativas = conversas.filter((item) => item.chat_status !== 'encerrado').length;
+    const encerradas = conversas.filter((item) => item.chat_status === 'encerrado');
+    const resolucao = conversas.length ? Math.round((encerradas.length / conversas.length) * 100) : 0;
+    const duracoes = encerradas.flatMap((item) => item.created_at && item.tempo_encerramento
+      ? [Math.max(0, new Date(item.tempo_encerramento).getTime() - new Date(item.created_at).getTime())]
+      : []);
+    const mediaMinutos = duracoes.length ? Math.round(duracoes.reduce((a, b) => a + b, 0) / duracoes.length / 60000) : 0;
+    return { ativas, resolucao, mediaMinutos };
+  }, [conversas]);
+
+  const canais = useMemo(() => {
+    const totais = conversas.reduce<Record<string, number>>((acc, item) => {
+      const canal = item.canal || 'Não informado';
+      acc[canal] = (acc[canal] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(totais).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, total]) => ({
+      name,
+      percentage: conversas.length ? Math.round((total / conversas.length) * 100) : 0,
+    }));
+  }, [conversas]);
 
   const stats = [
     {
       title: "Conversas Ativas",
-      value: "24",
-      description: "+12% desde ontem",
+      value: loadingMetricas ? "—" : metricas.ativas.toLocaleString('pt-BR'),
+      description: "Em atendimento nos últimos 30 dias",
       icon: MessageSquare,
       color: "text-primary",
     },
     {
       title: "Clientes Atendidos",
-      value: "156",
-      description: "+8% esta semana",
+      value: loadingMetricas ? "—" : totalConversas.toLocaleString('pt-BR'),
+      description: "Conversas recebidas nos últimos 30 dias",
       icon: Users,
       color: "text-success",
     },
     {
       title: "Taxa de Resolução",
-      value: "94%",
-      description: "+2% este mês",
+      value: loadingMetricas ? "—" : `${metricas.resolucao}%`,
+      description: "Conversas encerradas no período",
       icon: TrendingUp,
       color: "text-accent",
     },
     {
       title: "Tempo Médio",
-      value: "3.2min",
-      description: "-15% este mês",
+      value: loadingMetricas ? "—" : `${metricas.mediaMinutos} min`,
+      description: "Da abertura ao encerramento",
       icon: Clock,
       color: "text-warning",
     },
@@ -136,13 +190,13 @@ export default function Dashboard() {
           </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                {conversas.slice(0, 4).map((conversa) => (
+                  <div key={conversa.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Nova conversa iniciada</p>
+                      <p className="text-sm font-medium text-foreground">Conversa via {conversa.canal}</p>
                       <p className="text-xs text-muted-foreground">
-                        Há {i * 5} minutos
+                         {conversa.created_at ? new Date(conversa.created_at).toLocaleString('pt-BR') : 'Data não informada'}
                       </p>
                     </div>
                   </div>
@@ -165,11 +219,7 @@ export default function Dashboard() {
           </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { name: "WhatsApp", percentage: 65, color: "bg-success" },
-                  { name: "Web Chat", percentage: 25, color: "bg-primary" },
-                  { name: "Telegram", percentage: 10, color: "bg-accent" },
-                ].map((channel) => (
+                {canais.map((channel, index) => (
                   <div key={channel.name}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-foreground">{channel.name}</span>
@@ -179,7 +229,7 @@ export default function Dashboard() {
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${channel.color} transition-all duration-500`}
+                         className={`h-full ${index % 2 === 0 ? 'bg-primary' : 'bg-accent'} transition-all duration-500`}
                         style={{ width: `${channel.percentage}%` }}
                       />
                     </div>

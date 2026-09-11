@@ -352,7 +352,7 @@ export default function Funil() {
       }
       for (const move of moves) {
         const destino = idsPersistidos.get(move.to) || move.to;
-        const { error } = await supabase.from('funil_deals').update({ stage_id: destino, ultima_interacao: new Date().toISOString() }).eq('stage_id', move.from).eq('funil_id', selectedFunilId);
+        const { error } = await supabase.from('funil_deals').update({ stage_id: destino, dias_parado: 0, ultima_interacao: new Date().toISOString() }).eq('stage_id', move.from).eq('funil_id', selectedFunilId);
         if (error) throw error;
       }
       const mantidos = new Set(stages.map((stage) => stage.id));

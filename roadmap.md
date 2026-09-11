@@ -43,9 +43,9 @@
 - [x] Confirmar conclusão das duas releases no GitHub Actions após sincronização com a branch principal
 
 ## Validação técnica F01–F16 — 2026-09-11
-- [ ] Etapa 1 — Segurança: F01–F05
-- [ ] Etapa 2 — Instalação e testes: F06 e F15
-- [ ] Etapa 3 — Funcionamento comercial: F07–F12
-- [ ] Etapa 4 — Escala e usabilidade: F13, F14 e F16
+- [x] Etapa 1 — Segurança: F01–F05 (implementada e testes públicos/sem sessão executados)
+- [x] Etapa 2 — Instalação e testes: F06 e F15 (instalação congelada, tipos, testes e build validados)
+- [x] Etapa 3 — Funcionamento comercial: F07–F12 (dados reais e persistência implementados; homologação autenticada pendente)
+- [x] Etapa 4 — Escala e usabilidade: F13, F14 e F16 (paginação/busca, carregamento por módulo e estados acessíveis implementados)
 - [ ] Homologação com usuário comum e administrador em dois estabelecimentos
 - [ ] Persistência após recarga e nova sessão

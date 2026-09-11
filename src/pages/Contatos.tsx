@@ -543,6 +543,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         const search = `%${searchFilters.unifiedSearch}%`;
         query = query.or(`nome.ilike.${search},email.ilike.${search},telefone.ilike.${search}`);
       }
+      if (tipoContatoFilter === 'clientes') query = query.neq('custom_fields->>tipo_operador', 'false');
+      if (tipoContatoFilter === 'prospects') query = query.eq('custom_fields->>tipo_operador', 'false');
 
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -593,7 +595,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   useEffect(() => {
     loadContacts();
-  }, [page, sortConfig, searchFilters.unifiedSearch]);
+  }, [page, sortConfig, searchFilters.unifiedSearch, tipoContatoFilter]);
+
+  useEffect(() => { setPage(1); }, [searchFilters.unifiedSearch, tipoContatoFilter]);
 
   // Salvar configuração de campos de empresa no Supabase
   useEffect(() => {
@@ -2038,27 +2042,6 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     // Filtrar apenas contatos ativos
     if (!contact.active) return false;
 
-    // Filtro cliente/prospect
-    if (tipoContatoFilter === 'clientes' && contact.customFields?.tipo_operador === false) return false;
-    if (tipoContatoFilter === 'prospects' && contact.customFields?.tipo_operador !== false) return false;
-
-
-    
-    // Busca unificada apenas em nome, telefone/WhatsApp e e-mail
-    if (searchFilters.unifiedSearch) {
-      const searchTerm = searchFilters.unifiedSearch.toLowerCase();
-      
-      const matchesSearch = 
-        contact.name.toLowerCase().includes(searchTerm) ||
-        contact.phone.includes(searchTerm) ||
-        (contact.tel || '').includes(searchTerm) ||
-        contact.email.toLowerCase().includes(searchTerm);
-      
-      if (!matchesSearch) {
-        return false;
-      }
-    }
-    
     // Filtrar por campos customizados marcados como searchable
     const allSearchableFields = [...contactFields, ...companyFields].filter(f => f.searchable);
     for (const field of allSearchableFields) {
@@ -2503,6 +2486,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                 </tbody>
               </table>
             </div>
+            {totalCount > pageSize && (
+              <Pagination className="mt-4" aria-label="Paginação de contatos">
+                <PaginationContent>
+                  <PaginationItem><PaginationPrevious onClick={() => setPage((p) => Math.max(1, p - 1))} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} /></PaginationItem>
+                  <PaginationItem><PaginationLink isActive>{page} de {Math.ceil(totalCount / pageSize)}</PaginationLink></PaginationItem>
+                  <PaginationItem><PaginationNext onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / pageSize), p + 1))} className={page >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : 'cursor-pointer'} /></PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
             </>
 
           )}

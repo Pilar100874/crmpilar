@@ -251,6 +251,8 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     }
   }, [page, sortConfig, searchTerm, statusFilter]);
 
+  useEffect(() => { setPage(1); }, [searchTerm, statusFilter, variant]);
+
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
@@ -1892,22 +1894,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
-  const filteredEmpresas = empresas.filter(e => {
-    const status = (e as any).status_comercial || null;
-    if (statusFilter === "nao_prospect" && status === "prospect") return false;
-    if (statusFilter === "somente_prospect" && status !== "prospect") return false;
-    if (statusFilter !== "all" && statusFilter !== "nao_prospect" && statusFilter !== "somente_prospect") {
-      if (status !== statusFilter) return false;
-    }
-    const term = searchTerm.toLowerCase();
-    if (!term) return true;
-    return (
-      e.nome_fantasia?.toLowerCase().includes(term) ||
-      e.nome?.toLowerCase().includes(term) ||
-      e.cnpj?.includes(searchTerm) ||
-      e.email?.toLowerCase().includes(term)
-    );
-  });
+  const filteredEmpresas = empresas;
 
   const sortedEmpresas = React.useMemo(() => {
     if (!sortConfig) return filteredEmpresas;
@@ -2353,6 +2340,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </tbody>
               </table>
             </div>
+            {totalCount > pageSize && (
+              <Pagination className="mt-4" aria-label={`Paginação de ${entityConfig.plural.toLowerCase()}`}>
+                <PaginationContent>
+                  <PaginationItem><PaginationPrevious onClick={() => setPage((p) => Math.max(1, p - 1))} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} /></PaginationItem>
+                  <PaginationItem><PaginationLink isActive>{page} de {Math.ceil(totalCount / pageSize)}</PaginationLink></PaginationItem>
+                  <PaginationItem><PaginationNext onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / pageSize), p + 1))} className={page >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : 'cursor-pointer'} /></PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
             </>
 
           )}
