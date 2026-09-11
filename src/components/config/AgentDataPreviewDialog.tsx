@@ -53,7 +53,11 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
             .single();
           if (ep) {
             try {
-              const { data: result } = await supabase.rpc('execute_sql', { sql_query: ep.query });
+              const { data: response, error } = await supabase.functions.invoke('execute-dynamic-query', {
+                body: { endpoint_id: apiEndpointId },
+              });
+              if (error) throw error;
+              const result = (response as { data?: unknown })?.data;
               const rows = Array.isArray(result) ? result : [];
               setData(rows.slice(0, 200));
               setColumns(rows.length ? Object.keys(rows[0]) : []);

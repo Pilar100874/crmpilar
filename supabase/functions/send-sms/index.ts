@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getAuthContext, unauthorized, forbidden } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,9 +18,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { estabelecimento_id, destino, mensagem, test } = await req.json();
-    if (!estabelecimento_id || !destino || !mensagem) {
-      return new Response(JSON.stringify({ error: 'estabelecimento_id, destino e mensagem são obrigatórios' }), {
+    const { estabelecimento_id: requestedTenant, destino, mensagem, test, simulate, idempotency_key } = await req.json();
+    if (!destino || !mensagem) {
+      return new Response(JSON.stringify({ error: 'destino e mensagem são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -28,6 +29,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
+
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+    const estabelecimento_id = auth.isServiceRole ? String(requestedTenant || '') : auth.estabelecimentoId;
+    if (!estabelecimento_id) return forbidden(corsHeaders, 'Estabelecimento não identificado');
+    if (!auth.isServiceRole && requestedTenant && requestedTenant !== estabelecimento_id) {
+      return forbidden(corsHeaders, 'Não é permitido enviar por outro estabelecimento');
+    }
+    if (!auth.isServiceRole && !auth.isSystemAdmin && !auth.isAdmin && !auth.isManager) {
+      return forbidden(corsHeaders, 'Seu papel não permite enviar SMS');
+    }
+
+    if (idempotency_key) {
+      const { data: previous } = await supabase.from('sms_envios')
+        .select('id, status, provider_message_id, erro')
+        .eq('estabelecimento_id', estabelecimento_id)
+        .eq('idempotency_key', String(idempotency_key))
+        .maybeSingle();
+      if (previous) return new Response(JSON.stringify({ success: previous.status === 'sent' || previous.status === 'queued', duplicado: true, ...previous }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const { data: cfg, error: cfgErr } = await supabase
       .from('sms_config')
@@ -49,8 +72,15 @@ Deno.serve(async (req) => {
     let status = 'sent';
     let erro: string | null = null;
 
+    if (simulate === true) {
+      status = 'simulated';
+      responseRaw = { simulated: true };
+    }
+
     try {
-      if (cfg.provider === 'twilio') {
+      if (simulate === true) {
+        // Simulação valida autorização e configuração, mas nunca chama o provedor.
+      } else if (cfg.provider === 'twilio') {
         if (!cfg.twilio_account_sid || !cfg.twilio_auth_token || !cfg.twilio_from) {
           throw new Error('Credenciais do Twilio incompletas');
         }
@@ -144,8 +174,7 @@ Deno.serve(async (req) => {
       erro = e instanceof Error ? e.message : String(e);
     }
 
-    if (!test) {
-      await supabase.from('sms_envios').insert({
+    const { error: auditError } = await supabase.from('sms_envios').insert({
         estabelecimento_id,
         provider: cfg.provider,
         destino: to,
@@ -154,10 +183,14 @@ Deno.serve(async (req) => {
         provider_message_id: providerMessageId,
         erro,
         response_raw: responseRaw,
+        created_by: auth.isServiceRole ? null : auth.userId,
+        idempotency_key: idempotency_key ? String(idempotency_key) : null,
+        is_test: test === true,
+        is_simulation: simulate === true,
       });
-    }
+    if (auditError) throw auditError;
 
-    const success = status === 'sent' || status === 'queued';
+    const success = status === 'sent' || status === 'queued' || status === 'simulated';
     return new Response(JSON.stringify({ success, status, provider: cfg.provider, provider_message_id: providerMessageId, erro, response: responseRaw }), {
       status: success ? 200 : 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

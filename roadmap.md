@@ -41,3 +41,11 @@
 - [x] Incrementar Android TV Signage para 1.6.0 e alinhar manifesto do APK
 - [x] Incrementar Pilar Fone para 1.7.6 e alinhar manifesto do APK
 - [x] Confirmar conclusão das duas releases no GitHub Actions após sincronização com a branch principal
+
+## Validação técnica F01–F16 — 2026-09-11
+- [ ] Etapa 1 — Segurança: F01–F05
+- [ ] Etapa 2 — Instalação e testes: F06 e F15
+- [ ] Etapa 3 — Funcionamento comercial: F07–F12
+- [ ] Etapa 4 — Escala e usabilidade: F13, F14 e F16
+- [ ] Homologação com usuário comum e administrador em dois estabelecimentos
+- [ ] Persistência após recarga e nova sessão
