@@ -3341,6 +3341,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           dispositivo: string
+          estabelecimento_id: string | null
           fundo_ajuste: string
           fundo_caminho: string | null
           fundo_opacidade: number
@@ -3361,6 +3362,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dispositivo?: string
+          estabelecimento_id?: string | null
           fundo_ajuste?: string
           fundo_caminho?: string | null
           fundo_opacidade?: number
@@ -3381,6 +3383,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dispositivo?: string
+          estabelecimento_id?: string | null
           fundo_ajuste?: string
           fundo_caminho?: string | null
           fundo_opacidade?: number
@@ -3396,7 +3399,15 @@ export type Database = {
           tela_nome?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "automacao_ambientes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       automacao_blocos: {
         Row: {
@@ -23849,10 +23860,13 @@ export type Database = {
           destinatario_id: string | null
           destinatario_tipo: string
           erro: string | null
+          estabelecimento_id: string | null
           icone: string | null
           id: string
+          idempotency_key: string | null
           origem: string | null
           payload: Json | null
+          requested_by: string | null
           status: string
           titulo: string
           total_enviado: number | null
@@ -23867,10 +23881,13 @@ export type Database = {
           destinatario_id?: string | null
           destinatario_tipo: string
           erro?: string | null
+          estabelecimento_id?: string | null
           icone?: string | null
           id?: string
+          idempotency_key?: string | null
           origem?: string | null
           payload?: Json | null
+          requested_by?: string | null
           status?: string
           titulo: string
           total_enviado?: number | null
@@ -23885,10 +23902,13 @@ export type Database = {
           destinatario_id?: string | null
           destinatario_tipo?: string
           erro?: string | null
+          estabelecimento_id?: string | null
           icone?: string | null
           id?: string
+          idempotency_key?: string | null
           origem?: string | null
           payload?: Json | null
+          requested_by?: string | null
           status?: string
           titulo?: string
           total_enviado?: number | null
@@ -23897,7 +23917,15 @@ export type Database = {
           workflow_id?: string | null
           workflow_tipo?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_notifications_log_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -26076,6 +26104,9 @@ export type Database = {
           erro: string | null
           estabelecimento_id: string
           id: string
+          idempotency_key: string | null
+          is_simulation: boolean
+          is_test: boolean
           mensagem: string
           provider: string
           provider_message_id: string | null
@@ -26089,6 +26120,9 @@ export type Database = {
           erro?: string | null
           estabelecimento_id: string
           id?: string
+          idempotency_key?: string | null
+          is_simulation?: boolean
+          is_test?: boolean
           mensagem: string
           provider: string
           provider_message_id?: string | null
@@ -26102,6 +26136,9 @@ export type Database = {
           erro?: string | null
           estabelecimento_id?: string
           id?: string
+          idempotency_key?: string | null
+          is_simulation?: boolean
+          is_test?: boolean
           mensagem?: string
           provider?: string
           provider_message_id?: string | null
@@ -30773,6 +30810,10 @@ export type Database = {
       exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       expire_bot_response_tracking: { Args: never; Returns: number }
+      ferr_can_access_company: {
+        Args: { target_company_id: string }
+        Returns: boolean
+      }
       ferr_create_overdue_notifications: { Args: never; Returns: number }
       ferr_get_user_company_id: {
         Args: { check_user_id: string }
@@ -30782,6 +30823,35 @@ export type Database = {
       ferr_is_almoxarifado: {
         Args: { check_user_id: string }
         Returns: boolean
+      }
+      ferr_provision_current_user: {
+        Args: { p_email: string; p_full_name: string }
+        Returns: {
+          allow_relend: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          company_id: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          is_approved: boolean | null
+          last_location_lat: number | null
+          last_location_lng: number | null
+          last_location_updated_at: string | null
+          phone: string | null
+          qr_code: string | null
+          updated_at: string
+          warehouse_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ferr_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       generate_orcamento_token: { Args: never; Returns: string }
       get_auth_user_estabelecimento_id: { Args: never; Returns: string }
