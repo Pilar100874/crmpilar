@@ -61,8 +61,14 @@ export function NewDealDialog({ open, onOpenChange, onSave, stages }: NewDealDia
   useEffect(() => {
     if (open) {
       void Promise.all([loadEmpresas(), loadUsuarios()]);
+      if (stages.length > 0) {
+        setFormData((current) => ({
+          ...current,
+          stage: stages.some((stage) => stage.id === current.stage) ? current.stage : stages[0].id,
+        }));
+      }
     }
-  }, [open]);
+  }, [open, stages]);
 
   const loadEmpresas = async () => {
     const estabId = await getEstabelecimentoId();
@@ -156,7 +162,7 @@ export function NewDealDialog({ open, onOpenChange, onSave, stages }: NewDealDia
       origem: 'whatsapp',
       segmento: '',
       cluster: '',
-      stage: 'lead',
+      stage: (stages[0]?.id || 'lead') as FunilStage,
     });
     setSelectedEmpresa(null);
     setSearchQuery('');
