@@ -68,12 +68,14 @@ class MainActivity : AppCompatActivity() {
 
         pedirPermissoes()
 
-        if (!Prefs.configurado(this)) abrirConfig() else carregar()
+        // Abre direto no sistema: se ninguém estiver conectado, aparece a tela
+        // de entrada com usuário e senha, sem passar por telas de configuração.
+        carregar()
     }
 
     override fun onResume() {
         super.onResume()
-        if (Prefs.configurado(this)) carregar()
+        carregar()
         esconderBarras()
     }
 
