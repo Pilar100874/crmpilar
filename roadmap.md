@@ -43,9 +43,11 @@
 - [x] Confirmar conclusão das duas releases no GitHub Actions após sincronização com a branch principal
 
 ## Validação técnica F01–F16 — 2026-09-11
-- [x] Etapa 1 — Segurança: F01–F05 (implementada e testes públicos/sem sessão executados)
-- [x] Etapa 2 — Instalação e testes: F06 e F15 (instalação congelada, tipos, testes e build validados)
-- [x] Etapa 3 — Funcionamento comercial: F07–F12 (dados reais e persistência implementados; homologação autenticada pendente)
-- [x] Etapa 4 — Escala e usabilidade: F13, F14 e F16 (paginação/busca, carregamento por módulo e estados acessíveis implementados)
+- [x] Etapa 1 — Segurança: F01–F05 (RLS de SMS/push por estabelecimento implantada; SQL livre revogado; teste público aprovado)
+- [x] Etapa 2 — Instalação e testes: F06 e F15 (instalação congelada, tipos, lint, 80 testes e build aprovados)
+- [x] Etapa 3 — Funcionamento comercial: F07–F12 (dados reais, persistência e gravação transacional de etapas implementados)
+- [x] Etapa 4 — Escala e usabilidade: F13, F14 e F16 (paginação/busca, detalhes sob demanda, recuperação de módulos e estados acessíveis)
 - [ ] Homologação com usuário comum e administrador em dois estabelecimentos
-- [ ] Persistência após recarga e nova sessão
+- [x] Persistência somente de leitura após recarga e nova sessão
+- [ ] Envio real de SMS/push com destinatários de homologação
+- [ ] Revisar separadamente 131 alertas legados do verificador do banco, fora dos F01–F16
