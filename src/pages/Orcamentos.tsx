@@ -67,7 +67,9 @@ export default function Orcamentos() {
 
   useEffect(() => {
     loadOrcamentos();
-  }, [page, searchQuery, filterEtapa]);
+  }, [page, searchQuery, filterEtapa, filterVendedor, showOnlyMine, currentUserId]);
+
+  useEffect(() => { setPage(1); }, [searchQuery, filterEtapa, filterVendedor, showOnlyMine]);
 
     const loadOrcamentos = async () => {
     try {
@@ -94,13 +96,23 @@ export default function Orcamentos() {
         `, { count: 'exact' })
         .eq('estabelecimento_id', estabId);
 
-      if (searchQuery) {
-        const search = `%${searchQuery}%`;
-        query = query.or(`id.ilike.${search}`); // Simplified search for ID
-      }
-
       if (filterEtapa && filterEtapa !== 'all') {
         query = query.eq('etapa', filterEtapa);
+      }
+      if (filterVendedor) query = query.eq('vendedor_id', filterVendedor);
+      if (showOnlyMine && currentUserId) query = query.eq('vendedor_id', currentUserId);
+      if (searchQuery) {
+        const { data: matchingCustomers, error: customerError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('estabelecimento_id', estabId)
+          .or(`nome.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+          .limit(200);
+        if (customerError) throw customerError;
+        const ids = (matchingCustomers || []).map((customer) => customer.id);
+        query = ids.length > 0
+          ? query.or(`id.eq.${searchQuery},cliente_id.in.(${ids.join(',')})`)
+          : query.eq('id', searchQuery);
       }
 
       const from = (page - 1) * pageSize;
@@ -124,36 +136,13 @@ export default function Orcamentos() {
   const columns = useMemo(() => {
     let filtered = orcamentos;
 
-    // Filtrar apenas meus orçamentos - verifica se o contato tem vínculo com o usuário logado
-    if (showOnlyMine && currentUserId) {
-      filtered = filtered.filter(o => {
-        const customerVinculos = o.cliente?.customer_vinculos || [];
-        return customerVinculos.some((v: any) => v.usuario_id === currentUserId);
-      });
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(o => 
-        o.cliente?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.id.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (filterVendedor) {
-      filtered = filtered.filter(o => o.vendedor_id === filterVendedor);
-    }
-
-    if (filterEtapa) {
-      filtered = filtered.filter(o => o.etapa === filterEtapa);
-    }
-
     return ETAPAS_CONFIG.map(etapa => ({
       id: etapa.id as OrcamentoEtapa,
       title: etapa.title,
       color: etapa.color,
       orcamentos: filtered.filter(o => o.etapa === etapa.id),
     }));
-  }, [orcamentos, searchQuery, filterVendedor, filterEtapa, showOnlyMine, currentUserId]);
+  }, [orcamentos]);
 
   const flatOrcamentos = useMemo(() => {
     return columns.flatMap(col => col.orcamentos);
