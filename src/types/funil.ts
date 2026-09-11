@@ -6,6 +6,8 @@ export interface Deal {
   valor: number;
   dataEstimada: string;
   responsavel: string;
+  responsavelId?: string | null;
+  clienteId?: string | null;
   origem?: string;
   segmento?: string;
   cluster?: string;

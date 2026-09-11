@@ -13,60 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
-// Mock data inicial com stages
-const mockDeals: Deal[] = [
-  {
-    id: '1',
-    cliente: 'Kommo Demo',
-    valor: 5000,
-    dataEstimada: '2025-11-20',
-    responsavel: 'Menu',
-    origem: 'WhatsApp',
-    status: 'normal',
-    saude: 'verde',
-    tags: [],
-    stage: 'lead',
-  },
-  {
-    id: '2',
-    cliente: 'Marcos PAPÉIS',
-    valor: 820298.64,
-    dataEstimada: '2025-11-22',
-    responsavel: 'Marcos',
-    origem: 'Site',
-    status: 'normal',
-    saude: 'amarelo',
-    tags: ['Sem Tarefas'],
-    stage: 'qualificacao',
-  },
-  {
-    id: '3',
-    cliente: 'Marcos Pilar',
-    valor: 15000,
-    dataEstimada: '2025-11-14',
-    responsavel: 'Pilar',
-    origem: 'Indicação',
-    status: 'urgente',
-    saude: 'vermelho',
-    diasParado: 5,
-    tags: ['Sem Tarefas'],
-    stage: 'negociacao',
-  },
-];
-
 interface StageConfig {
   id: string;
   title: string;
   isDefault: boolean;
 }
-
-const defaultStages: StageConfig[] = [
-  { id: 'lead', title: 'ETAPA DE LEADS DE ENTRADA', isDefault: true },
-  { id: 'qualificacao', title: 'CONTATO INICIAL', isDefault: true },
-  { id: 'proposta', title: 'DISCUSSÕES', isDefault: true },
-  { id: 'negociacao', title: 'TOMADA DE DECISÃO', isDefault: true },
-  { id: 'fechamento', title: 'DISCUSSÃO DE CONTRATO', isDefault: true },
-];
 
 export default function Funil() {
   const { toast } = useToast();
@@ -134,16 +85,22 @@ export default function Funil() {
 
       if (error) throw error;
       
+      const agora = Date.now();
       setDeals(data?.map(deal => ({
         id: deal.id,
         cliente: deal.cliente_nome,
         valor: Number(deal.valor),
         dataEstimada: deal.data_estimada || '',
         responsavel: deal.responsavel?.nome || 'Sem responsável',
+        responsavelId: deal.responsavel_id,
+        clienteId: deal.cliente_id,
         origem: deal.origem,
         status: deal.status as any,
         saude: deal.saude as any,
-        diasParado: deal.dias_parado,
+        diasParado: Math.max(0, Math.floor((agora - new Date(deal.ultima_interacao || deal.updated_at || deal.created_at || agora).getTime()) / 86400000)),
+        ultimaInteracao: deal.ultima_interacao || deal.updated_at || deal.created_at || undefined,
+        segmento: typeof deal.custom_fields === 'object' && deal.custom_fields && !Array.isArray(deal.custom_fields) ? String((deal.custom_fields as Record<string, unknown>).segmento || '') : '',
+        cluster: typeof deal.custom_fields === 'object' && deal.custom_fields && !Array.isArray(deal.custom_fields) ? String((deal.custom_fields as Record<string, unknown>).cluster || '') : '',
         tags: deal.tags || [],
         stage: deal.stage_id,
       })) || []);
@@ -152,18 +109,6 @@ export default function Funil() {
       toast({ title: 'Erro ao carregar negócios', variant: 'destructive' });
     }
   };
-
-  // Simular detecção de SLA (negócios parados)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDeals(prev => prev.map(deal => ({
-        ...deal,
-        diasParado: deal.diasParado ? deal.diasParado + 1 : 1,
-      })));
-    }, 60000); // Atualiza a cada minuto (em produção seria diário)
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Organiza os deals por estágio usando as configurações salvas
   const columns: FunilColumn[] = useMemo(() => {
@@ -210,6 +155,7 @@ export default function Funil() {
         .update({ 
           stage_id: newStage,
           dias_parado: 0,
+          ultima_interacao: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', dealId);
@@ -219,7 +165,7 @@ export default function Funil() {
       // Atualizar estado local
       setDeals(prevDeals => 
         prevDeals.map(d => 
-          d.id === dealId ? { ...d, stage: newStage, diasParado: 0 } as any : d
+          d.id === dealId ? { ...d, stage: newStage, diasParado: 0, ultimaInteracao: new Date().toISOString() } as any : d
         )
       );
       
@@ -257,14 +203,14 @@ export default function Funil() {
     setNewDealOpen(true);
   };
 
-  const handleSaveNewDeal = async (newDeal: Omit<Deal, 'id'>) => {
+  const handleSaveNewDeal = async (newDeal: Omit<Deal, 'id'>): Promise<boolean> => {
     if (!selectedFunilId) {
       toast({
         title: 'Erro',
         description: 'Nenhum funil selecionado',
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
     try {
@@ -275,7 +221,7 @@ export default function Funil() {
           description: 'Estabelecimento não identificado',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
 
       // Buscar o stage_id da primeira etapa do funil
@@ -286,14 +232,15 @@ export default function Funil() {
           description: 'Nenhuma etapa configurada neste funil',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
 
       // Preparar dados para inserir no banco
       const dealData = {
         funil_id: selectedFunilId,
         estabelecimento_id: estabId,
-        stage_id: firstStage.id,
+        stage_id: newDeal.stage || firstStage.id,
+        cliente_id: newDeal.clienteId || null,
         cliente_nome: newDeal.cliente,
         valor: newDeal.valor,
         data_estimada: newDeal.dataEstimada,
@@ -303,6 +250,9 @@ export default function Funil() {
         dias_parado: 0,
         prioridade: newDeal.prioridade || 0,
         tags: newDeal.tags || [],
+        responsavel_id: newDeal.responsavelId || null,
+        ultima_interacao: new Date().toISOString(),
+        custom_fields: { segmento: newDeal.segmento || null, cluster: newDeal.cluster || null },
       };
 
       const { data, error } = await supabase
@@ -320,6 +270,7 @@ export default function Funil() {
         title: 'Lead criado',
         description: `${newDeal.cliente} foi adicionado ao funil com sucesso.`,
       });
+      return true;
     } catch (error) {
       console.error('Erro ao salvar lead:', error);
       toast({
@@ -327,6 +278,7 @@ export default function Funil() {
         description: 'Não foi possível salvar o lead. Tente novamente.',
         variant: 'destructive',
       });
+      return false;
     }
   };
 
@@ -382,27 +334,40 @@ export default function Funil() {
     setConfigureStagesOpen(true);
   };
 
-  const handleSaveStages = (stages: StageConfig[], moves: { from: string; to: string }[]) => {
-    // Salva as configurações no estado e no localStorage
-    setStagesConfig(stages);
-    localStorage.setItem('funilStagesConfig', JSON.stringify(stages));
-
-    const stageIds = new Set(stages.map(s => s.id));
-    const movesMap = new Map(moves.map(m => [m.from, m.to] as const));
-    const fallbackStage = stages[0]?.id;
-
-    // Aplica movimentações e garante que todos os deals tenham estágio válido
-    setDeals(prev => prev.map(d => {
-      const currentStage = (d as any).stage as string | undefined;
-      const movedTo = currentStage ? movesMap.get(currentStage) : undefined;
-      const nextStage = movedTo || (currentStage && stageIds.has(currentStage) ? currentStage : fallbackStage);
-      return { ...d, stage: nextStage } as any;
-    }));
-    
-    toast({
-      title: 'Etapas configuradas',
-      description: `${stages.length} etapas foram configuradas com sucesso.`,
-    });
+  const handleSaveStages = async (stages: StageConfig[], moves: { from: string; to: string }[]): Promise<boolean> => {
+    if (!selectedFunilId) return false;
+    try {
+      const atuais = new Set(stagesConfig.map((stage) => stage.id));
+      const idsPersistidos = new Map<string, string>();
+      for (const [ordem, stage] of stages.entries()) {
+        if (atuais.has(stage.id)) {
+          const { error } = await supabase.from('funil_stages').update({ nome: stage.title, ordem }).eq('id', stage.id).eq('funil_id', selectedFunilId);
+          if (error) throw error;
+          idsPersistidos.set(stage.id, stage.id);
+        } else {
+          const { data, error } = await supabase.from('funil_stages').insert({ funil_id: selectedFunilId, nome: stage.title, ordem }).select('id').single();
+          if (error) throw error;
+          idsPersistidos.set(stage.id, data.id);
+        }
+      }
+      for (const move of moves) {
+        const destino = idsPersistidos.get(move.to) || move.to;
+        const { error } = await supabase.from('funil_deals').update({ stage_id: destino, ultima_interacao: new Date().toISOString() }).eq('stage_id', move.from).eq('funil_id', selectedFunilId);
+        if (error) throw error;
+      }
+      const mantidos = new Set(stages.map((stage) => stage.id));
+      for (const antiga of stagesConfig.filter((stage) => !mantidos.has(stage.id))) {
+        const { error } = await supabase.from('funil_stages').delete().eq('id', antiga.id).eq('funil_id', selectedFunilId);
+        if (error) throw error;
+      }
+      await Promise.all([loadStages(), loadDeals()]);
+      toast({ title: 'Etapas configuradas', description: `${stages.length} etapas foram salvas.` });
+      return true;
+    } catch (error) {
+      console.error('Erro ao salvar etapas:', error);
+      toast({ title: 'Erro ao salvar etapas', description: 'Nenhuma confirmação foi exibida porque a gravação não terminou.', variant: 'destructive' });
+      return false;
+    }
   };
 
   const handleSearch = (query: string) => {
@@ -560,6 +525,7 @@ export default function Funil() {
         open={newDealOpen}
         onOpenChange={setNewDealOpen}
         onSave={handleSaveNewDeal}
+        stages={stagesConfig}
       />
 
       <DealDetailsDialog

@@ -71,7 +71,7 @@ interface StageConfig {
 interface ConfigureStagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (stages: StageConfig[], moves: { from: string; to: string }[]) => void;
+  onSave: (stages: StageConfig[], moves: { from: string; to: string }[]) => Promise<boolean>;
   currentDeals: Array<{ id: string; stage?: FunilStage | string }>;
   initialStages: StageConfig[];
 }
@@ -91,6 +91,7 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
   const [stageToDelete, setStageToDelete] = useState<StageConfig | null>(null);
   const [targetStageId, setTargetStageId] = useState<string>('');
   const [moves, setMoves] = useState<{ from: string; to: string }[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // Atualiza stages quando initialStages mudar
   useEffect(() => {
@@ -187,9 +188,11 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
     ));
   };
 
-  const handleSave = () => {
-    onSave(stages, moves);
-    onOpenChange(false);
+  const handleSave = async () => {
+    setSaving(true);
+    const saved = await onSave(stages, moves);
+    setSaving(false);
+    if (saved) onOpenChange(false);
   };
 
   const handleReset = () => {
@@ -309,8 +312,8 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
-              Salvar Configurações
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Salvando...' : 'Salvar Configurações'}
             </Button>
           </DialogFooter>
         </DialogContent>
