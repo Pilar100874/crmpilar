@@ -1,4 +1,4 @@
-import { validarChaveApp } from "../_shared/validar-chave-app.ts";
+import { APPS_VALIDOS, validarChaveApp, type AppChave } from "../_shared/validar-chave-app.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,12 +12,16 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-/** Mantido por compatibilidade com o APK de Automação já instalado. */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const body = await req.json().catch(() => ({}));
-    const resultado = await validarChaveApp(body?.chave, "automacao");
+    const app = String(body?.app ?? "").trim().toLowerCase();
+    if (!APPS_VALIDOS.includes(app as AppChave)) {
+      return json({ error: "aplicativo inválido" }, 400);
+    }
+
+    const resultado = await validarChaveApp(body?.chave, app as AppChave);
     if (!resultado.ok) return json({ error: resultado.erro }, resultado.status);
     return json(resultado.dados);
   } catch (e) {

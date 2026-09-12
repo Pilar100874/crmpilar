@@ -3411,6 +3411,7 @@ export type Database = {
       }
       automacao_app_chaves: {
         Row: {
+          app: string
           bloqueado: boolean
           chave: string
           created_at: string
@@ -3421,6 +3422,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          app?: string
           bloqueado?: boolean
           chave: string
           created_at?: string
@@ -3431,6 +3433,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          app?: string
           bloqueado?: boolean
           chave?: string
           created_at?: string

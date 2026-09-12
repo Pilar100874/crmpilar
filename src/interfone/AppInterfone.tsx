@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Loader2, BellRing, Phone, ShieldAlert } from "lucide-react";
+import { LogOut, Loader2, BellRing, Phone, ShieldAlert, KeyRound } from "lucide-react";
 import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobile";
 import AtualizadorApk from "@/components/portaria/AtualizadorApk";
+import AtivacaoChaveApp, { useAtivacaoChave } from "@/components/apps/AtivacaoChaveApp";
 import logoPilar from "@/assets/logo_branco.png";
 
 /** App nativo da Portaria: só interfone (campainha/câmeras) e ramal SIP. */
 export default function AppInterfone() {
+  const { ativacao, salvar, limpar } = useAtivacaoChave("fone");
   const [sessao, setSessao] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -37,19 +39,29 @@ export default function AppInterfone() {
       }
       const { data } = await supabase
         .from("usuarios")
-        .select("pode_usar_interfone, pilarfone_abas")
+        .select("pode_usar_interfone, pilarfone_abas, estabelecimento_id")
         .eq("auth_user_id", auth.user.id)
         .maybeSingle();
       if (!cancelado) {
-        const registro = data as { pode_usar_interfone?: boolean; pilarfone_abas?: string[] | null } | null;
+        const registro = data as {
+          pode_usar_interfone?: boolean;
+          pilarfone_abas?: string[] | null;
+          estabelecimento_id?: string | null;
+        } | null;
+        // A pessoa precisa ser da mesma empresa da chave usada para ativar o aparelho.
+        const mesmaEmpresa =
+          !ativacao?.estabelecimento_id ||
+          registro?.estabelecimento_id === ativacao.estabelecimento_id;
         // Acesso pelo campo antigo (legado) ou por pelo menos uma aba liberada no cadastro.
-        setPermitido(!!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0);
+        const liberado =
+          !!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0;
+        setPermitido(mesmaEmpresa && liberado);
       }
     })();
     return () => {
       cancelado = true;
     };
-  }, [sessao]);
+  }, [sessao, ativacao?.estabelecimento_id]);
 
   const entrar = async (e: React.FormEvent) => {
     e.preventDefault();
