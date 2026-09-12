@@ -255,6 +255,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
+  const [segmentosOriginais, setSegmentosOriginais] = useState<string[]>([]);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
   // Estados para gerenciar empresas
@@ -1495,6 +1496,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         empresa_id: null, // Mantém null pois usamos tabela de junção
         tipo_operador: empresasVinculadas.length > 0 ? true : false, // true = cliente, false = prospect
         custom_fields: {
+          ...(editingContact?.customFields || {}),
           position: formData.position,
         },
         tags: [],
@@ -1520,12 +1522,28 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           .update(contatoPayload)
           .eq('id', contatoId);
 
-        // Atualizar segmentos
-        await supabase.from('customer_segmentos').delete().eq('customer_id', contatoId);
-        if (segmentosSelecionados.length > 0) {
-          await supabase.from('customer_segmentos').insert(
-            segmentosSelecionados.map((sid) => ({ customer_id: contatoId, segmento_id: sid }))
-          );
+        // Atualizar somente os vínculos alterados para preservar os dados já existentes.
+        const segmentosParaAdicionar = segmentosSelecionados.filter(
+          (sid) => !segmentosOriginais.includes(sid)
+        );
+        const segmentosParaRemover = segmentosOriginais.filter(
+          (sid) => !segmentosSelecionados.includes(sid)
+        );
+
+        if (segmentosParaAdicionar.length > 0) {
+          const { error: segmentosInsertError } = await supabase
+            .from('customer_segmentos')
+            .insert(segmentosParaAdicionar.map((sid) => ({ customer_id: contatoId, segmento_id: sid })));
+          if (segmentosInsertError) throw segmentosInsertError;
+        }
+
+        if (segmentosParaRemover.length > 0) {
+          const { error: segmentosDeleteError } = await supabase
+            .from('customer_segmentos')
+            .delete()
+            .eq('customer_id', contatoId)
+            .in('segmento_id', segmentosParaRemover);
+          if (segmentosDeleteError) throw segmentosDeleteError;
         }
       } else {
         // Criar novo contato
@@ -1580,6 +1598,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       setEditingContact(null);
       setFieldErrors({});
       setSegmentosSelecionados([]);
+      setSegmentosOriginais([]);
       setEmpresaSelecionada("");
       setCriarNovaEmpresa(false);
       setContatosDaEmpresa([]);
@@ -1593,8 +1612,22 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   };
 
   const handleEditContact = async (contact: Contact) => {
-    setEditingContact(contact);
-    
+    // Recarregar os segmentos diretamente do banco evita salvar uma seleção
+    // vazia quando o contato veio de uma lista ainda sem os vínculos hidratados.
+    const { data: segmentosVinculados, error: segmentosError } = await supabase
+      .from('customer_segmentos')
+      .select('segmento_id')
+      .eq('customer_id', contact.id);
+
+    if (segmentosError) {
+      console.error('Erro ao carregar segmentos do contato:', segmentosError);
+      toast.error('Não foi possível carregar os segmentos deste contato. Tente novamente.');
+      return;
+    }
+
+    const idsSegmentos = (segmentosVinculados || []).map((v) => v.segmento_id);
+    setEditingContact({ ...contact, segmentos: idsSegmentos });
+
     // Carregar dados do contato no formData
     const baseFormData: Record<string, any> = {
       name: contact.name,
@@ -1642,7 +1675,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     setFormSnapshot(JSON.stringify(baseFormData));
     setActiveTab("contato");
     setPendingTab(null);
-    setSegmentosSelecionados(contact.segmentos || []);
+    setSegmentosSelecionados(idsSegmentos);
+    setSegmentosOriginais(idsSegmentos);
     setShouldCheckDuplicate(true);
     setIsClosingForm(false);
     setShowForm(true);
@@ -1774,6 +1808,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   const loadDuplicateContact = async () => {
     if (!duplicateContact) return;
+
+    const { data: segmentosVinculados, error: segmentosError } = await supabase
+      .from('customer_segmentos')
+      .select('segmento_id')
+      .eq('customer_id', duplicateContact.id);
+
+    if (segmentosError) {
+      console.error('Erro ao carregar segmentos do contato duplicado:', segmentosError);
+      toast.error('Não foi possível carregar os segmentos deste contato. Tente novamente.');
+      return;
+    }
+
+    const idsSegmentos = (segmentosVinculados || []).map((v) => v.segmento_id);
     
     // Carregar dados do contato duplicado no formulário
     const baseFormData: Record<string, any> = {
@@ -1802,7 +1849,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       position: duplicateContact.custom_fields?.position || "",
       customFields: duplicateContact.custom_fields || {},
       company: "",
-      segmentos: [],
+      segmentos: idsSegmentos,
       active: true,
       createdAt: duplicateContact.created_at,
       responsible: "",
@@ -1812,6 +1859,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       modifiedBy: ""
     });
     setFormData(baseFormData);
+    setSegmentosSelecionados(idsSegmentos);
+    setSegmentosOriginais(idsSegmentos);
     
     // Carregar empresas vinculadas
     const { data: vinculos } = await supabase
@@ -2179,6 +2228,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   setActiveTab("contato");
                   setPendingTab(null);
                   setSegmentosSelecionados([]);
+                   setSegmentosOriginais([]);
                   setEmpresaSelecionada("");
                   setCriarNovaEmpresa(false);
                   setContatosDaEmpresa([]);
