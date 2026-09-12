@@ -1,24 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
-import { Download, Smartphone, QrCode as QrIcon, CheckCircle2 } from "lucide-react";
+import { Smartphone, QrCode as QrIcon, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { downloadApk } from "@/lib/downloadApk";
-import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME, TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
+import { TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 export default function TvPair() {
   const [params] = useSearchParams();
   const codigo = params.get("codigo") || "";
   const api_url = params.get("api") || window.location.origin;
-  const [apkUrl, setApkUrl] = useState<string>("");
 
-  useEffect(() => {
-    getLatestTvSignageApkUrl().then(setApkUrl);
-  }, []);
-
-  const isAndroid = useMemo(() => /android/i.test(navigator.userAgent), []);
   const payload = useMemo(
     () => JSON.stringify({ codigo, api_url }),
     [codigo, api_url],
@@ -58,14 +51,15 @@ export default function TvPair() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button size="lg" className="w-full gap-2" disabled={!apkUrl} onClick={() => apkUrl && downloadApk(apkUrl, TV_SIGNAGE_APK_FILENAME)}>
-                  <Download className="w-5 h-5" /> Baixar APK (versão mais nova)
+                <p className="text-sm text-muted-foreground">
+                  O download do APK foi centralizado em <b>Admin → Apps</b>. Baixe pelo computador
+                  ou celular e transfira para a TV.
+                </p>
+                <Button asChild size="lg" className="w-full gap-2">
+                  <Link to="/admin/apps">
+                    Ir para Admin → Apps <ArrowRight className="w-5 h-5" />
+                  </Link>
                 </Button>
-                {!isAndroid && (
-                  <p className="text-xs text-muted-foreground">
-                    ⚠️ Você não está em um dispositivo Android. Baixe o APK e transfira para a TV/tablet Android.
-                  </p>
-                )}
                 <ol className="text-xs text-muted-foreground space-y-1 list-decimal pl-4">
                   <li>Toque no arquivo baixado para instalar.</li>
                   <li>Se pedir, autorize <b>Instalar apps desconhecidos</b> nas configurações.</li>

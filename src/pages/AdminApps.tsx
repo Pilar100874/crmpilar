@@ -9,6 +9,8 @@ import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownload
 import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
 import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
+import PilarSmsDownloadCard from "@/components/config/PilarSmsDownloadCard";
+import TvSignageDownloadCard from "@/components/apps/TvSignageDownloadCard";
 
 
 // Sempre a build mais recente publicada pelos workflows do GitHub Actions.
@@ -381,6 +383,10 @@ export default function AdminApps() {
           </ol>
         </div>
       </Card>
+
+      <PilarSmsDownloadCard />
+
+      <TvSignageDownloadCard />
 
       <ColetorRemotoCard />
 
