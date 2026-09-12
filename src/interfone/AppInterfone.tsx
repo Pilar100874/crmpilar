@@ -72,11 +72,24 @@ export default function AppInterfone() {
     setEntrando(false);
   };
 
-  if (sessao === null) {
+  if (sessao === null || ativacao === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0D1626]">
         <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
       </div>
+    );
+  }
+
+  // Multiempresa: o aparelho só funciona depois de ativado com a chave da empresa.
+  if (!ativacao) {
+    return (
+      <AtivacaoChaveApp
+        app="fone"
+        titulo="Pilar Fone"
+        subtitulo="Informe a chave da empresa"
+        logo={logoPilar}
+        onAtivado={salvar}
+      />
     );
   }
 
