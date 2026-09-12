@@ -189,11 +189,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         </CardContent>
       </Card>
 
-      <div className="rounded-xl border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
-        O aplicativo <b className="text-foreground">Pilar SMS (APK)</b> agora é baixado em{" "}
-        <Link to="/admin/apps" className="text-primary underline">Admin → Apps</Link>.
-      </div>
-
       <Card>
 
         <CardHeader>
