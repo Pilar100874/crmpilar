@@ -819,6 +819,37 @@
     }
     refreshLoop();
 
+    // ─── Ativação por chave da empresa ─────────────────────────────
+    async function verificarAtivacao(){
+      try{
+        const a = await window.coletor.ativacao();
+        const ov = document.getElementById('ativacaoOverlay');
+        ov.style.display = a && a.ativado ? 'none' : 'flex';
+        const el = document.getElementById('empresaAtivaNome');
+        if (el) el.textContent = (a && a.empresaNome) || '—';
+      }catch(e){}
+    }
+    async function ativarChaveColetor(){
+      const btn = document.getElementById('ativBtn');
+      const msg = document.getElementById('ativMsg');
+      const chave = (document.getElementById('ativChave').value || '').trim().toUpperCase();
+      if (!chave){ msg.textContent = 'Informe a chave da empresa.'; return; }
+      btn.disabled = true; msg.textContent = 'Validando chave…';
+      try{
+        const r = await window.coletor.ativarChave(chave);
+        if (r && r.ok){ msg.textContent = ''; await verificarAtivacao(); refresh(); }
+        else { msg.textContent = (r && r.error) || 'Não foi possível validar a chave.'; }
+      }catch(e){ msg.textContent = String(e.message || e); }
+      btn.disabled = false;
+    }
+    async function trocarChaveColetor(){
+      if (!confirm('Trocar a chave da empresa? O coletor para até uma nova chave ser informada.')) return;
+      await window.coletor.limparAtivacao();
+      await verificarAtivacao();
+    }
+    verificarAtivacao();
+    setInterval(verificarAtivacao, 15000);
+
     // ─── Config de vídeo (resolução/FPS/bitrate) ───────────────────
     async function carregarVideoConfig(){
       try{

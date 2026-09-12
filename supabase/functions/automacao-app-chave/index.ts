@@ -12,11 +12,18 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+/** Aplicativos que usam chave de empresa. */
+const APPS_VALIDOS = ["automacao", "coletor", "coletor-tv"];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { chave } = await req.json();
+    const corpo = await req.json();
+    const chave = corpo?.chave;
     if (!chave) return json({ error: "chave obrigatória" }, 400);
+
+    const app = String(corpo?.app ?? "automacao").trim().toLowerCase();
+    if (!APPS_VALIDOS.includes(app)) return json({ error: "aplicativo inválido" }, 400);
 
     const sb = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -26,13 +33,16 @@ Deno.serve(async (req) => {
 
     const { data: registro, error } = await sb
       .from("automacao_app_chaves")
-      .select("id, nome, bloqueado, estabelecimento_id")
+      .select("id, nome, bloqueado, estabelecimento_id, app")
       .eq("chave", String(chave).trim().toUpperCase())
       .maybeSingle();
 
     if (error) return json({ error: "falha ao validar a chave" }, 500);
     if (!registro) return json({ error: "chave não encontrada" }, 404);
     if (registro.bloqueado) return json({ error: "chave bloqueada" }, 403);
+    if ((registro.app ?? "automacao") !== app) {
+      return json({ error: "esta chave é de outro aplicativo" }, 403);
+    }
 
     const { data: estabelecimento } = await sb
       .from("estabelecimentos")
@@ -48,6 +58,7 @@ Deno.serve(async (req) => {
     return json({
       chave_id: registro.id,
       chave_nome: registro.nome,
+      app: registro.app ?? "automacao",
       estabelecimento_id: registro.estabelecimento_id,
       empresa: estabelecimento?.nome ?? "",
     });
