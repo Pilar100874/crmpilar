@@ -486,6 +486,7 @@ function getStatus() {
     camerasRunning: !!timerCameras,
     portariaRunning: !!timerPortaria,
     portaria: PORTARIA_STATE,
+    ativacao: statusAtivacao(),
     config: loadConfig(),
   };
 }

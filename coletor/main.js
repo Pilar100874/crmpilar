@@ -5,6 +5,7 @@ const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
   startPonto, stopPonto, startCameras, stopCameras, startPortaria, stopPortaria,
   listarFiliais, clearDiagnostics,
+  statusAtivacao, ativarChaveEmpresa, limparAtivacao,
 } = require('./collector');
 const { listarCameras } = require('./cameras');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
