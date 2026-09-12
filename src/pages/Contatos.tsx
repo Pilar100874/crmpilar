@@ -1496,6 +1496,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         empresa_id: null, // Mantém null pois usamos tabela de junção
         tipo_operador: empresasVinculadas.length > 0 ? true : false, // true = cliente, false = prospect
         custom_fields: {
+          ...(editingContact?.customFields || {}),
           position: formData.position,
         },
         tags: [],
@@ -1807,6 +1808,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   const loadDuplicateContact = async () => {
     if (!duplicateContact) return;
+
+    const { data: segmentosVinculados, error: segmentosError } = await supabase
+      .from('customer_segmentos')
+      .select('segmento_id')
+      .eq('customer_id', duplicateContact.id);
+
+    if (segmentosError) {
+      console.error('Erro ao carregar segmentos do contato duplicado:', segmentosError);
+      toast.error('Não foi possível carregar os segmentos deste contato. Tente novamente.');
+      return;
+    }
+
+    const idsSegmentos = (segmentosVinculados || []).map((v) => v.segmento_id);
     
     // Carregar dados do contato duplicado no formulário
     const baseFormData: Record<string, any> = {
@@ -1835,7 +1849,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       position: duplicateContact.custom_fields?.position || "",
       customFields: duplicateContact.custom_fields || {},
       company: "",
-      segmentos: [],
+      segmentos: idsSegmentos,
       active: true,
       createdAt: duplicateContact.created_at,
       responsible: "",
@@ -1845,6 +1859,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       modifiedBy: ""
     });
     setFormData(baseFormData);
+    setSegmentosSelecionados(idsSegmentos);
+    setSegmentosOriginais(idsSegmentos);
     
     // Carregar empresas vinculadas
     const { data: vinculos } = await supabase
@@ -2212,6 +2228,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   setActiveTab("contato");
                   setPendingTab(null);
                   setSegmentosSelecionados([]);
+                   setSegmentosOriginais([]);
                   setEmpresaSelecionada("");
                   setCriarNovaEmpresa(false);
                   setContatosDaEmpresa([]);
