@@ -30,11 +30,18 @@ object Prefs {
             .apply()
     }
 
-    /** Monta a URL da tela de parede para este aparelho. */
+    /**
+     * Monta o endereço que o aplicativo abre.
+     * Sem painel escolhido no aparelho, abre a entrada com usuário e senha e
+     * mostra apenas o painel definido para a pessoa que entrou.
+     */
     fun urlTela(ctx: Context, tipo: String): String {
         val base = baseUrl(ctx)
-        val amb = ambiente(ctx).ifBlank { "todos" }
+        val amb = ambiente(ctx)
         val barra = if (rolagem(ctx)) "1" else "0"
-        return "$base/automacao/tela?ambiente=$amb&tipo=$tipo&barra=$barra&app=1"
+        return if (amb.isBlank())
+            "$base/automacao/app?tipo=$tipo&barra=$barra&app=1"
+        else
+            "$base/automacao/tela?ambiente=$amb&tipo=$tipo&barra=$barra&app=1"
     }
 }
