@@ -88,7 +88,7 @@ const STATE = {
   running: false,          // legado — indica se algum coletor está ativo
   pontoEnabled: true,
   camerasEnabled: true,
-  portariaEnabled: false,
+  portariaEnabled: true,
   lastSync: null,
   lastSyncCameras: null,
   totalSent: 0,
@@ -124,7 +124,7 @@ function loadConfig() {
     empresaNome: saved.empresaNome || null,
     pontoEnabled: saved.pontoEnabled !== false,
     camerasEnabled: saved.camerasEnabled !== false,
-    portariaEnabled: saved.portariaEnabled === true,
+    portariaEnabled: saved.portariaEnabled !== false,
     portariaToken: saved.portariaToken || null,
     filialId: saved.filialId || null,
     filialNome: saved.filialNome || null,
