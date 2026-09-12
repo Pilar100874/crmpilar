@@ -14,6 +14,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ImageButton
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -28,6 +29,13 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!Prefs.ativado(this)) {
+            startActivity(Intent(this, AtivacaoActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -58,7 +66,7 @@ class MainActivity : AppCompatActivity() {
 
         refresh.setOnRefreshListener { web.reload() }
 
-        findViewById<ImageButton>(R.id.btn_config).setOnClickListener { abrirConfig() }
+        findViewById<ImageButton>(R.id.btn_config).setOnClickListener { trocarChave() }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -67,14 +75,12 @@ class MainActivity : AppCompatActivity() {
         })
 
         pedirPermissoes()
-
-        // Abre direto no sistema: se ninguém estiver conectado, aparece a tela
-        // de entrada com usuário e senha, sem passar por telas de configuração.
         carregar()
     }
 
     override fun onResume() {
         super.onResume()
+        if (!Prefs.ativado(this)) return
         carregar()
         esconderBarras()
     }
@@ -85,8 +91,19 @@ class MainActivity : AppCompatActivity() {
         if (faltando.isNotEmpty()) requestPermissions(faltando.toTypedArray(), 10)
     }
 
-    private fun abrirConfig() {
-        startActivity(Intent(this, ConfiguracaoActivity::class.java))
+    /** Permite desvincular o aparelho e informar a chave de outra empresa. */
+    private fun trocarChave() {
+        val empresa = Prefs.empresaNome(this).ifBlank { "empresa atual" }
+        AlertDialog.Builder(this)
+            .setTitle("Trocar chave")
+            .setMessage("Este aparelho está ligado a: $empresa.\nDeseja informar outra chave?")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Trocar") { _, _ ->
+                Prefs.limpar(this)
+                startActivity(Intent(this, AtivacaoActivity::class.java))
+                finish()
+            }
+            .show()
     }
 
     private fun tipoTela(): String {
@@ -97,7 +114,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun carregar() {
         val url = Prefs.urlTela(this, tipoTela())
-        if (web.url != url) web.loadUrl(url)
+        if (web.url == null) web.loadUrl(url)
     }
 
     private fun esconderBarras() {

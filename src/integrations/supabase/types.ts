@@ -3409,6 +3409,47 @@ export type Database = {
           },
         ]
       }
+      automacao_app_chaves: {
+        Row: {
+          bloqueado: boolean
+          chave: string
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          ultima_comunicacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          bloqueado?: boolean
+          chave: string
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bloqueado?: boolean
+          chave?: string
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacao_app_chaves_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automacao_blocos: {
         Row: {
           ambiente_id: string | null
