@@ -692,7 +692,7 @@ export default function TvSignageDispositivos() {
                 </TabsContent>
                 <TabsContent value="app" className="space-y-3">
                   <p className="text-xs text-muted-foreground">
-                    Use este QR dentro do app <b>Pilar TV Signage</b> já instalado (botão <b>📷 Ler QR Code</b>).
+                    Use este QR dentro do app <b>Pilar Remotas</b> já instalado (botão <b>📷 Ler QR Code</b>).
                   </p>
                   <div className="flex justify-center bg-white p-4 rounded-lg">
                     <QRCodeCanvas value={appPayload} size={220} />

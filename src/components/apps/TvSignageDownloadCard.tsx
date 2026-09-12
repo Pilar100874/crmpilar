@@ -41,7 +41,7 @@ export default function TvSignageDownloadCard() {
         </div>
 
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <h2 className="text-xl font-bold text-foreground sm:text-2xl">Pilar TV Signage</h2>
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">Pilar Remotas</h2>
           <VersaoAppBadge manifesto={TV_SIGNAGE_MANIFEST_URL} />
         </div>
         <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
@@ -91,7 +91,7 @@ export default function TvSignageDownloadCard() {
           <li className="flex gap-3 sm:gap-4">
             <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Instale permitindo fontes desconhecidas e abra o app <b>Pilar TV Signage</b>.
+              Instale permitindo fontes desconhecidas e abra o app <b>Pilar Remotas</b>.
             </p>
           </li>
           <li className="flex gap-3 sm:gap-4">
