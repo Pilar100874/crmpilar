@@ -38,6 +38,8 @@ function gerarChave() {
 export default function AutomacaoChavesApp() {
   const [chaves, setChaves] = useState<Chave[]>([]);
   const [nome, setNome] = useState("");
+  const [app, setApp] = useState<string>("automacao");
+  const [filtro, setFiltro] = useState<string>("todos");
   const [carregando, setCarregando] = useState(true);
   const [excluir, setExcluir] = useState<Chave | null>(null);
 
@@ -45,7 +47,7 @@ export default function AutomacaoChavesApp() {
     setCarregando(true);
     const { data, error } = await supabase
       .from("automacao_app_chaves")
-      .select("id, nome, chave, bloqueado, ultima_comunicacao")
+      .select("id, nome, chave, app, bloqueado, ultima_comunicacao")
       .order("created_at", { ascending: false });
     if (error) toast.error("Não foi possível carregar as chaves");
     setChaves((data as Chave[]) ?? []);
@@ -67,6 +69,7 @@ export default function AutomacaoChavesApp() {
     const { error } = await supabase.from("automacao_app_chaves").insert({
       nome: nome.trim(),
       chave: gerarChave(),
+      app,
       estabelecimento_id: usuario.estabelecimento_id,
     });
     if (error) return toast.error("Não foi possível criar a chave");
