@@ -268,6 +268,7 @@ const AutomacaoEstado = React.lazy(() => import("./pages/automacao/AutomacaoEsta
 const AutomacaoRegras = React.lazy(() => import("./pages/automacao/AutomacaoRegras"));
 const AutomacaoTela = React.lazy(() => import("./pages/automacao/AutomacaoTela"));
 const AutomacaoMeuPainel = React.lazy(() => import("./pages/automacao/AutomacaoMeuPainel"));
+const AutomacaoChavesApp = React.lazy(() => import("./pages/automacao/AutomacaoChavesApp"));
 
 const PortariaDashboard = React.lazy(() => import("./pages/portaria/PortariaDashboard"));
 const PortariaAcessos = React.lazy(() => import("./pages/portaria/PortariaAcessos"));
@@ -863,6 +864,7 @@ const App = () => (
                 <Route path="painel/:id" element={<AutomacaoPainel />} />
                 <Route path="regras" element={<AutomacaoRegras />} />
                 <Route path="estado" element={<AutomacaoEstado />} />
+                <Route path="chaves-app" element={<AutomacaoChavesApp />} />
                 <Route path="dispositivos" element={<PortariaDispositivos />} />
               </Route>
 
