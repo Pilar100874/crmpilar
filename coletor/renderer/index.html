@@ -213,6 +213,25 @@
 </head>
 <body>
 
+  <!-- ─── ATIVAÇÃO POR CHAVE DA EMPRESA ──────────────────────────────── -->
+  <div id="ativacaoOverlay" style="display:none; position:fixed; inset:0; z-index:10000; background:#0B1B3F; color:#fff; align-items:center; justify-content:center; padding:24px;">
+    <div style="width:100%; max-width:420px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:16px; padding:28px;">
+      <img src="logo_pilar.png" alt="Pilar" style="height:34px; margin-bottom:18px;" />
+      <div style="font-size:20px; font-weight:800; margin-bottom:6px;">Ativar este equipamento</div>
+      <div style="font-size:13px; opacity:.75; line-height:1.5; margin-bottom:18px;">
+        Informe a chave da empresa. Ela é criada no CRM em <b>Admin → Apps → Chaves dos aplicativos</b>.
+      </div>
+      <input id="ativChave" placeholder="XXXX-XXXX" autocomplete="off"
+        style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.25); color:#fff; font-family:monospace; font-size:18px; letter-spacing:.18em; text-transform:uppercase;" />
+      <div id="ativMsg" style="min-height:20px; font-size:12px; margin-top:10px; color:#FFB86B;"></div>
+      <button id="ativBtn" onclick="ativarChaveColetor()"
+        style="width:100%; margin-top:8px; padding:12px 14px; border:0; border-radius:10px; background:#F97316; color:#fff; font-weight:700; font-size:15px; cursor:pointer;">
+        Ativar
+      </button>
+    </div>
+  </div>
+
+
   <!-- ─── HEADER ─────────────────────────────────────────────────────── -->
   <header class="app-header">
     <div class="container" style="padding:0 8px;">
