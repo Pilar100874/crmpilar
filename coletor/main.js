@@ -219,6 +219,12 @@ ipcMain.handle('collector:clear', () => {
   try { clearDiagnostics(); } catch {}
   return clearLogFiles();
 });
+ipcMain.handle('collector:ativacao', () => statusAtivacao());
+ipcMain.handle('collector:ativarChave', async (_evt, chave) => {
+  try { return { ok: true, ativacao: await ativarChaveEmpresa(chave) }; }
+  catch (e) { return { ok: false, error: String(e.message || e) }; }
+});
+ipcMain.handle('collector:limparAtivacao', () => limparAtivacao());
 ipcMain.handle('collector:listarFiliais', () => listarFiliais());
 ipcMain.handle('collector:setFilial', (evt, id, nome) => {
   saveConfig({ filialId: id, filialNome: nome });
