@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="52dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:contentDescription="Pilar"
+            android:src="@drawable/logo_pilar" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="Informe a chave da sua empresa para liberar o aplicativo"
+            android:textColor="@color/text_muted"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chave da empresa"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/campo_chave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input"
+                android:hint="ABCD-1234"
+                android:inputType="textCapCharacters"
+                android:letterSpacing="0.15"
+                android:padding="14dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="#5B6B8A"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="Endereço do sistema"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/campo_url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input"
+                android:hint="https://crmpilar.lovable.app"
+                android:inputType="textUri"
+                android:padding="12dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="#5B6B8A" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_ativar"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/btn_primary"
+            android:text="Ativar aparelho"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txt_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="Depois da chave, entre com seu usuário e senha."
+            android:textColor="@color/text_muted"
+            android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>
