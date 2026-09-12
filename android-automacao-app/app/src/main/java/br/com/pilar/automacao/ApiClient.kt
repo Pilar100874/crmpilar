@@ -11,7 +11,7 @@ object ApiClient {
     data class Ativacao(val empresaId: String, val empresaNome: String)
 
     fun validarChave(chave: String): Ativacao {
-        val url = URL("${BuildConfig.SUPABASE_URL}/functions/v1/app-chave-validar")
+        val url = URL("${BuildConfig.SUPABASE_URL}/functions/v1/automacao-app-chave")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 15000
@@ -22,7 +22,7 @@ object ApiClient {
             setRequestProperty("Authorization", "Bearer ${BuildConfig.SUPABASE_ANON_KEY}")
         }
         conn.outputStream.use {
-            it.write(JSONObject().put("chave", chave.trim().uppercase()).put("app", "automacao").toString().toByteArray())
+            it.write(JSONObject().put("chave", chave.trim().uppercase()).toString().toByteArray())
         }
         val codigo = conn.responseCode
         val corpo = (if (codigo in 200..299) conn.inputStream else conn.errorStream)

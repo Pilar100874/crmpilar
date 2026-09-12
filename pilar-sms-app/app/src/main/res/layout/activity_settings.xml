@@ -222,32 +222,6 @@
                     android:text="—"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="EMPRESA"
-                    android:textSize="11sp"
-                    android:letterSpacing="0.1"
-                    android:textColor="@color/text_muted"/>
-                <TextView
-                    android:id="@+id/tvEmpresa"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="—"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"/>
-                <Button
-                    android:id="@+id/btnTrocarChave"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"
-                    android:backgroundTint="@color/brand_primary"
-                    android:text="Trocar chave da empresa"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"/>
             </LinearLayout>
 
             <TextView

@@ -1,4 +1,4 @@
-import { validarChaveApp } from "../_shared/validar-chave-app.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,14 +12,56 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-/** Mantido por compatibilidade com o APK de Automação já instalado. */
+/** Aplicativos que usam chave de empresa. */
+const APPS_VALIDOS = ["automacao", "coletor", "coletor-tv"];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const body = await req.json().catch(() => ({}));
-    const resultado = await validarChaveApp(body?.chave, "automacao");
-    if (!resultado.ok) return json({ error: resultado.erro }, resultado.status);
-    return json(resultado.dados);
+    const corpo = await req.json();
+    const chave = corpo?.chave;
+    if (!chave) return json({ error: "chave obrigatória" }, 400);
+
+    const app = String(corpo?.app ?? "automacao").trim().toLowerCase();
+    if (!APPS_VALIDOS.includes(app)) return json({ error: "aplicativo inválido" }, 400);
+
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } },
+    );
+
+    const { data: registro, error } = await sb
+      .from("automacao_app_chaves")
+      .select("id, nome, bloqueado, estabelecimento_id, app")
+      .eq("chave", String(chave).trim().toUpperCase())
+      .maybeSingle();
+
+    if (error) return json({ error: "falha ao validar a chave" }, 500);
+    if (!registro) return json({ error: "chave não encontrada" }, 404);
+    if (registro.bloqueado) return json({ error: "chave bloqueada" }, 403);
+    if ((registro.app ?? "automacao") !== app) {
+      return json({ error: "esta chave é de outro aplicativo" }, 403);
+    }
+
+    const { data: estabelecimento } = await sb
+      .from("estabelecimentos")
+      .select("nome")
+      .eq("id", registro.estabelecimento_id)
+      .maybeSingle();
+
+    await sb
+      .from("automacao_app_chaves")
+      .update({ ultima_comunicacao: new Date().toISOString() })
+      .eq("id", registro.id);
+
+    return json({
+      chave_id: registro.id,
+      chave_nome: registro.nome,
+      app: registro.app ?? "automacao",
+      estabelecimento_id: registro.estabelecimento_id,
+      empresa: estabelecimento?.nome ?? "",
+    });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

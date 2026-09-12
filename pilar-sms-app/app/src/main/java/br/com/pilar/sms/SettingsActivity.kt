@@ -56,16 +56,6 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, "Retentativas salvas: $n", Toast.LENGTH_SHORT).show()
         }
 
-        b.tvEmpresa.text = ChaveEmpresa.empresaNome(this).ifBlank { ChaveEmpresa.chave(this) }.ifBlank { "—" }
-        b.btnTrocarChave.setOnClickListener {
-            ChaveEmpresa.limpar(this)
-            val intent = android.content.Intent(this, AtivacaoActivity::class.java)
-            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-        }
-
         populateSims(prefs)
     }
 

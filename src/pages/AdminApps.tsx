@@ -11,7 +11,6 @@ import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 import PilarSmsDownloadCard from "@/components/config/PilarSmsDownloadCard";
 import TvSignageDownloadCard from "@/components/apps/TvSignageDownloadCard";
-import ChavesAppsManager from "@/components/apps/ChavesAppsManager";
 
 
 // Sempre a build mais recente publicada pelos workflows do GitHub Actions.
@@ -181,8 +180,6 @@ export default function AdminApps() {
           Instale o CRM Pilar no celular ou tablet para acessar de qualquer lugar.
         </p>
       </div>
-
-      <ChavesAppsManager />
 
       <MobileAppCard />
 

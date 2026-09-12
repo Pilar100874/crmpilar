@@ -213,6 +213,25 @@
 </head>
 <body>
 
+  <!-- ─── ATIVAÇÃO POR CHAVE DA EMPRESA ──────────────────────────────── -->
+  <div id="ativacaoOverlay" style="display:none; position:fixed; inset:0; z-index:10000; background:#0B1B3F; color:#fff; align-items:center; justify-content:center; padding:24px;">
+    <div style="width:100%; max-width:420px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:16px; padding:28px;">
+      <img src="logo_pilar.png" alt="Pilar" style="height:34px; margin-bottom:18px;" />
+      <div style="font-size:20px; font-weight:800; margin-bottom:6px;">Ativar este equipamento</div>
+      <div style="font-size:13px; opacity:.75; line-height:1.5; margin-bottom:18px;">
+        Informe a chave da empresa. Ela é criada no CRM em <b>Admin → Apps → Chaves dos aplicativos</b>.
+      </div>
+      <input id="ativChave" placeholder="XXXX-XXXX" autocomplete="off"
+        style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.25); color:#fff; font-family:monospace; font-size:18px; letter-spacing:.18em; text-transform:uppercase;" />
+      <div id="ativMsg" style="min-height:20px; font-size:12px; margin-top:10px; color:#FFB86B;"></div>
+      <button id="ativBtn" onclick="ativarChaveColetor()"
+        style="width:100%; margin-top:8px; padding:12px 14px; border:0; border-radius:10px; background:#F97316; color:#fff; font-weight:700; font-size:15px; cursor:pointer;">
+        Ativar
+      </button>
+    </div>
+  </div>
+
+
   <!-- ─── HEADER ─────────────────────────────────────────────────────── -->
   <header class="app-header">
     <div class="container" style="padding:0 8px;">
@@ -223,6 +242,9 @@
           <span class="product">Coletor</span>
         </div>
         <div class="hdr-actions">
+          <button class="icon-btn" title="Empresa ativa — clique para trocar a chave" onclick="trocarChaveColetor()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2"/><path d="m16 6 3 3"/></svg>
+          </button>
           <button class="icon-btn" title="Abrir DevTools (logs)" onclick="window.coletor.openDevTools && window.coletor.openDevTools()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           </button>
@@ -799,6 +821,37 @@
       setTimeout(refreshLoop, 5000);
     }
     refreshLoop();
+
+    // ─── Ativação por chave da empresa ─────────────────────────────
+    async function verificarAtivacao(){
+      try{
+        const a = await window.coletor.ativacao();
+        const ov = document.getElementById('ativacaoOverlay');
+        ov.style.display = a && a.ativado ? 'none' : 'flex';
+        const el = document.getElementById('empresaAtivaNome');
+        if (el) el.textContent = (a && a.empresaNome) || '—';
+      }catch(e){}
+    }
+    async function ativarChaveColetor(){
+      const btn = document.getElementById('ativBtn');
+      const msg = document.getElementById('ativMsg');
+      const chave = (document.getElementById('ativChave').value || '').trim().toUpperCase();
+      if (!chave){ msg.textContent = 'Informe a chave da empresa.'; return; }
+      btn.disabled = true; msg.textContent = 'Validando chave…';
+      try{
+        const r = await window.coletor.ativarChave(chave);
+        if (r && r.ok){ msg.textContent = ''; await verificarAtivacao(); refresh(); }
+        else { msg.textContent = (r && r.error) || 'Não foi possível validar a chave.'; }
+      }catch(e){ msg.textContent = String(e.message || e); }
+      btn.disabled = false;
+    }
+    async function trocarChaveColetor(){
+      if (!confirm('Trocar a chave da empresa? O coletor para até uma nova chave ser informada.')) return;
+      await window.coletor.limparAtivacao();
+      await verificarAtivacao();
+    }
+    verificarAtivacao();
+    setInterval(verificarAtivacao, 15000);
 
     // ─── Config de vídeo (resolução/FPS/bitrate) ───────────────────
     async function carregarVideoConfig(){

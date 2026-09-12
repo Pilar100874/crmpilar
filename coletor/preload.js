@@ -35,6 +35,9 @@ contextBridge.exposeInMainWorld('coletor', {
   statusRemoto: () => ipcRenderer.invoke('remoto:status'),
 
   onUpdateProgress: (cb) => ipcRenderer.on('updater:progress', (_e, pct) => cb(pct)),
+  ativacao: () => ipcRenderer.invoke('collector:ativacao'),
+  ativarChave: (chave) => ipcRenderer.invoke('collector:ativarChave', chave),
+  limparAtivacao: () => ipcRenderer.invoke('collector:limparAtivacao'),
   listarFiliais: () => ipcRenderer.invoke('collector:listarFiliais'),
   setFilial: (id, nome) => ipcRenderer.invoke('collector:setFilial', id, nome),
   openLogsFolder: () => ipcRenderer.invoke('app:openLogsFolder'),

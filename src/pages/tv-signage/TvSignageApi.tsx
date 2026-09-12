@@ -20,18 +20,17 @@ export default function TvSignageApi() {
                 <VersaoAppBadge manifesto={TV_SIGNAGE_MANIFEST_URL} />
               </div>
               <p className="text-sm text-muted-foreground">
-                O download do APK e as <b>chaves de ativação</b> ficam em <b>Admin → Apps</b>.
-                Aqui você só administra as telas já ligadas.
+                O download do APK foi centralizado em <b>Admin → Apps</b>.
+                Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
+                <b> lendo o QR Code</b> — sem digitar nada. Nas TVs sem câmera, digite o código exibido.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Sempre a versão mais recente · Android 7.0+ (API 24)
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Sempre a versão mais recente · Android 7.0+ (API 24) · com leitor de QR embutido</p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
             <Button asChild size="lg" className="gap-2">
               <Link to="/admin/apps">
-                Abrir Admin → Apps <ArrowRight className="w-4 h-4" />
+                Baixar APK em Admin → Apps <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
           </div>
@@ -40,8 +39,9 @@ export default function TvSignageApi() {
           <div><b className="text-foreground">Como instalar:</b></div>
           <ol className="list-decimal list-inside space-y-1 pl-1">
             <li>Nas configurações da TV, habilite <b>Fontes desconhecidas</b> (Segurança / Aplicativos).</li>
-            <li>Baixe o APK em <b>Admin → Apps</b> pelo navegador da TV, por pendrive USB ou com <code>adb install pareamento-pilar-remotas.apk</code>.</li>
-            <li>Ao abrir o app, informe a <b>chave da empresa</b> gerada em <b>Admin → Apps</b> e depois vincule a tela desejada.</li>
+            <li>Baixe o APK em <b>Admin → Apps</b> diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pareamento-pilar-remotas.apk</code>.</li>
+            <li>Abra <b>Pilar Remotas</b> no launcher. <b>Se o aparelho tiver câmera</b>, toque em <b>📷 Ler QR Code</b> e aponte para o QR gerado em <b>Dispositivos → Novo</b> — o pareamento é automático. Caso contrário, digite o código de 8 caracteres.</li>
+            <li>Pronto: a TV assume o dashboard/playlist configurado e recebe comandos remotos em tempo real.</li>
           </ol>
         </div>
       </Card>

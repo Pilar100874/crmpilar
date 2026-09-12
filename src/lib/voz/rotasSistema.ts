@@ -136,7 +136,7 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/portaria/visitantes", titulo: "Interfone - Visitantes", aliases: ["visitantes portaria", "visitantes interfone"] },
   { path: "/portaria/relatorio-unidades", titulo: "Portaria - Relatório por Unidade", aliases: ["relatorio por unidade", "relatorio portaria", "relatorio unidades"] },
   { path: "/portaria/historico", titulo: "Interfone - Histórico", aliases: ["historico de acessos", "historico interfone", "logs portaria"] },
-  { path: "/admin/apps", titulo: "Apps e Chaves dos Aplicativos", aliases: ["chaves dos aplicativos", "chave dos apps", "ativacao dos aplicativos", "apps", "apk"] },
+  { path: "/automacao/chaves-app", titulo: "Automação - Chaves do Aplicativo", aliases: ["chaves do aplicativo", "chave automacao", "ativacao do app de automacao"] },
   { path: "/automacao/dispositivos", titulo: "Automação - Dispositivos", aliases: ["shelly", "idface", "dispositivos", "cadastro de dispositivos", "dispositivos automacao"] },
   { path: "/portaria/interfone", titulo: "Interfone", aliases: ["interfone"] },
   { path: "/portaria/permissoes", titulo: "Interfone - Permissões", aliases: ["permissoes portaria", "permissoes interfone", "gestor portaria", "papeis portaria"] },

@@ -229,6 +229,7 @@ export const menuItems: MenuItem[] = [
       
       { id: "Automacao Estado", title: "Estado dos Equipamentos", url: "/automacao/estado", icon: LucideIcons.Activity },
       { id: "Automacao Dispositivos", title: "Dispositivos", url: "/automacao/dispositivos", icon: LucideIcons.Cpu },
+      { id: "Automacao Chaves App", title: "Chaves do Aplicativo", url: "/automacao/chaves-app", icon: LucideIcons.KeyRound },
 
 
     ],
