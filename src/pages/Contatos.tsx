@@ -580,6 +580,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         .order('nome');
       if (usuariosData) setUsuarios(usuariosData);
 
+      // Carregar segmentos vinculados dos contatos da página
+      const contatoIds = (rows || []).map((r: any) => r.id);
+      const segmentosPorContato: Record<string, string[]> = {};
+      if (contatoIds.length > 0) {
+        const { data: vinculos } = await supabase
+          .from('customer_segmentos')
+          .select('customer_id, segmento_id')
+          .in('customer_id', contatoIds);
+        (vinculos || []).forEach((v: any) => {
+          segmentosPorContato[v.customer_id] = [...(segmentosPorContato[v.customer_id] || []), v.segmento_id];
+        });
+      }
+
       const mapped: Contact[] = (rows || []).map((r: any) => ({
         id: r.id,
         name: r.nome,
@@ -590,12 +603,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         position: r.custom_fields?.position || '',
         responsible: r.custom_fields?.responsible || '',
         tags: r.tags || [],
+        segmentos: segmentosPorContato[r.id] || [],
         createdAt: r.created_at,
         createdBy: 'Sistema',
         modifiedAt: r.created_at,
         modifiedBy: 'Sistema',
-        customFields: { ...r.custom_fields, empresa_id: r.empresa_id },
-        active: true,
+        customFields: {
+          ...r.custom_fields,
+          empresa_id: r.empresa_id,
+          tipo_operador: r.tipo_operador,
+          company_name: r.empresas?.nome_fantasia || r.custom_fields?.company_name || '',
+          cpf_cnpj: r.cpf || r.custom_fields?.cpf_cnpj || '',
+        },
+        active: r.ativo !== false,
       }));
 
       setContacts(mapped);
