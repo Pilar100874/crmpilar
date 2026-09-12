@@ -103,7 +103,9 @@ export default function AppInterfone() {
             <div className="h-1 w-16 rounded-full bg-orange-500" />
             <div>
               <h1 className="text-lg font-semibold text-white">Pilar Fone</h1>
-              <p className="text-xs text-slate-400">Interfone e ramal SIP</p>
+              <p className="text-xs text-slate-400">
+                {ativacao.empresa || "Interfone e ramal SIP"}
+              </p>
             </div>
           </div>
           <form className="space-y-4" onSubmit={entrar}>
@@ -145,6 +147,14 @@ export default function AppInterfone() {
             <span className="flex items-center gap-1"><BellRing className="h-3 w-3" /> Campainha</span>
             <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> Ramal SIP</span>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-2 w-full text-[11px] text-slate-400 hover:bg-white/10 hover:text-white"
+            onClick={limpar}
+          >
+            <KeyRound className="mr-1 h-3 w-3" /> Trocar chave da empresa
+          </Button>
         </div>
       </div>
     );
@@ -175,6 +185,17 @@ export default function AppInterfone() {
           onClick={() => void supabase.auth.signOut()}
         >
           <LogOut className="mr-2 h-4 w-4" /> Sair
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[11px] text-slate-400 hover:bg-white/10 hover:text-white"
+          onClick={() => {
+            limpar();
+            void supabase.auth.signOut();
+          }}
+        >
+          <KeyRound className="mr-1 h-3 w-3" /> Trocar chave da empresa
         </Button>
       </div>
     );
