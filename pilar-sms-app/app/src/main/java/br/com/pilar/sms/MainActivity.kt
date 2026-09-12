@@ -36,6 +36,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Sistema multiempresa: sem a chave validada o aparelho volta para a ativação.
+        if (!ChaveEmpresa.ativado(this)) {
+            startActivity(Intent(this, AtivacaoActivity::class.java))
+            finish()
+            return
+        }
+
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
 

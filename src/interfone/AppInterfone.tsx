@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Loader2, BellRing, Phone, ShieldAlert } from "lucide-react";
+import { LogOut, Loader2, BellRing, Phone, ShieldAlert, KeyRound } from "lucide-react";
 import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobile";
 import AtualizadorApk from "@/components/portaria/AtualizadorApk";
+import AtivacaoChaveApp, { useAtivacaoChave } from "@/components/apps/AtivacaoChaveApp";
 import logoPilar from "@/assets/logo_branco.png";
 
 /** App nativo da Portaria: só interfone (campainha/câmeras) e ramal SIP. */
 export default function AppInterfone() {
+  const { ativacao, salvar, limpar } = useAtivacaoChave("fone");
   const [sessao, setSessao] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -37,19 +39,29 @@ export default function AppInterfone() {
       }
       const { data } = await supabase
         .from("usuarios")
-        .select("pode_usar_interfone, pilarfone_abas")
+        .select("pode_usar_interfone, pilarfone_abas, estabelecimento_id")
         .eq("auth_user_id", auth.user.id)
         .maybeSingle();
       if (!cancelado) {
-        const registro = data as { pode_usar_interfone?: boolean; pilarfone_abas?: string[] | null } | null;
+        const registro = data as {
+          pode_usar_interfone?: boolean;
+          pilarfone_abas?: string[] | null;
+          estabelecimento_id?: string | null;
+        } | null;
+        // A pessoa precisa ser da mesma empresa da chave usada para ativar o aparelho.
+        const mesmaEmpresa =
+          !ativacao?.estabelecimento_id ||
+          registro?.estabelecimento_id === ativacao.estabelecimento_id;
         // Acesso pelo campo antigo (legado) ou por pelo menos uma aba liberada no cadastro.
-        setPermitido(!!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0);
+        const liberado =
+          !!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0;
+        setPermitido(mesmaEmpresa && liberado);
       }
     })();
     return () => {
       cancelado = true;
     };
-  }, [sessao]);
+  }, [sessao, ativacao?.estabelecimento_id]);
 
   const entrar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +72,24 @@ export default function AppInterfone() {
     setEntrando(false);
   };
 
-  if (sessao === null) {
+  if (sessao === null || ativacao === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0D1626]">
         <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
       </div>
+    );
+  }
+
+  // Multiempresa: o aparelho só funciona depois de ativado com a chave da empresa.
+  if (!ativacao) {
+    return (
+      <AtivacaoChaveApp
+        app="fone"
+        titulo="Pilar Fone"
+        subtitulo="Informe a chave da empresa"
+        logo={logoPilar}
+        onAtivado={salvar}
+      />
     );
   }
 
@@ -78,7 +103,9 @@ export default function AppInterfone() {
             <div className="h-1 w-16 rounded-full bg-orange-500" />
             <div>
               <h1 className="text-lg font-semibold text-white">Pilar Fone</h1>
-              <p className="text-xs text-slate-400">Interfone e ramal SIP</p>
+              <p className="text-xs text-slate-400">
+                {ativacao.empresa || "Interfone e ramal SIP"}
+              </p>
             </div>
           </div>
           <form className="space-y-4" onSubmit={entrar}>
@@ -120,6 +147,14 @@ export default function AppInterfone() {
             <span className="flex items-center gap-1"><BellRing className="h-3 w-3" /> Campainha</span>
             <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> Ramal SIP</span>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-2 w-full text-[11px] text-slate-400 hover:bg-white/10 hover:text-white"
+            onClick={limpar}
+          >
+            <KeyRound className="mr-1 h-3 w-3" /> Trocar chave da empresa
+          </Button>
         </div>
       </div>
     );
@@ -150,6 +185,17 @@ export default function AppInterfone() {
           onClick={() => void supabase.auth.signOut()}
         >
           <LogOut className="mr-2 h-4 w-4" /> Sair
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[11px] text-slate-400 hover:bg-white/10 hover:text-white"
+          onClick={() => {
+            limpar();
+            void supabase.auth.signOut();
+          }}
+        >
+          <KeyRound className="mr-1 h-3 w-3" /> Trocar chave da empresa
         </Button>
       </div>
     );
