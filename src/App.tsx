@@ -856,6 +856,7 @@ const App = () => (
               </Route>
               <Route path="/app/interfone" element={<PortariaAtendimentoMobile />} />
               <Route path="/automacao/tela" element={<AutomacaoTela />} />
+              <Route path="/automacao/app" element={<AutomacaoMeuPainel />} />
               <Route path="/automacao" element={<AutomacaoLayout />}>
                 <Route index element={<AutomacaoPaineis />} />
                 <Route path="painel" element={<AutomacaoPainel />} />
