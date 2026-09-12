@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Send, Save, MessageSquare, Shield } from 'lucide-react';
 import PilarSmsDevices from './PilarSmsDevices';
-import { Link } from 'react-router-dom';
+
 
 
 type Provider = 'pilar';
@@ -188,11 +188,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           </div>
         </CardContent>
       </Card>
-
-      <div className="rounded-xl border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
-        O aplicativo <b className="text-foreground">Pilar SMS (APK)</b> agora é baixado em{" "}
-        <Link to="/admin/apps" className="text-primary underline">Admin → Apps</Link>.
-      </div>
 
       <Card>
 

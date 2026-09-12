@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Download, Zap, Crosshair, Images } from "lucide-react";
+import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Zap, Crosshair, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -13,7 +13,6 @@ const items = [
   { to: "/tv-signage/workflows", icon: Zap, label: "Workflows" },
   { to: "/tv-signage/eventos", icon: Activity, label: "Eventos" },
   { to: "/tv-signage/config-veiculos", icon: Crosshair, label: "TV Veículos" },
-  { to: "/tv-signage/api", icon: Download, label: "Download" },
 ];
 
 export default function TvSignageLayout() {
