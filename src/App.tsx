@@ -267,6 +267,7 @@ const AutomacaoPaineis = React.lazy(() => import("./pages/automacao/AutomacaoPai
 const AutomacaoEstado = React.lazy(() => import("./pages/automacao/AutomacaoEstado"));
 const AutomacaoRegras = React.lazy(() => import("./pages/automacao/AutomacaoRegras"));
 const AutomacaoTela = React.lazy(() => import("./pages/automacao/AutomacaoTela"));
+const AutomacaoMeuPainel = React.lazy(() => import("./pages/automacao/AutomacaoMeuPainel"));
 
 const PortariaDashboard = React.lazy(() => import("./pages/portaria/PortariaDashboard"));
 const PortariaAcessos = React.lazy(() => import("./pages/portaria/PortariaAcessos"));
