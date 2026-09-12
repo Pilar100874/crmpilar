@@ -88,6 +88,7 @@ export default function Orcamentos() {
         .from('orcamentos')
         .select(`
           *,
+          itens:orcamento_itens(*),
           empresa:empresas!left(id, nome_fantasia, cnpj),
           cliente:customers!left(id, nome, email, telefone),
           vendedor:usuarios!left(id, nome),
@@ -109,9 +110,17 @@ export default function Orcamentos() {
           .limit(200);
         if (customerError) throw customerError;
         const ids = (matchingCustomers || []).map((customer) => customer.id);
-        query = ids.length > 0
-          ? query.or(`id.eq.${searchQuery},cliente_id.in.(${ids.join(',')})`)
-          : query.eq('id', searchQuery);
+        const term = searchQuery.trim();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(term);
+        const filtros: string[] = [];
+        if (isUuid) filtros.push(`id.eq.${term}`);
+        if (ids.length > 0) filtros.push(`cliente_id.in.(${ids.join(',')})`);
+        if (filtros.length > 0) {
+          query = query.or(filtros.join(','));
+        } else {
+          // Nenhum critério válido: não retorna resultados em vez de gerar erro
+          query = query.is('id', null);
+        }
       }
 
       const from = (page - 1) * pageSize;
