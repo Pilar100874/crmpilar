@@ -164,6 +164,7 @@ export default function AutomacaoChavesApp() {
                     {c.bloqueado ? "Bloqueada" : "Ativa"}
                   </Badge>
                 </div>
+                <Badge variant="outline" className="text-[11px]">{rotuloApp(c.app ?? "automacao")}</Badge>
                 <p className="text-xs text-muted-foreground">
                   {c.ultima_comunicacao
                     ? `Último uso: ${new Date(c.ultima_comunicacao).toLocaleString("pt-BR")}`
