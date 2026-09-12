@@ -458,6 +458,11 @@ function stopPortaria() {
 // Compatibilidade retro
 function startCollector() {
   const cfg = loadConfig();
+  // Só trabalha depois de ativado com a chave da empresa.
+  if (!cfg.chaveEmpresa || !cfg.empresaId) {
+    console.log('[coletor] aguardando a chave da empresa');
+    return STATE;
+  }
   // Não inicia coletores enquanto o usuário não selecionar a filial.
   if (!cfg.filialId) {
     console.log('[coletor] aguardando seleção de filial pelo usuário');
@@ -506,4 +511,5 @@ module.exports = {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
   startPonto, stopPonto, startCameras, stopCameras, startPortaria, stopPortaria,
   listarFiliais, clearDiagnostics,
+  statusAtivacao, ativarChaveEmpresa, limparAtivacao,
 };
