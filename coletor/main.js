@@ -161,9 +161,49 @@ function createTray() {
 
 const { startRemoto, stopRemoto, statusRemoto } = require('./remoto');
 
+// ─── Início automático junto com o computador ────────────────────────────
+// Igual ao Pilar Remotas: assim que o equipamento liga, o coletor sobe sozinho
+// (minimizado na bandeja) e volta a coletar sem ninguém precisar abrir nada.
+const INICIO_OCULTO = process.argv.includes('--hidden') || process.argv.includes('--autostart');
+
+function garantirInicioAutomatico() {
+  try {
+    if (process.platform === 'linux') {
+      const os = require('os');
+      const pasta = path.join(os.homedir(), '.config', 'autostart');
+      fs.mkdirSync(pasta, { recursive: true });
+      const exec = process.env.APPIMAGE || process.execPath;
+      fs.writeFileSync(
+        path.join(pasta, 'coletor-pilar.desktop'),
+        [
+          '[Desktop Entry]',
+          'Type=Application',
+          'Name=Coletor Pilar',
+          `Exec="${exec}" --autostart`,
+          'X-GNOME-Autostart-enabled=true',
+          'Terminal=false',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      return;
+    }
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: true,
+      args: ['--hidden'],
+      path: process.execPath,
+    });
+  } catch (e) {
+    console.error('[coletor] início automático:', e.message);
+  }
+}
+
 app.whenReady().then(() => {
+  garantirInicioAutomatico();
   createWindow();
   createTray();
+  if (INICIO_OCULTO && mainWindow) { try { mainWindow.hide(); } catch {} }
   startCollector();
   try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
 });
