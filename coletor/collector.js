@@ -118,6 +118,10 @@ function loadConfig() {
   return {
     url: saved.url || DEFAULT_URL,
     anonKey: saved.anonKey || DEFAULT_ANON_KEY,
+    // Chave da empresa (multiempresa): o Coletor só trabalha depois de ativado.
+    chaveEmpresa: saved.chaveEmpresa || null,
+    empresaId: saved.empresaId || null,
+    empresaNome: saved.empresaNome || null,
     pontoEnabled: saved.pontoEnabled !== false,
     camerasEnabled: saved.camerasEnabled !== false,
     portariaEnabled: saved.portariaEnabled === true,
@@ -153,6 +157,59 @@ function restaurarConfig() {
 }
 restaurarConfig();
 
+
+// ─── Ativação por chave da empresa ───────────────────────────────────────
+// Cada instalação (Windows ou appliance) precisa de uma chave criada no CRM
+// em Admin → Apps. Ela diz a qual empresa o equipamento pertence.
+function statusAtivacao() {
+  const cfg = loadConfig();
+  return {
+    ativado: !!(cfg.chaveEmpresa && cfg.empresaId),
+    chave: cfg.chaveEmpresa || null,
+    empresaId: cfg.empresaId || null,
+    empresaNome: cfg.empresaNome || null,
+  };
+}
+
+async function ativarChaveEmpresa(chaveBruta) {
+  const chave = String(chaveBruta || '').trim().toUpperCase();
+  if (!chave) throw new Error('Informe a chave da empresa.');
+  const cfg = loadConfig();
+  const resp = await fetch(`${cfg.url}/functions/v1/automacao-app-chave`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: cfg.anonKey,
+      Authorization: `Bearer ${cfg.anonKey}`,
+    },
+    body: JSON.stringify({ chave, app: 'coletor' }),
+  });
+  const json = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(json.error || `Não foi possível validar a chave (HTTP ${resp.status})`);
+  saveConfig({
+    chaveEmpresa: chave,
+    empresaId: json.estabelecimento_id || null,
+    empresaNome: json.empresa || null,
+  });
+  try { startCollector(); } catch {}
+  return statusAtivacao();
+}
+
+function limparAtivacao() {
+  try { stopCollector(); } catch {}
+  saveConfig({ chaveEmpresa: null, empresaId: null, empresaNome: null });
+  // saveConfig ignora valores vazios na leitura, então grava explicitamente
+  try {
+    const atual = lerArquivoConfig();
+    delete atual.chaveEmpresa; delete atual.empresaId; delete atual.empresaNome;
+    const conteudo = JSON.stringify(atual, null, 2);
+    fs.writeFileSync(CONFIG_PATH, conteudo);
+    for (const destino of CONFIG_BACKUPS) {
+      try { fs.mkdirSync(path.dirname(destino), { recursive: true }); fs.writeFileSync(destino, conteudo); } catch {}
+    }
+  } catch {}
+  return statusAtivacao();
+}
 
 async function listarFiliais() {
   const cfg = loadConfig();
