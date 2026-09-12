@@ -319,6 +319,9 @@ verify_jwt = false
 [functions.extract-encomenda-photo]
 verify_jwt = false
 
+[functions.automacao-app-chave]
+verify_jwt = false
+
 [functions.tv-device-auth]
 verify_jwt = false
 
