@@ -29,7 +29,7 @@
         android:theme="@style/Theme.PilarAutomacao">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".AtivacaoActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|uiMode"
             android:launchMode="singleTask"
@@ -41,8 +41,10 @@
         </activity>
 
         <activity
-            android:name=".ConfiguracaoActivity"
+            android:name=".MainActivity"
             android:exported="false"
-            android:label="@string/config_titulo" />
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|uiMode"
+            android:launchMode="singleTask"
+            android:screenOrientation="fullSensor" />
     </application>
 </manifest>
