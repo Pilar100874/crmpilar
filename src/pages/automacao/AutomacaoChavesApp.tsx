@@ -115,19 +115,44 @@ export default function AutomacaoChavesApp() {
             onChange={(e) => setNome(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && criar()}
           />
+          <select
+            value={app}
+            onChange={(e) => setApp(e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground sm:w-72"
+            aria-label="Programa que vai usar a chave"
+          >
+            {APPS.map((a) => (
+              <option key={a.valor} value={a.valor}>{a.rotulo}</option>
+            ))}
+          </select>
           <Button onClick={criar} className="gap-2">
             <Plus className="h-4 w-4" /> Gerar chave
           </Button>
         </CardContent>
       </Card>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Mostrar:</span>
+        <select
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+          aria-label="Filtrar chaves por programa"
+        >
+          <option value="todos">Todos os programas</option>
+          {APPS.map((a) => (
+            <option key={a.valor} value={a.valor}>{a.rotulo}</option>
+          ))}
+        </select>
+      </div>
+
       {carregando ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
-      ) : chaves.length === 0 ? (
+      ) : chaves.filter((c) => filtro === "todos" || (c.app ?? "automacao") === filtro).length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhuma chave criada até agora.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {chaves.map((c) => (
+          {chaves.filter((c) => filtro === "todos" || (c.app ?? "automacao") === filtro).map((c) => (
             <Card key={c.id} className="transition-shadow hover:shadow-md">
               <CardContent className="space-y-3 p-4">
                 <div className="flex items-start justify-between gap-2">
