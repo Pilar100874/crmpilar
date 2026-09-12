@@ -543,15 +543,30 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         const search = `%${searchFilters.unifiedSearch}%`;
         query = query.or(`nome.ilike.${search},email.ilike.${search},telefone.ilike.${search}`);
       }
-      if (tipoContatoFilter === 'clientes') query = query.neq('custom_fields->>tipo_operador', 'false');
-      if (tipoContatoFilter === 'prospects') query = query.eq('custom_fields->>tipo_operador', 'false');
+      if (tipoContatoFilter === 'clientes') query = query.eq('tipo_operador', true);
+      if (tipoContatoFilter === 'prospects') query = query.or('tipo_operador.eq.false,tipo_operador.is.null');
 
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
+      // Apenas colunas reais podem ser ordenadas no banco; as demais são ordenadas na tela
+      const colunasOrdenaveis: Record<string, string> = {
+        name: 'nome',
+        nome: 'nome',
+        email: 'email',
+        phone: 'telefone',
+        telefone: 'telefone',
+        tel: 'tel',
+        created_at: 'created_at',
+      };
+      const colunaOrdem = (sortConfig?.key && colunasOrdenaveis[sortConfig.key]) || 'created_at';
+      const ascendente = sortConfig?.key && colunasOrdenaveis[sortConfig.key]
+        ? sortConfig.direction === 'asc'
+        : false;
+
       const { data: rows, count, error } = await query
         .range(from, to)
-        .order(sortConfig?.key || 'created_at', { ascending: sortConfig?.direction === 'asc' });
+        .order(colunaOrdem, { ascending: ascendente });
 
       if (error) throw error;
       setTotalCount(count || 0);
