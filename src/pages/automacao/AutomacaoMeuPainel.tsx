@@ -29,11 +29,18 @@ export default function AutomacaoMeuPainel() {
 
       const { data: usuario } = await supabase
         .from("usuarios")
-        .select("automacao_ambiente_celular, automacao_ambiente_tablet")
+        .select("automacao_ambiente_celular, automacao_ambiente_tablet, estabelecimento_id")
         .eq("auth_user_id", data.session.user.id)
         .maybeSingle();
 
       if (!ativo) return;
+
+      // O aplicativo envia a empresa liberada pela chave do aparelho.
+      const empresa = params.get("emp");
+      if (empresa && usuario?.estabelecimento_id && usuario.estabelecimento_id !== empresa) {
+        setErro("Este aparelho está liberado para outra empresa. Peça a chave correta ao responsável.");
+        return;
+      }
 
       const ambiente = tipo === "tablet"
         ? usuario?.automacao_ambiente_tablet
