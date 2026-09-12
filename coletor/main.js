@@ -203,7 +203,7 @@ app.whenReady().then(() => {
   garantirInicioAutomatico();
   createWindow();
   createTray();
-  if (INICIO_OCULTO && mainWindow) { try { mainWindow.hide(); } catch {} }
+  if (INICIO_OCULTO && win) { try { win.hide(); } catch {} }
   startCollector();
   try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
 });
