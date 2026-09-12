@@ -12,9 +12,20 @@ type Chave = {
   id: string;
   nome: string;
   chave: string;
+  app: string;
   bloqueado: boolean;
   ultima_comunicacao: string | null;
 };
+
+/** Programas que pedem a chave da empresa no primeiro acesso. */
+const APPS = [
+  { valor: "automacao", rotulo: "Pilar Automação (celular/tablet)" },
+  { valor: "coletor", rotulo: "Coletor (Windows / ISO)" },
+  { valor: "coletor-tv", rotulo: "Coletor TV (Android TV)" },
+] as const;
+
+const rotuloApp = (valor: string) =>
+  APPS.find((a) => a.valor === valor)?.rotulo ?? "Pilar Automação (celular/tablet)";
 
 /** Gera uma chave curta e fácil de digitar no aparelho. */
 function gerarChave() {
