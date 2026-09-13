@@ -28,6 +28,7 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:banner="@drawable/tv_banner"
         android:supportsRtl="true"
@@ -40,7 +41,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:resizeableActivity="true"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="unspecified"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|navigation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -53,14 +54,14 @@
             android:name=".PairingActivity"
             android:exported="false"
             android:resizeableActivity="true"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="unspecified"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|navigation" />
 
         <activity
             android:name=".QrScanActivity"
             android:exported="false"
             android:resizeableActivity="true"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="unspecified"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|navigation" />
 
         <activity

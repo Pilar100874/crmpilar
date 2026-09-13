@@ -53,8 +53,8 @@
 - [ ] Revisar separadamente 131 alertas legados do verificador do banco, fora dos F01–F16
 
 ## Padronização dos APKs — 2026-09-13
-- [ ] Padronizar todos os ícones Android nas cores e moldura do Pilar Fone, mantendo um símbolo central próprio por aplicativo
-- [ ] Permitir ativação/login vertical no Pilar Remotas em celulares e tablets, preservando o modo horizontal da TV
-- [ ] Criar login próprio e isolado no Pilar Automação após a chave da empresa
-- [ ] Abrir somente o painel de Automação do usuário, sem menus, chat, fone ou botão de fala
-- [ ] Incrementar versões e validar os APKs afetados
+- [x] Padronizar todos os ícones Android nas cores e moldura do Pilar Fone, mantendo um símbolo central próprio por aplicativo
+- [x] Permitir ativação/login vertical no Pilar Remotas em celulares e tablets, preservando o modo horizontal da TV
+- [x] Criar login próprio e isolado no Pilar Automação após a chave da empresa
+- [x] Abrir somente o painel de Automação do usuário, sem menus, chat, fone ou botão de fala
+- [x] Incrementar versões; validação local concluída, e a compilação assinada permanece no fluxo automático por falta do Android SDK neste ambiente
