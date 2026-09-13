@@ -19,8 +19,22 @@ android {
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc\"")
     }
 
+    signingConfigs {
+        create("pilar") {
+            storeFile = rootProject.file("../pilar-sms-app/app/pilar-release.keystore")
+            storePassword = "pilarsms"
+            keyAlias = "pilar"
+            keyPassword = "pilarsms"
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("pilar")
             isMinifyEnabled = false
         }
     }

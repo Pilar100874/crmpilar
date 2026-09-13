@@ -30,6 +30,7 @@ export default function PilarHubDownloadCard() {
     downloadUrl: string;
     filename?: string;
     notas?: string;
+    disponivel?: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function PilarHubDownloadCard() {
     hubInfo?.filename || hubInfo?.downloadUrl?.split("/").pop() || HUB_FALLBACK_FILENAME;
   const hubUrl = hubInfo?.downloadUrl || HUB_FALLBACK_URL;
   const hubNotas = hubInfo?.notas;
+  const indisponivel = hubInfo?.disponivel === false;
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
@@ -88,10 +90,12 @@ export default function PilarHubDownloadCard() {
             </span>
           </div>
           <Button
+            disabled={indisponivel}
             onClick={() => baixar(hubFileName, hubUrl)}
-            className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white"
+            className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white disabled:opacity-60"
           >
-            <Download className="mr-2 h-4 w-4" /> Baixar APK
+            <Download className="mr-2 h-4 w-4" />
+            {indisponivel ? "Gerando pacote…" : "Baixar APK"}
           </Button>
         </div>
       </CardContent>

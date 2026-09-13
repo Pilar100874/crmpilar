@@ -108,6 +108,7 @@ jobs:
             const p = 'public/coletor/hub-version.json';
             const j = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
             j.version = '${VERSION}';
+            j.disponivel = true;
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
             j.notas = 'v${VERSION}: ícone padronizado na identidade visual Pilar e publicação na central de apps.';
