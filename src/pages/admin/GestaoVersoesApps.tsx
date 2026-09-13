@@ -27,7 +27,6 @@ import {
   Smartphone,
   RefreshCw,
   PackageCheck,
-  MonitorSmartphone,
   Send,
 } from "lucide-react";
 
@@ -425,6 +424,7 @@ export default function GestaoVersoesApps() {
                       <div className="grid grid-cols-2 gap-3 text-sm sm:flex sm:items-center sm:gap-5">
                         <div><p className="text-xs text-muted-foreground">Instalada</p><p>{e.versao || "desconhecida"}</p></div>
                         <div><p className="text-xs text-muted-foreground">Disponível</p><p>{disponivel || "—"}</p></div>
+                        <div className="col-span-2 sm:col-span-1"><p className="text-xs text-muted-foreground">Último contato</p><p>{formatarData(e.ultimoContato)}</p></div>
                         <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
                         {comando && <Badge variant="outline">{comando.status}</Badge>}
                       </div>
