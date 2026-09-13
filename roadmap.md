@@ -71,3 +71,12 @@
 - [x] Integrar recebimento remoto no Pilar SMS e Pilar Hub
 - [x] Redirecionar a antiga tela de versões e atualizar menu/busca por voz
 - [ ] Validar tela em computador, tablet e celular
+
+## Versão instalada e atualização dentro dos apps — 2026-09-13
+- [x] Remover a aba Publicações; a central usa os mesmos manifestos da tela de Apps
+- [x] Comando remoto de celular passa a guardar o link do pacote direto (sem depender de uploads)
+- [x] Remotas: painel oculto (segurar Voltar 5s) com versão instalada, atualização e saída; tela de pareamento também mostra versão e botão de atualização
+- [x] Automação: botão de atualização passa a exibir a versão instalada
+- [x] Pilar Fone, Hub, SMS e Coletor já exibiam versão e botão de atualização
+- [x] Hub 1.6.0 e SMS 1.11.0; Remotas e Automação sobem versão automaticamente na compilação
+- [ ] Compilar os APKs assinados no fluxo automático (GitHub Actions) — este ambiente não tem o SDK Android

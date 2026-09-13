@@ -359,7 +359,41 @@ class SignageActivity : AppCompatActivity() {
     private var saidaInicio = 0L
     private val saidaRunnable = Runnable {
         saidaInicio = 0L
-        sairImediato()
+        mostrarPainelControle()
+    }
+
+    /** Painel oculto (segurar VOLTAR/ESC por 5s): mostra a versão instalada,
+     *  permite atualizar o aplicativo e sair do modo kiosk. */
+    private fun mostrarPainelControle() {
+        val versao = try { BuildConfig.VERSION_NAME } catch (_: Exception) { "—" }
+        AlertDialog.Builder(this)
+            .setTitle("Pilar Remotas")
+            .setMessage("Versão instalada: $versao")
+            .setPositiveButton("Atualizar aplicativo") { _, _ -> atualizarAgora() }
+            .setNegativeButton("Sair do aplicativo") { _, _ -> sairImediato() }
+            .setNeutralButton("Cancelar", null)
+            .show()
+    }
+
+    /** Busca a versão mais nova publicada e instala no aparelho. */
+    private fun atualizarAgora() {
+        Toast.makeText(this, "Buscando atualização...", Toast.LENGTH_SHORT).show()
+        CoroutineScope(Dispatchers.IO).launch {
+            when (val r = Updater.atualizar(applicationContext, false) { file ->
+                ui.post { instalarAtualizacao(file) }
+            }) {
+                is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignageActivity, "Já está na versão mais nova", Toast.LENGTH_LONG).show()
+                }
+                is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignageActivity, "Instalando nova versão...", Toast.LENGTH_LONG).show()
+                    verificarAtualizacaoPendente()
+                }
+                is Updater.Result.Erro -> withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignageActivity, "Falha ao atualizar: ${r.msg}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     /** Sai do app na hora, sem pedir senha (segurar VOLTAR/ESC por 5s). */
