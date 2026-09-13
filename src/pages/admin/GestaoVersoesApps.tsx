@@ -261,7 +261,7 @@ export default function GestaoVersoesApps() {
   ).length;
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-4 p-3 sm:space-y-6 sm:p-6">
+    <div className="mx-auto w-full max-w-6xl space-y-4 p-3 max-sm:pl-9 sm:space-y-6 sm:p-6">
       <header className="border-b bg-gradient-to-r from-primary/15 to-primary/5 p-4 sm:rounded-xl sm:border sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -384,7 +384,7 @@ export default function GestaoVersoesApps() {
               <CardTitle className="text-base">Versões enviadas</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 sm:pt-0">
-              <div className="space-y-3 md:hidden">
+              <div className="space-y-3 lg:hidden">
                 {releasesFiltrados.length === 0 && (
                   <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma versão enviada ainda.</p>
                 )}
@@ -420,7 +420,7 @@ export default function GestaoVersoesApps() {
                   </article>
                 ))}
               </div>
-              <div className="hidden overflow-x-auto md:block">
+              <div className="hidden overflow-x-auto lg:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -487,7 +487,7 @@ export default function GestaoVersoesApps() {
               <CardTitle className="text-base">Equipamentos e versões instaladas</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 sm:pt-0">
-              <div className="space-y-3 md:hidden">
+              <div className="space-y-3 lg:hidden">
                 {equipamentosFiltrados.length === 0 && (
                   <p className="py-8 text-center text-sm text-muted-foreground">Nenhum equipamento encontrado.</p>
                 )}
@@ -518,7 +518,7 @@ export default function GestaoVersoesApps() {
                   );
                 })}
               </div>
-              <div className="hidden overflow-x-auto md:block">
+              <div className="hidden overflow-x-auto lg:block">
               <Table>
                 <TableHeader>
                   <TableRow>

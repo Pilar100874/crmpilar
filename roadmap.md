@@ -63,4 +63,4 @@
 - [x] Criar menu lateral do módulo Apps seguindo o padrão da tela Listas
 - [x] Integrar Downloads e Versões dos Aplicativos no mesmo módulo
 - [x] Ajustar as duas telas para tablet e celular
-- [ ] Validar navegação e apresentação nos três tamanhos de tela
+- [x] Validar navegação e apresentação nos três tamanhos de tela
