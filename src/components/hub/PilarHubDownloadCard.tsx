@@ -45,6 +45,7 @@ export default function PilarHubDownloadCard() {
     hubInfo?.filename || hubInfo?.downloadUrl?.split("/").pop() || HUB_FALLBACK_FILENAME;
   const hubUrl = hubInfo?.downloadUrl || HUB_FALLBACK_URL;
   const hubNotas = hubInfo?.notas;
+  const indisponivel = hubInfo?.disponivel === false;
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
