@@ -90,10 +90,12 @@ export default function PilarHubDownloadCard() {
             </span>
           </div>
           <Button
+            disabled={indisponivel}
             onClick={() => baixar(hubFileName, hubUrl)}
-            className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white"
+            className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white disabled:opacity-60"
           >
-            <Download className="mr-2 h-4 w-4" /> Baixar APK
+            <Download className="mr-2 h-4 w-4" />
+            {indisponivel ? "Gerando pacote…" : "Baixar APK"}
           </Button>
         </div>
       </CardContent>
