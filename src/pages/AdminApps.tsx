@@ -6,7 +6,6 @@ import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
-import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
 import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 import PilarSmsDownloadCard from "@/components/config/PilarSmsDownloadCard";
@@ -390,8 +389,6 @@ export default function AdminApps() {
       <PilarHubDownloadCard />
 
       <TvSignageDownloadCard />
-
-      <ColetorRemotoCard />
 
     </div>
 
