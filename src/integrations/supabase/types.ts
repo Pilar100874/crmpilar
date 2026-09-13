@@ -2855,6 +2855,76 @@ export type Database = {
         }
         Relationships: []
       }
+      app_update_commands: {
+        Row: {
+          app: string
+          concluido_em: string | null
+          created_at: string
+          criado_por: string | null
+          device_id: string
+          estabelecimento_id: string
+          id: string
+          recebido_em: string | null
+          release_id: string
+          resultado: Json
+          status: string
+          updated_at: string
+          versao_alvo: string
+        }
+        Insert: {
+          app: string
+          concluido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          device_id: string
+          estabelecimento_id: string
+          id?: string
+          recebido_em?: string | null
+          release_id: string
+          resultado?: Json
+          status?: string
+          updated_at?: string
+          versao_alvo: string
+        }
+        Update: {
+          app?: string
+          concluido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          device_id?: string
+          estabelecimento_id?: string
+          id?: string
+          recebido_em?: string | null
+          release_id?: string
+          resultado?: Json
+          status?: string
+          updated_at?: string
+          versao_alvo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_update_commands_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_update_commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "sms_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_update_commands_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "app_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apresentacoes_empresa: {
         Row: {
           ativo: boolean
