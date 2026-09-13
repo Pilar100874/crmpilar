@@ -12,14 +12,10 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.ImageButton
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import android.Manifest
-import android.content.pm.PackageManager
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +28,11 @@ class MainActivity : AppCompatActivity() {
 
         if (!Prefs.ativado(this)) {
             startActivity(Intent(this, AtivacaoActivity::class.java))
+            finish()
+            return
+        }
+        if (!Prefs.sessaoSalva(this)) {
+            startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
@@ -66,15 +67,12 @@ class MainActivity : AppCompatActivity() {
 
         refresh.setOnRefreshListener { web.reload() }
 
-        findViewById<ImageButton>(R.id.btn_config).setOnClickListener { trocarChave() }
-
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (web.canGoBack()) web.goBack() else finish()
+                // O painel fica isolado: Voltar não abre páginas anteriores do sistema.
             }
         })
 
-        pedirPermissoes()
         carregar()
     }
 
@@ -85,27 +83,6 @@ class MainActivity : AppCompatActivity() {
         esconderBarras()
     }
 
-    private fun pedirPermissoes() {
-        val faltando = listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
-            .filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
-        if (faltando.isNotEmpty()) requestPermissions(faltando.toTypedArray(), 10)
-    }
-
-    /** Permite desvincular o aparelho e informar a chave de outra empresa. */
-    private fun trocarChave() {
-        val empresa = Prefs.empresaNome(this).ifBlank { "empresa atual" }
-        AlertDialog.Builder(this)
-            .setTitle("Trocar chave")
-            .setMessage("Este aparelho está ligado a: $empresa.\nDeseja informar outra chave?")
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Trocar") { _, _ ->
-                Prefs.limpar(this)
-                startActivity(Intent(this, AtivacaoActivity::class.java))
-                finish()
-            }
-            .show()
-    }
-
     private fun tipoTela(): String {
         val grande = (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >=
             Configuration.SCREENLAYOUT_SIZE_LARGE
@@ -114,7 +91,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun carregar() {
         val url = Prefs.urlTela(this, tipoTela())
-        if (web.url == null) web.loadUrl(url)
+        if (web.url != null) return
+        val storageKey = "sb-ioxugupvxlcdweldocmq-auth-token"
+        val session = JSONObject()
+            .put("access_token", Prefs.accessToken(this))
+            .put("refresh_token", Prefs.refreshToken(this))
+            .put("expires_at", Prefs.expiresAt(this))
+            .put("expires_in", 3600)
+            .put("token_type", "bearer")
+            .put("user", JSONObject().put("id", Prefs.userId(this)))
+        val html = """
+            <!doctype html><html><body><script>
+            localStorage.setItem(${JSONObject.quote(storageKey)}, ${JSONObject.quote(session.toString())});
+            location.replace(${JSONObject.quote(url)});
+            </script></body></html>
+        """.trimIndent()
+        web.loadDataWithBaseURL(Prefs.baseUrl(this), html, "text/html", "UTF-8", null)
     }
 
     private fun esconderBarras() {

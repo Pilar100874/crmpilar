@@ -23,6 +23,19 @@ object Prefs {
 
     fun ativado(ctx: Context): Boolean = chave(ctx).isNotEmpty() && empresaId(ctx).isNotEmpty()
 
+    fun sessaoSalva(ctx: Context): Boolean =
+        accessToken(ctx).isNotEmpty() && refreshToken(ctx).isNotEmpty() && ambiente(ctx).isNotEmpty()
+
+    fun accessToken(ctx: Context): String = sp(ctx).getString("access_token", "")?.trim().orEmpty()
+
+    fun refreshToken(ctx: Context): String = sp(ctx).getString("refresh_token", "")?.trim().orEmpty()
+
+    fun expiresAt(ctx: Context): Long = sp(ctx).getLong("expires_at", 0L)
+
+    fun userId(ctx: Context): String = sp(ctx).getString("user_id", "")?.trim().orEmpty()
+
+    fun ambiente(ctx: Context): String = sp(ctx).getString("ambiente", "")?.trim().orEmpty()
+
     fun salvarAtivacao(
         ctx: Context,
         baseUrl: String,
@@ -38,17 +51,39 @@ object Prefs {
             .apply()
     }
 
+    fun salvarSessao(
+        ctx: Context,
+        accessToken: String,
+        refreshToken: String,
+        expiresAt: Long,
+        userId: String,
+        ambiente: String,
+    ) {
+        sp(ctx).edit()
+            .putString("access_token", accessToken)
+            .putString("refresh_token", refreshToken)
+            .putLong("expires_at", expiresAt)
+            .putString("user_id", userId)
+            .putString("ambiente", ambiente)
+            .apply()
+    }
+
+    fun limparSessao(ctx: Context) {
+        sp(ctx).edit()
+            .remove("access_token")
+            .remove("refresh_token")
+            .remove("expires_at")
+            .remove("user_id")
+            .remove("ambiente")
+            .apply()
+    }
+
     fun limpar(ctx: Context) {
         sp(ctx).edit().clear().apply()
     }
 
-    /**
-     * Endereço que o aplicativo abre: entrada com usuário e senha e, em seguida,
-     * apenas o painel definido para a pessoa que entrou, dentro da empresa da chave.
-     */
     fun urlTela(ctx: Context, tipo: String): String {
         val base = baseUrl(ctx)
-        val empresa = empresaId(ctx)
-        return "$base/automacao/app?tipo=$tipo&app=1&barra=0&emp=$empresa"
+        return "$base/automacao/tela?ambiente=${ambiente(ctx)}&tipo=$tipo&app=1&barra=0"
     }
 }
