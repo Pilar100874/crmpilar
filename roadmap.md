@@ -60,7 +60,7 @@
 - [x] Incrementar versões; validação local concluída, e a compilação assinada permanece no fluxo automático por falta do Android SDK neste ambiente
 
 ## Menu de Apps responsivo — 2026-09-13
-- [ ] Criar menu lateral do módulo Apps seguindo o padrão da tela Listas
-- [ ] Integrar Downloads e Versões dos Aplicativos no mesmo módulo
-- [ ] Ajustar as duas telas para tablet e celular
-- [ ] Validar navegação e apresentação nos três tamanhos de tela
+- [x] Criar menu lateral do módulo Apps seguindo o padrão da tela Listas
+- [x] Integrar Downloads e Versões dos Aplicativos no mesmo módulo
+- [x] Ajustar as duas telas para tablet e celular
+- [x] Validar navegação e apresentação nos três tamanhos de tela
