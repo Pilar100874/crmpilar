@@ -103,6 +103,17 @@ object AtualizadorApp {
         return false
     }
 
+    /** Inicia uma atualização recebida remotamente pelo serviço em segundo plano. */
+    fun atualizarRemoto(ctx: Context, url: String): String {
+        val arquivo = baixarApk(ctx, url) ?: return "Falha ao baixar a atualização"
+        return try {
+            instalar(ctx, arquivo)
+            "Instalador aberto no aparelho"
+        } catch (e: Exception) {
+            e.message ?: "Falha ao abrir o instalador"
+        }
+    }
+
     /**
      * Fluxo completo do botão. [aviso] recebe mensagens já na thread principal.
      */
