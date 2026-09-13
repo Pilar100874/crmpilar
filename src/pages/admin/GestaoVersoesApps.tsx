@@ -34,6 +34,7 @@ const MANIFESTOS: Record<string, string> = {
   remotas: "/apps/android-tv-signage-latest.json",
   sms: "/coletor/sms-version.json",
   hub: "/coletor/hub-version.json",
+  coletor: "/coletor/version.json",
 };
 
 interface VersaoPublicada {
@@ -196,7 +197,7 @@ export default function GestaoVersoesApps() {
   ).length;
 
   const atualizaveis = equipamentosFiltrados.filter((e) =>
-    ["remotas", "sms", "hub"].includes(e.app) && Boolean(ultimaVersao[e.app]),
+    ["remotas", "sms", "hub", "coletor"].includes(e.app) && Boolean(ultimaVersao[e.app]),
   );
   const ultimoComando = (id: string) => comandos
     .filter((c) => c.equipamentoId === id)
@@ -219,8 +220,19 @@ export default function GestaoVersoesApps() {
       for (const equipamento of alvos) {
         const publicada = versoes[equipamento.app];
         if (!publicada) continue;
-        const deviceId = equipamento.id.replace(/^(tv|sms)-/, "");
-        if (equipamento.app === "remotas") {
+        const deviceId = equipamento.id.replace(/^(tv|sms|col)-/, "");
+        if (equipamento.app === "coletor") {
+          const { error } = await supabase
+            .from("coletor_dispositivos")
+            .update({
+              comando: "atualizar_versao",
+              comando_solicitado_em: new Date().toISOString(),
+              comando_status: "pendente",
+              comando_resultado: null,
+            })
+            .eq("id", deviceId);
+          if (error) throw error;
+        } else if (equipamento.app === "remotas") {
           const { error } = await enviarComando(deviceId, "atualizar_versao", { forcar: true, versao: publicada.versao });
           if (error) throw error;
         } else {
@@ -294,7 +306,7 @@ export default function GestaoVersoesApps() {
       <Card>
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="text-base">Telas remotas e celulares</CardTitle>
+            <CardTitle className="text-base">Telas remotas, celulares e coletores</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">Selecione aparelhos e envie a versão mais nova publicada.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -307,7 +319,7 @@ export default function GestaoVersoesApps() {
         </CardHeader>
         <CardContent className="p-3 sm:p-6 sm:pt-0">
           <div className="space-y-3">
-            {atualizaveis.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma tela remota ou celular encontrado.</p>}
+            {atualizaveis.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum equipamento encontrado.</p>}
             {atualizaveis.map((e) => {
               const disponivel = ultimaVersao[e.app];
               const atrasado = menorQue(e.versao, disponivel);
