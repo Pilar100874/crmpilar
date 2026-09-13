@@ -10,6 +10,7 @@ import ColetorRemotoCard from "@/components/coletor/ColetorRemotoCard";
 import BaixarAppAutomacao from "@/components/automacao/BaixarAppAutomacao";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 import PilarSmsDownloadCard from "@/components/config/PilarSmsDownloadCard";
+import PilarHubDownloadCard from "@/components/hub/PilarHubDownloadCard";
 import TvSignageDownloadCard from "@/components/apps/TvSignageDownloadCard";
 
 
@@ -385,6 +386,8 @@ export default function AdminApps() {
       </Card>
 
       <PilarSmsDownloadCard />
+
+      <PilarHubDownloadCard />
 
       <TvSignageDownloadCard />
 
