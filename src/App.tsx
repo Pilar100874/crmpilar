@@ -118,6 +118,7 @@ const PontoAlertas = React.lazy(() => import("./pages/ponto/PontoAlertas"));
 const PontoAuditoria = React.lazy(() => import("./pages/ponto/PontoAuditoria"));
 const PontoColetorDownload = React.lazy(() => import("./pages/ponto/PontoColetorDownload"));
 const AdminApps = React.lazy(() => import("./pages/AdminApps"));
+const GestaoVersoesApps = React.lazy(() => import("./pages/admin/GestaoVersoesApps"));
 const PoliticasInternas = React.lazy(() => import("./pages/PoliticasInternas"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
 const RelatoriosVozConfig = React.lazy(() => import("./pages/RelatoriosVozConfig"));
@@ -676,6 +677,7 @@ const App = () => (
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
               <Route path="/admin/apps" element={<AdminApps />} />
+              <Route path="/admin/versoes-apps" element={<GestaoVersoesApps />} />
               <Route path="/admin/telas-customizadas" element={<TelasCustomizadas />} />
               <Route path="/politicas-internas" element={<PoliticasInternas />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
