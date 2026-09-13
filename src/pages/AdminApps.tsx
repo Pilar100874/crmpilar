@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock, Tablet } from "lucide-react";
+import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock, Tablet, PackageCheck, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import InterfoneAppDownloadCard from "@/components/portaria/InterfoneAppDownloadCard";
@@ -180,6 +180,26 @@ export default function AdminApps() {
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           Instale o CRM Pilar no celular ou tablet para acessar de qualquer lugar.
         </p>
+      </div>
+
+      {/* Menu da área de aplicativos */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link to="/admin/versoes-apps" className="group">
+          <Card className="overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-primary/30">
+            <CardContent className="flex items-center gap-4 p-4 sm:p-5">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <PackageCheck className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-foreground">Versões dos Aplicativos</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  Suba novas versões dos APKs e veja a versão instalada em cada equipamento.
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <MobileAppCard />
