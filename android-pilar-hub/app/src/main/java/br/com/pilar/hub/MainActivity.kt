@@ -102,12 +102,13 @@ class MainActivity : AppCompatActivity() {
     private fun iniciarSaidaOculta() {
         if (saidaInicio != 0L) return
         saidaInicio = SystemClock.elapsedRealtime()
-        Toast.makeText(this, "Segure para sair…", Toast.LENGTH_SHORT).show()
+        ui.postDelayed(dicaRunnable, 1200L)
         ui.postDelayed(saidaRunnable, 5000L)
     }
 
     private fun cancelarSaidaOculta() {
         saidaInicio = 0L
+        ui.removeCallbacks(dicaRunnable)
         ui.removeCallbacks(saidaRunnable)
     }
 
