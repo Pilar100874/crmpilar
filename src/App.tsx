@@ -119,6 +119,7 @@ const PontoAuditoria = React.lazy(() => import("./pages/ponto/PontoAuditoria"));
 const PontoColetorDownload = React.lazy(() => import("./pages/ponto/PontoColetorDownload"));
 const AdminApps = React.lazy(() => import("./pages/AdminApps"));
 const GestaoVersoesApps = React.lazy(() => import("./pages/admin/GestaoVersoesApps"));
+const AppsLayout = React.lazy(() => import("./pages/admin/AppsLayout"));
 const PoliticasInternas = React.lazy(() => import("./pages/PoliticasInternas"));
 const AssistenteVozConfig = React.lazy(() => import("./pages/AssistenteVozConfig"));
 const RelatoriosVozConfig = React.lazy(() => import("./pages/RelatoriosVozConfig"));
@@ -676,8 +677,11 @@ const App = () => (
               <Route path="/ads/wizard" element={<AdsSetupWizard />} />
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
-              <Route path="/admin/apps" element={<AdminApps />} />
-              <Route path="/admin/versoes-apps" element={<GestaoVersoesApps />} />
+              <Route path="/admin/apps" element={<AppsLayout />}>
+                <Route index element={<AdminApps />} />
+                <Route path="versoes" element={<GestaoVersoesApps />} />
+              </Route>
+              <Route path="/admin/versoes-apps" element={<Navigate to="/admin/apps/versoes" replace />} />
               <Route path="/admin/telas-customizadas" element={<TelasCustomizadas />} />
               <Route path="/politicas-internas" element={<PoliticasInternas />} />
               <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
