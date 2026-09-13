@@ -2858,6 +2858,7 @@ export type Database = {
       app_update_commands: {
         Row: {
           app: string
+          arquivo_url: string | null
           concluido_em: string | null
           created_at: string
           criado_por: string | null
@@ -2865,7 +2866,7 @@ export type Database = {
           estabelecimento_id: string
           id: string
           recebido_em: string | null
-          release_id: string
+          release_id: string | null
           resultado: Json
           status: string
           updated_at: string
@@ -2873,6 +2874,7 @@ export type Database = {
         }
         Insert: {
           app: string
+          arquivo_url?: string | null
           concluido_em?: string | null
           created_at?: string
           criado_por?: string | null
@@ -2880,7 +2882,7 @@ export type Database = {
           estabelecimento_id: string
           id?: string
           recebido_em?: string | null
-          release_id: string
+          release_id?: string | null
           resultado?: Json
           status?: string
           updated_at?: string
@@ -2888,6 +2890,7 @@ export type Database = {
         }
         Update: {
           app?: string
+          arquivo_url?: string | null
           concluido_em?: string | null
           created_at?: string
           criado_por?: string | null
@@ -2895,7 +2898,7 @@ export type Database = {
           estabelecimento_id?: string
           id?: string
           recebido_em?: string | null
-          release_id?: string
+          release_id?: string | null
           resultado?: Json
           status?: string
           updated_at?: string
