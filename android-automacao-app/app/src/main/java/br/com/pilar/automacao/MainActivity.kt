@@ -66,6 +66,10 @@ class MainActivity : AppCompatActivity() {
         })
 
         val btnAtualizar = findViewById<android.widget.Button>(R.id.btnAtualizarApp)
+        val versaoAtual = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (_: Exception) { "" }
+        if (versaoAtual.isNotEmpty()) btnAtualizar.text = "Atualizar aplicativo · v$versaoAtual"
         btnAtualizar.setOnClickListener {
             btnAtualizar.isEnabled = false
             AtualizadorApp.atualizar(this) { msg ->
