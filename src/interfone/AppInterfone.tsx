@@ -163,6 +163,9 @@ export default function AppInterfone() {
         className="mx-auto w-full max-w-md px-3 pb-6"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
       >
+        <div className="mb-2">
+          <AtualizadorApk compacto />
+        </div>
         <Button
           variant="ghost"
           size="sm"
