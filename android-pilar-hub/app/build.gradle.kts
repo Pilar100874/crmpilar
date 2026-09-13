@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.pilar.hub"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3.0"
+        versionCode = 5
+        versionName = "1.4.0"
 
         // >>> Ajuste com os dados do seu projeto Lovable Cloud <<<
         buildConfigField("String", "SUPABASE_URL", "\"https://ioxugupvxlcdweldocmq.supabase.co\"")
