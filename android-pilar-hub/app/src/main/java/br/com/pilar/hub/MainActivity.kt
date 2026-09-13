@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -45,6 +46,23 @@ class MainActivity : AppCompatActivity() {
             requestPermsAndStart()
             status.text = "Pilar Hub iniciado. Ver notificação."
         }
+
+        configurarSaidaPorToque()
+    }
+
+    // ===================== Saída oculta por toque (celular) =====================
+    // No celular não há tecla Voltar física para segurar: segurar o dedo na tela
+    // por 5s fecha o app (igual à saída oculta do Pilar Remotas na TV).
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private fun configurarSaidaPorToque() {
+        findViewById<android.view.View>(android.R.id.content).setOnTouchListener { _, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> iniciarSaidaOculta()
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> cancelarSaidaOculta()
+            }
+            false
+        }
     }
 
     private fun requestPermsAndStart() {
@@ -70,7 +88,11 @@ class MainActivity : AppCompatActivity() {
     private var saidaInicio = 0L
     private val saidaRunnable = Runnable {
         saidaInicio = 0L
+        ui.removeCallbacks(dicaRunnable)
         finishAndRemoveTask()
+    }
+    private val dicaRunnable = Runnable {
+        Toast.makeText(this, "Continue segurando para sair…", Toast.LENGTH_SHORT).show()
     }
 
     private fun ehTeclaSaida(keyCode: Int) = keyCode == KeyEvent.KEYCODE_BACK ||
@@ -80,12 +102,13 @@ class MainActivity : AppCompatActivity() {
     private fun iniciarSaidaOculta() {
         if (saidaInicio != 0L) return
         saidaInicio = SystemClock.elapsedRealtime()
-        Toast.makeText(this, "Segure para sair…", Toast.LENGTH_SHORT).show()
+        ui.postDelayed(dicaRunnable, 1200L)
         ui.postDelayed(saidaRunnable, 5000L)
     }
 
     private fun cancelarSaidaOculta() {
         saidaInicio = 0L
+        ui.removeCallbacks(dicaRunnable)
         ui.removeCallbacks(saidaRunnable)
     }
 
