@@ -7,8 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import android.webkit.PermissionRequest
-import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -59,12 +57,6 @@ class MainActivity : AppCompatActivity() {
                 refresh.isRefreshing = false
             }
         }
-        web.webChromeClient = object : WebChromeClient() {
-            override fun onPermissionRequest(request: PermissionRequest) {
-                runOnUiThread { request.grant(request.resources) }
-            }
-        }
-
         refresh.setOnRefreshListener { web.reload() }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
