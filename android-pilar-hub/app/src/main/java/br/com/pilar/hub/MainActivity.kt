@@ -46,6 +46,23 @@ class MainActivity : AppCompatActivity() {
             requestPermsAndStart()
             status.text = "Pilar Hub iniciado. Ver notificação."
         }
+
+        configurarSaidaPorToque()
+    }
+
+    // ===================== Saída oculta por toque (celular) =====================
+    // No celular não há tecla Voltar física para segurar: segurar o dedo na tela
+    // por 5s fecha o app (igual à saída oculta do Pilar Remotas na TV).
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private fun configurarSaidaPorToque() {
+        findViewById<android.view.View>(android.R.id.content).setOnTouchListener { _, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> iniciarSaidaOculta()
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> cancelarSaidaOculta()
+            }
+            false
+        }
     }
 
     private fun requestPermsAndStart() {
