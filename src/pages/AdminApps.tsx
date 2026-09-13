@@ -387,6 +387,8 @@ export default function AdminApps() {
 
       <PilarSmsDownloadCard />
 
+      <PilarHubDownloadCard />
+
       <TvSignageDownloadCard />
 
       <ColetorRemotoCard />
