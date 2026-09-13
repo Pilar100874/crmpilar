@@ -142,7 +142,6 @@ export const FOOTER_ADMIN_PROGRAMS: ProgramLeaf[] = [
   { id: "Admin Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap, footerAdmin: true },
   { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy, footerAdmin: true },
   { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: LucideIcons.AppWindow, footerAdmin: true },
-  { id: "Admin Versoes Apps", title: "Versões dos Aplicativos", url: "/admin/versoes-apps", icon: LucideIcons.PackageCheck, footerAdmin: true },
   { id: "Admin Telas Customizadas", title: "Tela Customizada", url: "/admin/telas-customizadas", icon: LucideIcons.LayoutGrid, footerAdmin: true },
   { id: "Admin Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen, footerAdmin: true },
 ];

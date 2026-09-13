@@ -7,6 +7,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import br.com.pilar.hub.sms.SmsModule
 import kotlinx.coroutines.*
+import org.json.JSONObject
 
 /**
  * Serviço em foreground responsável exclusivamente pelo módulo SMS.
@@ -51,12 +52,39 @@ class PilarHubService : Service() {
             if (!token.isNullOrBlank()) {
                 try {
                     SmsModule.processarFila(this@PilarHubService, token)
+                    processarAtualizacao(token)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
             delay(15_000)
         }
+    }
+
+    private fun processarAtualizacao(token: String) {
+        val versao = AtualizadorApp.versaoInstalada(this)
+        val headers = mapOf("X-Device-Token" to token)
+        val resposta = ApiClient.post(
+            "app-update-device",
+            JSONObject().put("acao", "poll").put("app", "hub").put("versao_app", versao).toString(),
+            headers
+        )
+        val comando = JSONObject(resposta).optJSONObject("command") ?: return
+        val id = comando.optString("id")
+        val url = comando.optString("url")
+        if (id.isBlank() || url.isBlank()) return
+        ApiClient.post(
+            "app-update-device",
+            JSONObject().put("acao", "ack").put("app", "hub").put("command_id", id).put("status", "instalando").toString(),
+            headers
+        )
+        val mensagem = AtualizadorApp.atualizarRemoto(this, url)
+        val status = if (mensagem.startsWith("Falha")) "erro" else "instalando"
+        ApiClient.post(
+            "app-update-device",
+            JSONObject().put("acao", "ack").put("app", "hub").put("command_id", id).put("status", status).put("mensagem", mensagem).toString(),
+            headers
+        )
     }
 
     override fun onDestroy() {

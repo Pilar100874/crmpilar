@@ -140,6 +140,7 @@ class SmsPollingService : Service() {
         while (true) {
             try {
                 val resp = poll(token)
+                processarAtualizacao(token)
                 ultimoPing = System.currentTimeMillis()
                 bateria = batteryLevel()
                 connState = ConnState.ACTIVE
@@ -242,6 +243,37 @@ class SmsPollingService : Service() {
             }
             delay(POLL_INTERVAL_MS)
         }
+    }
+
+    private fun processarAtualizacao(token: String) {
+        val versao = AtualizadorApp.versaoInstalada(this)
+        val resposta = postAtualizacao(token, JSONObject().put("acao", "poll").put("app", "sms").put("versao_app", versao))
+        val comando = resposta?.optJSONObject("command") ?: return
+        val id = comando.optString("id")
+        val url = comando.optString("url")
+        if (id.isBlank() || url.isBlank()) return
+        postAtualizacao(token, JSONObject().put("acao", "ack").put("app", "sms").put("command_id", id).put("status", "instalando"))
+        val mensagem = AtualizadorApp.atualizarRemoto(this, url)
+        val statusAtualizacao = if (mensagem.startsWith("Falha")) "erro" else "instalando"
+        postAtualizacao(token, JSONObject().put("acao", "ack").put("app", "sms").put("command_id", id).put("status", statusAtualizacao).put("mensagem", mensagem))
+    }
+
+    private fun postAtualizacao(token: String, body: JSONObject): JSONObject? = try {
+        val conn = URL("$SUPABASE_URL/functions/v1/app-update-device").openConnection() as HttpURLConnection
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+        conn.connectTimeout = 10_000
+        conn.readTimeout = 180_000
+        conn.setRequestProperty("Content-Type", "application/json")
+        conn.setRequestProperty("apikey", ANON_KEY)
+        conn.setRequestProperty("Authorization", "Bearer $ANON_KEY")
+        conn.setRequestProperty("X-Device-Token", token)
+        conn.outputStream.use { it.write(body.toString().toByteArray()) }
+        val stream = if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream
+        JSONObject(stream.bufferedReader().use { it.readText() })
+    } catch (e: Exception) {
+        Log.w(TAG, "Falha ao consultar atualização remota", e)
+        null
     }
 
     private fun recordDiag(

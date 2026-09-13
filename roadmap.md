@@ -64,3 +64,10 @@
 - [x] Integrar Downloads e Versões dos Aplicativos no mesmo módulo
 - [x] Ajustar as duas telas para tablet e celular
 - [x] Validar navegação e apresentação nos três tamanhos de tela
+
+## Central de atualizações remotas — 2026-09-13
+- [x] Criar fila multiempresa para atualização remota de celulares
+- [x] Centralizar versões, equipamentos e disparos no novo menu Atualizações
+- [x] Integrar recebimento remoto no Pilar SMS e Pilar Hub
+- [x] Redirecionar a antiga tela de versões e atualizar menu/busca por voz
+- [ ] Validar tela em computador, tablet e celular
