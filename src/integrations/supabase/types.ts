@@ -2807,6 +2807,54 @@ export type Database = {
           },
         ]
       }
+      app_releases: {
+        Row: {
+          app: string
+          arquivo_nome: string | null
+          arquivo_url: string
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string
+          id: string
+          notas: string | null
+          obrigatorio: boolean
+          publicado: boolean
+          tamanho_bytes: number | null
+          updated_at: string
+          versao: string
+        }
+        Insert: {
+          app: string
+          arquivo_nome?: string | null
+          arquivo_url: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          id?: string
+          notas?: string | null
+          obrigatorio?: boolean
+          publicado?: boolean
+          tamanho_bytes?: number | null
+          updated_at?: string
+          versao: string
+        }
+        Update: {
+          app?: string
+          arquivo_nome?: string | null
+          arquivo_url?: string
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string
+          id?: string
+          notas?: string | null
+          obrigatorio?: boolean
+          publicado?: boolean
+          tamanho_bytes?: number | null
+          updated_at?: string
+          versao?: string
+        }
+        Relationships: []
+      }
       apresentacoes_empresa: {
         Row: {
           ativo: boolean
