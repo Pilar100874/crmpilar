@@ -174,9 +174,9 @@ export default function AdminApps() {
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
+    <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 xl:p-8">
       <div>
-        <h1 className="text-xl font-semibold sm:text-3xl">Aplicativo</h1>
+        <h1 className="text-xl font-semibold sm:text-3xl">Aplicativos e downloads</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           Instale o CRM Pilar no celular ou tablet para acessar de qualquer lugar.
         </p>

@@ -261,11 +261,11 @@ export default function GestaoVersoesApps() {
   ).length;
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6">
-      <header className="rounded-2xl bg-gradient-to-r from-primary/15 to-primary/5 p-5 sm:p-7">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+    <div className="mx-auto w-full max-w-6xl space-y-4 p-3 sm:space-y-6 sm:p-6">
+      <header className="border-b bg-gradient-to-r from-primary/15 to-primary/5 p-4 sm:rounded-xl sm:border sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
               <PackageCheck className="h-6 w-6 text-primary" />
               Versões dos Aplicativos
             </h1>
@@ -273,7 +273,7 @@ export default function GestaoVersoesApps() {
               Envie novos pacotes e acompanhe a versão instalada em cada equipamento.
             </p>
           </div>
-          <Button variant="outline" onClick={recarregar} disabled={carregando}>
+          <Button variant="outline" onClick={recarregar} disabled={carregando} className="w-full sm:w-auto">
             <RefreshCw className={`mr-2 h-4 w-4 ${carregando ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
@@ -305,11 +305,11 @@ export default function GestaoVersoesApps() {
       </div>
 
       <Tabs defaultValue="versoes">
-        <TabsList>
-          <TabsTrigger value="versoes">
+        <TabsList className="grid w-full grid-cols-2 sm:inline-grid sm:w-auto">
+          <TabsTrigger value="versoes" className="min-w-0">
             <Upload className="mr-2 h-4 w-4" /> Versões
           </TabsTrigger>
-          <TabsTrigger value="equipamentos">
+          <TabsTrigger value="equipamentos" className="min-w-0">
             <MonitorSmartphone className="mr-2 h-4 w-4" /> Equipamentos
           </TabsTrigger>
         </TabsList>
@@ -319,7 +319,7 @@ export default function GestaoVersoesApps() {
             <CardHeader>
               <CardTitle className="text-base">Enviar nova versão</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label className="mb-1 block text-xs">Aplicativo</Label>
                 <Select value={app} onValueChange={(v) => setApp(v as AppValor)}>
@@ -343,7 +343,7 @@ export default function GestaoVersoesApps() {
                   placeholder="1.4.0"
                 />
               </div>
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <Label className="mb-1 block text-xs">Arquivo do aplicativo</Label>
                 <Input
                   ref={inputRef}
@@ -357,7 +357,7 @@ export default function GestaoVersoesApps() {
                   </p>
                 )}
               </div>
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <Label className="mb-1 block text-xs">Novidades desta versão</Label>
                 <Textarea
                   value={notas}
@@ -371,7 +371,7 @@ export default function GestaoVersoesApps() {
                 <span className="text-sm text-muted-foreground">Atualização obrigatória</span>
               </div>
               <div className="flex justify-end">
-                <Button onClick={enviarVersao} disabled={enviando}>
+                <Button onClick={enviarVersao} disabled={enviando} className="w-full sm:w-auto">
                   <Upload className="mr-2 h-4 w-4" />
                   {enviando ? "Enviando…" : "Publicar versão"}
                 </Button>
@@ -383,7 +383,44 @@ export default function GestaoVersoesApps() {
             <CardHeader>
               <CardTitle className="text-base">Versões enviadas</CardTitle>
             </CardHeader>
-            <CardContent className="overflow-x-auto p-0 sm:p-6 sm:pt-0">
+            <CardContent className="p-3 sm:p-6 sm:pt-0">
+              <div className="space-y-3 md:hidden">
+                {releasesFiltrados.length === 0 && (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma versão enviada ainda.</p>
+                )}
+                {releasesFiltrados.map((r) => (
+                  <article key={r.id} className="space-y-3 rounded-lg border bg-background p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{nomeApp(r.app)}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary">v{r.versao}</Badge>
+                          {r.obrigatorio && <Badge variant="destructive">obrigatória</Badge>}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => window.open(r.arquivo_url, "_blank", "noopener")}>
+                          <Download className="h-4 w-4" />
+                          <span className="sr-only">Baixar versão</span>
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => setExcluir(r)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Excluir versão</span>
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="min-w-0 text-xs text-muted-foreground">
+                      <p className="truncate font-mono">{r.arquivo_nome || "Arquivo"} · {formatarTamanho(r.tamanho_bytes)}</p>
+                      <p className="mt-1">Enviado em {formatarData(r.created_at)}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-t pt-3">
+                      <span className="text-sm text-muted-foreground">Versão publicada</span>
+                      <Switch checked={r.publicado} onCheckedChange={() => alternarPublicado(r)} />
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -439,6 +476,7 @@ export default function GestaoVersoesApps() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -448,7 +486,39 @@ export default function GestaoVersoesApps() {
             <CardHeader>
               <CardTitle className="text-base">Equipamentos e versões instaladas</CardTitle>
             </CardHeader>
-            <CardContent className="overflow-x-auto p-0 sm:p-6 sm:pt-0">
+            <CardContent className="p-3 sm:p-6 sm:pt-0">
+              <div className="space-y-3 md:hidden">
+                {equipamentosFiltrados.length === 0 && (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Nenhum equipamento encontrado.</p>
+                )}
+                {equipamentosFiltrados.map((e) => {
+                  const disponivel = ultimaVersao[e.app];
+                  const atrasado = menorQue(e.versao, disponivel);
+                  return (
+                    <article key={e.id} className="space-y-3 rounded-lg border bg-background p-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                          <Smartphone className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold">{e.nome}</p>
+                          <p className="truncate text-xs text-muted-foreground">{e.detalhe}</p>
+                        </div>
+                        <Badge variant={atrasado ? "destructive" : "secondary"} className="shrink-0">
+                          {atrasado ? "Desatualizado" : "Atualizado"}
+                        </Badge>
+                      </div>
+                      <dl className="grid grid-cols-2 gap-3 border-t pt-3 text-sm">
+                        <div><dt className="text-xs text-muted-foreground">Aplicativo</dt><dd>{nomeApp(e.app)}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Instalada</dt><dd>{e.versao || "desconhecida"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Disponível</dt><dd>{disponivel || "—"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Último contato</dt><dd>{formatarData(e.ultimoContato)}</dd></div>
+                      </dl>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -496,6 +566,7 @@ export default function GestaoVersoesApps() {
                   })}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
