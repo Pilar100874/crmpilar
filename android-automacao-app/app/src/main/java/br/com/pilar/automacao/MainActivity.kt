@@ -65,6 +65,15 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        val btnAtualizar = findViewById<android.widget.Button>(R.id.btnAtualizarApp)
+        btnAtualizar.setOnClickListener {
+            btnAtualizar.isEnabled = false
+            AtualizadorApp.atualizar(this) { msg ->
+                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+                if (!msg.endsWith("…")) btnAtualizar.isEnabled = true
+            }
+        }
+
         carregar()
     }
 
