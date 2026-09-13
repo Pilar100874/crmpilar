@@ -88,7 +88,11 @@ class MainActivity : AppCompatActivity() {
     private var saidaInicio = 0L
     private val saidaRunnable = Runnable {
         saidaInicio = 0L
+        ui.removeCallbacks(dicaRunnable)
         finishAndRemoveTask()
+    }
+    private val dicaRunnable = Runnable {
+        Toast.makeText(this, "Continue segurando para sair…", Toast.LENGTH_SHORT).show()
     }
 
     private fun ehTeclaSaida(keyCode: Int) = keyCode == KeyEvent.KEYCODE_BACK ||
