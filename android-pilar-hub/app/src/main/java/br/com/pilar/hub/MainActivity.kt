@@ -5,6 +5,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.view.KeyEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -56,5 +60,58 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
         super.onRequestPermissionsResult(rc, p, r)
+    }
+
+    // ===================== Saída oculta (segurar VOLTAR/ESC por 5s) =====================
+    // Igual ao Pilar Remotas (Android TV): segurar a tecla Voltar fecha a tela do app.
+    // O serviço em segundo plano (gateway SMS) continua rodando.
+
+    private val ui = Handler(Looper.getMainLooper())
+    private var saidaInicio = 0L
+    private val saidaRunnable = Runnable {
+        saidaInicio = 0L
+        finishAndRemoveTask()
+    }
+
+    private fun ehTeclaSaida(keyCode: Int) = keyCode == KeyEvent.KEYCODE_BACK ||
+        keyCode == KeyEvent.KEYCODE_ESCAPE ||
+        keyCode == KeyEvent.KEYCODE_DEL
+
+    private fun iniciarSaidaOculta() {
+        if (saidaInicio != 0L) return
+        saidaInicio = SystemClock.elapsedRealtime()
+        Toast.makeText(this, "Segure para sair…", Toast.LENGTH_SHORT).show()
+        ui.postDelayed(saidaRunnable, 5000L)
+    }
+
+    private fun cancelarSaidaOculta() {
+        saidaInicio = 0L
+        ui.removeCallbacks(saidaRunnable)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (ehTeclaSaida(keyCode)) {
+            iniciarSaidaOculta()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (ehTeclaSaida(keyCode)) {
+            // Alguns controles emitem key up entre repetições: tolera pequenas quebras
+            ui.postDelayed({
+                if (saidaInicio != 0L && SystemClock.elapsedRealtime() - saidaInicio < 5000L) {
+                    cancelarSaidaOculta()
+                }
+            }, 400L)
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // ignora toque simples — saída somente segurando VOLTAR por 5s
     }
 }
