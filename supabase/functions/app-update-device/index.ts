@@ -1,5 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-device-token",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 import { z } from "npm:zod@3.23.8";
 
 const BodySchema = z.object({
@@ -79,7 +83,7 @@ Deno.serve(async (req) => {
   }
 
   const { data: command } = await admin.from("app_update_commands")
-    .select("id, versao_alvo, release:app_releases(arquivo_url, arquivo_nome, notas)")
+    .select("id, versao_alvo, arquivo_url, release:app_releases(arquivo_url, arquivo_nome, notas)")
     .eq("device_id", device.id)
     .eq("app", body.app)
     .eq("status", "pendente")
@@ -90,5 +94,7 @@ Deno.serve(async (req) => {
   if (!command) return resposta({ command: null });
   await admin.from("app_update_commands").update({ status: "recebido", recebido_em: new Date().toISOString() }).eq("id", command.id);
   const release = Array.isArray(command.release) ? command.release[0] : command.release;
-  return resposta({ command: { id: command.id, versao: command.versao_alvo, url: release?.arquivo_url, arquivo: release?.arquivo_nome, notas: release?.notas } });
+  const url = (command as { arquivo_url?: string | null }).arquivo_url || release?.arquivo_url;
+  if (!url) return resposta({ command: null });
+  return resposta({ command: { id: command.id, versao: command.versao_alvo, url, arquivo: release?.arquivo_nome, notas: release?.notas } });
 });
