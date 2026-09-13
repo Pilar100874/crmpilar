@@ -56,6 +56,15 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, "Retentativas salvas: $n", Toast.LENGTH_SHORT).show()
         }
 
+        // Atualização do aplicativo para a última versão publicada.
+        b.btnAtualizarApp.setOnClickListener {
+            b.btnAtualizarApp.isEnabled = false
+            AtualizadorApp.atualizar(this) { msg ->
+                b.tvAtualizarStatus.text = msg
+                if (!msg.endsWith("…")) b.btnAtualizarApp.isEnabled = true
+            }
+        }
+
         populateSims(prefs)
     }
 

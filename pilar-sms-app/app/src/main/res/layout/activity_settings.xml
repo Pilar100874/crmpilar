@@ -181,6 +181,41 @@
                     android:text="Salvar retentativas"/>
             </LinearLayout>
 
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ATUALIZAÇÃO"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:textColor="@color/text_muted"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAtualizarApp"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="10dp"
+                    app:cornerRadius="14dp"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:text="Atualizar aplicativo"/>
+
+                <TextView
+                    android:id="@+id/tvAtualizarStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Baixa e instala a última versão publicada."
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp"/>
+            </LinearLayout>
 
             <LinearLayout
                 android:orientation="vertical"
