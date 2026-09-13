@@ -163,6 +163,26 @@
                 android:textSize="14sp"
                 android:layout_marginTop="16dp"
                 android:gravity="center" />
+
+            <Button
+                android:id="@+id/btnAtualizarApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Atualizar aplicativo"
+                android:textSize="14sp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_btn_primary"
+                android:textColor="#FFFFFF"
+                android:stateListAnimator="@null" />
+
+            <TextView
+                android:id="@+id/txtVersao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                android:layout_marginTop="10dp"
+                android:gravity="center" />
         </LinearLayout>
     </FrameLayout>
 
