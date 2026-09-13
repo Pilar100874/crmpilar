@@ -47,6 +47,18 @@ class MainActivity : AppCompatActivity() {
             status.text = "Pilar Hub iniciado. Ver notificação."
         }
 
+        // Atualização do aplicativo para a última versão publicada.
+        val btnAtualizar = findViewById<Button>(R.id.btnAtualizarApp)
+        val atualizacaoStatus = findViewById<TextView>(R.id.atualizacaoStatus)
+        findViewById<TextView>(R.id.verLabel).text = "v${AtualizadorApp.versaoInstalada(this)}"
+        btnAtualizar.setOnClickListener {
+            btnAtualizar.isEnabled = false
+            AtualizadorApp.atualizar(this) { msg ->
+                atualizacaoStatus.text = msg
+                if (!msg.endsWith("…")) btnAtualizar.isEnabled = true
+            }
+        }
+
         configurarSaidaPorToque()
     }
 
