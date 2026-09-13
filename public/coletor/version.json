@@ -1,6 +1,6 @@
 {
   "version": "2.0.4",
   "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.3/ColetorPilar-Linux.AppImage",
-  "notas": "2.0.3: o auto-desligar agora é enviado junto do comando de ligar, garantindo que o equipamento desligue sozinho no tempo configurado."
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Linux.AppImage",
+  "notas": "2.0.4: abre sempre visível ao instalar, atualizar e ligar o computador, com todos os recursos ativos."
 }
