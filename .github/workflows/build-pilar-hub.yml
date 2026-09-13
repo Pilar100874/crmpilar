@@ -1,0 +1,133 @@
+name: Build Pilar Hub APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'android-pilar-hub/**'
+      - '.github/workflows/build-pilar-hub.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-pilar-hub
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Usar SDK do GitHub Actions
+        run: rm -f local.properties
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Ler versionName do build.gradle.kts
+        id: version
+        run: |
+          VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -n1)
+          CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -n1)
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Versão detectada: ${VERSION} (code ${CODE}) sha ${SHORT_SHA}"
+
+      - name: Build APK release compatível assinado
+        run: ./gradlew clean :app:assembleRelease --no-daemon
+
+      - name: Renomear APK com versão
+        id: rename
+        run: |
+          mkdir -p dist
+          APK_SRC=app/build/outputs/apk/release/app-release.apk
+          APK_DST=dist/pilar-hub-v${{ steps.version.outputs.version }}.apk
+          test -f "$APK_SRC"
+          cp "$APK_SRC" "$APK_DST"
+          echo "apk=$APK_DST" >> "$GITHUB_OUTPUT"
+          ls -lh dist/
+
+      - name: Verificar APK instalável
+        run: |
+          APK="dist/pilar-hub-v${{ steps.version.outputs.version }}.apk"
+          test -s "$APK"
+          unzip -t "$APK" >/dev/null
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          "$APKSIGNER" verify --min-sdk-version 24 --verbose --print-certs "$APK"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilar-hub-v${{ steps.version.outputs.version }}
+          path: android-pilar-hub/dist/*.apk
+
+      - name: Criar / atualizar GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: hub-v${{ steps.version.outputs.version }}
+          name: Pilar Hub v${{ steps.version.outputs.version }}
+          body: |
+            APK do Pilar Hub — gateway SMS do CRM Pilar.
+
+            - versionName: `${{ steps.version.outputs.version }}`
+            - versionCode: `${{ steps.version.outputs.code }}`
+            - commit: `${{ steps.version.outputs.short_sha }}`
+
+            APK release compatível assinado com V1+V2+V3, pronto para instalação direta no aparelho.
+          files: |
+            android-pilar-hub/dist/pilar-hub-v${{ steps.version.outputs.version }}.apk
+          fail_on_unmatched_files: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Atualizar public/coletor/hub-version.json
+        working-directory: ${{ github.workspace }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REPO="${{ github.repository }}"
+          FILENAME="pilar-hub-v${VERSION}.apk"
+          URL="https://github.com/${REPO}/releases/download/hub-v${VERSION}/${FILENAME}"
+          node -e "
+            const fs = require('fs');
+            const p = 'public/coletor/hub-version.json';
+            const j = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
+            j.version = '${VERSION}';
+            j.downloadUrl = '${URL}';
+            j.filename = '${FILENAME}';
+            j.notas = 'v${VERSION}: ícone padronizado na identidade visual Pilar e publicação na central de apps.';
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+          "
+          cat public/coletor/hub-version.json
+
+      - name: Commit hub-version.json bump
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/coletor/hub-version.json; then
+            echo "hub-version.json unchanged"
+          else
+            git add public/coletor/hub-version.json
+            git commit -m "chore(hub): publish apk v${{ steps.version.outputs.version }} [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push origin HEAD:main && break
+              echo "push retry $i..."
+              sleep 3
+            done
+          fi
