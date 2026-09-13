@@ -58,3 +58,9 @@
 - [x] Criar login próprio e isolado no Pilar Automação após a chave da empresa
 - [x] Abrir somente o painel de Automação do usuário, sem menus, chat, fone ou botão de fala
 - [x] Incrementar versões; validação local concluída, e a compilação assinada permanece no fluxo automático por falta do Android SDK neste ambiente
+
+## Menu de Apps responsivo — 2026-09-13
+- [ ] Criar menu lateral do módulo Apps seguindo o padrão da tela Listas
+- [ ] Integrar Downloads e Versões dos Aplicativos no mesmo módulo
+- [ ] Ajustar as duas telas para tablet e celular
+- [ ] Validar navegação e apresentação nos três tamanhos de tela
