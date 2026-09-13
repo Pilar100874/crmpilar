@@ -30,6 +30,7 @@ export default function PilarHubDownloadCard() {
     downloadUrl: string;
     filename?: string;
     notas?: string;
+    disponivel?: boolean;
   } | null>(null);
 
   useEffect(() => {
