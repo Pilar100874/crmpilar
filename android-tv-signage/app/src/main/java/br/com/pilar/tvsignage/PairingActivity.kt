@@ -60,6 +60,30 @@ class PairingActivity : AppCompatActivity() {
             }
             pair(codigo)
         }
+
+        // Versão instalada e atualização manual para a última versão publicada
+        b.txtVersao.text = "Versão instalada: v${BuildConfig.VERSION_NAME}"
+        b.btnAtualizarApp.setOnClickListener {
+            b.btnAtualizarApp.isEnabled = false
+            b.txtStatus.text = "Buscando atualização..."
+            CoroutineScope(Dispatchers.IO).launch {
+                when (val r = Updater.atualizar(applicationContext, false) { file ->
+                    runOnUiThread { Updater.instalarArquivo(this@PairingActivity, file) }
+                }) {
+                    is Updater.Result.JaAtualizado -> withContext(Dispatchers.Main) {
+                        b.txtStatus.text = "Já está na versão mais nova"
+                        b.btnAtualizarApp.isEnabled = true
+                    }
+                    is Updater.Result.Instalando -> withContext(Dispatchers.Main) {
+                        b.txtStatus.text = "Instalando nova versão..."
+                    }
+                    is Updater.Result.Erro -> withContext(Dispatchers.Main) {
+                        b.txtStatus.text = "Falha ao atualizar: ${r.msg}"
+                        b.btnAtualizarApp.isEnabled = true
+                    }
+                }
+            }
+        }
     }
 
     private fun pair(codigo: String) {
