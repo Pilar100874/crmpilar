@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { enviarComando, getEstabelecimentoId, getUsuarioId } from "@/services/tvSignage/tvSignageService";
 import { toast } from "sonner";
 import {
   Upload,
@@ -26,6 +28,7 @@ import {
   RefreshCw,
   PackageCheck,
   MonitorSmartphone,
+  Send,
 } from "lucide-react";
 
 const APPS = [
@@ -63,6 +66,13 @@ interface Equipamento {
   ultimoContato: string | null;
 }
 
+interface ComandoAtualizacao {
+  id: string;
+  equipamentoId: string;
+  status: string;
+  criadoEm: string;
+}
+
 const formatarTamanho = (bytes?: number | null) => {
   if (!bytes) return "—";
   const mb = bytes / (1024 * 1024);
@@ -95,6 +105,9 @@ export default function GestaoVersoesApps() {
   const [enviando, setEnviando] = useState(false);
   const [excluir, setExcluir] = useState<Release | null>(null);
   const [filtroApp, setFiltroApp] = useState<string>("todos");
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [comandos, setComandos] = useState<ComandoAtualizacao[]>([]);
+  const [disparando, setDisparando] = useState(false);
 
   const [app, setApp] = useState<AppValor>("hub");
   const [versao, setVersao] = useState("");
@@ -165,11 +178,22 @@ export default function GestaoVersoesApps() {
     setEquipamentos(lista);
   }, []);
 
+  const carregarComandos = useCallback(async () => {
+    const [celulares, telas] = await Promise.all([
+      supabase.from("app_update_commands" as any).select("id,device_id,status,created_at").order("created_at", { ascending: false }).limit(300),
+      supabase.from("tv_commands").select("id,device_id,status,created_at").eq("tipo", "atualizar_versao").order("created_at", { ascending: false }).limit(300),
+    ]);
+    setComandos([
+      ...((celulares.data || []) as any[]).map((c) => ({ id: c.id, equipamentoId: `sms-${c.device_id}`, status: c.status, criadoEm: c.created_at })),
+      ...((telas.data || []) as any[]).map((c) => ({ id: c.id, equipamentoId: `tv-${c.device_id}`, status: c.status, criadoEm: c.created_at })),
+    ]);
+  }, []);
+
   const recarregar = useCallback(async () => {
     setCarregando(true);
-    await Promise.all([carregarReleases(), carregarEquipamentos()]);
+    await Promise.all([carregarReleases(), carregarEquipamentos(), carregarComandos()]);
     setCarregando(false);
-  }, [carregarReleases, carregarEquipamentos]);
+  }, [carregarReleases, carregarEquipamentos, carregarComandos]);
 
   useEffect(() => {
     recarregar();
@@ -260,6 +284,58 @@ export default function GestaoVersoesApps() {
     menorQue(e.versao, ultimaVersao[e.app]),
   ).length;
 
+  const atualizaveis = equipamentosFiltrados.filter((e) =>
+    ["remotas", "sms", "hub"].includes(e.app) && Boolean(ultimaVersao[e.app]),
+  );
+  const ultimoComando = (id: string) => comandos
+    .filter((c) => c.equipamentoId === id)
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))[0];
+  const alternarSelecao = (id: string) => setSelecionados((atuais) =>
+    atuais.includes(id) ? atuais.filter((item) => item !== id) : [...atuais, id],
+  );
+  const selecionarDesatualizados = () => setSelecionados(
+    atualizaveis.filter((e) => menorQue(e.versao, ultimaVersao[e.app])).map((e) => e.id),
+  );
+
+  const enviarAtualizacoes = async (ids = selecionados) => {
+    const alvos = atualizaveis.filter((e) => ids.includes(e.id));
+    if (!alvos.length) return toast.error("Selecione pelo menos um aparelho");
+    setDisparando(true);
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      const usuarioId = await getUsuarioId();
+      if (!estabelecimentoId) throw new Error("Empresa do usuário não encontrada");
+      for (const equipamento of alvos) {
+        const release = releases
+          .filter((r) => r.app === equipamento.app && r.publicado)
+          .sort((a, b) => menorQue(a.versao, b.versao) ? 1 : -1)[0];
+        if (!release) continue;
+        const deviceId = equipamento.id.replace(/^(tv|sms)-/, "");
+        if (equipamento.app === "remotas") {
+          const { error } = await enviarComando(deviceId, "atualizar_versao", { forcar: true, versao: release.versao });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("app_update_commands" as any).insert({
+            estabelecimento_id: estabelecimentoId,
+            device_id: deviceId,
+            release_id: release.id,
+            app: equipamento.app,
+            versao_alvo: release.versao,
+            criado_por: usuarioId,
+          });
+          if (error) throw error;
+        }
+      }
+      toast.success(`Atualização enviada para ${alvos.length} aparelho${alvos.length === 1 ? "" : "s"}`);
+      setSelecionados([]);
+      await carregarComandos();
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível enviar a atualização");
+    } finally {
+      setDisparando(false);
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-4 p-3 max-sm:pl-9 sm:space-y-6 sm:p-6">
       <header className="border-b bg-gradient-to-r from-primary/15 to-primary/5 p-4 sm:rounded-xl sm:border sm:p-6">
@@ -267,10 +343,10 @@ export default function GestaoVersoesApps() {
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
               <PackageCheck className="h-6 w-6 text-primary" />
-              Versões dos Aplicativos
+              Central de Atualizações
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Envie novos pacotes e acompanhe a versão instalada em cada equipamento.
+              Publique versões, acompanhe os aparelhos e envie atualizações remotamente.
             </p>
           </div>
           <Button variant="outline" onClick={recarregar} disabled={carregando} className="w-full sm:w-auto">
@@ -304,15 +380,65 @@ export default function GestaoVersoesApps() {
         </Select>
       </div>
 
-      <Tabs defaultValue="versoes">
-        <TabsList className="grid w-full grid-cols-2 sm:inline-grid sm:w-auto">
-          <TabsTrigger value="versoes" className="min-w-0">
-            <Upload className="mr-2 h-4 w-4" /> Versões
+      <Tabs defaultValue="remota">
+        <TabsList className="grid h-auto w-full grid-cols-2 sm:inline-grid sm:w-auto">
+          <TabsTrigger value="remota" className="min-w-0">
+            <Send className="mr-2 h-4 w-4" /> Envio remoto
           </TabsTrigger>
-          <TabsTrigger value="equipamentos" className="min-w-0">
-            <MonitorSmartphone className="mr-2 h-4 w-4" /> Equipamentos
+          <TabsTrigger value="versoes" className="min-w-0">
+            <Upload className="mr-2 h-4 w-4" /> Publicações
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="remota" className="space-y-4">
+          <Card>
+            <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="text-base">Telas remotas e celulares</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">Selecione aparelhos e envie a última versão publicada.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={selecionarDesatualizados}>Selecionar desatualizados</Button>
+                <Button onClick={() => enviarAtualizacoes()} disabled={disparando || selecionados.length === 0}>
+                  <Send className="mr-2 h-4 w-4" />
+                  {disparando ? "Enviando…" : `Enviar atualização (${selecionados.length})`}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 sm:pt-0">
+              <div className="space-y-3">
+                {atualizaveis.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma tela remota ou celular encontrado.</p>}
+                {atualizaveis.map((e) => {
+                  const disponivel = ultimaVersao[e.app];
+                  const atrasado = menorQue(e.versao, disponivel);
+                  const comando = ultimoComando(e.id);
+                  return (
+                    <article key={e.id} className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center">
+                      <Checkbox checked={selecionados.includes(e.id)} onCheckedChange={() => alternarSelecao(e.id)} aria-label={`Selecionar ${e.nome}`} />
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Smartphone className="h-4 w-4" /></div>
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{e.nome}</p>
+                          <p className="truncate text-xs text-muted-foreground">{nomeApp(e.app)} · {e.detalhe}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm sm:flex sm:items-center sm:gap-5">
+                        <div><p className="text-xs text-muted-foreground">Instalada</p><p>{e.versao || "desconhecida"}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Disponível</p><p>{disponivel || "—"}</p></div>
+                        <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
+                        {comando && <Badge variant="outline">{comando.status}</Badge>}
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
+                        <Send className="mr-2 h-4 w-4" /> Enviar
+                      </Button>
+                    </article>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">Em celulares Android, o sistema pode solicitar a confirmação da instalação no próprio aparelho.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="versoes" className="space-y-6">
           <Card>
@@ -481,95 +607,6 @@ export default function GestaoVersoesApps() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="equipamentos">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Equipamentos e versões instaladas</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-6 sm:pt-0">
-              <div className="space-y-3 lg:hidden">
-                {equipamentosFiltrados.length === 0 && (
-                  <p className="py-8 text-center text-sm text-muted-foreground">Nenhum equipamento encontrado.</p>
-                )}
-                {equipamentosFiltrados.map((e) => {
-                  const disponivel = ultimaVersao[e.app];
-                  const atrasado = menorQue(e.versao, disponivel);
-                  return (
-                    <article key={e.id} className="space-y-3 rounded-lg border bg-background p-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                          <Smartphone className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold">{e.nome}</p>
-                          <p className="truncate text-xs text-muted-foreground">{e.detalhe}</p>
-                        </div>
-                        <Badge variant={atrasado ? "destructive" : "secondary"} className="shrink-0">
-                          {atrasado ? "Desatualizado" : "Atualizado"}
-                        </Badge>
-                      </div>
-                      <dl className="grid grid-cols-2 gap-3 border-t pt-3 text-sm">
-                        <div><dt className="text-xs text-muted-foreground">Aplicativo</dt><dd>{nomeApp(e.app)}</dd></div>
-                        <div><dt className="text-xs text-muted-foreground">Instalada</dt><dd>{e.versao || "desconhecida"}</dd></div>
-                        <div><dt className="text-xs text-muted-foreground">Disponível</dt><dd>{disponivel || "—"}</dd></div>
-                        <div><dt className="text-xs text-muted-foreground">Último contato</dt><dd>{formatarData(e.ultimoContato)}</dd></div>
-                      </dl>
-                    </article>
-                  );
-                })}
-              </div>
-              <div className="hidden overflow-x-auto lg:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Equipamento</TableHead>
-                    <TableHead>Aplicativo</TableHead>
-                    <TableHead>Instalada</TableHead>
-                    <TableHead>Disponível</TableHead>
-                    <TableHead>Último contato</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {equipamentosFiltrados.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                        Nenhum equipamento encontrado.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {equipamentosFiltrados.map((e) => {
-                    const disponivel = ultimaVersao[e.app];
-                    const atrasado = menorQue(e.versao, disponivel);
-                    return (
-                      <TableRow key={e.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2 font-medium">
-                            <Smartphone className="h-4 w-4 text-muted-foreground" />
-                            {e.nome}
-                          </div>
-                          <span className="text-xs text-muted-foreground">{e.detalhe}</span>
-                        </TableCell>
-                        <TableCell>{nomeApp(e.app)}</TableCell>
-                        <TableCell>
-                          <Badge variant={atrasado ? "destructive" : "secondary"}>
-                            {e.versao || "desconhecida"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {disponivel || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatarData(e.ultimoContato)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       <DeleteConfirmDialog
