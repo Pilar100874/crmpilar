@@ -119,4 +119,4 @@
 - [x] Conferir os links atuais de APK, Windows, Linux e ISO
 - [x] Corrigir o download quebrado do Coletor Linux
 - [x] Alinhar os links alternativos às versões atuais publicadas
-- [ ] Validar novamente todos os downloads após as correções
+- [x] Validar novamente todos os downloads após as correções
