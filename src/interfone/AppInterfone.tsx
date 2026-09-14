@@ -3,10 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Loader2, BellRing, Phone, ShieldAlert } from "lucide-react";
+import { LogOut, Loader2, BellRing, Phone, ShieldAlert, KeyRound } from "lucide-react";
 import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobile";
 import AtualizadorApk from "@/components/portaria/AtualizadorApk";
 import logoPilar from "@/assets/logo_branco.png";
+import {
+  estaNoApkPilarFone,
+  lerAtivacaoPilarFone,
+  limparAtivacaoPilarFone,
+  validarChavePilarFone,
+  type AtivacaoPilarFone,
+} from "@/lib/portaria/ativacaoPilarFone";
 
 /** App nativo da Portaria: só interfone (campainha/câmeras) e ramal SIP. */
 export default function AppInterfone() {
@@ -16,6 +23,23 @@ export default function AppInterfone() {
   const [entrando, setEntrando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [permitido, setPermitido] = useState<boolean | null>(null);
+  const [ativacao, setAtivacao] = useState<AtivacaoPilarFone | null>(() => lerAtivacaoPilarFone());
+  const [chave, setChave] = useState("");
+  const [ativando, setAtivando] = useState(false);
+  const [erroAtivacao, setErroAtivacao] = useState<string | null>(null);
+  const apkNativo = estaNoApkPilarFone();
+
+  useEffect(() => {
+    if (!apkNativo || !ativacao) return;
+    let cancelado = false;
+    validarChavePilarFone(ativacao.chave).then((dados) => {
+      if (!cancelado) setAtivacao(dados);
+    }).catch(() => {
+      limparAtivacaoPilarFone();
+      if (!cancelado) setAtivacao(null);
+    });
+    return () => { cancelado = true; };
+  }, [apkNativo]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSessao(!!data.session));
@@ -37,19 +61,35 @@ export default function AppInterfone() {
       }
       const { data } = await supabase
         .from("usuarios")
-        .select("pode_usar_interfone, pilarfone_abas")
+        .select("pode_usar_interfone, pilarfone_abas, estabelecimento_id")
         .eq("auth_user_id", auth.user.id)
         .maybeSingle();
       if (!cancelado) {
-        const registro = data as { pode_usar_interfone?: boolean; pilarfone_abas?: string[] | null } | null;
+        const registro = data as { pode_usar_interfone?: boolean; pilarfone_abas?: string[] | null; estabelecimento_id?: string | null } | null;
         // Acesso pelo campo antigo (legado) ou por pelo menos uma aba liberada no cadastro.
-        setPermitido(!!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0);
+        const pertenceAEmpresa = !apkNativo || registro?.estabelecimento_id === ativacao?.estabelecimentoId;
+        setPermitido(pertenceAEmpresa && (!!registro?.pode_usar_interfone || (registro?.pilarfone_abas?.length ?? 0) > 0));
       }
     })();
     return () => {
       cancelado = true;
     };
-  }, [sessao]);
+  }, [apkNativo, ativacao?.estabelecimentoId, sessao]);
+
+  const ativar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chave.trim()) return setErroAtivacao("Informe a chave da empresa.");
+    setAtivando(true);
+    setErroAtivacao(null);
+    try {
+      setAtivacao(await validarChavePilarFone(chave));
+      setChave("");
+    } catch (error) {
+      setErroAtivacao(error instanceof Error ? error.message : "Não foi possível validar a chave.");
+    } finally {
+      setAtivando(false);
+    }
+  };
 
   const entrar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +104,41 @@ export default function AppInterfone() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0D1626]">
         <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (apkNativo && !ativacao) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-[#16253E] to-[#0D1626] p-4">
+        <div className="relative w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-xl">
+          <div className="mb-6 flex flex-col items-center gap-3 text-center">
+            <img src={logoPilar} alt="Pilar Fone" className="h-14 w-auto object-contain drop-shadow" />
+            <KeyRound className="h-7 w-7 text-orange-500" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">Ativar Pilar Fone</h1>
+              <p className="mt-1 text-xs text-slate-400">Informe a chave deste aparelho para vinculá-lo à empresa.</p>
+            </div>
+          </div>
+          <form className="space-y-4" onSubmit={ativar}>
+            <div className="space-y-1.5">
+              <Label htmlFor="chave-empresa" className="text-slate-300">Chave da empresa</Label>
+              <Input
+                id="chave-empresa"
+                value={chave}
+                onChange={(e) => setChave(e.target.value.toUpperCase())}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                placeholder="XXXX-XXXX"
+                className="border-white/10 bg-white/10 text-center font-mono text-lg tracking-widest text-white placeholder:text-slate-500 focus-visible:ring-orange-500"
+              />
+            </div>
+            {erroAtivacao && <p className="text-sm text-red-400">{erroAtivacao}</p>}
+            <Button type="submit" className="w-full bg-orange-500 font-semibold text-white hover:bg-orange-600" disabled={ativando}>
+              {ativando ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ativar aparelho"}
+            </Button>
+          </form>
+        </div>
       </div>
     );
   }
