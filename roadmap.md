@@ -156,4 +156,4 @@
 - [x] Melhorar larguras e espaçamentos dos downloads em telas médias.
 - [x] Reorganizar filtros, ações e equipamentos da Central de Atualizações.
 - [x] Ajustar formulário e cartões de chaves para tablet.
-- [ ] Validar as três telas em tablet vertical e horizontal sem cortes.
+- [x] Validar as três telas em tablet vertical e horizontal sem cortes.

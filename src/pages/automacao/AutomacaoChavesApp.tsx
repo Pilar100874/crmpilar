@@ -111,12 +111,13 @@ export default function AutomacaoChavesApp() {
             com usuário e senha e vê apenas o painel definido para ela.
           </p>
         </CardHeader>
-        <CardContent className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(220px,280px)_auto]">
+        <CardContent className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_minmax(220px,280px)_auto]">
           <Input
             placeholder="Nome do aparelho (ex.: Tablet da portaria)"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && criar()}
+            className="md:col-span-2 lg:col-span-1"
           />
           <select
             value={app}
