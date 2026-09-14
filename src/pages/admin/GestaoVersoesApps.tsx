@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { Smartphone, RefreshCw, PackageCheck, Send } from "lucide-react";
 
 const APPS = [
-  { valor: "fone", nome: "Pilar Fone" },
   { valor: "sms", nome: "Pilar SMS" },
   { valor: "hub", nome: "Pilar Controle" },
   { valor: "automacao", nome: "Pilar Automação" },
@@ -34,6 +33,7 @@ const MANIFESTOS: Record<string, string> = {
   remotas: "/apps/android-tv-signage-latest.json",
   sms: "/coletor/sms-version.json",
   hub: "/coletor/hub-version.json",
+  automacao: "/apps/pilar-automacao-latest.json",
   coletor: "/coletor/version.json",
 };
 
@@ -49,6 +49,8 @@ interface Equipamento {
   detalhe: string;
   versao: string | null;
   ultimoContato: string | null;
+  statusAtualizacao?: string | null;
+  resultadoAtualizacao?: string | null;
 }
 
 interface ComandoAtualizacao {
@@ -56,6 +58,7 @@ interface ComandoAtualizacao {
   equipamentoId: string;
   status: string;
   criadoEm: string;
+  mensagem?: string | null;
 }
 
 const formatarData = (iso?: string | null) => {
@@ -117,7 +120,7 @@ export default function GestaoVersoesApps() {
         .select("id,nome,tipo_dispositivo,versao_app,ultimo_heartbeat,ultimo_ping"),
       supabase
         .from("coletor_dispositivos")
-        .select("id,hostname,plataforma,versao,ultimo_contato,unidade_nome"),
+        .select("id,hostname,plataforma,versao,ultimo_contato,unidade_nome,comando_status,comando_resultado"),
     ]);
 
     const lista: Equipamento[] = [];
@@ -136,7 +139,7 @@ export default function GestaoVersoesApps() {
     (sms.data || []).forEach((d: any) =>
       lista.push({
         id: `sms-${d.id}`,
-        app: d.tipo_dispositivo === "hub" ? "hub" : "sms",
+        app: d.tipo_dispositivo === "hub" ? "hub" : d.tipo_dispositivo === "automacao" ? "automacao" : "sms",
         nome: d.nome || "Aparelho sem nome",
         detalhe: d.tipo_dispositivo || "celular",
         versao: d.versao_app,
@@ -152,6 +155,8 @@ export default function GestaoVersoesApps() {
         detalhe: [d.plataforma, d.unidade_nome].filter(Boolean).join(" · ") || "—",
         versao: d.versao,
         ultimoContato: d.ultimo_contato,
+        statusAtualizacao: d.comando_status,
+        resultadoAtualizacao: d.comando_resultado,
       }),
     );
 
@@ -161,12 +166,12 @@ export default function GestaoVersoesApps() {
 
   const carregarComandos = useCallback(async () => {
     const [celulares, telas] = await Promise.all([
-      supabase.from("app_update_commands" as any).select("id,device_id,status,created_at").order("created_at", { ascending: false }).limit(300),
-      supabase.from("tv_commands").select("id,device_id,status,created_at").eq("tipo", "atualizar_versao").order("created_at", { ascending: false }).limit(300),
+      supabase.from("app_update_commands" as any).select("id,device_id,status,resultado,created_at").order("created_at", { ascending: false }).limit(300),
+      supabase.from("tv_commands").select("id,device_id,status,resultado,created_at").eq("tipo", "atualizar_versao").order("created_at", { ascending: false }).limit(300),
     ]);
     setComandos([
-      ...((celulares.data || []) as any[]).map((c) => ({ id: c.id, equipamentoId: `sms-${c.device_id}`, status: c.status, criadoEm: c.created_at })),
-      ...((telas.data || []) as any[]).map((c) => ({ id: c.id, equipamentoId: `tv-${c.device_id}`, status: c.status, criadoEm: c.created_at })),
+      ...((celulares.data || []) as any[]).map((c) => ({ id: c.id, equipamentoId: `sms-${c.device_id}`, status: c.status, criadoEm: c.created_at, mensagem: c.resultado?.mensagem || null })),
+      ...((telas.data || []) as any[]).map((c) => ({ id: c.id, equipamentoId: `tv-${c.device_id}`, status: c.status, criadoEm: c.created_at, mensagem: c.resultado?.mensagem || null })),
     ]);
   }, []);
 
@@ -197,7 +202,7 @@ export default function GestaoVersoesApps() {
   ).length;
 
   const atualizaveis = equipamentosFiltrados.filter((e) =>
-    ["remotas", "sms", "hub", "coletor"].includes(e.app) && Boolean(ultimaVersao[e.app]),
+    ["remotas", "sms", "hub", "automacao", "coletor"].includes(e.app) && Boolean(ultimaVersao[e.app]),
   );
   const ultimoComando = (id: string) => comandos
     .filter((c) => c.equipamentoId === id)
@@ -323,7 +328,9 @@ export default function GestaoVersoesApps() {
             {atualizaveis.map((e) => {
               const disponivel = ultimaVersao[e.app];
               const atrasado = menorQue(e.versao, disponivel);
-              const comando = ultimoComando(e.id);
+               const comando = ultimoComando(e.id);
+               const statusComando = comando?.status || e.statusAtualizacao;
+               const mensagemComando = comando?.mensagem || e.resultadoAtualizacao;
               return (
                 <article key={e.id} className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center">
                   <Checkbox checked={selecionados.includes(e.id)} onCheckedChange={() => alternarSelecao(e.id)} aria-label={`Selecionar ${e.nome}`} />
@@ -339,16 +346,17 @@ export default function GestaoVersoesApps() {
                     <div><p className="text-xs text-muted-foreground">Disponível</p><p>{disponivel || "—"}</p></div>
                     <div className="col-span-2 sm:col-span-1"><p className="text-xs text-muted-foreground">Último contato</p><p>{formatarData(e.ultimoContato)}</p></div>
                     <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
-                    {comando && <Badge variant="outline">{comando.status}</Badge>}
+                     {statusComando && <Badge variant="outline">{statusComando}</Badge>}
                   </div>
                   <Button size="sm" variant="outline" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
                     <Send className="mr-2 h-4 w-4" /> Enviar
                   </Button>
+                   {mensagemComando && <p className="text-xs text-muted-foreground sm:max-w-48">{mensagemComando}</p>}
                 </article>
               );
             })}
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">Em celulares Android, o sistema pode solicitar a confirmação da instalação no próprio aparelho.</p>
+          <p className="mt-4 text-xs text-muted-foreground">Em celulares Android, o sistema pode solicitar a confirmação da instalação no próprio aparelho. O Pilar Fone continua com atualização manual no próprio aplicativo.</p>
         </CardContent>
       </Card>
     </div>
