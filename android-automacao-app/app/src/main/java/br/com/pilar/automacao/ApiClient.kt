@@ -1,6 +1,7 @@
 package br.com.pilar.automacao
 
 import org.json.JSONObject
+import org.json.JSONArray
 import java.io.BufferedReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -20,6 +21,8 @@ object ApiClient {
         val ambienteTablet: String,
         val estabelecimentoId: String,
     )
+
+    data class Painel(val ambiente: JSONObject, val blocos: JSONArray)
 
     fun validarChave(chave: String): Ativacao {
         val url = URL("${BuildConfig.SUPABASE_URL}/functions/v1/automacao-app-chave")
@@ -80,11 +83,59 @@ object ApiClient {
         )
     }
 
+    /** Carrega somente o ambiente atribuído ao usuário autenticado e seus blocos visíveis. */
+    fun carregarPainel(accessToken: String, ambienteId: String): Painel {
+        val ambiente = requisicaoArray(
+            "${BuildConfig.SUPABASE_URL}/rest/v1/automacao_ambientes?id=eq.${codificar(ambienteId)}&ativo=eq.true&select=*",
+            accessToken,
+        ).optJSONObject(0) ?: throw IllegalStateException("Painel não encontrado ou sem acesso")
+        val blocos = requisicaoArray(
+            "${BuildConfig.SUPABASE_URL}/rest/v1/automacao_blocos?ambiente_id=eq.${codificar(ambienteId)}&visivel=eq.true&select=*&order=y.asc,x.asc",
+            accessToken,
+        )
+        return Painel(ambiente, blocos)
+    }
+
+    fun comando(accessToken: String, deviceId: String, canal: Int, acao: String): JSONObject {
+        val acaoReal = if (acao == "alternar") {
+            val atual = comando(accessToken, deviceId, canal, "status")
+            if (atual.optBoolean("ligado", false)) "desligar" else "ligar"
+        } else acao
+        return requisicaoJson(
+            url = "${BuildConfig.SUPABASE_URL}/functions/v1/automacao-comando",
+            metodo = "POST",
+            autorizacao = accessToken,
+            corpo = JSONObject().put("device_id", deviceId).put("canal", canal).put("acao", acaoReal),
+        )
+    }
+
+    fun funcionarioAtual(accessToken: String, userId: String): JSONObject? = requisicaoArray(
+        "${BuildConfig.SUPABASE_URL}/rest/v1/ponto_funcionarios?auth_user_id=eq.${codificar(userId)}&status=eq.ativo&select=id,nome&limit=1",
+        accessToken,
+    ).optJSONObject(0)
+
+    fun registrarPonto(accessToken: String, funcionarioId: String, tipo: String): JSONObject =
+        requisicaoJson(
+            url = "${BuildConfig.SUPABASE_URL}/rest/v1/ponto_registros",
+            metodo = "POST",
+            autorizacao = accessToken,
+            corpo = JSONObject()
+                .put("funcionario_id", funcionarioId)
+                .put("data_hora", java.time.Instant.now().toString())
+                .put("tipo", tipo)
+                .put("origem", "pilar_controle_android"),
+            preferRepresentation = true,
+        )
+
+    private fun codificar(valor: String): String =
+        URLEncoder.encode(valor, StandardCharsets.UTF_8.name())
+
     private fun requisicaoJson(
         url: String,
         metodo: String,
         autorizacao: String,
         corpo: JSONObject,
+        preferRepresentation: Boolean = false,
     ): JSONObject {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = metodo
@@ -94,6 +145,7 @@ object ApiClient {
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
             setRequestProperty("Authorization", "Bearer $autorizacao")
+            if (preferRepresentation) setRequestProperty("Prefer", "return=representation")
         }
         conn.outputStream.use { it.write(corpo.toString().toByteArray()) }
         val codigo = conn.responseCode
@@ -107,7 +159,9 @@ object ApiClient {
                 ?: "E-mail ou senha inválidos"
             throw IllegalStateException(mensagem)
         }
-        return json
+        if (json != null) return json
+        val array = runCatching { org.json.JSONArray(texto) }.getOrNull()
+        return array?.optJSONObject(0) ?: JSONObject().put("ok", true)
     }
 
     private fun requisicaoArray(url: String, autorizacao: String): org.json.JSONArray {
