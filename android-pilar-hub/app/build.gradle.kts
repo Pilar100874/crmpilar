@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.pilar.hub"
         minSdk = 24
         targetSdk = 34
-        versionCode = 13
-        versionName = "2.3.0"
+        versionCode = 14
+        versionName = "2.3.1"
 
         buildConfigField("String", "APP_BASE_URL", "\"https://crmpilar.lovable.app\"")
         buildConfigField("String", "SUPABASE_URL", "\"https://ioxugupvxlcdweldocmq.supabase.co\"")
