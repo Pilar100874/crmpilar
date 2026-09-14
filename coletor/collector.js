@@ -213,6 +213,7 @@ function limparAtivacao() {
 
 async function listarFiliais() {
   const cfg = loadConfig();
+  if (!cfg.chaveEmpresa) throw new Error('Ative o coletor com a chave da empresa.');
   const resp = await fetch(`${cfg.url}/functions/v1/ponto-coletor-filiais`, {
     method: 'POST',
     headers: {
@@ -220,7 +221,7 @@ async function listarFiliais() {
       apikey: cfg.anonKey,
       Authorization: `Bearer ${cfg.anonKey}`,
     },
-    body: '{}',
+    body: JSON.stringify({ chave: cfg.chaveEmpresa }),
   });
   if (!resp.ok) throw new Error(`filiais HTTP ${resp.status}`);
   const json = await resp.json();
@@ -229,6 +230,7 @@ async function listarFiliais() {
 
 async function callBootstrap(statusUpdates = []) {
   const cfg = loadConfig();
+  if (!cfg.chaveEmpresa) throw new Error('Ative o coletor com a chave da empresa.');
   const resp = await fetch(`${cfg.url}/functions/v1/ponto-coletor-bootstrap`, {
     method: 'POST',
     headers: {
@@ -236,7 +238,11 @@ async function callBootstrap(statusUpdates = []) {
       'apikey': cfg.anonKey,
       'Authorization': `Bearer ${cfg.anonKey}`,
     },
-    body: JSON.stringify({ status_updates: statusUpdates, filial_id: cfg.filialId || null }),
+    body: JSON.stringify({
+      chave: cfg.chaveEmpresa,
+      status_updates: statusUpdates,
+      filial_id: cfg.filialId || null,
+    }),
   });
   if (!resp.ok) throw new Error(`bootstrap HTTP ${resp.status}`);
   return await resp.json();
