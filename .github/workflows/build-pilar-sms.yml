@@ -35,9 +35,9 @@ jobs:
         run: |
           test -n "$ANDROID_HOME"
           test -d "$ANDROID_HOME/platforms/android-34"
-          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)
           test -x "$APKSIGNER"
-          echo "$(dirname "$APKSIGNER")" >> "$GITHUB_PATH"
+          dirname "$APKSIGNER" >> "$GITHUB_PATH"
 
       - name: Usar SDK do GitHub Actions
         run: rm -f local.properties
@@ -51,9 +51,11 @@ jobs:
           VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -n1)
           CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -n1)
           SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
-          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=${VERSION}"
+            echo "code=${CODE}"
+            echo "short_sha=${SHORT_SHA}"
+          } >> "$GITHUB_OUTPUT"
           echo "Versão detectada: ${VERSION} (code ${CODE}) sha ${SHORT_SHA}"
 
       - name: Build APK release compatível assinado
@@ -75,7 +77,7 @@ jobs:
           APK="dist/pilar-sms-v${{ steps.version.outputs.version }}.apk"
           test -s "$APK"
           unzip -t "$APK" >/dev/null
-          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)
           "$APKSIGNER" verify --min-sdk-version 21 --verbose --print-certs "$APK"
 
       - name: Upload artifacts
