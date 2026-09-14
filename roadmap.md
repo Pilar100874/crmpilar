@@ -98,3 +98,13 @@
 - [x] Filtrar filiais, equipamentos e atualizações de estado pelo estabelecimento vinculado
 - [x] Publicar as funções protegidas e validar bloqueios para chave ausente ou inválida
 - [ ] Homologar com duas chaves reais de estabelecimentos distintos
+
+## Confiabilidade da Central de Atualizações — 2026-09-14
+- [ ] Corrigir conflito do commit automático do manifesto Pilar Automação
+- [ ] Exibir somente aplicativos e equipamentos com atualização remota real
+- [ ] Integrar Pilar Automação à fila remota com confirmação e versão instalada
+- [ ] Fortalecer confirmação periódica do Pilar Controle
+- [ ] Preservar e validar configurações existentes após cada atualização
+- [ ] Autenticar comandos e confirmações do Coletor por estabelecimento
+- [ ] Implementar expiração e mensagens de erro dos comandos
+- [ ] Homologar atualização assinada em equipamentos reais de dois estabelecimentos
