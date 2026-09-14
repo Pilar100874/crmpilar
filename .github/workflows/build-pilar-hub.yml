@@ -1,4 +1,4 @@
-name: Build Pilar Hub APK
+name: Build Pilar Controle APK
 
 on:
   workflow_dispatch:
@@ -56,7 +56,7 @@ jobs:
         run: |
           mkdir -p dist
           APK_SRC=app/build/outputs/apk/release/app-release.apk
-          APK_DST=dist/pilar-hub-v${{ steps.version.outputs.version }}.apk
+          APK_DST=dist/pilar-controle-v${{ steps.version.outputs.version }}.apk
           test -f "$APK_SRC"
           cp "$APK_SRC" "$APK_DST"
           echo "apk=$APK_DST" >> "$GITHUB_OUTPUT"
@@ -64,7 +64,7 @@ jobs:
 
       - name: Verificar APK instalável
         run: |
-          APK="dist/pilar-hub-v${{ steps.version.outputs.version }}.apk"
+          APK="dist/pilar-controle-v${{ steps.version.outputs.version }}.apk"
           test -s "$APK"
           unzip -t "$APK" >/dev/null
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
@@ -73,16 +73,16 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pilar-hub-v${{ steps.version.outputs.version }}
+          name: pilar-controle-v${{ steps.version.outputs.version }}
           path: android-pilar-hub/dist/*.apk
 
       - name: Criar / atualizar GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: hub-v${{ steps.version.outputs.version }}
-          name: Pilar Hub v${{ steps.version.outputs.version }}
+          name: Pilar Controle v${{ steps.version.outputs.version }}
           body: |
-            APK do Pilar Hub — gateway SMS do CRM Pilar.
+            APK nativo do Pilar Controle — Automação e Relógio de Ponto, sem SMS ou câmeras.
 
             - versionName: `${{ steps.version.outputs.version }}`
             - versionCode: `${{ steps.version.outputs.code }}`
@@ -90,7 +90,7 @@ jobs:
 
             APK release compatível assinado com V1+V2+V3, pronto para instalação direta no aparelho.
           files: |
-            android-pilar-hub/dist/pilar-hub-v${{ steps.version.outputs.version }}.apk
+            android-pilar-hub/dist/pilar-controle-v${{ steps.version.outputs.version }}.apk
           fail_on_unmatched_files: true
           make_latest: true
         env:
@@ -101,7 +101,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           REPO="${{ github.repository }}"
-          FILENAME="pilar-hub-v${VERSION}.apk"
+          FILENAME="pilar-controle-v${VERSION}.apk"
           URL="https://github.com/${REPO}/releases/download/hub-v${VERSION}/${FILENAME}"
           node -e "
             const fs = require('fs');
@@ -111,7 +111,7 @@ jobs:
             j.disponivel = true;
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
-            j.notas = 'v${VERSION}: ícone padronizado na identidade visual Pilar e publicação na central de apps.';
+            j.notas = 'v${VERSION}: Pilar Controle nativo com Automação e Relógio de Ponto, sem SMS ou câmeras.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/hub-version.json

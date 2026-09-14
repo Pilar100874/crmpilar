@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Info } from "lucide-react";
 import { toast } from "sonner";
 
-const HUB_FALLBACK_URL =
-  "https://github.com/Pilar100874/crmpilar/releases/download/hub-v1.3.0/pilar-hub-v1.3.0.apk";
-const HUB_FALLBACK_FILENAME = "pilar-hub-v1.3.0.apk";
-const HUB_FALLBACK_VERSION = "1.3.0";
+const HUB_FALLBACK_URL = "";
+const HUB_FALLBACK_FILENAME = "pilar-controle-v2.0.0.apk";
+const HUB_FALLBACK_VERSION = "2.0.0";
 
 const baixar = (file: string, url: string) => {
   try {
@@ -45,7 +44,7 @@ export default function PilarHubDownloadCard() {
     hubInfo?.filename || hubInfo?.downloadUrl?.split("/").pop() || HUB_FALLBACK_FILENAME;
   const hubUrl = hubInfo?.downloadUrl || HUB_FALLBACK_URL;
   const hubNotas = hubInfo?.notas;
-  const indisponivel = hubInfo?.disponivel === false;
+  const indisponivel = hubInfo?.disponivel !== true || !hubUrl;
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
@@ -59,18 +58,17 @@ export default function PilarHubDownloadCard() {
           </span>
         </div>
 
-        <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Hub</h2>
+        <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Controle</h2>
         <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-          Aplicativo Android que transforma um celular em <b>gateway de SMS</b> do CRM.
-          Também registra batidas de ponto e tira fotos de evento quando os módulos são ligados
-          remotamente pelo CRM.
+          Aplicativo Android nativo com <b>Automação</b> e <b>Relógio de Ponto</b>.
+          Não inclui SMS nem recursos de câmera.
         </div>
 
         <div className="mb-6 flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground sm:mb-8">
           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <span>
-            <b className="text-foreground">Versão {hubVersion}</b> · gateway SMS nativo ·
-            foreground service · pareamento por token.
+            <b className="text-foreground">Versão {hubVersion}</b> · chave multiempresa ·
+            login nativo · painel definido para o usuário.
             {hubNotas && (
               <>
                 <br />
@@ -108,8 +106,7 @@ export default function PilarHubDownloadCard() {
           <li className="flex gap-3 sm:gap-4">
             <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              No Android, remova qualquer versão anterior do <b>Pilar Hub</b> e permita a instalação
-              quando o navegador perguntar.
+              No Android, mantenha a versão anterior instalada para atualizar sem perder a configuração.
             </p>
           </li>
           <li className="flex gap-3 sm:gap-4">
@@ -121,15 +118,13 @@ export default function PilarHubDownloadCard() {
           <li className="flex gap-3 sm:gap-4">
             <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Abra o app <b>Pilar Hub</b>, cole o <b>token do dispositivo</b> (gerado em{" "}
-              <b>Config → Dispositivos Pilar Hub</b>) e conceda a permissão de <b>SMS</b>.
+              Abra o <b>Pilar Controle</b>, informe a chave criada em Apps e entre com usuário e senha.
             </p>
           </li>
           <li className="flex gap-3 sm:gap-4">
             <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Pronto. O serviço fica ativo em segundo plano e os módulos são ligados/desligados
-              pelo CRM.
+              Use Automação para controlar o painel definido e Relógio de Ponto para registrar marcações.
             </p>
           </li>
         </ol>

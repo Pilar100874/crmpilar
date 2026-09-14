@@ -2,10 +2,11 @@ package br.com.pilar.hub
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,20 @@ class MainActivity : AppCompatActivity() {
             Prefs.limparSessao(this)
             startActivity(Intent(this, LoginActivity::class.java)); finish()
         }
+        val lista = findViewById<LinearLayout>(R.id.listaBlocos)
+        val ponto = findViewById<LinearLayout>(R.id.painelPonto)
+        findViewById<Button>(R.id.btnAutomacao).setOnClickListener {
+            lista.visibility = View.VISIBLE
+            ponto.visibility = View.GONE
+            findViewById<TextView>(R.id.txtTitulo).text = "Automação"
+        }
+        findViewById<Button>(R.id.btnPonto).setOnClickListener {
+            lista.visibility = View.GONE
+            ponto.visibility = View.VISIBLE
+            findViewById<TextView>(R.id.txtTitulo).text = "Relógio de ponto"
+            carregarFuncionario()
+        }
+        configurarPonto()
         carregar()
     }
 
@@ -74,6 +89,56 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }.onFailure { status.text = it.message ?: "Não foi possível carregar o ambiente" }
+            }
+        }
+    }
+
+    private var funcionarioId: String? = null
+
+    private fun carregarFuncionario() {
+        val texto = findViewById<TextView>(R.id.txtFuncionario)
+        texto.text = "Carregando funcionário…"
+        CoroutineScope(Dispatchers.IO).launch {
+            val resultado = runCatching { ApiClient.funcionarioAtual(Prefs.accessToken(this@MainActivity), Prefs.userId(this@MainActivity)) }
+            withContext(Dispatchers.Main) {
+                resultado.onSuccess { funcionario ->
+                    funcionarioId = funcionario?.optString("id")?.takeIf { it.isNotBlank() }
+                    texto.text = funcionario?.optString("nome")?.takeIf { it.isNotBlank() }
+                        ?: "Seu usuário não está vinculado a um funcionário ativo"
+                    habilitarPonto(funcionarioId != null)
+                }.onFailure {
+                    texto.text = it.message ?: "Não foi possível carregar o funcionário"
+                    habilitarPonto(false)
+                }
+            }
+        }
+    }
+
+    private fun configurarPonto() {
+        mapOf(
+            R.id.btnEntrada to "entrada",
+            R.id.btnInicioIntervalo to "inicio_intervalo",
+            R.id.btnFimIntervalo to "fim_intervalo",
+            R.id.btnSaida to "saida",
+        ).forEach { (id, tipo) -> findViewById<Button>(id).setOnClickListener { registrarPonto(tipo) } }
+    }
+
+    private fun habilitarPonto(habilitado: Boolean) {
+        listOf(R.id.btnEntrada, R.id.btnInicioIntervalo, R.id.btnFimIntervalo, R.id.btnSaida)
+            .forEach { findViewById<Button>(it).isEnabled = habilitado }
+    }
+
+    private fun registrarPonto(tipo: String) {
+        val id = funcionarioId ?: return
+        val status = findViewById<TextView>(R.id.txtStatusPonto)
+        habilitarPonto(false)
+        status.text = "Registrando marcação…"
+        CoroutineScope(Dispatchers.IO).launch {
+            val resultado = runCatching { ApiClient.registrarPonto(Prefs.accessToken(this@MainActivity), id, tipo) }
+            withContext(Dispatchers.Main) {
+                resultado.onSuccess { status.text = "Marcação registrada com sucesso" }
+                    .onFailure { status.text = it.message ?: "Não foi possível registrar a marcação" }
+                habilitarPonto(true)
             }
         }
     }
