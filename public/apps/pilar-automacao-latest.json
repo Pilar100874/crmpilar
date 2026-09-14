@@ -3,10 +3,10 @@
   "tag": "pilar-automacao-latest",
   "asset": "pilar-automacao.apk",
   "url": "https://github.com/Pilar100874/crmpilar/releases/download/pilar-automacao-latest/pilar-automacao.apk",
-  "sha256": "039a5efa21a706f1c8eda1a91dc13a603dfa9949e883d71011f6e7fd6fbe4621",
-  "size": 4742873,
-  "versionCode": 18,
+  "sha256": "069f9b8f95ff07e100ad21d32862b8f47ef21175af019427d5624bb89871c603",
+  "size": 4735087,
+  "versionCode": 19,
   "versionName": "1.6.0",
-  "updated_at": "2026-09-14T15:07:16Z",
-  "commit": "46160e342c3bf9ba824e08abb9554acb3c665c75"
+  "updated_at": "2026-09-14T15:13:14Z",
+  "commit": "9a5f2a9dc05eee181f0e2aa22917d3cafc2649d6"
 }
