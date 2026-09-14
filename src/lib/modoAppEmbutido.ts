@@ -11,7 +11,8 @@ export function marcarModoApp(): void {
     const parametro = url.searchParams.get("app");
     const agente = navigator.userAgent || "";
     const porAgente = /PilarAutomacao|PilarControle|PilarApp/i.test(agente);
-    if (parametro === "1" || parametro === "automacao" || porAgente) {
+    const porRota = /^\/automacao\/(app|tela)/.test(url.pathname);
+    if (parametro === "1" || parametro === "automacao" || porAgente || porRota) {
       sessionStorage.setItem(CHAVE, "1");
     }
   } catch {
