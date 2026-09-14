@@ -82,10 +82,11 @@
 - [ ] Compilar os APKs assinados no fluxo automático (GitHub Actions) — este ambiente não tem o SDK Android
 
 ## Correções visuais e Pilar Controle — 2026-09-14
-- [ ] Reenquadrar e validar visualmente o ícone do Pilar SMS no padrão Pilar Fone
-- [ ] Padronizar login nativo e ícone do Pilar Automação; substituir WebView por painel nativo do ambiente definido
-- [ ] Renomear APK Pilar Hub para Pilar Controle, mantendo apenas Automação e Relógio de Ponto
-- [ ] Remover câmera e SMS somente do APK Pilar Controle; preservar Windows e ISO completos
-- [ ] Atualizar download, manifesto e atualização remota para Pilar Controle
-- [ ] Validar ícones renderizados antes da geração dos APKs
-- [ ] Validar código web e registrar pendência de compilação assinada no fluxo automático
+- [x] Reenquadrar e validar visualmente o ícone do Pilar SMS no padrão Pilar Fone
+- [x] Padronizar login nativo e ícone do Pilar Automação; substituir WebView por painel nativo do ambiente definido
+- [x] Renomear APK Pilar Hub para Pilar Controle, mantendo apenas Automação e Relógio de Ponto
+- [x] Remover câmera e SMS somente do APK Pilar Controle; preservar Windows e ISO completos
+- [x] Atualizar download, manifesto e atualização remota para Pilar Controle
+- [x] Validar ícones renderizados antes da geração dos APKs
+- [x] Validar código web e registrar pendência de compilação assinada no fluxo automático
+- [ ] Confirmar a compilação assinada dos três APKs no GitHub Actions (Java/Android SDK indisponíveis localmente)

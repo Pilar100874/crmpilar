@@ -15,11 +15,13 @@ type Chave = {
   app: string;
   bloqueado: boolean;
   ultima_comunicacao: string | null;
+  dispositivo_id?: string | null;
 };
 
 /** Programas que pedem a chave da empresa no primeiro acesso. */
 const APPS = [
   { valor: "automacao", rotulo: "Pilar Automação (celular/tablet)" },
+  { valor: "controle", rotulo: "Pilar Controle (Automação e Ponto)" },
   { valor: "coletor", rotulo: "Coletor (Windows / ISO)" },
   { valor: "coletor-tv", rotulo: "Coletor TV (Android TV)" },
 ] as const;
@@ -47,7 +49,7 @@ export default function AutomacaoChavesApp() {
     setCarregando(true);
     const { data, error } = await supabase
       .from("automacao_app_chaves")
-      .select("id, nome, chave, app, bloqueado, ultima_comunicacao")
+      .select("id, nome, chave, app, bloqueado, ultima_comunicacao, dispositivo_id")
       .order("created_at", { ascending: false });
     if (error) toast.error("Não foi possível carregar as chaves");
     setChaves((data as Chave[]) ?? []);

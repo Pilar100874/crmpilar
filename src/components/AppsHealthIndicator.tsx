@@ -254,7 +254,7 @@ export function AppsHealthIndicator({
           </span>
         </TooltipTrigger>
         <TooltipContent side={tooltipSide} className="text-xs">
-          <div className="font-semibold">Pilar Hub (Android)</div>
+          <div className="font-semibold">Pilar Controle (Android)</div>
           <div className="text-muted-foreground">{label(andState, and.at)}</div>
         </TooltipContent>
       </Tooltip>

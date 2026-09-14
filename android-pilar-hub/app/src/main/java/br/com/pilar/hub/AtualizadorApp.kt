@@ -20,7 +20,6 @@ import java.net.URL
  */
 object AtualizadorApp {
 
-    private const val BASE = "https://crmpilar.lovable.app"
     private const val MANIFESTO = "/coletor/hub-version.json"
 
     data class Info(val versao: String, val url: String, val notas: String)
@@ -51,13 +50,14 @@ object AtualizadorApp {
         c.inputStream.bufferedReader().use { it.readText() }
     } catch (_: Exception) { null }
 
-    fun consultar(): Info? {
-        val txt = baixarTexto("$BASE$MANIFESTO?_=${System.currentTimeMillis()}") ?: return null
+    fun consultar(ctx: Context): Info? {
+        val txt = baixarTexto("${Prefs.baseUrl(ctx)}$MANIFESTO?_=${System.currentTimeMillis()}") ?: return null
         return try {
             val j = JSONObject(txt)
             val versao = j.optString("version").ifBlank { j.optString("versionName") }
             val url = j.optString("downloadUrl").ifBlank { j.optString("url") }
-            if (versao.isBlank() || url.isBlank()) null
+            if (j.has("disponivel") && !j.optBoolean("disponivel")) null
+            else if (versao.isBlank() || url.isBlank()) null
             else Info(versao, url, j.optString("notas"))
         } catch (_: Exception) { null }
     }
@@ -103,24 +103,13 @@ object AtualizadorApp {
         return false
     }
 
-    /** Inicia uma atualização recebida remotamente pelo serviço em segundo plano. */
-    fun atualizarRemoto(ctx: Context, url: String): String {
-        val arquivo = baixarApk(ctx, url) ?: return "Falha ao baixar a atualização"
-        return try {
-            instalar(ctx, arquivo)
-            "Instalador aberto no aparelho"
-        } catch (e: Exception) {
-            e.message ?: "Falha ao abrir o instalador"
-        }
-    }
-
     /**
      * Fluxo completo do botão. [aviso] recebe mensagens já na thread principal.
      */
     fun atualizar(act: Activity, aviso: (String) -> Unit) {
         aviso("Procurando atualização…")
         Thread {
-            val info = consultar()
+            val info = consultar(act)
             if (info == null) {
                 ui.post { aviso("Não foi possível consultar a atualização agora.") }
                 return@Thread
@@ -143,6 +132,36 @@ object AtualizadorApp {
                 }
                 aviso("Abrindo o instalador…")
                 instalar(act, arquivo)
+            }
+        }.start()
+    }
+
+    /** Consulta silenciosamente a fila da Central de Atualizações ao abrir o aplicativo. */
+    fun processarComandoRemoto(act: Activity) {
+        val chave = Prefs.chave(act)
+        if (chave.isBlank()) return
+        Thread {
+            val atual = versaoInstalada(act)
+            val conn = try {
+                (URL("${BuildConfig.SUPABASE_URL}/functions/v1/app-update-device").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 15000
+                    readTimeout = 30000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    setRequestProperty("X-Device-Token", chave)
+                    outputStream.use { it.write(JSONObject().put("acao", "poll").put("app", "controle").put("versao_app", atual).toString().toByteArray()) }
+                }
+            } catch (_: Exception) { return@Thread }
+            val texto = runCatching { conn.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
+            conn.disconnect()
+            val comando = runCatching { JSONObject(texto.orEmpty()).optJSONObject("command") }.getOrNull() ?: return@Thread
+            val url = comando.optString("url")
+            if (url.isBlank()) return@Thread
+            val arquivo = baixarApk(act, url) ?: return@Thread
+            ui.post {
+                if (permitirInstalacao(act)) instalar(act, arquivo)
             }
         }.start()
     }

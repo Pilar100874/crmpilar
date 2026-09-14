@@ -1,7 +1,7 @@
 {
-  "version": "1.6.0",
-  "disponivel": true,
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/hub-v1.6.0/pilar-hub-v1.6.0.apk",
-  "filename": "pilar-hub-v1.6.0.apk",
-  "notas": "v1.6.0: ícone padronizado na identidade visual Pilar e publicação na central de apps."
+  "version": "2.0.0",
+  "disponivel": false,
+  "downloadUrl": "",
+  "filename": "pilar-controle-v2.0.0.apk",
+  "notas": "v2.0.0: novo Pilar Controle nativo com Automação e Relógio de Ponto, sem SMS ou câmeras."
 }

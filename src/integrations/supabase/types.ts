@@ -3536,6 +3536,7 @@ export type Database = {
           bloqueado: boolean
           chave: string
           created_at: string
+          dispositivo_id: string | null
           estabelecimento_id: string
           id: string
           nome: string
@@ -3547,6 +3548,7 @@ export type Database = {
           bloqueado?: boolean
           chave: string
           created_at?: string
+          dispositivo_id?: string | null
           estabelecimento_id: string
           id?: string
           nome: string
@@ -3558,6 +3560,7 @@ export type Database = {
           bloqueado?: boolean
           chave?: string
           created_at?: string
+          dispositivo_id?: string | null
           estabelecimento_id?: string
           id?: string
           nome?: string
@@ -3565,6 +3568,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "automacao_app_chaves_dispositivo_id_fkey"
+            columns: ["dispositivo_id"]
+            isOneToOne: false
+            referencedRelation: "sms_devices"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "automacao_app_chaves_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]

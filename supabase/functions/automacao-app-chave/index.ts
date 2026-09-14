@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 /** Aplicativos que usam chave de empresa. */
-const APPS_VALIDOS = ["automacao", "coletor", "coletor-tv"];
+const APPS_VALIDOS = ["automacao", "controle", "coletor", "coletor-tv"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     const { data: registro, error } = await sb
       .from("automacao_app_chaves")
-      .select("id, nome, bloqueado, estabelecimento_id, app")
+      .select("id, nome, bloqueado, estabelecimento_id, app, dispositivo_id")
       .eq("chave", String(chave).trim().toUpperCase())
       .maybeSingle();
 
@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
       app: registro.app ?? "automacao",
       estabelecimento_id: registro.estabelecimento_id,
       empresa: estabelecimento?.nome ?? "",
+      dispositivo_id: registro.dispositivo_id ?? "",
     });
   } catch (e) {
     return json({ error: String(e) }, 500);

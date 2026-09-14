@@ -43,7 +43,7 @@ export default function PilarSnapshotsGallery({ estabelecimentoId }: { estabelec
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Snapshots do Pilar Hub</DialogTitle>
+          <DialogTitle>Snapshots legados do Pilar Hub</DialogTitle>
         </DialogHeader>
 
         <div className="flex gap-2 mb-3">

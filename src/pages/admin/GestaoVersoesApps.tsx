@@ -19,7 +19,7 @@ import { Smartphone, RefreshCw, PackageCheck, Send } from "lucide-react";
 const APPS = [
   { valor: "fone", nome: "Pilar Fone" },
   { valor: "sms", nome: "Pilar SMS" },
-  { valor: "hub", nome: "Pilar Hub" },
+  { valor: "hub", nome: "Pilar Controle" },
   { valor: "automacao", nome: "Pilar Automação" },
   { valor: "remotas", nome: "Pilar Remotas" },
   { valor: "coletor", nome: "Coletor Pilar" },
