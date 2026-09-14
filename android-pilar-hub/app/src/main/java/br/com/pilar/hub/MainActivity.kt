@@ -2,6 +2,8 @@ package br.com.pilar.hub
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -14,6 +16,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
+    private val atualizacaoHandler = Handler(Looper.getMainLooper())
+    private val verificarAtualizacao = object : Runnable {
+        override fun run() {
+            AtualizadorApp.processarComandoRemoto(this@MainActivity)
+            atualizacaoHandler.postDelayed(this, 60_000L)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +74,12 @@ class MainActivity : AppCompatActivity() {
         }
         configurarPonto()
         carregar()
-        AtualizadorApp.processarComandoRemoto(this)
+        atualizacaoHandler.post(verificarAtualizacao)
+    }
+
+    override fun onDestroy() {
+        atualizacaoHandler.removeCallbacks(verificarAtualizacao)
+        super.onDestroy()
     }
 
     private fun carregar() {

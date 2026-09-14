@@ -26,6 +26,7 @@ object AtualizadorApp {
     data class Info(val versao: String, val url: String, val notas: String)
 
     private val ui = Handler(Looper.getMainLooper())
+    @Volatile private var consultaEmAndamento = false
 
     fun versaoInstalada(ctx: Context): String = try {
         ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty()
@@ -132,6 +133,52 @@ object AtualizadorApp {
                 }
                 aviso("Abrindo o instalador…")
                 instalar(act, arquivo)
+            }
+        }.start()
+    }
+
+    private fun postFila(ctx: Context, body: JSONObject): JSONObject? = try {
+        val conn = URL("${BuildConfig.SUPABASE_URL}/functions/v1/app-update-device").openConnection() as HttpURLConnection
+        conn.requestMethod = "POST"
+        conn.connectTimeout = 15000
+        conn.readTimeout = 180000
+        conn.doOutput = true
+        conn.setRequestProperty("Content-Type", "application/json")
+        conn.setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
+        conn.setRequestProperty("Authorization", "Bearer ${BuildConfig.SUPABASE_ANON_KEY}")
+        conn.setRequestProperty("X-Device-Token", Prefs.chave(ctx))
+        conn.outputStream.use { it.write(body.toString().toByteArray()) }
+        val stream = if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream
+        val resposta = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+        conn.disconnect()
+        JSONObject(resposta)
+    } catch (_: Exception) { null }
+
+    /** Consulta a Central sem limpar chave, sessão, ambiente ou preferências do aplicativo. */
+    fun processarComandoRemoto(act: Activity) {
+        if (consultaEmAndamento || Prefs.chave(act).isBlank()) return
+        consultaEmAndamento = true
+        Thread {
+            try {
+                val versao = versaoInstalada(act)
+                val resposta = postFila(act, JSONObject().put("acao", "poll").put("app", "automacao").put("versao_app", versao))
+                val comando = resposta?.optJSONObject("command") ?: return@Thread
+                val id = comando.optString("id")
+                val url = comando.optString("url")
+                if (id.isBlank() || url.isBlank()) return@Thread
+                postFila(act, JSONObject().put("acao", "ack").put("app", "automacao").put("command_id", id).put("status", "instalando"))
+                val arquivo = baixarApk(act, url)
+                if (arquivo == null) {
+                    postFila(act, JSONObject().put("acao", "ack").put("app", "automacao").put("command_id", id).put("status", "erro").put("mensagem", "Falha ao baixar a atualização"))
+                    return@Thread
+                }
+                ui.post {
+                    if (!permitirInstalacao(act)) {
+                        postFila(act, JSONObject().put("acao", "ack").put("app", "automacao").put("command_id", id).put("status", "erro").put("mensagem", "Permissão de instalação pendente"))
+                    } else instalar(act, arquivo)
+                }
+            } finally {
+                consultaEmAndamento = false
             }
         }.start()
     }

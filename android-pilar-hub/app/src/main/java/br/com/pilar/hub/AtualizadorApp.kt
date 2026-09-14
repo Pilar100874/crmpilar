@@ -25,6 +25,7 @@ object AtualizadorApp {
     data class Info(val versao: String, val url: String, val notas: String)
 
     private val ui = Handler(Looper.getMainLooper())
+    @Volatile private var consultaEmAndamento = false
 
     fun versaoInstalada(ctx: Context): String = try {
         ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty()
@@ -139,10 +140,12 @@ object AtualizadorApp {
     /** Consulta silenciosamente a fila da Central de Atualizações ao abrir o aplicativo. */
     fun processarComandoRemoto(act: Activity) {
         val chave = Prefs.chave(act)
-        if (chave.isBlank()) return
+        if (chave.isBlank() || consultaEmAndamento) return
+        consultaEmAndamento = true
         Thread {
-            val atual = versaoInstalada(act)
-            val conn = try {
+            try {
+              val atual = versaoInstalada(act)
+              val conn = try {
                 (URL("${BuildConfig.SUPABASE_URL}/functions/v1/app-update-device").openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
                     connectTimeout = 15000
@@ -153,15 +156,18 @@ object AtualizadorApp {
                     setRequestProperty("X-Device-Token", chave)
                     outputStream.use { it.write(JSONObject().put("acao", "poll").put("app", "controle").put("versao_app", atual).toString().toByteArray()) }
                 }
-            } catch (_: Exception) { return@Thread }
-            val texto = runCatching { conn.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
-            conn.disconnect()
-            val comando = runCatching { JSONObject(texto.orEmpty()).optJSONObject("command") }.getOrNull() ?: return@Thread
-            val url = comando.optString("url")
-            if (url.isBlank()) return@Thread
-            val arquivo = baixarApk(act, url) ?: return@Thread
-            ui.post {
-                if (permitirInstalacao(act)) instalar(act, arquivo)
+              } catch (_: Exception) { return@Thread }
+              val texto = runCatching { conn.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
+              conn.disconnect()
+              val comando = runCatching { JSONObject(texto.orEmpty()).optJSONObject("command") }.getOrNull() ?: return@Thread
+              val url = comando.optString("url")
+              if (url.isBlank()) return@Thread
+              val arquivo = baixarApk(act, url) ?: return@Thread
+              ui.post {
+                  if (permitirInstalacao(act)) instalar(act, arquivo)
+              }
+            } finally {
+              consultaEmAndamento = false
             }
         }.start()
     }

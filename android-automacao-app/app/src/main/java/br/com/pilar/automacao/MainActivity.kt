@@ -2,6 +2,8 @@ package br.com.pilar.automacao
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -12,6 +14,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
+    private val atualizacaoHandler = Handler(Looper.getMainLooper())
+    private val verificarAtualizacao = object : Runnable {
+        override fun run() {
+            AtualizadorApp.processarComandoRemoto(this@MainActivity)
+            atualizacaoHandler.postDelayed(this, 60_000L)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +58,12 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java)); finish()
         }
         carregar()
+        atualizacaoHandler.post(verificarAtualizacao)
+    }
+
+    override fun onDestroy() {
+        atualizacaoHandler.removeCallbacks(verificarAtualizacao)
+        super.onDestroy()
     }
 
     private fun carregar() {

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { validarChaveColetor } from '../_shared/coletorAuth.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -17,6 +18,9 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    const autenticacao = await validarChaveColetor(supabase, body?.chave);
+    if ('response' in autenticacao) return autenticacao.response;
+    const estabelecimentoId = autenticacao.estabelecimentoId;
     const acao = String(body?.acao || '');
     const deviceKey = String(body?.device_key || '').trim();
     if (!deviceKey || deviceKey.length > 100) return json({ error: 'device_key inválido' }, 400);
@@ -26,6 +30,7 @@ Deno.serve(async (req) => {
         .from('coletor_dispositivos')
         .select('id, comando, estabelecimento_id')
         .eq('device_key', deviceKey)
+        .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 
       const registro = {
@@ -36,6 +41,7 @@ Deno.serve(async (req) => {
         unidade_id: body?.unidade_id || null,
         unidade_nome: body?.unidade_nome ? String(body.unidade_nome).slice(0, 120) : null,
         ultimo_contato: new Date().toISOString(),
+        estabelecimento_id: estabelecimentoId,
       };
 
       if (atual) {
@@ -63,7 +69,8 @@ Deno.serve(async (req) => {
           comando_resultado: body?.resultado ? String(body.resultado).slice(0, 500) : null,
           ultimo_contato: new Date().toISOString(),
         })
-        .eq('device_key', deviceKey);
+        .eq('device_key', deviceKey)
+        .eq('estabelecimento_id', estabelecimentoId);
       return json({ ok: true });
     }
 
