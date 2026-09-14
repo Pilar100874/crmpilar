@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       .select("id, estabelecimento_id, ativo")
       .eq("token", token)
       .maybeSingle();
-  if (!device?.ativo || !device.estabelecimento_id) return resposta({ error: "Aparelho inválido ou inativo" }, 403);
+  if (!device?.id || !device.ativo || !device.estabelecimento_id) return resposta({ error: "Aparelho inválido ou inativo" }, 403);
 
   const limiteExpiracao = new Date(Date.now() - 30 * 60 * 1000).toISOString();
   await admin.from("app_update_commands").update({
