@@ -175,3 +175,12 @@
 - [x] Avançar SMS para 1.13.0, Automação para 1.7.0, Controle para 2.2.0 e Remotas para 1.8.3.
 - [x] Validar build web, função publicada, XMLs e 60 imagens de ícone.
 - [ ] Confirmar os quatro APKs assinados no GitHub Actions e instalar em aparelhos reais (Java/Android SDK indisponíveis localmente).
+
+## Entradas finais e ícones fornecidos — 2026-09-14
+- [x] Igualar as telas de ativação do Pilar SMS e Pilar Controle à composição do Pilar Fone.
+- [x] Unificar chave, e-mail e senha em uma única entrada nativa do Pilar Automação.
+- [x] Abrir automaticamente o painel de celular ou tablet definido no cadastro do usuário.
+- [x] Aplicar diretamente aos cinco APKs os ícones da imagem final fornecida, sem redesenhar os símbolos.
+- [x] Remover referências ao login separado do Automação e ao desenho antigo do Remotas.
+- [x] Avançar as versões de Fone, SMS, Automação, Controle e Remotas.
+- [ ] Confirmar os cinco APKs assinados no fluxo automático e instalar em aparelhos reais.

@@ -44,8 +44,8 @@ class AtivacaoActivity : AppCompatActivity() {
             status.text = "Validando acesso..."
             CoroutineScope(Dispatchers.IO).launch {
                 val resultado = runCatching {
-                    val ativacao = ApiClient.validarChave(chave)
                     val sessao = ApiClient.autenticar(email, senha)
+                    val ativacao = ApiClient.validarChave(chave)
                     if (sessao.estabelecimentoId != ativacao.empresaId) {
                         throw IllegalStateException("Este usuário pertence a outra empresa")
                     }
