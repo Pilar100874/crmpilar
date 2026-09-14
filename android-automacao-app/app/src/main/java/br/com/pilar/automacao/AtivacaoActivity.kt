@@ -25,15 +25,11 @@ class AtivacaoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ativacao)
 
         val campoChave = findViewById<EditText>(R.id.campo_chave)
-        val campoUrl = findViewById<EditText>(R.id.campo_url)
         val status = findViewById<TextView>(R.id.txt_status)
         val botao = findViewById<Button>(R.id.btn_ativar)
 
-        campoUrl.setText(Prefs.baseUrl(this))
-
         botao.setOnClickListener {
             val chave = campoChave.text.toString().trim().uppercase()
-            val url = campoUrl.text.toString().trim().ifBlank { Prefs.PADRAO_URL }
             if (chave.isBlank()) {
                 status.text = "Informe a chave da empresa"
                 return@setOnClickListener
@@ -44,7 +40,7 @@ class AtivacaoActivity : AppCompatActivity() {
                 val resultado = runCatching { ApiClient.validarChave(chave) }
                 withContext(Dispatchers.Main) {
                     resultado.onSuccess { dados ->
-                        Prefs.salvarAtivacao(this@AtivacaoActivity, url, chave, dados.empresaId, dados.empresaNome, dados.dispositivoId)
+                        Prefs.salvarAtivacao(this@AtivacaoActivity, chave, dados.empresaId, dados.empresaNome, dados.dispositivoId)
                         abrirSistema()
                     }.onFailure { erro ->
                         status.text = erro.message ?: "Falha ao validar a chave"
