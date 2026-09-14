@@ -20,7 +20,7 @@ import java.net.URL
  */
 object AtualizadorApp {
 
-    private const val MANIFESTO = "/apps/pilar-automacao-latest.json"
+    private const val MANIFESTO = "/coletor/hub-version.json"
 
     data class Info(val versao: String, val url: String, val notas: String)
 
@@ -56,7 +56,8 @@ object AtualizadorApp {
             val j = JSONObject(txt)
             val versao = j.optString("version").ifBlank { j.optString("versionName") }
             val url = j.optString("downloadUrl").ifBlank { j.optString("url") }
-            if (versao.isBlank() || url.isBlank()) null
+            if (j.has("disponivel") && !j.optBoolean("disponivel")) null
+            else if (versao.isBlank() || url.isBlank()) null
             else Info(versao, url, j.optString("notas"))
         } catch (_: Exception) { null }
     }

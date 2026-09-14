@@ -8,7 +8,7 @@ import { z } from "npm:zod@3.23.8";
 
 const BodySchema = z.object({
   acao: z.enum(["poll", "ack"]),
-  app: z.enum(["sms", "hub"]),
+  app: z.enum(["sms", "hub", "controle"]),
   versao_app: z.string().max(40).optional(),
   command_id: z.string().uuid().optional(),
   status: z.enum(["recebido", "instalando", "concluido", "erro"]).optional(),
@@ -45,13 +45,24 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
     { auth: { persistSession: false } },
   );
-  const { data: device } = await admin.from("sms_devices")
-    .select("id, estabelecimento_id, ativo")
-    .eq("token", token)
-    .maybeSingle();
+  const body = parsed.data;
+  const appFila = body.app === "controle" ? "hub" : body.app;
+  const { data: device } = body.app === "controle"
+    ? await admin.from("automacao_app_chaves")
+      .select("dispositivo_id, estabelecimento_id, bloqueado")
+      .eq("chave", token.toUpperCase())
+      .eq("app", "controle")
+      .maybeSingle()
+      .then(({ data, error }) => ({
+        error,
+        data: data ? { id: data.dispositivo_id, estabelecimento_id: data.estabelecimento_id, ativo: !data.bloqueado } : null,
+      }))
+    : await admin.from("sms_devices")
+      .select("id, estabelecimento_id, ativo")
+      .eq("token", token)
+      .maybeSingle();
   if (!device?.ativo || !device.estabelecimento_id) return resposta({ error: "Aparelho inválido ou inativo" }, 403);
 
-  const body = parsed.data;
   if (body.acao === "ack") {
     if (!body.command_id || !body.status) return resposta({ error: "Comando e situação são obrigatórios" }, 400);
     const finalizado = body.status === "concluido" || body.status === "erro";
@@ -60,7 +71,7 @@ Deno.serve(async (req) => {
       resultado: { mensagem: body.mensagem || null, versao_informada: body.versao_app || null },
       recebido_em: body.status === "recebido" ? new Date().toISOString() : undefined,
       concluido_em: finalizado ? new Date().toISOString() : undefined,
-    }).eq("id", body.command_id).eq("device_id", device.id).eq("app", body.app);
+    }).eq("id", body.command_id).eq("device_id", device.id).eq("app", appFila);
     if (error) return resposta({ error: "Não foi possível confirmar a atualização" }, 500);
     return resposta({ ok: true });
   }
@@ -69,7 +80,7 @@ Deno.serve(async (req) => {
     const { data: abertos } = await admin.from("app_update_commands")
       .select("id, versao_alvo")
       .eq("device_id", device.id)
-      .eq("app", body.app)
+      .eq("app", appFila)
       .in("status", ["recebido", "instalando"]);
     const concluidos = (abertos || []).filter((c) => versaoMaiorOuIgual(body.versao_app || "", c.versao_alvo)).map((c) => c.id);
     if (concluidos.length) {
@@ -85,7 +96,7 @@ Deno.serve(async (req) => {
   const { data: command } = await admin.from("app_update_commands")
     .select("id, versao_alvo, arquivo_url, release:app_releases(arquivo_url, arquivo_nome, notas)")
     .eq("device_id", device.id)
-    .eq("app", body.app)
+    .eq("app", appFila)
     .eq("status", "pendente")
     .order("created_at", { ascending: true })
     .limit(1)
