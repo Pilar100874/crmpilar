@@ -184,3 +184,11 @@
 - [x] Remover referências ao login separado do Automação e ao desenho antigo do Remotas.
 - [x] Avançar as versões de Fone, SMS, Automação, Controle e Remotas.
 - [ ] Confirmar os cinco APKs assinados no fluxo automático e instalar em aparelhos reais.
+
+## Correção visual após teste nos aparelhos — 2026-09-14
+- [x] Refazer Automação, Controle, SMS e Remotas com símbolos brancos sólidos no estilo do Pilar Fone.
+- [x] Remover o modo monocromático adaptativo que deixava os quatro ícones com aparência de contorno.
+- [x] Centralizar horizontal e verticalmente as entradas nativas de Automação, Controle e SMS.
+- [x] Refazer a entrada do Pilar Remotas com a mesma paleta azul-marinho, cartão escuro e ações laranja.
+- [x] Avançar as versões dos quatro APKs corrigidos.
+- [ ] Confirmar os quatro APKs assinados no fluxo automático e instalar em aparelhos reais.
