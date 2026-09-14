@@ -125,3 +125,8 @@
 - [x] Remover a variação temática que podia exibir o ícone com fundo branco
 - [x] Usar uma única camada adaptativa centralizada sobre o fundo azul-marinho
 - [x] Avançar a versão para 1.6.1 e forçar uma nova compilação do APK
+
+## Acesso às chaves dos aplicativos — 2026-09-14
+- [x] Exibir navegação própria dentro da área de Automação
+- [x] Manter Chaves do Aplicativo visível em computador e tablet
+- [x] Preservar o destaque da tela atual e as rotas existentes
