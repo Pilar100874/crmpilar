@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Info } from "lucide-react";
 import { toast } from "sonner";
 
-const HUB_FALLBACK_URL = "";
+const HUB_FALLBACK_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/controle-v2.0.0/pilar-controle-v2.0.0.apk";
 const HUB_FALLBACK_FILENAME = "pilar-controle-v2.0.0.apk";
 const HUB_FALLBACK_VERSION = "2.0.0";
 

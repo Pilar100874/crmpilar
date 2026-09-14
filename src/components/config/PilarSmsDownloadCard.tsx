@@ -5,9 +5,9 @@ import { Download, Smartphone, Info } from "lucide-react";
 import { toast } from "sonner";
 
 const SMS_FALLBACK_URL =
-  "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.9/pilar-sms-v1.4.9.apk";
-const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.9.apk";
-const SMS_FALLBACK_VERSION = "1.4.9";
+  "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.11.0/pilar-sms-v1.11.0.apk";
+const SMS_FALLBACK_FILENAME = "pilar-sms-v1.11.0.apk";
+const SMS_FALLBACK_VERSION = "1.11.0";
 
 const baixar = (file: string, url: string) => {
   try {

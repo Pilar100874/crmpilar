@@ -2,7 +2,7 @@
 // O workflow do GitHub Actions atualiza public/apps/android-tv-signage-latest.json
 // a cada build, apontando para o release rolling "android-tv-signage-latest".
 const FALLBACK_URL =
-  "/__l5e/assets-v1/22639f5c-8527-42b2-8fe0-01f9fee05946/pareamento-pilar-remotas-v1.1.3.apk";
+  "https://github.com/Pilar100874/crmpilar/releases/download/android-tv-signage-latest/app-release.apk";
 const MANIFEST_URL = "/apps/android-tv-signage-latest.json";
 
 let cached: string | null = null;

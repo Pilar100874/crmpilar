@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 
 const FALLBACK = {
-  version: "1.0.0",
+  version: "1.7.6",
   downloadUrl:
-    "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.0.0/pilar-interfone-v1.0.0.apk",
-  filename: "pilar-interfone-v1.0.0.apk",
+    "https://github.com/Pilar100874/crmpilar/releases/download/interfone-v1.7.6/pilar-interfone-v1.7.6.apk",
+  filename: "pilar-interfone-v1.7.6.apk",
   notas:
     "Atendimento do interfone no celular: câmeras, abrir porta/portão, áudio ao vivo e push da campainha.",
 };
