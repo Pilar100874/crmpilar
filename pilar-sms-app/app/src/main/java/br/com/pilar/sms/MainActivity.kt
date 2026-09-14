@@ -36,6 +36,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("pilar_sms", Context.MODE_PRIVATE)
+        if (prefs.getString("device_token", "").orEmpty().length < 16 ||
+            prefs.getString("activation_key", "").isNullOrBlank()) {
+            startActivity(Intent(this, AtivacaoActivity::class.java))
+            finish()
+            return
+        }
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
 
