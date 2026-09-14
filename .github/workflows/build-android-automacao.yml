@@ -147,7 +147,7 @@ jobs:
           git add public/apps/pilar-automacao-latest.json
           git commit -m "chore(automacao-app): atualizar manifesto do APK [skip ci]"
           for i in $(seq 1 5); do
-            git pull --rebase origin main && git push && exit 0
+            git pull --rebase --autostash origin main && git push origin HEAD:main && exit 0
             echo "Tentativa $i falhou, tentando novamente..."
             sleep 3
           done
