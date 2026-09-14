@@ -142,3 +142,10 @@
 - [x] Permitir que a exibição acompanhe a orientação vertical do equipamento.
 - [x] Avançar a versão para 1.8.1 e validar recursos e navegação web.
 - [ ] Confirmar a compilação assinada e instalar em um equipamento vertical real.
+
+## Ativação do Pilar Fone por chave — 2026-09-14
+- [ ] Adicionar Pilar Fone aos programas disponíveis em Chaves do Aplicativo.
+- [ ] Validar e vincular a chave do Pilar Fone ao estabelecimento no servidor.
+- [ ] Exigir ativação por chave antes do login no APK Pilar Fone.
+- [ ] Preservar chave, login e configurações do ramal nas atualizações.
+- [ ] Avançar a versão e validar o fluxo completo.
