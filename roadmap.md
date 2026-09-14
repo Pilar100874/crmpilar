@@ -192,3 +192,9 @@
 - [x] Refazer a entrada do Pilar Remotas com a mesma paleta azul-marinho, cartão escuro e ações laranja.
 - [x] Avançar as versões dos quatro APKs corrigidos.
 - [ ] Confirmar os quatro APKs assinados no fluxo automático e instalar em aparelhos reais.
+
+## Ícone fornecido para o Pilar SMS — 2026-09-14
+- [x] Aplicar sem redesenho o ícone fornecido ao Pilar SMS.
+- [x] Gerar os tamanhos comum, redondo e adaptativo do Android.
+- [x] Avançar o Pilar SMS para 1.14.3.
+- [ ] Confirmar a compilação assinada e instalar no aparelho real.
