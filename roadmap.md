@@ -90,3 +90,4 @@
 - [x] Validar ícones renderizados antes da geração dos APKs
 - [x] Validar código web e registrar pendência de compilação assinada no fluxo automático
 - [ ] Confirmar a compilação assinada dos três APKs no GitHub Actions (Java/Android SDK indisponíveis localmente)
+- [x] Padronizar o ícone do Pilar Remotas na mesma família visual e área segura adaptativa do Pilar Fone
