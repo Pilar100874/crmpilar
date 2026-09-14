@@ -1,51 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="@color/bg_page" android:fillViewport="true"
+    android:background="@drawable/bg_activation_page" android:fillViewport="true"
     android:fitsSystemWindows="true">
     <LinearLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_gravity="center" android:orientation="vertical"
-        android:padding="30dp">
+        android:padding="16dp">
         <LinearLayout
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:background="@drawable/bg_card" android:gravity="center_horizontal"
-            android:orientation="vertical" android:padding="26dp">
+            android:orientation="vertical" android:padding="28dp">
             <ImageView
                 android:layout_width="132dp" android:layout_height="48dp"
                 android:contentDescription="Pilar" android:scaleType="centerInside"
                 android:src="@drawable/logo_pilar" />
             <ImageView
-                android:layout_width="46dp" android:layout_height="46dp"
-                android:layout_marginTop="16dp" android:contentDescription="Chave"
-                android:src="@drawable/ic_key" />
+                android:layout_width="72dp" android:layout_height="72dp"
+                android:layout_marginTop="12dp" android:contentDescription="Pilar Automação"
+                android:src="@mipmap/ic_launcher" />
             <TextView
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="12dp" android:gravity="center"
-                android:text="Ativar Pilar Automação" android:textColor="@color/text_primary"
-                android:textSize="25sp" android:textStyle="bold" />
+                android:text="Entrar no Pilar Automação" android:textColor="@color/text_primary"
+                android:textSize="18sp" android:textStyle="bold" />
             <TextView
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="10dp" android:gravity="center"
-                android:text="Informe a chave deste aparelho para vinculá-lo à empresa."
-                android:textColor="@color/text_muted" android:textSize="15sp" />
+                android:text="Use a chave da empresa e os dados do seu usuário."
+                android:textColor="@color/text_muted" android:textSize="12sp" />
             <TextView
                 android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="28dp" android:text="Chave da empresa"
-                android:textColor="@color/text_primary" android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="20dp" android:text="Chave da empresa"
+                android:textColor="@color/text_primary" android:textSize="14sp" />
             <EditText
                 android:id="@+id/campo_chave" android:layout_width="match_parent"
-                android:layout_height="58dp" android:layout_marginTop="8dp"
+                android:layout_height="50dp" android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input" android:gravity="center"
                 android:hint="XXXX-XXXX" android:inputType="textCapCharacters"
                 android:letterSpacing="0.15" android:maxLines="1" android:padding="14dp"
                 android:textColor="@color/text_primary" android:textColorHint="@color/text_muted"
-                android:textSize="19sp" />
+                android:textSize="17sp" />
+            <TextView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" android:text="E-mail"
+                android:textColor="@color/text_primary" android:textSize="14sp" />
+            <EditText
+                android:id="@+id/campo_email" android:layout_width="match_parent"
+                android:layout_height="50dp" android:layout_marginTop="6dp"
+                android:autofillHints="emailAddress" android:background="@drawable/bg_input"
+                android:hint="seu@email.com" android:inputType="textEmailAddress"
+                android:maxLines="1" android:padding="16dp" android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted" />
+            <TextView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" android:text="Senha"
+                android:textColor="@color/text_primary" android:textSize="14sp" />
+            <EditText
+                android:id="@+id/campo_senha" android:layout_width="match_parent"
+                android:layout_height="50dp" android:layout_marginTop="6dp"
+                android:autofillHints="password" android:background="@drawable/bg_input"
+                android:hint="Sua senha" android:imeOptions="actionDone"
+                android:inputType="textPassword" android:maxLines="1" android:padding="16dp"
+                android:textColor="@color/text_primary" android:textColorHint="@color/text_muted" />
             <Button
                 android:id="@+id/btn_ativar" android:layout_width="match_parent"
-                android:layout_height="56dp" android:layout_marginTop="18dp"
-                android:background="@drawable/btn_primary" android:text="Ativar aparelho"
+                android:layout_height="52dp" android:layout_marginTop="16dp"
+                android:background="@drawable/btn_primary" android:text="Entrar"
                 android:textAllCaps="false" android:textColor="#FFFFFF"
                 android:textSize="16sp" android:textStyle="bold" />
             <TextView

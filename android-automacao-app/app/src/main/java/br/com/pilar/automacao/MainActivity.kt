@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (!Prefs.sessaoSalva(this)) {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, AtivacaoActivity::class.java))
             finish()
             return
         }
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<android.widget.Button>(R.id.btnRecarregar).setOnClickListener { carregar() }
         findViewById<android.widget.Button>(R.id.btnSair).setOnClickListener {
             Prefs.limparSessao(this)
-            startActivity(Intent(this, LoginActivity::class.java)); finish()
+            startActivity(Intent(this, AtivacaoActivity::class.java)); finish()
         }
         carregar()
         atualizacaoHandler.post(verificarAtualizacao)

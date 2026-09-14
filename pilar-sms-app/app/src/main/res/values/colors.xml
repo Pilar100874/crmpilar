@@ -4,10 +4,12 @@
     <color name="brand_primary_dark">#061128</color>
     <color name="brand_accent">#FF6B00</color>
     <color name="brand_accent_dark">#D95B00</color>
-    <color name="activation_bg">#0F172A</color>
-    <color name="activation_card">#1E293B</color>
-    <color name="activation_border">#334155</color>
-    <color name="activation_text">#E2E8F0</color>
+    <color name="activation_top">#16253E</color>
+    <color name="activation_bottom">#0D1626</color>
+    <color name="activation_bg">#0D1626</color>
+    <color name="activation_card">#182235</color>
+    <color name="activation_border">#364052</color>
+    <color name="activation_text">#FFFFFF</color>
     <color name="activation_muted">#94A3B8</color>
     <color name="bg_page">#F5F7FB</color>
     <color name="bg_card">#FFFFFF</color>
