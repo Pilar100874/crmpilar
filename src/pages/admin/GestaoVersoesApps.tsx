@@ -14,7 +14,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { enviarComando, getEstabelecimentoId, getUsuarioId } from "@/services/tvSignage/tvSignageService";
 import { toast } from "sonner";
-import { Smartphone, RefreshCw, PackageCheck, Send } from "lucide-react";
+import { Smartphone, RefreshCw, PackageCheck, Send, CircleCheck, TriangleAlert, Laptop } from "lucide-react";
 
 const APPS = [
   { valor: "sms", nome: "Pilar SMS" },
@@ -263,8 +263,8 @@ export default function GestaoVersoesApps() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-4 p-3 max-sm:pl-9 sm:space-y-6 sm:p-6">
-      <header className="border-b bg-gradient-to-r from-primary/15 to-primary/5 p-4 sm:rounded-xl sm:border sm:p-6">
+    <div className="mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5 xl:p-6">
+      <header className="border bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-4 shadow-sm sm:rounded-lg sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
@@ -280,50 +280,51 @@ export default function GestaoVersoesApps() {
             Atualizar
           </Button>
         </div>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm">
-          <Badge variant="secondary">{equipamentos.length} equipamentos</Badge>
-          {desatualizados > 0 && (
-            <Badge variant="destructive">{desatualizados} desatualizados</Badge>
-          )}
-          {Object.entries(versoes).map(([appSlug, v]) => (
-            <Badge key={appSlug} variant="outline">{nomeApp(appSlug)} v{v.versao}</Badge>
-          ))}
+        <div className="mt-5 grid gap-2 sm:grid-cols-3">
+          <div className="flex items-center gap-3 rounded-md border bg-background/70 p-3">
+            <Smartphone className="h-5 w-5 text-primary" />
+            <div><p className="text-xl font-bold leading-none">{equipamentos.length}</p><p className="mt-1 text-xs text-muted-foreground">Equipamentos</p></div>
+          </div>
+          <div className="flex items-center gap-3 rounded-md border bg-background/70 p-3">
+            {desatualizados > 0 ? <TriangleAlert className="h-5 w-5 text-destructive" /> : <CircleCheck className="h-5 w-5 text-primary" />}
+            <div><p className="text-xl font-bold leading-none">{desatualizados}</p><p className="mt-1 text-xs text-muted-foreground">Desatualizados</p></div>
+          </div>
+          <div className="flex items-center gap-3 rounded-md border bg-background/70 p-3">
+            <PackageCheck className="h-5 w-5 text-primary" />
+            <div><p className="text-xl font-bold leading-none">{Object.keys(versoes).length}</p><p className="mt-1 text-xs text-muted-foreground">Versões publicadas</p></div>
+          </div>
         </div>
       </header>
 
-      <div className="w-full sm:w-72">
-        <Label className="mb-1 block text-xs">Filtrar por aplicativo</Label>
-        <Select value={filtroApp} onValueChange={setFiltroApp}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os aplicativos</SelectItem>
-            {APPS.map((a) => (
-              <SelectItem key={a.valor} value={a.valor}>
-                {a.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 md:flex-row md:items-end md:justify-between">
+        <div className="w-full md:w-72">
+          <Label className="mb-1.5 block text-xs">Filtrar por aplicativo</Label>
+          <Select value={filtroApp} onValueChange={setFiltroApp}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os aplicativos</SelectItem>
+              {APPS.map((a) => <SelectItem key={a.valor} value={a.valor}>{a.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={selecionarDesatualizados}>Selecionar desatualizados</Button>
+          <Button onClick={() => enviarAtualizacoes()} disabled={disparando || selecionados.length === 0}>
+            <Send className="mr-2 h-4 w-4" />
+            {disparando ? "Enviando…" : `Enviar atualização (${selecionados.length})`}
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="overflow-hidden rounded-lg">
+        <CardHeader className="border-b bg-muted/25 pb-4">
           <div>
             <CardTitle className="text-base">Telas remotas, celulares e coletores</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Selecione aparelhos e envie a versão mais nova publicada.</p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={selecionarDesatualizados}>Selecionar desatualizados</Button>
-            <Button onClick={() => enviarAtualizacoes()} disabled={disparando || selecionados.length === 0}>
-              <Send className="mr-2 h-4 w-4" />
-              {disparando ? "Enviando…" : `Enviar atualização (${selecionados.length})`}
-            </Button>
+            <p className="mt-1 text-sm text-muted-foreground">{equipamentosFiltrados.length} equipamento{equipamentosFiltrados.length === 1 ? "" : "s"} no filtro atual</p>
           </div>
         </CardHeader>
-        <CardContent className="p-3 sm:p-6 sm:pt-0">
-          <div className="space-y-3">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
             {atualizaveis.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum equipamento encontrado.</p>}
             {atualizaveis.map((e) => {
               const disponivel = ultimaVersao[e.app];
@@ -332,26 +333,28 @@ export default function GestaoVersoesApps() {
                const statusComando = comando?.status || e.statusAtualizacao;
                const mensagemComando = comando?.mensagem || e.resultadoAtualizacao;
               return (
-                <article key={e.id} className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center">
-                  <Checkbox checked={selecionados.includes(e.id)} onCheckedChange={() => alternarSelecao(e.id)} aria-label={`Selecionar ${e.nome}`} />
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Smartphone className="h-4 w-4" /></div>
+                <article key={e.id} className="grid gap-3 rounded-lg border bg-background p-3 shadow-sm xl:grid-cols-[auto_minmax(170px,1fr)_100px_100px_minmax(150px,1fr)_auto_auto] xl:items-center xl:gap-4">
+                  <div className="flex min-w-0 items-center gap-3 xl:contents">
+                    <Checkbox checked={selecionados.includes(e.id)} onCheckedChange={() => alternarSelecao(e.id)} aria-label={`Selecionar ${e.nome}`} />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary xl:hidden">{e.app === "coletor" ? <Laptop className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}</div>
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{e.nome}</p>
                       <p className="truncate text-xs text-muted-foreground">{nomeApp(e.app)} · {e.detalhe}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm sm:flex sm:items-center sm:gap-5">
+                  <div className="grid grid-cols-2 gap-3 text-sm xl:contents">
                     <div><p className="text-xs text-muted-foreground">Instalada</p><p>{e.versao || "desconhecida"}</p></div>
                     <div><p className="text-xs text-muted-foreground">Disponível</p><p>{disponivel || "—"}</p></div>
-                    <div className="col-span-2 sm:col-span-1"><p className="text-xs text-muted-foreground">Último contato</p><p>{formatarData(e.ultimoContato)}</p></div>
-                    <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
-                     {statusComando && <Badge variant="outline">{statusComando}</Badge>}
+                    <div className="col-span-2 xl:col-span-1"><p className="text-xs text-muted-foreground">Último contato</p><p className="truncate">{formatarData(e.ultimoContato)}</p></div>
+                    <div className="flex flex-wrap items-center gap-2 xl:block">
+                      <Badge variant={atrasado ? "destructive" : "secondary"}>{atrasado ? "Desatualizado" : "Atualizado"}</Badge>
+                      {statusComando && <Badge variant="outline" className="xl:mt-1">{statusComando}</Badge>}
+                    </div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
+                  <Button size="sm" variant="outline" className="w-full xl:w-auto" onClick={() => enviarAtualizacoes([e.id])} disabled={disparando}>
                     <Send className="mr-2 h-4 w-4" /> Enviar
                   </Button>
-                   {mensagemComando && <p className="text-xs text-muted-foreground sm:max-w-48">{mensagemComando}</p>}
+                  {mensagemComando && <p className="text-xs text-muted-foreground md:col-span-2 xl:col-span-full xl:ml-10">{mensagemComando}</p>}
                 </article>
               );
             })}

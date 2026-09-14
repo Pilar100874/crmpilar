@@ -108,3 +108,9 @@
 - [x] Autenticar comandos e confirmações do Coletor por estabelecimento
 - [x] Implementar expiração e mensagens de erro dos comandos
 - [ ] Homologar atualização assinada em equipamentos reais de dois estabelecimentos
+
+## Visualização de Apps no computador e tablet — 2026-09-14
+- [x] Exibir navegação lateral compacta no tablet e completa no computador
+- [x] Melhorar aproveitamento horizontal dos downloads e instruções
+- [x] Organizar resumo, filtros e equipamentos da Central de Atualizações
+- [x] Validar as duas telas no computador e tablet sem cortes ou sobreposições
