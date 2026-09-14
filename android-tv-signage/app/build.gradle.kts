@@ -4,9 +4,9 @@ plugins {
 }
 
 // versionCode/versionName sobem automaticamente a cada build no CI (env TV_VERSION_CODE / TV_VERSION_NAME).
-val baseVersionCode = 22
+val baseVersionCode = 23
 val ciVersionCode = System.getenv("TV_VERSION_CODE")?.toIntOrNull() ?: baseVersionCode
-val ciVersionName = System.getenv("TV_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.8.2"
+val ciVersionName = System.getenv("TV_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.8.3"
 
 android {
     namespace = "br.com.pilar.tvsignage"

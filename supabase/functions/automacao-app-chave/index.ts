@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 /** Aplicativos que usam chave de empresa. */
-const APPS_VALIDOS = ["pilar-fone", "automacao", "controle", "coletor", "coletor-tv"];
+const APPS_VALIDOS = ["pilar-fone", "fone", "automacao", "controle", "sms", "remotas", "coletor", "coletor-tv"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -55,6 +55,22 @@ Deno.serve(async (req) => {
       .update({ ultima_comunicacao: new Date().toISOString() })
       .eq("id", registro.id);
 
+    let deviceToken = "";
+    if (app === "sms" && registro.dispositivo_id) {
+      const { data: dispositivo, error: dispositivoError } = await sb
+        .from("sms_devices")
+        .select("token")
+        .eq("id", registro.dispositivo_id)
+        .eq("estabelecimento_id", registro.estabelecimento_id)
+        .eq("tipo_dispositivo", "android")
+        .eq("ativo", true)
+        .maybeSingle();
+      if (dispositivoError || !dispositivo?.token) {
+        return json({ error: "aparelho SMS não está disponível" }, 409);
+      }
+      deviceToken = dispositivo.token;
+    }
+
     return json({
       chave_id: registro.id,
       chave_nome: registro.nome,
@@ -62,6 +78,7 @@ Deno.serve(async (req) => {
       estabelecimento_id: registro.estabelecimento_id,
       empresa: estabelecimento?.nome ?? "",
       dispositivo_id: registro.dispositivo_id ?? "",
+      ...(app === "sms" ? { device_token: deviceToken } : {}),
     });
   } catch (e) {
     return json({ error: String(e) }, 500);

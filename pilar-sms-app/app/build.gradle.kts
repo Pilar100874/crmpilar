@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.pilar.sms"
         minSdk = 21
         targetSdk = 34
-      versionCode = 27
-      versionName = "1.12.1"
+      versionCode = 28
+      versionName = "1.13.0"
 
 
     }

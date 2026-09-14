@@ -9,8 +9,8 @@
     <color name="text_muted">#94a3b8</color>
     <color name="accent_green">#22c55e</color>
     <color name="accent_green_dark">#16a34a</color>
-    <color name="accent_blue">#3b82f6</color>
-    <color name="accent_blue_dark">#2563eb</color>
+    <color name="accent_blue">#ff6b00</color>
+    <color name="accent_blue_dark">#d95b00</color>
     <color name="danger_red">#ef4444</color>
     <color name="warn_amber">#f59e0b</color>
 </resources>
