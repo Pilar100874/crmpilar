@@ -1,189 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_pairing_gradient">
+    android:background="@drawable/bg_pairing_gradient"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
 
-    <!-- Decorative brand strip on the left -->
     <LinearLayout
-        android:id="@+id/brandPane"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:padding="48dp"
-        app:layout_constraintWidth_percent="0.38"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView
-            android:layout_width="220dp"
-            android:layout_height="120dp"
-            android:src="@drawable/logo_pilar"
-            android:scaleType="fitCenter"
-            android:contentDescription="@string/app_name" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Pilar"
-            android:textColor="#FFFFFF"
-            android:textSize="42sp"
-            android:letterSpacing="0.08"
-            android:textStyle="bold"
-            android:layout_marginTop="24dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TV - REMOTAS"
-            android:textColor="#93C5FD"
-            android:textSize="18sp"
-            android:letterSpacing="0.30"
-            android:layout_marginTop="4dp" />
-
-        <View
-            android:layout_width="60dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="20dp"
-            android:background="#F59E0B" />
-    </LinearLayout>
-
-    <!-- Card with pairing form -->
-    <FrameLayout
-        android:id="@+id/card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="48dp"
-        app:layout_constraintStart_toEndOf="@id/brandPane"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:orientation="vertical"
+        android:padding="32dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/card"
+            android:layout_width="560dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:background="@drawable/bg_card"
-            android:padding="36dp">
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <ImageView
+                android:layout_width="132dp"
+                android:layout_height="48dp"
+                android:contentDescription="Pilar"
+                android:scaleType="centerInside"
+                android:src="@drawable/logo_pilar" />
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginTop="12dp"
+                android:contentDescription="@string/app_name"
+                android:src="@mipmap/ic_launcher" />
 
             <TextView
                 android:id="@+id/txtTitle"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/pair_title"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="@string/pair_title_vertical"
                 android:textColor="#FFFFFF"
-                android:textSize="30sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txtSub"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/pair_sub"
-                android:textColor="#94A3B8"
-                android:textSize="15sp"
                 android:layout_marginTop="10dp"
-                android:lineSpacingExtra="4dp" />
+                android:gravity="center"
+                android:text="@string/pair_sub_vertical"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/btnScanQr"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pair_scan_qr"
-                android:textSize="18sp"
-                android:paddingVertical="16dp"
-                android:layout_marginTop="24dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="20dp"
                 android:background="@drawable/bg_btn_success"
+                android:stateListAnimator="@null"
+                android:text="@string/pair_scan_qr"
+                android:textAllCaps="false"
                 android:textColor="#FFFFFF"
-                android:stateListAnimator="@null" />
+                android:textSize="16sp" />
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="20dp">
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#1F2A44" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ou digite manualmente"
-                    android:textColor="#64748B"
-                    android:textSize="12sp"
-                    android:paddingHorizontal="12dp"
-                    android:letterSpacing="0.15" />
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#1F2A44" />
-            </LinearLayout>
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:text="ou use o código"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/inputCodigo"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/pair_code_hint"
-                android:textColorHint="#64748B"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:padding="16dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
                 android:background="@drawable/bg_input"
+                android:gravity="center"
+                android:hint="@string/pair_code_hint"
+                android:importantForAutofill="no"
                 android:inputType="textCapCharacters"
                 android:maxLength="8"
-                android:layout_marginTop="16dp"
-                android:importantForAutofill="no" />
+                android:padding="14dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#94A3B8"
+                android:textSize="18sp" />
 
-            
             <Button
                 android:id="@+id/btnPair"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pair_button"
-                android:textSize="18sp"
-                android:paddingVertical="16dp"
-                android:layout_marginTop="18dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="14dp"
                 android:background="@drawable/bg_btn_primary"
+                android:stateListAnimator="@null"
+                android:text="@string/pair_button"
+                android:textAllCaps="false"
                 android:textColor="#FFFFFF"
-                android:stateListAnimator="@null" />
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txtStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#F97316"
-                android:textSize="14sp"
-                android:layout_marginTop="16dp"
-                android:gravity="center" />
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:textColor="#FF8A33"
+                android:textSize="13sp" />
 
             <Button
                 android:id="@+id/btnAtualizarApp"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@android:color/transparent"
+                android:stateListAnimator="@null"
                 android:text="Atualizar aplicativo"
-                android:textSize="14sp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_btn_primary"
-                android:textColor="#FFFFFF"
-                android:stateListAnimator="@null" />
+                android:textAllCaps="false"
+                android:textColor="#94A3B8"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/txtVersao"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#64748B"
-                android:textSize="12sp"
-                android:layout_marginTop="10dp"
-                android:gravity="center" />
+                android:gravity="center"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
         </LinearLayout>
-    </FrameLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</ScrollView>
