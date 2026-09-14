@@ -110,7 +110,7 @@
 - [ ] Homologar atualização assinada em equipamentos reais de dois estabelecimentos
 
 ## Visualização de Apps no computador e tablet — 2026-09-14
-- [ ] Exibir navegação lateral compacta no tablet e completa no computador
-- [ ] Melhorar aproveitamento horizontal dos downloads e instruções
-- [ ] Organizar resumo, filtros e equipamentos da Central de Atualizações
-- [ ] Validar as duas telas no computador e tablet sem cortes ou sobreposições
+- [x] Exibir navegação lateral compacta no tablet e completa no computador
+- [x] Melhorar aproveitamento horizontal dos downloads e instruções
+- [x] Organizar resumo, filtros e equipamentos da Central de Atualizações
+- [x] Validar as duas telas no computador e tablet sem cortes ou sobreposições
