@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Activity, Cpu, Home, KeyRound, LayoutGrid } from "lucide-react";
+import { Activity, Cpu, Home, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -7,7 +7,6 @@ const itens = [
   { to: "/automacao", label: "Painéis", icon: LayoutGrid, end: true },
   { to: "/automacao/estado", label: "Estado dos Equipamentos", icon: Activity },
   { to: "/automacao/dispositivos", label: "Dispositivos", icon: Cpu },
-  { to: "/automacao/chaves-app", label: "Chaves do Aplicativo", icon: KeyRound },
 ];
 
 export default function AutomacaoLayout() {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Download, RefreshCw, PanelLeft, PanelLeftClose, Smartphone } from "lucide-react";
+import { Download, KeyRound, RefreshCw, PanelLeft, PanelLeftClose, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const itens = [
   { to: "/admin/apps", label: "Aplicativos e downloads", icon: Download, end: true },
   { to: "/admin/apps/atualizacoes", label: "Atualizações", icon: RefreshCw, end: false },
+  { to: "/admin/apps/chaves", label: "Chaves do Aplicativo", icon: KeyRound, end: false },
 ];
 
 export default function AppsLayout() {

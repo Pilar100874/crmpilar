@@ -3,6 +3,8 @@
     <string name="app_name">Pilar Remotas</string>
     <string name="pair_title">Pareamento Pilar Remotas</string>
     <string name="pair_sub">No painel Pilar acesse Gerenciador de Telas Remotas → Dispositivos → Novo. Aponte a câmera para o QR Code exibido ou digite o código do dispositivo.</string>
+    <string name="pair_title_vertical">Conectar esta tela</string>
+    <string name="pair_sub_vertical">No Pilar, abra Remotas → Dispositivos → Novo. Leia o QR Code ou informe o código exibido.</string>
     <string name="pair_code_hint">Código (8 caracteres)</string>
     <string name="pair_button">Conectar</string>
     <string name="pair_scan_qr">📷 Ler QR Code</string>
