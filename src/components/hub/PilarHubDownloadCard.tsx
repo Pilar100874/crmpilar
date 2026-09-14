@@ -3,26 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Info } from "lucide-react";
 import { toast } from "sonner";
+import { baixarArquivo } from "@/lib/baixarArquivo";
 
 const HUB_FALLBACK_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/controle-v2.0.0/pilar-controle-v2.0.0.apk";
 const HUB_FALLBACK_FILENAME = "pilar-controle-v2.0.0.apk";
 const HUB_FALLBACK_VERSION = "2.0.0";
 
-const baixar = (file: string, url: string) => {
-  try {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast.success("Download iniciado");
-  } catch {
-    toast.error("Não foi possível iniciar o download");
-  }
-};
+const baixar = (file: string, url: string) => baixarArquivo(file, url);
 
 export default function PilarHubDownloadCard() {
   const [hubInfo, setHubInfo] = useState<{

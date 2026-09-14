@@ -11,6 +11,7 @@ import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
 import PilarSmsDownloadCard from "@/components/config/PilarSmsDownloadCard";
 import PilarHubDownloadCard from "@/components/hub/PilarHubDownloadCard";
 import TvSignageDownloadCard from "@/components/apps/TvSignageDownloadCard";
+import { baixarArquivo } from "@/lib/baixarArquivo";
 
 
 // Alternativas da mesma versão publicada no manifesto do Coletor.
@@ -149,15 +150,7 @@ function MobileAppCard() {
   );
 }
 
-const baixar = (file: string, url: string) => {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = file;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  toast.success("Download iniciado");
-};
+const baixar = (file: string, url: string) => baixarArquivo(file, url);
 
 export default function AdminApps() {
   const [coletorInfo, setColetorInfo] = useState<{
