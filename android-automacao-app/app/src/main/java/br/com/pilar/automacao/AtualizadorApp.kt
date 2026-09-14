@@ -71,7 +71,8 @@ object AtualizadorApp {
         c.connectTimeout = 20000
         c.readTimeout = 180000
         c.inputStream.use { input -> out.outputStream().use { input.copyTo(it, 64 * 1024) } }
-        if (out.length() > 100_000) out else null
+        val pacote = ctx.packageManager.getPackageArchiveInfo(out.absolutePath, 0)?.packageName
+        if (out.length() > 100_000 && pacote == ctx.packageName) out else { out.delete(); null }
     } catch (_: Exception) { null }
 
     private fun instalar(ctx: Context, arquivo: File) {

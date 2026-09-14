@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const autenticacao = await validarChaveColetor(supabase, body?.chave);
-    if ('response' in autenticacao) return autenticacao.response;
+    if ('erro' in autenticacao) return json({ error: autenticacao.erro }, autenticacao.status);
     const estabelecimentoId = autenticacao.estabelecimentoId;
     const acao = String(body?.acao || '');
     const deviceKey = String(body?.device_key || '').trim();
