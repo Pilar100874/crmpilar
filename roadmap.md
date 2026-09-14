@@ -80,3 +80,12 @@
 - [x] Pilar Fone, Hub, SMS e Coletor já exibiam versão e botão de atualização
 - [x] Hub 1.6.0 e SMS 1.11.0; Remotas e Automação sobem versão automaticamente na compilação
 - [ ] Compilar os APKs assinados no fluxo automático (GitHub Actions) — este ambiente não tem o SDK Android
+
+## Correções visuais e Pilar Controle — 2026-09-14
+- [ ] Reenquadrar e validar visualmente o ícone do Pilar SMS no padrão Pilar Fone
+- [ ] Padronizar login nativo e ícone do Pilar Automação; substituir WebView por painel nativo do ambiente definido
+- [ ] Renomear APK Pilar Hub para Pilar Controle, mantendo apenas Automação e Relógio de Ponto
+- [ ] Remover câmera e SMS somente do APK Pilar Controle; preservar Windows e ISO completos
+- [ ] Atualizar download, manifesto e atualização remota para Pilar Controle
+- [ ] Validar ícones renderizados antes da geração dos APKs
+- [ ] Validar código web e registrar pendência de compilação assinada no fluxo automático
