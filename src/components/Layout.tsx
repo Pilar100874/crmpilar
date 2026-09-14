@@ -57,6 +57,7 @@ import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
 import VoiceAssistant from "@/components/voz/VoiceAssistant";
+import { modoAppEmbutido } from "@/lib/modoAppEmbutido";
 import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import PilarFoneWeb from "@/components/portaria/PilarFoneWeb";
@@ -350,6 +351,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
+  const dentroDoAplicativo = modoAppEmbutido();
   const location = useLocation();
   const soloMode =
     typeof window !== "undefined" &&
@@ -1690,16 +1692,20 @@ export default function Layout({ children }: LayoutProps) {
         estabelecimentoId={estabelecimentoId}
       />
 
-      <IncomingCallNotification />
-      <ChatInternoProvider>
-        <ChatAvisosFloatingButton />
-      <PilarFoneWeb />
-      </ChatInternoProvider>
-      
-      <FloatingMacroRecorder />
-      <FloatingMacroQuickAccess />
-      <SupportTicketFloatingButton />
-      <VoiceAssistant />
+      {!dentroDoAplicativo && (
+        <>
+          <IncomingCallNotification />
+          <ChatInternoProvider>
+            <ChatAvisosFloatingButton />
+            <PilarFoneWeb />
+          </ChatInternoProvider>
+
+          <FloatingMacroRecorder />
+          <FloatingMacroQuickAccess />
+          <SupportTicketFloatingButton />
+          <VoiceAssistant />
+        </>
+      )}
 
       {/* FAB Menu (aparece somente no estilo "buttons") */}
       <button
