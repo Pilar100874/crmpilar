@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "bun run typecheck && NODE_OPTIONS=--max-old-space-size=8192 vite build",
+    "build": "npm run typecheck && NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "build:dev": "NODE_OPTIONS=--max-old-space-size=8192 vite build --mode development",
     "typecheck": "tsgo --noEmit",
     "test": "vitest run",
-    "check": "bun run typecheck && bun run lint && bun run test && bun run build",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
