@@ -3,7 +3,7 @@ package br.com.pilar.automacao
 import android.content.Context
 import android.content.SharedPreferences
 
-/** Guarda a chave da empresa e o endereço do sistema usados pelo aparelho. */
+/** Guarda a ativação e a sessão usadas pelo aparelho. */
 object Prefs {
     private const val ARQUIVO = "pilar_automacao"
     const val PADRAO_URL = BuildConfig.APP_BASE_URL
@@ -40,14 +40,13 @@ object Prefs {
 
     fun salvarAtivacao(
         ctx: Context,
-        baseUrl: String,
         chave: String,
         empresaId: String,
         empresaNome: String,
         dispositivoId: String,
     ) {
         sp(ctx).edit()
-            .putString("base_url", baseUrl.trim().trimEnd('/'))
+            .putString("base_url", PADRAO_URL)
             .putString("chave", chave.trim().uppercase())
             .putString("empresa_id", empresaId.trim())
             .putString("empresa_nome", empresaNome.trim())

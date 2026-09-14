@@ -42,10 +42,6 @@
                 android:letterSpacing="0.15" android:maxLines="1" android:padding="14dp"
                 android:textColor="@color/text_primary" android:textColorHint="@color/text_muted"
                 android:textSize="19sp" />
-            <EditText
-                android:id="@+id/campo_url" android:layout_width="1dp"
-                android:layout_height="1dp" android:importantForAutofill="noExcludeDescendants"
-                android:inputType="textUri" android:visibility="invisible" />
             <Button
                 android:id="@+id/btn_ativar" android:layout_width="match_parent"
                 android:layout_height="56dp" android:layout_marginTop="18dp"
