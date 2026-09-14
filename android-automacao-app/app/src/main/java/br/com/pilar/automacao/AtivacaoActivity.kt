@@ -44,7 +44,7 @@ class AtivacaoActivity : AppCompatActivity() {
                 val resultado = runCatching { ApiClient.validarChave(chave) }
                 withContext(Dispatchers.Main) {
                     resultado.onSuccess { dados ->
-                        Prefs.salvarAtivacao(this@AtivacaoActivity, url, chave, dados.empresaId, dados.empresaNome)
+                        Prefs.salvarAtivacao(this@AtivacaoActivity, url, chave, dados.empresaId, dados.empresaNome, dados.dispositivoId)
                         abrirSistema()
                     }.onFailure { erro ->
                         status.text = erro.message ?: "Falha ao validar a chave"

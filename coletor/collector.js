@@ -58,7 +58,8 @@ function lerArquivo(p) {
     const obj = JSON.parse(fs.readFileSync(p, 'utf-8'));
     if (obj && typeof obj === 'object') {
       const mtime = fs.statSync(p).mtimeMs || 0;
-      return { obj, mtime };
+      const revision = Number(obj.configRevision) || mtime;
+      return { obj, mtime, revision };
     }
   } catch {}
   return null;
@@ -72,7 +73,7 @@ function lerArquivoConfig() {
   const encontrados = [CONFIG_PATH, CONFIG_HOME_PADRAO, ...CONFIG_BACKUPS]
     .map(lerArquivo)
     .filter(Boolean)
-    .sort((a, b) => a.mtime - b.mtime); // mais antigo primeiro; mais novo sobrescreve
+    .sort((a, b) => a.revision - b.revision || a.mtime - b.mtime);
   if (!encontrados.length) return {};
   const final = {};
   for (const f of encontrados) {
@@ -135,7 +136,7 @@ function loadConfig() {
 }
 function saveConfig(cfg) {
   const cur = loadConfig();
-  const conteudo = JSON.stringify({ ...cur, ...cfg }, null, 2);
+  const conteudo = JSON.stringify({ ...cur, ...cfg, configRevision: Date.now() }, null, 2);
   try { fs.writeFileSync(CONFIG_PATH, conteudo); } catch {}
   // Espelha a configuração (best-effort) para sobreviver a atualizações
   for (const destino of CONFIG_BACKUPS) {

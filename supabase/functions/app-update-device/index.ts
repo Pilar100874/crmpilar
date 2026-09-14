@@ -8,7 +8,7 @@ import { z } from "npm:zod@3.23.8";
 
 const BodySchema = z.object({
   acao: z.enum(["poll", "ack"]),
-  app: z.enum(["sms", "hub", "controle"]),
+  app: z.enum(["sms", "hub", "controle", "automacao"]),
   versao_app: z.string().max(40).optional(),
   command_id: z.string().uuid().optional(),
   status: z.enum(["recebido", "instalando", "concluido", "erro"]).optional(),
@@ -47,11 +47,12 @@ Deno.serve(async (req) => {
   );
   const body = parsed.data;
   const appFila = body.app === "controle" ? "hub" : body.app;
-  const { data: device } = body.app === "controle"
+  const usaChave = body.app === "controle" || body.app === "automacao";
+  const { data: device } = usaChave
     ? await admin.from("automacao_app_chaves")
       .select("dispositivo_id, estabelecimento_id, bloqueado")
       .eq("chave", token.toUpperCase())
-      .eq("app", "controle")
+      .eq("app", body.app)
       .maybeSingle()
       .then(({ data, error }) => ({
         error,
@@ -62,6 +63,14 @@ Deno.serve(async (req) => {
       .eq("token", token)
       .maybeSingle();
   if (!device?.ativo || !device.estabelecimento_id) return resposta({ error: "Aparelho inválido ou inativo" }, 403);
+
+  const limiteExpiracao = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  await admin.from("app_update_commands").update({
+    status: "erro",
+    concluido_em: new Date().toISOString(),
+    resultado: { mensagem: "Atualização expirou sem confirmação do aparelho" },
+  }).eq("device_id", device.id).eq("app", appFila)
+    .in("status", ["recebido", "instalando"]).lt("updated_at", limiteExpiracao);
 
   if (body.acao === "ack") {
     if (!body.command_id || !body.status) return resposta({ error: "Comando e situação são obrigatórios" }, 400);
@@ -90,7 +99,10 @@ Deno.serve(async (req) => {
         resultado: { mensagem: "Versão confirmada pelo aparelho", versao_informada: body.versao_app },
       }).in("id", concluidos);
     }
-    await admin.from("sms_devices").update({ versao_app: body.versao_app }).eq("id", device.id);
+    await admin.from("sms_devices").update({
+      versao_app: body.versao_app,
+      ultimo_heartbeat: new Date().toISOString(),
+    }).eq("id", device.id).eq("estabelecimento_id", device.estabelecimento_id);
   }
 
   const { data: command } = await admin.from("app_update_commands")

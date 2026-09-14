@@ -15,6 +15,7 @@ let ultimoStatus = { registrado: false, ultimoContato: null, erro: null };
 
 async function chamar(corpo) {
   const cfg = loadConfig();
+  if (!cfg.chaveEmpresa) throw new Error('Coletor sem chave de ativação');
   const resp = await fetch(`${cfg.url}/functions/v1/coletor-dispositivo`, {
     method: 'POST',
     headers: {
@@ -22,7 +23,7 @@ async function chamar(corpo) {
       apikey: cfg.anonKey,
       Authorization: `Bearer ${cfg.anonKey}`,
     },
-    body: JSON.stringify(corpo),
+    body: JSON.stringify({ ...corpo, chave: cfg.chaveEmpresa }),
   });
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) throw new Error(json.error || `HTTP ${resp.status}`);
