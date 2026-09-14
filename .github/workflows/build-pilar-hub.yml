@@ -79,7 +79,7 @@ jobs:
       - name: Criar / atualizar GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: hub-v${{ steps.version.outputs.version }}
+          tag_name: controle-v${{ steps.version.outputs.version }}
           name: Pilar Controle v${{ steps.version.outputs.version }}
           body: |
             APK nativo do Pilar Controle — Automação e Relógio de Ponto, sem SMS ou câmeras.
@@ -102,7 +102,7 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           REPO="${{ github.repository }}"
           FILENAME="pilar-controle-v${VERSION}.apk"
-          URL="https://github.com/${REPO}/releases/download/hub-v${VERSION}/${FILENAME}"
+          URL="https://github.com/${REPO}/releases/download/controle-v${VERSION}/${FILENAME}"
           node -e "
             const fs = require('fs');
             const p = 'public/coletor/hub-version.json';
