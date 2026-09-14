@@ -13,9 +13,9 @@ import PilarHubDownloadCard from "@/components/hub/PilarHubDownloadCard";
 import TvSignageDownloadCard from "@/components/apps/TvSignageDownloadCard";
 
 
-// Sempre a build mais recente publicada pelos workflows do GitHub Actions.
-const COLETOR_LINUX_URL =
-  "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Linux.AppImage";
+// Alternativas da mesma versão publicada no manifesto do Coletor.
+const COLETOR_LINUX_FALLBACK_URL =
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Linux.AppImage";
 const APPLIANCE_ISO_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/appliance-latest/coletor-pilar-appliance-amd64.iso";
 
@@ -160,7 +160,12 @@ const baixar = (file: string, url: string) => {
 };
 
 export default function AdminApps() {
-  const [coletorInfo, setColetorInfo] = useState<{ version: string; downloadUrl: string; notas?: string } | null>(null);
+  const [coletorInfo, setColetorInfo] = useState<{
+    version: string;
+    downloadUrl: string;
+    downloadUrlLinux?: string;
+    notas?: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/coletor/version.json", { cache: "no-store" })
@@ -171,6 +176,7 @@ export default function AdminApps() {
 
   const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
+  const coletorLinuxUrl = coletorInfo?.downloadUrlLinux || COLETOR_LINUX_FALLBACK_URL;
 
   return (
     <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 xl:p-6">
@@ -333,7 +339,7 @@ export default function AdminApps() {
               <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Linux.AppImage</span>
             </div>
             <Button
-              onClick={() => baixar("ColetorPilar-Linux.AppImage", COLETOR_LINUX_URL)}
+              onClick={() => baixar("ColetorPilar-Linux.AppImage", coletorLinuxUrl)}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-amber-500 hover:bg-amber-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar AppImage
