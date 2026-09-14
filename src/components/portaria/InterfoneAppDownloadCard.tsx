@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Info, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
+import { baixarArquivo } from "@/lib/baixarArquivo";
 
 const FALLBACK = {
   version: "1.7.6",
@@ -16,19 +17,7 @@ const FALLBACK = {
 
 type Info = { version: string; downloadUrl: string; filename?: string; notas?: string };
 
-const baixar = (file: string, url: string) => {
-  try {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  } catch {
-    toast.error("Não foi possível iniciar o download");
-  }
-};
+const baixar = (file: string, url: string) => baixarArquivo(file, url);
 
 export default function InterfoneAppDownloadCard() {
   const [info, setInfo] = useState<Info | null>(null);

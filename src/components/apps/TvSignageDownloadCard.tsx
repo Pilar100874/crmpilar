@@ -5,21 +5,9 @@ import { Download, Tv, Info } from "lucide-react";
 import { toast } from "sonner";
 import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME, TV_SIGNAGE_MANIFEST_URL } from "@/lib/tvSignageApkUrl";
 import VersaoAppBadge from "@/components/apps/VersaoAppBadge";
+import { baixarArquivo } from "@/lib/baixarArquivo";
 
-const baixar = (file: string, url: string) => {
-  try {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file;
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast.success("Download iniciado");
-  } catch {
-    toast.error("Não foi possível iniciar o download");
-  }
-};
+const baixar = (file: string, url: string) => baixarArquivo(file, url);
 
 export default function TvSignageDownloadCard() {
   const [apkUrl, setApkUrl] = useState<string>("");
