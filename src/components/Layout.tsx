@@ -350,6 +350,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
+  const dentroDoAplicativo = modoAppEmbutido();
   const location = useLocation();
   const soloMode =
     typeof window !== "undefined" &&
