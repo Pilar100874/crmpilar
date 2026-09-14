@@ -120,3 +120,8 @@
 - [x] Corrigir o download quebrado do Coletor Linux
 - [x] Alinhar os links alternativos às versões atuais publicadas
 - [x] Validar novamente todos os downloads após as correções
+
+## Ícone do Pilar Automação — 2026-09-14
+- [x] Remover a variação temática que podia exibir o ícone com fundo branco
+- [x] Usar uma única camada adaptativa centralizada sobre o fundo azul-marinho
+- [x] Avançar a versão para 1.6.1 e forçar uma nova compilação do APK
