@@ -198,3 +198,9 @@
 - [x] Gerar os tamanhos comum, redondo e adaptativo do Android.
 - [x] Avançar o Pilar SMS para 1.14.3.
 - [ ] Confirmar a compilação assinada e instalar no aparelho real.
+
+## Ícone fornecido para o Pilar Automação — 2026-09-14
+- [x] Aplicar sem redesenho o ícone fornecido ao Pilar Automação.
+- [x] Gerar os tamanhos comum, redondo e adaptativo do Android.
+- [x] Avançar o Pilar Automação para 1.8.2.
+- [ ] Confirmar a compilação assinada e instalar no aparelho real.
