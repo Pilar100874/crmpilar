@@ -13,7 +13,7 @@
         android:layout_width="104dp"
         android:layout_height="104dp"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/ic_launcher_foreground" />
+        android:src="@drawable/ic_launcher_fg" />
 
     <TextView
         android:layout_width="wrap_content"
