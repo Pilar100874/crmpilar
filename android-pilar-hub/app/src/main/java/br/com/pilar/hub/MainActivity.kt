@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         }
         configurarPonto()
         carregar()
+        AtualizadorApp.processarComandoRemoto(this)
     }
 
     private fun carregar() {

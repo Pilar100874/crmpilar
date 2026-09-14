@@ -135,4 +135,34 @@ object AtualizadorApp {
             }
         }.start()
     }
+
+    /** Consulta silenciosamente a fila da Central de Atualizações ao abrir o aplicativo. */
+    fun processarComandoRemoto(act: Activity) {
+        val chave = Prefs.chave(act)
+        if (chave.isBlank()) return
+        Thread {
+            val atual = versaoInstalada(act)
+            val conn = try {
+                (URL("${BuildConfig.SUPABASE_URL}/functions/v1/app-update-device").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 15000
+                    readTimeout = 30000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    setRequestProperty("X-Device-Token", chave)
+                    outputStream.use { it.write(JSONObject().put("acao", "poll").put("app", "controle").put("versao_app", atual).toString().toByteArray()) }
+                }
+            } catch (_: Exception) { return@Thread }
+            val texto = runCatching { conn.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
+            conn.disconnect()
+            val comando = runCatching { JSONObject(texto.orEmpty()).optJSONObject("command") }.getOrNull() ?: return@Thread
+            val url = comando.optString("url")
+            if (url.isBlank()) return@Thread
+            val arquivo = baixarApk(act, url) ?: return@Thread
+            ui.post {
+                if (permitirInstalacao(act)) instalar(act, arquivo)
+            }
+        }.start()
+    }
 }
