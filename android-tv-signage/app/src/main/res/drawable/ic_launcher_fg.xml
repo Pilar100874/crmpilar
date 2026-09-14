@@ -4,13 +4,13 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Monitor e reprodução, centralizados na área segura adaptativa. -->
+    <!-- Monitor e reprodução centralizados na mesma caixa segura dos demais apps Pilar. -->
     <path
         android:fillColor="#FFFFFF"
         android:fillType="evenOdd"
-        android:pathData="M28,26 h52 a6,6 0,0 1,6 6 v34 a6,6 0,0 1,-6 6 h-20 v7 h10 v5 h-32 v-5 h10 v-7 h-20 a6,6 0,0 1,-6 -6 v-34 a6,6 0,0 1,6 -6 z M31,34 v30 h46 v-30 z M46,40 l18,9 -18,9 z" />
+        android:pathData="M30,28 h48 a5,5 0,0 1,5 5 v28 a5,5 0,0 1,-5 5 h-19 v8 h10 v5 h-30 v-5 h10 v-8 h-19 a5,5 0,0 1,-5 -5 v-28 a5,5 0,0 1,5 -5 z M31,34 v26 h46 v-26 z M48,40 l14,7 -14,7 z" />
     <!-- Faixa laranja comum à família Pilar. -->
     <path
         android:fillColor="#FF6B00"
-        android:pathData="M28,88 h52 a4,4 0,0 1,0 8 h-52 a4,4 0,0 1,0 -8 z" />
+        android:pathData="M28,84 h52 a3,3 0,0 1,0 6 h-52 a3,3 0,0 1,0 -6 z" />
 </vector>

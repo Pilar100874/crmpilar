@@ -130,3 +130,15 @@
 - [x] Exibir navegação própria dentro da área de Automação
 - [x] Manter Chaves do Aplicativo visível em computador e tablet
 - [x] Preservar o destaque da tela atual e as rotas existentes
+
+## Mover Chaves do Aplicativo para Apps — 2026-09-14
+- [x] Adicionar Chaves do Aplicativo à navegação de Apps.
+- [x] Remover Chaves do Aplicativo da navegação interna de Automação.
+- [x] Validar o acesso em computador e tablet.
+
+## Pilar Remotas vertical e ícone — 2026-09-14
+- [x] Substituir o ícone adaptativo e o cartão da Android TV pelo padrão Pilar centralizado.
+- [x] Criar telas verticais próprias para abertura, pareamento e leitura do QR Code.
+- [x] Permitir que a exibição acompanhe a orientação vertical do equipamento.
+- [x] Avançar a versão para 1.8.1 e validar recursos e navegação web.
+- [ ] Confirmar a compilação assinada e instalar em um equipamento vertical real.
