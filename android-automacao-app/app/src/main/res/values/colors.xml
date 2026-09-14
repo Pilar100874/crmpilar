@@ -7,6 +7,6 @@
     <color name="border_soft">#334155</color>
     <color name="text_primary">#e2e8f0</color>
     <color name="text_muted">#94a3b8</color>
-    <color name="accent_blue">#3b82f6</color>
-    <color name="accent_blue_dark">#1d4ed8</color>
+    <color name="accent_blue">#ff6b00</color>
+    <color name="accent_blue_dark">#d95b00</color>
 </resources>
