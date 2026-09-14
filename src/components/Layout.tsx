@@ -1690,16 +1690,20 @@ export default function Layout({ children }: LayoutProps) {
         estabelecimentoId={estabelecimentoId}
       />
 
-      <IncomingCallNotification />
-      <ChatInternoProvider>
-        <ChatAvisosFloatingButton />
-      <PilarFoneWeb />
-      </ChatInternoProvider>
-      
-      <FloatingMacroRecorder />
-      <FloatingMacroQuickAccess />
-      <SupportTicketFloatingButton />
-      <VoiceAssistant />
+      {!dentroDoAplicativo && (
+        <>
+          <IncomingCallNotification />
+          <ChatInternoProvider>
+            <ChatAvisosFloatingButton />
+            <PilarFoneWeb />
+          </ChatInternoProvider>
+
+          <FloatingMacroRecorder />
+          <FloatingMacroQuickAccess />
+          <SupportTicketFloatingButton />
+          <VoiceAssistant />
+        </>
+      )}
 
       {/* FAB Menu (aparece somente no estilo "buttons") */}
       <button
