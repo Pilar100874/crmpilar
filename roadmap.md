@@ -197,6 +197,7 @@
 - [x] Aplicar sem redesenho o ícone fornecido ao Pilar SMS.
 - [x] Gerar os tamanhos comum, redondo e adaptativo do Android.
 - [x] Substituir pelo ícone final fornecido e avançar o Pilar SMS para 1.14.4.
+- [x] Remover a atualização remota instável do SDK e validar o SDK Android já instalado no compilador.
 - [ ] Confirmar a compilação assinada e instalar no aparelho real.
 
 ## Ícone fornecido para o Pilar Automação — 2026-09-14
