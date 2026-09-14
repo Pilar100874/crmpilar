@@ -144,8 +144,9 @@
 - [ ] Confirmar a compilação assinada e instalar em um equipamento vertical real.
 
 ## Ativação do Pilar Fone por chave — 2026-09-14
-- [ ] Adicionar Pilar Fone aos programas disponíveis em Chaves do Aplicativo.
-- [ ] Validar e vincular a chave do Pilar Fone ao estabelecimento no servidor.
-- [ ] Exigir ativação por chave antes do login no APK Pilar Fone.
-- [ ] Preservar chave, login e configurações do ramal nas atualizações.
-- [ ] Avançar a versão e validar o fluxo completo.
+- [x] Adicionar Pilar Fone aos programas disponíveis em Chaves do Aplicativo.
+- [x] Validar e vincular a chave do Pilar Fone ao estabelecimento no servidor.
+- [x] Exigir ativação por chave antes do login no APK Pilar Fone.
+- [x] Preservar chave, login e configurações do ramal nas atualizações.
+- [x] Avançar a versão para 1.8.0 e validar o fluxo web.
+- [ ] Confirmar a compilação assinada e instalar em um aparelho real.
