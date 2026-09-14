@@ -196,7 +196,7 @@
 ## Ícone fornecido para o Pilar SMS — 2026-09-14
 - [x] Aplicar sem redesenho o ícone fornecido ao Pilar SMS.
 - [x] Gerar os tamanhos comum, redondo e adaptativo do Android.
-- [x] Avançar o Pilar SMS para 1.14.3.
+- [x] Substituir pelo ícone final fornecido e avançar o Pilar SMS para 1.14.4.
 - [ ] Confirmar a compilação assinada e instalar no aparelho real.
 
 ## Ícone fornecido para o Pilar Automação — 2026-09-14
