@@ -130,3 +130,8 @@
 - [x] Exibir navegação própria dentro da área de Automação
 - [x] Manter Chaves do Aplicativo visível em computador e tablet
 - [x] Preservar o destaque da tela atual e as rotas existentes
+
+## Mover Chaves do Aplicativo para Apps — 2026-09-14
+- [ ] Adicionar Chaves do Aplicativo à navegação de Apps.
+- [ ] Remover Chaves do Aplicativo da navegação interna de Automação.
+- [ ] Validar o acesso em computador e tablet.
