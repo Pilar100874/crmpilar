@@ -91,3 +91,10 @@
 - [x] Validar código web e registrar pendência de compilação assinada no fluxo automático
 - [ ] Confirmar a compilação assinada dos três APKs no GitHub Actions (Java/Android SDK indisponíveis localmente)
 - [x] Padronizar o ícone do Pilar Remotas na mesma família visual e área segura adaptativa do Pilar Fone
+
+## Isolamento multiempresa do Coletor — 2026-09-14
+- [x] Exigir a chave ativa nas consultas de filiais e equipamentos do Coletor Windows/Linux/ISO
+- [x] Resolver o estabelecimento no servidor exclusivamente pela chave validada
+- [x] Filtrar filiais, equipamentos e atualizações de estado pelo estabelecimento vinculado
+- [x] Publicar as funções protegidas e validar bloqueios para chave ausente ou inválida
+- [ ] Homologar com duas chaves reais de estabelecimentos distintos

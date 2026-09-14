@@ -2,6 +2,7 @@
 // Público (verify_jwt=false) — retorna apenas nome/cidade/uf + nome do estabelecimento,
 // sem CNPJ ou dados sensíveis.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validarChaveColetor } from "../_shared/coletorAuth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -16,17 +17,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    let estabelecimentoId: string | null = null;
+    let body: any = {};
     try {
-      const body = await req.json();
-      estabelecimentoId = body?.estabelecimento_id ?? null;
+      body = await req.json();
     } catch { /* body vazio */ }
+
+    const autenticacao = await validarChaveColetor(sb, body.chave);
+    if ("erro" in autenticacao) {
+      return new Response(JSON.stringify({ error: autenticacao.erro }), {
+        status: autenticacao.status,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
     let q = sb
       .from("unidades")
       .select("id, nome, cidade, uf, estabelecimento_id, estabelecimentos(nome)")
       .order("nome");
-    if (estabelecimentoId) q = q.eq("estabelecimento_id", estabelecimentoId);
+    q = q.eq("estabelecimento_id", autenticacao.estabelecimentoId);
 
     const { data, error } = await q;
     if (error) throw error;

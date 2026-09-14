@@ -3,6 +3,7 @@
 // Retorna apenas equipamentos ativos. A chave_comunicacao é usada pelo coletor
 // para autenticar batidas no ponto-coletor-ingest.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validarChaveColetor } from "../_shared/coletorAuth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +23,23 @@ Deno.serve(async (req) => {
       try { body = await req.json(); } catch { body = {}; }
     }
 
-    // Atualizações de status vindas do coletor (batch)
+    const autenticacao = await validarChaveColetor(sb, body.chave);
+    if ("erro" in autenticacao) {
+      return new Response(JSON.stringify({ error: autenticacao.erro }), {
+        status: autenticacao.status,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const estabelecimentoId = autenticacao.estabelecimentoId;
+    const { data: empresas, error: empresasError } = await sb
+      .from("ponto_empresas")
+      .select("id")
+      .eq("estabelecimento_id", estabelecimentoId);
+    if (empresasError) throw empresasError;
+    const empresaIds = (empresas || []).map((empresa: any) => empresa.id);
+
+    // Atualizações de status vindas do coletor (batch), limitadas ao tenant.
     if (Array.isArray(body.status_updates) && body.status_updates.length) {
       for (const u of body.status_updates) {
         if (!u?.id) continue;
@@ -37,7 +54,12 @@ Deno.serve(async (req) => {
         if (u.resultado_teste !== undefined) {
           updatePayload.resultado_teste = u.resultado_teste;
         }
-        await sb.from("ponto_equipamentos").update(updatePayload).eq("id", u.id);
+        if (empresaIds.length) {
+          await sb.from("ponto_equipamentos")
+            .update(updatePayload)
+            .eq("id", u.id)
+            .in("empresa_id", empresaIds);
+        }
       }
     }
 
@@ -45,7 +67,8 @@ Deno.serve(async (req) => {
     // daquela filial + equipamentos SEM filial atribuída (fallback).
     let query = sb.from("ponto_equipamentos")
       .select("id, empresa_id, filial_id, nome, modelo, ip, porta, usuario, senha, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
-      .eq("ativo", true);
+      .eq("ativo", true)
+      .in("empresa_id", empresaIds.length ? empresaIds : ["00000000-0000-0000-0000-000000000000"]);
     if (body.filial_id) query = query.or(`filial_id.eq.${body.filial_id},filial_id.is.null`);
     const { data, error } = await query;
     if (error) throw error;
