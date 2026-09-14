@@ -164,3 +164,14 @@
 - [x] Avançar as versões dos cinco aplicativos para gerar atualizações reconhecidas.
 - [x] Validar dimensões, centralização, cores e arquivos dos ícones.
 - [ ] Confirmar os cinco APKs assinados no fluxo automático e instalar em aparelhos reais.
+
+## Entradas nativas e ícones proporcionais — 2026-09-14
+- [x] Padronizar as entradas de Automação e Controle com o cartão nativo do Pilar Fone.
+- [x] Criar ativação nativa por chave para o Pilar SMS sem apagar SIM, retentativas ou demais configurações.
+- [x] Vincular chaves SMS a dispositivos do estabelecimento e entregar o token somente na ativação válida.
+- [x] Adicionar Pilar SMS à tela Apps → Chaves do Aplicativo.
+- [x] Normalizar símbolos, área segura e faixa laranja de SMS, Automação, Controle e Remotas pela proporção do Fone.
+- [x] Remover as referências adaptativas antigas do ícone do Pilar Remotas.
+- [x] Avançar SMS para 1.13.0, Automação para 1.7.0, Controle para 2.2.0 e Remotas para 1.8.3.
+- [x] Validar build web, função publicada, XMLs e 60 imagens de ícone.
+- [ ] Confirmar os quatro APKs assinados no GitHub Actions e instalar em aparelhos reais (Java/Android SDK indisponíveis localmente).
