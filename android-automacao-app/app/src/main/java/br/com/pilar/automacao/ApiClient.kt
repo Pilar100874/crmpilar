@@ -96,13 +96,18 @@ object ApiClient {
         return Painel(ambiente, blocos)
     }
 
-    fun comando(accessToken: String, deviceId: String, canal: Int, acao: String): JSONObject =
-        requisicaoJson(
+    fun comando(accessToken: String, deviceId: String, canal: Int, acao: String): JSONObject {
+        val acaoReal = if (acao == "alternar") {
+            val atual = comando(accessToken, deviceId, canal, "status")
+            if (atual.optBoolean("ligado", false)) "desligar" else "ligar"
+        } else acao
+        return requisicaoJson(
             url = "${BuildConfig.SUPABASE_URL}/functions/v1/automacao-comando",
             metodo = "POST",
             autorizacao = accessToken,
-            corpo = JSONObject().put("device_id", deviceId).put("canal", canal).put("acao", acao),
+            corpo = JSONObject().put("device_id", deviceId).put("canal", canal).put("acao", acaoReal),
         )
+    }
 
     fun funcionarioAtual(accessToken: String, userId: String): JSONObject? = requisicaoArray(
         "${BuildConfig.SUPABASE_URL}/rest/v1/ponto_funcionarios?auth_user_id=eq.${codificar(userId)}&status=eq.ativo&select=id,nome&limit=1",
