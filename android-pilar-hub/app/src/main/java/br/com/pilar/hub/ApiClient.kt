@@ -36,7 +36,7 @@ object ApiClient {
             setRequestProperty("Authorization", "Bearer ${BuildConfig.SUPABASE_ANON_KEY}")
         }
         conn.outputStream.use {
-            it.write(JSONObject().put("chave", chave.trim().uppercase()).toString().toByteArray())
+            it.write(JSONObject().put("chave", chave.trim().uppercase()).put("app", "controle").toString().toByteArray())
         }
         val codigo = conn.responseCode
         val corpo = (if (codigo in 200..299) conn.inputStream else conn.errorStream)
@@ -121,7 +121,7 @@ object ApiClient {
             autorizacao = accessToken,
             corpo = JSONObject()
                 .put("funcionario_id", funcionarioId)
-                .put("data_hora", java.time.Instant.now().toString())
+                .put("data_hora", formatoIsoUtc())
                 .put("tipo", tipo)
                 .put("origem", "pilar_controle_android"),
             preferRepresentation = true,
@@ -153,14 +153,14 @@ object ApiClient {
             ?.bufferedReader()?.use(BufferedReader::readText).orEmpty()
         conn.disconnect()
         val json = runCatching { JSONObject(texto) }.getOrNull()
-        if (codigo !in 200..299 || json == null) {
+        if (codigo !in 200..299) {
             val mensagem = json?.optString("msg").takeUnless { it.isNullOrBlank() }
                 ?: json?.optString("error_description").takeUnless { it.isNullOrBlank() }
                 ?: "E-mail ou senha inválidos"
             throw IllegalStateException(mensagem)
         }
         if (json != null) return json
-        val array = runCatching { org.json.JSONArray(texto) }.getOrNull()
+        val array = runCatching { JSONArray(texto) }.getOrNull()
         return array?.optJSONObject(0) ?: JSONObject().put("ok", true)
     }
 
@@ -181,4 +181,9 @@ object ApiClient {
             throw IllegalStateException("Resposta inválida ao consultar o painel")
         }
     }
+
+    private fun formatoIsoUtc(): String =
+        java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }.format(java.util.Date())
 }

@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Pilar Hub</string>
+    <string name="app_name">Pilar Controle</string>
+    <string name="config_titulo">Configurações</string>
 </resources>

@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 
 /** Guarda a chave da empresa e o endereço do sistema usados pelo aparelho. */
 object Prefs {
-    private const val ARQUIVO = "pilar_automacao"
+    private const val ARQUIVO = "pilar_controle"
     const val PADRAO_URL = BuildConfig.APP_BASE_URL
 
     private fun sp(ctx: Context): SharedPreferences =

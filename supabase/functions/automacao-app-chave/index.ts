@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 /** Aplicativos que usam chave de empresa. */
-const APPS_VALIDOS = ["automacao", "coletor", "coletor-tv"];
+const APPS_VALIDOS = ["automacao", "controle", "coletor", "coletor-tv"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

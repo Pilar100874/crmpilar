@@ -20,6 +20,7 @@ type Chave = {
 /** Programas que pedem a chave da empresa no primeiro acesso. */
 const APPS = [
   { valor: "automacao", rotulo: "Pilar Automação (celular/tablet)" },
+  { valor: "controle", rotulo: "Pilar Controle (Automação e Ponto)" },
   { valor: "coletor", rotulo: "Coletor (Windows / ISO)" },
   { valor: "coletor-tv", rotulo: "Coletor TV (Android TV)" },
 ] as const;

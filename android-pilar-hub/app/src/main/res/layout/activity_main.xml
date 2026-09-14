@@ -16,8 +16,23 @@
         <Button android:id="@+id/btnRecarregar" android:layout_width="wrap_content" android:layout_height="44dp" android:background="@drawable/btn_secondary" android:text="Atualizar painel" android:textAllCaps="false" android:textColor="@color/text_primary" />
     </LinearLayout>
     <TextView android:id="@+id/txtStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="12dp" android:textColor="@color/text_muted" android:textSize="12sp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="12dp">
+        <Button android:id="@+id/btnAutomacao" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:background="@drawable/btn_primary" android:text="Automação" android:textAllCaps="false" android:textColor="@android:color/white" />
+        <Button android:id="@+id/btnPonto" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:layout_marginStart="8dp" android:background="@drawable/btn_secondary" android:text="Relógio de ponto" android:textAllCaps="false" android:textColor="@color/text_primary" />
+    </LinearLayout>
     <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-        <LinearLayout android:id="@+id/listaBlocos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+            <LinearLayout android:id="@+id/listaBlocos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+            <LinearLayout android:id="@+id/painelPonto" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone" android:background="@drawable/bg_card" android:padding="18dp">
+                <TextView android:id="@+id/txtFuncionario" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Carregando funcionário…" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:layout_marginBottom="14dp" android:text="Selecione a marcação. Este aplicativo não usa câmera." android:textColor="@color/text_muted" />
+                <Button android:id="@+id/btnEntrada" android:layout_width="match_parent" android:layout_height="52dp" android:background="@drawable/btn_primary" android:text="Registrar entrada" android:textAllCaps="false" android:textColor="@android:color/white" />
+                <Button android:id="@+id/btnInicioIntervalo" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/btn_secondary" android:text="Iniciar intervalo" android:textAllCaps="false" android:textColor="@color/text_primary" />
+                <Button android:id="@+id/btnFimIntervalo" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/btn_secondary" android:text="Finalizar intervalo" android:textAllCaps="false" android:textColor="@color/text_primary" />
+                <Button android:id="@+id/btnSaida" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/btn_secondary" android:text="Registrar saída" android:textAllCaps="false" android:textColor="@color/text_primary" />
+                <TextView android:id="@+id/txtStatusPonto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/text_muted" />
+            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
         <Button android:id="@+id/btnAtualizarApp" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:background="@drawable/btn_secondary" android:text="Atualizar aplicativo" android:textAllCaps="false" android:textColor="@color/text_primary" />

@@ -20,7 +20,6 @@ import java.net.URL
  */
 object AtualizadorApp {
 
-    private const val BASE = "https://crmpilar.lovable.app"
     private const val MANIFESTO = "/apps/pilar-automacao-latest.json"
 
     data class Info(val versao: String, val url: String, val notas: String)
@@ -51,8 +50,8 @@ object AtualizadorApp {
         c.inputStream.bufferedReader().use { it.readText() }
     } catch (_: Exception) { null }
 
-    fun consultar(): Info? {
-        val txt = baixarTexto("$BASE$MANIFESTO?_=${System.currentTimeMillis()}") ?: return null
+    fun consultar(ctx: Context): Info? {
+        val txt = baixarTexto("${Prefs.baseUrl(ctx)}$MANIFESTO?_=${System.currentTimeMillis()}") ?: return null
         return try {
             val j = JSONObject(txt)
             val versao = j.optString("version").ifBlank { j.optString("versionName") }
@@ -109,7 +108,7 @@ object AtualizadorApp {
     fun atualizar(act: Activity, aviso: (String) -> Unit) {
         aviso("Procurando atualização…")
         Thread {
-            val info = consultar()
+            val info = consultar(act)
             if (info == null) {
                 ui.post { aviso("Não foi possível consultar a atualização agora.") }
                 return@Thread
