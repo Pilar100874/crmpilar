@@ -29,9 +29,16 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # O runner Ubuntu já inclui o SDK Android. Não execute setup-android ou
+      # sdkmanager aqui: ambos consultam o catálogo remoto e podem falhar antes
+      # da compilação, mesmo quando a plataforma necessária já está instalada.
+      - name: Validar Android SDK do compilador
+        run: |
+          test -n "$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms/android-34"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)
+          test -x "$APKSIGNER"
+          dirname "$APKSIGNER" >> "$GITHUB_PATH"
       - name: Ler versão
         id: version
         run: |
