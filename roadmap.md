@@ -157,3 +157,10 @@
 - [x] Reorganizar filtros, ações e equipamentos da Central de Atualizações.
 - [x] Ajustar formulário e cartões de chaves para tablet.
 - [x] Validar as três telas em tablet vertical e horizontal sem cortes.
+
+## Compilação do Pilar Fone e ícones dos APKs — 2026-09-14
+- [x] Remover a dependência de Bun do comando de compilação usado pelo Pilar Fone.
+- [x] Aplicar a mesma faixa laranja aos cinco ícones dos APKs.
+- [x] Avançar as versões dos cinco aplicativos para gerar atualizações reconhecidas.
+- [x] Validar dimensões, centralização, cores e arquivos dos ícones.
+- [ ] Confirmar os cinco APKs assinados no fluxo automático e instalar em aparelhos reais.
