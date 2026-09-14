@@ -100,7 +100,7 @@ export default function AutomacaoChavesApp() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5 lg:p-6">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -111,7 +111,7 @@ export default function AutomacaoChavesApp() {
             com usuário e senha e vê apenas o painel definido para ela.
           </p>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2 sm:flex-row">
+        <CardContent className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(220px,280px)_auto]">
           <Input
             placeholder="Nome do aparelho (ex.: Tablet da portaria)"
             value={nome}
@@ -121,14 +121,14 @@ export default function AutomacaoChavesApp() {
           <select
             value={app}
             onChange={(e) => setApp(e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground sm:w-72"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
             aria-label="Programa que vai usar a chave"
           >
             {APPS.map((a) => (
               <option key={a.valor} value={a.valor}>{a.rotulo}</option>
             ))}
           </select>
-          <Button onClick={criar} className="gap-2">
+          <Button onClick={criar} className="w-full gap-2 md:w-auto">
             <Plus className="h-4 w-4" /> Gerar chave
           </Button>
         </CardContent>
@@ -154,7 +154,7 @@ export default function AutomacaoChavesApp() {
       ) : chaves.filter((c) => filtro === "todos" || (c.app ?? "automacao") === filtro).length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhuma chave criada até agora.</p>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {chaves.filter((c) => filtro === "todos" || (c.app ?? "automacao") === filtro).map((c) => (
             <Card key={c.id} className="transition-shadow hover:shadow-md">
               <CardContent className="space-y-3 p-4">
