@@ -210,3 +210,9 @@
 - [x] Gerar os tamanhos comum, redondo e adaptativo do Android.
 - [x] Avançar o Pilar Remotas para 1.8.7.
 - [ ] Confirmar a compilação assinada e instalar no aparelho real.
+
+## Ícone fornecido para o Pilar Fone — 2026-09-14
+- [x] Aplicar sem redesenho o ícone fornecido ao Pilar Fone.
+- [x] Preparar os arquivos comum e adaptativo usados na geração Android.
+- [x] Avançar o Pilar Fone para 1.8.3.
+- [ ] Confirmar a compilação assinada e instalar no aparelho real.
