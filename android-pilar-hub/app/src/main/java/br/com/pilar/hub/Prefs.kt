@@ -21,6 +21,8 @@ object Prefs {
 
     fun empresaNome(ctx: Context): String = sp(ctx).getString("empresa_nome", "")?.trim().orEmpty()
 
+    fun dispositivoId(ctx: Context): String = sp(ctx).getString("dispositivo_id", "")?.trim().orEmpty()
+
     fun ativado(ctx: Context): Boolean = chave(ctx).isNotEmpty() && empresaId(ctx).isNotEmpty()
 
     fun sessaoSalva(ctx: Context): Boolean =
@@ -42,12 +44,14 @@ object Prefs {
         chave: String,
         empresaId: String,
         empresaNome: String,
+        dispositivoId: String,
     ) {
         sp(ctx).edit()
             .putString("base_url", baseUrl.trim().trimEnd('/'))
             .putString("chave", chave.trim().uppercase())
             .putString("empresa_id", empresaId.trim())
             .putString("empresa_nome", empresaNome.trim())
+            .putString("dispositivo_id", dispositivoId.trim())
             .apply()
     }
 

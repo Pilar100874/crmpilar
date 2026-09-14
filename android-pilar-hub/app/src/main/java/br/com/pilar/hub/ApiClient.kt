@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets
 /** Conversa com o servidor para validar a chave da empresa. */
 object ApiClient {
 
-    data class Ativacao(val empresaId: String, val empresaNome: String)
+    data class Ativacao(val empresaId: String, val empresaNome: String, val dispositivoId: String)
     data class Sessao(
         val accessToken: String,
         val refreshToken: String,
@@ -51,6 +51,7 @@ object ApiClient {
         return Ativacao(
             empresaId = json?.optString("estabelecimento_id").orEmpty(),
             empresaNome = json?.optString("empresa").orEmpty(),
+            dispositivoId = json?.optString("dispositivo_id").orEmpty(),
         )
     }
 

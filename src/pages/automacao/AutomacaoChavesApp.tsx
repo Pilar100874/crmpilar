@@ -15,6 +15,7 @@ type Chave = {
   app: string;
   bloqueado: boolean;
   ultima_comunicacao: string | null;
+  dispositivo_id?: string | null;
 };
 
 /** Programas que pedem a chave da empresa no primeiro acesso. */
@@ -48,7 +49,7 @@ export default function AutomacaoChavesApp() {
     setCarregando(true);
     const { data, error } = await supabase
       .from("automacao_app_chaves")
-      .select("id, nome, chave, app, bloqueado, ultima_comunicacao")
+      .select("id, nome, chave, app, bloqueado, ultima_comunicacao, dispositivo_id")
       .order("created_at", { ascending: false });
     if (error) toast.error("Não foi possível carregar as chaves");
     setChaves((data as Chave[]) ?? []);
