@@ -33,7 +33,7 @@ export default function AppsLayout() {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <div className="shrink-0 border-b bg-card/60 p-3 backdrop-blur lg:hidden">
+        <div className="shrink-0 border-b bg-card/60 p-3 backdrop-blur md:hidden">
           <Select value={ativo.to} onValueChange={navigate}>
             <SelectTrigger className="h-11 w-full bg-background">
               <SelectValue>
@@ -60,10 +60,10 @@ export default function AppsLayout() {
         </div>
 
         <aside className={cn(
-          "hub-menu hidden shrink-0 flex-col overflow-y-auto border-r bg-card transition-all duration-300 lg:flex",
-          recolhido ? "w-14" : "w-64",
+          "hub-menu hidden w-14 shrink-0 flex-col overflow-y-auto border-r bg-card transition-all duration-300 md:flex lg:w-64",
+          recolhido && "lg:w-14",
         )}>
-          <div className="flex justify-end border-b p-2">
+          <div className="hidden justify-end border-b p-2 lg:flex">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setRecolhido((valor) => !valor)}>
               {recolhido ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
               <span className="sr-only">{recolhido ? "Expandir menu" : "Recolher menu"}</span>
@@ -82,12 +82,13 @@ export default function AppsLayout() {
                     className={cn(
                       "relative h-10 w-full justify-start gap-3 px-2.5 text-muted-foreground",
                       selecionado && "bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary",
-                      recolhido && "justify-center px-0",
+                      "justify-center px-0 lg:justify-start lg:px-2.5",
+                      recolhido && "lg:justify-center lg:px-0",
                     )}
                   >
-                    {selecionado && !recolhido && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" />}
+                    {selecionado && !recolhido && <span className="absolute inset-y-1.5 left-0 hidden w-0.5 rounded-full bg-primary lg:block" />}
                     <Icone className="h-4 w-4 shrink-0" />
-                    {!recolhido && <span className="truncate">{item.label}</span>}
+                    {!recolhido && <span className="hidden truncate lg:inline">{item.label}</span>}
                   </Button>
                 );
                 return recolhido ? (
@@ -95,7 +96,12 @@ export default function AppsLayout() {
                     <TooltipTrigger asChild>{botao}</TooltipTrigger>
                     <TooltipContent side="right">{item.label}</TooltipContent>
                   </Tooltip>
-                ) : botao;
+                ) : (
+                  <Tooltip key={item.to}>
+                    <TooltipTrigger asChild>{botao}</TooltipTrigger>
+                    <TooltipContent side="right" className="lg:hidden">{item.label}</TooltipContent>
+                  </Tooltip>
+                );
               })}
             </nav>
           </TooltipProvider>

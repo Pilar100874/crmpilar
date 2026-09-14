@@ -173,7 +173,7 @@ export default function AdminApps() {
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 xl:p-8">
+    <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 xl:p-6">
       <div>
         <h1 className="text-xl font-semibold sm:text-3xl">Aplicativos e downloads</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
@@ -220,7 +220,7 @@ export default function AdminApps() {
           <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Como usar
           </h3>
-          <ol className="space-y-4">
+          <ol className="grid gap-4 md:grid-cols-3">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
               <p className="text-sm leading-relaxed text-muted-foreground">Baixe e instale o APK no celular ou tablet Android (permita fontes desconhecidas).</p>
@@ -290,7 +290,7 @@ export default function AdminApps() {
           <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Como instalar e usar
           </h3>
-          <ol className="space-y-4">
+          <ol className="grid gap-4 md:grid-cols-3">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
               <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>{coletorFileName}</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras e relógios de ponto.</p>
@@ -361,7 +361,7 @@ export default function AdminApps() {
           <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Como usar no Linux
           </h3>
-          <ol className="space-y-4">
+          <ol className="grid gap-4 md:grid-cols-3">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -384,11 +384,13 @@ export default function AdminApps() {
         </div>
       </Card>
 
-      <PilarSmsDownloadCard />
-
-      <PilarHubDownloadCard />
-
-      <TvSignageDownloadCard />
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <PilarSmsDownloadCard />
+        <PilarHubDownloadCard />
+        <div className="xl:col-span-2">
+          <TvSignageDownloadCard />
+        </div>
+      </div>
 
     </div>
 
