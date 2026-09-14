@@ -172,7 +172,7 @@ export default function AdminApps() {
   const coletorLinuxUrl = coletorInfo?.downloadUrlLinux || COLETOR_LINUX_FALLBACK_URL;
 
   return (
-    <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 xl:p-6">
+    <div className="mx-auto max-w-screen-2xl space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-6">
       <div>
         <h1 className="text-xl font-semibold sm:text-3xl">Aplicativos e downloads</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
@@ -184,8 +184,8 @@ export default function AdminApps() {
 
       <InterfoneAppDownloadCard />
 
-      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
           <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 sm:h-14 sm:w-14 sm:rounded-2xl">
               <Tablet className="h-8 w-8" />
@@ -215,7 +215,7 @@ export default function AdminApps() {
           </div>
         </CardContent>
 
-        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
           <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Como usar
           </h3>
@@ -236,8 +236,8 @@ export default function AdminApps() {
         </div>
       </Card>
 
-      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
           <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 sm:h-14 sm:w-14 sm:rounded-2xl">
               <Monitor className="h-8 w-8" />
@@ -285,7 +285,7 @@ export default function AdminApps() {
           )}
         </CardContent>
 
-        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
           <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Como instalar e usar
           </h3>
@@ -306,8 +306,8 @@ export default function AdminApps() {
         </div>
       </Card>
 
-      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+      <Card className="flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-6 lg:p-8">
           <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 sm:h-14 sm:w-14 sm:rounded-2xl">
               <Monitor className="h-8 w-8" />
@@ -356,7 +356,7 @@ export default function AdminApps() {
           </div>
         </CardContent>
 
-        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+        <div className="border-t bg-muted/40 p-5 sm:p-6 lg:p-8">
           <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Como usar no Linux
           </h3>
@@ -383,10 +383,10 @@ export default function AdminApps() {
         </div>
       </Card>
 
-      <div className="grid items-start gap-5 xl:grid-cols-2">
+      <div className="grid items-start gap-5 md:grid-cols-2">
         <PilarSmsDownloadCard />
         <PilarHubDownloadCard />
-        <div className="xl:col-span-2">
+        <div className="md:col-span-2">
           <TvSignageDownloadCard />
         </div>
       </div>

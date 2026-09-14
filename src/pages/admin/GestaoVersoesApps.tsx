@@ -263,7 +263,7 @@ export default function GestaoVersoesApps() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5 xl:p-6">
+    <div className="mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5 lg:p-6">
       <header className="border bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-4 shadow-sm sm:rounded-lg sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -296,8 +296,8 @@ export default function GestaoVersoesApps() {
         </div>
       </header>
 
-      <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 md:flex-row md:items-end md:justify-between">
-        <div className="w-full md:w-72">
+      <div className="grid gap-3 rounded-lg border bg-card p-3 lg:grid-cols-[minmax(220px,288px)_1fr] lg:items-end">
+        <div className="w-full">
           <Label className="mb-1.5 block text-xs">Filtrar por aplicativo</Label>
           <Select value={filtroApp} onValueChange={setFiltroApp}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -307,9 +307,9 @@ export default function GestaoVersoesApps() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" onClick={selecionarDesatualizados}>Selecionar desatualizados</Button>
-          <Button onClick={() => enviarAtualizacoes()} disabled={disparando || selecionados.length === 0}>
+        <div className="grid gap-2 sm:grid-cols-2 lg:flex lg:justify-end">
+          <Button variant="outline" className="w-full lg:w-auto" onClick={selecionarDesatualizados}>Selecionar desatualizados</Button>
+          <Button className="w-full lg:w-auto" onClick={() => enviarAtualizacoes()} disabled={disparando || selecionados.length === 0}>
             <Send className="mr-2 h-4 w-4" />
             {disparando ? "Enviando…" : `Enviar atualização (${selecionados.length})`}
           </Button>
@@ -324,7 +324,7 @@ export default function GestaoVersoesApps() {
           </div>
         </CardHeader>
         <CardContent className="p-3 sm:p-4">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
+          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
             {atualizaveis.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum equipamento encontrado.</p>}
             {atualizaveis.map((e) => {
               const disponivel = ultimaVersao[e.app];
