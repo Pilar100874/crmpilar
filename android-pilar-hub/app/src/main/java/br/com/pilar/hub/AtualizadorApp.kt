@@ -21,7 +21,7 @@ import java.net.URL
 object AtualizadorApp {
 
     private const val BASE = "https://crmpilar.lovable.app"
-    private const val MANIFESTO = "/coletor/hub-version.json"
+    private const val MANIFESTO = "/apps/pilar-automacao-latest.json"
 
     data class Info(val versao: String, val url: String, val notas: String)
 
@@ -101,17 +101,6 @@ object AtualizadorApp {
             )
         } catch (_: Exception) {}
         return false
-    }
-
-    /** Inicia uma atualização recebida remotamente pelo serviço em segundo plano. */
-    fun atualizarRemoto(ctx: Context, url: String): String {
-        val arquivo = baixarApk(ctx, url) ?: return "Falha ao baixar a atualização"
-        return try {
-            instalar(ctx, arquivo)
-            "Instalador aberto no aparelho"
-        } catch (e: Exception) {
-            e.message ?: "Falha ao abrir o instalador"
-        }
     }
 
     /**

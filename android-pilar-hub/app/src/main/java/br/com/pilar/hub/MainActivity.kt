@@ -1,152 +1,80 @@
 package br.com.pilar.hub
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.widget.Button
-import android.widget.EditText
+import android.view.WindowManager
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
-    // Somente permissões necessárias ao gateway SMS.
-    private val PERMS = arrayOf(
-        Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.POST_NOTIFICATIONS
-    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        val prefs = getSharedPreferences("pilar_hub", MODE_PRIVATE)
-        val tokenInput = findViewById<EditText>(R.id.tokenInput)
-        val status = findViewById<TextView>(R.id.status)
-        tokenInput.setText(prefs.getString("device_token", ""))
-
-        findViewById<Button>(R.id.btnSave).setOnClickListener {
-            val token = tokenInput.text.toString().trim()
-            if (token.isBlank()) {
-                Toast.makeText(this, "Informe o token", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            prefs.edit().putString("device_token", token).apply()
-            requestPermsAndStart()
-            status.text = "Pilar Hub iniciado. Ver notificação."
+        if (!Prefs.ativado(this)) {
+            startActivity(Intent(this, AtivacaoActivity::class.java))
+            finish()
+            return
+        }
+        if (!Prefs.sessaoSalva(this)) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
         }
 
-        // Atualização do aplicativo para a última versão publicada.
-        val btnAtualizar = findViewById<Button>(R.id.btnAtualizarApp)
-        val atualizacaoStatus = findViewById<TextView>(R.id.atualizacaoStatus)
-        findViewById<TextView>(R.id.verLabel).text = "v${AtualizadorApp.versaoInstalada(this)}"
+        setContentView(R.layout.activity_main)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        val btnAtualizar = findViewById<android.widget.Button>(R.id.btnAtualizarApp)
+        val versaoAtual = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (_: Exception) { "" }
+        if (versaoAtual.isNotEmpty()) btnAtualizar.text = "Atualizar aplicativo · v$versaoAtual"
         btnAtualizar.setOnClickListener {
             btnAtualizar.isEnabled = false
             AtualizadorApp.atualizar(this) { msg ->
-                atualizacaoStatus.text = msg
+                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
                 if (!msg.endsWith("…")) btnAtualizar.isEnabled = true
             }
         }
 
-        configurarSaidaPorToque()
+        findViewById<android.widget.Button>(R.id.btnRecarregar).setOnClickListener { carregar() }
+        findViewById<android.widget.Button>(R.id.btnSair).setOnClickListener {
+            Prefs.limparSessao(this)
+            startActivity(Intent(this, LoginActivity::class.java)); finish()
+        }
+        carregar()
     }
 
-    // ===================== Saída oculta por toque (celular) =====================
-    // No celular não há tecla Voltar física para segurar: segurar o dedo na tela
-    // por 5s fecha o app (igual à saída oculta do Pilar Remotas na TV).
-
-    @android.annotation.SuppressLint("ClickableViewAccessibility")
-    private fun configurarSaidaPorToque() {
-        findViewById<android.view.View>(android.R.id.content).setOnTouchListener { _, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> iniciarSaidaOculta()
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> cancelarSaidaOculta()
+    private fun carregar() {
+        val status = findViewById<TextView>(R.id.txtStatus)
+        val lista = findViewById<LinearLayout>(R.id.listaBlocos)
+        status.text = "Carregando ambiente…"
+        CoroutineScope(Dispatchers.IO).launch {
+            val resultado = runCatching { ApiClient.carregarPainel(Prefs.accessToken(this@MainActivity), Prefs.ambiente(this@MainActivity)) }
+            withContext(Dispatchers.Main) {
+                resultado.onSuccess { painel ->
+                    findViewById<TextView>(R.id.txtTitulo).text = painel.ambiente.optString("nome", "Automação")
+                    status.text = "Atualizado agora"
+                    PainelNativo.preencher(this@MainActivity, painel, lista) { bloco, acao, retorno ->
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val resposta = runCatching {
+                                ApiClient.comando(Prefs.accessToken(this@MainActivity), bloco.getString("device_id"), bloco.optInt("canal", 0), acao)
+                            }
+                            withContext(Dispatchers.Main) {
+                                resposta.onSuccess { retorno(it.optBoolean("ok"), it.optString("mensagem").ifBlank { if (it.optBoolean("ok")) "Comando enviado" else "Falha no comando" }) }
+                                    .onFailure { retorno(false, it.message ?: "Falha no comando") }
+                            }
+                        }
+                    }
+                }.onFailure { status.text = it.message ?: "Não foi possível carregar o ambiente" }
             }
-            false
         }
-    }
-
-    private fun requestPermsAndStart() {
-        val missing = PERMS.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (missing.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, missing.toTypedArray(), 1)
-        }
-        val svc = Intent(this, PilarHubService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc) else startService(svc)
-    }
-
-    override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
-        super.onRequestPermissionsResult(rc, p, r)
-    }
-
-    // ===================== Saída oculta (segurar VOLTAR/ESC por 5s) =====================
-    // Igual ao Pilar Remotas (Android TV): segurar a tecla Voltar fecha a tela do app.
-    // O serviço em segundo plano (gateway SMS) continua rodando.
-
-    private val ui = Handler(Looper.getMainLooper())
-    private var saidaInicio = 0L
-    private val saidaRunnable = Runnable {
-        saidaInicio = 0L
-        ui.removeCallbacks(dicaRunnable)
-        finishAndRemoveTask()
-    }
-    private val dicaRunnable = Runnable {
-        Toast.makeText(this, "Continue segurando para sair…", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun ehTeclaSaida(keyCode: Int) = keyCode == KeyEvent.KEYCODE_BACK ||
-        keyCode == KeyEvent.KEYCODE_ESCAPE ||
-        keyCode == KeyEvent.KEYCODE_DEL
-
-    private fun iniciarSaidaOculta() {
-        if (saidaInicio != 0L) return
-        saidaInicio = SystemClock.elapsedRealtime()
-        ui.postDelayed(dicaRunnable, 1200L)
-        ui.postDelayed(saidaRunnable, 5000L)
-    }
-
-    private fun cancelarSaidaOculta() {
-        saidaInicio = 0L
-        ui.removeCallbacks(dicaRunnable)
-        ui.removeCallbacks(saidaRunnable)
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (ehTeclaSaida(keyCode)) {
-            iniciarSaidaOculta()
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (ehTeclaSaida(keyCode)) {
-            // Alguns controles emitem key up entre repetições: tolera pequenas quebras
-            ui.postDelayed({
-                if (saidaInicio != 0L && SystemClock.elapsedRealtime() - saidaInicio < 5000L) {
-                    cancelarSaidaOculta()
-                }
-            }, 400L)
-            return true
-        }
-        return super.onKeyUp(keyCode, event)
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        // ignora toque simples — saída somente segurando VOLTAR por 5s
     }
 }
