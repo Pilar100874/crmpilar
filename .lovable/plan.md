@@ -1,16 +1,15 @@
-# Ajustar Apps para tablet
+# Corrigir compilação do Pilar Fone e padronizar ícones
 
-## Resultado esperado
-- Deixar Downloads, Atualizações e Chaves confortáveis em tablets, sem cortes, aperto ou navegação ambígua.
-- Preservar as versões de computador e celular.
+## Compilação
+- Remover a dependência implícita do Bun no comando usado pelo fluxo do Pilar Fone.
+- Manter verificação de tipos e geração do aplicativo web antes da montagem do APK.
 
-## Alterações
-- Trocar a faixa lateral estreita do tablet por uma navegação horizontal clara e compacta.
-- Ajustar larguras, espaçamentos e distribuição dos cartões de downloads para telas médias.
-- Reorganizar filtros, ações e cartões de equipamentos da Central de Atualizações para uso em tablet.
-- Melhorar o formulário e a grade de chaves para aproveitar a largura sem comprimir textos e botões.
+## Ícones
+- Aplicar a mesma faixa laranja, no mesmo tamanho e posição, aos ícones de Pilar Fone, SMS, Automação, Controle e Remotas.
+- Atualizar ícones comuns, redondos e adaptativos para evitar diferenças entre aparelhos Android.
+- Manter fundo azul-marinho e símbolo branco centralizado, sem cortes.
 
-## Validação
-- Conferir Downloads, Atualizações e Chaves em tablet vertical e horizontal.
-- Confirmar ausência de rolagem horizontal, cortes e sobreposições.
-- Verificar que a navegação e os botões continuam funcionando.
+## Versões e validação
+- Avançar as versões dos cinco APKs para garantir que os aparelhos reconheçam os novos arquivos.
+- Conferir visualmente os cinco ícones e validar os arquivos de imagem e configuração.
+- Confirmar que o projeto web compila sem exigir Bun no fluxo baseado em Node.

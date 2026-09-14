@@ -33,7 +33,7 @@ export default function AppsLayout() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
         <div className="shrink-0 border-b bg-card/60 p-3 backdrop-blur md:hidden">
           <Select value={ativo.to} onValueChange={navigate}>
             <SelectTrigger className="h-11 w-full bg-background">
@@ -60,11 +60,32 @@ export default function AppsLayout() {
           </Select>
         </div>
 
+        <nav className="hidden shrink-0 grid-cols-3 gap-2 border-b bg-card/70 p-3 backdrop-blur md:grid xl:hidden">
+          {itens.map((item) => {
+            const Icone = item.icon;
+            const selecionado = item.to === ativo.to;
+            return (
+              <Button
+                key={item.to}
+                variant="ghost"
+                onClick={() => navigate(item.to)}
+                className={cn(
+                  "h-11 min-w-0 justify-center gap-2 px-3 text-muted-foreground",
+                  selecionado && "bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary",
+                )}
+              >
+                <Icone className="h-4 w-4 shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </Button>
+            );
+          })}
+        </nav>
+
         <aside className={cn(
-          "hub-menu hidden w-14 shrink-0 flex-col overflow-y-auto border-r bg-card transition-all duration-300 md:flex lg:w-64",
-          recolhido && "lg:w-14",
+          "hub-menu hidden w-64 shrink-0 flex-col overflow-y-auto border-r bg-card transition-all duration-300 xl:flex",
+          recolhido && "xl:w-14",
         )}>
-          <div className="hidden justify-end border-b p-2 lg:flex">
+          <div className="flex justify-end border-b p-2">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setRecolhido((valor) => !valor)}>
               {recolhido ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
               <span className="sr-only">{recolhido ? "Expandir menu" : "Recolher menu"}</span>
@@ -83,13 +104,13 @@ export default function AppsLayout() {
                     className={cn(
                       "relative h-10 w-full justify-start gap-3 px-2.5 text-muted-foreground",
                       selecionado && "bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary",
-                      "justify-center px-0 lg:justify-start lg:px-2.5",
-                      recolhido && "lg:justify-center lg:px-0",
+                       "justify-start px-2.5",
+                       recolhido && "xl:justify-center xl:px-0",
                     )}
                   >
-                    {selecionado && !recolhido && <span className="absolute inset-y-1.5 left-0 hidden w-0.5 rounded-full bg-primary lg:block" />}
+                    {selecionado && !recolhido && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" />}
                     <Icone className="h-4 w-4 shrink-0" />
-                    {!recolhido && <span className="hidden truncate lg:inline">{item.label}</span>}
+                    {!recolhido && <span className="truncate">{item.label}</span>}
                   </Button>
                 );
                 return recolhido ? (
@@ -100,7 +121,7 @@ export default function AppsLayout() {
                 ) : (
                   <Tooltip key={item.to}>
                     <TooltipTrigger asChild>{botao}</TooltipTrigger>
-                    <TooltipContent side="right" className="lg:hidden">{item.label}</TooltipContent>
+                    <TooltipContent side="right" className="hidden">{item.label}</TooltipContent>
                   </Tooltip>
                 );
               })}

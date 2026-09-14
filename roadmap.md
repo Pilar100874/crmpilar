@@ -150,3 +150,10 @@
 - [x] Preservar chave, login e configurações do ramal nas atualizações.
 - [x] Avançar a versão para 1.8.0 e validar o fluxo web.
 - [ ] Confirmar a compilação assinada e instalar em um aparelho real.
+
+## Ajuste da área Apps para tablet — 2026-09-14
+- [x] Substituir a faixa lateral estreita por navegação horizontal no tablet.
+- [x] Melhorar larguras e espaçamentos dos downloads em telas médias.
+- [x] Reorganizar filtros, ações e equipamentos da Central de Atualizações.
+- [x] Ajustar formulário e cartões de chaves para tablet.
+- [x] Validar as três telas em tablet vertical e horizontal sem cortes.
