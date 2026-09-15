@@ -259,3 +259,9 @@
 - [x] Reconhecer com segurança coletores instalados antes da ativação por chave
 - [x] Criar e salvar automaticamente a chave nas instalações antigas reconhecidas
 - [x] Manter a ativação manual obrigatória em instalações novas
+
+## Pilar Coletor 3.2.1 — botão Sair e Atualizar — 2026-09-15
+- [x] Sair limpa toda a ativação (Prefs.limpar) com diálogo de confirmação e volta à tela de chave
+- [x] Botão de atualização com texto curto ("Atualizar · v3.2.1"), fonte 12sp, sem corte
+- [x] Versão 3.2.1 (code 20) em build.gradle.kts, hub-version.json e PilarHubDownloadCard
+- [ ] Compilar e publicar o APK 3.2.1

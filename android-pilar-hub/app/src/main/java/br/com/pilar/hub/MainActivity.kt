@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         }
         val btnAtualizar = findViewById<Button>(R.id.btnAtualizarApp)
         val versao = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
-        if (versao.isNotEmpty()) btnAtualizar.text = "Atualizar aplicativo · v$versao"
+        if (versao.isNotEmpty()) btnAtualizar.text = "Atualizar · v$versao"
         btnAtualizar.setOnClickListener {
             btnAtualizar.isEnabled = false
             AtualizadorApp.atualizar(this) { msg ->
@@ -80,11 +80,18 @@ class MainActivity : AppCompatActivity() {
             mostrar()
         }
         findViewById<Button>(R.id.btnSair).setOnClickListener {
-            Prefs.salvarColetorAtivo(this, false)
-            ColetorService.parar(this)
-            Prefs.limparSessao(this)
-            startActivity(Intent(this, AtivacaoActivity::class.java))
-            finish()
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Sair do aplicativo")
+                .setMessage("O coletor será interrompido e será preciso informar a chave da empresa novamente para entrar.")
+                .setPositiveButton("Sair") { _, _ ->
+                    Prefs.salvarColetorAtivo(this, false)
+                    ColetorService.parar(this)
+                    Prefs.limpar(this)
+                    startActivity(Intent(this, AtivacaoActivity::class.java))
+                    finish()
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
         }
         mostrar()
     }
