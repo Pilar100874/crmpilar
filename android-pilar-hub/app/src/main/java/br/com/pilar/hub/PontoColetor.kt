@@ -7,11 +7,19 @@ import org.json.JSONObject
 /** Lê os relógios de ponto da rede local e envia as marcações ao servidor. */
 object PontoColetor {
 
+    /** Só marcamos um relógio como fora do ar depois de algumas falhas seguidas. */
+    private const val FALHAS_PARA_OFFLINE = 3
+    private val falhasSeguidas = mutableMapOf<String, Int>()
+
     fun sincronizar(ctx: Context) {
         val chave = Prefs.chave(ctx)
         if (chave.isBlank()) throw IllegalStateException("Aparelho sem chave da empresa.")
+        val filial = Prefs.filialId(ctx).ifBlank { null }
 
-        val boot = Rede.funcao("ponto-coletor-bootstrap", JSONObject().put("chave", chave))
+        val boot = Rede.funcao(
+            "ponto-coletor-bootstrap",
+            JSONObject().put("chave", chave).put("filial_id", filial),
+        )
         val equipamentos = Rede.lista(boot, "equipamentos")
         val situacoes = mutableListOf<ColetorEstado.Item>()
         val atualizacoes = JSONArray()
@@ -19,18 +27,33 @@ object PontoColetor {
         for (i in 0 until equipamentos.length()) {
             val eq = equipamentos.optJSONObject(i) ?: continue
             val id = eq.optString("id")
+            if (filial != null) {
+                val doEquipamento = eq.optString("filial_id").ifBlank { eq.optString("unidade_id") }
+                if (doEquipamento.isNotBlank() && doEquipamento != filial) continue
+            }
             val nome = eq.optString("nome").ifBlank { eq.optString("ip") }
             val ultimoNsr = Prefs.nsr(ctx, id)
-            var situacao = "online"
             var erro: String? = null
             var batidas: List<ControlId.Batida> = emptyList()
+            var resultadoTeste: String? = null
+
+            if (eq.optBoolean("solicitar_teste", false)) {
+                resultadoTeste = ControlId.testarConexao(eq)
+            }
 
             try {
                 batidas = ControlId.lerBatidas(eq, ultimoNsr)
+                falhasSeguidas[id] = 0
             } catch (e: Exception) {
-                situacao = "offline"
-                erro = e.message ?: "Sem resposta na rede local"
+                val falhas = (falhasSeguidas[id] ?: 0) + 1
+                falhasSeguidas[id] = falhas
+                if (falhas >= FALHAS_PARA_OFFLINE) {
+                    erro = e.message ?: "Sem resposta na rede local"
+                    ColetorEstado.erros++
+                }
             }
+            val falhando = (falhasSeguidas[id] ?: 0) >= FALHAS_PARA_OFFLINE
+            val situacao = if (falhando) "offline" else "online"
 
             if (batidas.isNotEmpty()) {
                 val registros = JSONArray()
@@ -57,6 +80,7 @@ object PontoColetor {
                     Prefs.salvarNsr(ctx, id, batidas.maxOf { it.nsr })
                 } catch (e: Exception) {
                     erro = e.message ?: "Falha ao enviar as marcações"
+                    ColetorEstado.erros++
                 }
             }
 
@@ -65,12 +89,19 @@ object PontoColetor {
                     .put("id", id)
                     .put("status", situacao)
                     .put("ultimo_erro", erro)
-                    .put("ultima_sync", agoraIso()),
+                    .put("ultima_sync", agoraIso())
+                    .put("filial_id", filial)
+                    .put("resultado_teste", resultadoTeste),
             )
             situacoes += ColetorEstado.Item(
                 nome = nome,
-                situacao = erro ?: if (batidas.isEmpty()) "Sem marcações novas" else "${batidas.size} marcações enviadas",
+                situacao = resultadoTeste
+                    ?: erro
+                    ?: if (falhando) "Tentando reconectar…"
+                    else if (batidas.isEmpty()) "Sem marcações novas"
+                    else "${batidas.size} marcações enviadas",
             )
+            if (erro != null) ColetorEstado.ultimoErro = "$nome: $erro"
         }
 
         ColetorEstado.relogios = situacoes
@@ -78,7 +109,7 @@ object PontoColetor {
             runCatching {
                 Rede.funcao(
                     "ponto-coletor-bootstrap",
-                    JSONObject().put("chave", chave).put("status_updates", atualizacoes),
+                    JSONObject().put("chave", chave).put("filial_id", filial).put("status_updates", atualizacoes),
                 )
             }
         }
