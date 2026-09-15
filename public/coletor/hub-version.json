@@ -1,7 +1,7 @@
 {
-  "version": "2.3.2",
+  "version": "3.0.0",
   "disponivel": true,
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/controle-v2.3.2/pilar-controle-v2.3.2.apk",
-  "filename": "pilar-controle-v2.3.2.apk",
-  "notas": "v2.3.2: Pilar Controle nativo com Automação e Relógio de Ponto, sem SMS ou câmeras."
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.0.0/pilar-coletor-v3.0.0.apk",
+  "filename": "pilar-coletor-v3.0.0.apk",
+  "notas": "v3.0.0: Pilar Coletor — lê os relógios de ponto e comanda os dispositivos de automação na rede local."
 }
