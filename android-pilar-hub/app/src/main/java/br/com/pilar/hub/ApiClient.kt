@@ -36,7 +36,7 @@ object ApiClient {
             setRequestProperty("Authorization", "Bearer ${BuildConfig.SUPABASE_ANON_KEY}")
         }
         conn.outputStream.use {
-            it.write(JSONObject().put("chave", chave.trim().uppercase()).put("app", "controle").toString().toByteArray())
+            it.write(JSONObject().put("chave", chave.trim().uppercase()).put("app", "coletor").toString().toByteArray())
         }
         val codigo = conn.responseCode
         val corpo = (if (codigo in 200..299) conn.inputStream else conn.errorStream)
