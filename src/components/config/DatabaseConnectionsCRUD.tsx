@@ -82,13 +82,16 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
     e.preventDefault();
     
     try {
+      const { sql_password, ...dadosSemSenha } = formData;
+
       if (editingId) {
         const { error } = await supabase
           .from("database_connections")
-          .update(formData)
+          .update(dadosSemSenha)
           .eq("id", editingId);
 
         if (error) throw error;
+        await salvarSenhaConexao("database_connections", editingId, sql_password);
         toast.success("Conexão atualizada com sucesso!");
       } else {
         const estabId = await getEstabelecimentoId(estabelecimentoId);
@@ -97,11 +100,14 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
           return;
         }
 
-        const { error } = await supabase
+        const { data: nova, error } = await supabase
           .from("database_connections")
-          .insert([{ ...formData, estabelecimento_id: estabId }]);
-        
+          .insert([{ ...dadosSemSenha, estabelecimento_id: estabId }])
+          .select("id")
+          .single();
+
         if (error) throw error;
+        if (nova?.id) await salvarSenhaConexao("database_connections", nova.id, sql_password);
         toast.success("Conexão criada com sucesso!");
       }
 
