@@ -25,10 +25,10 @@ object ColetorRemoto {
         if (comando.isBlank() || comando == "null") return
 
         var status = "concluido"
-        var resultado = "Comando recebido."
+        var resultado: String
         if (comando == "atualizar_versao") {
-            AtualizadorApp.atualizar(ctx) { }
-            resultado = "Atualização do aplicativo iniciada no aparelho."
+            Prefs.salvarAtualizacaoPendente(ctx, true)
+            resultado = "Atualização agendada: o aparelho instala ao abrir o aplicativo."
         } else {
             status = "erro"
             resultado = "Comando não reconhecido pelo aplicativo coletor."

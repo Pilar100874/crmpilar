@@ -115,7 +115,6 @@ class ColetorService : Service() {
             laçoRemoto = escopo.launch {
                 while (isActive) {
                     runCatching { ColetorRemoto.bater(this@ColetorService) }
-                    runCatching { AtualizadorApp.processarComandoRemoto(this@ColetorService) }
                     delay(INTERVALO_REMOTO)
                 }
             }

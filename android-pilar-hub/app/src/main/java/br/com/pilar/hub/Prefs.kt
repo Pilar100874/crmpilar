@@ -143,4 +143,11 @@ object Prefs {
     fun salvarAutomacaoAtiva(ctx: Context, ativa: Boolean) {
         sp(ctx).edit().putBoolean("automacao_ativa", ativa).apply()
     }
+
+    /** O painel pediu atualização enquanto o coletor rodava em segundo plano. */
+    fun atualizacaoPendente(ctx: Context): Boolean = sp(ctx).getBoolean("atualizacao_pendente", false)
+
+    fun salvarAtualizacaoPendente(ctx: Context, pendente: Boolean) {
+        sp(ctx).edit().putBoolean("atualizacao_pendente", pendente).apply()
+    }
 }
