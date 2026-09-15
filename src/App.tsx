@@ -494,6 +494,15 @@ const App = () => (
             <Route path="/espelho-funcionario/:token" element={<EspelhoFuncionario />} />
             <Route path="/ponto/totem" element={<PontoTotem />} />
             <Route path="/pilar-sip" element={<PilarSipJanela />} />
+            {/* O APK de Automação usa estas rotas sem o Layout principal da web. */}
+            <Route
+              path="/automacao/tela"
+              element={<ProtectedRoute><AutomacaoTela /></ProtectedRoute>}
+            />
+            <Route
+              path="/automacao/app"
+              element={<ProtectedRoute><AutomacaoMeuPainel /></ProtectedRoute>}
+            />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
               
@@ -864,8 +873,6 @@ const App = () => (
                 <Route path="palavras-chave" element={<LivroPalavrasChave />} />
               </Route>
               <Route path="/app/interfone" element={<PortariaAtendimentoMobile />} />
-              <Route path="/automacao/tela" element={<AutomacaoTela />} />
-              <Route path="/automacao/app" element={<AutomacaoMeuPainel />} />
               <Route path="/automacao" element={<AutomacaoLayout />}>
                 <Route index element={<AutomacaoPaineis />} />
                 <Route path="painel" element={<AutomacaoPainel />} />
