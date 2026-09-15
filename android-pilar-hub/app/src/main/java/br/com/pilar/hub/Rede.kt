@@ -55,6 +55,38 @@ object Rede {
         return resposta
     }
 
+    /** Usado quando o equipamento devolve uma imagem em vez de texto. */
+    fun bytes(
+        url: String,
+        metodo: String = "GET",
+        corpo: String? = null,
+        cabecalhos: Map<String, String> = emptyMap(),
+        timeoutMs: Int = 20000,
+        aceitarCertificadoLocal: Boolean = false,
+    ): Pair<ByteArray, String> {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            requestMethod = metodo
+            connectTimeout = timeoutMs
+            readTimeout = timeoutMs
+            cabecalhos.forEach { (k, v) -> setRequestProperty(k, v) }
+            if (corpo != null) {
+                doOutput = true
+                if (getRequestProperty("Content-Type") == null) setRequestProperty("Content-Type", "application/json")
+            }
+        }
+        if (aceitarCertificadoLocal && conn is HttpsURLConnection) {
+            conn.sslSocketFactory = contextoPermissivo.socketFactory
+            conn.hostnameVerifier = HostnameVerifier { _, _ -> true }
+        }
+        corpo?.let { conn.outputStream.use { saida -> saida.write(it.toByteArray()) } }
+        val codigo = conn.responseCode
+        val tipo = conn.contentType ?: "image/jpeg"
+        val dados = (if (codigo in 200..299) conn.inputStream else conn.errorStream)?.use { it.readBytes() } ?: ByteArray(0)
+        conn.disconnect()
+        if (codigo !in 200..299) throw IllegalStateException("HTTP $codigo")
+        return dados to tipo
+    }
+
     fun json(
         url: String,
         metodo: String = "POST",

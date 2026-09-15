@@ -36,10 +36,30 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal">
         <Button android:id="@+id/btnLigarParar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:background="@drawable/btn_primary" android:text="Parar coletor" android:textAllCaps="false" android:textColor="@android:color/white" />
         <Button android:id="@+id/btnSincronizar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:layout_marginStart="8dp" android:background="@drawable/btn_secondary" android:text="Sincronizar agora" android:textAllCaps="false" android:textColor="@color/text_primary" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnFilial"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_secondary"
+        android:text="Unidade: todas"
+        android:textAllCaps="false"
+        android:textColor="@color/text_primary" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:orientation="horizontal">
+        <Button android:id="@+id/btnPonto" android:layout_width="0dp" android:layout_weight="1" android:layout_height="44dp" android:background="@drawable/btn_secondary" android:text="Ponto ligado" android:textAllCaps="false" android:textColor="@color/text_primary" android:textSize="13sp" />
+        <Button android:id="@+id/btnAutomacao" android:layout_width="0dp" android:layout_weight="1" android:layout_height="44dp" android:layout_marginStart="8dp" android:background="@drawable/btn_secondary" android:text="Automação ligada" android:textAllCaps="false" android:textColor="@color/text_primary" android:textSize="13sp" />
+        <Button android:id="@+id/btnLimpar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="44dp" android:layout_marginStart="8dp" android:background="@drawable/btn_secondary" android:text="Limpar avisos" android:textAllCaps="false" android:textColor="@color/text_muted" android:textSize="13sp" />
     </LinearLayout>
 
     <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">

@@ -62,6 +62,21 @@ class MainActivity : AppCompatActivity() {
                 if (!msg.endsWith("…")) btnAtualizar.isEnabled = true
             }
         }
+        findViewById<Button>(R.id.btnFilial).setOnClickListener { escolherUnidade() }
+        findViewById<Button>(R.id.btnPonto).setOnClickListener {
+            Prefs.salvarPontoAtivo(this, !Prefs.pontoAtivo(this))
+            ColetorService.sincronizarAgora(this)
+            mostrar()
+        }
+        findViewById<Button>(R.id.btnAutomacao).setOnClickListener {
+            Prefs.salvarAutomacaoAtiva(this, !Prefs.automacaoAtiva(this))
+            ColetorService.sincronizarAgora(this)
+            mostrar()
+        }
+        findViewById<Button>(R.id.btnLimpar).setOnClickListener {
+            ColetorEstado.limparDiagnostico()
+            mostrar()
+        }
         findViewById<Button>(R.id.btnSair).setOnClickListener {
             Prefs.salvarColetorAtivo(this, false)
             ColetorService.parar(this)
@@ -80,6 +95,11 @@ class MainActivity : AppCompatActivity() {
             IntentFilter(ColetorService.ATUALIZOU),
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+        AtualizadorApp.processarComandoRemoto(this)
+        if (Prefs.atualizacaoPendente(this)) {
+            Prefs.salvarAtualizacaoPendente(this, false)
+            AtualizadorApp.atualizar(this) { msg -> Toast.makeText(this, msg, Toast.LENGTH_SHORT).show() }
+        }
         mostrar()
     }
 
@@ -94,9 +114,41 @@ class MainActivity : AppCompatActivity() {
         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 10)
     }
 
+    /** Deixa escolher qual unidade (filial) este aparelho atende. */
+    private fun escolherUnidade() {
+        Toast.makeText(this, "Buscando unidades…", Toast.LENGTH_SHORT).show()
+        Thread {
+            val resultado = runCatching { ColetorFiliais.listar(this) }
+            runOnUiThread {
+                val filiais = resultado.getOrNull()
+                if (filiais == null) {
+                    Toast.makeText(this, "Não foi possível buscar as unidades agora.", Toast.LENGTH_LONG).show()
+                    return@runOnUiThread
+                }
+                val nomes = (listOf("Todas as unidades") + filiais.map { it.nome }).toTypedArray()
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Unidade atendida")
+                    .setItems(nomes) { _, indice ->
+                        if (indice == 0) Prefs.salvarFilial(this, "", "")
+                        else filiais[indice - 1].let { Prefs.salvarFilial(this, it.id, it.nome) }
+                        ColetorService.sincronizarAgora(this)
+                        mostrar()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+        }.start()
+    }
+
     private fun mostrar() {
         findViewById<Button>(R.id.btnLigarParar).text =
             if (ColetorEstado.rodando) "Parar coletor" else "Iniciar coletor"
+        findViewById<Button>(R.id.btnFilial).text =
+            "Unidade: " + Prefs.filialNome(this).ifBlank { "todas" }
+        findViewById<Button>(R.id.btnPonto).text =
+            if (Prefs.pontoAtivo(this)) "Ponto ligado" else "Ponto desligado"
+        findViewById<Button>(R.id.btnAutomacao).text =
+            if (Prefs.automacaoAtiva(this)) "Automação ligada" else "Automação desligada"
         val status = findViewById<TextView>(R.id.txtStatus)
         status.text = buildString {
             append(ColetorEstado.resumo())

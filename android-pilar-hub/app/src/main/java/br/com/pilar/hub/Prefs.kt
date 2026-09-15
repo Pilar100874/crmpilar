@@ -118,4 +118,36 @@ object Prefs {
     fun salvarNsr(ctx: Context, equipamentoId: String, nsr: Long) {
         sp(ctx).edit().putLong("nsr_$equipamentoId", nsr).apply()
     }
+
+    /** Unidade (filial) que este aparelho atende. Vazio significa todas. */
+    fun filialId(ctx: Context): String = sp(ctx).getString("filial_id", "")?.trim().orEmpty()
+
+    fun filialNome(ctx: Context): String = sp(ctx).getString("filial_nome", "")?.trim().orEmpty()
+
+    fun salvarFilial(ctx: Context, id: String, nome: String) {
+        sp(ctx).edit()
+            .putString("filial_id", id.trim())
+            .putString("filial_nome", nome.trim())
+            .remove("portaria_token")
+            .apply()
+    }
+
+    fun pontoAtivo(ctx: Context): Boolean = sp(ctx).getBoolean("ponto_ativo", true)
+
+    fun salvarPontoAtivo(ctx: Context, ativo: Boolean) {
+        sp(ctx).edit().putBoolean("ponto_ativo", ativo).apply()
+    }
+
+    fun automacaoAtiva(ctx: Context): Boolean = sp(ctx).getBoolean("automacao_ativa", true)
+
+    fun salvarAutomacaoAtiva(ctx: Context, ativa: Boolean) {
+        sp(ctx).edit().putBoolean("automacao_ativa", ativa).apply()
+    }
+
+    /** O painel pediu atualização enquanto o coletor rodava em segundo plano. */
+    fun atualizacaoPendente(ctx: Context): Boolean = sp(ctx).getBoolean("atualizacao_pendente", false)
+
+    fun salvarAtualizacaoPendente(ctx: Context, pendente: Boolean) {
+        sp(ctx).edit().putBoolean("atualizacao_pendente", pendente).apply()
+    }
 }
