@@ -3,5 +3,5 @@
   "disponivel": true,
   "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.1.0/pilar-coletor-v3.1.0.apk",
   "filename": "pilar-coletor-v3.1.0.apk",
-  "notas": "v3.1.0: coletor completo no aparelho — escolha de unidade, teste de relógio, campainha do interfone, comandos do iDFace, configuração de saída Shelly, saúde dos dispositivos e atualização pelo painel."
+  "notas": "v3.1.0: Pilar Coletor: leitura dos relógios de ponto e comandos de automação na rede local."
 }
