@@ -225,8 +225,10 @@ object AutomacaoColetor {
                 if (idface) throw IllegalStateException("Configuração de saída disponível somente para Shelly.")
                 configurarSaida(device, cred, canal, params)
             }
-            "abrir" -> if (idface) ControlId.abrirPorta(device, cred, params.optInt("porta", 1))
-            else pulso(device, cred, canal)
+            "abrir" -> {
+                if (idface) ControlId.abrirPorta(device, cred, params.optInt("porta", 1))
+                else pulso(device, cred, canal)
+            }
             else -> if (idface) ControlId.statusLogin(device, cred) else status(device, cred, canal)
         }
     }
