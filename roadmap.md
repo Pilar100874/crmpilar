@@ -251,3 +251,6 @@
 - [x] Exibir a unidade atual marcada e confirmar a troca antes de sincronizar
 - [x] Exibir erros persistentes e o estado sem unidades cadastradas
 - [ ] Compilar, publicar e instalar o APK 3.2.0 em aparelho real
+
+## Chaves dos aplicativos — 2026-09-15
+- [x] Renomear “Coletor TV” para “TV Remotas” na tela de chaves

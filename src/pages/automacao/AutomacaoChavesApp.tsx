@@ -25,7 +25,7 @@ const APPS = [
   { valor: "automacao", rotulo: "Pilar Automação (celular/tablet)" },
   { valor: "controle", rotulo: "Pilar Coletor (Ponto e Automação na rede local)" },
   { valor: "coletor", rotulo: "Coletor (Windows / ISO)" },
-  { valor: "coletor-tv", rotulo: "Coletor TV (Android TV)" },
+  { valor: "coletor-tv", rotulo: "TV Remotas (Android TV)" },
 ] as const;
 
 const rotuloApp = (valor: string) =>
