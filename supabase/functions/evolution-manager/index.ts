@@ -548,13 +548,27 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const body = await req.json();
     const { action, estabelecimentoId, sessionId, sessionName, webhookUrl } = body || {};
 
+    // Só o próprio estabelecimento (ou service role) pode operar o WhatsApp dele.
+    if (!auth.isServiceRole && estabelecimentoId && estabelecimentoId !== auth.estabelecimentoId) {
+      return forbidden(corsHeaders);
+    }
+
     if (action === "test") {
-      const testUrl = normalizeBaseUrl(String(body?.url || "").trim());
       const testKey = String(body?.apiKey || "").trim();
       const managerUrl = String(body?.managerUrl || "").trim();
+      let testUrl = "";
+      try {
+        testUrl = normalizeBaseUrl(assertPublicUrl(String(body?.url || "").trim()).toString());
+        if (managerUrl) assertPublicUrl(managerUrl);
+      } catch (e: any) {
+        return json({ ok: false, error: e?.message || "URL inválida" }, 400);
+      }
       if (!testUrl || !testKey) {
         return json({ ok: false, error: "Informe URL e apikey para testar." }, 400);
       }
