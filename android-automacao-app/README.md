@@ -4,10 +4,10 @@ Aplicativo nativo leve para celular e tablet que carrega o painel de automação
 
 ## Versão atual
 
-- **1.9.1**
+- **1.3.0**
 - Ícone no padrão visual dos apps Pilar (fundo azul-marinho, glifo branco) em todas as densidades.
-- Abre a entrada com usuário e senha e, em seguida, diretamente o painel definido para a pessoa.
-- Não mostra a abertura, o menu principal nem os elementos flutuantes da versão web.
+- Abre a entrada com usuário e senha e, em seguida, apenas o painel definido para a pessoa.
+- Pull-to-refresh, permissões de câmera/microfone e botão discreto de configuração.
 
 ## Compilação
 
