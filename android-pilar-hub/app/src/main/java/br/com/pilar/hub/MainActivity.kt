@@ -54,9 +54,9 @@ class MainActivity : AppCompatActivity() {
             ColetorService.sincronizarAgora(this)
             Toast.makeText(this, "Sincronizando…", Toast.LENGTH_SHORT).show()
         }
-        val btnAtualizar = findViewById<Button>(R.id.btnAtualizarApp)
+        val btnAtualizar = findViewById<android.widget.ImageButton>(R.id.btnAtualizarApp)
         val versao = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
-        if (versao.isNotEmpty()) btnAtualizar.text = "Atualizar · v$versao"
+        if (versao.isNotEmpty()) btnAtualizar.contentDescription = "Atualizar aplicativo · v$versao"
         btnAtualizar.setOnClickListener {
             btnAtualizar.isEnabled = false
             AtualizadorApp.atualizar(this) { msg ->
@@ -75,11 +75,11 @@ class MainActivity : AppCompatActivity() {
             ColetorService.sincronizarAgora(this)
             mostrar()
         }
-        findViewById<Button>(R.id.btnLimpar).setOnClickListener {
+        findViewById<android.widget.ImageButton>(R.id.btnLimpar).setOnClickListener {
             ColetorEstado.limparDiagnostico()
             mostrar()
         }
-        findViewById<Button>(R.id.btnSair).setOnClickListener {
+        findViewById<android.widget.ImageButton>(R.id.btnSair).setOnClickListener {
             androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Sair do aplicativo")
                 .setMessage("O coletor será interrompido e será preciso informar a chave da empresa novamente para entrar.")
