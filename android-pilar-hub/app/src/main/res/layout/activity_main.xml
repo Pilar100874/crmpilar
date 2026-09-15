@@ -53,8 +53,8 @@
                 <Button android:id="@+id/btnSincronizar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:layout_marginStart="8dp" android:background="@drawable/iso_button_outline" android:text="Verificar agora" android:textAllCaps="false" android:textColor="@color/iso_brand" />
             </LinearLayout>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="16dp" android:orientation="horizontal">
-                <Button android:id="@+id/btnAtualizarApp" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:background="@drawable/iso_button_outline" android:text="Atualizar aplicativo" android:textAllCaps="false" android:textColor="@color/iso_brand" />
-                <Button android:id="@+id/btnLimpar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:layout_marginStart="8dp" android:background="@drawable/iso_button_outline" android:text="Limpar avisos" android:textAllCaps="false" android:textColor="@color/iso_text_secondary" />
+<Button android:id="@+id/btnAtualizarApp" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:background="@drawable/iso_button_outline" android:paddingStart="4dp" android:paddingEnd="4dp" android:text="Atualizar" android:textAllCaps="false" android:textColor="@color/iso_brand" android:textSize="12sp" />
+                <Button android:id="@+id/btnLimpar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:layout_marginStart="8dp" android:background="@drawable/iso_button_outline" android:paddingStart="4dp" android:paddingEnd="4dp" android:text="Limpar avisos" android:textAllCaps="false" android:textColor="@color/iso_text_secondary" android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
