@@ -1,59 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:orientation="vertical"
     android:background="@color/bg_page">
 
-    <FrameLayout
+    <WebView
+        android:id="@+id/webPainel"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <WebView
-            android:id="@+id/webPainel"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <LinearLayout
-            android:id="@+id/painelAviso"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/bg_page"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="24dp">
-            <TextView
-                android:id="@+id/txtStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Carregando painel…"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp" />
-            <Button
-                android:id="@+id/btnTentarNovamente"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/btn_primary"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:text="Tentar de novo"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:visibility="gone" />
-        </LinearLayout>
-    </FrameLayout>
+        android:layout_height="match_parent" />
 
     <LinearLayout
+        android:id="@+id/painelAviso"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-        <Button android:id="@+id/btnRecarregar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="44dp" android:background="@drawable/btn_secondary" android:text="Atualizar painel" android:textAllCaps="false" android:textColor="@color/text_primary" />
-        <Button android:id="@+id/btnAtualizarApp" android:layout_width="0dp" android:layout_weight="1" android:layout_height="44dp" android:layout_marginStart="8dp" android:background="@drawable/btn_secondary" android:text="Atualizar aplicativo" android:textAllCaps="false" android:textColor="@color/text_primary" />
-        <Button android:id="@+id/btnSair" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_marginStart="8dp" android:background="@drawable/btn_secondary" android:text="Sair" android:textAllCaps="false" android:textColor="@color/text_muted" />
+        android:layout_height="match_parent"
+        android:background="@color/bg_page"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Carregando painel…"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp" />
+        <Button
+            android:id="@+id/btnTentarNovamente"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/btn_primary"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:text="Tentar de novo"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:visibility="gone" />
     </LinearLayout>
-</LinearLayout>
+
+    <!-- Área invisível: segurar no canto superior direito abre as opções do aplicativo. -->
+    <View
+        android:id="@+id/areaOculta"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="top|end"
+        android:background="@android:color/transparent"
+        android:contentDescription="@null" />
+</FrameLayout>
