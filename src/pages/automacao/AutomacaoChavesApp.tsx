@@ -23,7 +23,7 @@ const APPS = [
   { valor: "pilar-fone", rotulo: "Pilar Fone (Android)" },
   { valor: "sms", rotulo: "Pilar SMS (Android)" },
   { valor: "automacao", rotulo: "Pilar Automação (celular/tablet)" },
-  { valor: "controle", rotulo: "Pilar Controle (Automação e Ponto)" },
+  { valor: "controle", rotulo: "Pilar Coletor (Ponto e Automação na rede local)" },
   { valor: "coletor", rotulo: "Coletor (Windows / ISO)" },
   { valor: "coletor-tv", rotulo: "Coletor TV (Android TV)" },
 ] as const;

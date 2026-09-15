@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { baixarArquivo } from "@/lib/baixarArquivo";
 
 const HUB_FALLBACK_URL =
-  "https://github.com/Pilar100874/crmpilar/releases/download/controle-v2.0.0/pilar-controle-v2.0.0.apk";
-const HUB_FALLBACK_FILENAME = "pilar-controle-v2.0.0.apk";
+  "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.0/pilar-coletor-v2.0.0.apk";
+const HUB_FALLBACK_FILENAME = "pilar-coletor-v2.0.0.apk";
 const HUB_FALLBACK_VERSION = "2.0.0";
 
 const baixar = (file: string, url: string) => baixarArquivo(file, url);
@@ -47,7 +47,7 @@ export default function PilarHubDownloadCard() {
           </span>
         </div>
 
-        <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Controle</h2>
+        <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Pilar Coletor</h2>
         <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
           Aplicativo Android nativo com <b>Automação</b> e <b>Relógio de Ponto</b>.
           Não inclui SMS nem recursos de câmera.
@@ -107,7 +107,7 @@ export default function PilarHubDownloadCard() {
           <li className="flex gap-3 sm:gap-4">
             <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Abra o <b>Pilar Controle</b>, informe a chave criada em Apps e entre com usuário e senha.
+              Abra o <b>Pilar Coletor</b>, informe a chave criada em Apps e entre com usuário e senha.
             </p>
           </li>
           <li className="flex gap-3 sm:gap-4">

@@ -18,7 +18,7 @@ import { Smartphone, RefreshCw, PackageCheck, Send, CircleCheck, TriangleAlert, 
 
 const APPS = [
   { valor: "sms", nome: "Pilar SMS" },
-  { valor: "hub", nome: "Pilar Controle" },
+  { valor: "hub", nome: "Pilar Coletor" },
   { valor: "automacao", nome: "Pilar Automação" },
   { valor: "remotas", nome: "Pilar Remotas" },
   { valor: "coletor", nome: "Coletor Pilar" },
