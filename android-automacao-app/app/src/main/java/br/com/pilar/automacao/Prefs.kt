@@ -89,4 +89,8 @@ object Prefs {
         val base = baseUrl(ctx)
         return "$base/automacao/tela?ambiente=${ambiente(ctx)}&tipo=$tipo&app=1&barra=0"
     }
+
+    /** Painel "Meu painel" da web, exibido dentro do aplicativo. */
+    fun urlPainel(ctx: Context): String =
+        "${baseUrl(ctx)}/automacao/app?app=automacao&barra=0"
 }

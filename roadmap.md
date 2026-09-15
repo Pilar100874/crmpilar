@@ -217,3 +217,12 @@
 - [x] Preparar os arquivos comum e adaptativo usados na geração Android.
 - [x] Avançar o Pilar Fone para 1.8.3.
 - [ ] Confirmar a compilação assinada e instalar no aparelho real.
+
+## Pilar Automação com painel da web e novo Pilar Coletor — 2026-09-15
+- [x] Pilar Automação abre o painel da web (`/automacao/app?app=automacao`) com a sessão já iniciada — v1.9.0
+- [x] Pilar Controle vira Pilar Coletor (mesmo pacote, atualização por cima) — v3.0.0
+- [x] Coletor lê os relógios de ponto Control iD na rede local e envia as marcações
+- [x] Coletor atende os comandos dos dispositivos de automação na rede local
+- [x] Serviço em segundo plano com ciclo de 1 minuto e religa ao ligar o aparelho
+- [x] Textos, downloads e rotina de compilação renomeados para Pilar Coletor
+- [ ] Instalar nos aparelhos e confirmar batidas e comandos reais

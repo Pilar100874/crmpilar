@@ -1,4 +1,4 @@
-# Pilar Controle — Android
+# Pilar Coletor — Android
 
 Aplicativo Android nativo para celular e tablet com dois módulos:
 
@@ -9,13 +9,13 @@ Não contém SMS, câmera, WebView ou menus gerais do CRM. O Pilar SMS continua 
 
 ## Acesso
 
-1. Informe uma chave multiempresa do tipo **Pilar Controle**.
+1. Informe uma chave multiempresa do tipo **Pilar Coletor**.
 2. Entre com e-mail e senha.
 3. O usuário somente acessa dados da empresa da chave e seu ambiente atribuído.
 
 ## Compatibilidade
 
-O `applicationId` e o manifesto público `hub-version.json` permanecem com o identificador interno `hub`, permitindo atualizar instalações antigas do Pilar Hub para o Pilar Controle.
+O `applicationId` e o manifesto público `hub-version.json` permanecem com o identificador interno `hub`, permitindo atualizar instalações antigas do Pilar Coletor para o Pilar Coletor.
 
 ## Geração
 

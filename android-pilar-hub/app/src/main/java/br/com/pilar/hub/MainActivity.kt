@@ -1,27 +1,26 @@
 package br.com.pilar.hub
 
+import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.View
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.core.content.ContextCompat
 
+/** Tela única do Pilar Coletor: situação, relógios de ponto e dispositivos de automação. */
 class MainActivity : AppCompatActivity() {
-    private val atualizacaoHandler = Handler(Looper.getMainLooper())
-    private val verificarAtualizacao = object : Runnable {
-        override fun run() {
-            AtualizadorApp.processarComandoRemoto(this@MainActivity)
-            atualizacaoHandler.postDelayed(this, 60_000L)
-        }
+
+    private val aoAtualizar = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) = mostrar()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,129 +31,106 @@ class MainActivity : AppCompatActivity() {
             finish()
             return
         }
-        if (!Prefs.sessaoSalva(this)) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
 
         setContentView(R.layout.activity_main)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        findViewById<TextView>(R.id.txtEmpresa).text =
+            Prefs.empresaNome(this).ifBlank { "Empresa ativada" }
 
-        val btnAtualizar = findViewById<android.widget.Button>(R.id.btnAtualizarApp)
-        val versaoAtual = try {
-            packageManager.getPackageInfo(packageName, 0).versionName
-        } catch (_: Exception) { "" }
-        if (versaoAtual.isNotEmpty()) btnAtualizar.text = "Atualizar aplicativo · v$versaoAtual"
+        pedirNotificacoes()
+        if (Prefs.coletorAtivo(this)) ColetorService.iniciar(this)
+
+        findViewById<Button>(R.id.btnLigarParar).setOnClickListener {
+            if (ColetorEstado.rodando) {
+                Prefs.salvarColetorAtivo(this, false)
+                ColetorService.parar(this)
+            } else {
+                ColetorService.iniciar(this)
+            }
+            mostrar()
+        }
+        findViewById<Button>(R.id.btnSincronizar).setOnClickListener {
+            ColetorService.sincronizarAgora(this)
+            Toast.makeText(this, "Sincronizando…", Toast.LENGTH_SHORT).show()
+        }
+        val btnAtualizar = findViewById<Button>(R.id.btnAtualizarApp)
+        val versao = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
+        if (versao.isNotEmpty()) btnAtualizar.text = "Atualizar aplicativo · v$versao"
         btnAtualizar.setOnClickListener {
             btnAtualizar.isEnabled = false
             AtualizadorApp.atualizar(this) { msg ->
-                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 if (!msg.endsWith("…")) btnAtualizar.isEnabled = true
             }
         }
-
-        findViewById<android.widget.Button>(R.id.btnRecarregar).setOnClickListener { carregar() }
-        findViewById<android.widget.Button>(R.id.btnSair).setOnClickListener {
+        findViewById<Button>(R.id.btnSair).setOnClickListener {
+            Prefs.salvarColetorAtivo(this, false)
+            ColetorService.parar(this)
             Prefs.limparSessao(this)
-            startActivity(Intent(this, LoginActivity::class.java)); finish()
+            startActivity(Intent(this, AtivacaoActivity::class.java))
+            finish()
         }
-        val lista = findViewById<LinearLayout>(R.id.listaBlocos)
-        val ponto = findViewById<LinearLayout>(R.id.painelPonto)
-        findViewById<Button>(R.id.btnAutomacao).setOnClickListener {
-            lista.visibility = View.VISIBLE
-            ponto.visibility = View.GONE
-            findViewById<TextView>(R.id.txtTitulo).text = "Automação"
-        }
-        findViewById<Button>(R.id.btnPonto).setOnClickListener {
-            lista.visibility = View.GONE
-            ponto.visibility = View.VISIBLE
-            findViewById<TextView>(R.id.txtTitulo).text = "Relógio de ponto"
-            carregarFuncionario()
-        }
-        configurarPonto()
-        carregar()
-        atualizacaoHandler.post(verificarAtualizacao)
+        mostrar()
     }
 
-    override fun onDestroy() {
-        atualizacaoHandler.removeCallbacks(verificarAtualizacao)
-        super.onDestroy()
+    override fun onResume() {
+        super.onResume()
+        ContextCompat.registerReceiver(
+            this,
+            aoAtualizar,
+            IntentFilter(ColetorService.ATUALIZOU),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        mostrar()
     }
 
-    private fun carregar() {
+    override fun onPause() {
+        runCatching { unregisterReceiver(aoAtualizar) }
+        super.onPause()
+    }
+
+    private fun pedirNotificacoes() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 10)
+    }
+
+    private fun mostrar() {
+        findViewById<Button>(R.id.btnLigarParar).text =
+            if (ColetorEstado.rodando) "Parar coletor" else "Iniciar coletor"
         val status = findViewById<TextView>(R.id.txtStatus)
-        val lista = findViewById<LinearLayout>(R.id.listaBlocos)
-        status.text = "Carregando ambiente…"
-        CoroutineScope(Dispatchers.IO).launch {
-            val resultado = runCatching { ApiClient.carregarPainel(Prefs.accessToken(this@MainActivity), Prefs.ambiente(this@MainActivity)) }
-            withContext(Dispatchers.Main) {
-                resultado.onSuccess { painel ->
-                    findViewById<TextView>(R.id.txtTitulo).text = painel.ambiente.optString("nome", "Automação")
-                    status.text = "Atualizado agora"
-                    PainelNativo.preencher(this@MainActivity, painel, lista) { bloco, acao, retorno ->
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val resposta = runCatching {
-                                ApiClient.comando(Prefs.accessToken(this@MainActivity), bloco.getString("device_id"), bloco.optInt("canal", 0), acao)
-                            }
-                            withContext(Dispatchers.Main) {
-                                resposta.onSuccess { retorno(it.optBoolean("ok"), it.optString("mensagem").ifBlank { if (it.optBoolean("ok")) "Comando enviado" else "Falha no comando" }) }
-                                    .onFailure { retorno(false, it.message ?: "Falha no comando") }
-                            }
-                        }
-                    }
-                }.onFailure { status.text = it.message ?: "Não foi possível carregar o ambiente" }
+        status.text = buildString {
+            append(ColetorEstado.resumo())
+            if (ColetorEstado.ultimoErro.isNotBlank()) append("\nÚltimo aviso: ${ColetorEstado.ultimoErro}")
+        }
+        preencher(findViewById(R.id.listaRelogios), ColetorEstado.relogios, "Nenhum relógio cadastrado para esta empresa.")
+        preencher(findViewById(R.id.listaDispositivos), ColetorEstado.dispositivos, "Nenhum dispositivo de automação atribuído a este coletor.")
+    }
+
+    private fun preencher(destino: LinearLayout, itens: List<ColetorEstado.Item>, vazio: String) {
+        destino.removeAllViews()
+        if (itens.isEmpty()) {
+            destino.addView(texto(vazio, false))
+            return
+        }
+        for (item in itens) {
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(R.drawable.bg_card)
+                setPadding(dp(16), dp(12), dp(16), dp(12))
+                layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) }
             }
+            card.addView(texto(item.nome, true))
+            card.addView(texto(item.situacao, false))
+            destino.addView(card)
         }
     }
 
-    private var funcionarioId: String? = null
-
-    private fun carregarFuncionario() {
-        val texto = findViewById<TextView>(R.id.txtFuncionario)
-        texto.text = "Carregando funcionário…"
-        CoroutineScope(Dispatchers.IO).launch {
-            val resultado = runCatching { ApiClient.funcionarioAtual(Prefs.accessToken(this@MainActivity), Prefs.userId(this@MainActivity)) }
-            withContext(Dispatchers.Main) {
-                resultado.onSuccess { funcionario ->
-                    funcionarioId = funcionario?.optString("id")?.takeIf { it.isNotBlank() }
-                    texto.text = funcionario?.optString("nome")?.takeIf { it.isNotBlank() }
-                        ?: "Seu usuário não está vinculado a um funcionário ativo"
-                    habilitarPonto(funcionarioId != null)
-                }.onFailure {
-                    texto.text = it.message ?: "Não foi possível carregar o funcionário"
-                    habilitarPonto(false)
-                }
-            }
-        }
+    private fun texto(valor: String, destaque: Boolean) = TextView(this).apply {
+        text = valor
+        textSize = if (destaque) 16f else 13f
+        setTextColor(getColor(if (destaque) R.color.text_primary else R.color.text_muted))
+        if (destaque) setTypeface(typeface, Typeface.BOLD)
     }
 
-    private fun configurarPonto() {
-        mapOf(
-            R.id.btnEntrada to "entrada",
-            R.id.btnInicioIntervalo to "inicio_intervalo",
-            R.id.btnFimIntervalo to "fim_intervalo",
-            R.id.btnSaida to "saida",
-        ).forEach { (id, tipo) -> findViewById<Button>(id).setOnClickListener { registrarPonto(tipo) } }
-    }
-
-    private fun habilitarPonto(habilitado: Boolean) {
-        listOf(R.id.btnEntrada, R.id.btnInicioIntervalo, R.id.btnFimIntervalo, R.id.btnSaida)
-            .forEach { findViewById<Button>(it).isEnabled = habilitado }
-    }
-
-    private fun registrarPonto(tipo: String) {
-        val id = funcionarioId ?: return
-        val status = findViewById<TextView>(R.id.txtStatusPonto)
-        habilitarPonto(false)
-        status.text = "Registrando marcação…"
-        CoroutineScope(Dispatchers.IO).launch {
-            val resultado = runCatching { ApiClient.registrarPonto(Prefs.accessToken(this@MainActivity), id, tipo) }
-            withContext(Dispatchers.Main) {
-                resultado.onSuccess { status.text = "Marcação registrada com sucesso" }
-                    .onFailure { status.text = it.message ?: "Não foi possível registrar a marcação" }
-                habilitarPonto(true)
-            }
-        }
-    }
+    private fun dp(valor: Int): Int = (valor * resources.displayMetrics.density).toInt()
 }

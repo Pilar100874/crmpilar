@@ -89,4 +89,33 @@ object Prefs {
         val base = baseUrl(ctx)
         return "$base/automacao/tela?ambiente=${ambiente(ctx)}&tipo=$tipo&app=1&barra=0"
     }
+
+    // ---- Coletor -----------------------------------------------------------
+
+    fun coletorAtivo(ctx: Context): Boolean = sp(ctx).getBoolean("coletor_ativo", true)
+
+    fun salvarColetorAtivo(ctx: Context, ativo: Boolean) {
+        sp(ctx).edit().putBoolean("coletor_ativo", ativo).apply()
+    }
+
+    /** Identificação fixa deste aparelho como coletor da empresa. */
+    fun deviceKey(ctx: Context): String {
+        val atual = sp(ctx).getString("device_key", "")?.trim().orEmpty()
+        if (atual.isNotEmpty()) return atual
+        val nova = "android-" + java.util.UUID.randomUUID().toString().replace("-", "").take(24)
+        sp(ctx).edit().putString("device_key", nova).apply()
+        return nova
+    }
+
+    fun portariaToken(ctx: Context): String = sp(ctx).getString("portaria_token", "")?.trim().orEmpty()
+
+    fun salvarPortariaToken(ctx: Context, token: String) {
+        sp(ctx).edit().putString("portaria_token", token.trim()).apply()
+    }
+
+    fun nsr(ctx: Context, equipamentoId: String): Long = sp(ctx).getLong("nsr_$equipamentoId", 0L)
+
+    fun salvarNsr(ctx: Context, equipamentoId: String, nsr: Long) {
+        sp(ctx).edit().putLong("nsr_$equipamentoId", nsr).apply()
+    }
 }
