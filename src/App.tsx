@@ -447,8 +447,25 @@ import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIn
 import WakeLockManager from "./components/WakeLockManager";
 import GlobalOpenInNewTabButton from "./components/GlobalOpenInNewTabButton";
 import GlobalBackToTelaButton from "./components/GlobalBackToTelaButton";
+import { modoAppEmbutido } from "./lib/modoAppEmbutido";
 
 const queryClient = new QueryClient();
+
+/** Elementos gerais da web não devem aparecer sobre o painel dentro do APK. */
+const ElementosVisuaisGlobais = () => {
+  if (modoAppEmbutido()) return null;
+  return (
+    <>
+      <PWAInstallPrompt />
+      <PWAUpdateNotifier />
+      <StudioBackgroundIndicator />
+      <AvisoCreditosIA />
+      <BannerCreditosIA />
+      <GlobalOpenInNewTabButton />
+      <GlobalBackToTelaButton />
+    </>
+  );
+};
 
 // Layout wrapper component
 const LayoutWrapper = () => (
@@ -476,16 +493,10 @@ const App = () => (
           <BackgroundLocationManager />
           <WhatsappSessionMonitor />
           <WatchRedirectWrapper />
-          <PWAInstallPrompt />
-          <PWAUpdateNotifier />
-          <StudioBackgroundIndicator />
-          <AvisoCreditosIA />
-          <BannerCreditosIA />
+          <ElementosVisuaisGlobais />
 
 
           <WakeLockManager />
-          <GlobalOpenInNewTabButton />
-          <GlobalBackToTelaButton />
           <RouteErrorBoundary><React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>}><Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
