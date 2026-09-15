@@ -21,10 +21,10 @@ import kotlinx.coroutines.launch
 class ColetorService : Service() {
 
     private val escopo = CoroutineScope(Dispatchers.IO)
-    private var laçoPonto: Job? = null
-    private var laçoAutomacao: Job? = null
-    private var laçoComandos: Job? = null
-    private var laçoRemoto: Job? = null
+    private var lacoPonto: Job? = null
+    private var lacoAutomacao: Job? = null
+    private var lacoComandos: Job? = null
+    private var lacoRemoto: Job? = null
 
     companion object {
         const val CANAL = "pilar_coletor"
@@ -76,33 +76,33 @@ class ColetorService : Service() {
     }
 
     override fun onDestroy() {
-        laçoPonto?.cancel()
-        laçoAutomacao?.cancel()
-        laçoComandos?.cancel()
-        laçoRemoto?.cancel()
+        lacoPonto?.cancel()
+        lacoAutomacao?.cancel()
+        lacoComandos?.cancel()
+        lacoRemoto?.cancel()
         ColetorEstado.rodando = false
         super.onDestroy()
     }
 
     private fun iniciarLacos() {
-        if (laçoPonto?.isActive != true) {
-            laçoPonto = escopo.launch {
+        if (lacoPonto?.isActive != true) {
+            lacoPonto = escopo.launch {
                 while (isActive) {
                     rodarPonto()
                     delay(INTERVALO_PONTO)
                 }
             }
         }
-        if (laçoAutomacao?.isActive != true) {
-            laçoAutomacao = escopo.launch {
+        if (lacoAutomacao?.isActive != true) {
+            lacoAutomacao = escopo.launch {
                 while (isActive) {
                     rodarAutomacao()
                     delay(INTERVALO_AUTOMACAO)
                 }
             }
         }
-        if (laçoComandos?.isActive != true) {
-            laçoComandos = escopo.launch {
+        if (lacoComandos?.isActive != true) {
+            lacoComandos = escopo.launch {
                 while (isActive) {
                     if (Prefs.automacaoAtiva(this@ColetorService)) {
                         runCatching { AutomacaoColetor.executarJobs(this@ColetorService) }
@@ -111,8 +111,8 @@ class ColetorService : Service() {
                 }
             }
         }
-        if (laçoRemoto?.isActive != true) {
-            laçoRemoto = escopo.launch {
+        if (lacoRemoto?.isActive != true) {
+            lacoRemoto = escopo.launch {
                 while (isActive) {
                     runCatching { ColetorRemoto.bater(this@ColetorService) }
                     delay(INTERVALO_REMOTO)
