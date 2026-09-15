@@ -52,8 +52,7 @@ class AtivacaoActivity : AppCompatActivity() {
     }
 
     private fun abrirSistema() {
-        val destino = if (Prefs.sessaoSalva(this)) MainActivity::class.java else LoginActivity::class.java
-        startActivity(Intent(this, destino))
+        startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
 }

@@ -15,7 +15,7 @@ android {
         applicationId = "br.com.pilar.automacao"
         minSdk = 24
         targetSdk = 34
-        versionCode = ciVersionCode
+        versionCode = 5ciVersionCode
         versionName = ciVersionName
 
         buildConfigField("String", "APP_BASE_URL", "\"https://crmpilar.lovable.app\"")
