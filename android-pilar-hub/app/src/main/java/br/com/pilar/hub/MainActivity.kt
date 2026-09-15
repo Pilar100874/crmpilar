@@ -179,6 +179,7 @@ class MainActivity : AppCompatActivity() {
         val status = findViewById<TextView>(R.id.txtStatus)
         status.text = if (ColetorEstado.rodando) "Em funcionamento" else "Parado"
         status.setTextColor(getColor(if (ColetorEstado.rodando) R.color.iso_success else R.color.iso_danger))
+        status.setBackgroundResource(if (ColetorEstado.rodando) R.drawable.iso_pill_online else R.drawable.iso_pill_warning)
         findViewById<TextView>(R.id.txtResumo).text = buildString {
             append(if (ColetorEstado.rodando) "Serviços ativos em segundo plano" else "A coleta está interrompida")
             if (ColetorEstado.ultimoErro.isNotBlank()) append("\nÚltimo aviso: ${ColetorEstado.ultimoErro}")
