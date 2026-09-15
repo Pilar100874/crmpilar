@@ -3,9 +3,9 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-val baseVersionCode = 5
+val baseVersionCode = 6
 val ciVersionCode = System.getenv("AUTO_VERSION_CODE")?.toIntOrNull() ?: baseVersionCode
-val ciVersionName = System.getenv("AUTO_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.9.0"
+val ciVersionName = System.getenv("AUTO_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.9.1"
 
 android {
     namespace = "br.com.pilar.automacao"
