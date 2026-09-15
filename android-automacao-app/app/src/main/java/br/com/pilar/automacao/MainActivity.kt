@@ -2,6 +2,7 @@ package br.com.pilar.automacao
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -26,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var btnTentar: Button
 
-    private var sessaoInjetada = false
     private var falhou = false
 
     private val atualizacaoHandler = Handler(Looper.getMainLooper())
@@ -77,11 +77,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: WebView, url: String?) {
-                if (!sessaoInjetada) {
-                    sessaoInjetada = true
-                    view.evaluateJavascript(scriptSessao()) { abrirPainel() }
-                    return
-                }
                 if (!falhou) mostrarPainel()
             }
 
@@ -127,15 +122,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun recarregar() {
         falhou = false
-        sessaoInjetada = false
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.GONE
         status.text = "Carregando painel…"
-        web.loadUrl("${Prefs.baseUrl(this)}/login?app=automacao")
-    }
-
-    private fun abrirPainel() {
-        web.loadUrl(Prefs.urlPainel(this))
+        val script = scriptSessao()
+        val url = Prefs.urlTela(this, tipoTela())
+        web.loadUrl(url, mapOf("X-Pilar-Session" to script))
+        web.evaluateJavascript(script, null)
     }
 
     private fun mostrarPainel() {
@@ -148,6 +141,12 @@ class MainActivity : AppCompatActivity() {
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.VISIBLE
         status.text = mensagem
+    }
+
+    private fun tipoTela(): String {
+        val grande = (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >=
+            Configuration.SCREENLAYOUT_SIZE_LARGE
+        return if (grande) "tablet" else "celular"
     }
 
     /** Reaproveita a sessão já validada no aplicativo para o painel abrir direto. */
