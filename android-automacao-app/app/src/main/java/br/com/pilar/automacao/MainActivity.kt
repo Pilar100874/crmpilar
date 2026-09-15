@@ -95,25 +95,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnTentar.setOnClickListener { recarregar() }
-        findViewById<Button>(R.id.btnRecarregar).setOnClickListener { recarregar() }
-        findViewById<Button>(R.id.btnSair).setOnClickListener {
-            Prefs.limparSessao(this)
-            startActivity(Intent(this, AtivacaoActivity::class.java))
-            finish()
-        }
-        val btnAtualizar = findViewById<Button>(R.id.btnAtualizarApp)
-        val versaoAtual = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
-        if (versaoAtual.isNotEmpty()) btnAtualizar.text = "Atualizar aplicativo · v$versaoAtual"
-        btnAtualizar.setOnClickListener {
-            btnAtualizar.isEnabled = false
-            AtualizadorApp.atualizar(this) { msg ->
-                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
-                if (!msg.endsWith("…")) btnAtualizar.isEnabled = true
-            }
+        findViewById<View>(R.id.areaOculta).setOnLongClickListener {
+            abrirOpcoes()
+            true
         }
 
         recarregar()
         atualizacaoHandler.post(verificarAtualizacao)
+    }
+
+    /** Opções escondidas do aplicativo (sem ocupar espaço na tela do painel). */
+    private fun abrirOpcoes() {
+        val versaoAtual = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
+        val opcoes = arrayOf(
+            "Atualizar painel",
+            if (versaoAtual.isEmpty()) "Atualizar aplicativo" else "Atualizar aplicativo · v$versaoAtual",
+            "Sair",
+        )
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Opções")
+            .setItems(opcoes) { _, indice ->
+                when (indice) {
+                    0 -> recarregar()
+                    1 -> AtualizadorApp.atualizar(this) { msg ->
+                        android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        Prefs.limparSessao(this)
+                        startActivity(Intent(this, AtivacaoActivity::class.java))
+                        finish()
+                    }
+                }
+            }
+            .setNegativeButton("Fechar", null)
+            .show()
     }
 
     override fun onDestroy() {
@@ -131,7 +146,8 @@ class MainActivity : AppCompatActivity() {
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.GONE
         status.text = "Carregando painel…"
-        web.loadUrl("${Prefs.baseUrl(this)}/login?app=automacao")
+        // Página leve da mesma origem: permite gravar a sessão sem exibir a abertura da web.
+        web.loadUrl("${Prefs.baseUrl(this)}/robots.txt")
     }
 
     private fun abrirPainel() {
