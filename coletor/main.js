@@ -5,7 +5,7 @@ const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
   startPonto, stopPonto, startCameras, stopCameras, startPortaria, stopPortaria,
   listarFiliais, clearDiagnostics,
-  statusAtivacao, ativarChaveEmpresa, limparAtivacao,
+  statusAtivacao, ativarChaveEmpresa, migrarInstalacaoLegada, limparAtivacao,
 } = require('./collector');
 const { listarCameras } = require('./cameras');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
@@ -198,11 +198,12 @@ function garantirInicioAutomatico() {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   garantirInicioAutomatico();
   createWindow();
   createTray();
   if (win) { try { win.show(); win.focus(); } catch {} }
+  await migrarInstalacaoLegada();
   startCollector();
   try { startRemoto(); } catch (e) { console.error('[coletor] remoto:', e.message); }
 });

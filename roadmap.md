@@ -254,3 +254,8 @@
 
 ## Chaves dos aplicativos — 2026-09-15
 - [x] Renomear “Coletor TV” para “TV Remotas” na tela de chaves
+
+## Coletor 2.0.5 — continuidade após atualização — 2026-09-15
+- [x] Reconhecer com segurança coletores instalados antes da ativação por chave
+- [x] Criar e salvar automaticamente a chave nas instalações antigas reconhecidas
+- [x] Manter a ativação manual obrigatória em instalações novas

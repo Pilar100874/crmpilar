@@ -1,6 +1,6 @@
 {
-  "version": "2.0.4",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Setup.exe",
-  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.4/ColetorPilar-Linux.AppImage",
-  "notas": "2.0.4: abre sempre visível ao instalar, atualizar e ligar o computador, com todos os recursos ativos."
+  "version": "2.0.5",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.5/ColetorPilar-Setup.exe",
+  "downloadUrlLinux": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v2.0.5/ColetorPilar-Linux.AppImage",
+  "notas": "2.0.5: mantém coletores já instalados funcionando após a atualização, migrando automaticamente sua ativação."
 }

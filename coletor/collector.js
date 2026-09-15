@@ -5,6 +5,7 @@ const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
 const { verificarCameras, listarCameras } = require('./cameras');
 const { pollPortariaOnce, pollJobsOnce, ESTADO: PORTARIA_STATE } = require('./portaria');
+const { deviceKey } = require('./deviceKey');
 // Carregamento preguiçoso do módulo de streaming (werift). Se a dependência
 // estiver quebrada no pacote instalado, o app NÃO deve travar na abertura —
 // apenas o streaming ao vivo das câmeras fica indisponível.
@@ -193,6 +194,44 @@ async function ativarChaveEmpresa(chaveBruta) {
     empresaNome: json.empresa || null,
   });
   try { startCollector(); } catch {}
+  return statusAtivacao();
+}
+
+// Instalações anteriores à ativação já tinham unidade e identidade persistidas.
+// O servidor só migra identidades registradas antes da exigência da chave;
+// instalações novas continuam obrigadas a informar uma chave no primeiro uso.
+async function migrarInstalacaoLegada() {
+  const cfg = loadConfig();
+  if ((cfg.chaveEmpresa && cfg.empresaId) || !cfg.filialId) return statusAtivacao();
+
+  try {
+    const resp = await fetch(`${cfg.url}/functions/v1/automacao-app-chave`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${cfg.anonKey}`,
+      },
+      body: JSON.stringify({
+        acao: 'migrar_coletor_legado',
+        device_key: deviceKey(),
+        filial_id: cfg.filialId,
+        hostname: require('os').hostname(),
+      }),
+    });
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(json.error || `migração HTTP ${resp.status}`);
+    if (!json.chave || !json.estabelecimento_id) throw new Error('resposta de migração incompleta');
+
+    saveConfig({
+      chaveEmpresa: json.chave,
+      empresaId: json.estabelecimento_id,
+      empresaNome: json.empresa || null,
+    });
+    console.log('[coletor] instalação existente migrada automaticamente para ativação por chave');
+  } catch (e) {
+    console.warn('[coletor] migração automática indisponível:', e.message);
+  }
   return statusAtivacao();
 }
 
@@ -519,5 +558,5 @@ module.exports = {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
   startPonto, stopPonto, startCameras, stopCameras, startPortaria, stopPortaria,
   listarFiliais, clearDiagnostics,
-  statusAtivacao, ativarChaveEmpresa, limparAtivacao,
+  statusAtivacao, ativarChaveEmpresa, migrarInstalacaoLegada, limparAtivacao,
 };
