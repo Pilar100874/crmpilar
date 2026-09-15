@@ -8,7 +8,7 @@ import { baixarArquivo } from "@/lib/baixarArquivo";
 const HUB_FALLBACK_URL =
   "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.1.0/pilar-coletor-v3.1.0.apk";
 const HUB_FALLBACK_FILENAME = "pilar-coletor-v3.1.0.apk";
-const HUB_FALLBACK_VERSION = "2.0.0";
+const HUB_FALLBACK_VERSION = "3.1.0";
 
 const baixar = (file: string, url: string) => baixarArquivo(file, url);
 
