@@ -272,3 +272,6 @@
 - [x] Versão 3.2.2 (code 21) em build.gradle.kts, hub-version.json e PilarHubDownloadCard.tsx
 - [x] XMLs validados, build OK
 - [ ] Publicar/compilar APK 3.2.2
+
+## Pilar Automação 1.9.1 — publicação — 2026-09-15
+- [x] Publicado via preview_ui--publish; compilação assinada disparada automaticamente (release pilar-automacao-latest)
