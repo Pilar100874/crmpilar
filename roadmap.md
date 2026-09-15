@@ -226,3 +226,15 @@
 - [x] Serviço em segundo plano com ciclo de 1 minuto e religa ao ligar o aparelho
 - [x] Textos, downloads e rotina de compilação renomeados para Pilar Coletor
 - [ ] Instalar nos aparelhos e confirmar batidas e comandos reais
+
+## Pilar Coletor 3.1.0 — paridade com o coletor de computador (sem câmeras)
+- [x] Escolha da unidade (filial) no aparelho, usada no ponto e na automação
+- [x] Ritmos separados: ponto 15s, automação 5s, comandos 0,4s, presença 60s
+- [x] Teste de conexão do relógio pedido pelo painel
+- [x] Só marca relógio como fora do ar após 3 falhas seguidas
+- [x] Teste de rede (ping TCP) de cada dispositivo de automação
+- [x] Campainha do interfone (iDFace) avisando o sistema
+- [x] Comandos do iDFace: abrir porta, status e foto da câmera
+- [x] Shelly: ligar/desligar, pulso, status e configuração da saída
+- [x] Presença no painel (heartbeat) e atualização remota do aplicativo
+- [x] Contadores de marcações, comandos e avisos, com botão limpar
