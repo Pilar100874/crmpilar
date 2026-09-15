@@ -80,19 +80,23 @@ const denunciaSchema = z
       return toast.error(parsed.error.issues[0].message);
     }
     setSaving(true);
-    const { error } = await supabase.from("ecommerce_denuncias" as any).insert({
-      estabelecimento_id: estId,
-      categoria: categoria || null,
-      descricao,
-      local_ocorrencia: local || null,
-      data_ocorrencia: dataOc || null,
-      anonimo,
-      nome: anonimo ? null : nome || null,
-      email: anonimo ? null : email || null,
-      telefone: anonimo ? null : telefone || null,
+    const { data, error } = await supabase.functions.invoke("denuncia-enviar", {
+      body: {
+        estabelecimento_id: estId,
+        categoria: categoria || null,
+        descricao: descricao.trim(),
+        local_ocorrencia: local || null,
+        data_ocorrencia: dataOc || null,
+        anonimo,
+        nome: anonimo ? null : nome || null,
+        email: anonimo ? null : email || null,
+        telefone: anonimo ? null : telefone || null,
+      },
     });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error || (data as any)?.error) {
+      return toast.error((data as any)?.error || "Não foi possível enviar sua denúncia agora. Tente novamente em alguns minutos.");
+    }
     setSent(true);
   }
 

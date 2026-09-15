@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getAuthContext, unauthorized, forbidden } from '../_shared/auth.ts';
+import { decifrarSegredo } from "../_shared/segredoConexao.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -174,7 +175,7 @@ serve(async (req) => {
         server: apiConfig.connection?.sql_server || apiConfig.sql_server,
         database: apiConfig.connection?.sql_database || apiConfig.sql_database,
         username: apiConfig.connection?.sql_username || apiConfig.sql_username,
-        password: apiConfig.connection?.sql_password || apiConfig.sql_password,
+        password: await decifrarSegredo(apiConfig.connection?.sql_password || apiConfig.sql_password),
         query: apiConfig.query,
         proxy_url: apiConfig.connection?.proxy_url
       };
