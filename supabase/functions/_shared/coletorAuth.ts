@@ -17,7 +17,11 @@ export async function validarChaveColetor(sb: any, chaveInformada: unknown) {
   if (error) return { erro: "falha ao validar a chave", status: 500 } as const;
   if (!data) return { erro: "chave não encontrada", status: 403 } as const;
   if (data.bloqueado) return { erro: "chave bloqueada", status: 403 } as const;
-  if (data.app !== "coletor") return { erro: "esta chave é de outro aplicativo", status: 403 } as const;
+  // "controle" é o identificador legado dos aparelhos atualizados em campo
+  // antes de o produto ser renomeado para Pilar Coletor.
+  if (data.app !== "coletor" && data.app !== "controle") {
+    return { erro: "esta chave é de outro aplicativo", status: 403 } as const;
+  }
 
   await sb
     .from("automacao_app_chaves")

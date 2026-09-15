@@ -243,3 +243,11 @@
 - [x] Abrir as rotas do painel fora do menu principal da web
 - [x] Manter a validação da sessão antes de exibir o painel
 - [x] Exibir somente o painel de automação após o carregamento nativo
+
+## Pilar Coletor 3.2.0 — visual ISO e unidade — 2026-09-15
+- [x] Aproximar a tela interna do visual claro do Coletor ISO, sem câmeras
+- [x] Destacar situação, unidade ativa, indicadores, módulos e equipamentos
+- [x] Corrigir a consulta de unidades para chaves novas e legadas
+- [x] Exibir a unidade atual marcada e confirmar a troca antes de sincronizar
+- [x] Exibir erros persistentes e o estado sem unidades cadastradas
+- [ ] Compilar, publicar e instalar o APK 3.2.0 em aparelho real

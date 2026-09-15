@@ -40,7 +40,9 @@ Deno.serve(async (req) => {
     if (error) return json({ error: "falha ao validar a chave" }, 500);
     if (!registro) return json({ error: "chave não encontrada" }, 404);
     if (registro.bloqueado) return json({ error: "chave bloqueada" }, 403);
-    if ((registro.app ?? "automacao") !== app) {
+    const appDaChave = registro.app ?? "automacao";
+    const coletorCompativel = app === "coletor" && appDaChave === "controle";
+    if (appDaChave !== app && !coletorCompativel) {
       return json({ error: "esta chave é de outro aplicativo" }, 403);
     }
 

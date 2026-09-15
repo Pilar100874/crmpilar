@@ -1,7 +1,7 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "disponivel": true,
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.1.0/pilar-coletor-v3.1.0.apk",
-  "filename": "pilar-coletor-v3.1.0.apk",
-  "notas": "v3.1.0: Pilar Coletor: leitura dos relógios de ponto e comandos de automação na rede local."
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v3.2.0/pilar-coletor-v3.2.0.apk",
+  "filename": "pilar-coletor-v3.2.0.apk",
+  "notas": "v3.2.0: nova tela interna no padrão do Coletor ISO e troca de unidade corrigida."
 }

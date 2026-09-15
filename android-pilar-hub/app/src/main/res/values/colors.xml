@@ -15,4 +15,19 @@
     <color name="accent_blue_dark">#D95B00</color>
     <color name="danger_red">#ef4444</color>
     <color name="warn_amber">#f59e0b</color>
+    <color name="iso_page">#F5F7FB</color>
+    <color name="iso_card">#FFFFFF</color>
+    <color name="iso_brand">#0B1E3F</color>
+    <color name="iso_brand_dark">#061128</color>
+    <color name="iso_text">#0F172A</color>
+    <color name="iso_text_secondary">#64748B</color>
+    <color name="iso_muted">#94A3B8</color>
+    <color name="iso_stroke">#E2E8F0</color>
+    <color name="iso_success">#16A34A</color>
+    <color name="iso_success_bg">#DCFCE7</color>
+    <color name="iso_danger">#DC2626</color>
+    <color name="iso_warning">#D97706</color>
+    <color name="iso_warning_bg">#FEF3C7</color>
+    <color name="iso_info">#2563EB</color>
+    <color name="iso_info_bg">#DBEAFE</color>
 </resources>

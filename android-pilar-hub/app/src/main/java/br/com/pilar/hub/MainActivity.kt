@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -116,23 +118,46 @@ class MainActivity : AppCompatActivity() {
 
     /** Deixa escolher qual unidade (filial) este aparelho atende. */
     private fun escolherUnidade() {
-        Toast.makeText(this, "Buscando unidades…", Toast.LENGTH_SHORT).show()
+        val botao = findViewById<Button>(R.id.btnFilial)
+        val erro = findViewById<TextView>(R.id.txtFilialErro)
+        botao.isEnabled = false
+        botao.text = "Buscando unidades…"
+        erro.visibility = View.GONE
         Thread {
             val resultado = runCatching { ColetorFiliais.listar(this) }
             runOnUiThread {
+                botao.isEnabled = true
                 val filiais = resultado.getOrNull()
                 if (filiais == null) {
-                    Toast.makeText(this, "Não foi possível buscar as unidades agora.", Toast.LENGTH_LONG).show()
+                    mostrar()
+                    erro.text = resultado.exceptionOrNull()?.message
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "Não foi possível buscar as unidades. Toque em Trocar unidade para tentar novamente."
+                    erro.visibility = View.VISIBLE
                     return@runOnUiThread
                 }
-                val nomes = (listOf("Todas as unidades") + filiais.map { it.nome }).toTypedArray()
+                if (filiais.isEmpty()) {
+                    mostrar()
+                    erro.text = "Nenhuma unidade está cadastrada para esta empresa."
+                    erro.visibility = View.VISIBLE
+                    return@runOnUiThread
+                }
+                val nomes = filiais.map { it.nome }.toTypedArray()
+                val atual = filiais.indexOfFirst { it.id == Prefs.filialId(this) }
+                var selecionada = atual
                 androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("Unidade atendida")
-                    .setItems(nomes) { _, indice ->
-                        if (indice == 0) Prefs.salvarFilial(this, "", "")
-                        else filiais[indice - 1].let { Prefs.salvarFilial(this, it.id, it.nome) }
+                    .setTitle("Selecione a unidade")
+                    .setSingleChoiceItems(nomes, atual) { _, indice -> selecionada = indice }
+                    .setPositiveButton("Confirmar") { _, _ ->
+                        if (selecionada !in filiais.indices) {
+                            Toast.makeText(this, "Selecione uma unidade.", Toast.LENGTH_SHORT).show()
+                            return@setPositiveButton
+                        }
+                        filiais[selecionada].let { Prefs.salvarFilial(this, it.id, it.nome) }
+                        erro.visibility = View.GONE
                         ColetorService.sincronizarAgora(this)
                         mostrar()
+                        Toast.makeText(this, "Unidade alterada com sucesso.", Toast.LENGTH_SHORT).show()
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()
@@ -143,17 +168,28 @@ class MainActivity : AppCompatActivity() {
     private fun mostrar() {
         findViewById<Button>(R.id.btnLigarParar).text =
             if (ColetorEstado.rodando) "Parar coletor" else "Iniciar coletor"
+        findViewById<TextView>(R.id.txtFilialNome).text =
+            Prefs.filialNome(this).ifBlank { "Nenhuma unidade selecionada" }
         findViewById<Button>(R.id.btnFilial).text =
-            "Unidade: " + Prefs.filialNome(this).ifBlank { "todas" }
+            if (Prefs.filialId(this).isBlank()) "Selecionar unidade" else "Trocar unidade"
         findViewById<Button>(R.id.btnPonto).text =
             if (Prefs.pontoAtivo(this)) "Ponto ligado" else "Ponto desligado"
         findViewById<Button>(R.id.btnAutomacao).text =
             if (Prefs.automacaoAtiva(this)) "Automação ligada" else "Automação desligada"
         val status = findViewById<TextView>(R.id.txtStatus)
-        status.text = buildString {
-            append(ColetorEstado.resumo())
+        status.text = if (ColetorEstado.rodando) "Em funcionamento" else "Parado"
+        status.setTextColor(getColor(if (ColetorEstado.rodando) R.color.iso_success else R.color.iso_danger))
+        status.setBackgroundResource(if (ColetorEstado.rodando) R.drawable.iso_pill_online else R.drawable.iso_pill_warning)
+        findViewById<TextView>(R.id.txtResumo).text = buildString {
+            append(if (ColetorEstado.rodando) "Serviços ativos em segundo plano" else "A coleta está interrompida")
             if (ColetorEstado.ultimoErro.isNotBlank()) append("\nÚltimo aviso: ${ColetorEstado.ultimoErro}")
         }
+        findViewById<TextView>(R.id.txtMarcacoes).text = ColetorEstado.marcacoesEnviadas.toString()
+        findViewById<TextView>(R.id.txtComandos).text = ColetorEstado.comandosExecutados.toString()
+        findViewById<TextView>(R.id.txtPontoStatus).text =
+            if (Prefs.pontoAtivo(this)) "Ativo · sincronização a cada 15 segundos" else "Módulo desativado"
+        findViewById<TextView>(R.id.txtAutomacaoStatus).text =
+            if (Prefs.automacaoAtiva(this)) "Ativo · comandos em tempo real" else "Módulo desativado"
         preencher(findViewById(R.id.listaRelogios), ColetorEstado.relogios, "Nenhum relógio cadastrado para esta empresa.")
         preencher(findViewById(R.id.listaDispositivos), ColetorEstado.dispositivos, "Nenhum dispositivo de automação atribuído a este coletor.")
     }
@@ -166,13 +202,28 @@ class MainActivity : AppCompatActivity() {
         }
         for (item in itens) {
             val card = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setBackgroundResource(R.drawable.bg_card)
-                setPadding(dp(16), dp(12), dp(16), dp(12))
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.iso_row)
+                setPadding(dp(14), dp(12), dp(12), dp(12))
                 layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) }
             }
-            card.addView(texto(item.nome, true))
-            card.addView(texto(item.situacao, false))
+            val info = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+            }
+            info.addView(texto(item.nome, true))
+            info.addView(texto(item.situacao, false))
+            card.addView(info)
+            val online = item.situacao.contains("online", true) || item.situacao.contains("conectado", true)
+            card.addView(TextView(this).apply {
+                text = if (online) "ONLINE" else "ATENÇÃO"
+                textSize = 10f
+                setTypeface(typeface, Typeface.BOLD)
+                setTextColor(getColor(if (online) R.color.iso_success else R.color.iso_warning))
+                setBackgroundResource(if (online) R.drawable.iso_pill_online else R.drawable.iso_pill_warning)
+                setPadding(dp(10), dp(5), dp(10), dp(5))
+            })
             destino.addView(card)
         }
     }
@@ -180,7 +231,7 @@ class MainActivity : AppCompatActivity() {
     private fun texto(valor: String, destaque: Boolean) = TextView(this).apply {
         text = valor
         textSize = if (destaque) 16f else 13f
-        setTextColor(getColor(if (destaque) R.color.text_primary else R.color.text_muted))
+        setTextColor(getColor(if (destaque) R.color.iso_text else R.color.iso_text_secondary))
         if (destaque) setTypeface(typeface, Typeface.BOLD)
     }
 
