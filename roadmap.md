@@ -265,3 +265,10 @@
 - [x] Botão de atualização com texto curto ("Atualizar · v3.2.1"), fonte 12sp, sem corte
 - [x] Versão 3.2.1 (code 20) em build.gradle.kts, hub-version.json e PilarHubDownloadCard
 - [x] Compilar e publicar o APK 3.2.1
+
+## Pilar Coletor 3.2.2 — botões como ícones — 2026-09-15
+- [x] Botões "Atualizar", "Limpar avisos" e "Sair" viraram ícones (sem texto cortado)
+- [x] Versão exibida na descrição do botão de atualizar
+- [x] Versão 3.2.2 (code 21) em build.gradle.kts, hub-version.json e PilarHubDownloadCard.tsx
+- [x] XMLs validados, build OK
+- [ ] Publicar/compilar APK 3.2.2
