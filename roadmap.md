@@ -238,3 +238,8 @@
 - [x] Shelly: ligar/desligar, pulso, status e configuração da saída
 - [x] Presença no painel (heartbeat) e atualização remota do aplicativo
 - [x] Contadores de marcações, comandos e avisos, com botão limpar
+
+## Pilar Automação — painel exclusivo no APK — 2026-09-15
+- [x] Abrir as rotas do painel fora do menu principal da web
+- [x] Manter a validação da sessão antes de exibir o painel
+- [x] Exibir somente o painel de automação após o carregamento nativo
