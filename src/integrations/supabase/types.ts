@@ -3535,6 +3535,7 @@ export type Database = {
           app: string
           bloqueado: boolean
           chave: string
+          coletor_device_key: string | null
           created_at: string
           dispositivo_id: string | null
           estabelecimento_id: string
@@ -3547,6 +3548,7 @@ export type Database = {
           app?: string
           bloqueado?: boolean
           chave: string
+          coletor_device_key?: string | null
           created_at?: string
           dispositivo_id?: string | null
           estabelecimento_id: string
@@ -3559,6 +3561,7 @@ export type Database = {
           app?: string
           bloqueado?: boolean
           chave?: string
+          coletor_device_key?: string | null
           created_at?: string
           dispositivo_id?: string | null
           estabelecimento_id?: string
