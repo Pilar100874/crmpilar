@@ -86,10 +86,10 @@ jobs:
       - name: Criar / atualizar GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: controle-v${{ steps.version.outputs.version }}
+          tag_name: coletor-v${{ steps.version.outputs.version }}
           name: Pilar Coletor v${{ steps.version.outputs.version }}
           body: |
-            APK nativo do Pilar Coletor — Automação e Relógio de Ponto, sem SMS ou câmeras.
+            APK nativo do Pilar Coletor — lê os relógios de ponto e comanda os dispositivos de automação na rede local.
 
             - versionName: `${{ steps.version.outputs.version }}`
             - versionCode: `${{ steps.version.outputs.code }}`
@@ -118,7 +118,7 @@ jobs:
             j.disponivel = true;
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
-            j.notas = 'v${VERSION}: Pilar Coletor nativo com Automação e Relógio de Ponto, sem SMS ou câmeras.';
+            j.notas = 'v${VERSION}: Pilar Coletor: leitura dos relógios de ponto e comandos de automação na rede local.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/hub-version.json
