@@ -8577,6 +8577,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ecommerce_denuncias_envios: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          origem_hash: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          origem_hash: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          origem_hash?: string
+        }
+        Relationships: []
+      }
       ecommerce_rules: {
         Row: {
           ativo: boolean | null
