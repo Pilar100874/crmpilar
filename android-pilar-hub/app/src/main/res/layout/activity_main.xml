@@ -3,7 +3,7 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingTop="22dp" android:paddingEnd="20dp" android:paddingBottom="24dp" android:background="@drawable/iso_header">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
             <TextView android:id="@+id/txtTitulo" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="PILAR  |  COLETOR" android:textColor="@android:color/white" android:textSize="19sp" android:textStyle="bold" />
-            <Button android:id="@+id/btnSair" android:layout_width="wrap_content" android:layout_height="40dp" android:background="@drawable/iso_button_outline" android:minWidth="64dp" android:text="Sair" android:textAllCaps="false" android:textColor="@color/iso_brand" />
+            <ImageButton android:id="@+id/btnSair" android:layout_width="44dp" android:layout_height="40dp" android:background="@drawable/iso_button_outline" android:contentDescription="Sair" android:padding="9dp" android:scaleType="fitCenter" android:src="@drawable/ic_sair" />
         </LinearLayout>
         <TextView android:id="@+id/txtEmpresa" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="#B8C7E0" android:textSize="13sp" />
         <TextView android:id="@+id/txtStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:background="@drawable/iso_pill_online" android:paddingStart="12dp" android:paddingTop="7dp" android:paddingEnd="12dp" android:paddingBottom="7dp" android:text="Em funcionamento" android:textSize="13sp" android:textStyle="bold" />
@@ -53,8 +53,8 @@
                 <Button android:id="@+id/btnSincronizar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:layout_marginStart="8dp" android:background="@drawable/iso_button_outline" android:text="Verificar agora" android:textAllCaps="false" android:textColor="@color/iso_brand" />
             </LinearLayout>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="16dp" android:orientation="horizontal">
-<Button android:id="@+id/btnAtualizarApp" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:background="@drawable/iso_button_outline" android:paddingStart="4dp" android:paddingEnd="4dp" android:text="Atualizar" android:textAllCaps="false" android:textColor="@color/iso_brand" android:textSize="12sp" />
-                <Button android:id="@+id/btnLimpar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:layout_marginStart="8dp" android:background="@drawable/iso_button_outline" android:paddingStart="4dp" android:paddingEnd="4dp" android:text="Limpar avisos" android:textAllCaps="false" android:textColor="@color/iso_text_secondary" android:textSize="12sp" />
+<ImageButton android:id="@+id/btnAtualizarApp" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:background="@drawable/iso_button_outline" android:contentDescription="Atualizar aplicativo" android:padding="10dp" android:scaleType="fitCenter" android:src="@drawable/ic_atualizar" />
+                <ImageButton android:id="@+id/btnLimpar" android:layout_width="0dp" android:layout_weight="1" android:layout_height="46dp" android:layout_marginStart="8dp" android:background="@drawable/iso_button_outline" android:contentDescription="Limpar avisos" android:padding="10dp" android:scaleType="fitCenter" android:src="@drawable/ic_limpar" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
