@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { forbidden, getAuthContext, unauthorized } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,9 @@ serve(async (req) => {
   }
 
   try {
+    const auth = await getAuthContext(req);
+    if (!auth) return unauthorized(corsHeaders);
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -20,6 +24,9 @@ serve(async (req) => {
     // Parse query parameters
     const url = new URL(req.url);
     const estabelecimentoId = url.searchParams.get('estabelecimento_id');
+    if (!auth.isServiceRole && estabelecimentoId && estabelecimentoId !== auth.estabelecimentoId) {
+      return forbidden(corsHeaders);
+    }
     const grupoId = url.searchParams.get('grupo_id');
     const categoriaId = url.searchParams.get('categoria_id');
     const ativo = url.searchParams.get('ativo');
