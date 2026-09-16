@@ -539,6 +539,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         }
       }
 
+      await garantirAcessoLogin(editingId);
+
       toast({ title: "Usuário atualizado com sucesso!" });
       resetForm();
       fetchUsuarios();
@@ -611,11 +613,32 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         }
       }
 
+      if (data) await garantirAcessoLogin(data.id);
+
       toast({ title: "Usuário criado com sucesso!" });
       resetForm();
       fetchUsuarios();
     }
   };
+
+  /** Cria (ou atualiza) o login do usuário no sistema de autenticação. */
+  const garantirAcessoLogin = async (usuarioId: string) => {
+    if (!senha || !email.trim()) return;
+    const { data, error } = await supabase.functions.invoke("criar-acesso-usuario", {
+      body: { usuario_id: usuarioId, senha },
+    });
+    if (error || (data as { error?: string } | null)?.error) {
+      toast({
+        title: "Acesso de login não criado",
+        description:
+          (data as { error?: string } | null)?.error ||
+          error?.message ||
+          "Não foi possível liberar o login deste usuário.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const detectEmailProvider = (emailAddress: string) => {
     const domain = emailAddress.toLowerCase().split('@')[1];
