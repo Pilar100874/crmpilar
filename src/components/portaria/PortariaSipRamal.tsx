@@ -24,6 +24,8 @@ const STORAGE_KEY = "portaria.sip.config";
 export interface PortariaSipConfig {
   servidor: string;
   servidorRemoto: string;
+  porta: string;
+  portaRemota: string;
   ramal: string;
   senha: string;
   nome: string;
@@ -35,6 +37,8 @@ export interface PortariaSipConfig {
 const CONFIG_PADRAO: PortariaSipConfig = {
   servidor: "",
   servidorRemoto: "",
+  porta: "8089",
+  portaRemota: "8089",
   ramal: "",
   senha: "",
   nome: "",
