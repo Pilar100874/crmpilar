@@ -24,6 +24,8 @@ export const USUARIO_COLUNAS_PUBLICAS = [
   "auth_user_id",
   "ramal",
   "usuario_sip",
+  "sip_porta",
+  "sip_porta_alternativa",
   "imap",
   "porta_imap",
   "segmento_id",
