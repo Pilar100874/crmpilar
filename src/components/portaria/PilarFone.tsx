@@ -104,7 +104,7 @@ interface Props {
   initialWhatsapp?: { nome: string; numero: string };
 
   /** Servidores vindos da configuração do estabelecimento. */
-  serverConfig?: { servidor: string; servidorRemoto: string };
+  serverConfig?: { servidor: string; servidorRemoto: string; porta?: string; portaRemota?: string };
   mostrarInterfone?: boolean;
   /** Fecha o telefone (exibido apenas no modo embutido). */
   onFechar?: () => void;
