@@ -3,7 +3,7 @@
 // - Administrador do estabelecimento ou grupo com perfil "admin": acesso total.
 // - Sem grupo ou grupo sem permissões salvas: acesso total (nada configurado = liberado).
 // - Item marcado no grupo: vale exatamente o que está marcado.
-// - Item não listado: herda a permissão do item pai; sem pai listado, fica liberado.
+// - Item não listado: herda a permissão do item pai; sem pai listado, fica bloqueado.
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
