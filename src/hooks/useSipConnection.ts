@@ -156,7 +156,7 @@ export const useSipConnection = () => {
           server: wsUrl,
           connectionTimeout: 8,
         },
-        authorizationUsername: extension,
+        authorizationUsername: (authUser || '').trim() || extension,
         authorizationPassword: password,
         displayName: displayName || extension,
         sessionDescriptionHandlerFactoryOptions: {
