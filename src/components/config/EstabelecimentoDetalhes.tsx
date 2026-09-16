@@ -196,6 +196,13 @@ const getConfigCategories = (): ConfigCategory[] => [
         component: UCMConfigCRUD,
       },
       {
+        id: "painel-telefonia-sip",
+        title: "Painel de Telefonia SIP",
+        description: "Ramais, linhas e ligações em andamento",
+        icon: Phone,
+        navigateTo: "/telefonia-sip",
+      },
+      {
         id: "ia-config",
         title: "Configurações de IA",
         description: "Provedores e modelos",
