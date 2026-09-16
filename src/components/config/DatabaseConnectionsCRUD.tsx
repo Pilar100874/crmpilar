@@ -105,7 +105,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
 
         const { data: nova, error } = await supabase
           .from("database_connections")
-          .insert([{ ...dadosSemSenha, estabelecimento_id: estabId }])
+          .insert([{ ...dadosSemSenha, sql_password: "", estabelecimento_id: estabId }])
           .select("id")
           .single();
 
@@ -352,11 +352,10 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
                     <Input
                       id="sql_password"
                       type={showPassword ? "text" : "password"}
-                      required
+                      required={!editingId}
                       value={formData.sql_password}
-                      placeholder={editingId ? SENHA_PLACEHOLDER : ""}
                       onChange={(e) => setFormData({ ...formData, sql_password: e.target.value })}
-                      placeholder="Senha"
+                      placeholder={editingId ? SENHA_PLACEHOLDER : "Senha"}
                     />
                     <Button
                       type="button"

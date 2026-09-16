@@ -604,11 +604,10 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
                         <Input
                           id="sql_password"
                           type={showPassword ? "text" : "password"}
-                          required
+                          required={!editingId}
                           value={formData.sql_password}
-                          placeholder={editingId ? SENHA_PLACEHOLDER : ""}
                           onChange={(e) => setFormData({ ...formData, sql_password: e.target.value })}
-                          placeholder="Senha"
+                          placeholder={editingId ? SENHA_PLACEHOLDER : "Senha"}
                         />
                         <Button
                           type="button"
