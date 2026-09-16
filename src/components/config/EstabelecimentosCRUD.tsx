@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/lib/toast-config";
-import { Pencil, Trash2, ChevronRight, Plus, Building2, Users, X, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, Plus, Building2, Users, ArrowLeft } from "lucide-react";
 import { EstabelecimentoDetalhes } from "./EstabelecimentoDetalhes";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
