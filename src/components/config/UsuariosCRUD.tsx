@@ -188,6 +188,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .select(`
         ${USUARIO_COLUNAS_PUBLICAS},
         senha_sip,
+        sip_servidor,
+        sip_servidor_alternativo,
+        ramal_portaria,
+        pilarfone_abas,
+        automacao_ambiente_celular,
+        automacao_ambiente_tablet,
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
