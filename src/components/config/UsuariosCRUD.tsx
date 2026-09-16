@@ -119,7 +119,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [mostrarSenhaSip, setMostrarSenhaSip] = useState(false);
   const [usuarioSip, setUsuarioSip] = useState("");
   const [sipServidor, setSipServidor] = useState("");
+  const [sipPorta, setSipPorta] = useState("8089");
   const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
+  const [sipPortaAlternativa, setSipPortaAlternativa] = useState("8089");
   const [ramalPortaria, setRamalPortaria] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
