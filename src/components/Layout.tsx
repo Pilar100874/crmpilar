@@ -1629,6 +1629,7 @@ export default function Layout({ children }: LayoutProps) {
                       
                       <div className="space-y-1">
                         {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), true)}
+                        {linhaAssistenteVoz}
                         {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/70")}
                       </div>
 
@@ -1665,6 +1666,7 @@ export default function Layout({ children }: LayoutProps) {
                 {openSubmenuId === "UserMenu" && (
                   <div className="mt-1 ml-8 space-y-1">
                     {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), false)}
+                        {linhaAssistenteVoz}
                     {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/60")}
 
                     
@@ -1726,7 +1728,7 @@ export default function Layout({ children }: LayoutProps) {
           <FloatingMacroRecorder />
           <FloatingMacroQuickAccess />
           <SupportTicketFloatingButton />
-          <VoiceAssistant />
+          {assistenteVozAtivo && <VoiceAssistant />}
         </>
       )}
 
