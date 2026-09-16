@@ -233,11 +233,11 @@ const getConfigCategories = (): ConfigCategory[] => [
   },
 ];
 
-export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome }: EstabelecimentoDetalhesProps) {
+export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome, categoriaInicial, onVoltar }: EstabelecimentoDetalhesProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoriaInicial ?? null);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [userEstabId, setUserEstabId] = useState<string | null>(null);
 
