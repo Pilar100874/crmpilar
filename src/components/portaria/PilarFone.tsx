@@ -267,6 +267,12 @@ export default function PilarFone({
     });
   }, [config, configValida, connect]);
 
+  // Se o servidor/ramal mudarem (dados da unidade chegando depois), tenta registrar de novo.
+  const assinaturaConfig = `${config.servidor}|${config.porta}|${config.ramal}|${config.senha}`;
+  useEffect(() => {
+    tentouAuto.current = false;
+  }, [assinaturaConfig]);
+
   // Conexão é sempre automática: assim que a configuração do cadastro é carregada, o ramal se registra.
   useEffect(() => {
     if (!configSincronizada || tentouAuto.current || !configValida || isRegistered || isConnecting) return;
