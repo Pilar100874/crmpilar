@@ -33,7 +33,7 @@ const resolverArquivo = (especificador: string): string | null => {
 
 // 2) rota -> componente
 const rotas = new Map<string, string>();
-for (const m of app.matchAll(/<Route\s+path="([^"]+)"\s+element=\{<(\w+)/g)) {
+for (const m of app.matchAll(/<Route\s+path="([^"]+)"[\s\S]{0,200}?element=\{\s*(?:<\w+[^>]*>\s*)*?<(\w+)/g)) {
   if (!rotas.has(m[1])) rotas.set(m[1], m[2]);
 }
 
@@ -56,6 +56,15 @@ const limparRotulo = (bruto: string) =>
 const extrairAbas = (caminho: string) => {
   const fonte = lerArquivo(caminho);
   const abas: { id: string; label: string }[] = [];
+  // Listas de seções declaradas como constantes ({ id, label/title, icon })
+  for (const bloco of fonte.matchAll(/=\s*\[([\s\S]*?)\]\s*(?:as const)?\s*;/g)) {
+    const itensBloco = [...bloco[1].matchAll(/\{[^{}]*?\bid:\s*["'`]([^"'`]+)["'`][^{}]*?\b(?:label|title|nome):\s*["'`]([^"'`]+)["'`][^{}]*?\bicon:[^{}]*?\}/g)];
+    if (itensBloco.length < 2) continue;
+    for (const it of itensBloco) {
+      if (abas.some((a) => a.id === it[1])) continue;
+      abas.push({ id: it[1], label: it[2] });
+    }
+  }
   const re = /<TabsTrigger\b([^>]*)>([\s\S]*?)<\/TabsTrigger>/g;
   for (const m of fonte.matchAll(re)) {
     const valor = /value=["']([^"']+)["']/.exec(m[1])?.[1];
