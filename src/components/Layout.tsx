@@ -1610,17 +1610,15 @@ export default function Layout({ children }: LayoutProps) {
                 >
                   <UserIcon className="w-5 h-5 text-sidebar-foreground/70" />
                 </button>
-                <NavLink
-                  to="/avisos"
-                  className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold transition-colors ${
-                    avisosPendentes > 0 
-                      ? 'bg-destructive text-destructive-foreground hover:bg-destructive/80' 
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                  title={`${avisosPendentes} avisos pendentes`}
-                >
-                  {avisosPendentes}
-                </NavLink>
+                {avisosPendentes > 0 && (
+                  <NavLink
+                    to="/avisos"
+                    className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold transition-colors bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                    title={`${avisosPendentes} avisos pendentes`}
+                  >
+                    {avisosPendentes}
+                  </NavLink>
+                )}
                 
                 {openSubmenuId === "UserMenu" && (
                   <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50">
