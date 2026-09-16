@@ -3,12 +3,11 @@
 // - Administrador do estabelecimento ou grupo com perfil "admin": acesso total.
 // - Sem grupo ou grupo sem permissões salvas: acesso bloqueado por padrão.
 // - Item marcado no grupo: vale exatamente o que está marcado.
-// - Item não listado: herda a permissão do item pai; sem pai listado, fica bloqueado.
+// - Módulo interno não listado: fica bloqueado; precisa de liberação própria.
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
-import { getMapaPais, SEPARADOR_MODULO } from "@/lib/permissoes/catalogo";
 
 export interface Permissao {
   view: boolean;
@@ -128,18 +127,7 @@ export function usePermissoesUsuario() {
       if (estado.acessoTotal) return true;
       const direta = estado.permissoes[id];
       if (direta) return Boolean(direta[acao]);
-      // Módulos internos (abas) de uma tela liberada herdam a permissão da tela.
-      if (id.includes(SEPARADOR_MODULO)) {
-        let atual: string | undefined = getMapaPais()[id];
-        const visitados = new Set<string>([id]);
-        while (atual && !visitados.has(atual)) {
-          visitados.add(atual);
-          const permissao = estado.permissoes[atual];
-          if (permissao) return Boolean(permissao[acao]);
-          atual = getMapaPais()[atual];
-        }
-      }
-      // Menus e submenus não marcados no grupo ficam bloqueados.
+      // Menus, submenus e módulos não marcados no grupo ficam bloqueados.
       return false;
     };
 
