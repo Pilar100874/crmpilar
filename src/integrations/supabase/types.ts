@@ -28675,6 +28675,11 @@ export type Database = {
           longitude: number | null
           nome: string
           numero: string | null
+          ramal_portaria: string | null
+          sip_porta: number | null
+          sip_porta_alternativa: number | null
+          sip_servidor: string | null
+          sip_servidor_alternativo: string | null
           uf: string | null
           updated_at: string | null
         }
@@ -28691,6 +28696,11 @@ export type Database = {
           longitude?: number | null
           nome: string
           numero?: string | null
+          ramal_portaria?: string | null
+          sip_porta?: number | null
+          sip_porta_alternativa?: number | null
+          sip_servidor?: string | null
+          sip_servidor_alternativo?: string | null
           uf?: string | null
           updated_at?: string | null
         }
@@ -28707,6 +28717,11 @@ export type Database = {
           longitude?: number | null
           nome?: string
           numero?: string | null
+          ramal_portaria?: string | null
+          sip_porta?: number | null
+          sip_porta_alternativa?: number | null
+          sip_servidor?: string | null
+          sip_servidor_alternativo?: string | null
           uf?: string | null
           updated_at?: string | null
         }
