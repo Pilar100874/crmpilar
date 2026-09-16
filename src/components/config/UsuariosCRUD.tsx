@@ -367,14 +367,16 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       return;
     }
 
-    if (senha && senha.length < 6) {
+    const erroSenha = senha ? validarSenhaForte(senha) : null;
+    if (erroSenha) {
       toast({
         title: "Senha inválida",
-        description: "A senha deve ter no mínimo 6 caracteres",
+        description: erroSenha,
         variant: "destructive",
       });
       return;
     }
+
 
     const usuarioData = {
       nome,
