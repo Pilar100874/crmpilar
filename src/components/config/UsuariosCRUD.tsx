@@ -1164,58 +1164,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="usuario-sip-servidor">Servidor (PABX)</Label>
-                <Input
-                  id="usuario-sip-servidor"
-                  placeholder="192.168.88.250"
-                  value={sipServidor}
-                  onChange={(e) => setSipServidor(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1 sm:w-28">
-                <Label htmlFor="usuario-sip-porta">Porta</Label>
-                <Input
-                  id="usuario-sip-porta"
-                  type="number"
-                  placeholder="8089"
-                  value={sipPorta}
-                  onChange={(e) => setSipPorta(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="usuario-sip-servidor-alt">Servidor alternativo</Label>
-                <Input
-                  id="usuario-sip-servidor-alt"
-                  placeholder="pilar.myddns.me"
-                  value={sipServidorAlternativo}
-                  onChange={(e) => setSipServidorAlternativo(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1 sm:w-28">
-                <Label htmlFor="usuario-sip-porta-alt">Porta</Label>
-                <Input
-                  id="usuario-sip-porta-alt"
-                  type="number"
-                  placeholder="8089"
-                  value={sipPortaAlternativa}
-                  onChange={(e) => setSipPortaAlternativa(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="usuario-ramal-portaria">Ramal da TV/portaria</Label>
-              <Input
-                id="usuario-ramal-portaria"
-                placeholder="2000"
-                value={ramalPortaria}
-                onChange={(e) => setRamalPortaria(e.target.value)}
-              />
+            <div className="sm:col-span-2 rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+              O servidor (PABX), a porta, o servidor alternativo, a porta alternativa e o ramal da TV/portaria agora
+              ficam no cadastro da unidade. O usuário usa automaticamente os dados da unidade em que está vinculado.
             </div>
           </div>
 
