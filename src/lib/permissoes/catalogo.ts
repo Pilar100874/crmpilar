@@ -124,6 +124,14 @@ export const listarIdsCatalogo = (): string[] => {
   return ids;
 };
 
+let idsCatalogoCache: Set<string> | null = null;
+
+/** Confirma se o id pertence ao catálogo, sem liberar abas auxiliares não cadastradas. */
+export const existeIdCatalogo = (id: string): boolean => {
+  if (!idsCatalogoCache) idsCatalogoCache = new Set(listarIdsCatalogo());
+  return idsCatalogoCache.has(id);
+};
+
 /** Mapa id -> id do pai (usado para herdar permissão). */
 let mapaPaisCache: Record<string, string> | null = null;
 

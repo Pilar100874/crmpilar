@@ -6,6 +6,7 @@ import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermissoesUsuario } from "@/hooks/usePermissoesUsuario";
 import { getCatalogoPermissoes, type NoPermissao } from "@/lib/permissoes/catalogo";
+import { EscopoPermissao } from "@/components/permissoes/ContextoPermissao";
 
 /** Rotas sempre liberadas (entrada do sistema e telas neutras). */
 const SEMPRE_LIBERADAS = ["/", "/menu", "/menu-visual", "/dashboard", "/perfil", "/avisos"];
@@ -39,7 +40,7 @@ const construirIndice = (): Entrada[] => {
 };
 
 /** Id de permissão da rota atual, ou null quando a rota não está no catálogo. */
-const idDaRota = (pathname: string, search: string): string | null => {
+export const idDaRota = (pathname: string, search: string): string | null => {
   const caminho = pathname.replace(/\/$/, "") || "/";
   const secao = new URLSearchParams(search).get("secao");
   for (const entrada of construirIndice()) {
@@ -94,5 +95,6 @@ export function RotaPermitida({ children }: { children: ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  const idTela = idDaRota(pathname, search);
+  return <EscopoPermissao idTela={idTela} idModulo={null}>{children}</EscopoPermissao>;
 }
