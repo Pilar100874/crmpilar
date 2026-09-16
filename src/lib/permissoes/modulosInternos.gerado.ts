@@ -1643,5 +1643,19 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "id": "table",
       "label": "Tabela"
     }
+  ],
+  "Config Estab Painel Telefonia": [
+    {
+      "id": "ramais",
+      "label": "Ramais"
+    },
+    {
+      "id": "linhas",
+      "label": "Linhas"
+    },
+    {
+      "id": "ligacoes",
+      "label": "Ligações"
+    }
   ]
 };
