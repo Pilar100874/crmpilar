@@ -444,6 +444,7 @@ export const useSipConnection = () => {
         );
 
         if (state === SessionState.Established) {
+          pararToqueChamando();
           console.log('🎤 Configurando mídia para chamada estabelecida...');
           await setupRemoteMedia(inviter);
           if (opcoes?.video) {
