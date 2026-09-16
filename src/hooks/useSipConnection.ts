@@ -21,6 +21,10 @@ interface CallSession {
   startTime: Date;
 }
 
+/** Remove apenas a formatação visual; códigos SIP digitados pelo usuário continuam intactos. */
+const normalizarNumeroDiscagem = (phoneNumber: string) =>
+  phoneNumber.trim().replace(/[\s().-]/g, '');
+
 export const useSipConnection = () => {
   const { toast } = useToast();
   const [userAgent, setUserAgent] = useState<UserAgent | null>(null);
@@ -366,22 +370,17 @@ export const useSipConnection = () => {
     }
 
     try {
-      // Adiciona # ao final para números externos (mais de 4 dígitos)
-      // Ramais internos geralmente têm 3-4 dígitos
-      let dialNumber = phoneNumber.trim();
-      const isExternalNumber = dialNumber.length > 4;
+      // Envia exatamente o número digitado, removendo apenas espaços e pontuação visual.
+      // O UCM aplica a rota de saída; acrescentar "#" muda o destino e pode encerrar a chamada.
+      const dialNumber = normalizarNumeroDiscagem(phoneNumber);
+      if (!dialNumber) throw new Error('Informe um número válido');
       
-      if (isExternalNumber && !dialNumber.endsWith('#')) {
-        dialNumber = dialNumber + '#';
-        console.log('📞 Número externo detectado, adicionando #:', dialNumber);
-      }
-      
-      // Codifica # como %23 para o URI SIP ser válida
+      // Codifica # somente quando ele tiver sido digitado intencionalmente.
       const sipUserPart = dialNumber.replace(/#/g, '%23');
       const sipUri = `sip:${sipUserPart}@${userAgent.configuration.uri?.host}`;
       console.log('📞 URI SIP sendo usada:', sipUri);
       console.log('📞 Número original:', phoneNumber);
-      console.log('📞 Número com #:', dialNumber);
+      console.log('📞 Número normalizado:', dialNumber);
       console.log('📞 Ramal origem:', userAgent.configuration.uri?.user);
       
       const target = UserAgent.makeURI(sipUri);
