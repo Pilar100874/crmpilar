@@ -280,3 +280,8 @@
 - [x] Pedidos da loja: valores recalculados no servidor e preço de item validado contra o produto
 - [x] Denúncias: envio só pelo servidor, com limite de 3/hora por remetente e 30/hora por empresa
 - [x] Senhas de conexões externas gravadas cifradas; telas não exibem mais a senha
+
+## Segurança — dados entre empresas — 2026-09-16
+- [x] Loja (anúncios, conteúdos, configuração, preços por volume) e apresentações de TV deixam de ser lidos por visitantes de outras empresas
+- [x] Visitantes acessam a loja por consultas do servidor escopadas pela empresa
+- [x] Credenciais de SMS, pedágio, frete, redes sociais e licitações restritas a admin/gestor
