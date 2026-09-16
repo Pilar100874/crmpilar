@@ -48,10 +48,12 @@ interface Usuario {
 }
 
 export default function Avisos() {
-  const { avisos, loading, avisosPendentes, marcarResolvido, criarAviso } = useAvisosSistema();
+  const { avisos, loading, avisosPendentes, marcarResolvido, criarAviso, excluirAviso } = useAvisosSistema();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filtroResolvido, setFiltroResolvido] = useState<'todos' | 'pendentes' | 'resolvidos'>('pendentes');
-  
+  const [avisoParaExcluir, setAvisoParaExcluir] = useState<{ id: string; titulo: string } | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+   
   const [titulo, setTitulo] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [tipo, setTipo] = useState('info');
