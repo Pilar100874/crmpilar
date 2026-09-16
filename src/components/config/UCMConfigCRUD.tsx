@@ -17,6 +17,9 @@ interface UCMConfig {
   id?: string;
   ucm_host: string;
   remote_ip?: string;
+  sip_porta?: number | string | null;
+  sip_porta_alternativa?: number | string | null;
+  ramal_portaria?: string | null;
   ucm_user: string;
   ucm_password: string;
   enabled: boolean;
@@ -30,6 +33,9 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
   const [config, setConfig] = useState<UCMConfig>({
     ucm_host: "",
     remote_ip: "",
+    sip_porta: 8089,
+    sip_porta_alternativa: 8089,
+    ramal_portaria: "",
     ucm_user: "",
     ucm_password: "",
     enabled: true,
