@@ -373,11 +373,11 @@ export default function Layout({ children }: LayoutProps) {
     if (partes.length === 1) return capitalizar(primeiro);
     return `${capitalizar(primeiro)} ${partes[partes.length - 1].charAt(0).toUpperCase()}.`;
   };
-  const nomeResumido = userName ? resumirNome(userName) : "";
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
   const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
+  const nomeResumido = userName ? resumirNome(userName) : "";
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
