@@ -15,6 +15,7 @@ import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
 import { maskWhatsApp } from "@/lib/masks";
 import { validateEmail, validateWhatsApp } from "@/lib/validators";
+import { validarSenhaForte } from "@/lib/validarSenhaForte";
 import {
   Dialog,
   DialogContent,
@@ -367,14 +368,16 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       return;
     }
 
-    if (senha && senha.length < 6) {
+    const erroSenha = senha ? validarSenhaForte(senha) : null;
+    if (erroSenha) {
       toast({
         title: "Senha inválida",
-        description: "A senha deve ter no mínimo 6 caracteres",
+        description: erroSenha,
         variant: "destructive",
       });
       return;
     }
+
 
     const usuarioData = {
       nome,
@@ -1052,13 +1055,19 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 type="password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 6 caracteres"}
-                minLength={6}
+                placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 8 caracteres"}
+                minLength={8}
               />
-              {senha && senha.length < 6 && (
-                <p className="text-xs text-destructive mt-1">Mínimo 6 caracteres</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                A senha precisa ter no mínimo 8 caracteres, com letras, números e um símbolo
+                (ex.: Pilar@2026). Senhas comuns como 123456 ou senha123 são bloqueadas por
+                segurança e o login não é criado.
+              </p>
+              {senha && validarSenhaForte(senha) && (
+                <p className="text-xs text-destructive mt-1">{validarSenhaForte(senha)}</p>
               )}
             </div>
+
 
             <div>
               <Label htmlFor="usuario-hora-inicial">Hora Inicial *</Label>
