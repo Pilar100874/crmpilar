@@ -31075,6 +31075,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      auth_usuario_tem_papel: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
       auto_close_support_tickets: { Args: never; Returns: undefined }
       check_catalog_expiration: { Args: never; Returns: undefined }
       check_customer_dependencies: {
