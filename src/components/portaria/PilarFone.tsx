@@ -256,7 +256,9 @@ export default function PilarFone({
     setAviso(null);
     await connect({
       server: config.servidor.trim(),
+      serverPort: config.porta || undefined,
       remoteServer: config.servidorRemoto.trim() || undefined,
+      remoteServerPort: config.portaRemota || undefined,
       extension: config.ramal.trim(),
       password: config.senha,
       displayName: config.nome.trim() || config.ramal.trim(),
