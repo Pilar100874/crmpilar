@@ -227,5 +227,6 @@ export function useAvisosSistema() {
     marcarResolvido,
     marcarTodosComoLidos,
     criarAviso,
+    excluirAviso,
   };
 }
