@@ -170,12 +170,17 @@ export const useSipConnection = () => {
           },
           onDisconnect: (error) => {
             console.error('❌ WebSocket desconectado:', error);
-            toast({
-              title: "Desconectado",
-              description: "Conexão com UCM perdida",
-              variant: "destructive",
+            // Só avisa quem realmente tinha o ramal registrado; sem ramal não há o que perder.
+            setIsRegistered((estavaRegistrado) => {
+              if (estavaRegistrado) {
+                toast({
+                  title: "Desconectado",
+                  description: "Conexão com UCM perdida",
+                  variant: "destructive",
+                });
+              }
+              return false;
             });
-            setIsRegistered(false);
           },
         },
       });
