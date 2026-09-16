@@ -258,7 +258,8 @@ export const useSipConnection = () => {
               config.extension, 
               config.password, 
               config.displayName || config.extension,
-              true
+              true,
+              config.authUser
             );
             ua = result.ua;
             connectedServer = result.server;
