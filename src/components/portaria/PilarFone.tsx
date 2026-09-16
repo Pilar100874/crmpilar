@@ -496,11 +496,26 @@ export default function PilarFone({
             <div className="flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#00A884]">
               <span className="inline-flex items-center gap-2">
                 <Users className="h-4 w-4" /> Ramais do CRM ({ramaisFiltrados.length})
+                <span className="rounded-full bg-[#00A884]/15 px-2 py-0.5 text-[10px] normal-case tracking-normal">
+                  {totalOnline} online
+                </span>
               </span>
-              <button type="button" aria-label="Atualizar ramais" onClick={() => void carregarRamais()}>
+              <button
+                type="button"
+                aria-label="Atualizar ramais"
+                onClick={() => {
+                  void carregarRamais();
+                  void atualizarStatus();
+                }}
+              >
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
+            {pabxDisponivel === false && (
+              <p className="px-4 pb-2 text-[11px] text-[#8696A0]">
+                Aparelhos SIP físicos não puderam ser consultados no PABX. Mostrando quem está conectado pelo sistema.
+              </p>
+            )}
             <div className="px-4 pb-3">
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#111B21] px-3 py-2">
                 <Search className="h-4 w-4 shrink-0 text-[#8696A0]" />
