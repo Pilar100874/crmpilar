@@ -1,5 +1,5 @@
 // ARQUIVO GERADO AUTOMATICAMENTE — não edite à mão.
-// Gere novamente com: bun run scripts/gerarModulosInternos.ts
+// Regenerado pelo Vite (plugin modulos-permissoes) e por: npm run permissoes:gerar
 // Mapeia o id de um item de menu para os módulos internos (abas) da tela.
 
 export interface ModuloInternoGerado {
