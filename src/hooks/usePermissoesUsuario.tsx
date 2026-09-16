@@ -29,7 +29,19 @@ const ESTADO_INICIAL: EstadoPermissoes = { carregando: true, acessoTotal: true, 
 
 const PermissoesContext = createContext<EstadoPermissoes | null>(null);
 
-const carregarPermissoes = async (): Promise<EstadoPermissoes> => {
+let cache: Promise<EstadoPermissoes> | null = null;
+
+/** Limpa o cache (usar após trocar de usuário ou salvar permissões). */
+export const limparCachePermissoes = () => {
+  cache = null;
+};
+
+const carregarPermissoes = (): Promise<EstadoPermissoes> => {
+  if (!cache) cache = buscarPermissoes();
+  return cache;
+};
+
+const buscarPermissoes = async (): Promise<EstadoPermissoes> => {
   try {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth?.user) return { carregando: false, acessoTotal: true, permissoes: {} };
