@@ -151,6 +151,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Config Estab Segmentos", title: "Segmentos", url: "/config?secao=cadastro-estabelecimentos&subsecao=usuarios-acessos&subsubsecao=cadastro-segmentos", icon: LucideIcons.Tag, group: "Estabelecimento" },
       { id: "Config Estab Redes Sociais", title: "Redes Sociais", url: "/config?secao=cadastro-estabelecimentos&subsecao=redes-sociais", icon: LucideIcons.Share2, group: "Estabelecimento" },
       { id: "Config Estab UCM", title: "Configuração UCM/PABX", url: "/config?secao=cadastro-estabelecimentos&subsecao=configuracao-ucm", icon: LucideIcons.Phone, group: "Estabelecimento" },
+      { id: "Config Estab Painel Telefonia", title: "Painel de Telefonia SIP", url: "/telefonia-sip", icon: LucideIcons.PhoneCall, group: "Estabelecimento" },
       { id: "Config Estab Integracao", title: "Integração e APIs", url: "/config?secao=cadastro-estabelecimentos&subsecao=integracao-apis", icon: LucideIcons.Link, group: "Estabelecimento" },
       { id: "Config Estab Gerador API", title: "Gerador de API", url: "/config?secao=cadastro-estabelecimentos&subsecao=integracao-apis&subsubsecao=gerador-api", icon: LucideIcons.Zap, group: "Estabelecimento" },
       { id: "Config Estab Webhooks", title: "Webhooks", url: "/config?secao=cadastro-estabelecimentos&subsecao=integracao-apis&subsubsecao=webhooks", icon: LucideIcons.Webhook, group: "Estabelecimento" },
