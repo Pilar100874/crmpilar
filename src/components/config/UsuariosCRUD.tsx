@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users, ArrowLeft } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -116,6 +116,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [ramal, setRamal] = useState("");
   const [tipo, setTipo] = useState<string>("padrao");
   const [senhaSip, setSenhaSip] = useState("");
+  const [mostrarSenhaSip, setMostrarSenhaSip] = useState(false);
   const [usuarioSip, setUsuarioSip] = useState("");
   const [sipServidor, setSipServidor] = useState("");
   const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
@@ -186,6 +187,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .from("usuarios")
       .select(`
         ${USUARIO_COLUNAS_PUBLICAS},
+        senha_sip,
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
@@ -1113,13 +1115,27 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
             <div>
               <Label htmlFor="usuario-senha-sip">Senha SIP</Label>
-              <Input
-                id="usuario-senha-sip"
-                type="password"
-                placeholder="Senha do ramal"
-                value={senhaSip}
-                onChange={(e) => setSenhaSip(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="usuario-senha-sip"
+                  type={mostrarSenhaSip ? "text" : "password"}
+                  placeholder="Senha do ramal"
+                  className="pr-10"
+                  value={senhaSip}
+                  onChange={(e) => setSenhaSip(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:bg-transparent"
+                  onClick={() => setMostrarSenhaSip((v) => !v)}
+                  aria-label={mostrarSenhaSip ? "Ocultar senha SIP" : "Mostrar senha SIP"}
+                  title={mostrarSenhaSip ? "Ocultar senha SIP" : "Mostrar senha SIP"}
+                >
+                  {mostrarSenhaSip ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             <div>
