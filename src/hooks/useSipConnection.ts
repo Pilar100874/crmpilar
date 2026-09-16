@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
+import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 
 interface SipConfig {
   server: string;
