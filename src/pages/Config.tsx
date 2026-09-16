@@ -108,6 +108,30 @@ const EMPRESA_SUBMENUS: ConfigSection[] = [
     bgColor: "bg-cyan-500/10",
     iconColor: "text-cyan-500",
   },
+  {
+    id: "comunicacao",
+    title: "Comunicação",
+    description: "E-mail, redes sociais e notificações",
+    icon: Mail,
+    bgColor: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+  },
+  {
+    id: "integrações",
+    title: "Integrações",
+    description: "APIs, webhooks, PABX e IA",
+    icon: Link2,
+    bgColor: "bg-indigo-500/10",
+    iconColor: "text-indigo-500",
+  },
+  {
+    id: "sistema",
+    title: "Sistema",
+    description: "Segurança e conformidade",
+    icon: Settings,
+    bgColor: "bg-gray-500/10",
+    iconColor: "text-gray-500",
+  },
   // Sistema
   {
     id: "notificacoes-sistema",
