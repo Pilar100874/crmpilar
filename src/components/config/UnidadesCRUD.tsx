@@ -9,7 +9,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
-import { UCMAjudaGuia } from "@/components/config/UCMAjudaGuia";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Unidade {
@@ -22,11 +22,6 @@ interface Unidade {
   bairro?: string;
   cidade?: string;
   uf?: string;
-  sip_servidor?: string | null;
-  sip_porta?: number | null;
-  sip_servidor_alternativo?: string | null;
-  sip_porta_alternativa?: number | null;
-  ramal_portaria?: string | null;
 }
 
 interface UnidadesCRUDProps {
@@ -43,11 +38,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
-  const [sipServidor, setSipServidor] = useState("");
-  const [sipPorta, setSipPorta] = useState("8089");
-  const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
-  const [sipPortaAlternativa, setSipPortaAlternativa] = useState("8089");
-  const [ramalPortaria, setRamalPortaria] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
@@ -149,11 +139,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       bairro: bairro || null,
       cidade: cidade || null,
       uf: uf || null,
-      sip_servidor: sipServidor || null,
-      sip_porta: sipPorta ? parseInt(sipPorta) : 8089,
-      sip_servidor_alternativo: sipServidorAlternativo || null,
-      sip_porta_alternativa: sipPortaAlternativa ? parseInt(sipPortaAlternativa) : 8089,
-      ramal_portaria: ramalPortaria || null,
     };
 
     if (editingId) {
@@ -229,11 +214,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro(unidade.bairro || "");
     setCidade(unidade.cidade || "");
     setUf(unidade.uf || "");
-    setSipServidor(unidade.sip_servidor || "");
-    setSipPorta(unidade.sip_porta?.toString() || "8089");
-    setSipServidorAlternativo(unidade.sip_servidor_alternativo || "");
-    setSipPortaAlternativa(unidade.sip_porta_alternativa?.toString() || "8089");
-    setRamalPortaria(unidade.ramal_portaria || "");
     setEditingId(unidade.id);
     setFormOpen(true);
   };
@@ -247,11 +227,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro("");
     setCidade("");
     setUf("");
-    setSipServidor("");
-    setSipPorta("8089");
-    setSipServidorAlternativo("");
-    setSipPortaAlternativa("8089");
-    setRamalPortaria("");
     setEditingId(null);
     setFormOpen(false);
   };
@@ -465,73 +440,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
                 <SelectItem value="TO">TO</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border p-3 space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <Label>Telefonia da unidade</Label>
-              <p className="text-xs text-muted-foreground">
-                Estes dados são usados automaticamente por todos os usuários vinculados a esta unidade.
-              </p>
-            </div>
-            <UCMAjudaGuia />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="unidade-sip-servidor">Servidor (PABX)</Label>
-                <Input
-                  id="unidade-sip-servidor"
-                  value={sipServidor}
-                  onChange={(e) => setSipServidor(e.target.value)}
-                  placeholder="192.168.88.250"
-                />
-              </div>
-              <div className="space-y-1 w-24">
-                <Label htmlFor="unidade-sip-porta">Porta</Label>
-                <Input
-                  id="unidade-sip-porta"
-                  type="number"
-                  value={sipPorta}
-                  onChange={(e) => setSipPorta(e.target.value)}
-                  placeholder="8089"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="unidade-sip-servidor-alt">Servidor alternativo</Label>
-                <Input
-                  id="unidade-sip-servidor-alt"
-                  value={sipServidorAlternativo}
-                  onChange={(e) => setSipServidorAlternativo(e.target.value)}
-                  placeholder="pilar.myddns.me"
-                />
-              </div>
-              <div className="space-y-1 w-24">
-                <Label htmlFor="unidade-sip-porta-alt">Porta</Label>
-                <Input
-                  id="unidade-sip-porta-alt"
-                  type="number"
-                  value={sipPortaAlternativa}
-                  onChange={(e) => setSipPortaAlternativa(e.target.value)}
-                  placeholder="8089"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="unidade-ramal-portaria">Ramal da TV/portaria</Label>
-              <Input
-                id="unidade-ramal-portaria"
-                value={ramalPortaria}
-                onChange={(e) => setRamalPortaria(e.target.value)}
-                placeholder="2000"
-              />
-            </div>
           </div>
         </div>
 

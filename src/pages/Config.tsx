@@ -19,6 +19,7 @@ import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import { EstabelecimentoDetalhes } from "@/components/config/EstabelecimentoDetalhes";
 import EmailConfig from "@/pages/EmailConfig";
 import SystemVisualConfig from "@/pages/SystemVisualConfig";
 import { Building2, FolderTree, UserCog, Tag } from "lucide-react";
@@ -107,6 +108,30 @@ const EMPRESA_SUBMENUS: ConfigSection[] = [
     icon: Mail,
     bgColor: "bg-cyan-500/10",
     iconColor: "text-cyan-500",
+  },
+  {
+    id: "comunicacao",
+    title: "Comunicação",
+    description: "E-mail, redes sociais e notificações",
+    icon: Mail,
+    bgColor: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+  },
+  {
+    id: "integrações",
+    title: "Integrações",
+    description: "APIs, webhooks, PABX e IA",
+    icon: Link2,
+    bgColor: "bg-indigo-500/10",
+    iconColor: "text-indigo-500",
+  },
+  {
+    id: "sistema",
+    title: "Sistema",
+    description: "Segurança e conformidade",
+    icon: Settings,
+    bgColor: "bg-gray-500/10",
+    iconColor: "text-gray-500",
   },
   // Sistema
   {
@@ -234,6 +259,22 @@ export default function Config() {
         return <EmailConfig embedded />;
       case "visual-sistema":
         return <SystemVisualConfig embedded />;
+      case "comunicacao":
+      case "integrações":
+      case "sistema": {
+        const estabAtual = estabParam ?? estabelecimentos[0]?.id;
+        if (!estabAtual) return null;
+        return (
+          <EstabelecimentoDetalhes
+            key={`${activeSection}-${estabAtual}`}
+            estabelecimentoId={estabAtual}
+            estabelecimentoNome={estabelecimentos.find((e) => e.id === estabAtual)?.nome ?? ""}
+            categoriaInicial={activeSection}
+            onVoltar={() => handleSectionClick("cadastro-estabelecimentos", estabAtual)}
+          />
+        );
+      }
+
 
       default:
         return null;

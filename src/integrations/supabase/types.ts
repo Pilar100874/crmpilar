@@ -28656,7 +28656,10 @@ export type Database = {
           estabelecimento_id: string
           id: string
           is_local: boolean | null
+          ramal_portaria: string | null
           remote_ip: string | null
+          sip_porta: number
+          sip_porta_alternativa: number
           ucm_host: string
           ucm_password: string
           ucm_user: string
@@ -28670,7 +28673,10 @@ export type Database = {
           estabelecimento_id: string
           id?: string
           is_local?: boolean | null
+          ramal_portaria?: string | null
           remote_ip?: string | null
+          sip_porta?: number
+          sip_porta_alternativa?: number
           ucm_host: string
           ucm_password: string
           ucm_user: string
@@ -28684,7 +28690,10 @@ export type Database = {
           estabelecimento_id?: string
           id?: string
           is_local?: boolean | null
+          ramal_portaria?: string | null
           remote_ip?: string | null
+          sip_porta?: number
+          sip_porta_alternativa?: number
           ucm_host?: string
           ucm_password?: string
           ucm_user?: string
@@ -31166,6 +31175,17 @@ export type Database = {
         Returns: {
           config: Json
           sections: Json
+        }[]
+      }
+      get_telefonia_estabelecimento: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          porta: number
+          porta_alternativa: number
+          ramal_portaria: string
+          servidor: string
+          servidor_alternativo: string
         }[]
       }
       get_user_conversation_ids: {
