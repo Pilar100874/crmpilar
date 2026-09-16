@@ -9,7 +9,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
-import { UCMAjudaGuia } from "@/components/config/UCMAjudaGuia";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Unidade {
