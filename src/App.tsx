@@ -470,9 +470,13 @@ const ElementosVisuaisGlobais = () => {
 // Layout wrapper component
 const LayoutWrapper = () => (
   <ProtectedRoute>
-    <Layout>
-      <Outlet />
-    </Layout>
+    <PermissoesProvider>
+      <Layout>
+        <RotaPermitida>
+          <Outlet />
+        </RotaPermitida>
+      </Layout>
+    </PermissoesProvider>
   </ProtectedRoute>
 );
 
