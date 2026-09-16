@@ -34,6 +34,7 @@ let cache: { userId: string; promise: Promise<EstadoPermissoes> } | null = null;
 /** Limpa o cache (usar após trocar de usuário ou salvar permissões). */
 export const limparCachePermissoes = () => {
   cache = null;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("permissoes-atualizadas"));
 };
 
 const carregarPermissoes = async (): Promise<EstadoPermissoes> => {
@@ -90,9 +91,15 @@ export function PermissoesProvider({ children }: { children: ReactNode }) {
       if (ativo) setEstado(ESTADO_INICIAL);
       atualizar();
     });
+    const aoAtualizarPermissoes = () => {
+      if (ativo) setEstado(ESTADO_INICIAL);
+      atualizar();
+    };
+    window.addEventListener("permissoes-atualizadas", aoAtualizarPermissoes);
     return () => {
       ativo = false;
       subscription.unsubscribe();
+      window.removeEventListener("permissoes-atualizadas", aoAtualizarPermissoes);
     };
   }, []);
 
