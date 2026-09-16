@@ -4,7 +4,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface SipConfig {
   server: string;
+  serverPort?: string;
   remoteServer?: string;
+  remoteServerPort?: string;
   extension: string;
   password: string;
   displayName?: string;
