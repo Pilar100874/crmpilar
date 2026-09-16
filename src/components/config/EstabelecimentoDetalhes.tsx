@@ -392,27 +392,25 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
         </div>
 
         {/* Items list */}
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {currentCategory.items.map((item) => (
             <Card 
               key={item.id}
-              className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
+              className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all group"
               onClick={() => handleItemClick(item)}
             >
-              <CardContent className="p-0">
-                <div className="flex items-center gap-3 p-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-                    currentCategory.bgColor
-                  )}>
-                    <item.icon className={cn("w-5 h-5", currentCategory.color)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm">{item.title}</h4>
-                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+                <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0",
+                  currentCategory.bgColor
+                )}>
+                  <item.icon className={cn("w-7 h-7", currentCategory.color)} />
                 </div>
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-sm">{item.title}</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </CardContent>
             </Card>
           ))}
