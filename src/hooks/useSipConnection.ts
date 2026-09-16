@@ -213,6 +213,7 @@ export const useSipConnection = () => {
       setIsRegistered(false);
       return;
     }
+    ramalPresencaRef.current = config.extension.trim();
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
