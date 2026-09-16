@@ -69,6 +69,7 @@ import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization, applyUserFooterCustomization, applySystemFooterCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
+import { usePermissoesUsuario } from "@/hooks/usePermissoesUsuario";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
 
@@ -361,6 +362,7 @@ export default function Layout({ children }: LayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const { podeVer, carregando: carregandoPermissoes } = usePermissoesUsuario();
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
   const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -751,7 +753,7 @@ export default function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
 
-  if (!user || isLoading) {
+  if (!user || isLoading || carregandoPermissoes) {
     return null;
   }
 
