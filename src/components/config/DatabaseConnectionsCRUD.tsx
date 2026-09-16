@@ -56,6 +56,8 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
 
   useEffect(() => {
     loadConnections();
+    // Protege credenciais antigas que ainda estavam em texto puro
+    supabase.functions.invoke("conexao-credencial", { body: { acao: "cifrar_existentes" } }).catch(() => {});
   }, [estabelecimentoId]);
 
   const loadConnections = async () => {
