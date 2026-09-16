@@ -293,3 +293,4 @@
 - [x] Hook central `usePermissoesUsuario` (podeVer/podeCriar/podeEditar/podeExcluir) + `SeTiverPermissao`
 - [x] Abas de Chats > Configurações respeitam o "Ver" do módulo
 - [ ] Estender o gate de Criar/Editar/Excluir às demais telas conforme necessidade
+- [x] Catálogo atualizado sozinho: plugin do Vite regenera os módulos ao iniciar, no build e a cada alteração de tela/menu (`npm run permissoes:gerar` manual)
