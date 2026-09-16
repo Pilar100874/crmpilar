@@ -399,6 +399,13 @@ export default function PilarFone({
       (!filtro || r.nome.toLowerCase().includes(filtro) || r.ramal.includes(filtro)),
   );
 
+  const totalOnline = ramaisFiltrados.filter((r) => {
+    const st = statusPorRamal[r.ramal];
+    return Boolean(st?.noSistema || st?.registradoPabx);
+  }).length;
+
+
+
   const contatosFiltrados = contatos.filter(
     (c) => !filtro || c.nome.toLowerCase().includes(filtro) || c.numero.includes(filtro),
   );
