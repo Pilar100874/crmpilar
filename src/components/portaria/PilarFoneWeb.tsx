@@ -207,7 +207,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   useEffect(() => {
     if (semAcesso) return;
     const canal = supabase
-      .channel("pilar-fone-alerta-wa")
+      .channel(`pilar-fone-alerta-wa-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const msg = payload.new as { sender?: string };
         if (msg?.sender === "agent" || msg?.sender === "user") return;
