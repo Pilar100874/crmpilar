@@ -232,11 +232,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro("");
     setCidade("");
     setUf("");
-    setSipServidor("");
-    setSipPorta("8089");
-    setSipServidorAlternativo("");
-    setSipPortaAlternativa("8089");
-    setRamalPortaria("");
     setEditingId(null);
     setFormOpen(false);
   };
