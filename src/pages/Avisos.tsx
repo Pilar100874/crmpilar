@@ -222,6 +222,7 @@ export default function Avisos() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <Select value={filtroResolvido} onValueChange={(v: any) => setFiltroResolvido(v)}>
