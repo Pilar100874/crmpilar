@@ -73,9 +73,20 @@ Deno.serve(async (req) => {
       authId = lista?.users?.find((u) => (u.email ?? "").toLowerCase() === email)?.id ?? null;
     }
 
+    const traduzErro = (msg: string) => {
+      const m = msg.toLowerCase();
+      if (m.includes("weak") || m.includes("pwned") || m.includes("known to be"))
+        return "Senha muito fraca ou vazada. Use uma senha forte (mínimo 8 caracteres, com letras, números e símbolos).";
+      if (m.includes("should be at least"))
+        return "Senha muito curta. Use no mínimo 8 caracteres.";
+      if (m.includes("already registered") || m.includes("already been registered"))
+        return "Já existe um login com este e-mail.";
+      return msg;
+    };
+
     if (authId) {
       const { error } = await admin.auth.admin.updateUserById(authId, { email, password: senha });
-      if (error) return json({ error: error.message }, 400);
+      if (error) return json({ error: traduzErro(error.message) }, 400);
     } else {
       const { data: criado, error } = await admin.auth.admin.createUser({
         email,
@@ -83,7 +94,7 @@ Deno.serve(async (req) => {
         email_confirm: true,
         user_metadata: { full_name: alvo.nome },
       });
-      if (error) return json({ error: error.message }, 400);
+      if (error) return json({ error: traduzErro(error.message) }, 400);
       authId = criado.user?.id ?? null;
     }
 
