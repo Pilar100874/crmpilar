@@ -112,7 +112,7 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Retenção de Dados"
     }
   ],
-  "Campanhas": [
+  "Calendario Painel": [
     {
       "id": "day",
       "label": "Dia"
@@ -132,6 +132,20 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "table",
       "label": "Tabela"
+    }
+  ],
+  "Roteirizador Visitas": [
+    {
+      "id": "carteira",
+      "label": "Carteira"
+    },
+    {
+      "id": "agenda",
+      "label": "Agenda"
+    },
+    {
+      "id": "manual",
+      "label": "Buscar"
     }
   ],
   "Config Vendas": [
@@ -402,30 +416,70 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Configuração"
     }
   ],
-  "Robô de Preços": [
+  "Ecommerce Config": [
     {
-      "id": "busca",
-      "label": "Buscar Preços"
+      "id": "homepage",
+      "label": "Página Inicial"
     },
     {
-      "id": "dashboard",
-      "label": "Dashboard"
+      "id": "branding",
+      "label": "Identidade Visual"
     },
     {
-      "id": "fontes",
-      "label": "Fontes de Pesquisa"
+      "id": "pagamentos",
+      "label": "Gateways de Pagamento"
     },
     {
-      "id": "mapeamento",
-      "label": "Mapeamento"
+      "id": "regras",
+      "label": "Regras do E-commerce"
     },
     {
-      "id": "importar",
-      "label": "Importar Arquivo"
+      "id": "rastreamento",
+      "label": "Rastreamento de Pedidos"
     },
     {
-      "id": "logs",
-      "label": "Logs e Monitoramento"
+      "id": "conteudos",
+      "label": "Conteúdos & Páginas"
+    },
+    {
+      "id": "anuncios",
+      "label": "Anúncios & Banners"
+    },
+    {
+      "id": "rodape",
+      "label": "Rodapé"
+    },
+    {
+      "id": "funcionalidades",
+      "label": "Funcionalidades"
+    },
+    {
+      "id": "volume-pricing",
+      "label": "Preços por Volume / B2B"
+    },
+    {
+      "id": "cupons",
+      "label": "Cupons de Desconto"
+    },
+    {
+      "id": "b2b-editor",
+      "label": "Página B2B / Atacado"
+    },
+    {
+      "id": "newsletter",
+      "label": "Newsletter"
+    },
+    {
+      "id": "mapa-calor",
+      "label": "Mapa de Calor"
+    },
+    {
+      "id": "denuncias",
+      "label": "Canal de Denúncias (NR-1)"
+    },
+    {
+      "id": "lgpd",
+      "label": "LGPD - Privacidade"
     }
   ],
   "Ads": [
@@ -482,30 +536,56 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Amazon Ads"
     }
   ],
-  "Admin Assistente Voz": [
+  "Robô de Preços": [
     {
-      "id": "telas",
-      "label": "Telas por voz"
+      "id": "busca",
+      "label": "Buscar Preços"
     },
     {
-      "id": "frases",
-      "label": "Frases por voz"
+      "id": "dashboard",
+      "label": "Dashboard"
     },
     {
-      "id": "testar",
-      "label": "Testar"
+      "id": "fontes",
+      "label": "Fontes de Pesquisa"
     },
     {
-      "id": "relatorios",
-      "label": "Relatórios por voz"
+      "id": "mapeamento",
+      "label": "Mapeamento"
     },
     {
-      "id": "snapshots",
-      "label": "Snapshots"
+      "id": "importar",
+      "label": "Importar Arquivo"
     },
     {
-      "id": "config",
-      "label": "Configurações"
+      "id": "logs",
+      "label": "Logs e Monitoramento"
+    }
+  ],
+  "Mapa de Calor": [
+    {
+      "id": "advanced",
+      "label": "🔥 Avançado"
+    },
+    {
+      "id": "usage",
+      "label": "Uso por Tela"
+    },
+    {
+      "id": "users",
+      "label": "Usuários"
+    },
+    {
+      "id": "1",
+      "label": "Hoje"
+    },
+    {
+      "id": "7",
+      "label": "7 dias"
+    },
+    {
+      "id": "30",
+      "label": "30 dias"
     }
   ],
   "Config Geral": [
@@ -1458,6 +1538,110 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "visual-sistema",
       "label": "Visual do Sistema"
+    }
+  ],
+  "Admin Config": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Admin Assistente Voz": [
+    {
+      "id": "telas",
+      "label": "Telas por voz"
+    },
+    {
+      "id": "frases",
+      "label": "Frases por voz"
+    },
+    {
+      "id": "testar",
+      "label": "Testar"
+    },
+    {
+      "id": "relatorios",
+      "label": "Relatórios por voz"
+    },
+    {
+      "id": "snapshots",
+      "label": "Snapshots"
+    },
+    {
+      "id": "config",
+      "label": "Configurações"
+    }
+  ],
+  "Admin Menu Customizacao": [
+    {
+      "id": "main",
+      "label": "Menu"
+    },
+    {
+      "id": "admin",
+      "label": "Admin"
+    },
+    {
+      "id": "user",
+      "label": "Usuário"
+    },
+    {
+      "id": "system",
+      "label": "Sistema"
+    },
+    {
+      "id": "pool",
+      "label": "Programas"
+    }
+  ],
+  "Campanhas": [
+    {
+      "id": "day",
+      "label": "Dia"
+    },
+    {
+      "id": "week",
+      "label": "Semana"
+    },
+    {
+      "id": "month",
+      "label": "Mês"
+    },
+    {
+      "id": "list",
+      "label": "Lista"
+    },
+    {
+      "id": "table",
+      "label": "Tabela"
     }
   ]
 };

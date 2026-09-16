@@ -37,8 +37,8 @@ for (const m of app.matchAll(/<Route\s+path="([^"]+)"[\s\S]{0,200}?element=\{\s*
   if (!rotas.has(m[1])) rotas.set(m[1], m[2]);
 }
 
-// 3) itens do menu (id + url)
-const menu = lerArquivo("src/lib/menuStructure.ts");
+// 3) itens do menu (id + url) — Layout.tsx é a fonte principal do menu lateral
+const menu = lerArquivo("src/components/Layout.tsx") + lerArquivo("src/lib/menuStructure.ts");
 const itens: { id: string; url: string }[] = [];
 for (const m of menu.matchAll(/id:\s*"([^"]+)",\s*title:\s*"[^"]*",\s*url:\s*"([^"]+)"/g)) {
   itens.push({ id: m[1], url: m[2] });
