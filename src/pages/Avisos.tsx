@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useAvisosSistema } from '@/hooks/useAvisosSistema';
 import { supabase } from '@/integrations/supabase/client';
+import { isEstabelecimentoAdmin } from '@/lib/estabelecimentoUtils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -56,6 +57,17 @@ export default function Avisos() {
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<string>('');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelado = false;
+    isEstabelecimentoAdmin().then((resultado) => {
+      if (!cancelado) setIsAdmin(resultado);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   // Carregar usuários quando abrir o dialog
   useEffect(() => {
@@ -140,6 +152,7 @@ export default function Avisos() {
             <Badge variant="destructive">{avisosPendentes} pendente{avisosPendentes > 1 ? 's' : ''}</Badge>
           )}
         </div>
+        {isAdmin && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Novo Aviso</Button>
@@ -209,6 +222,7 @@ export default function Avisos() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <Select value={filtroResolvido} onValueChange={(v: any) => setFiltroResolvido(v)}>
