@@ -148,6 +148,11 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       bairro: bairro || null,
       cidade: cidade || null,
       uf: uf || null,
+      sip_servidor: sipServidor || null,
+      sip_porta: sipPorta ? parseInt(sipPorta) : 8089,
+      sip_servidor_alternativo: sipServidorAlternativo || null,
+      sip_porta_alternativa: sipPortaAlternativa ? parseInt(sipPortaAlternativa) : 8089,
+      ramal_portaria: ramalPortaria || null,
     };
 
     if (editingId) {
@@ -223,6 +228,11 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro(unidade.bairro || "");
     setCidade(unidade.cidade || "");
     setUf(unidade.uf || "");
+    setSipServidor(unidade.sip_servidor || "");
+    setSipPorta(unidade.sip_porta?.toString() || "8089");
+    setSipServidorAlternativo(unidade.sip_servidor_alternativo || "");
+    setSipPortaAlternativa(unidade.sip_porta_alternativa?.toString() || "8089");
+    setRamalPortaria(unidade.ramal_portaria || "");
     setEditingId(unidade.id);
     setFormOpen(true);
   };
@@ -236,6 +246,11 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro("");
     setCidade("");
     setUf("");
+    setSipServidor("");
+    setSipPorta("8089");
+    setSipServidorAlternativo("");
+    setSipPortaAlternativa("8089");
+    setRamalPortaria("");
     setEditingId(null);
     setFormOpen(false);
   };
