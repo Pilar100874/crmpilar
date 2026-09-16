@@ -101,7 +101,15 @@ const construirCatalogo = (): NoPermissao[] => {
   return catalogo;
 };
 
-export const CATALOGO_PERMISSOES: NoPermissao[] = construirCatalogo();
+// Construção preguiçosa: o catálogo lê o menu do Layout, que por sua vez usa
+// as permissões — montar na importação criaria dependência circular.
+let catalogoCache: NoPermissao[] | null = null;
+
+/** Catálogo completo (menus, submenus e módulos internos). */
+export const getCatalogoPermissoes = (): NoPermissao[] => {
+  if (!catalogoCache) catalogoCache = construirCatalogo();
+  return catalogoCache;
+};
 
 /** Todos os ids do catálogo (menus, submenus e módulos). */
 export const listarIdsCatalogo = (): string[] => {
@@ -112,22 +120,27 @@ export const listarIdsCatalogo = (): string[] => {
       percorrer(no.filhos);
     }
   };
-  percorrer(CATALOGO_PERMISSOES);
+  percorrer(getCatalogoPermissoes());
   return ids;
 };
 
 /** Mapa id -> id do pai (usado para herdar permissão). */
-export const MAPA_PAIS: Record<string, string> = (() => {
-  const mapa: Record<string, string> = {};
-  const percorrer = (nos: NoPermissao[], pai?: string) => {
-    for (const no of nos) {
-      if (pai) mapa[no.id] = pai;
-      percorrer(no.filhos, no.id);
-    }
-  };
-  percorrer(CATALOGO_PERMISSOES);
-  return mapa;
-})();
+let mapaPaisCache: Record<string, string> | null = null;
+
+export const getMapaPais = (): Record<string, string> => {
+  if (!mapaPaisCache) {
+    const mapa: Record<string, string> = {};
+    const percorrer = (nos: NoPermissao[], pai?: string) => {
+      for (const no of nos) {
+        if (pai) mapa[no.id] = pai;
+        percorrer(no.filhos, no.id);
+      }
+    };
+    percorrer(getCatalogoPermissoes());
+    mapaPaisCache = mapa;
+  }
+  return mapaPaisCache;
+};
 
 export const rotuloDoId = (id: string): string => {
   const procurar = (nos: NoPermissao[]): string | null => {
@@ -138,7 +151,7 @@ export const rotuloDoId = (id: string): string => {
     }
     return null;
   };
-  return procurar(CATALOGO_PERMISSOES) || id;
+  return procurar(getCatalogoPermissoes()) || id;
 };
 
 /** Ids de um nó e de todos os seus descendentes. */

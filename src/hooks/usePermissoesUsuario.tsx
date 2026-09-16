@@ -8,7 +8,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
-import { MAPA_PAIS } from "@/lib/permissoes/catalogo";
+import { getMapaPais } from "@/lib/permissoes/catalogo";
 
 export interface Permissao {
   view: boolean;
@@ -117,7 +117,7 @@ export function usePermissoesUsuario() {
         visitados.add(atual);
         const permissao = estado.permissoes[atual];
         if (permissao) return Boolean(permissao[acao]);
-        atual = MAPA_PAIS[atual];
+        atual = getMapaPais()[atual];
       }
       return true;
     };

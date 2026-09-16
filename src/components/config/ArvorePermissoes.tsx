@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CATALOGO_PERMISSOES, idsDoRamo, MAPA_PAIS, type NoPermissao } from "@/lib/permissoes/catalogo";
+import { getCatalogoPermissoes, getMapaPais, idsDoRamo, type NoPermissao } from "@/lib/permissoes/catalogo";
 
 export interface MenuPermissions {
   view: boolean;
@@ -44,7 +44,7 @@ export function ArvorePermissoes({ valor, onChange }: ArvorePermissoesProps) {
   const termo = busca.trim().toLocaleLowerCase("pt-BR");
 
   const catalogoFiltrado = useMemo(
-    () => CATALOGO_PERMISSOES.filter((no) => correspondeBusca(no, termo)),
+    () => getCatalogoPermissoes().filter((no) => correspondeBusca(no, termo)),
     [termo]
   );
 
@@ -70,10 +70,10 @@ export function ArvorePermissoes({ valor, onChange }: ArvorePermissoesProps) {
     if (ligar) {
       // garante que os pais fiquem visíveis
       for (const id of ids) {
-        let pai = MAPA_PAIS[id];
+        let pai = getMapaPais()[id];
         while (pai) {
           novo[pai] = { ...(novo[pai] || { ...VAZIO }), view: true };
-          pai = MAPA_PAIS[pai];
+          pai = getMapaPais()[pai];
         }
       }
     }
@@ -168,7 +168,7 @@ export function ArvorePermissoes({ valor, onChange }: ArvorePermissoesProps) {
   };
 
   const marcarColuna = (acao: Acao, ligar: boolean) => {
-    const todos = CATALOGO_PERMISSOES.flatMap((no) => idsDoRamo(no));
+    const todos = getCatalogoPermissoes().flatMap((no) => idsDoRamo(no));
     aplicar(todos, acao, ligar);
   };
 
