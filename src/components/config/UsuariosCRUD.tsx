@@ -1115,13 +1115,27 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
             <div>
               <Label htmlFor="usuario-senha-sip">Senha SIP</Label>
-              <Input
-                id="usuario-senha-sip"
-                type="password"
-                placeholder="Senha do ramal"
-                value={senhaSip}
-                onChange={(e) => setSenhaSip(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="usuario-senha-sip"
+                  type={mostrarSenhaSip ? "text" : "password"}
+                  placeholder="Senha do ramal"
+                  className="pr-10"
+                  value={senhaSip}
+                  onChange={(e) => setSenhaSip(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:bg-transparent"
+                  onClick={() => setMostrarSenhaSip((v) => !v)}
+                  aria-label={mostrarSenhaSip ? "Ocultar senha SIP" : "Mostrar senha SIP"}
+                  title={mostrarSenhaSip ? "Ocultar senha SIP" : "Mostrar senha SIP"}
+                >
+                  {mostrarSenhaSip ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             <div>
