@@ -62,6 +62,10 @@ import {
 interface EstabelecimentoDetalhesProps {
   estabelecimentoId: string;
   estabelecimentoNome: string;
+  /** Abre direto em uma categoria (comunicacao, integrações, sistema, usuarios-acessos) */
+  categoriaInicial?: string | null;
+  /** Ação ao voltar da lista de categorias (quando aberto via submenu) */
+  onVoltar?: () => void;
 }
 
 interface ConfigCategory {
