@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarAnunciosLoja } from "@/lib/lojaPublica";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,18 +46,7 @@ export default function EcommerceAdBanner({ posicao, className = "", carousel = 
     const estabId = localStorage.getItem("estabelecimentoId");
     const now = new Date().toISOString();
     
-    let query = supabase
-      .from("ecommerce_anuncios")
-      .select("id, titulo, descricao, imagem_url, link_url, posicao, tipo, html_conteudo")
-      .eq("posicao", posicao)
-      .eq("ativo", true)
-      .order("ordem");
-
-    if (estabId) {
-      query = query.eq("estabelecimento_id", estabId);
-    }
-
-    const { data } = await query;
+    const data = estabId ? await carregarAnunciosLoja(estabId, posicao) : [];
     
     // Filter by date range client-side
     const filtered = (data || []).filter((ad: any) => {

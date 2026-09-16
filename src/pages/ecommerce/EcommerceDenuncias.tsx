@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConfigLoja } from "@/lib/lojaPublica";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -39,8 +40,7 @@ export default function EcommerceDenuncias() {
       const id = localStorage.getItem("estabelecimentoId");
       setEstId(id);
       if (!id) { setLoading(false); return; }
-      const { data } = await supabase.from("ecommerce_config" as any)
-        .select("denuncias_enabled, denuncias_config").eq("estabelecimento_id", id).maybeSingle();
+      const data = await carregarConfigLoja(id);
       if (data) {
         setEnabled(!!(data as any).denuncias_enabled);
         setCfg((data as any).denuncias_config as DenunciasConfig);

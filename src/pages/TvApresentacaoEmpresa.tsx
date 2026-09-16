@@ -7,6 +7,7 @@ import { useSaidaOculta } from "@/lib/tvSaidaOculta";
 import { SaidaOcultaOverlay } from "@/components/tv/SaidaOcultaOverlay";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarApresentacaoTv } from "@/lib/lojaPublica";
 import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { MonitorPlay, X } from "lucide-react";
@@ -114,12 +115,7 @@ export default function TvApresentacaoEmpresa() {
           return falhar(e?.message || "Falha ao carregar apresentação no dispositivo");
         }
       } else {
-        const res = await supabase
-          .from("apresentacoes_empresa")
-          .select("id,nome,itens,duracao_padrao_imagem,transicao,ativo")
-          .eq("id", id)
-          .maybeSingle();
-        data = res.data;
+        data = await carregarApresentacaoTv(id);
       }
       if (cancelado) return;
       if (!data) return falhar("Apresentação não encontrada");
