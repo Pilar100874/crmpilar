@@ -33,15 +33,50 @@ export function limparAtivacaoPilarFone() {
   localStorage.removeItem(CHAVE_STORAGE);
 }
 
+/** Erro de ativação: `rejeitada` só é true quando o servidor recusou a chave. */
+export class ErroChavePilarFone extends Error {
+  rejeitada: boolean;
+  constructor(mensagem: string, rejeitada: boolean) {
+    super(mensagem);
+    this.name = "ErroChavePilarFone";
+    this.rejeitada = rejeitada;
+  }
+}
+
+function statusDoErro(erro: unknown): number | null {
+  const ctx = (erro as { context?: { status?: unknown } } | null)?.context;
+  return typeof ctx?.status === "number" ? ctx.status : null;
+}
+
 export async function validarChavePilarFone(chave: string): Promise<AtivacaoPilarFone> {
   const chaveNormalizada = chave.trim().toUpperCase();
-  const { data, error } = await supabase.functions.invoke("automacao-app-chave", {
-    body: { chave: chaveNormalizada, app: "pilar-fone" },
-  });
+  let data: { estabelecimento_id?: string; empresa?: string; error?: string } | null = null;
+  let error: unknown = null;
+  try {
+    const resposta = await supabase.functions.invoke("automacao-app-chave", {
+      body: { chave: chaveNormalizada, app: "pilar-fone" },
+    });
+    data = resposta.data;
+    error = resposta.error;
+  } catch (e) {
+    // Falha de rede/transporte: nunca é motivo para apagar a ativação.
+    throw new ErroChavePilarFone("Não foi possível falar com o servidor. Verifique a internet.", false);
+  }
 
-  if (error || !data?.estabelecimento_id) {
+  if (error) {
+    const status = statusDoErro(error);
+    const recusada = status !== null && status >= 400 && status < 500;
+    throw new ErroChavePilarFone(
+      recusada
+        ? (typeof data?.error === "string" ? data.error : "Chave inválida ou bloqueada")
+        : "Não foi possível falar com o servidor. Tente novamente.",
+      recusada,
+    );
+  }
+
+  if (!data?.estabelecimento_id) {
     const mensagem = typeof data?.error === "string" ? data.error : "Chave inválida ou bloqueada";
-    throw new Error(mensagem);
+    throw new ErroChavePilarFone(mensagem, true);
   }
 
   const ativacao: AtivacaoPilarFone = {

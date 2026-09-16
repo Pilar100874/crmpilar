@@ -8,12 +8,14 @@ import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobil
 import AtualizadorApk from "@/components/portaria/AtualizadorApk";
 import logoPilar from "@/assets/logo_branco.png";
 import {
+  ErroChavePilarFone,
   estaNoApkPilarFone,
   lerAtivacaoPilarFone,
   limparAtivacaoPilarFone,
   validarChavePilarFone,
   type AtivacaoPilarFone,
 } from "@/lib/portaria/ativacaoPilarFone";
+
 
 /** App nativo da Portaria: só interfone (campainha/câmeras) e ramal SIP. */
 export default function AppInterfone() {
@@ -34,12 +36,16 @@ export default function AppInterfone() {
     let cancelado = false;
     validarChavePilarFone(ativacao.chave).then((dados) => {
       if (!cancelado) setAtivacao(dados);
-    }).catch(() => {
+    }).catch((erro) => {
+      // Só perde a ativação se o servidor realmente recusou a chave.
+      // Falha de rede/servidor mantém o aparelho funcionando.
+      if (erro instanceof ErroChavePilarFone && !erro.rejeitada) return;
       limparAtivacaoPilarFone();
       if (!cancelado) setAtivacao(null);
     });
     return () => { cancelado = true; };
   }, [apkNativo]);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSessao(!!data.session));
