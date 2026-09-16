@@ -119,7 +119,8 @@ export function usePermissoesUsuario() {
         if (permissao) return Boolean(permissao[acao]);
         atual = getMapaPais()[atual];
       }
-      return true;
+      // Grupo com permissões configuradas: o que não estiver liberado fica bloqueado.
+      return false;
     };
 
     return {
