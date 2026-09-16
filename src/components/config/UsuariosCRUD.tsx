@@ -539,6 +539,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         }
       }
 
+      await garantirAcessoLogin(editingId);
+
       toast({ title: "Usuário atualizado com sucesso!" });
       resetForm();
       fetchUsuarios();
