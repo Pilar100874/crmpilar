@@ -25907,6 +25907,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sip_presenca: {
+        Row: {
+          created_at: string
+          dispositivo: string | null
+          em_chamada: boolean
+          estabelecimento_id: string
+          id: string
+          origem: string
+          ramal: string
+          ultimo_ping: string
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dispositivo?: string | null
+          em_chamada?: boolean
+          estabelecimento_id: string
+          id?: string
+          origem?: string
+          ramal: string
+          ultimo_ping?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dispositivo?: string | null
+          em_chamada?: boolean
+          estabelecimento_id?: string
+          id?: string
+          origem?: string
+          ramal?: string
+          ultimo_ping?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       skills: {
         Row: {
           ativo: boolean
