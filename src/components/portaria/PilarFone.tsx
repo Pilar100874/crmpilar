@@ -271,6 +271,7 @@ export default function PilarFone({
       remoteServer: config.servidorRemoto.trim() || undefined,
       remoteServerPort: config.portaRemota || undefined,
       extension: config.ramal.trim(),
+      authUser: (config.usuarioSip || "").trim() || undefined,
       password: config.senha,
       displayName: config.nome.trim() || config.ramal.trim(),
     });
