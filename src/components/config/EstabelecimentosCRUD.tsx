@@ -304,84 +304,82 @@ export function EstabelecimentosCRUD() {
   // Lista de estabelecimentos
   return (
     <div className="space-y-4">
-      {/* Botão adicionar (apenas para admin do sistema) */}
-      {isSystemAdmin && (
-        <Button 
-          className="w-full" 
-          size="lg"
-          onClick={() => setShowForm(true)}
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Novo Estabelecimento
-        </Button>
-      )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold">Estabelecimentos</h2>
+          <p className="text-xs text-muted-foreground">
+            Clique em um card para abrir as configurações
+          </p>
+        </div>
+        {isSystemAdmin && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Novo
+          </Button>
+        )}
+      </div>
 
       {/* Lista de estabelecimentos em cards */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {estabelecimentos.length === 0 ? (
-          <Card className="bg-muted/50 border-dashed">
+          <Card className="bg-muted/50 border-dashed col-span-full">
             <CardContent className="p-6 text-center text-muted-foreground">
               Nenhum estabelecimento cadastrado
             </CardContent>
           </Card>
         ) : (
           estabelecimentos.map((estabelecimento) => (
-            <Card 
+            <Card
               key={estabelecimento.id}
-              className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
+              className="group relative overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
               onClick={() => handleSelectEstabelecimento(estabelecimento)}
             >
               <CardContent className="p-0">
-                <div className="flex items-center gap-4 p-4">
+                <div className="flex flex-col items-center text-center p-6 gap-3">
                   {/* Ícone */}
-                  <div className="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-                    <Building2 className="w-7 h-7 text-green-500" />
-                  </div>
-                  
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base mb-0.5 truncate">
-                      {estabelecimento.nome}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      CNPJ: {formatCNPJ(estabelecimento.cnpj)}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        <Users className="w-3 h-3 mr-1" />
-                        {estabelecimento.numero_usuarios_permitidos} usuários
-                      </Badge>
-                    </div>
+                  <div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center shrink-0">
+                    <Building2 className="w-8 h-8 text-green-500" />
                   </div>
 
-                  {/* Ações */}
-                  <div className="flex items-center gap-1">
-                    {isSystemAdmin && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(estabelecimento);
-                          }}
-                          className="h-9 w-9"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => handleDeleteClick(estabelecimento, e)}
-                          className="h-9 w-9 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                    <ChevronRight className="w-5 h-5 text-muted-foreground ml-1" />
+                  {/* Info */}
+                  <div className="min-w-0 w-full">
+                    <h3 className="font-semibold text-base truncate">
+                      {estabelecimento.nome}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      CNPJ: {formatCNPJ(estabelecimento.cnpj)}
+                    </p>
+                    <Badge variant="secondary" className="mt-2 text-xs">
+                      <Users className="w-3 h-3 mr-1" />
+                      {estabelecimento.numero_usuarios_permitidos} usuários
+                    </Badge>
                   </div>
                 </div>
+
+                {/* Ações */}
+                {isSystemAdmin && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(estabelecimento);
+                      }}
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleDeleteClick(estabelecimento, e)}
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))
