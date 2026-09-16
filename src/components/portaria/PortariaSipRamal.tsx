@@ -208,6 +208,17 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                     />
                   </div>
                   <div className="space-y-1">
+                    <Label htmlFor="sip-porta">Porta</Label>
+                    <Input
+                      id="sip-porta"
+                      className={inputEscuro}
+                      type="number"
+                      value={config.porta}
+                      onChange={(e) => setConfig({ ...config, porta: e.target.value })}
+                      placeholder="8089"
+                    />
+                  </div>
+                  <div className="space-y-1">
                     <Label htmlFor="sip-remoto">Servidor alternativo</Label>
                     <Input
                       id="sip-remoto"
@@ -215,6 +226,17 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                       value={config.servidorRemoto}
                       onChange={(e) => setConfig({ ...config, servidorRemoto: e.target.value })}
                       placeholder="opcional"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-porta-remota">Porta alternativa</Label>
+                    <Input
+                      id="sip-porta-remota"
+                      className={inputEscuro}
+                      type="number"
+                      value={config.portaRemota}
+                      onChange={(e) => setConfig({ ...config, portaRemota: e.target.value })}
+                      placeholder="8089"
                     />
                   </div>
                   <div className="space-y-1">
