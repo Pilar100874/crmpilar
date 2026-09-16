@@ -1052,13 +1052,19 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 type="password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 6 caracteres"}
-                minLength={6}
+                placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 8 caracteres"}
+                minLength={8}
               />
-              {senha && senha.length < 6 && (
-                <p className="text-xs text-destructive mt-1">Mínimo 6 caracteres</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                A senha precisa ter no mínimo 8 caracteres, com letras, números e um símbolo
+                (ex.: Pilar@2026). Senhas comuns como 123456 ou senha123 são bloqueadas por
+                segurança e o login não é criado.
+              </p>
+              {senha && validarSenhaForte(senha) && (
+                <p className="text-xs text-destructive mt-1">{validarSenhaForte(senha)}</p>
               )}
             </div>
+
 
             <div>
               <Label htmlFor="usuario-hora-inicial">Hora Inicial *</Label>
