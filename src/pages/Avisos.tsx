@@ -267,11 +267,31 @@ export default function Avisos() {
                     {aviso.resolvido && ' • Resolvido'}
                   </p>
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                    onClick={() => setAvisoParaExcluir({ id: aviso.id, titulo: aviso.titulo })}
+                    aria-label="Excluir aviso"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={!!avisoParaExcluir}
+        onOpenChange={(open) => !open && setAvisoParaExcluir(null)}
+        onConfirm={handleConfirmarExclusao}
+        title="Excluir aviso"
+        itemName={avisoParaExcluir?.titulo}
+        isLoading={excluindo}
+      />
     </div>
   );
 }
