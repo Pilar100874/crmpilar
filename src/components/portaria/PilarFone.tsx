@@ -196,32 +196,34 @@ export default function PilarFone({
     }
   }, [abasVisiveis, aba]);
 
+  // A telefonia definitiva vem da unidade vinculada ao usuário (servidor, portas e ramal da
+  // portaria) somada ao ramal/senha do cadastro dele. Esses dados têm prioridade sobre
+  // qualquer configuração antiga guardada no aparelho ou na nuvem.
+  
+
   useEffect(() => {
     let ativo = true;
-    void sincronizarConfigSip().then((sincronizada) => {
+    void (async () => {
+      const [sincronizada, doCadastro] = await Promise.all([
+        sincronizarConfigSip().catch(() => lerConfigSip()),
+        lerConfigSipDoUsuario().catch(() => null),
+      ]);
       if (!ativo) return;
-      const final = serverConfig?.servidor ? { ...sincronizada, ...serverConfig } : sincronizada;
-      setConfig(final);
+      
+      const limpo = Object.fromEntries(
+        Object.entries(doCadastro ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== ""),
+      );
+      setConfig({
+        ...sincronizada,
+        ...(serverConfig?.servidor ? serverConfig : {}),
+        ...limpo,
+      } as PortariaSipConfig);
       setConfigSincronizada(true);
-    });
+    })();
     return () => {
       ativo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // A telefonia (servidor, servidor alternativo, ramal, senha e ramal da TV/portaria)
-  // é definida pelo administrador no cadastro do usuário.
-  useEffect(() => {
-    let ativo = true;
-    void lerConfigSipDoUsuario().then((doCadastro) => {
-      if (!ativo || !doCadastro) return;
-      setConfig((atual) => ({ ...atual, ...doCadastro }));
-      setConfigSincronizada(true);
-    });
-    return () => {
-      ativo = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -250,7 +252,9 @@ export default function PilarFone({
 
   const conectar = useCallback(async () => {
     if (!configValida) {
-      setAviso("Telefonia não configurada. Peça ao administrador para preencher os dados SIP no seu cadastro de usuário.");
+      setAviso(
+        "Telefonia não configurada. O servidor e a porta vêm do cadastro da unidade; o ramal e a senha, do seu cadastro de usuário.",
+      );
       return;
     }
     setAviso(null);
@@ -264,6 +268,12 @@ export default function PilarFone({
       displayName: config.nome.trim() || config.ramal.trim(),
     });
   }, [config, configValida, connect]);
+
+  // Se o servidor/ramal mudarem (dados da unidade chegando depois), tenta registrar de novo.
+  const assinaturaConfig = `${config.servidor}|${config.porta}|${config.ramal}|${config.senha}`;
+  useEffect(() => {
+    tentouAuto.current = false;
+  }, [assinaturaConfig]);
 
   // Conexão é sempre automática: assim que a configuração do cadastro é carregada, o ramal se registra.
   useEffect(() => {
