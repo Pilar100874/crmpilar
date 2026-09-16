@@ -139,7 +139,7 @@ export const useSipConnection = () => {
   };
 
   // Helper to try connecting to a server
-  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false) => {
+  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false, authUser?: string) => {
     console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
 
     const { urls: wsServers, host } = montarUrlsWs(server);
