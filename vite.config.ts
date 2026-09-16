@@ -14,7 +14,12 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
-  plugins: [react(), mcpPlugin(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mcpPlugin(),
+    modulosPermissoesPlugin(),
+    mode === "development" && componentTagger(),
+  ].filter(Boolean),
   build: {
     rollupOptions: {
       input: {
