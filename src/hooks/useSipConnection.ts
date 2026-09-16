@@ -686,6 +686,7 @@ export const useSipConnection = () => {
 
   // Disconnect
   const disconnect = useCallback(async () => {
+    const tinhaConexaoSip = Boolean(userAgent || registerer || isRegistered || activeCalls.length > 0);
     try {
       // Hangup all active calls
       for (const call of activeCalls) {
@@ -709,14 +710,17 @@ export const useSipConnection = () => {
       setUserAgent(null);
       setRegisterer(null);
 
-      toast({
-        title: "Desconectado",
-        description: "Ramal desconectado do UCM",
-      });
+      // Não exibe aviso no cleanup de telas ou para usuários sem ramal configurado.
+      if (tinhaConexaoSip) {
+        toast({
+          title: "Desconectado",
+          description: "Ramal desconectado do UCM",
+        });
+      }
     } catch (error) {
       console.error('Erro ao desconectar:', error);
     }
-  }, [userAgent, registerer, activeCalls, toast]);
+  }, [userAgent, registerer, isRegistered, activeCalls, toast]);
 
   // Cleanup on unmount
   useEffect(() => {
