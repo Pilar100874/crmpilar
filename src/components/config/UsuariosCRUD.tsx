@@ -118,11 +118,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [senhaSip, setSenhaSip] = useState("");
   const [mostrarSenhaSip, setMostrarSenhaSip] = useState(false);
   const [usuarioSip, setUsuarioSip] = useState("");
-  const [sipServidor, setSipServidor] = useState("");
-  const [sipPorta, setSipPorta] = useState("8089");
-  const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
-  const [sipPortaAlternativa, setSipPortaAlternativa] = useState("8089");
-  const [ramalPortaria, setRamalPortaria] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
@@ -190,11 +185,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .select(`
         ${USUARIO_COLUNAS_PUBLICAS},
         senha_sip,
-        sip_servidor,
-        sip_porta,
-        sip_servidor_alternativo,
-        sip_porta_alternativa,
-        ramal_portaria,
         pilarfone_abas,
         automacao_ambiente_celular,
         automacao_ambiente_tablet,
@@ -410,11 +400,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       ramal: ramal || null,
       senha_sip: senhaSip || null,
       usuario_sip: usuarioSip || null,
-      sip_servidor: sipServidor || null,
-      sip_porta: sipPorta ? parseInt(sipPorta) : 8089,
-      sip_servidor_alternativo: sipServidorAlternativo || null,
-      sip_porta_alternativa: sipPortaAlternativa ? parseInt(sipPortaAlternativa) : 8089,
-      ramal_portaria: ramalPortaria || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
@@ -760,11 +745,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal("");
     setSenhaSip("");
     setUsuarioSip("");
-    setSipServidor("");
-    setSipPorta("8089");
-    setSipServidorAlternativo("");
-    setSipPortaAlternativa("8089");
-    setRamalPortaria("");
     setTipo("padrao");
     setEditingId(null);
     setFormOpen(false);
@@ -788,11 +768,6 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal(usuario.ramal || "");
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
-    setSipServidor(((usuario as unknown as Record<string, string | null>).sip_servidor) || "");
-    setSipPorta(((usuario as unknown as Record<string, number | null>).sip_porta)?.toString() || "8089");
-    setSipServidorAlternativo(((usuario as unknown as Record<string, string | null>).sip_servidor_alternativo) || "");
-    setSipPortaAlternativa(((usuario as unknown as Record<string, number | null>).sip_porta_alternativa)?.toString() || "8089");
-    setRamalPortaria(((usuario as unknown as Record<string, string | null>).ramal_portaria) || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
