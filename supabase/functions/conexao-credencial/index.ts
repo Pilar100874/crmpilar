@@ -28,11 +28,30 @@ Deno.serve(async (req) => {
     return forbidden(corsHeaders, "Sem permissão para gerenciar credenciais");
   }
 
-  let corpo: unknown;
+  let corpo: any;
   try {
     corpo = await req.json();
   } catch {
     return json({ error: "Dados inválidos" }, 400);
+  }
+
+  // Cifra credenciais antigas que ainda estão em texto puro
+  if (corpo?.acao === "cifrar_existentes") {
+    const svc = serviceClient();
+    let total = 0;
+    for (const tabela of TABELAS) {
+      let consulta = svc.from(tabela).select("id, estabelecimento_id, sql_password");
+      if (!auth.isSystemAdmin && !auth.isServiceRole) {
+        consulta = consulta.eq("estabelecimento_id", auth.estabelecimentoId);
+      }
+      const { data: registros } = await consulta;
+      for (const reg of registros ?? []) {
+        if (!reg.sql_password || estaCifrado(reg.sql_password)) continue;
+        await svc.from(tabela).update({ sql_password: await cifrarSegredo(reg.sql_password) }).eq("id", reg.id);
+        total++;
+      }
+    }
+    return json({ ok: true, cifradas: total });
   }
 
   const parsed = BodySchema.safeParse(corpo);
