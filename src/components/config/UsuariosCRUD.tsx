@@ -1164,24 +1164,48 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div>
-              <Label htmlFor="usuario-sip-servidor">Servidor (PABX)</Label>
-              <Input
-                id="usuario-sip-servidor"
-                placeholder="192.168.88.250"
-                value={sipServidor}
-                onChange={(e) => setSipServidor(e.target.value)}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="usuario-sip-servidor">Servidor (PABX)</Label>
+                <Input
+                  id="usuario-sip-servidor"
+                  placeholder="192.168.88.250"
+                  value={sipServidor}
+                  onChange={(e) => setSipServidor(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1 sm:w-28">
+                <Label htmlFor="usuario-sip-porta">Porta</Label>
+                <Input
+                  id="usuario-sip-porta"
+                  type="number"
+                  placeholder="8089"
+                  value={sipPorta}
+                  onChange={(e) => setSipPorta(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="usuario-sip-servidor-alt">Servidor alternativo</Label>
-              <Input
-                id="usuario-sip-servidor-alt"
-                placeholder="pilar.myddns.me"
-                value={sipServidorAlternativo}
-                onChange={(e) => setSipServidorAlternativo(e.target.value)}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="usuario-sip-servidor-alt">Servidor alternativo</Label>
+                <Input
+                  id="usuario-sip-servidor-alt"
+                  placeholder="pilar.myddns.me"
+                  value={sipServidorAlternativo}
+                  onChange={(e) => setSipServidorAlternativo(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1 sm:w-28">
+                <Label htmlFor="usuario-sip-porta-alt">Porta</Label>
+                <Input
+                  id="usuario-sip-porta-alt"
+                  type="number"
+                  placeholder="8089"
+                  value={sipPortaAlternativa}
+                  onChange={(e) => setSipPortaAlternativa(e.target.value)}
+                />
+              </div>
             </div>
 
             <div>
