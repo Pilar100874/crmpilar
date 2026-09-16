@@ -57,6 +57,8 @@ import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
 import VoiceAssistant from "@/components/voz/VoiceAssistant";
+import { Switch } from "@/components/ui/switch";
+import { useAssistenteVozAtivo } from "@/lib/preferencias/assistenteVoz";
 import { modoAppEmbutido } from "@/lib/modoAppEmbutido";
 import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
@@ -378,6 +380,17 @@ export default function Layout({ children }: LayoutProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const nomeResumido = userName ? resumirNome(userName) : "";
+  const [assistenteVozAtivo, setAssistenteVozAtivo] = useAssistenteVozAtivo();
+  const linhaAssistenteVoz = (
+    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent/50">
+      <span className="text-sm text-sidebar-foreground/80">Comandos por voz (Assistente Pilar)</span>
+      <Switch
+        checked={assistenteVozAtivo}
+        onCheckedChange={setAssistenteVozAtivo}
+        aria-label="Ativar comandos por voz"
+      />
+    </div>
+  );
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
@@ -1616,6 +1629,7 @@ export default function Layout({ children }: LayoutProps) {
                       
                       <div className="space-y-1">
                         {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), true)}
+                        {linhaAssistenteVoz}
                         {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/70")}
                       </div>
 
@@ -1652,6 +1666,7 @@ export default function Layout({ children }: LayoutProps) {
                 {openSubmenuId === "UserMenu" && (
                   <div className="mt-1 ml-8 space-y-1">
                     {renderUserFooterItems(userFooterItems, () => setOpenSubmenuId(null), false)}
+                        {linhaAssistenteVoz}
                     {isAdmin && renderAdminFooter(adminFooterItems, () => setOpenSubmenuId(null), "text-sidebar-foreground/60")}
 
                     
@@ -1713,7 +1728,7 @@ export default function Layout({ children }: LayoutProps) {
           <FloatingMacroRecorder />
           <FloatingMacroQuickAccess />
           <SupportTicketFloatingButton />
-          <VoiceAssistant />
+          {assistenteVozAtivo && <VoiceAssistant />}
         </>
       )}
 

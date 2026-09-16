@@ -435,9 +435,15 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
   const veiculosDoGrupo = filterByGrupo(veiculos, grupoId);
 
+  // Só exibe alertas de veículos da unidade selecionada no filtro.
+  const alertsVisiveis = React.useMemo(() => {
+    const idsDoGrupo = new Set(veiculosDoGrupo.map(v => v.id));
+    return alerts.filter(a => idsDoGrupo.has(a.veiculoId));
+  }, [alerts, veiculosDoGrupo]);
+
   const alertVeiculoIds = React.useMemo(
-    () => new Set(alerts.map(a => a.veiculoId)),
-    [alerts]
+    () => new Set(alertsVisiveis.map(a => a.veiculoId)),
+    [alertsVisiveis]
   );
 
   const veiculosFiltrados = React.useMemo(() => {
@@ -796,12 +802,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             </SheetContent>
           </Sheet>
 
-          {alerts.length > 0 && (
+          {alertsVisiveis.length > 0 && (
             <Sheet open={mobileAlertsOpen} onOpenChange={setMobileAlertsOpen}>
               <SheetTrigger asChild>
                 <Button variant="secondary" size="sm" className="shadow-lg">
                   <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
-                  Alertas ({alerts.length})
+                  Alertas ({alertsVisiveis.length})
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[85vw] sm:w-[320px] p-0">
@@ -814,7 +820,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                   </div>
                   <ScrollArea className="flex-1">
                     <div className="p-2 space-y-2">
-                      {alerts.map((alert, index) => (
+                      {alertsVisiveis.map((alert, index) => (
                         <AlertRow
                           key={`${alert.veiculoId}-${alert.type}-${index}`}
                           alert={alert}
@@ -877,10 +883,10 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           <div className="hidden lg:flex absolute top-4 right-4 bottom-4 w-72 z-[500] flex-col rounded-xl border border-border/60 bg-background/85 backdrop-blur-md shadow-xl overflow-hidden">
             <div className="px-3 py-2 border-b border-border/60 flex items-center justify-between">
               <h3 className="font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-                <AlertTriangle className={cn("h-3.5 w-3.5", alerts.length > 0 && "text-destructive")} />
+                <AlertTriangle className={cn("h-3.5 w-3.5", alertsVisiveis.length > 0 && "text-destructive")} />
                 Alertas
-                {alerts.length > 0 && (
-                  <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
+                {alertsVisiveis.length > 0 && (
+                  <Badge variant="destructive" className="text-[10px]">{alertsVisiveis.length}</Badge>
                 )}
               </h3>
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowAlerts(false)} title="Recolher">
@@ -889,10 +895,10 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
             </div>
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-2">
-                {alerts.length === 0 ? (
+                {alertsVisiveis.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta</p>
                 ) : (
-                  alerts.map((alert, index) => (
+                  alertsVisiveis.map((alert, index) => (
                     <AlertRow
                       key={`${alert.veiculoId}-${alert.type}-${index}`}
                       alert={alert}
@@ -906,13 +912,13 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
         ) : !detalhesVeiculo ? (
           <Button
-            variant={alerts.length > 0 ? 'destructive' : 'secondary'}
+            variant={alertsVisiveis.length > 0 ? 'destructive' : 'secondary'}
             size="sm"
             className="hidden lg:flex absolute top-4 right-4 z-[500] shadow-lg"
             onClick={() => setShowAlerts(true)}
           >
             <AlertTriangle className="h-4 w-4 mr-2" />
-            Alertas {alerts.length > 0 ? `(${alerts.length})` : ''}
+            Alertas {alertsVisiveis.length > 0 ? `(${alertsVisiveis.length})` : ''}
           </Button>
         ) : null}
 
