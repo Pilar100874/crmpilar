@@ -530,6 +530,7 @@ export const useSipConnection = () => {
             }, 500);
           },
           onAccept: (response) => {
+            pararToqueChamando();
             console.log('✅ Chamada aceita pelo outro lado');
             console.log('📊 Headers da resposta:', response.message.headers);
             console.log('📊 SDP remoto:', response.message.body);
