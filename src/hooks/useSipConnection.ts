@@ -550,6 +550,7 @@ export const useSipConnection = () => {
       });
 
     } catch (error) {
+      pararToqueChamando();
       console.error('Erro ao discar:', error);
       toast({
         title: "Erro ao discar",
