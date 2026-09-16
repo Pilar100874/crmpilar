@@ -43,11 +43,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
-  const [sipServidor, setSipServidor] = useState("");
-  const [sipPorta, setSipPorta] = useState("8089");
-  const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
-  const [sipPortaAlternativa, setSipPortaAlternativa] = useState("8089");
-  const [ramalPortaria, setRamalPortaria] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
