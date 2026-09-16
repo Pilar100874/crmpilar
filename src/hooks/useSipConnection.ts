@@ -458,6 +458,7 @@ export const useSipConnection = () => {
             description: `Conectado com ${phoneNumber}`,
           });
         } else if (state === SessionState.Terminated) {
+          pararToqueChamando();
           // Remove da lista após um pequeno delay para garantir que a UI atualize
           setTimeout(() => {
             setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
