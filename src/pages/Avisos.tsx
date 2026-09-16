@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { 
   Bell, 
   Plus, 
@@ -31,6 +32,7 @@ import {
   AlertCircle,
   Users,
   User,
+  Trash2,
 } from 'lucide-react';
 import { useAvisosSistema } from '@/hooks/useAvisosSistema';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,10 +48,12 @@ interface Usuario {
 }
 
 export default function Avisos() {
-  const { avisos, loading, avisosPendentes, marcarResolvido, criarAviso } = useAvisosSistema();
+  const { avisos, loading, avisosPendentes, marcarResolvido, criarAviso, excluirAviso } = useAvisosSistema();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filtroResolvido, setFiltroResolvido] = useState<'todos' | 'pendentes' | 'resolvidos'>('pendentes');
-  
+  const [avisoParaExcluir, setAvisoParaExcluir] = useState<{ id: string; titulo: string } | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+   
   const [titulo, setTitulo] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [tipo, setTipo] = useState('info');
@@ -124,6 +128,14 @@ export default function Avisos() {
     if (!titulo.trim() || !mensagem.trim()) return false;
     if (destinatariosTipo === 'usuarios_especificos' && !usuarioSelecionado) return false;
     return true;
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!avisoParaExcluir) return;
+    setExcluindo(true);
+    await excluirAviso(avisoParaExcluir.id);
+    setExcluindo(false);
+    setAvisoParaExcluir(null);
   };
 
   const getTipoIcon = (t: string) => {
@@ -255,11 +267,31 @@ export default function Avisos() {
                     {aviso.resolvido && ' • Resolvido'}
                   </p>
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                    onClick={() => setAvisoParaExcluir({ id: aviso.id, titulo: aviso.titulo })}
+                    aria-label="Excluir aviso"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={!!avisoParaExcluir}
+        onOpenChange={(open) => !open && setAvisoParaExcluir(null)}
+        onConfirm={handleConfirmarExclusao}
+        title="Excluir aviso"
+        itemName={avisoParaExcluir?.titulo}
+        isLoading={excluindo}
+      />
     </div>
   );
 }

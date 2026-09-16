@@ -164,6 +164,29 @@ export function useAvisosSistema() {
     }
   };
 
+  const excluirAviso = async (avisoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('avisos_sistema')
+        .delete()
+        .eq('id', avisoId);
+
+      if (error) throw error;
+
+      setAvisos(prev => prev.filter(a => a.id !== avisoId));
+      setAvisosPendentes(prev => {
+        const removido = avisos.find(a => a.id === avisoId);
+        return removido && !removido.resolvido ? Math.max(0, prev - 1) : prev;
+      });
+      toast.success('Aviso excluído com sucesso');
+      return true;
+    } catch (error) {
+      console.error('Erro ao excluir aviso:', error);
+      toast.error('Erro ao excluir aviso');
+      return false;
+    }
+  };
+
   // Realtime subscription for avisos_sistema and avisos_lidos
   const carregarRef = useRef(carregarAvisos);
   useEffect(() => {
@@ -204,5 +227,6 @@ export function useAvisosSistema() {
     marcarResolvido,
     marcarTodosComoLidos,
     criarAviso,
+    excluirAviso,
   };
 }
