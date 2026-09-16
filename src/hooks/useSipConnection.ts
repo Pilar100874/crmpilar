@@ -482,6 +482,7 @@ export const useSipConnection = () => {
         },
         requestDelegate: {
           onReject: (response) => {
+            pararToqueChamando();
             console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
             console.error('❌ Headers da resposta:', response.message.headers);
             let errorMsg = response.message.reasonPhrase;
