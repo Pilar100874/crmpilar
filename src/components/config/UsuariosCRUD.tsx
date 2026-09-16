@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users, ArrowLeft } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail, Search, Users, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -116,6 +116,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [ramal, setRamal] = useState("");
   const [tipo, setTipo] = useState<string>("padrao");
   const [senhaSip, setSenhaSip] = useState("");
+  const [mostrarSenhaSip, setMostrarSenhaSip] = useState(false);
   const [usuarioSip, setUsuarioSip] = useState("");
   const [sipServidor, setSipServidor] = useState("");
   const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
@@ -186,6 +187,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .from("usuarios")
       .select(`
         ${USUARIO_COLUNAS_PUBLICAS},
+        senha_sip,
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
