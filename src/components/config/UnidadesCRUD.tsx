@@ -149,11 +149,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       bairro: bairro || null,
       cidade: cidade || null,
       uf: uf || null,
-      sip_servidor: sipServidor || null,
-      sip_porta: sipPorta ? parseInt(sipPorta) : 8089,
-      sip_servidor_alternativo: sipServidorAlternativo || null,
-      sip_porta_alternativa: sipPortaAlternativa ? parseInt(sipPortaAlternativa) : 8089,
-      ramal_portaria: ramalPortaria || null,
     };
 
     if (editingId) {
