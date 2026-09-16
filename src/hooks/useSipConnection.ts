@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
+import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 
 interface SipConfig {
   server: string;
@@ -443,6 +444,7 @@ export const useSipConnection = () => {
         );
 
         if (state === SessionState.Established) {
+          pararToqueChamando();
           console.log('🎤 Configurando mídia para chamada estabelecida...');
           await setupRemoteMedia(inviter);
           if (opcoes?.video) {
@@ -456,6 +458,7 @@ export const useSipConnection = () => {
             description: `Conectado com ${phoneNumber}`,
           });
         } else if (state === SessionState.Terminated) {
+          pararToqueChamando();
           // Remove da lista após um pequeno delay para garantir que a UI atualize
           setTimeout(() => {
             setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -467,6 +470,9 @@ export const useSipConnection = () => {
         }
       });
 
+      // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
+      iniciarToqueChamando();
+
       await inviter.invite({
         sessionDescriptionHandlerOptions: {
           constraints: {
@@ -476,6 +482,7 @@ export const useSipConnection = () => {
         },
         requestDelegate: {
           onReject: (response) => {
+            pararToqueChamando();
             console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
             console.error('❌ Headers da resposta:', response.message.headers);
             let errorMsg = response.message.reasonPhrase;
@@ -523,6 +530,7 @@ export const useSipConnection = () => {
             }, 500);
           },
           onAccept: (response) => {
+            pararToqueChamando();
             console.log('✅ Chamada aceita pelo outro lado');
             console.log('📊 Headers da resposta:', response.message.headers);
             console.log('📊 SDP remoto:', response.message.body);
@@ -542,6 +550,7 @@ export const useSipConnection = () => {
       });
 
     } catch (error) {
+      pararToqueChamando();
       console.error('Erro ao discar:', error);
       toast({
         title: "Erro ao discar",
@@ -639,6 +648,8 @@ export const useSipConnection = () => {
   const hangup = useCallback(async (callId: string) => {
     const call = activeCalls.find(c => c.id === callId);
     if (!call) return;
+
+    pararToqueChamando();
 
     try {
       // Para chamadas de saída em progresso, use reject
