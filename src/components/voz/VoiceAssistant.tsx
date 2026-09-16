@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { matchRotaPorFala, matchRotaComCandidatos, matchRotaComCandidatosEm, ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
 import { frasesEfetivas, rotasEfetivas } from "@/lib/voz/frasesGatilho";
 import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
+import { usePermissoesUsuario } from "@/hooks/usePermissoesUsuario";
+import { idDaRota } from "@/components/permissoes/RotaPermitida";
 
 type Config = {
   wake_word_ativo: boolean;
