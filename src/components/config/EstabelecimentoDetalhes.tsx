@@ -279,6 +279,24 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
     })();
   }, [estabelecimentoId]);
 
+  // Abre direto na categoria indicada pelo submenu
+  useEffect(() => {
+    if (categoriaInicial) {
+      setSelectedCategory(categoriaInicial);
+      if (!searchParams.get('subsecao')) setSelectedItem(null);
+    }
+  }, [categoriaInicial]);
+
+  /** Mantém secao/estab da URL e ajusta apenas subsecao/subsubsecao */
+  const atualizarParams = (extras: Record<string, string>) => {
+    const base: Record<string, string> = {};
+    const secao = searchParams.get('secao');
+    const estab = searchParams.get('estab');
+    if (secao) base.secao = secao;
+    if (estab) base.estab = estab;
+    setSearchParams({ ...base, ...extras });
+  };
+
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setSelectedItem(null);
@@ -290,18 +308,22 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
       return;
     }
     setSelectedItem(item.id);
-    setSearchParams({ subsecao: item.id });
+    atualizarParams({ subsecao: item.id });
   };
 
   const handleBackToCategories = () => {
+    if (categoriaInicial && onVoltar) {
+      onVoltar();
+      return;
+    }
     setSelectedCategory(null);
     setSelectedItem(null);
-    setSearchParams({});
+    atualizarParams({});
   };
 
   const handleBackToItems = () => {
     setSelectedItem(null);
-    setSearchParams({});
+    atualizarParams({});
   };
 
   const currentCategory = categories.find(c => c.id === selectedCategory);
