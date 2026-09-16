@@ -789,7 +789,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
     setSipServidor(((usuario as unknown as Record<string, string | null>).sip_servidor) || "");
+    setSipPorta(((usuario as unknown as Record<string, number | null>).sip_porta)?.toString() || "8089");
     setSipServidorAlternativo(((usuario as unknown as Record<string, string | null>).sip_servidor_alternativo) || "");
+    setSipPortaAlternativa(((usuario as unknown as Record<string, number | null>).sip_porta_alternativa)?.toString() || "8089");
     setRamalPortaria(((usuario as unknown as Record<string, string | null>).ramal_portaria) || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
