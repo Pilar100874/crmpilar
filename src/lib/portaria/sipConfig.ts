@@ -22,6 +22,7 @@ export const CONFIG_SIP_PADRAO: PortariaSipConfig = {
   porta: "8089",
   portaRemota: "8089",
   ramal: "",
+  usuarioSip: "",
   senha: "",
   nome: "",
   ramalPortaria: "",
