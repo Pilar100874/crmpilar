@@ -1650,17 +1650,15 @@ export default function Layout({ children }: LayoutProps) {
                     <span className="text-sm font-medium text-sidebar-foreground/70 flex-1 text-left truncate">{nomeResumido || "Minha Conta"}</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${openSubmenuId === "UserMenu" ? 'rotate-180' : ''}`} />
                   </button>
-                  <NavLink
-                    to="/avisos"
-                    className={`flex items-center justify-center min-w-6 h-6 px-1.5 rounded-full text-xs font-bold transition-colors ${
-                      avisosPendentes > 0 
-                        ? 'bg-destructive text-destructive-foreground hover:bg-destructive/80' 
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                    title={`${avisosPendentes} avisos pendentes`}
-                  >
-                    {avisosPendentes}
-                  </NavLink>
+                  {avisosPendentes > 0 && (
+                    <NavLink
+                      to="/avisos"
+                      className="flex items-center justify-center min-w-6 h-6 px-1.5 rounded-full text-xs font-bold transition-colors bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                      title={`${avisosPendentes} avisos pendentes`}
+                    >
+                      {avisosPendentes}
+                    </NavLink>
+                  )}
                 </div>
                 
                 {openSubmenuId === "UserMenu" && (
