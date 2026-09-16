@@ -1,5 +1,6 @@
-import { createContext, useContext, type ReactNode } from "react";
-import type { AcaoPermissao } from "@/hooks/usePermissoesUsuario";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { usePermissoesUsuario, type AcaoPermissao } from "@/hooks/usePermissoesUsuario";
+import { existeIdCatalogo, idModulo as montarIdModulo } from "@/lib/permissoes/catalogo";
 
 interface ContextoPermissaoValor {
   idTela: string | null;
@@ -21,6 +22,27 @@ export function EscopoPermissao({
 }
 
 export const useContextoPermissao = () => useContext(ContextoPermissao);
+
+export function useModulosPermitidos<T extends { id: string }>(
+  idTela: string,
+  itens: T[],
+  ativo?: string | null,
+  aoCorrigirAtivo?: (id: string) => void,
+) {
+  const { podeVer, carregando, acessoTotal } = usePermissoesUsuario();
+  const permitidos = useMemo(() => itens.filter((item) => {
+    const id = montarIdModulo(idTela, item.id);
+    return acessoTotal || !existeIdCatalogo(id) || podeVer(id);
+  }), [itens, idTela, acessoTotal, podeVer]);
+
+  useEffect(() => {
+    if (carregando || !ativo || permitidos.some((item) => item.id === ativo)) return;
+    const primeiro = permitidos[0];
+    if (primeiro) aoCorrigirAtivo?.(primeiro.id);
+  }, [ativo, aoCorrigirAtivo, carregando, permitidos]);
+
+  return { itensPermitidos: permitidos, carregando };
+}
 
 export const inferirAcaoBotao = (texto: string): AcaoPermissao | null => {
   const normalizado = texto.trim().toLocaleLowerCase("pt-BR");

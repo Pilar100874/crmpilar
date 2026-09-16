@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useModulosPermitidos } from '@/components/permissoes/ContextoPermissao';
 
 // Import existing components
 import MarketingCanvas from './MarketingCanvas';
@@ -98,6 +99,7 @@ const MarketingHub: React.FC = () => {
     tabParam && validTabs.includes(tabParam) ? tabParam : 'ai-studio'
   ));
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const { itensPermitidos: tabsPermitidas } = useModulosPermitidos('Desenho', tabItems, activeTab, setActiveTab);
 
   useEffect(() => {
     if (tabParam && validTabs.includes(tabParam)) {
@@ -105,7 +107,7 @@ const MarketingHub: React.FC = () => {
     }
   }, [tabParam, validTabs]);
 
-  const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
+  const currentTabItem = tabsPermitidas.find(t => t.id === activeTab) || tabsPermitidas[0] || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
   const handleEditImageFromGallery = (imageUrl: string, resourceName?: string) => {
@@ -207,7 +209,7 @@ const MarketingHub: React.FC = () => {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                {tabItems.map((tab) => {
+                {tabsPermitidas.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <SelectItem key={tab.id} value={tab.id}>
@@ -237,7 +239,7 @@ const MarketingHub: React.FC = () => {
                 {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
               </Button>
               <TooltipProvider delayDuration={0}>
-                {tabItems.map((tab) => {
+                {tabsPermitidas.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
                   const menuButton = (
@@ -272,7 +274,7 @@ const MarketingHub: React.FC = () => {
 
           {/* Content area */}
           <div className="flex-1 overflow-auto p-3 sm:p-6">
-            {tabItems.map((tab) => {
+            {tabsPermitidas.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               
