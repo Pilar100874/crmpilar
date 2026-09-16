@@ -31177,6 +31177,17 @@ export type Database = {
           sections: Json
         }[]
       }
+      get_telefonia_estabelecimento: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          porta: number
+          porta_alternativa: number
+          ramal_portaria: string
+          servidor: string
+          servidor_alternativo: string
+        }[]
+      }
       get_user_conversation_ids: {
         Args: { _auth_uid: string }
         Returns: string[]
