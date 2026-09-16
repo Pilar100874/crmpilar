@@ -649,6 +649,8 @@ export const useSipConnection = () => {
     const call = activeCalls.find(c => c.id === callId);
     if (!call) return;
 
+    pararToqueChamando();
+
     try {
       // Para chamadas de saída em progresso, use reject
       if (call.direction === 'outbound' && 
