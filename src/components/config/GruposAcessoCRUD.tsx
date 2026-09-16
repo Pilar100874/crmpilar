@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArvorePermissoes } from "@/components/config/ArvorePermissoes";
+import { limparCachePermissoes } from "@/hooks/usePermissoesUsuario";
 
 interface MenuPermissions {
   view: boolean;
@@ -126,6 +127,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           variant: "destructive",
         });
       } else {
+        limparCachePermissoes();
         toast({ title: "Grupo atualizado com sucesso!" });
         resetForm();
         await fetchGrupos();
@@ -159,6 +161,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           variant: "destructive",
         });
       } else {
+        limparCachePermissoes();
         toast({ title: "Grupo criado com sucesso!" });
         resetForm();
         await fetchGrupos();
@@ -244,8 +247,14 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   };
 
   const formatPermissionsCompact = (permissions: Record<string, MenuPermissions>) => {
-    const count = Object.keys(permissions).filter(k => permissions[k]?.view).length;
-    return `${count} menu${count !== 1 ? 's' : ''} com acesso`;
+    const itens = Object.keys(permissions).filter((k) => permissions[k]?.view);
+    if (itens.length === 0) return "Sem itens liberados";
+    const acoes: string[] = [];
+    if (itens.some((k) => permissions[k]?.create)) acoes.push("criar");
+    if (itens.some((k) => permissions[k]?.edit)) acoes.push("editar");
+    if (itens.some((k) => permissions[k]?.delete)) acoes.push("excluir");
+    const sufixo = acoes.length > 0 ? ` · ${acoes.join(", ")}` : " · somente ver";
+    return `${itens.length} ${itens.length === 1 ? "item liberado" : "itens liberados"}${sufixo}`;
   };
 
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
