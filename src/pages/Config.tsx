@@ -19,6 +19,7 @@ import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import { EstabelecimentoDetalhes } from "@/components/config/EstabelecimentoDetalhes";
 import EmailConfig from "@/pages/EmailConfig";
 import SystemVisualConfig from "@/pages/SystemVisualConfig";
 import { Building2, FolderTree, UserCog, Tag } from "lucide-react";
