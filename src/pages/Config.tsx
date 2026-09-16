@@ -258,6 +258,22 @@ export default function Config() {
         return <EmailConfig embedded />;
       case "visual-sistema":
         return <SystemVisualConfig embedded />;
+      case "comunicacao":
+      case "integrações":
+      case "sistema": {
+        const estabAtual = estabParam ?? estabelecimentos[0]?.id;
+        if (!estabAtual) return null;
+        return (
+          <EstabelecimentoDetalhes
+            key={`${activeSection}-${estabAtual}`}
+            estabelecimentoId={estabAtual}
+            estabelecimentoNome={estabelecimentos.find((e) => e.id === estabAtual)?.nome ?? ""}
+            categoriaInicial={activeSection}
+            onVoltar={() => handleSectionClick("cadastro-estabelecimentos", estabAtual)}
+          />
+        );
+      }
+
 
       default:
         return null;
