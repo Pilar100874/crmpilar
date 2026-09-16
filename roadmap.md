@@ -285,3 +285,11 @@
 - [x] Loja (anúncios, conteúdos, configuração, preços por volume) e apresentações de TV deixam de ser lidos por visitantes de outras empresas
 - [x] Visitantes acessam a loja por consultas do servidor escopadas pela empresa
 - [x] Credenciais de SMS, pedágio, frete, redes sociais e licitações restritas a admin/gestor
+
+## Grupos de acesso — menus, submenus e módulos — 2026-09-16
+- [x] Catálogo hierárquico (`src/lib/permissoes/catalogo.ts`) a partir do menu real do Layout + módulos internos gerados
+- [x] Gerador `scripts/gerarModulosInternos.ts` (44 telas, ~340 módulos) → `modulosInternos.gerado.ts`
+- [x] Nova árvore de permissões com Ver/Criar/Editar/Excluir (`ArvorePermissoes.tsx`) na tela de grupos
+- [x] Hook central `usePermissoesUsuario` (podeVer/podeCriar/podeEditar/podeExcluir) + `SeTiverPermissao`
+- [x] Abas de Chats > Configurações respeitam o "Ver" do módulo
+- [ ] Estender o gate de Criar/Editar/Excluir às demais telas conforme necessidade
