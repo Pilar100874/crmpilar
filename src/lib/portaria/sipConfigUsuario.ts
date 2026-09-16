@@ -36,7 +36,9 @@ export async function lerConfigSipDoUsuario(): Promise<ConfigSipUsuario | null> 
   config.porta = estab?.porta ? String(estab.porta) : "8089";
   config.portaRemota = estab?.porta_alternativa ? String(estab.porta_alternativa) : "8089";
   if (estab?.ramal_portaria) config.ramalPortaria = String(estab.ramal_portaria);
-  if (registro.usuario_sip || registro.ramal) config.ramal = String(registro.usuario_sip || registro.ramal || "");
+  // O número do ramal identifica a linha; o usuário SIP (quando existir) serve só para autenticar.
+  if (registro.ramal || registro.usuario_sip) config.ramal = String(registro.ramal || registro.usuario_sip || "");
+  if (registro.usuario_sip) config.usuarioSip = String(registro.usuario_sip);
   if (registro.senha_sip) config.senha = String(registro.senha_sip);
   if (registro.nome) config.nome = String(registro.nome);
   return config;
