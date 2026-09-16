@@ -196,32 +196,34 @@ export default function PilarFone({
     }
   }, [abasVisiveis, aba]);
 
+  // A telefonia definitiva vem da unidade vinculada ao usuário (servidor, portas e ramal da
+  // portaria) somada ao ramal/senha do cadastro dele. Esses dados têm prioridade sobre
+  // qualquer configuração antiga guardada no aparelho ou na nuvem.
+  const cadastroRef = useRef<Record<string, unknown> | null>(null);
+
   useEffect(() => {
     let ativo = true;
-    void sincronizarConfigSip().then((sincronizada) => {
+    void (async () => {
+      const [sincronizada, doCadastro] = await Promise.all([
+        sincronizarConfigSip().catch(() => lerConfigSip()),
+        lerConfigSipDoUsuario().catch(() => null),
+      ]);
       if (!ativo) return;
-      const final = serverConfig?.servidor ? { ...sincronizada, ...serverConfig } : sincronizada;
-      setConfig(final);
+      cadastroRef.current = (doCadastro ?? null) as Record<string, unknown> | null;
+      const limpo = Object.fromEntries(
+        Object.entries(doCadastro ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== ""),
+      );
+      setConfig({
+        ...sincronizada,
+        ...(serverConfig?.servidor ? serverConfig : {}),
+        ...limpo,
+      } as PortariaSipConfig);
       setConfigSincronizada(true);
-    });
+    })();
     return () => {
       ativo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // A telefonia (servidor, servidor alternativo, ramal, senha e ramal da TV/portaria)
-  // é definida pelo administrador no cadastro do usuário.
-  useEffect(() => {
-    let ativo = true;
-    void lerConfigSipDoUsuario().then((doCadastro) => {
-      if (!ativo || !doCadastro) return;
-      setConfig((atual) => ({ ...atual, ...doCadastro }));
-      setConfigSincronizada(true);
-    });
-    return () => {
-      ativo = false;
-    };
   }, []);
 
   useEffect(() => {
