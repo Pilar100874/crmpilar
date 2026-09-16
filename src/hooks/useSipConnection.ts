@@ -320,7 +320,10 @@ export const useSipConnection = () => {
       startTime: new Date(),
     };
 
-    setActiveCalls(prev => [...prev, callSession]);
+    setActiveCalls(prev => [
+      ...prev.filter(c => c.session.state !== SessionState.Terminated && c.state !== SessionState.Terminated),
+      callSession,
+    ]);
 
     // Setup session state change handler
     session.stateChange.addListener(async (state) => {
@@ -397,7 +400,12 @@ export const useSipConnection = () => {
         startTime: new Date(),
       };
 
-      setActiveCalls(prev => [...prev, callSession]);
+      // Remove chamadas já encerradas que possam ter ficado presas na lista,
+      // senão a tela mostra a chamada antiga ("Em conversa") em vez da nova.
+      setActiveCalls(prev => [
+        ...prev.filter(c => c.session.state !== SessionState.Terminated && c.state !== SessionState.Terminated),
+        callSession,
+      ]);
 
       if (opcoes?.vivaVoz) {
         setVivaVoz(true);
