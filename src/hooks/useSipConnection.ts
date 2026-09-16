@@ -170,12 +170,17 @@ export const useSipConnection = () => {
           },
           onDisconnect: (error) => {
             console.error('❌ WebSocket desconectado:', error);
-            toast({
-              title: "Desconectado",
-              description: "Conexão com UCM perdida",
-              variant: "destructive",
+            // Só avisa quem realmente tinha o ramal registrado; sem ramal não há o que perder.
+            setIsRegistered((estavaRegistrado) => {
+              if (estavaRegistrado) {
+                toast({
+                  title: "Desconectado",
+                  description: "Conexão com UCM perdida",
+                  variant: "destructive",
+                });
+              }
+              return false;
             });
-            setIsRegistered(false);
           },
         },
       });
@@ -198,6 +203,13 @@ export const useSipConnection = () => {
 
   // Connect and register to UCM
   const connect = useCallback(async (config: SipConfig) => {
+    // Sem ramal, senha ou servidor não há telefonia: não tenta conectar nem mostra avisos de erro.
+    if (!config.extension?.trim() || !config.password?.trim() || !config.server?.trim()) {
+      console.log('ℹ️ Telefonia não configurada (ramal ausente): conexão SIP ignorada.');
+      setIsConnecting(false);
+      setIsRegistered(false);
+      return;
+    }
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
