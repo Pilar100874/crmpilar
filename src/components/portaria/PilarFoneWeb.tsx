@@ -159,10 +159,15 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   useEffect(() => {
     if (semAcesso) return;
     let ativo = true;
-    // Toda a telefonia (servidor e servidor alternativo inclusos) vem do cadastro do usuário.
+    // Toda a telefonia (servidor, porta, servidor alternativo e porta alternativa inclusos) vem do cadastro do usuário.
     void lerConfigSipDoUsuario().then((cfg) => {
       if (!ativo || !cfg) return;
-      setServidores({ servidor: cfg.servidor ?? "", servidorRemoto: cfg.servidorRemoto ?? "" });
+      setServidores({
+        servidor: cfg.servidor ?? "",
+        servidorRemoto: cfg.servidorRemoto ?? "",
+        porta: cfg.porta ?? "8089",
+        portaRemota: cfg.portaRemota ?? "8089",
+      });
     });
     return () => {
       ativo = false;
