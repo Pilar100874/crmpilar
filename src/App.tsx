@@ -10,6 +10,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { PermissoesProvider } from "@/hooks/usePermissoesUsuario";
+import { RotaPermitida } from "@/components/permissoes/RotaPermitida";
 import ScrollToTop from "./components/ScrollToTop";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 const Index = React.lazy(() => import("./pages/Index"));
