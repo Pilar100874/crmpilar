@@ -229,11 +229,6 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setBairro(unidade.bairro || "");
     setCidade(unidade.cidade || "");
     setUf(unidade.uf || "");
-    setSipServidor(unidade.sip_servidor || "");
-    setSipPorta(unidade.sip_porta?.toString() || "8089");
-    setSipServidorAlternativo(unidade.sip_servidor_alternativo || "");
-    setSipPortaAlternativa(unidade.sip_porta_alternativa?.toString() || "8089");
-    setRamalPortaria(unidade.ramal_portaria || "");
     setEditingId(unidade.id);
     setFormOpen(true);
   };
