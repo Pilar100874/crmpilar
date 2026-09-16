@@ -3,17 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, ChevronDown, ChevronRight, Check, X, Search, ShieldCheck } from "lucide-react";
+import { Trash2, Edit, Plus, Search, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { MENU_CONFIG, getMenusByCategory, CATEGORY_ORDER, MenuConfigItem } from "@/lib/menus";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArvorePermissoes } from "@/components/config/ArvorePermissoes";
@@ -49,21 +45,6 @@ interface GruposAcessoCRUDProps {
   estabelecimentoId?: string;
 }
 
-const PERMISSION_KEYS = ['view', 'create', 'edit', 'delete'] as const;
-const PERMISSION_LABELS: Record<string, string> = {
-  view: 'Ver',
-  create: 'Criar',
-  edit: 'Editar',
-  delete: 'Excluir',
-};
-
-const PERMISSION_LABELS_SHORT: Record<string, string> = {
-  view: 'V',
-  create: 'C',
-  edit: 'E',
-  delete: 'X',
-};
-
 export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) => {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [nome, setNome] = useState("");
@@ -73,21 +54,13 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [grupoToDelete, setGrupoToDelete] = useState<GrupoAcesso | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const { toast } = useToast();
 
-  const menusByCategory = getMenusByCategory();
 
   useEffect(() => {
     fetchGrupos();
-    // Expandir todas as categorias por padrão
-    const initialExpanded: Record<string, boolean> = {};
-    CATEGORY_ORDER.forEach(cat => {
-      initialExpanded[cat] = true;
-    });
-    setExpandedCategories(initialExpanded);
   }, [estabelecimentoId]);
 
   const fetchGrupos = async () => {
@@ -270,33 +243,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     setGrupoToDelete(null);
   };
 
-  const togglePermission = (menu: string, permission: keyof MenuPermissions) => {
-    setMenusPermitidos((prev) => {
-      const current = prev[menu] || { view: false, create: false, edit: false, delete: false };
-      
-      if (permission === 'view' && current.view) {
-        const newPerms = { ...prev };
-        delete newPerms[menu];
-        return newPerms;
-      }
-      
-      const newPermissions = {
-        ...current,
-        [permission]: !current[permission],
-      };
-      
-      if (permission !== 'view' && !current[permission]) {
-        newPermissions.view = true;
-      }
-      
-      return {
-        ...prev,
-        [menu]: newPermissions,
-      };
-    });
-  };
-
-  const toggleAllPermissionsForMenu = (menu: string) => {
+ = (menu: string) => {
     setMenusPermitidos((prev) => {
       const current = prev[menu] || { view: false, create: false, edit: false, delete: false };
       const allChecked = PERMISSION_KEYS.every(k => current[k]);
@@ -314,67 +261,21 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     });
   };
 
-  const toggleCategoryPermissions = (category: string, permission: keyof MenuPermissions) => {
-    const menus = menusByCategory[category] || [];
-    setMenusPermitidos((prev) => {
-      const newPerms = { ...prev };
-      const allHavePermission = menus.every(m => prev[m.id]?.[permission]);
-      
-      menus.forEach(menu => {
-        const current = newPerms[menu.id] || { view: false, create: false, edit: false, delete: false };
-        
-        if (allHavePermission) {
-          if (permission === 'view') {
-            delete newPerms[menu.id];
-          } else {
-            newPerms[menu.id] = { ...current, [permission]: false };
-          }
-        } else {
-          newPerms[menu.id] = { 
-            ...current, 
-            [permission]: true,
-            view: permission === 'view' ? true : current.view || true
-          };
-        }
-      });
-      
-      return newPerms;
-    });
-  };
-
-  const getMenuLabel = (menuId: string) => {
+ = (menuId: string) => {
     const menuConfig = MENU_CONFIG.find(m => m.id === menuId);
     return menuConfig ? menuConfig.label : menuId;
   };
 
-  const selectAll = () => {
-    const allPermissions: Record<string, MenuPermissions> = {};
-    MENU_CONFIG.forEach(menu => {
-      allPermissions[menu.id] = { view: true, create: true, edit: true, delete: true };
-    });
-    setMenusPermitidos(allPermissions);
-  };
-
-  const clearAll = () => {
+ = () => {
     setMenusPermitidos({});
   };
 
-  const hasAnyPermission = Object.keys(menusPermitidos).length > 0;
-
-  const countPermissionsInCategory = (category: string) => {
+ = (category: string) => {
     const menus = menusByCategory[category] || [];
     return menus.filter(m => menusPermitidos[m.id]?.view).length;
   };
 
-  const getPermissionIcon = (checked: boolean) => {
-    return checked ? (
-      <Check className="w-3 h-3 text-primary" />
-    ) : (
-      <X className="w-3 h-3 text-muted-foreground/50" />
-    );
-  };
-
-  const renderMenuRow = (menu: MenuConfigItem) => {
+ = (menu: MenuConfigItem) => {
     const permissions = menusPermitidos[menu.id] || { view: false, create: false, edit: false, delete: false };
     const hasAnyMenuPermission = Object.values(permissions).some(p => p);
     const allChecked = PERMISSION_KEYS.every(k => permissions[k]);
