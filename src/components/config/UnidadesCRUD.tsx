@@ -22,11 +22,6 @@ interface Unidade {
   bairro?: string;
   cidade?: string;
   uf?: string;
-  sip_servidor?: string | null;
-  sip_porta?: number | null;
-  sip_servidor_alternativo?: string | null;
-  sip_porta_alternativa?: number | null;
-  ramal_portaria?: string | null;
 }
 
 interface UnidadesCRUDProps {
