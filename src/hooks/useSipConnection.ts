@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
+import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 
 interface SipConfig {
   server: string;
@@ -32,6 +33,8 @@ export const useSipConnection = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeCalls, setActiveCalls] = useState<CallSession[]>([]);
+  /** Ramal em uso, para informar aos outros usuários que ele está online. */
+  const ramalPresencaRef = useRef<string>('');
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [localVideoStream, setLocalVideoStream] = useState<MediaStream | null>(null);
   const [vivaVoz, setVivaVoz] = useState(false);
@@ -210,6 +213,7 @@ export const useSipConnection = () => {
       setIsRegistered(false);
       return;
     }
+    ramalPresencaRef.current = config.extension.trim();
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
@@ -709,6 +713,9 @@ export const useSipConnection = () => {
       setIsRegistered(false);
       setUserAgent(null);
       setRegisterer(null);
+      if (ramalPresencaRef.current) {
+        void removerPresencaSip(ramalPresencaRef.current);
+      }
 
       // Não exibe aviso no cleanup de telas ou para usuários sem ramal configurado.
       if (tinhaConexaoSip) {
@@ -721,6 +728,20 @@ export const useSipConnection = () => {
       console.error('Erro ao desconectar:', error);
     }
   }, [userAgent, registerer, isRegistered, activeCalls, toast]);
+
+  // Informa (e mantém atualizado) que este ramal está online pelo sistema.
+  const emChamadaAgora = activeCalls.length > 0;
+  useEffect(() => {
+    const ramal = ramalPresencaRef.current;
+    if (!ramal) return;
+    if (!isRegistered) {
+      void removerPresencaSip(ramal);
+      return;
+    }
+    void registrarPresencaSip(ramal, emChamadaAgora);
+    const intervalo = setInterval(() => void registrarPresencaSip(ramal, emChamadaAgora), 45000);
+    return () => clearInterval(intervalo);
+  }, [isRegistered, emChamadaAgora]);
 
   // Cleanup on unmount
   useEffect(() => {

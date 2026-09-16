@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStatusRamais } from "@/hooks/useStatusRamais";
 import {
   BellRing,
   BookUser,
@@ -167,6 +168,12 @@ export default function PilarFone({
   const [numero, setNumero] = useState("");
   const [ramais, setRamais] = useState<RamalCrm[]>([]);
   const [carregandoRamais, setCarregandoRamais] = useState(true);
+  // Quem está online: pelo sistema (web/aplicativo) ou por um telefone SIP físico no PABX.
+  const {
+    statusPorRamal,
+    pabxDisponivel,
+    atualizar: atualizarStatus,
+  } = useStatusRamais();
   const [contatos, setContatos] = useState<ContatoCelular[]>([]);
   const [erroAgenda, setErroAgenda] = useState<string | null>(null);
   const [carregandoAgenda, setCarregandoAgenda] = useState(false);
@@ -392,6 +399,13 @@ export default function PilarFone({
       (!filtro || r.nome.toLowerCase().includes(filtro) || r.ramal.includes(filtro)),
   );
 
+  const totalOnline = ramaisFiltrados.filter((r) => {
+    const st = statusPorRamal[r.ramal];
+    return Boolean(st?.noSistema || st?.registradoPabx);
+  }).length;
+
+
+
   const contatosFiltrados = contatos.filter(
     (c) => !filtro || c.nome.toLowerCase().includes(filtro) || c.numero.includes(filtro),
   );
@@ -495,11 +509,26 @@ export default function PilarFone({
             <div className="flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#00A884]">
               <span className="inline-flex items-center gap-2">
                 <Users className="h-4 w-4" /> Ramais do CRM ({ramaisFiltrados.length})
+                <span className="rounded-full bg-[#00A884]/15 px-2 py-0.5 text-[10px] normal-case tracking-normal">
+                  {totalOnline} online
+                </span>
               </span>
-              <button type="button" aria-label="Atualizar ramais" onClick={() => void carregarRamais()}>
+              <button
+                type="button"
+                aria-label="Atualizar ramais"
+                onClick={() => {
+                  void carregarRamais();
+                  void atualizarStatus();
+                }}
+              >
                 <RefreshCw className={`h-4 w-4 ${carregandoRamais ? "animate-spin" : ""}`} />
               </button>
             </div>
+            {pabxDisponivel === false && (
+              <p className="px-4 pb-2 text-[11px] text-[#8696A0]">
+                Aparelhos SIP físicos não puderam ser consultados no PABX. Mostrando quem está conectado pelo sistema.
+              </p>
+            )}
             <div className="px-4 pb-3">
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#111B21] px-3 py-2">
                 <Search className="h-4 w-4 shrink-0 text-[#8696A0]" />
@@ -559,28 +588,52 @@ export default function PilarFone({
             {!carregandoRamais && ramaisFiltrados.length === 0 && (
               <p className="px-4 py-6 text-sm text-[#8696A0]">Nenhum ramal SIP cadastrado no CRM.</p>
             )}
-            {ramaisFiltrados.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 active:bg-white/5">
-                <Avatar nome={r.nome} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold">{r.nome}</p>
-                  <p className="truncate text-[13px] text-[#8696A0]">Ramal {r.ramal}</p>
+            {ramaisFiltrados.map((r) => {
+              const st = statusPorRamal[r.ramal];
+              const online = Boolean(st?.noSistema || st?.registradoPabx);
+              const descricao = st?.emChamada
+                ? "Em ligação"
+                : st?.noSistema
+                  ? st.origens.includes("apk")
+                    ? "Online no aplicativo"
+                    : "Online no sistema"
+                  : st?.registradoPabx
+                    ? "Online no aparelho SIP"
+                    : "Offline";
+              return (
+                <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 active:bg-white/5">
+                  <div className="relative">
+                    <Avatar nome={r.nome} />
+                    <span
+                      title={descricao}
+                      className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#111B21] ${
+                        st?.emChamada ? "bg-amber-400" : online ? "bg-[#00A884]" : "bg-[#55636B]"
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold">{r.nome}</p>
+                    <p className="truncate text-[13px] text-[#8696A0]">
+                      Ramal {r.ramal}
+                      <span className={online ? "text-[#00A884]" : "text-[#8696A0]"}> · {descricao}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Ligar para ${r.nome}`}
+                    disabled={!isRegistered}
+                    title={isRegistered ? `Ligar para ${r.nome}` : "Ramal SIP desconectado"}
+                    onClick={() => {
+                      registrarChamada({ grupo: "ramais", nome: r.nome, numero: r.ramal, direcao: "saida" });
+                      ligar(r.ramal);
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884] transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Phone className="h-5 w-5" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  aria-label={`Ligar para ${r.nome}`}
-                  disabled={!isRegistered}
-                  title={isRegistered ? `Ligar para ${r.nome}` : "Ramal SIP desconectado"}
-                  onClick={() => {
-                    registrarChamada({ grupo: "ramais", nome: r.nome, numero: r.ramal, direcao: "saida" });
-                    ligar(r.ramal);
-                  }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884] transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Phone className="h-5 w-5" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
             <PilarFoneHistorico grupo="ramais" titulo="Chamadas recentes" onLigar={isRegistered ? (n) => ligar(n) : undefined} />
           </div>
         )}
