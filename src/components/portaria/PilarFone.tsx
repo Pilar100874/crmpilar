@@ -304,10 +304,12 @@ export default function PilarFone({
     }
   }, []);
 
-  const chamadaEntrante = activeCalls.find(
+  const chamadasVivas = activeCalls.filter((c) => c.state !== SessionState.Terminated);
+  const chamadaEntrante = chamadasVivas.find(
     (c) => c.direction === "inbound" && c.state !== SessionState.Established,
   );
-  const chamadaAtual = activeCalls[0] ?? null;
+  // Sempre a chamada mais recente: evita exibir "Em conversa" de uma chamada antiga presa.
+  const chamadaAtual = chamadasVivas[chamadasVivas.length - 1] ?? null;
 
   // Avisa o container (aba lateral) que há chamada entrante para piscar o botão
   useEffect(() => {
