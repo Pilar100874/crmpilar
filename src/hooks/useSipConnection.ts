@@ -197,17 +197,24 @@ export const useSipConnection = () => {
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
-      console.log('Servidor LOCAL:', config.server);
-      console.log('Servidor REMOTO:', config.remoteServer || 'Não configurado');
+      console.log('Servidor LOCAL:', config.server, 'Porta:', config.serverPort || '8089');
+      console.log('Servidor REMOTO:', config.remoteServer || 'Não configurado', 'Porta:', config.remoteServerPort || '8089');
       console.log('Ramal:', config.extension);
 
       let ua: UserAgent | null = null;
       let connectedServer = '';
 
+      const comPorta = (host: string, porta?: string) => {
+        const h = host.trim();
+        if (!h) return h;
+        if (/^wss?:\/\//i.test(h) || h.includes(':')) return h;
+        return `${h}:${porta || '8089'}`;
+      };
+
       // Tentar local primeiro
       try {
         const result = await tryConnect(
-          config.server, 
+          comPorta(config.server, config.serverPort), 
           config.extension, 
           config.password, 
           config.displayName || config.extension,
@@ -224,7 +231,7 @@ export const useSipConnection = () => {
           console.log('🔄 Tentando servidor REMOTO...');
           try {
             const result = await tryConnect(
-              config.remoteServer, 
+              comPorta(config.remoteServer, config.remoteServerPort), 
               config.extension, 
               config.password, 
               config.displayName || config.extension,
