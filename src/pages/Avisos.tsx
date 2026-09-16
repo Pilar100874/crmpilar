@@ -57,6 +57,17 @@ export default function Avisos() {
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<string>('');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelado = false;
+    isEstabelecimentoAdmin().then((resultado) => {
+      if (!cancelado) setIsAdmin(resultado);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   // Carregar usuários quando abrir o dialog
   useEffect(() => {
