@@ -7,6 +7,8 @@ export interface PortariaSipConfig {
   porta: string;
   portaRemota: string;
   ramal: string;
+  /** Usuário de autenticação SIP, quando o PABX usa um nome diferente do número do ramal. */
+  usuarioSip: string;
   senha: string;
   nome: string;
   ramalPortaria: string;
@@ -20,6 +22,7 @@ export const CONFIG_SIP_PADRAO: PortariaSipConfig = {
   porta: "8089",
   portaRemota: "8089",
   ramal: "",
+  usuarioSip: "",
   senha: "",
   nome: "",
   ramalPortaria: "",

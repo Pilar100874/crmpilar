@@ -9,6 +9,8 @@ interface SipConfig {
   remoteServer?: string;
   remoteServerPort?: string;
   extension: string;
+  /** Usuário de autenticação SIP (quando diferente do número do ramal). */
+  authUser?: string;
   password: string;
   displayName?: string;
 }
@@ -137,7 +139,7 @@ export const useSipConnection = () => {
   };
 
   // Helper to try connecting to a server
-  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false) => {
+  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false, authUser?: string) => {
     console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
 
     const { urls: wsServers, host } = montarUrlsWs(server);
@@ -154,7 +156,7 @@ export const useSipConnection = () => {
           server: wsUrl,
           connectionTimeout: 8,
         },
-        authorizationUsername: extension,
+        authorizationUsername: (authUser || '').trim() || extension,
         authorizationPassword: password,
         displayName: displayName || extension,
         sessionDescriptionHandlerFactoryOptions: {
@@ -238,7 +240,8 @@ export const useSipConnection = () => {
           config.extension, 
           config.password, 
           config.displayName || config.extension,
-          false
+          false,
+          config.authUser
         );
         ua = result.ua;
         connectedServer = result.server;
@@ -255,7 +258,8 @@ export const useSipConnection = () => {
               config.extension, 
               config.password, 
               config.displayName || config.extension,
-              true
+              true,
+              config.authUser
             );
             ua = result.ua;
             connectedServer = result.server;
@@ -475,29 +479,43 @@ export const useSipConnection = () => {
             console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
             console.error('❌ Headers da resposta:', response.message.headers);
             let errorMsg = response.message.reasonPhrase;
-            
+            let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
+
             // Mensagens mais amigáveis para códigos comuns
             switch (response.message.statusCode) {
+              case 401:
+              case 407:
+                errorMsg = "Senha do ramal recusada pelo PABX";
+                dica = "Confira a senha SIP no cadastro do usuário; se o PABX usa um usuário de autenticação diferente do número do ramal, preencha o campo de usuário SIP.";
+                break;
+              case 403:
+                errorMsg = "Ligação não autorizada para este ramal";
+                dica = "No PABX, libere chamadas externas para este ramal (privilégio de saída) e confira a rota de saída.";
+                break;
               case 404:
                 errorMsg = "Número não encontrado";
+                dica = "Confira o número discado e o prefixo da rota de saída.";
                 break;
               case 480:
                 errorMsg = "Número temporariamente indisponível";
                 break;
               case 486:
                 errorMsg = "Ocupado";
+                dica = "A outra pessoa está em outra ligação.";
                 break;
               case 487:
                 errorMsg = "Chamada cancelada";
+                dica = "A chamada foi encerrada antes de ser atendida.";
                 break;
               case 603:
                 errorMsg = "Chamada recusada";
+                dica = "A outra pessoa recusou a ligação.";
                 break;
             }
-            
+
             toast({
               title: "Falha na chamada",
-              description: `${errorMsg}. Verifique: 1) Permissões do ramal para chamadas externas, 2) Configuração de rotas no UCM, 3) Trunk SIP configurado`,
+              description: `${errorMsg}. ${dica}`,
               variant: "destructive",
             });
             setTimeout(() => {
