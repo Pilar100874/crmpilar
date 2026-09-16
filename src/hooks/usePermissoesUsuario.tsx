@@ -8,7 +8,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
-import { getMapaPais } from "@/lib/permissoes/catalogo";
+import { getMapaPais, SEPARADOR_MODULO } from "@/lib/permissoes/catalogo";
 
 export interface Permissao {
   view: boolean;
