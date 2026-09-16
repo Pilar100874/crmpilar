@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useModulosPermitidos } from '@/components/permissoes/ContextoPermissao';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { toast } from 'sonner';
 
@@ -66,6 +67,7 @@ const LogisticaHub: React.FC = () => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { itensPermitidos: tabsPermitidas } = useModulosPermitidos('Logística', tabItems, activeTab, setActiveTab);
 
   useEffect(() => {
     fetchEstabelecimento();
@@ -86,7 +88,7 @@ const LogisticaHub: React.FC = () => {
   };
 
   const isFullscreenTab = fullscreenTabs.includes(activeTab);
-  const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
+  const currentTabItem = tabsPermitidas.find(t => t.id === activeTab) || tabsPermitidas[0] || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
   const renderContent = () => {
@@ -159,7 +161,7 @@ const LogisticaHub: React.FC = () => {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                {tabItems.map((tab) => {
+                {tabsPermitidas.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <SelectItem key={tab.id} value={tab.id}>
@@ -188,7 +190,7 @@ const LogisticaHub: React.FC = () => {
               {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
             <TooltipProvider delayDuration={0}>
-              {tabItems.map((tab) => {
+              {tabsPermitidas.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const menuButton = (
@@ -223,7 +225,7 @@ const LogisticaHub: React.FC = () => {
             "flex-1 overflow-auto",
             !isFullscreenTab && "p-3 sm:p-6"
           )}>
-            {tabItems.map((tab) => {
+            {tabsPermitidas.map((tab) => {
               const Icon = tab.icon;
               const isFullscreen = fullscreenTabs.includes(tab.id);
               

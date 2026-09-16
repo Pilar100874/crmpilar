@@ -28,6 +28,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { EscopoPermissao, useModulosPermitidos } from "@/components/permissoes/ContextoPermissao";
+import { idModulo } from "@/lib/permissoes/catalogo";
 
 interface EstabelecimentoPainelProps {
   estabelecimentoId: string;
@@ -138,6 +140,16 @@ export default function Config() {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [expandedEstabId, setExpandedEstabId] = useState<string | null>(estabParam);
   const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
+  const todasSecoes = [...CONFIG_SECTIONS, ...EMPRESA_SUBMENUS];
+  const { itensPermitidos: secoesPermitidas } = useModulosPermitidos(
+    "Config Geral",
+    todasSecoes,
+    activeSection,
+    (id) => handleSectionClick(id),
+  );
+  const idsPermitidos = new Set(secoesPermitidas.map((secao) => secao.id));
+  const configSectionsPermitidas = CONFIG_SECTIONS.filter((secao) => idsPermitidos.has(secao.id));
+  const empresaSubmenusPermitidos = EMPRESA_SUBMENUS.filter((secao) => idsPermitidos.has(secao.id));
 
   useEffect(() => {
     supabase
@@ -292,7 +304,7 @@ export default function Config() {
                   </button>
                   {expanded && (
                     <div className="ml-4 space-y-0.5 border-l border-border/40 pl-2">
-                      {EMPRESA_SUBMENUS.map((sub) => (
+                      {empresaSubmenusPermitidos.map((sub) => (
                         <button
                           key={sub.id}
                           onClick={() => {
@@ -364,7 +376,7 @@ export default function Config() {
             <Select
               value={
                 activeSection
-                  ? EMPRESA_SUBMENUS.some((s) => s.id === activeSection)
+                  ? empresaSubmenusPermitidos.some((s) => s.id === activeSection)
                     ? `${activeSection}|${searchParams.get("estab") ?? estabelecimentos[0]?.id ?? ""}`
                     : activeSection
                   : CONFIG_SECTIONS[0].id
@@ -388,7 +400,7 @@ export default function Config() {
               </SelectTrigger>
               <SelectContent className="bg-popover">
 
-                {CONFIG_SECTIONS.map((section) => (
+                {configSectionsPermitidas.map((section) => (
                   <SelectItem key={section.id} value={section.id}>
                     <div className="flex items-center gap-2">
                       <section.icon className="h-4 w-4" />
@@ -403,7 +415,7 @@ export default function Config() {
                       <span>{e.nome}</span>
                     </div>
                   </SelectItem>,
-                  ...EMPRESA_SUBMENUS.map((section) => (
+                  ...empresaSubmenusPermitidos.map((section) => (
                     <SelectItem key={`${e.id}-${section.id}`} value={`${section.id}|${e.id}`}>
                       <div className="flex items-center gap-2 pl-3">
                         <section.icon className="h-4 w-4" />
@@ -436,13 +448,18 @@ export default function Config() {
               )}
             </Button>
             <TooltipProvider delayDuration={0}>
-              {CONFIG_SECTIONS.map(renderMenuButton)}
+              {configSectionsPermitidas.map(renderMenuButton)}
             </TooltipProvider>
           </div>
 
           <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
             <div className="mx-auto w-full max-w-6xl rounded-xl border bg-card p-4 shadow-sm sm:p-6">
-              {renderSectionContent()}
+              <EscopoPermissao
+                idTela="Config Geral"
+                idModulo={activeSection ? idModulo("Config Geral", activeSection) : null}
+              >
+                {renderSectionContent()}
+              </EscopoPermissao>
             </div>
           </main>
 
@@ -457,6 +474,7 @@ export default function Config() {
 // ============================================
 function EstabelecimentoPainel({ estabelecimentoId, estabelecimentos, onSubmenuClick }: EstabelecimentoPainelProps) {
   const estabelecimento = estabelecimentos.find((e) => e.id === estabelecimentoId);
+  const { itensPermitidos: submenusPermitidos } = useModulosPermitidos("Config Geral", EMPRESA_SUBMENUS);
 
   return (
     <div className="space-y-6">
@@ -475,7 +493,7 @@ function EstabelecimentoPainel({ estabelecimentoId, estabelecimentos, onSubmenuC
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {EMPRESA_SUBMENUS.map((sub) => (
+        {submenusPermitidos.map((sub) => (
           <button
             key={sub.id}
             onClick={() => onSubmenuClick(sub.id, estabelecimentoId)}

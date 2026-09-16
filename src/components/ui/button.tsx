@@ -3,6 +3,8 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import { usePermissoesUsuario, type AcaoPermissao } from "@/hooks/usePermissoesUsuario";
+import { inferirAcaoBotao, useContextoPermissao } from "@/components/permissoes/ContextoPermissao";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -35,10 +37,21 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  acaoPermissao?: AcaoPermissao | "nenhuma";
+  idPermissao?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, acaoPermissao, idPermissao, ...props }, ref) => {
+    const { idTela, idModulo } = useContextoPermissao();
+    const { pode, carregando } = usePermissoesUsuario();
+    const textoFilhos = React.Children.toArray(props.children)
+      .filter((filho): filho is string | number => typeof filho === "string" || typeof filho === "number")
+      .join(" ");
+    const texto = [props["aria-label"], props.title, textoFilhos].filter(Boolean).join(" ");
+    const acao = acaoPermissao === "nenhuma" ? null : (acaoPermissao ?? inferirAcaoBotao(texto));
+    const id = idPermissao ?? idModulo ?? idTela;
+    if (!carregando && acao && id && !pode(id, acao)) return null;
     const Comp = asChild ? Slot : "button";
     return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
   },

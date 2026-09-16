@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { EtiquetasZebra } from '@/components/config/EtiquetasZebra';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useModulosPermitidos } from '@/components/permissoes/ContextoPermissao';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -82,6 +83,7 @@ export default function VendasConfig() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const currentTab = searchParams.get('tab') || 'produtos';
+  const { itensPermitidos: tabsPermitidas } = useModulosPermitidos('Config Vendas', tabItems, currentTab, (id) => setSearchParams({ tab: id }));
 
   // Get user's estabelecimento_id
   const { data: estabelecimentoId } = useQuery({
@@ -95,7 +97,7 @@ export default function VendasConfig() {
     setSearchParams({ tab: value });
   };
 
-  const currentTabItem = tabItems.find(t => t.id === currentTab) || tabItems[0];
+  const currentTabItem = tabsPermitidas.find(t => t.id === currentTab) || tabsPermitidas[0] || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
   return (
@@ -121,7 +123,7 @@ export default function VendasConfig() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                {tabItems.map((tab) => {
+                {tabsPermitidas.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <SelectItem key={tab.id} value={tab.id}>
@@ -147,7 +149,7 @@ export default function VendasConfig() {
               {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
             <TooltipProvider delayDuration={0}>
-              {tabItems.map((tab) => {
+              {tabsPermitidas.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = currentTab === tab.id;
                 
