@@ -713,6 +713,9 @@ export const useSipConnection = () => {
       setIsRegistered(false);
       setUserAgent(null);
       setRegisterer(null);
+      if (ramalPresencaRef.current) {
+        void removerPresencaSip(ramalPresencaRef.current);
+      }
 
       // Não exibe aviso no cleanup de telas ou para usuários sem ramal configurado.
       if (tinhaConexaoSip) {
@@ -725,6 +728,20 @@ export const useSipConnection = () => {
       console.error('Erro ao desconectar:', error);
     }
   }, [userAgent, registerer, isRegistered, activeCalls, toast]);
+
+  // Informa (e mantém atualizado) que este ramal está online pelo sistema.
+  const emChamadaAgora = activeCalls.length > 0;
+  useEffect(() => {
+    const ramal = ramalPresencaRef.current;
+    if (!ramal) return;
+    if (!isRegistered) {
+      void removerPresencaSip(ramal);
+      return;
+    }
+    void registrarPresencaSip(ramal, emChamadaAgora);
+    const intervalo = setInterval(() => void registrarPresencaSip(ramal, emChamadaAgora), 45000);
+    return () => clearInterval(intervalo);
+  }, [isRegistered, emChamadaAgora]);
 
   // Cleanup on unmount
   useEffect(() => {
