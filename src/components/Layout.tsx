@@ -69,6 +69,7 @@ import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { applyMenuCustomization, MENU_CUSTOMIZATION_EVENT, fetchRemoteCustomization, getPlacedProgramIds, applyAdminFooterCustomization, applyUserFooterCustomization, applySystemFooterCustomization } from "@/lib/menuCustomization";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
+import { usePermissoesUsuario } from "@/hooks/usePermissoesUsuario";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
 
@@ -361,6 +362,7 @@ export default function Layout({ children }: LayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const { podeVer, carregando: carregandoPermissoes } = usePermissoesUsuario();
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
   const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -751,13 +753,19 @@ export default function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener(MENU_CUSTOMIZATION_EVENT, handler);
   }, []);
 
-  if (!user || isLoading) {
+  if (!user || isLoading || carregandoPermissoes) {
     return null;
   }
 
-  // Filtra os menus baseado nas permissões
+  // Filtra os menus baseado nas permissões do grupo de acesso
   const visibleMenus = customizedItems
-
+    .map((item) => {
+      // Remove os submenus que o grupo de acesso não permite ver
+      if (item.subItems && item.subItems.length > 0) {
+        return { ...item, subItems: item.subItems.filter((sub: any) => podeVer(sub.id)) };
+      }
+      return item;
+    })
     .filter((item) => {
       if (item.system) {
         if (item.system === "admin") return isAdmin;
@@ -768,24 +776,15 @@ export default function Layout({ children }: LayoutProps) {
         return isAdmin;
       }
 
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Atendimento Portaria", "Controle de Veículos", "Manutenção", "Transportadoras", "Operacional Hub", "Pilar Ferramentas", "Controle de Visitantes", "Livro de Ocorrência", "Portaria", "Câmeras", "Editores", "Automacao"];
-      if (alwaysVisibleMenus.includes(item.id)) {
-        return true;
-      }
-
-      const permission = allowedMenus[item.id];
-
+      // Menu com submenus: aparece se o próprio menu ou algum submenu estiver liberado
       if (item.subItems) {
-        const hasSubItemPermission = item.subItems.some((subItem) => {
-          const subPermission = allowedMenus[subItem.id];
-          return subPermission?.view === true;
-        });
-        return permission?.view === true || hasSubItemPermission;
+        return podeVer(item.id) && (item.subItems.length > 0 || Boolean(item.url));
       }
 
-      return permission?.view === true;
+      return podeVer(item.id);
     })
     .map((item) => item);
+
 
   const systemInMain = new Set<string>(
     visibleMenus.map((i) => i.system).filter(Boolean) as string[]
