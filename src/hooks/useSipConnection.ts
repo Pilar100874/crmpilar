@@ -9,6 +9,8 @@ interface SipConfig {
   remoteServer?: string;
   remoteServerPort?: string;
   extension: string;
+  /** Usuário de autenticação SIP (quando diferente do número do ramal). */
+  authUser?: string;
   password: string;
   displayName?: string;
 }
