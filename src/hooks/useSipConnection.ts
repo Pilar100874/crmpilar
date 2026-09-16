@@ -33,6 +33,8 @@ export const useSipConnection = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeCalls, setActiveCalls] = useState<CallSession[]>([]);
+  /** Ramal em uso, para informar aos outros usuários que ele está online. */
+  const ramalPresencaRef = useRef<string>('');
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [localVideoStream, setLocalVideoStream] = useState<MediaStream | null>(null);
   const [vivaVoz, setVivaVoz] = useState(false);
