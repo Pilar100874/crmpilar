@@ -409,7 +409,12 @@ export default function PilarFone({
         style={{ paddingTop: padTop }}
       >
         <div className="flex items-center gap-2 px-4 py-3">
-          <h1 className="flex-1 text-xl font-semibold tracking-tight">Pilar Fone</h1>
+          <div className="flex-1">
+            <h1 className="text-xl font-semibold tracking-tight">Pilar Fone</h1>
+            {config.ramal ? (
+              <p className="text-xs text-muted-foreground">Ramal: {config.ramal}</p>
+            ) : null}
+          </div>
           {headerExtra}
           {onFechar && (
             <button
