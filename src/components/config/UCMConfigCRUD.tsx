@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Save } from "lucide-react";
+import { UCMAjudaGuia } from "./UCMAjudaGuia";
 
 interface UCMConfigCRUDProps {
   estabelecimentoId: string;
@@ -113,10 +114,15 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuração PABX Grandstream UCM</CardTitle>
-        <CardDescription>
-          Configure a integração com o PABX Grandstream UCM6510 via API HTTPS
-        </CardDescription>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>Configuração PABX Grandstream UCM</CardTitle>
+            <CardDescription>
+              Configure a integração com o PABX Grandstream UCM6510 via API HTTPS
+            </CardDescription>
+          </div>
+          <UCMAjudaGuia />
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
