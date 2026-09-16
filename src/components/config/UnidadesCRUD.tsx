@@ -468,11 +468,14 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
         </div>
 
         <div className="rounded-lg border border-border p-3 space-y-3">
-          <div>
-            <Label>Telefonia da unidade</Label>
-            <p className="text-xs text-muted-foreground">
-              Estes dados são usados automaticamente por todos os usuários vinculados a esta unidade.
-            </p>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <Label>Telefonia da unidade</Label>
+              <p className="text-xs text-muted-foreground">
+                Estes dados são usados automaticamente por todos os usuários vinculados a esta unidade.
+              </p>
+            </div>
+            <UCMAjudaGuia />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid grid-cols-[1fr_auto] gap-2">
