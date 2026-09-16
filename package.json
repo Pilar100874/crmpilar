@@ -11,7 +11,7 @@
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "lint": "eslint .",
-    "permissoes:gerar": "tsx scripts/gerarModulosInternos.ts",
+    "permissoes:gerar": "bun scripts/gerarModulosInternos.ts",
     "preview": "vite preview"
   },
   "dependencies": {
