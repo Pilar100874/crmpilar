@@ -746,22 +746,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       } else {
         iconSigRef.current.set(veiculo.id, sig);
         const marker = L.marker(pos, { icon: criarIcone(), riseOnHover: true })
-          .addTo(map)
-          .bindPopup(`
-
-            <div class="text-sm">
-              <p class="font-bold">${veiculo.placa}</p>
-              <p>${veiculo.descricao || 'Sem descrição'}</p>
-              <p>Velocidade: ${Math.round(veiculo.ultima_posicao?.velocidade || 0)} km/h</p>
-              ${typeof veiculo.ultima_posicao?.ignicao === 'boolean'
-                ? `<p>Ignição: <strong style="color:${veiculo.ultima_posicao.ignicao ? '#059669' : '#6b7280'}">${veiculo.ultima_posicao.ignicao ? '🔑 Ligado' : '⏻ Desligado'}</strong></p>`
-                : `<p>Ignição: <strong style="color:#6b7280">Sem sinal</strong></p>`}
-              ${typeof veiculo.ultima_posicao?.corte_combustivel === 'boolean'
-                ? `<p>Combustível: <strong style="color:${veiculo.ultima_posicao.corte_combustivel ? '#dc2626' : '#059669'}">${veiculo.ultima_posicao.corte_combustivel ? '⛽ Cortado' : '⛽ Liberado'}</strong></p>`
-                : `<p>Combustível: <strong style="color:#6b7280">Sem sinal</strong></p>`}
-
-            </div>
-          `);
+          .addTo(map);
 
         marker.on('click', () => {
           pausarAuto();
@@ -770,7 +755,6 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         marker.on('dblclick', () => {
           pausarAuto();
           map.flyTo(pos, Math.max(map.getZoom(), 17), { duration: 1.0, easeLinearity: 0.25 });
-          marker.openPopup();
         });
 
         currentMarkers.set(veiculo.id, marker);
@@ -890,13 +874,6 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         ultimoPan: Date.now(),
         inicializado: true,
       };
-      const marker = markersRef.current.get(veiculo.id);
-      // Open popup without auto-panning so the marker stays centered on screen
-      marker?.openPopup();
-      // Re-center after popup opens to counter Leaflet's autoPan shift
-      setTimeout(() => {
-        map.panTo(pos, { animate: true, duration: 0.3 });
-      }, 350);
     });
     return () => cancelAnimationFrame(raf);
   }, [focusVeiculoId, focusTrigger, veiculos, pausarAuto, modoFoco, focoZoom]);
