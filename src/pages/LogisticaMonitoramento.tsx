@@ -435,9 +435,15 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
   const veiculosDoGrupo = filterByGrupo(veiculos, grupoId);
 
+  // Só exibe alertas de veículos da unidade selecionada no filtro.
+  const alertsVisiveis = React.useMemo(() => {
+    const idsDoGrupo = new Set(veiculosDoGrupo.map(v => v.id));
+    return alerts.filter(a => idsDoGrupo.has(a.veiculoId));
+  }, [alerts, veiculosDoGrupo]);
+
   const alertVeiculoIds = React.useMemo(
-    () => new Set(alerts.map(a => a.veiculoId)),
-    [alerts]
+    () => new Set(alertsVisiveis.map(a => a.veiculoId)),
+    [alertsVisiveis]
   );
 
   const veiculosFiltrados = React.useMemo(() => {
