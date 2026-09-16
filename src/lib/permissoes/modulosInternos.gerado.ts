@@ -614,6 +614,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -646,6 +658,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -682,6 +706,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -714,6 +750,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -750,6 +798,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -782,6 +842,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -818,6 +890,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -850,6 +934,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -886,6 +982,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -918,6 +1026,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -954,6 +1074,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -986,6 +1118,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1022,6 +1166,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1054,6 +1210,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1090,6 +1258,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1122,6 +1302,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1158,6 +1350,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1190,6 +1394,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1226,6 +1442,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1258,6 +1486,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1294,6 +1534,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1326,6 +1578,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1362,6 +1626,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1394,6 +1670,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1430,6 +1718,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1462,6 +1762,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
@@ -1498,6 +1810,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1532,6 +1856,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Email Config"
     },
     {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
       "id": "notificacoes-sistema",
       "label": "Notificações do Sistema"
     },
@@ -1564,6 +1900,18 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "email-config",
       "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
     },
     {
       "id": "notificacoes-sistema",
