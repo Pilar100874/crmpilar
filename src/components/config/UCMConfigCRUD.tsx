@@ -134,31 +134,75 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="ucm_host">Host Local do UCM</Label>
-          <Input
-            id="ucm_host"
-            placeholder="192.168.1.100"
-            value={config.ucm_host}
-            onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Servidor SIP usado pelo Pilar Fone (web e APK) na rede interna, sem https://
-          </p>
+        <div className="rounded-lg border border-border p-3 space-y-4">
+          <div>
+            <Label>Telefonia do estabelecimento</Label>
+            <p className="text-xs text-muted-foreground">
+              Estes dados valem para todos os usuários do estabelecimento (Pilar Fone web, APK, TV e portaria).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div className="space-y-2">
+              <Label htmlFor="ucm_host">Servidor (host local do UCM)</Label>
+              <Input
+                id="ucm_host"
+                placeholder="192.168.1.100"
+                value={config.ucm_host}
+                onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Servidor SIP e da API usado na rede interna, sem https://
+              </p>
+            </div>
+            <div className="space-y-2 w-24">
+              <Label htmlFor="sip_porta">Porta</Label>
+              <Input
+                id="sip_porta"
+                type="number"
+                placeholder="8089"
+                value={config.sip_porta ?? ""}
+                onChange={(e) => setConfig({ ...config, sip_porta: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div className="space-y-2">
+              <Label htmlFor="remote_ip">Servidor alternativo (opcional)</Label>
+              <Input
+                id="remote_ip"
+                placeholder="ucm.empresa.com ou IP público"
+                value={config.remote_ip || ""}
+                onChange={(e) => setConfig({ ...config, remote_ip: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Usado fora da empresa (ex.: pilar.myddns.me), sem https://
+              </p>
+            </div>
+            <div className="space-y-2 w-24">
+              <Label htmlFor="sip_porta_alternativa">Porta</Label>
+              <Input
+                id="sip_porta_alternativa"
+                type="number"
+                placeholder="8089"
+                value={config.sip_porta_alternativa ?? ""}
+                onChange={(e) => setConfig({ ...config, sip_porta_alternativa: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ramal_portaria">Ramal da TV/portaria</Label>
+            <Input
+              id="ramal_portaria"
+              placeholder="2000"
+              value={config.ramal_portaria || ""}
+              onChange={(e) => setConfig({ ...config, ramal_portaria: e.target.value })}
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="remote_ip">Host Remoto do UCM (Opcional)</Label>
-          <Input
-            id="remote_ip"
-            placeholder="ucm.empresa.com ou IP público"
-            value={config.remote_ip || ""}
-            onChange={(e) => setConfig({ ...config, remote_ip: e.target.value })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Servidor alternativo do Pilar Fone para uso fora da empresa (ex.: pilar.myddns.me), sem https://
-          </p>
-        </div>
 
         <div className="space-y-2">
           <Label htmlFor="ucm_user">Usuário API</Label>
