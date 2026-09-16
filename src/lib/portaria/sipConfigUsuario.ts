@@ -8,7 +8,10 @@ import type { PortariaSipConfig } from "./sipConfig";
  * Ramal, usuário e senha SIP continuam no cadastro do usuário.
  */
 export type ConfigSipUsuario = Partial<
-  Pick<PortariaSipConfig, "servidor" | "servidorRemoto" | "porta" | "portaRemota" | "ramal" | "senha" | "nome" | "ramalPortaria">
+  Pick<
+    PortariaSipConfig,
+    "servidor" | "servidorRemoto" | "porta" | "portaRemota" | "ramal" | "usuarioSip" | "senha" | "nome" | "ramalPortaria"
+  >
 >;
 
 export async function lerConfigSipDoUsuario(): Promise<ConfigSipUsuario | null> {
