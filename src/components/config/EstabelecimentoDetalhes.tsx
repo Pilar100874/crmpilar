@@ -421,29 +421,27 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
   // Render categories list
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {categories.map((category) => (
         <Card 
           key={category.id}
-          className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
+          className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all group"
           onClick={() => handleCategoryClick(category.id)}
         >
-          <CardContent className="p-0">
-            <div className="flex items-center gap-4 p-4">
-              <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                category.bgColor
-              )}>
-                <category.icon className={cn("w-6 h-6", category.color)} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base">{category.title}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {category.items.length} configurações
-                </p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+          <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+            <div className={cn(
+              "w-16 h-16 rounded-2xl flex items-center justify-center shrink-0",
+              category.bgColor
+            )}>
+              <category.icon className={cn("w-8 h-8", category.color)} />
             </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-base">{category.title}</h3>
+              <p className="text-xs text-muted-foreground">
+                {category.items.length} configurações
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
           </CardContent>
         </Card>
       ))}
