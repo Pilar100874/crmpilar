@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useAvisosSistema } from '@/hooks/useAvisosSistema';
 import { supabase } from '@/integrations/supabase/client';
+import { isEstabelecimentoAdmin } from '@/lib/estabelecimentoUtils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
