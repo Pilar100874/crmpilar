@@ -152,6 +152,7 @@ export default function Avisos() {
             <Badge variant="destructive">{avisosPendentes} pendente{avisosPendentes > 1 ? 's' : ''}</Badge>
           )}
         </div>
+        {isAdmin && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Novo Aviso</Button>
