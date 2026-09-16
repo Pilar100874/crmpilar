@@ -470,6 +470,9 @@ export const useSipConnection = () => {
         }
       });
 
+      // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
+      iniciarToqueChamando();
+
       await inviter.invite({
         sessionDescriptionHandlerOptions: {
           constraints: {
