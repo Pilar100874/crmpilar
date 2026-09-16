@@ -3,19 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, ChevronDown, ChevronRight, Check, X, Search, ShieldCheck } from "lucide-react";
+import { Trash2, Edit, Plus, Search, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { MENU_CONFIG, getMenusByCategory, CATEGORY_ORDER, MenuConfigItem } from "@/lib/menus";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArvorePermissoes } from "@/components/config/ArvorePermissoes";
+import { limparCachePermissoes } from "@/hooks/usePermissoesUsuario";
 
 interface MenuPermissions {
   view: boolean;
@@ -48,21 +46,6 @@ interface GruposAcessoCRUDProps {
   estabelecimentoId?: string;
 }
 
-const PERMISSION_KEYS = ['view', 'create', 'edit', 'delete'] as const;
-const PERMISSION_LABELS: Record<string, string> = {
-  view: 'Ver',
-  create: 'Criar',
-  edit: 'Editar',
-  delete: 'Excluir',
-};
-
-const PERMISSION_LABELS_SHORT: Record<string, string> = {
-  view: 'V',
-  create: 'C',
-  edit: 'E',
-  delete: 'X',
-};
-
 export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) => {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [nome, setNome] = useState("");
@@ -72,21 +55,13 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [grupoToDelete, setGrupoToDelete] = useState<GrupoAcesso | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const { toast } = useToast();
 
-  const menusByCategory = getMenusByCategory();
 
   useEffect(() => {
     fetchGrupos();
-    // Expandir todas as categorias por padrão
-    const initialExpanded: Record<string, boolean> = {};
-    CATEGORY_ORDER.forEach(cat => {
-      initialExpanded[cat] = true;
-    });
-    setExpandedCategories(initialExpanded);
   }, [estabelecimentoId]);
 
   const fetchGrupos = async () => {
@@ -152,6 +127,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           variant: "destructive",
         });
       } else {
+        limparCachePermissoes();
         toast({ title: "Grupo atualizado com sucesso!" });
         resetForm();
         await fetchGrupos();
@@ -185,6 +161,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           variant: "destructive",
         });
       } else {
+        limparCachePermissoes();
         toast({ title: "Grupo criado com sucesso!" });
         resetForm();
         await fetchGrupos();
@@ -269,178 +246,15 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     setGrupoToDelete(null);
   };
 
-  const togglePermission = (menu: string, permission: keyof MenuPermissions) => {
-    setMenusPermitidos((prev) => {
-      const current = prev[menu] || { view: false, create: false, edit: false, delete: false };
-      
-      if (permission === 'view' && current.view) {
-        const newPerms = { ...prev };
-        delete newPerms[menu];
-        return newPerms;
-      }
-      
-      const newPermissions = {
-        ...current,
-        [permission]: !current[permission],
-      };
-      
-      if (permission !== 'view' && !current[permission]) {
-        newPermissions.view = true;
-      }
-      
-      return {
-        ...prev,
-        [menu]: newPermissions,
-      };
-    });
-  };
-
-  const toggleAllPermissionsForMenu = (menu: string) => {
-    setMenusPermitidos((prev) => {
-      const current = prev[menu] || { view: false, create: false, edit: false, delete: false };
-      const allChecked = PERMISSION_KEYS.every(k => current[k]);
-      
-      if (allChecked) {
-        const newPerms = { ...prev };
-        delete newPerms[menu];
-        return newPerms;
-      } else {
-        return {
-          ...prev,
-          [menu]: { view: true, create: true, edit: true, delete: true },
-        };
-      }
-    });
-  };
-
-  const toggleCategoryPermissions = (category: string, permission: keyof MenuPermissions) => {
-    const menus = menusByCategory[category] || [];
-    setMenusPermitidos((prev) => {
-      const newPerms = { ...prev };
-      const allHavePermission = menus.every(m => prev[m.id]?.[permission]);
-      
-      menus.forEach(menu => {
-        const current = newPerms[menu.id] || { view: false, create: false, edit: false, delete: false };
-        
-        if (allHavePermission) {
-          if (permission === 'view') {
-            delete newPerms[menu.id];
-          } else {
-            newPerms[menu.id] = { ...current, [permission]: false };
-          }
-        } else {
-          newPerms[menu.id] = { 
-            ...current, 
-            [permission]: true,
-            view: permission === 'view' ? true : current.view || true
-          };
-        }
-      });
-      
-      return newPerms;
-    });
-  };
-
-  const getMenuLabel = (menuId: string) => {
-    const menuConfig = MENU_CONFIG.find(m => m.id === menuId);
-    return menuConfig ? menuConfig.label : menuId;
-  };
-
-  const selectAll = () => {
-    const allPermissions: Record<string, MenuPermissions> = {};
-    MENU_CONFIG.forEach(menu => {
-      allPermissions[menu.id] = { view: true, create: true, edit: true, delete: true };
-    });
-    setMenusPermitidos(allPermissions);
-  };
-
-  const clearAll = () => {
-    setMenusPermitidos({});
-  };
-
-  const hasAnyPermission = Object.keys(menusPermitidos).length > 0;
-
-  const countPermissionsInCategory = (category: string) => {
-    const menus = menusByCategory[category] || [];
-    return menus.filter(m => menusPermitidos[m.id]?.view).length;
-  };
-
-  const getPermissionIcon = (checked: boolean) => {
-    return checked ? (
-      <Check className="w-3 h-3 text-primary" />
-    ) : (
-      <X className="w-3 h-3 text-muted-foreground/50" />
-    );
-  };
-
-  const renderMenuRow = (menu: MenuConfigItem) => {
-    const permissions = menusPermitidos[menu.id] || { view: false, create: false, edit: false, delete: false };
-    const hasAnyMenuPermission = Object.values(permissions).some(p => p);
-    const allChecked = PERMISSION_KEYS.every(k => permissions[k]);
-
-    return (
-      <div 
-        key={menu.id} 
-        className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg border transition-all ${
-          hasAnyMenuPermission ? 'border-primary/30 bg-primary/5' : 'border-border/50 bg-background'
-        }`}
-      >
-        {/* Menu Name */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <button
-            type="button"
-            onClick={() => toggleAllPermissionsForMenu(menu.id)}
-            className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-              allChecked ? 'bg-primary border-primary' : 'border-muted-foreground/30 hover:border-primary/50'
-            }`}
-          >
-            {allChecked && <Check className="w-3 h-3 text-primary-foreground" />}
-          </button>
-          <span className="text-sm font-medium truncate">{menu.label}</span>
-        </div>
-
-        {/* Permissions - Desktop */}
-        <div className="hidden sm:flex items-center gap-3">
-          {PERMISSION_KEYS.map((perm) => (
-            <label
-              key={perm}
-              className="flex items-center gap-1.5 cursor-pointer select-none"
-            >
-              <Checkbox
-                id={`${menu.id}-${perm}`}
-                checked={permissions[perm]}
-                onCheckedChange={() => togglePermission(menu.id, perm)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-muted-foreground">{PERMISSION_LABELS[perm]}</span>
-            </label>
-          ))}
-        </div>
-
-        {/* Permissions - Mobile */}
-        <div className="flex sm:hidden items-center gap-1 flex-wrap">
-          {PERMISSION_KEYS.map((perm) => (
-            <button
-              key={perm}
-              type="button"
-              onClick={() => togglePermission(menu.id, perm)}
-              className={`px-2 py-1 text-xs rounded border transition-colors ${
-                permissions[perm] 
-                  ? 'bg-primary text-primary-foreground border-primary' 
-                  : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/50'
-              }`}
-            >
-              {PERMISSION_LABELS_SHORT[perm]}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const formatPermissionsCompact = (permissions: Record<string, MenuPermissions>) => {
-    const count = Object.keys(permissions).filter(k => permissions[k]?.view).length;
-    return `${count} menu${count !== 1 ? 's' : ''} com acesso`;
+    const itens = Object.keys(permissions).filter((k) => permissions[k]?.view);
+    if (itens.length === 0) return "Sem itens liberados";
+    const acoes: string[] = [];
+    if (itens.some((k) => permissions[k]?.create)) acoes.push("criar");
+    if (itens.some((k) => permissions[k]?.edit)) acoes.push("editar");
+    if (itens.some((k) => permissions[k]?.delete)) acoes.push("excluir");
+    const sufixo = acoes.length > 0 ? ` · ${acoes.join(", ")}` : " · somente ver";
+    return `${itens.length} ${itens.length === 1 ? "item liberado" : "itens liberados"}${sufixo}`;
   };
 
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
@@ -517,152 +331,16 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           </div>
         </Card>
 
-        {/* Permissões por Menu */}
+        {/* Permissões por menu, submenu e módulo interno */}
         <Card className="p-4">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <Label className="text-sm font-medium">Permissões por Menu</Label>
-                <p className="text-xs text-muted-foreground">
-                  Selecione as permissões para cada menu
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={selectAll} className="text-xs h-7">
-                  Marcar Todos
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={clearAll} disabled={!hasAnyPermission} className="text-xs h-7">
-                  Limpar
-                </Button>
-              </div>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm font-medium">Permissões por menu, submenu e módulo</Label>
+              <p className="text-xs text-muted-foreground">
+                Marque o que este grupo pode ver, criar, editar e excluir em cada menu, submenu e módulo interno das telas.
+              </p>
             </div>
-
-            {/* Legenda */}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground border-b pb-2 flex-wrap">
-              <span className="font-medium">Legenda:</span>
-              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">V</span> Ver</span>
-              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">C</span> Criar</span>
-              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">E</span> Editar</span>
-              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">X</span> Excluir</span>
-            </div>
-            
-            {/* Categorias e Menus */}
-            <div className="space-y-3">
-              {CATEGORY_ORDER.map((category) => {
-                const menus = menusByCategory[category];
-                if (!menus || menus.length === 0) return null;
-
-                const isExpanded = expandedCategories[category] !== false;
-                const permissionCount = countPermissionsInCategory(category);
-
-                return (
-                  <Collapsible
-                    key={category}
-                    open={isExpanded}
-                    onOpenChange={(open) => 
-                      setExpandedCategories(prev => ({ ...prev, [category]: open }))
-                    }
-                  >
-                    <div className="border rounded-lg overflow-hidden">
-                      {/* Category Header */}
-                      <CollapsibleTrigger asChild>
-                        <button
-                          type="button"
-                          className="w-full flex items-center justify-between p-2.5 bg-muted/50 hover:bg-muted/70 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            {isExpanded ? (
-                              <ChevronDown className="w-4 h-4" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4" />
-                            )}
-                            <span className="font-semibold text-sm">{category}</span>
-                            {permissionCount > 0 && (
-                              <Badge variant="secondary" className="text-xs h-5">
-                                {permissionCount}/{menus.length}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {/* Quick Category Toggle */}
-                          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                            {PERMISSION_KEYS.map((perm) => {
-                              const allHave = menus.every(m => menusPermitidos[m.id]?.[perm]);
-                              return (
-                                <button
-                                  key={perm}
-                                  type="button"
-                                  onClick={() => toggleCategoryPermissions(category, perm)}
-                                  className={`px-1.5 py-0.5 text-[10px] rounded transition-colors ${
-                                    allHave 
-                                      ? 'bg-primary text-primary-foreground' 
-                                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                                  }`}
-                                >
-                                  {PERMISSION_LABELS_SHORT[perm]}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </button>
-                      </CollapsibleTrigger>
-
-                      {/* Category Content */}
-                      <CollapsibleContent>
-                        <div className="p-2 space-y-1.5 bg-background">
-                          {menus.map((menu) => {
-                            const permissions = menusPermitidos[menu.id] || { view: false, create: false, edit: false, delete: false };
-                            const hasAnyMenuPermission = Object.values(permissions).some(p => p);
-                            const allChecked = PERMISSION_KEYS.every(k => permissions[k]);
-
-                            return (
-                              <div 
-                                key={menu.id} 
-                                className={`flex items-center justify-between gap-2 p-2 rounded-md border transition-all ${
-                                  hasAnyMenuPermission ? 'border-primary/30 bg-primary/5' : 'border-border/50 bg-background'
-                                }`}
-                              >
-                                {/* Menu Name with toggle all */}
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleAllPermissionsForMenu(menu.id)}
-                                    className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                                      allChecked ? 'bg-primary border-primary' : 'border-muted-foreground/30 hover:border-primary/50'
-                                    }`}
-                                  >
-                                    {allChecked && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
-                                  </button>
-                                  <span className="text-xs font-medium truncate">{menu.label}</span>
-                                </div>
-
-                                {/* Permissions Buttons */}
-                                <div className="flex items-center gap-1 shrink-0">
-                                  {PERMISSION_KEYS.map((perm) => (
-                                    <button
-                                      key={perm}
-                                      type="button"
-                                      onClick={() => togglePermission(menu.id, perm)}
-                                      className={`w-6 h-6 text-[10px] rounded border transition-colors ${
-                                        permissions[perm] 
-                                          ? 'bg-primary text-primary-foreground border-primary' 
-                                          : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/50'
-                                      }`}
-                                    >
-                                      {PERMISSION_LABELS_SHORT[perm]}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>
-                );
-              })}
-            </div>
+            <ArvorePermissoes valor={menusPermitidos} onChange={setMenusPermitidos} />
           </div>
         </Card>
       </form>}

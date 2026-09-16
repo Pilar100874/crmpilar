@@ -78,13 +78,16 @@ import BotTest from './BotTest';
 // Import Telefonia components
 import BotResponseMonitor from './BotResponseMonitor';
 
+import { usePermissoesUsuario } from '@/hooks/usePermissoesUsuario';
+import { idModulo } from '@/lib/permissoes/catalogo';
+
 interface TabItem {
   id: string;
   label: string;
   icon: LucideIcon;
 }
 
-const tabItems: TabItem[] = [
+const todosTabItems: TabItem[] = [
   { id: 'ferramentas', label: 'Ferramentas por Aba', icon: Wrench },
   { id: 'agentes-chat', label: 'Agentes de Chat', icon: Bot },
   { id: 'textos-prontos', label: 'Textos Prontos', icon: MessageSquareQuote },
@@ -395,9 +398,11 @@ function FilasManagerEmbedded({ estabelecimentoId }: { estabelecimentoId: string
 
 export default function AtendimentoConfig() {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const { podeVer } = usePermissoesUsuario();
+  const tabItems = todosTabItems.filter((tab) => podeVer(idModulo('Config Atendimento', tab.id)));
   const [currentTab, setCurrentTab] = useState(() => {
     const tabFromUrl = new URLSearchParams(window.location.search).get('tab');
-    return tabItems.some(tab => tab.id === tabFromUrl) ? tabFromUrl! : 'ferramentas';
+    return todosTabItems.some(tab => tab.id === tabFromUrl) ? tabFromUrl! : 'ferramentas';
   });
 
   const { data: estabelecimentoId } = useQuery({
@@ -424,7 +429,7 @@ export default function AtendimentoConfig() {
     } catch {}
   }, [currentTab]);
 
-  const currentTabItem = tabItems.find(t => t.id === currentTab) || tabItems[0];
+  const currentTabItem = tabItems.find(t => t.id === currentTab) || tabItems[0] || todosTabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
   return (
