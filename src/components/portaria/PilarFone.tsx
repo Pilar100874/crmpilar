@@ -209,7 +209,7 @@ export default function PilarFone({
         lerConfigSipDoUsuario().catch(() => null),
       ]);
       if (!ativo) return;
-      cadastroRef.current = (doCadastro ?? null) as Record<string, unknown> | null;
+      
       const limpo = Object.fromEntries(
         Object.entries(doCadastro ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== ""),
       );
