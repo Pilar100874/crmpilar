@@ -24,6 +24,8 @@ const STORAGE_KEY = "portaria.sip.config";
 export interface PortariaSipConfig {
   servidor: string;
   servidorRemoto: string;
+  porta: string;
+  portaRemota: string;
   ramal: string;
   senha: string;
   nome: string;
@@ -35,6 +37,8 @@ export interface PortariaSipConfig {
 const CONFIG_PADRAO: PortariaSipConfig = {
   servidor: "",
   servidorRemoto: "",
+  porta: "8089",
+  portaRemota: "8089",
   ramal: "",
   senha: "",
   nome: "",
@@ -82,7 +86,9 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
     setAviso(null);
     await connect({
       server: config.servidor.trim(),
+      serverPort: config.porta || undefined,
       remoteServer: config.servidorRemoto.trim() || undefined,
+      remoteServerPort: config.portaRemota || undefined,
       extension: config.ramal.trim(),
       password: config.senha,
       displayName: config.nome.trim() || config.ramal.trim(),
@@ -202,6 +208,17 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                     />
                   </div>
                   <div className="space-y-1">
+                    <Label htmlFor="sip-porta">Porta</Label>
+                    <Input
+                      id="sip-porta"
+                      className={inputEscuro}
+                      type="number"
+                      value={config.porta}
+                      onChange={(e) => setConfig({ ...config, porta: e.target.value })}
+                      placeholder="8089"
+                    />
+                  </div>
+                  <div className="space-y-1">
                     <Label htmlFor="sip-remoto">Servidor alternativo</Label>
                     <Input
                       id="sip-remoto"
@@ -209,6 +226,17 @@ export default function PortariaSipRamal({ dark = false }: { dark?: boolean }) {
                       value={config.servidorRemoto}
                       onChange={(e) => setConfig({ ...config, servidorRemoto: e.target.value })}
                       placeholder="opcional"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="sip-porta-remota">Porta alternativa</Label>
+                    <Input
+                      id="sip-porta-remota"
+                      className={inputEscuro}
+                      type="number"
+                      value={config.portaRemota}
+                      onChange={(e) => setConfig({ ...config, portaRemota: e.target.value })}
+                      placeholder="8089"
                     />
                   </div>
                   <div className="space-y-1">

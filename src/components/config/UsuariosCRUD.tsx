@@ -119,7 +119,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [mostrarSenhaSip, setMostrarSenhaSip] = useState(false);
   const [usuarioSip, setUsuarioSip] = useState("");
   const [sipServidor, setSipServidor] = useState("");
+  const [sipPorta, setSipPorta] = useState("8089");
   const [sipServidorAlternativo, setSipServidorAlternativo] = useState("");
+  const [sipPortaAlternativa, setSipPortaAlternativa] = useState("8089");
   const [ramalPortaria, setRamalPortaria] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -189,7 +191,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         ${USUARIO_COLUNAS_PUBLICAS},
         senha_sip,
         sip_servidor,
+        sip_porta,
         sip_servidor_alternativo,
+        sip_porta_alternativa,
         ramal_portaria,
         pilarfone_abas,
         automacao_ambiente_celular,
@@ -407,7 +411,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       senha_sip: senhaSip || null,
       usuario_sip: usuarioSip || null,
       sip_servidor: sipServidor || null,
+      sip_porta: sipPorta ? parseInt(sipPorta) : 8089,
       sip_servidor_alternativo: sipServidorAlternativo || null,
+      sip_porta_alternativa: sipPortaAlternativa ? parseInt(sipPortaAlternativa) : 8089,
       ramal_portaria: ramalPortaria || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
@@ -755,7 +761,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenhaSip("");
     setUsuarioSip("");
     setSipServidor("");
+    setSipPorta("8089");
     setSipServidorAlternativo("");
+    setSipPortaAlternativa("8089");
     setRamalPortaria("");
     setTipo("padrao");
     setEditingId(null);
@@ -781,7 +789,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
     setSipServidor(((usuario as unknown as Record<string, string | null>).sip_servidor) || "");
+    setSipPorta(((usuario as unknown as Record<string, number | null>).sip_porta)?.toString() || "8089");
     setSipServidorAlternativo(((usuario as unknown as Record<string, string | null>).sip_servidor_alternativo) || "");
+    setSipPortaAlternativa(((usuario as unknown as Record<string, number | null>).sip_porta_alternativa)?.toString() || "8089");
     setRamalPortaria(((usuario as unknown as Record<string, string | null>).ramal_portaria) || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
@@ -1154,24 +1164,48 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div>
-              <Label htmlFor="usuario-sip-servidor">Servidor (PABX)</Label>
-              <Input
-                id="usuario-sip-servidor"
-                placeholder="192.168.88.250"
-                value={sipServidor}
-                onChange={(e) => setSipServidor(e.target.value)}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="usuario-sip-servidor">Servidor (PABX)</Label>
+                <Input
+                  id="usuario-sip-servidor"
+                  placeholder="192.168.88.250"
+                  value={sipServidor}
+                  onChange={(e) => setSipServidor(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1 sm:w-28">
+                <Label htmlFor="usuario-sip-porta">Porta</Label>
+                <Input
+                  id="usuario-sip-porta"
+                  type="number"
+                  placeholder="8089"
+                  value={sipPorta}
+                  onChange={(e) => setSipPorta(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="usuario-sip-servidor-alt">Servidor alternativo</Label>
-              <Input
-                id="usuario-sip-servidor-alt"
-                placeholder="pilar.myddns.me"
-                value={sipServidorAlternativo}
-                onChange={(e) => setSipServidorAlternativo(e.target.value)}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="usuario-sip-servidor-alt">Servidor alternativo</Label>
+                <Input
+                  id="usuario-sip-servidor-alt"
+                  placeholder="pilar.myddns.me"
+                  value={sipServidorAlternativo}
+                  onChange={(e) => setSipServidorAlternativo(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1 sm:w-28">
+                <Label htmlFor="usuario-sip-porta-alt">Porta</Label>
+                <Input
+                  id="usuario-sip-porta-alt"
+                  type="number"
+                  placeholder="8089"
+                  value={sipPortaAlternativa}
+                  onChange={(e) => setSipPortaAlternativa(e.target.value)}
+                />
+              </div>
             </div>
 
             <div>

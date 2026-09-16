@@ -104,7 +104,7 @@ interface Props {
   initialWhatsapp?: { nome: string; numero: string };
 
   /** Servidores vindos da configuração do estabelecimento. */
-  serverConfig?: { servidor: string; servidorRemoto: string };
+  serverConfig?: { servidor: string; servidorRemoto: string; porta?: string; portaRemota?: string };
   mostrarInterfone?: boolean;
   /** Fecha o telefone (exibido apenas no modo embutido). */
   onFechar?: () => void;
@@ -256,7 +256,9 @@ export default function PilarFone({
     setAviso(null);
     await connect({
       server: config.servidor.trim(),
+      serverPort: config.porta || undefined,
       remoteServer: config.servidorRemoto.trim() || undefined,
+      remoteServerPort: config.portaRemota || undefined,
       extension: config.ramal.trim(),
       password: config.senha,
       displayName: config.nome.trim() || config.ramal.trim(),

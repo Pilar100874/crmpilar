@@ -29105,6 +29105,8 @@ export type Database = {
           senha_email: string | null
           senha_hash: string
           senha_sip: string | null
+          sip_porta: number | null
+          sip_porta_alternativa: number | null
           sip_servidor: string | null
           sip_servidor_alternativo: string | null
           smtp: string | null
@@ -29147,6 +29149,8 @@ export type Database = {
           senha_email?: string | null
           senha_hash: string
           senha_sip?: string | null
+          sip_porta?: number | null
+          sip_porta_alternativa?: number | null
           sip_servidor?: string | null
           sip_servidor_alternativo?: string | null
           smtp?: string | null
@@ -29189,6 +29193,8 @@ export type Database = {
           senha_email?: string | null
           senha_hash?: string
           senha_sip?: string | null
+          sip_porta?: number | null
+          sip_porta_alternativa?: number | null
           sip_servidor?: string | null
           sip_servidor_alternativo?: string | null
           smtp?: string | null

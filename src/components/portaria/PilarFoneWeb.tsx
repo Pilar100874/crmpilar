@@ -68,9 +68,11 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
 
-  const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string }>({
+  const [servidores, setServidores] = useState<{ servidor: string; servidorRemoto: string; porta: string; portaRemota: string }>({
     servidor: "",
     servidorRemoto: "",
+    porta: "8089",
+    portaRemota: "8089",
   });
 
   // Interfone dentro do Pilar Fone (igual ao APK)
@@ -157,10 +159,15 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   useEffect(() => {
     if (semAcesso) return;
     let ativo = true;
-    // Toda a telefonia (servidor e servidor alternativo inclusos) vem do cadastro do usuário.
+    // Toda a telefonia (servidor, porta, servidor alternativo e porta alternativa inclusos) vem do cadastro do usuário.
     void lerConfigSipDoUsuario().then((cfg) => {
       if (!ativo || !cfg) return;
-      setServidores({ servidor: cfg.servidor ?? "", servidorRemoto: cfg.servidorRemoto ?? "" });
+      setServidores({
+        servidor: cfg.servidor ?? "",
+        servidorRemoto: cfg.servidorRemoto ?? "",
+        porta: cfg.porta ?? "8089",
+        portaRemota: cfg.portaRemota ?? "8089",
+      });
     });
     return () => {
       ativo = false;
