@@ -199,7 +199,7 @@ export default function PilarFone({
   // A telefonia definitiva vem da unidade vinculada ao usuário (servidor, portas e ramal da
   // portaria) somada ao ramal/senha do cadastro dele. Esses dados têm prioridade sobre
   // qualquer configuração antiga guardada no aparelho ou na nuvem.
-  const cadastroRef = useRef<Record<string, unknown> | null>(null);
+  
 
   useEffect(() => {
     let ativo = true;
