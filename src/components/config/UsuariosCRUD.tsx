@@ -761,7 +761,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenhaSip("");
     setUsuarioSip("");
     setSipServidor("");
+    setSipPorta("8089");
     setSipServidorAlternativo("");
+    setSipPortaAlternativa("8089");
     setRamalPortaria("");
     setTipo("padrao");
     setEditingId(null);
