@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { salvarSenhaConexao, SENHA_PLACEHOLDER } from "@/lib/credenciaisConexao";
 
 interface DatabaseConnection {
   id: string;
@@ -139,7 +140,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
       sql_server: conn.sql_server,
       sql_database: conn.sql_database,
       sql_username: conn.sql_username,
-      sql_password: conn.sql_password,
+      sql_password: "",
       sql_port: conn.sql_port,
       proxy_url: conn.proxy_url || "",
     });
@@ -351,6 +352,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
                       type={showPassword ? "text" : "password"}
                       required
                       value={formData.sql_password}
+                      placeholder={editingId ? SENHA_PLACEHOLDER : ""}
                       onChange={(e) => setFormData({ ...formData, sql_password: e.target.value })}
                       placeholder="Senha"
                     />

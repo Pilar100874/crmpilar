@@ -202,7 +202,7 @@ const RailwayVariables: React.FC = () => {
 
       const { data: dbConnections } = await supabase
         .from('database_connections')
-        .select('database_type, sql_server, sql_port, sql_database, sql_username, sql_password')
+        .select('database_type, sql_server, sql_port, sql_database, sql_username')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('active', true);
 
@@ -300,21 +300,21 @@ const RailwayVariables: React.FC = () => {
               if (envVar.name === 'MSSQL_PORT') { configured = true; currentValue = db.sql_port || '1433'; }
               if (envVar.name === 'MSSQL_DATABASE') { configured = true; currentValue = db.sql_database; }
               if (envVar.name === 'MSSQL_USER') { configured = true; currentValue = db.sql_username; }
-              if (envVar.name === 'MSSQL_PASSWORD') { configured = true; currentValue = db.sql_password; }
+              if (envVar.name === 'MSSQL_PASSWORD') { configured = true; currentValue = '********'; }
             }
             if (db.database_type === 'mysql') {
               if (envVar.name === 'MYSQL_HOST') { configured = true; currentValue = db.sql_server; }
               if (envVar.name === 'MYSQL_PORT') { configured = true; currentValue = db.sql_port || '3306'; }
               if (envVar.name === 'MYSQL_DATABASE') { configured = true; currentValue = db.sql_database; }
               if (envVar.name === 'MYSQL_USER') { configured = true; currentValue = db.sql_username; }
-              if (envVar.name === 'MYSQL_PASSWORD') { configured = true; currentValue = db.sql_password; }
+              if (envVar.name === 'MYSQL_PASSWORD') { configured = true; currentValue = '********'; }
             }
             if (db.database_type === 'postgresql') {
               if (envVar.name === 'POSTGRES_HOST') { configured = true; currentValue = db.sql_server; }
               if (envVar.name === 'POSTGRES_PORT') { configured = true; currentValue = db.sql_port || '5432'; }
               if (envVar.name === 'POSTGRES_DATABASE') { configured = true; currentValue = db.sql_database; }
               if (envVar.name === 'POSTGRES_USER') { configured = true; currentValue = db.sql_username; }
-              if (envVar.name === 'POSTGRES_PASSWORD') { configured = true; currentValue = db.sql_password; }
+              if (envVar.name === 'POSTGRES_PASSWORD') { configured = true; currentValue = '********'; }
             }
           }
         }
