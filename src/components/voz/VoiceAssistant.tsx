@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { matchRotaPorFala, matchRotaComCandidatos, matchRotaComCandidatosEm, ROTAS_SISTEMA, type RotaSistema } from "@/lib/voz/rotasSistema";
 import { frasesEfetivas, rotasEfetivas } from "@/lib/voz/frasesGatilho";
 import RelatorioVozWizard from "@/components/voz/RelatorioVozWizard";
+import { usePermissoesUsuario } from "@/hooks/usePermissoesUsuario";
+import { idDaRota } from "@/components/permissoes/RotaPermitida";
 
 type Config = {
   wake_word_ativo: boolean;
@@ -178,7 +180,18 @@ export default function VoiceAssistant() {
   const gAvancar = useMemo(() => frasesEfetivas("avancar", frasesCustom), [frasesCustom]);
   const gPdf = useMemo(() => frasesEfetivas("pdf", frasesCustom), [frasesCustom]);
   const gRelatorios = useMemo(() => frasesEfetivas("relatorios", frasesCustom), [frasesCustom]);
-  const rotasCustom = useMemo(() => rotasEfetivas(ROTAS_SISTEMA, frasesCustom), [frasesCustom]);
+  // Só telas liberadas no grupo de acesso do usuário podem ser abertas/citadas por voz.
+  const { podeVer, acessoTotal, carregando: carregandoPermissoes } = usePermissoesUsuario();
+  const rotasPermitidas = useMemo(() => {
+    if (acessoTotal) return ROTAS_SISTEMA;
+    if (carregandoPermissoes) return [] as RotaSistema[];
+    return ROTAS_SISTEMA.filter((rota) => {
+      const [caminho, query] = rota.path.split("?");
+      const id = idDaRota(caminho, query ? `?${query}` : "");
+      return id ? podeVer(id) : false;
+    });
+  }, [acessoTotal, carregandoPermissoes, podeVer]);
+  const rotasCustom = useMemo(() => rotasEfetivas(rotasPermitidas, frasesCustom), [rotasPermitidas, frasesCustom]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wakeRecogRef = useRef<any>(null);
