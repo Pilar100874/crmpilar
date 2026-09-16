@@ -130,6 +130,14 @@ export default function Avisos() {
     return true;
   };
 
+  const handleConfirmarExclusao = async () => {
+    if (!avisoParaExcluir) return;
+    setExcluindo(true);
+    await excluirAviso(avisoParaExcluir.id);
+    setExcluindo(false);
+    setAvisoParaExcluir(null);
+  };
+
   const getTipoIcon = (t: string) => {
     switch (t) {
       case 'alerta': return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
