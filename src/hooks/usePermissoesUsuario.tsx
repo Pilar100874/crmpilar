@@ -111,15 +111,20 @@ export function usePermissoesUsuario() {
   return useMemo(() => {
     const resolver = (id: string, acao: AcaoPermissao): boolean => {
       if (estado.acessoTotal) return true;
-      let atual: string | undefined = id;
-      const visitados = new Set<string>();
-      while (atual && !visitados.has(atual)) {
-        visitados.add(atual);
-        const permissao = estado.permissoes[atual];
-        if (permissao) return Boolean(permissao[acao]);
-        atual = getMapaPais()[atual];
+      const direta = estado.permissoes[id];
+      if (direta) return Boolean(direta[acao]);
+      // Módulos internos (abas) de uma tela liberada herdam a permissão da tela.
+      if (id.includes(SEPARADOR_MODULO)) {
+        let atual: string | undefined = getMapaPais()[id];
+        const visitados = new Set<string>([id]);
+        while (atual && !visitados.has(atual)) {
+          visitados.add(atual);
+          const permissao = estado.permissoes[atual];
+          if (permissao) return Boolean(permissao[acao]);
+          atual = getMapaPais()[atual];
+        }
       }
-      // Grupo com permissões configuradas: o que não estiver liberado fica bloqueado.
+      // Menus e submenus não marcados no grupo ficam bloqueados.
       return false;
     };
 
