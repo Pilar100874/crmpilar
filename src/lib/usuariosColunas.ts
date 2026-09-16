@@ -32,6 +32,7 @@ export const USUARIO_COLUNAS_PUBLICAS = [
   "whatsapp_numero_id",
   "ativo",
   "tipo",
+  "comando_voz_habilitado",
   "whatsapp_status",
   "whatsapp_status_at",
   "whatsapp_status_reason",

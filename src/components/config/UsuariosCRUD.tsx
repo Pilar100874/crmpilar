@@ -124,6 +124,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAtendente, setIsAtendente] = useState(false);
   const [isPorteiro, setIsPorteiro] = useState(false);
+  const [comandoVozHabilitado, setComandoVozHabilitado] = useState(true);
   
   const [abasPilarFone, setAbasPilarFone] = useState<AbaPilarFoneId[]>([]);
   const [ambienteCelular, setAmbienteCelular] = useState<string>("");
@@ -402,6 +403,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       usuario_sip: usuarioSip || null,
       tipo: tipo || 'padrao',
       is_porteiro: isPorteiro,
+      comando_voz_habilitado: comandoVozHabilitado,
       pilarfone_abas: abasPilarFone.length ? abasPilarFone : null,
       automacao_ambiente_celular: ambienteCelular || null,
       automacao_ambiente_tablet: ambienteTablet || null,
@@ -746,6 +748,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenhaSip("");
     setUsuarioSip("");
     setTipo("padrao");
+    setComandoVozHabilitado(true);
     setEditingId(null);
     setFormOpen(false);
   };
@@ -770,6 +773,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUsuarioSip(usuario.usuario_sip || "");
     setTipo((usuario as any).tipo || "padrao");
     setIsPorteiro(!!(usuario as any).is_porteiro);
+    setComandoVozHabilitado((usuario as any).comando_voz_habilitado ?? true);
     setAbasPilarFone((((usuario as any).pilarfone_abas ?? []) as AbaPilarFoneId[]));
     setAmbienteCelular(((usuario as any).automacao_ambiente_celular as string) || "");
     setAmbienteTablet(((usuario as any).automacao_ambiente_tablet as string) || "");
@@ -1174,6 +1178,20 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 );
               })}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-lg border border-border p-3 flex items-center justify-between gap-3">
+            <div>
+              <Label>Comandos por voz (Assistente Pilar)</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Quando desativado, o botão de comandos por voz e a opção no menu do usuário ficam ocultos.
+              </p>
+            </div>
+            <Switch
+              checked={comandoVozHabilitado}
+              onCheckedChange={setComandoVozHabilitado}
+              aria-label="Disponibilizar comandos por voz"
+            />
           </div>
 
           <div className="mt-4 rounded-lg border border-border p-3">

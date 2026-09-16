@@ -29097,6 +29097,7 @@ export type Database = {
           auth_user_id: string | null
           automacao_ambiente_celular: string | null
           automacao_ambiente_tablet: string | null
+          comando_voz_habilitado: boolean
           created_at: string | null
           email: string | null
           estabelecimento_id: string | null
@@ -29141,6 +29142,7 @@ export type Database = {
           auth_user_id?: string | null
           automacao_ambiente_celular?: string | null
           automacao_ambiente_tablet?: string | null
+          comando_voz_habilitado?: boolean
           created_at?: string | null
           email?: string | null
           estabelecimento_id?: string | null
@@ -29185,6 +29187,7 @@ export type Database = {
           auth_user_id?: string | null
           automacao_ambiente_celular?: string | null
           automacao_ambiente_tablet?: string | null
+          comando_voz_habilitado?: boolean
           created_at?: string | null
           email?: string | null
           estabelecimento_id?: string | null

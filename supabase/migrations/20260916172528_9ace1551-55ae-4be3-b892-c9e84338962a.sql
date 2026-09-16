@@ -1,0 +1,1 @@
+alter table public.usuarios add column if not exists comando_voz_habilitado boolean not null default true;

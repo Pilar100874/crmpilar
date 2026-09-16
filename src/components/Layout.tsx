@@ -381,7 +381,8 @@ export default function Layout({ children }: LayoutProps) {
   const [userName, setUserName] = useState<string>("");
   const nomeResumido = userName ? resumirNome(userName) : "";
   const [assistenteVozAtivo, setAssistenteVozAtivo] = useAssistenteVozAtivo();
-  const linhaAssistenteVoz = (
+  const [comandoVozPermitido, setComandoVozPermitido] = useState(true);
+  const linhaAssistenteVoz = !comandoVozPermitido ? null : (
     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent/50">
       <span className="text-sm text-sidebar-foreground/80">Comandos por voz</span>
       <Switch
@@ -601,11 +602,12 @@ export default function Layout({ children }: LayoutProps) {
         // Buscar nome do usuário
         const { data: userData } = await supabase
           .from("usuarios")
-          .select("nome")
+          .select("nome, comando_voz_habilitado")
           .eq("auth_user_id", user.id)
           .maybeSingle();
-        
+
         setUserName(userData?.nome || user.email?.split("@")[0] || "Usuário");
+        setComandoVozPermitido((userData as any)?.comando_voz_habilitado ?? true);
 
         // Buscar nome do estabelecimento
         const estabId = await getEstabelecimentoId();
@@ -1728,7 +1730,7 @@ export default function Layout({ children }: LayoutProps) {
           <FloatingMacroRecorder />
           <FloatingMacroQuickAccess />
           <SupportTicketFloatingButton />
-          {assistenteVozAtivo && <VoiceAssistant />}
+          {assistenteVozAtivo && comandoVozPermitido && <VoiceAssistant />}
         </>
       )}
 
