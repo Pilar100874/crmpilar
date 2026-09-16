@@ -252,7 +252,9 @@ export default function PilarFone({
 
   const conectar = useCallback(async () => {
     if (!configValida) {
-      setAviso("Telefonia não configurada. Peça ao administrador para preencher os dados SIP no seu cadastro de usuário.");
+      setAviso(
+        "Telefonia não configurada. O servidor e a porta vêm do cadastro da unidade; o ramal e a senha, do seu cadastro de usuário.",
+      );
       return;
     }
     setAviso(null);
