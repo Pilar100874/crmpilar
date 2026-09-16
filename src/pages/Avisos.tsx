@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { 
   Bell, 
   Plus, 
@@ -31,6 +32,7 @@ import {
   AlertCircle,
   Users,
   User,
+  Trash2,
 } from 'lucide-react';
 import { useAvisosSistema } from '@/hooks/useAvisosSistema';
 import { supabase } from '@/integrations/supabase/client';
