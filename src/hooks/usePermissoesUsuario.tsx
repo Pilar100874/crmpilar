@@ -1,7 +1,7 @@
 // Consulta central de permissões do usuário logado (grupo de acesso).
 // Regras:
 // - Administrador do estabelecimento ou grupo com perfil "admin": acesso total.
-// - Sem grupo ou grupo sem permissões salvas: acesso total (nada configurado = liberado).
+// - Sem grupo ou grupo sem permissões salvas: acesso bloqueado por padrão.
 // - Item marcado no grupo: vale exatamente o que está marcado.
 // - Item não listado: herda a permissão do item pai; sem pai listado, fica bloqueado.
 
@@ -25,27 +25,28 @@ interface EstadoPermissoes {
   permissoes: Record<string, Permissao>;
 }
 
-const ESTADO_INICIAL: EstadoPermissoes = { carregando: true, acessoTotal: true, permissoes: {} };
+const ESTADO_INICIAL: EstadoPermissoes = { carregando: true, acessoTotal: false, permissoes: {} };
 
 const PermissoesContext = createContext<EstadoPermissoes | null>(null);
 
-let cache: Promise<EstadoPermissoes> | null = null;
+let cache: { userId: string; promise: Promise<EstadoPermissoes> } | null = null;
 
 /** Limpa o cache (usar após trocar de usuário ou salvar permissões). */
 export const limparCachePermissoes = () => {
   cache = null;
 };
 
-const carregarPermissoes = (): Promise<EstadoPermissoes> => {
-  if (!cache) cache = buscarPermissoes();
-  return cache;
+const carregarPermissoes = async (): Promise<EstadoPermissoes> => {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return { carregando: false, acessoTotal: false, permissoes: {} };
+  if (!cache || cache.userId !== auth.user.id) {
+    cache = { userId: auth.user.id, promise: buscarPermissoes(auth.user.id) };
+  }
+  return cache.promise;
 };
 
-const buscarPermissoes = async (): Promise<EstadoPermissoes> => {
+const buscarPermissoes = async (authUserId: string): Promise<EstadoPermissoes> => {
   try {
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth?.user) return { carregando: false, acessoTotal: true, permissoes: {} };
-
     if (await isEstabelecimentoAdmin()) {
       return { carregando: false, acessoTotal: true, permissoes: {} };
     }
@@ -53,10 +54,10 @@ const buscarPermissoes = async (): Promise<EstadoPermissoes> => {
     const { data: usuario } = await supabase
       .from("usuarios")
       .select("grupo_acesso_id")
-      .eq("auth_user_id", auth.user.id)
+      .eq("auth_user_id", authUserId)
       .maybeSingle();
 
-    if (!usuario?.grupo_acesso_id) return { carregando: false, acessoTotal: true, permissoes: {} };
+    if (!usuario?.grupo_acesso_id) return { carregando: false, acessoTotal: false, permissoes: {} };
 
     const { data: grupo } = await supabase
       .from("grupos_acesso")
@@ -69,9 +70,9 @@ const buscarPermissoes = async (): Promise<EstadoPermissoes> => {
 
     const mapa = (grupo?.menus_permitidos || {}) as unknown as Record<string, Permissao>;
     const temAlgo = mapa && typeof mapa === "object" && Object.keys(mapa).length > 0;
-    return { carregando: false, acessoTotal: !temAlgo, permissoes: temAlgo ? mapa : {} };
+    return { carregando: false, acessoTotal: false, permissoes: temAlgo ? mapa : {} };
   } catch {
-    return { carregando: false, acessoTotal: true, permissoes: {} };
+    return { carregando: false, acessoTotal: false, permissoes: {} };
   }
 };
 
@@ -80,11 +81,18 @@ export function PermissoesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let ativo = true;
-    carregarPermissoes().then((novo) => {
+    const atualizar = () => carregarPermissoes().then((novo) => {
       if (ativo) setEstado(novo);
+    });
+    atualizar();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      limparCachePermissoes();
+      if (ativo) setEstado(ESTADO_INICIAL);
+      atualizar();
     });
     return () => {
       ativo = false;
+      subscription.unsubscribe();
     };
   }, []);
 
