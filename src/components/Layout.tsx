@@ -383,7 +383,7 @@ export default function Layout({ children }: LayoutProps) {
   const [assistenteVozAtivo, setAssistenteVozAtivo] = useAssistenteVozAtivo();
   const linhaAssistenteVoz = (
     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent/50">
-      <span className="text-sm text-sidebar-foreground/80">Comandos por voz (Assistente Pilar)</span>
+      <span className="text-sm text-sidebar-foreground/80">Comandos por voz</span>
       <Switch
         checked={assistenteVozAtivo}
         onCheckedChange={setAssistenteVozAtivo}
