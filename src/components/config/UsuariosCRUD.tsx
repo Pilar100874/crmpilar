@@ -627,13 +627,22 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     const { data, error } = await supabase.functions.invoke("criar-acesso-usuario", {
       body: { usuario_id: usuarioId, senha },
     });
-    if (error || (data as { error?: string } | null)?.error) {
+
+    let mensagem = (data as { error?: string } | null)?.error ?? null;
+    if (!mensagem && error) {
+      // Erros HTTP (400/403) trazem o corpo da resposta em error.context
+      const resposta = (error as { context?: Response }).context;
+      if (resposta && typeof resposta.json === "function") {
+        const corpo = await resposta.json().catch(() => null);
+        mensagem = (corpo as { error?: string } | null)?.error ?? null;
+      }
+      mensagem = mensagem ?? error.message;
+    }
+
+    if (mensagem) {
       toast({
         title: "Acesso de login não criado",
-        description:
-          (data as { error?: string } | null)?.error ||
-          error?.message ||
-          "Não foi possível liberar o login deste usuário.",
+        description: mensagem || "Não foi possível liberar o login deste usuário.",
         variant: "destructive",
       });
     }
