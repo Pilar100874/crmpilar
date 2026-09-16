@@ -8,12 +8,14 @@ import PortariaAtendimentoMobile from "@/pages/portaria/PortariaAtendimentoMobil
 import AtualizadorApk from "@/components/portaria/AtualizadorApk";
 import logoPilar from "@/assets/logo_branco.png";
 import {
+  ErroChavePilarFone,
   estaNoApkPilarFone,
   lerAtivacaoPilarFone,
   limparAtivacaoPilarFone,
   validarChavePilarFone,
   type AtivacaoPilarFone,
 } from "@/lib/portaria/ativacaoPilarFone";
+
 
 /** App nativo da Portaria: só interfone (campainha/câmeras) e ramal SIP. */
 export default function AppInterfone() {

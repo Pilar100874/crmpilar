@@ -76,13 +76,54 @@ Deno.serve(async (req) => {
       if (camErr || !cam) throw new Error("Câmera não encontrada");
       if (!cam.ativo) throw new Error("Câmera desativada");
 
-      const bin = Uint8Array.from(atob(image_base64), (c) => c.charCodeAt(0));
+      // Limite de tamanho: evita estourar memória e travar o gateway de storage.
+      const LIMITE_BYTES = 6 * 1024 * 1024;
+      const tamanhoAprox = Math.floor((String(image_base64).length * 3) / 4);
+      if (tamanhoAprox > LIMITE_BYTES) {
+        return new Response(
+          JSON.stringify({
+            error: `Imagem muito grande (${Math.round(tamanhoAprox / 1024)} KB). Limite: ${LIMITE_BYTES / 1024 / 1024} MB — reduza a resolução do snapshot.`,
+          }),
+          { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      let bin: Uint8Array;
+      try {
+        bin = Uint8Array.from(atob(image_base64), (c) => c.charCodeAt(0));
+      } catch {
+        return new Response(JSON.stringify({ error: "image_base64 inválido" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const path = `cameras/${camera_id}/coletor-latest.jpg`;
-      const up = await supabase.storage.from("cv-vehicle-photos").upload(path, bin, {
-        contentType: content_type || "image/jpeg",
-        upsert: true,
-      });
-      if (up.error) throw up.error;
+      const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      let erroUpload: unknown = null;
+      let enviado = false;
+      for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        const up = await supabase.storage.from("cv-vehicle-photos").upload(path, bin, {
+          contentType: content_type || "image/jpeg",
+          upsert: true,
+        });
+        if (!up.error) { enviado = true; erroUpload = null; break; }
+        erroUpload = up.error;
+        const status = Number((up.error as { statusCode?: string | number }).statusCode ?? 0);
+        const transitorio = !status || status === 429 || status >= 500;
+        console.error(`[cv-coletor-cameras] upload tentativa ${tentativa}/3 status=${status || "?"}`, up.error.message);
+        if (!transitorio || tentativa === 3) break;
+        await dormir(500 * 2 ** (tentativa - 1));
+      }
+
+      if (!enviado) {
+        // Falha transitória do storage: responde 503 para o coletor tentar de novo depois.
+        return new Response(
+          JSON.stringify({ error: `Falha ao gravar o snapshot: ${String((erroUpload as Error)?.message || erroUpload)}` }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
       // Também marca online (snapshot chegou = coletor está falando com a câmera)
       await supabase.from("cv_cameras").update({
         ultima_verificacao: new Date().toISOString(),
@@ -93,6 +134,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     // Criação em lote a partir da tela de descoberta do Coletor Desktop.
     // Cria as câmeras já DESATIVADAS (ativo=false) para o operador revisar
