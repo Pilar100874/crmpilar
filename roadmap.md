@@ -275,3 +275,8 @@
 
 ## Pilar Automação 1.9.1 — publicação — 2026-09-15
 - [x] Publicado via preview_ui--publish; compilação assinada disparada automaticamente (release pilar-automacao-latest)
+
+## Segurança — últimos 3 pontos — 2026-09-15
+- [x] Pedidos da loja: valores recalculados no servidor e preço de item validado contra o produto
+- [x] Denúncias: envio só pelo servidor, com limite de 3/hora por remetente e 30/hora por empresa
+- [x] Senhas de conexões externas gravadas cifradas; telas não exibem mais a senha
