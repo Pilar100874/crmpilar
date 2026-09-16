@@ -363,10 +363,21 @@ export default function Layout({ children }: LayoutProps) {
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
   const { podeVer, carregando: carregandoPermissoes } = usePermissoesUsuario();
+  /** Nome curto para caber no menu: primeiro nome + inicial do sobrenome. */
+  const resumirNome = (nome: string) => {
+    const partes = nome.trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return "";
+    const primeiro = partes[0];
+    const capitalizar = (t: string) =>
+      t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+    if (partes.length === 1) return capitalizar(primeiro);
+    return `${capitalizar(primeiro)} ${partes[partes.length - 1].charAt(0).toUpperCase()}.`;
+  };
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
   const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
+  const nomeResumido = userName ? resumirNome(userName) : "";
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
@@ -1600,7 +1611,7 @@ export default function Layout({ children }: LayoutProps) {
                   <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50">
                     <div className="px-4 py-6">
                       <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
-                        {userName || "Minha Conta"}
+                        {nomeResumido || "Minha Conta"}
                       </h3>
                       
                       <div className="space-y-1">
@@ -1622,7 +1633,7 @@ export default function Layout({ children }: LayoutProps) {
                     title={userName || "Minha Conta"}
                   >
                     <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
-                    <span className="text-sm font-medium text-sidebar-foreground/70 flex-1 text-left truncate">{userName || "Minha Conta"}</span>
+                    <span className="text-sm font-medium text-sidebar-foreground/70 flex-1 text-left truncate">{nomeResumido || "Minha Conta"}</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${openSubmenuId === "UserMenu" ? 'rotate-180' : ''}`} />
                   </button>
                   <NavLink
