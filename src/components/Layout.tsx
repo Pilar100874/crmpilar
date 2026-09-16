@@ -57,6 +57,8 @@ import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
 import VoiceAssistant from "@/components/voz/VoiceAssistant";
+import { Switch } from "@/components/ui/switch";
+import { useAssistenteVozAtivo } from "@/lib/preferencias/assistenteVoz";
 import { modoAppEmbutido } from "@/lib/modoAppEmbutido";
 import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
