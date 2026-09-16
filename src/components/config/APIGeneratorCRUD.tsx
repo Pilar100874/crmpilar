@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatabaseConnectionsCRUD } from "./DatabaseConnectionsCRUD";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { salvarSenhaConexao, SENHA_PLACEHOLDER } from "@/lib/credenciaisConexao";
 
 interface APIEndpoint {
   id: string;
@@ -173,7 +174,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
 
       if (formData.database_type === 'sqlserver' && !formData.connection_id) {
         if (!formData.sql_server || !formData.sql_database || 
-            !formData.sql_username || !formData.sql_password) {
+            !formData.sql_username || (!formData.sql_password && !editingId)) {
           throw new Error('Preencha todos os campos de conexão SQL Server');
         }
       }
@@ -244,7 +245,6 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
         endpointData.sql_server = formData.sql_server;
         endpointData.sql_database = formData.sql_database;
         endpointData.sql_username = formData.sql_username;
-        endpointData.sql_password = formData.sql_password;
       }
 
       if (estabelecimentoId) {
@@ -258,6 +258,9 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
           .eq("id", editingId);
 
         if (error) throw error;
+        if (!formData.connection_id && formData.sql_password) {
+          await salvarSenhaConexao("api_endpoints", editingId, formData.sql_password);
+        }
         toast.success("Endpoint atualizado com sucesso!");
       } else {
         const estabId = await getEstabelecimentoId(estabelecimentoId);
@@ -267,8 +270,15 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
         }
         endpointData.estabelecimento_id = estabId;
 
-        const { error } = await supabase.from("api_endpoints").insert([endpointData]);
+        const { data: novoEndpoint, error } = await supabase
+          .from("api_endpoints")
+          .insert([endpointData])
+          .select("id")
+          .single();
         if (error) throw error;
+        if (novoEndpoint?.id && !formData.connection_id && formData.sql_password) {
+          await salvarSenhaConexao("api_endpoints", novoEndpoint.id, formData.sql_password);
+        }
         toast.success("Endpoint criado com sucesso!");
       }
 
@@ -305,7 +315,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
       sql_server: endpoint.sql_server || "",
       sql_database: endpoint.sql_database || "",
       sql_username: endpoint.sql_username || "",
-      sql_password: endpoint.sql_password || "",
+      sql_password: "",
       query: endpoint.query,
       http_method: endpoint.http_method,
       endpoint_path: endpoint.endpoint_path,
@@ -594,10 +604,10 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
                         <Input
                           id="sql_password"
                           type={showPassword ? "text" : "password"}
-                          required
+                          required={!editingId}
                           value={formData.sql_password}
                           onChange={(e) => setFormData({ ...formData, sql_password: e.target.value })}
-                          placeholder="Senha"
+                          placeholder={editingId ? SENHA_PLACEHOLDER : "Senha"}
                         />
                         <Button
                           type="button"

@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { salvarSenhaConexao, SENHA_PLACEHOLDER } from "@/lib/credenciaisConexao";
 
 interface DatabaseConnection {
   id: string;
@@ -55,6 +56,8 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
 
   useEffect(() => {
     loadConnections();
+    // Protege credenciais antigas que ainda estavam em texto puro
+    supabase.functions.invoke("conexao-credencial", { body: { acao: "cifrar_existentes" } }).catch(() => {});
   }, [estabelecimentoId]);
 
   const loadConnections = async () => {
@@ -102,7 +105,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
 
         const { data: nova, error } = await supabase
           .from("database_connections")
-          .insert([{ ...dadosSemSenha, estabelecimento_id: estabId }])
+          .insert([{ ...dadosSemSenha, sql_password: "", estabelecimento_id: estabId }])
           .select("id")
           .single();
 
@@ -139,7 +142,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
       sql_server: conn.sql_server,
       sql_database: conn.sql_database,
       sql_username: conn.sql_username,
-      sql_password: conn.sql_password,
+      sql_password: "",
       sql_port: conn.sql_port,
       proxy_url: conn.proxy_url || "",
     });
@@ -349,10 +352,10 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
                     <Input
                       id="sql_password"
                       type={showPassword ? "text" : "password"}
-                      required
+                      required={!editingId}
                       value={formData.sql_password}
                       onChange={(e) => setFormData({ ...formData, sql_password: e.target.value })}
-                      placeholder="Senha"
+                      placeholder={editingId ? SENHA_PLACEHOLDER : "Senha"}
                     />
                     <Button
                       type="button"
