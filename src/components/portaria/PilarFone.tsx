@@ -168,6 +168,12 @@ export default function PilarFone({
   const [numero, setNumero] = useState("");
   const [ramais, setRamais] = useState<RamalCrm[]>([]);
   const [carregandoRamais, setCarregandoRamais] = useState(true);
+  // Quem está online: pelo sistema (web/aplicativo) ou por um telefone SIP físico no PABX.
+  const {
+    statusPorRamal,
+    pabxDisponivel,
+    atualizar: atualizarStatus,
+  } = useStatusRamais();
   const [contatos, setContatos] = useState<ContatoCelular[]>([]);
   const [erroAgenda, setErroAgenda] = useState<string | null>(null);
   const [carregandoAgenda, setCarregandoAgenda] = useState(false);
