@@ -15,6 +15,7 @@ import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
 import { maskWhatsApp } from "@/lib/masks";
 import { validateEmail, validateWhatsApp } from "@/lib/validators";
+import { validarSenhaForte } from "@/lib/validarSenhaForte";
 import {
   Dialog,
   DialogContent,
