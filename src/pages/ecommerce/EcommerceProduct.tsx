@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarVolumePricingLoja } from "@/lib/lojaPublica";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { useQuoteRequest } from "@/contexts/QuoteRequestContext";
@@ -144,11 +145,7 @@ export default function EcommerceProduct() {
             .eq("categoria_id", catId).eq("ativo", true).neq("id", productId).limit(4)
         : null;
 
-      const volumePromise = supabase
-        .from("ecommerce_volume_pricing")
-        .select("*")
-        .eq("ativo", true)
-        .order("ordem");
+      const volumePromise = carregarVolumePricingLoja(estabId);
 
       const [relatedRes, volumeRes] = await Promise.all([
         relatedPromise,
@@ -167,7 +164,7 @@ export default function EcommerceProduct() {
         }
         setRelatedProducts(relMapped);
       }
-      if (volumeRes.data) setVolumeTiers(volumeRes.data);
+      if (volumeRes?.length) setVolumeTiers(volumeRes as any);
     }
     setLoading(false);
   };

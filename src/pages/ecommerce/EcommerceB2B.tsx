@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConfigLoja } from "@/lib/lojaPublica";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 const iconMap: Record<string, any> = {
@@ -60,12 +61,10 @@ export default function EcommerceB2B() {
       const estId = await getEstabelecimentoId();
       let data: any = null;
       if (estId) {
-        const res = await supabase.from("ecommerce_config").select("*").eq("estabelecimento_id", estId).maybeSingle();
-        data = res.data;
+        data = await carregarConfigLoja(estId);
       }
       if (!data) {
-        const res = await supabase.from("ecommerce_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
-        data = res.data;
+        data = await carregarConfigLoja(null);
       }
       setConfig(data);
     };

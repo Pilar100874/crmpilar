@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConfigLoja } from "@/lib/lojaPublica";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { EcommerceBranding } from "@/hooks/useEcommerceBranding";
@@ -24,7 +25,7 @@ export default function NewsletterSection({ branding }: Props) {
       const estId = await getEstabelecimentoId();
       if (!estId) {
         // fallback: get any config
-        const { data: cfg } = await supabase.from("ecommerce_config").select("estabelecimento_id").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        const cfg = await carregarConfigLoja(null);
         if (!cfg) { toast.error("Erro ao cadastrar"); setLoading(false); return; }
         const { error } = await supabase.from("newsletter_subscribers").insert({ email: email.trim().toLowerCase(), estabelecimento_id: cfg.estabelecimento_id });
         if (error?.code === "23505") { toast.info("Este e-mail já está cadastrado!"); }

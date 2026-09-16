@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Shield, Mail, Building2, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConfigLoja } from "@/lib/lojaPublica";
 
 interface Secao { titulo: string; texto: string; }
 interface LgpdConfig {
@@ -21,8 +22,7 @@ export default function EcommerceLGPD() {
     (async () => {
       const estId = localStorage.getItem("estabelecimentoId");
       if (!estId) { setLoading(false); return; }
-      const { data } = await supabase.from("ecommerce_config" as any)
-        .select("lgpd_enabled, lgpd_config").eq("estabelecimento_id", estId).maybeSingle();
+      const data = await carregarConfigLoja(estId);
       if (data) {
         setEnabled(!!(data as any).lgpd_enabled);
         setCfg((data as any).lgpd_config as LgpdConfig);

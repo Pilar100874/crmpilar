@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConfigLoja } from "@/lib/lojaPublica";
 import { toast } from "sonner";
 
 export interface QuoteItem {
@@ -109,12 +110,7 @@ export function QuoteRequestProvider({ children }: { children: ReactNode }) {
 
       // If no estabelecimento from user, get from config
       if (!estabelecimentoId) {
-        const { data: config } = await supabase
-          .from("ecommerce_config")
-          .select("estabelecimento_id")
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const config = await carregarConfigLoja(null);
         if (config) estabelecimentoId = config.estabelecimento_id;
       }
 

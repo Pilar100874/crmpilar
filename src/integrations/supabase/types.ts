@@ -30980,6 +30980,29 @@ export type Database = {
       admins_present: { Args: never; Returns: boolean }
       aggregate_heatmap_daily: { Args: never; Returns: undefined }
       aip_pode_gerenciar_credenciais: { Args: never; Returns: boolean }
+      apresentacao_tv_publica: {
+        Args: { p_id: string }
+        Returns: {
+          ativo: boolean
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          duracao_padrao_imagem: number
+          estabelecimento_id: string
+          id: string
+          itens: Json
+          nome: string
+          transicao: string
+          updated_at: string
+          versao: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "apresentacoes_empresa"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       auto_close_support_tickets: { Args: never; Returns: undefined }
       check_catalog_expiration: { Args: never; Returns: undefined }
       check_customer_dependencies: {
@@ -31113,6 +31136,158 @@ export type Database = {
       limpar_historico_logistica: {
         Args: { p_data_fim: string; p_data_inicio: string; p_tipo: string }
         Returns: Json
+      }
+      loja_anuncios_publicos: {
+        Args: { p_estabelecimento_id: string; p_posicao?: string }
+        Returns: {
+          ativo: boolean | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          html_conteudo: string | null
+          id: string
+          imagem_url: string | null
+          link_url: string | null
+          ordem: number | null
+          posicao: string | null
+          tipo: string | null
+          titulo: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ecommerce_anuncios"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      loja_config_publica: {
+        Args: { p_estabelecimento_id?: string }
+        Returns: {
+          b2b_badge: string | null
+          b2b_btn_primario: string | null
+          b2b_btn_secundario: string | null
+          b2b_como_funciona: Json | null
+          b2b_cta_botao: string | null
+          b2b_cta_subtitulo: string | null
+          b2b_cta_titulo: string | null
+          b2b_depoimentos: Json | null
+          b2b_descricao: string | null
+          b2b_form_subtitulo: string | null
+          b2b_form_titulo: string | null
+          b2b_hero_subtitulo: string | null
+          b2b_secao_vantagens_subtitulo: string | null
+          b2b_secao_vantagens_titulo: string | null
+          b2b_secoes_visiveis: Json | null
+          b2b_titulo: string | null
+          b2b_vantagens: Json | null
+          b2b_volume_table: Json | null
+          background_image_url: string | null
+          background_type: string | null
+          background_video_url: string | null
+          beneficios: Json | null
+          cor_primaria: string | null
+          cor_secundaria: string | null
+          created_at: string
+          denuncias_config: Json
+          denuncias_enabled: boolean
+          depoimentos: Json | null
+          estabelecimento_id: string
+          feat_avaliacoes: boolean | null
+          feat_b2b_card: boolean | null
+          feat_b2b_volume: boolean
+          feat_breadcrumb: boolean | null
+          feat_compartilhar: boolean | null
+          feat_estoque_visivel: boolean | null
+          feat_favoritos: boolean | null
+          feat_newsletter: boolean | null
+          feat_produtos_relacionados: boolean | null
+          feat_rating_estrelas: boolean | null
+          feat_webchat: boolean | null
+          feat_whatsapp: boolean | null
+          feat_zoom_imagem: boolean | null
+          footer_copyright: string | null
+          footer_descricao: string | null
+          footer_email: string | null
+          footer_horario: string | null
+          footer_links_extras: Json | null
+          footer_pagamentos: string[] | null
+          footer_telefone: string | null
+          hero_badge: string | null
+          hero_btn_primario: string | null
+          hero_btn_secundario: string | null
+          hero_stat_satisfacao: string | null
+          hero_subtitulo: string | null
+          hero_titulo: string | null
+          id: string
+          lgpd_config: Json
+          lgpd_enabled: boolean
+          logo_url: string | null
+          modo_catalogo: boolean
+          modo_catalogo_b2b: boolean | null
+          modo_catalogo_b2c: boolean | null
+          mostrar_precos_visitante_b2b: boolean
+          mostrar_precos_visitante_b2c: boolean
+          newsletter_subtitulo: string | null
+          newsletter_titulo: string | null
+          nome_loja: string | null
+          secoes_visiveis: Json | null
+          slogan: string | null
+          topbar_ativo: boolean | null
+          topbar_items: Json | null
+          topbar_link_b2b: boolean | null
+          topbar_telefone: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ecommerce_config"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      loja_conteudo_publico: {
+        Args: { p_estabelecimento_id: string; p_tipo: string }
+        Returns: {
+          ativo: boolean | null
+          conteudo: string
+          created_at: string
+          dados_json: Json | null
+          estabelecimento_id: string
+          id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ecommerce_conteudos"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      loja_volume_pricing_publico: {
+        Args: { p_estabelecimento_id: string }
+        Returns: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome_faixa: string
+          ordem: number
+          percentual_desconto: number
+          updated_at: string
+          valor_maximo: number | null
+          valor_minimo: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ecommerce_volume_pricing"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       lookup_orcamento_by_token: { Args: { p_token: string }; Returns: Json }
       lookup_pedido_by_token: {

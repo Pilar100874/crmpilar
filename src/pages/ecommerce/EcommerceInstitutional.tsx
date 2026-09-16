@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConteudoLoja } from "@/lib/lojaPublica";
 
 interface ContentData {
   conteudo: string;
@@ -38,9 +39,7 @@ export default function EcommerceInstitutional({ page }: { page: "sobre" | "cont
     const load = async () => {
       setLoading(true);
       const estId = localStorage.getItem("estabelecimentoId");
-      let query = supabase.from("ecommerce_conteudos").select("conteudo, dados_json").eq("tipo", page);
-      if (estId) { query = query.eq("estabelecimento_id", estId); }
-      const { data } = await query.maybeSingle();
+      const data = estId ? await carregarConteudoLoja(estId, page) : null;
       if (data) {
         setContent({
           conteudo: data.conteudo || "",

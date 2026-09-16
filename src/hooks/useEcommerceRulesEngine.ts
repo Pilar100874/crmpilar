@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarConfigLoja } from "@/lib/lojaPublica";
 
 export interface RuleAction {
   type: string;
@@ -41,11 +42,7 @@ export function useEcommerceRulesEngine(cartContext?: CartContext) {
       if (!estabId) { setLoading(false); return; }
 
       // Check if modo_catalogo is active for current context — skip all rules
-      const { data: configData } = await supabase
-        .from("ecommerce_config")
-        .select("modo_catalogo_b2c, modo_catalogo_b2b")
-        .eq("estabelecimento_id", estabId)
-        .maybeSingle();
+      const configData = await carregarConfigLoja(estabId);
       const isB2B = window.location.pathname.includes("/b2b");
       const catalogActive = isB2B ? configData?.modo_catalogo_b2b : configData?.modo_catalogo_b2c;
       if (catalogActive) { setLoading(false); return; }
