@@ -1164,6 +1164,7 @@ export default function AutomacaoPainel() {
         cameras={cameras}
         onChange={setBlocoEdit}
         onSalvo={aoSalvarBloco}
+        rascunho={podeEditar}
       />
       <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} abaInicial={abaAmbienteEdit} />
       <DeleteConfirmDialog
