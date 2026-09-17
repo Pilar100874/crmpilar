@@ -335,10 +335,40 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           </div>
           <div className="border-b bg-muted/20 p-3 sm:p-4"><div className="relative sm:max-w-md"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="bg-background pl-9" /></div></div>
 
-          {filteredGrupos.length === 0 ? <div className="m-4 rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : <>
-        <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 lg:hidden">{filteredGrupos.map((grupo) => <div key={grupo.id} className="rounded-md border bg-background p-4 shadow-sm transition-colors hover:bg-muted/20"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><UserRoundCog className="h-5 w-5" /></div><div className="min-w-0"><p className="truncate font-semibold">{grupo.nome}</p><Badge variant="secondary" className="mt-1">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge></div></div><div className="flex shrink-0 gap-1">{actionButtons(grupo)}</div></div><div className="mt-4 border-t pt-3"><p className="text-xs font-medium uppercase text-muted-foreground">Permissões</p><p className="mt-1 text-sm">{formatPermissionsCompact(grupo.menus_permitidos)}</p></div></div>)}</div>
-        <div className="hidden lg:block"><Table><TableHeader className="bg-muted/40"><TableRow><TableHead className="pl-5">Grupo</TableHead><TableHead>Perfil</TableHead><TableHead>Permissões</TableHead><TableHead className="w-24 pr-5 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredGrupos.map((grupo) => <TableRow key={grupo.id} className="transition-colors hover:bg-muted/30"><TableCell className="pl-5"><div className="flex items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><UserRoundCog className="h-4 w-4" /></div><span className="font-medium">{grupo.nome}</span></div></TableCell><TableCell><Badge variant="secondary">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge></TableCell><TableCell className="text-muted-foreground">{formatPermissionsCompact(grupo.menus_permitidos)}</TableCell><TableCell className="pr-5"><div className="flex justify-end gap-1">{actionButtons(grupo)}</div></TableCell></TableRow>)}</TableBody></Table></div>
-          </>}
+          {filteredGrupos.length === 0 ? <div className="m-4 rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : (
+        <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3 sm:p-4">{filteredGrupos.map((grupo) => (
+          <div
+            key={grupo.id}
+            onClick={() => handleEdit(grupo)}
+            className="group relative rounded-xl border bg-background p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30 hover:bg-muted/20 cursor-pointer"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <UserRoundCog className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{grupo.nome}</p>
+                  <Badge variant="secondary" className="mt-1">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge>
+                </div>
+              </div>
+              <div className="flex shrink-0 gap-1" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(grupo)} className="h-8 w-8" aria-label={`Editar ${grupo.nome}`}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(grupo)} className="h-8 w-8" aria-label={`Excluir ${grupo.nome}`}>
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+            <div className="mt-4 border-t pt-3">
+              <p className="text-xs font-medium uppercase text-muted-foreground">Permissões</p>
+              <p className="mt-1 text-sm">{formatPermissionsCompact(grupo.menus_permitidos)}</p>
+            </div>
+            <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-primary/0 transition-all group-hover:ring-primary/10" />
+          </div>
+        ))}</div>
+          )}
           </div>
 
       {/* Formulário */}
