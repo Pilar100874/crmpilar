@@ -308,16 +308,6 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
 
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
   const filteredGrupos = grupos.filter((grupo) => grupo.nome.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
-  const actionButtons = (grupo: GrupoAcesso) => (
-    <>
-      <Button variant="ghost" size="icon" onClick={() => handleEdit(grupo)} className="h-8 w-8" aria-label={`Editar ${grupo.nome}`}>
-        <Edit className="w-4 h-4" />
-      </Button>
-      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(grupo)} className="h-8 w-8" aria-label={`Excluir ${grupo.nome}`}>
-        <Trash2 className="w-4 h-4 text-destructive" />
-      </Button>
-    </>
-  );
 
   return (
     <div className="space-y-5">
