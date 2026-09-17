@@ -139,9 +139,29 @@ export const useSipConnection = () => {
     return { urls, host };
   };
 
-  // Helper to try connecting to a server
-  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false, authUser?: string) => {
-    console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
+  /** Reconexão automática: a queda do WebSocket não deve derrubar o ramal de vez. */
+  const registererRef = useRef<Registerer | null>(null);
+  const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
+
+  const agendarReconexao = useCallback((ua: UserAgent) => {
+    const estado = reconexaoRef.current;
+    if (estado.timer) return;
+    estado.tentativas += 1;
+    const espera = Math.min(30000, 3000 * estado.tentativas);
+    estado.timer = window.setTimeout(() => {
+      estado.timer = undefined;
+      ua.reconnect()
+        .then(async () => {
+          estado.tentativas = 0;
+          try { await registererRef.current?.register(); } catch { /* o registro tenta de novo no próximo ciclo */ }
+        })
+        .catch(() => agendarReconexao(ua));
+    }, espera);
+  }, []);
+
+  // Conecta ao servidor externo do UCM (único endereço usado pelo sistema).
+  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, authUser?: string) => {
+    console.log('🌐 Conectando ao UCM externo:', server);
 
     const { urls: wsServers, host } = montarUrlsWs(server);
 
@@ -151,6 +171,7 @@ export const useSipConnection = () => {
     let ultimoErro: unknown = null;
 
     for (const wsUrl of wsServers) {
+      let uaCriado: UserAgent | null = null;
       const ua = new UserAgent({
         uri: UserAgent.makeURI(sipUri),
         transportOptions: {
@@ -173,23 +194,16 @@ export const useSipConnection = () => {
           },
           onConnect: () => {
             console.log('✅ WebSocket conectado:', wsUrl);
+            reconexaoRef.current.tentativas = 0;
           },
           onDisconnect: (error) => {
-            console.error('❌ WebSocket desconectado:', error);
-            // Só avisa quem realmente tinha o ramal registrado; sem ramal não há o que perder.
-            setIsRegistered((estavaRegistrado) => {
-              if (estavaRegistrado) {
-                toast({
-                  title: "Desconectado",
-                  description: "Conexão com UCM perdida",
-                  variant: "destructive",
-                });
-              }
-              return false;
-            });
+            console.warn('⚠️ WebSocket desconectado, tentando reconectar:', error);
+            setIsRegistered(false);
+            if (uaCriado) agendarReconexao(uaCriado);
           },
         },
       });
+      uaCriado = ua;
 
       try {
         await ua.start();
@@ -204,7 +218,7 @@ export const useSipConnection = () => {
     throw ultimoErro instanceof Error
       ? ultimoErro
       : new Error(`WebSocket indisponível em ${wsServers.join(' e ')}`);
-  }, [toast]);
+  }, [agendarReconexao]);
 
 
   // Connect and register to UCM
