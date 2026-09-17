@@ -57,7 +57,8 @@ export default function AutomacaoPainel() {
   const [cameras, setCameras] = useState<CameraSimples[]>([]);
   const [ambienteId, setAmbienteId] = useState<string>("");
   const [tipoTelaFiltro, setTipoTelaFiltro] = useState<TipoTela>("tv");
-  const [edicao, setEdicao] = useState(false);
+  // O modo de edição continua ligado depois de recarregar a página.
+  const [edicao, setEdicao] = useState(() => localStorage.getItem("automacao_edicao") === "1");
   const [admin, setAdmin] = useState(false);
   const [modo, setModo] = useState<Modo>("grade");
   const [selecionados, setSelecionados] = useState<string[]>([]);
