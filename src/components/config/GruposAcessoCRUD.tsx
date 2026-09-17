@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus, Search, ShieldCheck, UsersRound, UserRoundCog } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Badge } from "@/components/ui/badge";
