@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState } from 'sip.js';
+import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState, Web } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
+import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
+
+/** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
+const fabricaSdhPadrao = Web.defaultSessionDescriptionHandlerFactory();
+const criarSdhComSdpLimpo: typeof fabricaSdhPadrao = (session, options) => {
+  const sdh = fabricaSdhPadrao(session, options) as Web.SessionDescriptionHandler;
+  const originalSetDescription = sdh.setDescription.bind(sdh);
+  sdh.setDescription = (sdp, opcoes, modificadores) =>
+    originalSetDescription(sanitizarSdp(sdp), opcoes, modificadores);
+  return sdh;
+};
 
 interface SipConfig {
   server: string;
