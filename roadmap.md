@@ -6,7 +6,7 @@
 - [x] Validar o grupo Gerente na aplicação e confirmar a compilação.
 
 ## Gestão centralizada de grupos de acesso
-- [ ] Criar matriz comparativa de menus, módulos e ações por grupo.
-- [ ] Permitir copiar permissões substituindo ou acrescentando.
-- [ ] Salvar somente grupos alterados e permitir descartar mudanças.
-- [ ] Validar atualização imediata, computador e celular.
+- [x] Criar matriz comparativa de menus, módulos e ações por grupo.
+- [x] Permitir copiar permissões substituindo ou acrescentando.
+- [x] Salvar somente grupos alterados e permitir descartar mudanças.
+- [x] Validar atualização imediata, computador e celular.
