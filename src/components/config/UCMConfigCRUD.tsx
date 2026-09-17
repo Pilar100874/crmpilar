@@ -259,6 +259,8 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           <Label htmlFor="enabled">Integração ativa</Label>
         </div>
 
+        <UCMTesteLigacao />
+
         <Button onClick={handleSave} disabled={loading} className="w-full">
           <Save className="mr-2 h-4 w-4" />
           {loading ? "Salvando..." : "Salvar Configuração"}
