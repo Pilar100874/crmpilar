@@ -682,10 +682,16 @@ export default function AutomacaoPainel() {
               <TabsTrigger key={a.id} value={a.id} className="gap-1">
                 <span className={a.ativo === false ? "line-through opacity-60" : ""}>{a.nome}</span>
                 {podeEditar && (
-                  <Trash2
-                    className="h-3 w-3 text-destructive opacity-70 hover:opacity-100"
-                    onClick={(e) => { e.stopPropagation(); setExcluir({ tipo: "ambiente", id: a.id, nome: a.nome }); }}
-                  />
+                  <>
+                    <Pencil
+                      className="h-3 w-3 opacity-70 hover:opacity-100"
+                      onClick={(e) => { e.stopPropagation(); setAmbienteEdit(a); }}
+                    />
+                    <Trash2
+                      className="h-3 w-3 text-destructive opacity-70 hover:opacity-100"
+                      onClick={(e) => { e.stopPropagation(); setExcluir({ tipo: "ambiente", id: a.id, nome: a.nome }); }}
+                    />
+                  </>
                 )}
               </TabsTrigger>
             ))}
