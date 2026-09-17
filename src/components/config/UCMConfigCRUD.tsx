@@ -144,15 +144,15 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
 
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <div className="space-y-2">
-              <Label htmlFor="ucm_host">Servidor (host local do UCM)</Label>
+              <Label htmlFor="ucm_host">Servidor do UCM (endereço externo)</Label>
               <Input
                 id="ucm_host"
-                placeholder="192.168.1.100"
+                placeholder="ucm.empresa.com ou IP fixo"
                 value={config.ucm_host}
                 onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Servidor SIP e da API usado na rede interna, sem https://
+                Endereço público (IP fixo ou domínio) do UCM, sem https://. É o único endereço usado pelo sistema.
               </p>
             </div>
             <div className="space-y-2 w-24">
@@ -167,30 +167,6 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="remote_ip">Servidor alternativo (opcional)</Label>
-              <Input
-                id="remote_ip"
-                placeholder="ucm.empresa.com ou IP público"
-                value={config.remote_ip || ""}
-                onChange={(e) => setConfig({ ...config, remote_ip: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Usado fora da empresa (ex.: pilar.myddns.me), sem https://
-              </p>
-            </div>
-            <div className="space-y-2 w-24">
-              <Label htmlFor="sip_porta_alternativa">Porta</Label>
-              <Input
-                id="sip_porta_alternativa"
-                type="number"
-                placeholder="8089"
-                value={config.sip_porta_alternativa ?? ""}
-                onChange={(e) => setConfig({ ...config, sip_porta_alternativa: e.target.value })}
-              />
-            </div>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="ramal_portaria">Ramal da TV/portaria</Label>
