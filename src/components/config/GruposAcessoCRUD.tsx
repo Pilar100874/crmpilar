@@ -9,6 +9,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { ArvorePermissoes } from "@/components/config/ArvorePermissoes";
 import { limparCachePermissoes } from "@/hooks/usePermissoesUsuario";
