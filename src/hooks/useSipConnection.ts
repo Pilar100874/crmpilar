@@ -142,6 +142,7 @@ export const useSipConnection = () => {
   /** Reconexão automática: a queda do WebSocket não deve derrubar o ramal de vez. */
   const registererRef = useRef<Registerer | null>(null);
   const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
+  const keepAliveRef = useRef<number | undefined>(undefined);
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
