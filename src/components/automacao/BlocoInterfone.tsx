@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Bell, Video } from "lucide-react";
 import { Bloco } from "@/lib/automacao/api";
 import { useUnidadeAtual } from "@/lib/unidadeAtual";
 import { useInterfoneConfig, useCampainha, tocarAlerta } from "@/lib/portaria/interfone";
 import InterfonePopup from "@/components/portaria/InterfonePopup";
 import { cn } from "@/lib/utils";
+import { iconePorNome } from "@/lib/automacao/icones";
 
 /** Abre a tela cheia do interfone e avisa quando alguém toca a campainha. */
 export default function BlocoInterfone({ bloco }: { bloco: Bloco }) {
-  const cfg = (bloco.config ?? {}) as { abrir_ao_tocar?: boolean; som?: boolean };
+  const cfg = (bloco.config ?? {}) as { abrir_ao_tocar?: boolean; som?: boolean; icone?: string };
+  const Icone = iconePorNome(cfg.icone ?? bloco.icone ?? "Video");
   const { unidadeId } = useUnidadeAtual();
   const { config } = useInterfoneConfig(unidadeId);
   const [aberto, setAberto] = useState(false);
@@ -35,7 +36,7 @@ export default function BlocoInterfone({ bloco }: { bloco: Bloco }) {
       >
         <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-            {tocando ? <Bell className="h-6 w-6" /> : <Video className="h-6 w-6" />}
+            <Icone className="h-6 w-6" />
           </span>
           <p className="truncate text-sm font-semibold">{bloco.nome || "Interfone"}</p>
           <p className="text-[11px] text-muted-foreground">

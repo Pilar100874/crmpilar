@@ -1713,6 +1713,10 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           {blocoEdit?.tipo === "interfone" && (
             <div className="space-y-2 rounded-lg border p-3">
               <Label className="text-sm font-semibold">Interfone</Label>
+              <div className="space-y-2">
+                <Label className="text-xs">Ícone</Label>
+                <SeletorIcone valor={cfg.icone ?? blocoEdit.icone} onChange={(n) => setCfg({ icone: n })} />
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
