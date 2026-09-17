@@ -378,6 +378,24 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     className="h-8 w-12 cursor-pointer rounded border bg-transparent"
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Fundo ativado</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corFundoAtivo as string) ?? "#3b82f6"}
+                    onChange={(e) => setCfg({ corFundoAtivo: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Fundo desativado</Label>
+                  <input
+                    type="color"
+                    value={(cfg.corFundoInativo as string) ?? "#64748b"}
+                    onChange={(e) => setCfg({ corFundoInativo: e.target.value })}
+                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
+                  />
+                </div>
               </div>
               <div>
                 <Label className="text-xs">Tamanho do ícone ({cfg.tamanho ?? 0 ? `${cfg.tamanho}px` : "Automático"})</Label>
