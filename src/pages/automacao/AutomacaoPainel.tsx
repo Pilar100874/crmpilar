@@ -542,7 +542,7 @@ export default function AutomacaoPainel() {
         if (dir === "base") y = Math.max(0, baseLim - bloco.h);
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
         const ok = await salvarComAviso(
-          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }),
+          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
           "alinhar o elemento",
         );
         if (!ok) return;
