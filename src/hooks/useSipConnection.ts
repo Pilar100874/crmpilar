@@ -699,6 +699,13 @@ export const useSipConnection = () => {
   // Disconnect
   const disconnect = useCallback(async () => {
     const tinhaConexaoSip = Boolean(userAgent || registerer || isRegistered || activeCalls.length > 0);
+    // Desconexão pedida pelo usuário: cancela qualquer reconexão automática pendente.
+    if (reconexaoRef.current.timer) {
+      clearTimeout(reconexaoRef.current.timer);
+      reconexaoRef.current.timer = undefined;
+    }
+    reconexaoRef.current.tentativas = 0;
+    registererRef.current = null;
     try {
       // Hangup all active calls
       for (const call of activeCalls) {
