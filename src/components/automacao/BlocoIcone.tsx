@@ -66,52 +66,54 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
       onClick={acionar}
       disabled={ocupado}
       title={bloco.nome}
-      className="group h-full w-full flex flex-col items-center justify-center gap-1 transition-transform active:scale-95"
+      className="group h-full w-full min-h-0 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95"
     >
-      <span
-        className={cn(
-          "flex items-center justify-center transition-all duration-300",
-          fundo === "circulo" && "rounded-full",
-          fundo === "quadrado" && "rounded-xl",
-          fundo !== "nenhum" && !corFundoAtual && (aceso
-            ? "bg-primary/25 ring-2 ring-primary/50"
-            : "bg-muted/60 ring-1 ring-border group-hover:ring-primary/40"),
-        )}
-        style={{
-          ...(fixo
-            ? { height: fixo + 16, width: fixo + 16 }
-            : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
-          ...(corAtual ? { color: corAtual } : {}),
-          ...(corFundoAtual && fundo !== "nenhum"
-            ? {
-                backgroundColor: hexToRgba(corFundoAtual, aceso ? 0.25 : 0.6),
-                boxShadow: `inset 0 0 0 ${aceso ? 2 : 1}px ${hexToRgba(corFundoAtual, aceso ? 0.5 : 0.3)}`,
-              }
-            : {}),
-          opacity: opacidade / 100,
-        }}
-      >
-        {ocupado ? (
-          <Loader2
-            className="animate-spin text-muted-foreground"
-            style={fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }}
-          />
-        ) : (
-          <Icon
-            className={cn(
-              "transition-colors",
-              !corAtual && (aceso ? "text-primary" : "text-muted-foreground"),
-              classeAnimacao(cfg.animacao, aceso),
-            )}
-            style={{
-              ...(fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }),
-              ...(corAtual ? { color: corAtual } : {}),
-            }}
-          />
-        )}
+      <span className="flex-1 min-h-0 w-full flex items-center justify-center">
+        <span
+          className={cn(
+            "shrink-0 flex items-center justify-center transition-all duration-300",
+            fundo === "circulo" && "rounded-full",
+            fundo === "quadrado" && "rounded-xl",
+            fundo !== "nenhum" && !corFundoAtual && (aceso
+              ? "bg-primary/25 ring-2 ring-primary/50"
+              : "bg-muted/60 ring-1 ring-border group-hover:ring-primary/40"),
+          )}
+          style={{
+            ...(fixo
+              ? { height: fixo + 16, width: fixo + 16 }
+              : { height: "100%", maxHeight: "100%", aspectRatio: "1/1", maxWidth: "100%" }),
+            ...(corAtual ? { color: corAtual } : {}),
+            ...(corFundoAtual && fundo !== "nenhum"
+              ? {
+                  backgroundColor: hexToRgba(corFundoAtual, aceso ? 0.25 : 0.6),
+                  boxShadow: `inset 0 0 0 ${aceso ? 2 : 1}px ${hexToRgba(corFundoAtual, aceso ? 0.5 : 0.3)}`,
+                }
+              : {}),
+            opacity: opacidade / 100,
+          }}
+        >
+          {ocupado ? (
+            <Loader2
+              className="animate-spin text-muted-foreground"
+              style={fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }}
+            />
+          ) : (
+            <Icon
+              className={cn(
+                "transition-colors",
+                !corAtual && (aceso ? "text-primary" : "text-muted-foreground"),
+                classeAnimacao(cfg.animacao, aceso),
+              )}
+              style={{
+                ...(fixo ? { height: fixo, width: fixo } : { height: "60%", width: "60%" }),
+                ...(corAtual ? { color: corAtual } : {}),
+              }}
+            />
+          )}
+        </span>
       </span>
       {cfg.mostrar_nome !== false && (
-        <span className="text-[11px] text-center leading-tight truncate w-full px-1">{bloco.nome}</span>
+        <span className="shrink-0 text-[11px] text-center leading-tight truncate w-full px-1">{bloco.nome}</span>
       )}
     </button>
   );
