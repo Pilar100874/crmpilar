@@ -362,20 +362,20 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           )}
           </div>
 
-      {/* Formulário em modal */}
-      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) resetForm(); setFormOpen(open); }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-          <DialogHeader className="border-b p-4 sm:p-5">
+      {/* Formulário em painel lateral */}
+      <Sheet open={formOpen} onOpenChange={(open) => { if (!open) resetForm(); setFormOpen(open); }}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-4xl overflow-y-auto p-0">
+          <SheetHeader className="border-b p-4 sm:p-5">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="text-left">
-                <DialogTitle className="text-base sm:text-lg">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</DialogTitle>
+                <SheetTitle className="text-base sm:text-lg">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</SheetTitle>
                 <p className="text-xs text-muted-foreground">Defina o perfil e as permissões deste grupo.</p>
               </div>
             </div>
-          </DialogHeader>
+          </SheetHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -429,8 +429,8 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
               </Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
         </TabsContent>
 
         <TabsContent value="permissoes" className="mt-4">
