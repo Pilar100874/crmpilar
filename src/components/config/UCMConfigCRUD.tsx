@@ -86,14 +86,15 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         .upsert({
           estabelecimento_id: estabelecimentoId,
           ucm_host: config.ucm_host,
-          remote_ip: config.remote_ip || null,
+          // O acesso é sempre externo: o mesmo endereço/porta vale para todos os usos.
+          remote_ip: config.ucm_host,
           sip_porta: config.sip_porta ? Number(config.sip_porta) : 8089,
-          sip_porta_alternativa: config.sip_porta_alternativa ? Number(config.sip_porta_alternativa) : 8089,
+          sip_porta_alternativa: config.sip_porta ? Number(config.sip_porta) : 8089,
           ramal_portaria: config.ramal_portaria || null,
           ucm_user: config.ucm_user,
           ucm_password: config.ucm_password,
           enabled: config.enabled,
-          is_local: config.is_local,
+          is_local: false,
           conference_room_number: config.conference_room_number || null,
           conference_room_password: config.conference_room_password || null,
         }, {
