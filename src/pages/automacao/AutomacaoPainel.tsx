@@ -82,7 +82,16 @@ export default function AutomacaoPainel() {
   const blocosRef = useRef<Bloco[]>([]);
   const regrasRef = useRef<Regra[]>([]);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
-  const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
+  const redim = useRef<{
+    id: string;
+    eixo: "ambos" | "largura" | "altura";
+    ox: number;
+    oy: number;
+    bw: number;
+    bh: number;
+    pw: number;
+    ph: number;
+  } | null>(null);
   const pendentesRef = useRef<string[]>([]);
   useEffect(() => { pendentesRef.current = pendentes; }, [pendentes]);
   // Avisa se o usuário tentar sair com mudanças ainda não salvas.
@@ -357,13 +366,17 @@ export default function AutomacaoPainel() {
     arrasto.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bx: bloco.x, by: bloco.y, pl: p.l, pt: p.t };
   };
 
-  const aoRedimensionar = (e: React.PointerEvent, bloco: Bloco) => {
+  const aoRedimensionar = (
+    e: React.PointerEvent,
+    bloco: Bloco,
+    eixo: "ambos" | "largura" | "altura" = "ambos",
+  ) => {
     if (!podeEditar || estaTravado(bloco)) return;
     e.stopPropagation();
     selecionar(bloco.id);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const p = posLivre(bloco, celula().cx);
-    redim.current = { id: bloco.id, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h, pw: p.w, ph: p.h };
+    redim.current = { id: bloco.id, eixo, ox: e.clientX, oy: e.clientY, bw: bloco.w, bh: bloco.h, pw: p.w, ph: p.h };
   };
 
   const aoMover = (e: React.PointerEvent) => {
@@ -379,13 +392,17 @@ export default function AutomacaoPainel() {
         const p = posLivre(bloco, cx);
         atualizarPos(bloco.id, {
           ...p,
-          w: Math.max(40, r.pw + dx(e.clientX - r.ox)),
-          h: Math.max(40, r.ph + dx(e.clientY - r.oy)),
+          w: r.eixo === "altura" ? r.pw : Math.max(40, r.pw + dx(e.clientX - r.ox)),
+          h: r.eixo === "largura" ? r.ph : Math.max(40, r.ph + dx(e.clientY - r.oy)),
         });
         return;
       }
-      const nw = Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round(dx(e.clientX - r.ox) / cx)));
-      const nh = Math.max(1, Math.min(12, r.bh + Math.round(dx(e.clientY - r.oy) / cy)));
+      const nw = r.eixo === "altura"
+        ? r.bw
+        : Math.max(1, Math.min(COLUNAS - bloco.x, r.bw + Math.round(dx(e.clientX - r.ox) / cx)));
+      const nh = r.eixo === "largura"
+        ? r.bh
+        : Math.max(1, Math.min(12, r.bh + Math.round(dx(e.clientY - r.oy) / cy)));
       if (nw !== bloco.w || nh !== bloco.h) {
         setBlocos((ant) => ant.map((b) => (b.id === r.id ? { ...b, w: nw, h: nh } : b)));
       }
@@ -1115,19 +1132,19 @@ export default function AutomacaoPainel() {
               {editando && !travado && (
                 <>
                   <div
-                    onPointerDown={(e) => aoRedimensionar(e, b)}
+                    onPointerDown={(e) => aoRedimensionar(e, b, "ambos")}
                     title="Arraste para redimensionar"
                     className="absolute -bottom-1 -right-1 h-5 w-5 cursor-nwse-resize rounded-full border-2 border-primary bg-background shadow"
                     style={{ touchAction: "none" }}
                   />
                   <div
-                    onPointerDown={(e) => aoRedimensionar(e, b)}
+                    onPointerDown={(e) => aoRedimensionar(e, b, "largura")}
                     title="Arraste para mudar a largura"
                     className="absolute top-1/2 -right-1 h-8 w-2 -translate-y-1/2 cursor-ew-resize rounded-full bg-primary/70"
                     style={{ touchAction: "none" }}
                   />
                   <div
-                    onPointerDown={(e) => aoRedimensionar(e, b)}
+                    onPointerDown={(e) => aoRedimensionar(e, b, "altura")}
                     title="Arraste para mudar a altura"
                     className="absolute -bottom-1 left-1/2 h-2 w-8 -translate-x-1/2 cursor-ns-resize rounded-full bg-primary/70"
                     style={{ touchAction: "none" }}
