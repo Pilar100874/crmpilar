@@ -322,23 +322,23 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Tabs value={aba} onValueChange={setAba}>
-        <TabsList className="grid h-auto w-full grid-cols-2 sm:w-[460px]">
-          <TabsTrigger value="grupos"><UsersRound className="mr-2 h-4 w-4" />Grupos</TabsTrigger>
-          <TabsTrigger value="permissoes"><ShieldCheck className="mr-2 h-4 w-4" />Gerenciar permissões</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2 rounded-lg border bg-muted/40 p-1 sm:w-[480px]">
+          <TabsTrigger value="grupos" className="min-h-10 gap-2"><UsersRound className="h-4 w-4" /><span>Grupos</span></TabsTrigger>
+          <TabsTrigger value="permissoes" className="min-h-10 gap-2"><ShieldCheck className="h-4 w-4" /><span className="sm:hidden">Permissões</span><span className="hidden sm:inline">Gerenciar permissões</span></TabsTrigger>
         </TabsList>
 
-        <TabsContent value="grupos" className="space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">{grupos.length} {grupos.length === 1 ? "grupo cadastrado" : "grupos cadastrados"}</p>
+        <TabsContent value="grupos" className="space-y-5">
+          <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div><h3 className="font-semibold">Grupos cadastrados</h3><p className="text-sm text-muted-foreground">{grupos.length} {grupos.length === 1 ? "grupo disponível" : "grupos disponíveis"}</p></div>
             <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo grupo</Button>
           </div>
-          <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="pl-9" /></div>
+          <div className="relative sm:max-w-md"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="bg-card pl-9" /></div>
 
           {filteredGrupos.length === 0 ? <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : <>
-        <div className="md:hidden"><CadastroCardList items={filteredGrupos.map((grupo) => ({ id: grupo.id, title: grupo.nome, subtitle: PERFIL_LABEL[grupo.perfil || 'padrao'], fields: [{ label: "Permissões", value: formatPermissionsCompact(grupo.menus_permitidos), full: true }], actions: actionButtons(grupo) }))} /></div>
-        <div className="hidden overflow-hidden rounded-lg border md:block"><Table><TableHeader><TableRow><TableHead>Grupo</TableHead><TableHead>Perfil</TableHead><TableHead>Permissões</TableHead><TableHead className="w-24 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredGrupos.map((grupo) => <TableRow key={grupo.id}><TableCell className="font-medium">{grupo.nome}</TableCell><TableCell><Badge variant="secondary">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge></TableCell><TableCell>{formatPermissionsCompact(grupo.menus_permitidos)}</TableCell><TableCell><div className="flex justify-end gap-1">{actionButtons(grupo)}</div></TableCell></TableRow>)}</TableBody></Table></div>
+        <div className="lg:hidden"><CadastroCardList items={filteredGrupos.map((grupo) => ({ id: grupo.id, title: grupo.nome, subtitle: PERFIL_LABEL[grupo.perfil || 'padrao'], fields: [{ label: "Permissões", value: formatPermissionsCompact(grupo.menus_permitidos), full: true }], actions: actionButtons(grupo) }))} /></div>
+        <div className="hidden overflow-hidden rounded-lg border bg-card shadow-sm lg:block"><Table><TableHeader className="bg-muted/40"><TableRow><TableHead>Grupo</TableHead><TableHead>Perfil</TableHead><TableHead>Permissões</TableHead><TableHead className="w-24 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredGrupos.map((grupo) => <TableRow key={grupo.id} className="transition-colors hover:bg-muted/30"><TableCell className="font-medium">{grupo.nome}</TableCell><TableCell><Badge variant="secondary">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge></TableCell><TableCell className="text-muted-foreground">{formatPermissionsCompact(grupo.menus_permitidos)}</TableCell><TableCell><div className="flex justify-end gap-1">{actionButtons(grupo)}</div></TableCell></TableRow>)}</TableBody></Table></div>
           </>}
 
       {/* Formulário */}
@@ -404,7 +404,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           </form>}
         </TabsContent>
 
-        <TabsContent value="permissoes">
+        <TabsContent value="permissoes" className="mt-4">
           <GerenciadorPermissoesGrupos
             grupos={grupos}
             valores={permissoesEmEdicao}
