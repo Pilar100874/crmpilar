@@ -139,9 +139,29 @@ export const useSipConnection = () => {
     return { urls, host };
   };
 
-  // Helper to try connecting to a server
-  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false, authUser?: string) => {
-    console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
+  /** Reconexão automática: a queda do WebSocket não deve derrubar o ramal de vez. */
+  const registererRef = useRef<Registerer | null>(null);
+  const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
+
+  const agendarReconexao = useCallback((ua: UserAgent) => {
+    const estado = reconexaoRef.current;
+    if (estado.timer) return;
+    estado.tentativas += 1;
+    const espera = Math.min(30000, 3000 * estado.tentativas);
+    estado.timer = window.setTimeout(() => {
+      estado.timer = undefined;
+      ua.reconnect()
+        .then(async () => {
+          estado.tentativas = 0;
+          try { await registererRef.current?.register(); } catch { /* o registro tenta de novo no próximo ciclo */ }
+        })
+        .catch(() => agendarReconexao(ua));
+    }, espera);
+  }, []);
+
+  // Conecta ao servidor externo do UCM (único endereço usado pelo sistema).
+  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, authUser?: string) => {
+    console.log('🌐 Conectando ao UCM externo:', server);
 
     const { urls: wsServers, host } = montarUrlsWs(server);
 
@@ -151,6 +171,7 @@ export const useSipConnection = () => {
     let ultimoErro: unknown = null;
 
     for (const wsUrl of wsServers) {
+      let uaCriado: UserAgent | null = null;
       const ua = new UserAgent({
         uri: UserAgent.makeURI(sipUri),
         transportOptions: {
@@ -173,23 +194,16 @@ export const useSipConnection = () => {
           },
           onConnect: () => {
             console.log('✅ WebSocket conectado:', wsUrl);
+            reconexaoRef.current.tentativas = 0;
           },
           onDisconnect: (error) => {
-            console.error('❌ WebSocket desconectado:', error);
-            // Só avisa quem realmente tinha o ramal registrado; sem ramal não há o que perder.
-            setIsRegistered((estavaRegistrado) => {
-              if (estavaRegistrado) {
-                toast({
-                  title: "Desconectado",
-                  description: "Conexão com UCM perdida",
-                  variant: "destructive",
-                });
-              }
-              return false;
-            });
+            console.warn('⚠️ WebSocket desconectado, tentando reconectar:', error);
+            setIsRegistered(false);
+            if (uaCriado) agendarReconexao(uaCriado);
           },
         },
       });
+      uaCriado = ua;
 
       try {
         await ua.start();
@@ -204,7 +218,7 @@ export const useSipConnection = () => {
     throw ultimoErro instanceof Error
       ? ultimoErro
       : new Error(`WebSocket indisponível em ${wsServers.join(' e ')}`);
-  }, [toast]);
+  }, [agendarReconexao]);
 
 
   // Connect and register to UCM
@@ -217,73 +231,40 @@ export const useSipConnection = () => {
       return;
     }
     ramalPresencaRef.current = config.extension.trim();
+
+    const comPorta = (host: string, porta?: string) => {
+      const h = host.trim();
+      if (!h) return h;
+      if (/^wss?:\/\//i.test(h) || h.includes(':')) return h;
+      return `${h}:${porta || '8089'}`;
+    };
+
+    // O UCM é sempre acessado pelo endereço externo (IP fixo/domínio).
+    const servidorExterno = comPorta(config.server, config.serverPort);
+
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
-      console.log('Servidor LOCAL:', config.server, 'Porta:', config.serverPort || '8089');
-      console.log('Servidor REMOTO:', config.remoteServer || 'Não configurado', 'Porta:', config.remoteServerPort || '8089');
+      console.log('Servidor externo do UCM:', servidorExterno);
       console.log('Ramal:', config.extension);
 
-      let ua: UserAgent | null = null;
-      let connectedServer = '';
-
-      const comPorta = (host: string, porta?: string) => {
-        const h = host.trim();
-        if (!h) return h;
-        if (/^wss?:\/\//i.test(h) || h.includes(':')) return h;
-        return `${h}:${porta || '8089'}`;
-      };
-
-      // Tentar local primeiro
-      try {
-        const result = await tryConnect(
-          comPorta(config.server, config.serverPort), 
-          config.extension, 
-          config.password, 
-          config.displayName || config.extension,
-          false,
-          config.authUser
-        );
-        ua = result.ua;
-        connectedServer = result.server;
-        console.log('✅ Conectado ao servidor LOCAL');
-      } catch (localError) {
-        console.warn('⚠️ Falha ao conectar no servidor local:', localError);
-        
-        // Se houver servidor remoto, tentar
-        if (config.remoteServer) {
-          console.log('🔄 Tentando servidor REMOTO...');
-          try {
-            const result = await tryConnect(
-              comPorta(config.remoteServer, config.remoteServerPort), 
-              config.extension, 
-              config.password, 
-              config.displayName || config.extension,
-              true,
-              config.authUser
-            );
-            ua = result.ua;
-            connectedServer = result.server;
-            console.log('✅ Conectado ao servidor REMOTO');
-          } catch (remoteError) {
-            console.error('❌ Falha ao conectar no servidor remoto:', remoteError);
-            throw new Error('Não foi possível conectar nem ao servidor local nem ao remoto');
-          }
-        } else {
-          throw localError;
-        }
-      }
-
-      if (!ua) {
-        throw new Error('Falha ao criar UserAgent');
-      }
+      const result = await tryConnect(
+        servidorExterno,
+        config.extension,
+        config.password,
+        config.displayName || config.extension,
+        config.authUser,
+      );
+      const ua = result.ua;
+      const connectedServer = result.server;
 
       const reg = new Registerer(ua);
-      
+      registererRef.current = reg;
+
       reg.stateChange.addListener((state) => {
         console.log('📊 Estado do registro mudou:', state);
         setIsRegistered(state === RegistererState.Registered);
-        
+
         if (state === RegistererState.Registered) {
           console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
           toast({
@@ -305,17 +286,15 @@ export const useSipConnection = () => {
     } catch (error) {
       console.error('❌ ERRO NA CONEXÃO:', error);
 
-      const host = (config.server || '').replace(/^wss?:\/\//i, '').split('/')[0].split(':')[0];
-      const ehRedeLocal = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+      const host = servidorExterno.replace(/^wss?:\/\//i, '').split('/')[0].split(':')[0];
+      const porta = (config.serverPort || '8089').trim() || '8089';
 
       let errorMsg = "Erro ao conectar ao UCM";
       if (error instanceof Error) {
         errorMsg = error.message;
 
         if (/WebSocket|indisponível|Transport|timeout/i.test(error.message)) {
-          errorMsg = ehRedeLocal
-            ? `O UCM ${host} está em rede interna. Conecte o aparelho ao Wi-Fi da empresa (ou VPN) e confirme se a porta 8089 (WSS) está liberada.`
-            : `Sem resposta em wss://${host}:8089/ws. Verifique se a porta 8089 está liberada e abra https://${host}:8089/ws no navegador uma vez para aceitar o certificado do UCM.`;
+          errorMsg = `Sem resposta em wss://${host}:${porta}/ws. Verifique se a porta ${porta} está liberada no UCM externo e abra https://${host}:${porta}/ws no navegador uma vez para aceitar o certificado.`;
         } else if (error.message.includes('401') || error.message.includes('403')) {
           errorMsg = "Credenciais inválidas. Verifique o ramal e senha.";
         }
@@ -720,6 +699,13 @@ export const useSipConnection = () => {
   // Disconnect
   const disconnect = useCallback(async () => {
     const tinhaConexaoSip = Boolean(userAgent || registerer || isRegistered || activeCalls.length > 0);
+    // Desconexão pedida pelo usuário: cancela qualquer reconexão automática pendente.
+    if (reconexaoRef.current.timer) {
+      clearTimeout(reconexaoRef.current.timer);
+      reconexaoRef.current.timer = undefined;
+    }
+    reconexaoRef.current.tentativas = 0;
+    registererRef.current = null;
     try {
       // Hangup all active calls
       for (const call of activeCalls) {

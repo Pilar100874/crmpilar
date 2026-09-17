@@ -86,14 +86,15 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         .upsert({
           estabelecimento_id: estabelecimentoId,
           ucm_host: config.ucm_host,
-          remote_ip: config.remote_ip || null,
+          // O acesso é sempre externo: o mesmo endereço/porta vale para todos os usos.
+          remote_ip: config.ucm_host,
           sip_porta: config.sip_porta ? Number(config.sip_porta) : 8089,
-          sip_porta_alternativa: config.sip_porta_alternativa ? Number(config.sip_porta_alternativa) : 8089,
+          sip_porta_alternativa: config.sip_porta ? Number(config.sip_porta) : 8089,
           ramal_portaria: config.ramal_portaria || null,
           ucm_user: config.ucm_user,
           ucm_password: config.ucm_password,
           enabled: config.enabled,
-          is_local: config.is_local,
+          is_local: false,
           conference_room_number: config.conference_room_number || null,
           conference_room_password: config.conference_room_password || null,
         }, {
@@ -144,15 +145,15 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
 
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <div className="space-y-2">
-              <Label htmlFor="ucm_host">Servidor (host local do UCM)</Label>
+              <Label htmlFor="ucm_host">Servidor do UCM (endereço externo)</Label>
               <Input
                 id="ucm_host"
-                placeholder="192.168.1.100"
+                placeholder="ucm.empresa.com ou IP fixo"
                 value={config.ucm_host}
                 onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Servidor SIP e da API usado na rede interna, sem https://
+                Endereço público (IP fixo ou domínio) do UCM, sem https://. É o único endereço usado pelo sistema.
               </p>
             </div>
             <div className="space-y-2 w-24">
@@ -167,30 +168,6 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="remote_ip">Servidor alternativo (opcional)</Label>
-              <Input
-                id="remote_ip"
-                placeholder="ucm.empresa.com ou IP público"
-                value={config.remote_ip || ""}
-                onChange={(e) => setConfig({ ...config, remote_ip: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Usado fora da empresa (ex.: pilar.myddns.me), sem https://
-              </p>
-            </div>
-            <div className="space-y-2 w-24">
-              <Label htmlFor="sip_porta_alternativa">Porta</Label>
-              <Input
-                id="sip_porta_alternativa"
-                type="number"
-                placeholder="8089"
-                value={config.sip_porta_alternativa ?? ""}
-                onChange={(e) => setConfig({ ...config, sip_porta_alternativa: e.target.value })}
-              />
-            </div>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="ramal_portaria">Ramal da TV/portaria</Label>
@@ -271,17 +248,6 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         </p>
       </div>
 
-      <div className="flex items-center space-x-2">
-          <Switch
-            id="is_local"
-            checked={config.is_local}
-            onCheckedChange={(checked) => setConfig({ ...config, is_local: checked })}
-          />
-          <Label htmlFor="is_local">UCM na rede local</Label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Ative esta opção se o UCM estiver na sua rede local. Desative se o UCM estiver acessível via internet.
-        </p>
 
         <div className="flex items-center space-x-2">
           <Switch
