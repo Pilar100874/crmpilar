@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { md5 } from "npm:js-md5@0.8.3";
+import { clienteUcmTls } from "../_shared/ucmTls.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,8 @@ class ClienteUcm {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ request: corpo }),
         signal: controlador.signal,
-      });
+        ...clienteUcmTls(),
+      } as RequestInit);
       if (!resposta.ok) throw new Error(`UCM respondeu ${resposta.status}`);
       return (await resposta.json()) as { status?: number; response?: Record<string, unknown> };
     } finally {
