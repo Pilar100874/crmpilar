@@ -220,7 +220,7 @@ export function GerenciadorPermissoesGrupos({ grupos, valores, alterados, salvan
             <div className="flex items-center gap-2"><Copy className="h-4 w-4 text-primary" /><h3 className="font-semibold">Copiar permissões</h3></div>
             <p className="mt-1 text-xs text-muted-foreground">Use um grupo como modelo para configurar outros rapidamente.</p>
           </div>
-          <Button type="button" variant="outline" onClick={() => setCopiarAberto(true)}"><Copy className="mr-2 h-4 w-4" /> Abrir cópia</Button>
+          <Button type="button" variant="outline" onClick={() => setCopiarAberto(true)}><Copy className="mr-2 h-4 w-4" /> Abrir cópia</Button>
         </div>
       </div>
 
@@ -237,7 +237,7 @@ export function GerenciadorPermissoesGrupos({ grupos, valores, alterados, salvan
           </div>
           <DialogFooter className="gap-2 sm:justify-end">
             <Button type="button" variant="outline" onClick={() => setCopiarAberto(false)}>Cancelar</Button>
-            <Button type="button" disabled={!origem || destinos.size === 0} onClick={() => setConfirmarCopia(true)}"><Copy className="mr-2 h-4 w-4" /> Aplicar cópia</Button>
+            <Button type="button" disabled={!origem || destinos.size === 0} onClick={() => setConfirmarCopia(true)}><Copy className="mr-2 h-4 w-4" /> Aplicar cópia</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
