@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Copy, Save, Search, Undo2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Save, Search, ShieldCheck, Undo2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -137,64 +138,79 @@ export function GerenciadorPermissoesGrupos({ grupos, valores, alterados, salvan
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h3 className="font-semibold">Gerenciar permissões</h3>
-          <p className="text-sm text-muted-foreground">Escolha um item e compare as liberações de todos os grupos.</p>
+    <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col gap-4 border-b bg-card/95 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold sm:text-lg">Gestão de permissões</h3>
+            <p className="text-xs text-muted-foreground sm:text-sm">Selecione um recurso e compare os acessos entre os grupos.</p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={onDescartar} disabled={alterados.size === 0 || salvando}>
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onDescartar} disabled={alterados.size === 0 || salvando}>
             <Undo2 className="h-4 w-4" /> Descartar
           </Button>
-          <Button type="button" onClick={onSalvar} disabled={alterados.size === 0 || salvando}>
-            <Save className="h-4 w-4" /> {salvando ? "Salvando..." : `Salvar alterações${alterados.size ? ` (${alterados.size})` : ""}`}
+          <Button type="button" className="w-full sm:w-auto" onClick={onSalvar} disabled={alterados.size === 0 || salvando}>
+            <Save className="h-4 w-4" /> {salvando ? "Salvando..." : "Salvar"}
+            {alterados.size > 0 && <Badge variant="secondary" className="ml-1 h-5 min-w-5 justify-center px-1.5">{alterados.size}</Badge>}
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
-        <div className="rounded-lg border bg-card">
-          <div className="border-b p-3">
+      <div className="grid min-h-[540px] lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="border-b bg-muted/20 lg:border-b-0 lg:border-r">
+          <div className="border-b p-3 sm:p-4">
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Menus e módulos</p>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={buscaItem} onChange={(e) => setBuscaItem(e.target.value)} placeholder="Buscar menu ou módulo" className="pl-9" />
+              <Input value={buscaItem} onChange={(e) => setBuscaItem(e.target.value)} placeholder="Buscar recurso" className="bg-background pl-9" />
             </div>
           </div>
-          <ScrollArea className="h-[520px] p-2">{catalogo.map((no) => renderNo(no, 0))}</ScrollArea>
-        </div>
+          <ScrollArea className="h-[260px] p-2 sm:h-[320px] lg:h-[475px]">{catalogo.map((no) => renderNo(no, 0))}</ScrollArea>
+        </aside>
 
-        <div className="min-w-0 space-y-3 rounded-lg border bg-card p-3">
+        <section className="min-w-0 bg-card">
           {!selecionado ? (
-            <div className="flex h-[520px] items-center justify-center text-center text-sm text-muted-foreground">Selecione um menu, submenu ou módulo na árvore.</div>
+            <div className="flex h-[320px] flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted-foreground lg:h-full">
+              <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted"><ShieldCheck className="h-6 w-6" /></div>
+              <span>Selecione um menu, submenu ou módulo para configurar os grupos.</span>
+            </div>
           ) : (
             <>
-              <div className="flex flex-col gap-3 border-b pb-3 md:flex-row md:items-center md:justify-between">
-                <div><p className="font-semibold">{selecionado.label}</p><p className="text-xs text-muted-foreground">{selecionado.nivel === "modulo" ? "Módulo interno" : selecionado.nivel === "submenu" ? "Submenu" : "Menu"}</p></div>
-                <div className="relative w-full md:max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={buscaGrupo} onChange={(e) => setBuscaGrupo(e.target.value)} placeholder="Buscar grupo" className="pl-9" /></div>
+              <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <div><div className="flex items-center gap-2"><p className="font-semibold">{selecionado.label}</p><Badge variant="outline" className="font-normal">{selecionado.nivel === "modulo" ? "Módulo" : selecionado.nivel === "submenu" ? "Submenu" : "Menu"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">Defina o que cada grupo pode fazer neste recurso.</p></div>
+                <div className="relative w-full sm:max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={buscaGrupo} onChange={(e) => setBuscaGrupo(e.target.value)} placeholder="Buscar grupo" className="pl-9" /></div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] text-sm">
-                  <thead><tr className="border-b"><th className="p-2 text-left font-medium">Grupo</th>{ACOES.map((acao) => <th key={acao} className="p-2 text-center font-medium"><button type="button" className="hover:text-primary" onClick={() => aplicarTodosGrupos(acao, true)}>{ACAO_LABEL[acao]}</button></th>)}<th className="p-2 text-right font-medium">Ramo</th></tr></thead>
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full min-w-[640px] text-sm">
+                  <thead className="bg-muted/40"><tr className="border-b"><th className="p-4 text-left text-xs font-semibold uppercase text-muted-foreground">Grupo</th>{ACOES.map((acao) => <th key={acao} className="w-20 p-3 text-center text-xs font-semibold uppercase text-muted-foreground"><Button type="button" variant="ghost" size="sm" className="h-7 px-2" onClick={() => aplicarTodosGrupos(acao, true)}>{ACAO_LABEL[acao]}</Button></th>)}<th className="w-32 p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Ramo</th></tr></thead>
                   <tbody>{gruposVisiveis.map((grupo) => {
                     const perm = permissao(grupo.id, selecionado.id);
                     const admin = grupo.perfil === "admin";
-                    return <tr key={grupo.id} className="border-b last:border-0"><td className="p-2"><div className="font-medium">{grupo.nome}</div><div className="text-xs text-muted-foreground">{admin ? "Acesso total" : alterados.has(grupo.id) ? "Alterado" : "Sem alterações"}</div></td>{ACOES.map((acao) => <td key={acao} className="p-2 text-center"><Checkbox checked={admin || perm[acao]} disabled={admin} onCheckedChange={(valor) => aplicar(grupo.id, [selecionado.id], acao, valor === true)} aria-label={`${ACAO_LABEL[acao]} — ${selecionado.label} — ${grupo.nome}`} /></td>)}<td className="p-2 text-right"><Button type="button" variant="ghost" size="sm" disabled={admin} onClick={() => aplicar(grupo.id, idsDoRamo(selecionado), "view", !perm.view)}>{perm.view ? "Remover ramo" : "Liberar ramo"}</Button></td></tr>;
+                    return <tr key={grupo.id} className="border-b transition-colors last:border-0 hover:bg-muted/30"><td className="p-4"><div className="flex items-center gap-2"><div className="font-medium">{grupo.nome}</div>{alterados.has(grupo.id) && <span className="h-2 w-2 rounded-full bg-primary" />}</div><div className="text-xs text-muted-foreground">{admin ? "Acesso total" : alterados.has(grupo.id) ? "Alteração pendente" : "Sem alterações"}</div></td>{ACOES.map((acao) => <td key={acao} className="p-3 text-center"><Checkbox checked={admin || perm[acao]} disabled={admin} className="h-5 w-5" onCheckedChange={(valor) => aplicar(grupo.id, [selecionado.id], acao, valor === true)} aria-label={`${ACAO_LABEL[acao]} — ${selecionado.label} — ${grupo.nome}`} /></td>)}<td className="p-3 text-right"><Button type="button" variant="ghost" size="sm" disabled={admin} onClick={() => aplicar(grupo.id, idsDoRamo(selecionado), "view", !perm.view)}>{perm.view ? "Remover" : "Liberar"}</Button></td></tr>;
                   })}</tbody>
                 </table>
               </div>
+              <div className="space-y-3 p-3 sm:hidden">{gruposVisiveis.map((grupo) => {
+                const perm = permissao(grupo.id, selecionado.id);
+                const admin = grupo.perfil === "admin";
+                return <div key={grupo.id} className="rounded-md border bg-background p-3 shadow-sm"><div className="mb-3 flex items-center justify-between gap-2"><div><div className="flex items-center gap-2 font-medium">{grupo.nome}{alterados.has(grupo.id) && <span className="h-2 w-2 rounded-full bg-primary" />}</div><p className="text-xs text-muted-foreground">{admin ? "Acesso total" : alterados.has(grupo.id) ? "Alteração pendente" : "Sem alterações"}</p></div><Button type="button" variant="outline" size="sm" disabled={admin} onClick={() => aplicar(grupo.id, idsDoRamo(selecionado), "view", !perm.view)}>{perm.view ? "Remover ramo" : "Liberar ramo"}</Button></div><div className="grid grid-cols-2 gap-2">{ACOES.map((acao) => <label key={acao} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md bg-muted/50 px-3 text-sm"><Checkbox checked={admin || perm[acao]} disabled={admin} className="h-5 w-5" onCheckedChange={(valor) => aplicar(grupo.id, [selecionado.id], acao, valor === true)} />{ACAO_LABEL[acao]}</label>)}</div></div>;
+              })}</div>
             </>
           )}
-        </div>
+        </section>
       </div>
 
-      <div className="space-y-3 rounded-lg border bg-card p-4">
-        <div className="flex items-center gap-2"><Copy className="h-4 w-4 text-primary" /><h3 className="font-semibold">Copiar permissões entre grupos</h3></div>
-        <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)_240px_auto] lg:items-end">
+      <div className="space-y-4 border-t bg-muted/20 p-4 sm:p-5">
+        <div><div className="flex items-center gap-2"><Copy className="h-4 w-4 text-primary" /><h3 className="font-semibold">Copiar permissões</h3></div><p className="mt-1 text-xs text-muted-foreground">Use um grupo como modelo para configurar outros rapidamente.</p></div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[220px_minmax(260px,1fr)_220px_auto] xl:items-end">
           <div className="space-y-1.5"><Label>Grupo modelo</Label><Select value={origem} onValueChange={(valor) => { setOrigem(valor); setDestinos(new Set()); }}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{grupos.map((grupo) => <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Grupos de destino</Label><div className="flex min-h-10 flex-wrap gap-3 rounded-md border p-2">{grupos.filter((grupo) => grupo.id !== origem && grupo.perfil !== "admin").map((grupo) => <label key={grupo.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={destinos.has(grupo.id)} onCheckedChange={(marcado) => setDestinos((atuais) => { const novos = new Set(atuais); if (marcado) novos.add(grupo.id); else novos.delete(grupo.id); return novos; })} />{grupo.nome}</label>)}</div></div>
-          <RadioGroup value={modoCopia} onValueChange={(valor) => setModoCopia(valor as "substituir" | "acrescentar")} className="flex gap-4 rounded-md border p-3"><label className="flex items-center gap-2 text-sm"><RadioGroupItem value="substituir" />Substituir</label><label className="flex items-center gap-2 text-sm"><RadioGroupItem value="acrescentar" />Acrescentar</label></RadioGroup>
-          <Button type="button" variant="outline" disabled={!origem || destinos.size === 0} onClick={() => setConfirmarCopia(true)}><Copy className="h-4 w-4" /> Aplicar cópia</Button>
+          <RadioGroup value={modoCopia} onValueChange={(valor) => setModoCopia(valor as "substituir" | "acrescentar")} className="grid grid-cols-2 gap-2 rounded-md border bg-background p-2"><label className="flex min-h-9 items-center gap-2 rounded px-2 text-sm"><RadioGroupItem value="substituir" />Substituir</label><label className="flex min-h-9 items-center gap-2 rounded px-2 text-sm"><RadioGroupItem value="acrescentar" />Acrescentar</label></RadioGroup>
+          <Button type="button" variant="outline" className="w-full" disabled={!origem || destinos.size === 0} onClick={() => setConfirmarCopia(true)}><Copy className="h-4 w-4" /> Aplicar cópia</Button>
         </div>
       </div>
 
