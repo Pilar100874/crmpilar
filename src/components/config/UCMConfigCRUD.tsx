@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { UCMAjudaGuia } from "./UCMAjudaGuia";
+import { UCMTesteLigacao } from "./UCMTesteLigacao";
 
 interface UCMConfigCRUDProps {
   estabelecimentoId: string;
