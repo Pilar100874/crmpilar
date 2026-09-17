@@ -215,14 +215,32 @@ export function GerenciadorPermissoesGrupos({ grupos, valores, alterados, salvan
       </div>
 
       <div className="space-y-4 border-t bg-muted/20 p-4 sm:p-5">
-        <div><div className="flex items-center gap-2"><Copy className="h-4 w-4 text-primary" /><h3 className="font-semibold">Copiar permissões</h3></div><p className="mt-1 text-xs text-muted-foreground">Use um grupo como modelo para configurar outros rapidamente.</p></div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[220px_minmax(260px,1fr)_220px_auto] xl:items-end">
-          <div className="space-y-1.5"><Label>Grupo modelo</Label><Select value={origem} onValueChange={(valor) => { setOrigem(valor); setDestinos(new Set()); }}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{grupos.map((grupo) => <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label>Grupos de destino</Label><div className="flex min-h-10 flex-wrap gap-3 rounded-md border p-2">{grupos.filter((grupo) => grupo.id !== origem && grupo.perfil !== "admin").map((grupo) => <label key={grupo.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={destinos.has(grupo.id)} onCheckedChange={(marcado) => setDestinos((atuais) => { const novos = new Set(atuais); if (marcado) novos.add(grupo.id); else novos.delete(grupo.id); return novos; })} />{grupo.nome}</label>)}</div></div>
-          <RadioGroup value={modoCopia} onValueChange={(valor) => setModoCopia(valor as "substituir" | "acrescentar")} className="grid grid-cols-2 gap-2 rounded-md border bg-background p-2"><label className="flex min-h-9 items-center gap-2 rounded px-2 text-sm"><RadioGroupItem value="substituir" />Substituir</label><label className="flex min-h-9 items-center gap-2 rounded px-2 text-sm"><RadioGroupItem value="acrescentar" />Acrescentar</label></RadioGroup>
-          <Button type="button" variant="outline" className="w-full" disabled={!origem || destinos.size === 0} onClick={() => setConfirmarCopia(true)}><Copy className="h-4 w-4" /> Aplicar cópia</Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2"><Copy className="h-4 w-4 text-primary" /><h3 className="font-semibold">Copiar permissões</h3></div>
+            <p className="mt-1 text-xs text-muted-foreground">Use um grupo como modelo para configurar outros rapidamente.</p>
+          </div>
+          <Button type="button" variant="outline" onClick={() => setCopiarAberto(true)}"><Copy className="mr-2 h-4 w-4" /> Abrir cópia</Button>
         </div>
       </div>
+
+      <Dialog open={copiarAberto} onOpenChange={setCopiarAberto}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Copiar permissões</DialogTitle>
+            <DialogDescription>Use um grupo como modelo para configurar outros grupos rapidamente.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5"><Label>Grupo modelo</Label><Select value={origem} onValueChange={(valor) => { setOrigem(valor); setDestinos(new Set()); }}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{grupos.map((grupo) => <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1.5"><Label>Grupos de destino</Label><div className="flex min-h-10 flex-wrap gap-3 rounded-md border p-2">{grupos.filter((grupo) => grupo.id !== origem && grupo.perfil !== "admin").map((grupo) => <label key={grupo.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={destinos.has(grupo.id)} onCheckedChange={(marcado) => setDestinos((atuais) => { const novos = new Set(atuais); if (marcado) novos.add(grupo.id); else novos.delete(grupo.id); return novos; })} />{grupo.nome}</label>)}</div></div>
+            <RadioGroup value={modoCopia} onValueChange={(valor) => setModoCopia(valor as "substituir" | "acrescentar")} className="grid grid-cols-2 gap-2 rounded-md border bg-background p-2"><label className="flex min-h-9 items-center gap-2 rounded px-2 text-sm"><RadioGroupItem value="substituir" />Substituir</label><label className="flex min-h-9 items-center gap-2 rounded px-2 text-sm"><RadioGroupItem value="acrescentar" />Acrescentar</label></RadioGroup>
+          </div>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => setCopiarAberto(false)}>Cancelar</Button>
+            <Button type="button" disabled={!origem || destinos.size === 0} onClick={() => setConfirmarCopia(true)}"><Copy className="mr-2 h-4 w-4" /> Aplicar cópia</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmarCopia} onOpenChange={setConfirmarCopia}>
         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Aplicar permissões do grupo modelo?</AlertDialogTitle><AlertDialogDescription>{modoCopia === "substituir" ? "As permissões atuais dos grupos selecionados serão substituídas." : "As permissões do modelo serão acrescentadas sem remover liberações existentes."} A alteração ficará pendente até você clicar em Salvar alterações.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={executarCopia}>Aplicar aos {destinos.size} grupos</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
