@@ -482,7 +482,11 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") novo.t = Math.max(0, topo + (baseLim - topo - p.h) / 2);
         if (dir === "base") novo.t = Math.max(0, baseLim - p.h);
         atualizarPos(b.id, novo);
-        await salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } });
+        const ok = await salvarComAviso(
+          () => salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } }),
+          "alinhar o elemento",
+        );
+        if (!ok) return;
       }
     } else {
       const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
@@ -500,7 +504,11 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") y = Math.max(0, topo + Math.round((baseLim - topo - bloco.h) / 2));
         if (dir === "base") y = Math.max(0, baseLim - bloco.h);
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+        const ok = await salvarComAviso(
+          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }),
+          "alinhar o elemento",
+        );
+        if (!ok) return;
       }
     }
     toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
