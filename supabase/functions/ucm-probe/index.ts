@@ -14,8 +14,8 @@ Deno.serve(async () => {
   const login = await call({ action: "login", user: c!.ucm_user, token: md5(String(ch.response.challenge) + c!.ucm_password) });
   const cookie = login.response.cookie;
   const testes: Record<string, unknown> = {};
-  testes["dialExtension"] = await call({ action: "dialExtension", cookie, caller: "1014", callee: "999611194" });
-  testes["dialExtension_zeros"] = await call({ action: "dialExtension", cookie, caller: "1014", callee: "0999611194" });
-  testes["listAccount"] = await call({ action: "listAccount", cookie, options: "extension,status", item_num: 5, page: 1 });
+  for (const a of ["callbackDial","cticall","dialNumber","clickToCall","originate","makeCall","dial","cti_dial"]) {
+    testes[a] = await call({ action: a, cookie, caller: "1014", callee: "999611194", phonenumber: "999611194", extension: "1014" });
+  }
   return new Response(JSON.stringify(testes, null, 2), { headers: { "Content-Type": "application/json" } });
 });
