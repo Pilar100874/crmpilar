@@ -730,7 +730,13 @@ export default function AutomacaoPainel() {
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
         </span>
         {admin && (
-          <Button variant={edicao ? "default" : "outline"} size="sm" className="ml-auto" onClick={() => setEdicao((v) => !v)}>
+          <Button
+            variant={edicao ? "default" : "outline"}
+            size="sm"
+            className="ml-auto"
+            disabled={salvandoPainel}
+            onClick={alternarEdicao}
+          >
             {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
           </Button>
         )}
