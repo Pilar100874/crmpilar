@@ -90,7 +90,11 @@ export default function AutomacaoPainel() {
       listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras(), listarRegras(),
     ]);
     setAmbientes(a);
-    setBlocos(b);
+    // Mantém na tela o que ainda não foi salvo, para a edição não se perder.
+    setBlocos((ant) => {
+      const naoSalvos = new Map(ant.filter((x) => pendentesRef.current.includes(x.id)).map((x) => [x.id, x]));
+      return b.map((x) => naoSalvos.get(x.id) ?? x);
+    });
     setDispositivos(d);
     setCameras(c);
     setRegras(r);
