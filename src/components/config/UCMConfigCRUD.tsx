@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { UCMAjudaGuia } from "./UCMAjudaGuia";
+import { UCMTesteLigacao } from "./UCMTesteLigacao";
 
 interface UCMConfigCRUDProps {
   estabelecimentoId: string;
@@ -257,6 +258,8 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           />
           <Label htmlFor="enabled">Integração ativa</Label>
         </div>
+
+        <UCMTesteLigacao />
 
         <Button onClick={handleSave} disabled={loading} className="w-full">
           <Save className="mr-2 h-4 w-4" />

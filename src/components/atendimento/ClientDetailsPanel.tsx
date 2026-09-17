@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
+import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
+import { useRamalUsuario } from "@/hooks/useRamalUsuario";
 
 interface ClientDetailsPanelProps {
   customer?: {
@@ -25,6 +27,7 @@ export function ClientDetailsPanel({
   onAddCompany
 }: ClientDetailsPanelProps) {
   const navigate = useNavigate();
+  const { temRamal } = useRamalUsuario();
 
   if (!customer) {
     return (
@@ -47,7 +50,7 @@ export function ClientDetailsPanel({
           </div>
           <h3 className="font-semibold text-lg">{customer.nome}</h3>
           {customer.telefone && (
-            <div className="flex gap-2 mt-2 text-xs">
+            <div className="flex gap-2 mt-2 text-xs items-center">
               <Button
                 variant="ghost"
                 size="sm"
@@ -57,6 +60,16 @@ export function ClientDetailsPanel({
                 <Phone className="w-3 h-3 mr-1" />
                 {customer.telefone}
               </Button>
+              {temRamal && (
+                <Button
+                  size="sm"
+                  className="h-7 rounded-full px-3 text-xs"
+                  onClick={() => ligarPeloPabx(customer.telefone!)}
+                >
+                  <Phone className="w-3 h-3 mr-1" />
+                  Ligar
+                </Button>
+              )}
             </div>
           )}
         </div>
