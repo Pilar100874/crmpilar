@@ -415,8 +415,8 @@ export default function AutomacaoPainel() {
     await salvarComAviso(
       () =>
         modo === "livre"
-          ? salvarBloco(bloco)
-          : moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h }),
+          ? salvarBloco(bloco).then(() => true)
+          : moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h }).then(() => true),
       "guardar a posição do elemento",
     );
   };
