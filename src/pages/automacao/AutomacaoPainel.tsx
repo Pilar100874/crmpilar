@@ -392,6 +392,61 @@ export default function AutomacaoPainel() {
     if (bloco) await gravarBloco(bloco);
   };
 
+  /** Diz se o elemento está (mesmo que em parte) fora da área visível do painel. */
+  const foraDaArea = (b: Bloco) => {
+    if (modo === "livre") {
+      const p = posLivre(b, celula().cx);
+      return p.l < 0 || p.t < 0 || p.l + p.w > telaL + 1 || p.t + p.h > telaA + 1;
+    }
+    const topo = b.y * (ALTURA_LINHA + ESPACO);
+    const alturaBloco = b.h * ALTURA_LINHA + (b.h - 1) * ESPACO;
+    return b.x < 0 || b.y < 0 || b.x + b.w > COLUNAS || topo + alturaBloco > telaA + 1;
+  };
+
+  /** Move os elementos escolhidos com as setas do teclado. */
+  const moverPorTeclado = async (dx: number, dy: number, passoGrande: boolean) => {
+    const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id) && !estaTravado(b));
+    if (!escolhidos.length) return;
+    const { cx } = celula();
+    for (const bloco of escolhidos) {
+      if (modo === "livre") {
+        const passo = passoGrande ? 10 : 1;
+        const p = posLivre(bloco, cx);
+        const novo: PosLivre = {
+          ...p,
+          l: Math.max(0, p.l + dx * passo),
+          t: Math.max(0, p.t + dy * passo),
+        };
+        atualizarPos(bloco.id, novo);
+        await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } });
+      } else {
+        const x = Math.max(0, Math.min(COLUNAS - bloco.w, bloco.x + dx));
+        const y = Math.max(0, bloco.y + dy);
+        if (x === bloco.x && y === bloco.y) continue;
+        setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
+        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!podeEditar) return;
+    const setas: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
+    };
+    const aoTeclar = (e: KeyboardEvent) => {
+      const alvo = e.target as HTMLElement | null;
+      if (alvo?.closest("input, textarea, select, [contenteditable='true']")) return;
+      const passo = setas[e.key];
+      if (!passo || !selecionados.length) return;
+      e.preventDefault();
+      moverPorTeclado(passo[0], passo[1], e.shiftKey);
+    };
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [podeEditar, selecionados, blocos, modo, telaL, telaA, ambienteId]);
+
   const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
     const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id));
     if (!escolhidos.length) { toast.error("Escolha um ou mais elementos tocando neles."); return; }
@@ -747,15 +802,17 @@ export default function AutomacaoPainel() {
             {daFrenteParaTras.map((b, idx) => {
               const ativo = estaSelecionado(b.id);
               const visivel = estaVisivel(b);
+              const fora = foraDaArea(b);
               return (
                 <div
                   key={b.id}
                   onClick={(e) => selecionar(b.id, e)}
-                  className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${fora ? "bg-destructive/15 hover:bg-destructive/20" : ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
-                  <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">{idx + 1}</span>
-                  <span className={`flex-1 truncate text-sm ${!visivel ? "line-through" : ""}`}>
+                  <span className={`w-5 shrink-0 text-center text-[10px] font-semibold ${fora ? "text-destructive" : "text-muted-foreground"}`}>{idx + 1}</span>
+                  <span className={`flex-1 truncate text-sm ${fora ? "font-medium text-destructive" : ""} ${!visivel ? "line-through" : ""}`}>
                     {b.nome || "Sem nome"}
+                    {fora && <span className="ml-2 text-[10px] uppercase tracking-wide text-destructive">fora da tela</span>}
                     {!visivel && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">oculto</span>}
                   </span>
                   <Button
@@ -805,6 +862,13 @@ export default function AutomacaoPainel() {
                   <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar para o fundo"
                     onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "fundo"); }}>
                     <ChevronsDown className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title="Excluir elemento"
+                    onClick={(e) => { e.stopPropagation(); setExcluir({ tipo: "bloco", id: b.id, nome: b.nome || "Elemento" }); }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
               );
