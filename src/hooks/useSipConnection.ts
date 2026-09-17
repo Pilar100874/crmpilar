@@ -142,6 +142,7 @@ export const useSipConnection = () => {
   /** Reconexão automática: a queda do WebSocket não deve derrubar o ramal de vez. */
   const registererRef = useRef<Registerer | null>(null);
   const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
+  const keepAliveRef = useRef<number | undefined>(undefined);
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
@@ -258,7 +259,8 @@ export const useSipConnection = () => {
       const ua = result.ua;
       const connectedServer = result.server;
 
-      const reg = new Registerer(ua);
+      // Registro curto (2 min): renova sozinho e mantém o caminho aberto no roteador/NAT.
+      const reg = new Registerer(ua, { expires: 120 });
       registererRef.current = reg;
 
       reg.stateChange.addListener((state) => {
@@ -280,8 +282,24 @@ export const useSipConnection = () => {
       await reg.register();
       console.log('Registro iniciado, aguardando resposta do UCM...');
 
+      // Ping de manutenção: evita que roteador/proxy derrubem o WebSocket por inatividade.
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      keepAliveRef.current = window.setInterval(() => {
+        const transporte = ua.transport as unknown as { send?: (m: string) => Promise<void>; isConnected?: () => boolean };
+        try {
+          if (transporte.isConnected?.() === false) {
+            agendarReconexao(ua);
+            return;
+          }
+          void transporte.send?.("\r\n\r\n");
+        } catch {
+          agendarReconexao(ua);
+        }
+      }, 25000);
+
       setUserAgent(ua);
       setRegisterer(reg);
+
 
     } catch (error) {
       console.error('❌ ERRO NA CONEXÃO:', error);
@@ -700,6 +718,10 @@ export const useSipConnection = () => {
   const disconnect = useCallback(async () => {
     const tinhaConexaoSip = Boolean(userAgent || registerer || isRegistered || activeCalls.length > 0);
     // Desconexão pedida pelo usuário: cancela qualquer reconexão automática pendente.
+    if (keepAliveRef.current) {
+      clearInterval(keepAliveRef.current);
+      keepAliveRef.current = undefined;
+    }
     if (reconexaoRef.current.timer) {
       clearTimeout(reconexaoRef.current.timer);
       reconexaoRef.current.timer = undefined;
