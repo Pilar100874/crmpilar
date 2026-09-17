@@ -318,118 +318,123 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
         </TabsList>
 
         <TabsContent value="grupos" className="space-y-4">
-          <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-          <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><UsersRound className="h-5 w-5" /></div><div><h3 className="text-base font-semibold sm:text-lg">Grupos cadastrados</h3><p className="text-xs text-muted-foreground sm:text-sm">{grupos.length} {grupos.length === 1 ? "grupo disponível" : "grupos disponíveis"} neste estabelecimento.</p></div></div>
-            <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo grupo</Button>
-          </div>
-          <div className="border-b bg-muted/20 p-3 sm:p-4"><div className="relative sm:max-w-md"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="bg-background pl-9" /></div></div>
+          {!formOpen ? (
+            <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+              <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><UsersRound className="h-5 w-5" /></div><div><h3 className="text-base font-semibold sm:text-lg">Grupos cadastrados</h3><p className="text-xs text-muted-foreground sm:text-sm">{grupos.length} {grupos.length === 1 ? "grupo disponível" : "grupos disponíveis"} neste estabelecimento.</p></div></div>
+                <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo grupo</Button>
+              </div>
+              <div className="border-b bg-muted/20 p-3 sm:p-4"><div className="relative sm:max-w-md"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="bg-background pl-9" /></div></div>
 
-          {filteredGrupos.length === 0 ? <div className="m-4 rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : (
-        <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3 sm:p-4">{filteredGrupos.map((grupo) => (
-          <div
-            key={grupo.id}
-            onClick={() => handleEdit(grupo)}
-            className="group relative rounded-xl border bg-background p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30 hover:bg-muted/20 cursor-pointer"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <UserRoundCog className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{grupo.nome}</p>
-                  <Badge variant="secondary" className="mt-1">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge>
-                </div>
-              </div>
-              <div className="flex shrink-0 gap-1" onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(grupo)} className="h-8 w-8" aria-label={`Editar ${grupo.nome}`}>
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(grupo)} className="h-8 w-8" aria-label={`Excluir ${grupo.nome}`}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
+              {filteredGrupos.length === 0 ? <div className="m-4 rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : (
+                <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3 sm:p-4">{filteredGrupos.map((grupo) => (
+                  <div
+                    key={grupo.id}
+                    onClick={() => handleEdit(grupo)}
+                    className="group relative rounded-xl border bg-background p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30 hover:bg-muted/20 cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                          <UserRoundCog className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{grupo.nome}</p>
+                          <Badge variant="secondary" className="mt-1">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(grupo)} className="h-8 w-8" aria-label={`Editar ${grupo.nome}`}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(grupo)} className="h-8 w-8" aria-label={`Excluir ${grupo.nome}`}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-4 border-t pt-3">
+                      <p className="text-xs font-medium uppercase text-muted-foreground">Permissões</p>
+                      <p className="mt-1 text-sm">{formatPermissionsCompact(grupo.menus_permitidos)}</p>
+                    </div>
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-primary/0 transition-all group-hover:ring-primary/10" />
+                  </div>
+                ))}</div>
+              )}
             </div>
-            <div className="mt-4 border-t pt-3">
-              <p className="text-xs font-medium uppercase text-muted-foreground">Permissões</p>
-              <p className="mt-1 text-sm">{formatPermissionsCompact(grupo.menus_permitidos)}</p>
+          ) : (
+            <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+              <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <div className="flex items-center gap-3">
+                  <Button type="button" variant="outline" size="sm" onClick={resetForm}>
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+                  </Button>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</h4>
+                    <p className="text-xs text-muted-foreground">Defina o perfil e as permissões deste grupo.</p>
+                  </div>
+                </div>
+                <Button type="submit" form="grupo-form" size="sm">
+                  {editingId ? "Salvar" : <><Plus className="w-4 h-4 mr-1" /> Criar</>}
+                </Button>
+              </div>
+
+              <form id="grupo-form" onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="grupo-nome" className="text-sm font-medium">
+                      {editingId ? 'Editando Grupo' : 'Novo Grupo'} *
+                    </Label>
+                    <Input
+                      id="grupo-nome"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      placeholder="Digite o nome do grupo"
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div className="sm:w-56">
+                    <Label htmlFor="grupo-perfil" className="text-sm font-medium">Perfil *</Label>
+                    <Select value={perfil} onValueChange={setPerfil}>
+                      <SelectTrigger id="grupo-perfil" className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PERFIS_GRUPO.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Define as permissões especiais do usuário (admin, atendente, porteiro, gerente).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-lg border bg-muted/20 p-3 sm:p-4">
+                  <div>
+                    <Label className="text-sm font-medium">Permissões por menu, submenu e módulo</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Marque o que este grupo pode ver, criar, editar e excluir em cada menu, submenu e módulo interno das telas.
+                    </p>
+                  </div>
+                  <ArvorePermissoes valor={menusPermitidos} onChange={setMenusPermitidos} />
+                </div>
+
+                <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    {editingId ? "Salvar" : <><Plus className="w-4 h-4 mr-1" /> Criar</>}
+                  </Button>
+                </div>
+              </form>
             </div>
-            <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-primary/0 transition-all group-hover:ring-primary/10" />
-          </div>
-        ))}</div>
           )}
-          </div>
-
-      {/* Formulário em painel lateral */}
-      <Sheet open={formOpen} onOpenChange={(open) => { if (!open) resetForm(); setFormOpen(open); }}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-4xl overflow-y-auto p-0">
-          <SheetHeader className="border-b p-4 sm:p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div className="text-left">
-                <SheetTitle className="text-base sm:text-lg">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</SheetTitle>
-                <p className="text-xs text-muted-foreground">Defina o perfil e as permissões deste grupo.</p>
-              </div>
-            </div>
-          </SheetHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label htmlFor="grupo-nome" className="text-sm font-medium">
-                  {editingId ? 'Editando Grupo' : 'Novo Grupo'} *
-                </Label>
-                <Input
-                  id="grupo-nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  placeholder="Digite o nome do grupo"
-                  className="mt-1"
-                  required
-                />
-              </div>
-              <div className="sm:w-56">
-                <Label htmlFor="grupo-perfil" className="text-sm font-medium">Perfil *</Label>
-                <Select value={perfil} onValueChange={setPerfil}>
-                  <SelectTrigger id="grupo-perfil" className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERFIS_GRUPO.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Define as permissões especiais do usuário (admin, atendente, porteiro, gerente).
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3 rounded-lg border bg-muted/20 p-3 sm:p-4">
-              <div>
-                <Label className="text-sm font-medium">Permissões por menu, submenu e módulo</Label>
-                <p className="text-xs text-muted-foreground">
-                  Marque o que este grupo pode ver, criar, editar e excluir em cada menu, submenu e módulo interno das telas.
-                </p>
-              </div>
-              <ArvorePermissoes valor={menusPermitidos} onChange={setMenusPermitidos} />
-            </div>
-
-            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {editingId ? "Salvar" : <><Plus className="w-4 h-4 mr-1" /> Criar</>}
-              </Button>
-            </div>
-          </form>
-        </SheetContent>
-      </Sheet>
         </TabsContent>
 
         <TabsContent value="permissoes" className="mt-4">
