@@ -1071,7 +1071,7 @@ export default function AutomacaoPainel() {
                     }
               }
             >
-              <div className={podeEditar && !selecionado ? "pointer-events-none" : ""}>
+              <div className={`h-full w-full ${podeEditar && !selecionado ? "pointer-events-none" : ""}`}>
                 <BlocoCard
                   bloco={b}
                   ligado={estados[b.id] ?? null}
