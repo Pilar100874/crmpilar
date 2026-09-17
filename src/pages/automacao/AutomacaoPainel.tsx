@@ -388,8 +388,13 @@ export default function AutomacaoPainel() {
   };
 
   const gravarBloco = async (bloco: Bloco) => {
-    if (modo === "livre") await salvarBloco(bloco);
-    else await moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h });
+    await salvarComAviso(
+      () =>
+        modo === "livre"
+          ? salvarBloco(bloco)
+          : moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h }),
+      "guardar a posição do elemento",
+    );
   };
 
   const aoSoltar = async () => {
@@ -427,13 +432,21 @@ export default function AutomacaoPainel() {
           t: Math.max(0, p.t + dy * passo),
         };
         atualizarPos(bloco.id, novo);
-        await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } });
+        const ok = await salvarComAviso(
+          () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } }),
+          "mover o elemento",
+        );
+        if (!ok) return;
       } else {
         const x = Math.max(0, Math.min(COLUNAS - bloco.w, bloco.x + dx));
         const y = Math.max(0, bloco.y + dy);
         if (x === bloco.x && y === bloco.y) continue;
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+        const ok = await salvarComAviso(
+          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }),
+          "mover o elemento",
+        );
+        if (!ok) return;
       }
     }
   };
