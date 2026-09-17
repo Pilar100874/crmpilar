@@ -253,10 +253,10 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         )}
         {edicao && (
           <div
-            className="absolute inset-0 z-[1200] bg-background/60 backdrop-blur-[1px] flex items-center justify-center gap-2"
+            className="absolute inset-0 z-[1200] flex items-center justify-center gap-2"
             style={{ borderRadius: raio }}
           >
-            <GripVertical className="h-5 w-5 text-muted-foreground" />
+            <GripVertical className="h-5 w-5 text-muted-foreground drop-shadow" />
             <Button variant="secondary" size="icon" className="h-8 w-8" title="Editar elemento" onClick={onEditar}>
               <Pencil className="h-4 w-4" />
             </Button>
