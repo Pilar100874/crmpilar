@@ -85,6 +85,13 @@ export default function AutomacaoPainel() {
   const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
   const pendentesRef = useRef<string[]>([]);
   useEffect(() => { pendentesRef.current = pendentes; }, [pendentes]);
+  // Avisa se o usuário tentar sair com mudanças ainda não salvas.
+  useEffect(() => {
+    if (!pendentes.length) return;
+    const aviso = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", aviso);
+    return () => window.removeEventListener("beforeunload", aviso);
+  }, [pendentes.length]);
 
 
 
