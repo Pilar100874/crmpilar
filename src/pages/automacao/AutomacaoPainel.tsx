@@ -127,11 +127,16 @@ export default function AutomacaoPainel() {
     });
   });
 
-  // Abre a tela escolhida na lista de telas.
+  // Abre a tela escolhida na lista de telas — só na primeira vez de cada
+  // endereço. Sem isso, qualquer recarga de dados jogaria o usuário de volta
+  // para a aba do endereço, perdendo a aba que ele estava editando.
+  const rotaAberta = useRef<string | null>(null);
   useEffect(() => {
     if (!idRota || !ambientes.length) return;
+    if (rotaAberta.current === idRota) return;
     const alvo = ambientes.find((a) => a.id === idRota);
     if (!alvo) return;
+    rotaAberta.current = idRota;
     setTipoTelaFiltro((alvo.dispositivo as TipoTela) ?? "tv");
     setAmbienteId(alvo.id);
   }, [idRota, ambientes]);
