@@ -57,7 +57,8 @@ export default function AutomacaoPainel() {
   const [cameras, setCameras] = useState<CameraSimples[]>([]);
   const [ambienteId, setAmbienteId] = useState<string>("");
   const [tipoTelaFiltro, setTipoTelaFiltro] = useState<TipoTela>("tv");
-  const [edicao, setEdicao] = useState(false);
+  // O modo de edição continua ligado depois de recarregar a página.
+  const [edicao, setEdicao] = useState(() => localStorage.getItem("automacao_edicao") === "1");
   const [admin, setAdmin] = useState(false);
   const [modo, setModo] = useState<Modo>("grade");
   const [selecionados, setSelecionados] = useState<string[]>([]);
@@ -617,6 +618,22 @@ export default function AutomacaoPainel() {
     }
   };
 
+  /**
+   * Liga e desliga o modo de edição. Ao concluir, grava tudo (posições,
+   * tamanhos e camadas) para o painel voltar igual depois de recarregar.
+   */
+  const alternarEdicao = async () => {
+    if (edicao) {
+      await salvarPainel();
+      setSelecionados([]);
+      setEdicao(false);
+      localStorage.removeItem("automacao_edicao");
+      return;
+    }
+    setEdicao(true);
+    localStorage.setItem("automacao_edicao", "1");
+  };
+
   /** Desativa (ou reativa) o painel: desativado, só administradores enxergam. */
   const alternarAtivoPainel = async () => {
     if (!ambienteAtual) return;
@@ -713,7 +730,13 @@ export default function AutomacaoPainel() {
           {TIPOS_TELA.find((t) => t.valor === tipoTelaFiltro)?.descricao}
         </span>
         {admin && (
-          <Button variant={edicao ? "default" : "outline"} size="sm" className="ml-auto" onClick={() => setEdicao((v) => !v)}>
+          <Button
+            variant={edicao ? "default" : "outline"}
+            size="sm"
+            className="ml-auto"
+            disabled={salvandoPainel}
+            onClick={alternarEdicao}
+          >
             {edicao ? <><Check className="h-4 w-4 mr-2" /> Concluir</> : <><Move className="h-4 w-4 mr-2" /> Editar painel</>}
           </Button>
         )}
