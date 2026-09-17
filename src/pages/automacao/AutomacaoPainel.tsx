@@ -231,37 +231,26 @@ export default function AutomacaoPainel() {
   const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
   const doFundoParaFrente = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
 
-  /**
-   * Guarda a mudança no banco. Se der erro, avisa na tela e recarrega o painel
-   * com o que está gravado, para a tela nunca mostrar algo que não foi salvo.
-   */
-  const salvarComAviso = async <T,>(acao: () => Promise<T>, oQue: string): Promise<T | null> => {
-    try {
-      return await acao();
-    } catch (e) {
-      toast.error(`Não foi possível ${oQue}. ${(e as Error).message ?? ""}`.trim());
-      await carregar();
-      return null;
-    }
+  /** Marca elementos como alterados, para serem gravados na hora de salvar. */
+  const marcarPendente = (...ids: string[]) =>
+    setPendentes((ant) => Array.from(new Set([...ant, ...ids])));
+
+  /** Muda o elemento só na tela e anota que ele precisa ser gravado. */
+  const alterarBloco = (id: string, muda: (b: Bloco) => Bloco) => {
+    setBlocos((ant) => ant.map((b) => (b.id === id ? muda(b) : b)));
+    marcarPendente(id);
   };
 
-  const gravarCamadas = async (ordem: Bloco[]) => {
+  const gravarCamadas = (ordem: Bloco[]) => {
     const mapa = new Map(ordem.map((b, i) => [b.id, i]));
+    const mudaram = ordem.filter((b, i) => camadaDe(b) !== i).map((b) => b.id);
     setBlocos((ant) =>
       ant.map((b) => (mapa.has(b.id) ? { ...b, config: { ...(b.config ?? {}), camada: mapa.get(b.id) } } : b)),
     );
-    await salvarComAviso(
-      () =>
-        Promise.all(
-          ordem.map((b, i) =>
-            camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
-          ),
-        ),
-      "guardar a ordem das camadas",
-    );
+    if (mudaram.length) marcarPendente(...mudaram);
   };
 
-  const moverCamada = async (id: string, acao: "frente" | "fundo" | "subir" | "descer") => {
+  const moverCamada = (id: string, acao: "frente" | "fundo" | "subir" | "descer") => {
     const ordem = [...doFundoParaFrente];
     const i = ordem.findIndex((b) => b.id === id);
     if (i < 0) return;
@@ -269,29 +258,17 @@ export default function AutomacaoPainel() {
     const destino =
       acao === "frente" ? ordem.length : acao === "fundo" ? 0 : acao === "subir" ? Math.min(ordem.length, i + 1) : Math.max(0, i - 1);
     ordem.splice(destino, 0, item);
-    await gravarCamadas(ordem);
+    gravarCamadas(ordem);
   };
 
-  const alternarTravado = async (bloco: Bloco) => {
+  const alternarTravado = (bloco: Bloco) => {
     const novo = !estaTravado(bloco);
-    setBlocos((ant) =>
-      ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
-    );
-    const ok = await salvarComAviso(
-      () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } }).then(() => true),
-      novo ? "bloquear o elemento" : "liberar o elemento",
-    );
-    if (ok) toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+    alterarBloco(bloco.id, (b) => ({ ...b, config: { ...(b.config ?? {}), travado: novo } }));
   };
 
-  const alternarVisivel = async (bloco: Bloco) => {
+  const alternarVisivel = (bloco: Bloco) => {
     const novo = !estaVisivel(bloco);
-    setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
-    const ok = await salvarComAviso(
-      () => salvarBloco({ ...bloco, visivel: novo }).then(() => true),
-      novo ? "mostrar o elemento" : "ocultar o elemento",
-    );
-    if (ok) toast.success(novo ? "Elemento visível." : "Elemento oculto.");
+    alterarBloco(bloco.id, (b) => ({ ...b, visivel: novo }));
   };
 
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
