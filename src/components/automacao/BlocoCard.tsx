@@ -224,7 +224,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         className={cn(
           "relative h-full select-none",
           semCorte ? "overflow-visible z-[1300]" : "overflow-hidden",
-          (transparente || fundoParcial) &&
+          (transparente || fundoParcial || corEscolhida) &&
             "[&>*:not([data-cheio])]:!bg-transparent [&>*:not([data-cheio])]:!border-transparent",
         )}
         style={{
@@ -299,15 +299,19 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         "relative h-full border p-3 flex flex-col gap-2 transition-colors select-none",
         transparente
           ? "bg-transparent border-transparent"
-          : fundoParcial
+          : fundoParcial || corEscolhida
             ? "border-border"
             : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
       )}
         style={{
           borderRadius: raio,
-          background: fundoParcial
-            ? `color-mix(in srgb, ${aceso ? "hsl(var(--primary))" : corBaseFundo} ${opacidadeFundo}%, transparent)`
-            : undefined,
+          background: transparente
+            ? undefined
+            : corEscolhida
+              ? fundoCalculado
+              : fundoParcial
+                ? `color-mix(in srgb, ${aceso ? "hsl(var(--primary))" : corBaseFundo} ${opacidadeFundo}%, transparent)`
+                : undefined,
         }}
       >
       {dialogo}
