@@ -271,17 +271,6 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         </p>
       </div>
 
-      <div className="flex items-center space-x-2">
-          <Switch
-            id="is_local"
-            checked={config.is_local}
-            onCheckedChange={(checked) => setConfig({ ...config, is_local: checked })}
-          />
-          <Label htmlFor="is_local">UCM na rede local</Label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Ative esta opção se o UCM estiver na sua rede local. Desative se o UCM estiver acessível via internet.
-        </p>
 
         <div className="flex items-center space-x-2">
           <Switch
