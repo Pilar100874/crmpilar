@@ -178,6 +178,9 @@ export const useSipConnection = () => {
         transportOptions: {
           server: wsUrl,
           connectionTimeout: 8,
+          // Ping nativo do SIP.js: mantém o caminho aberto no roteador/provedor.
+          keepAliveInterval: 20,
+          keepAliveDebounce: 5,
         },
         authorizationUsername: (authUser || '').trim() || extension,
         authorizationPassword: password,
