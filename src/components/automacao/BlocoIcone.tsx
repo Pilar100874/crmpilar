@@ -73,7 +73,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
           "flex items-center justify-center transition-all duration-300",
           fundo === "circulo" && "rounded-full",
           fundo === "quadrado" && "rounded-xl",
-          fundo !== "nenhum" && (aceso
+          fundo !== "nenhum" && !corFundoAtual && (aceso
             ? "bg-primary/25 ring-2 ring-primary/50"
             : "bg-muted/60 ring-1 ring-border group-hover:ring-primary/40"),
         )}
@@ -82,6 +82,12 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
             ? { height: fixo + 16, width: fixo + 16 }
             : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
           ...(corAtual ? { color: corAtual } : {}),
+          ...(corFundoAtual && fundo !== "nenhum"
+            ? {
+                backgroundColor: hexToRgba(corFundoAtual, aceso ? 0.25 : 0.6),
+                boxShadow: `inset 0 0 0 ${aceso ? 2 : 1}px ${hexToRgba(corFundoAtual, aceso ? 0.5 : 0.3)}`,
+              }
+            : {}),
           opacity: opacidade / 100,
         }}
       >
