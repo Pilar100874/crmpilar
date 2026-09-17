@@ -315,6 +315,15 @@ export default function AutomacaoPainel() {
     });
   };
 
+  /** Clicar no fundo do painel limpa a seleção atual. */
+  const limparSelecao = (e: React.PointerEvent) => {
+    if (!podeEditar) return;
+    if (e.button !== 0) return;
+    const alvo = e.target as HTMLElement | null;
+    if (alvo?.closest('[data-bloco="true"]')) return;
+    setSelecionados([]);
+  };
+
   const aoArrastar = (e: React.PointerEvent, bloco: Bloco) => {
     if (!podeEditar) return;
     selecionar(bloco.id, e);
