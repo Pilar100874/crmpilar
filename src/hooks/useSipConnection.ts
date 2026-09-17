@@ -143,6 +143,7 @@ export const useSipConnection = () => {
   const registererRef = useRef<Registerer | null>(null);
   const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
   const keepAliveRef = useRef<number | undefined>(undefined);
+  const ouvintesSaudeRef = useRef<(() => void) | undefined>(undefined);
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
