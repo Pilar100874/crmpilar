@@ -467,7 +467,7 @@ export default function AutomacaoPainel() {
         if (x === bloco.x && y === bloco.y) continue;
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
         const ok = await salvarComAviso(
-          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }),
+          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
           "mover o elemento",
         );
         if (!ok) return;
