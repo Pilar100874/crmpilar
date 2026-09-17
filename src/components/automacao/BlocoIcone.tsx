@@ -32,6 +32,8 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     cor?: string;
     corAtivo?: string;
     corInativo?: string;
+    corFundoAtivo?: string;
+    corFundoInativo?: string;
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
     tamanho?: number;
@@ -40,6 +42,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
   const corAtual = aceso ? (cfg.corAtivo ?? cfg.cor) : cfg.corInativo;
+  const corFundoAtual = aceso ? cfg.corFundoAtivo : cfg.corFundoInativo;
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
   const fixo = typeof cfg.tamanho === "number" && cfg.tamanho > 0 ? cfg.tamanho : null;
