@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useModulosPermitidos } from "@/components/permissoes/ContextoPermissao";
 import { 
   ArrowLeft, ChevronRight,
   Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, 
@@ -75,6 +76,7 @@ interface ConfigCategory {
   color: string;
   bgColor: string;
   items: ConfigItem[];
+  abrirDireto?: boolean;
 }
 
 interface ConfigItem {
@@ -128,11 +130,12 @@ const getConfigCategories = (): ConfigCategory[] => [
     ],
   },
   {
-    id: "usuarios-acessos",
-    title: "Usuários e Acessos",
-    icon: Users,
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
+    id: "cadastro-unidades",
+    title: "Unidades",
+    icon: Building2,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+    abrirDireto: true,
     items: [
       {
         id: "cadastro-unidades",
@@ -141,6 +144,16 @@ const getConfigCategories = (): ConfigCategory[] => [
         icon: Building2,
         component: UnidadesCRUD,
       },
+    ],
+  },
+  {
+    id: "grupos-acesso",
+    title: "Grupos de Acesso",
+    icon: FolderTree,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    abrirDireto: true,
+    items: [
       {
         id: "grupos-acesso",
         title: "Grupos de Acesso",
@@ -148,6 +161,16 @@ const getConfigCategories = (): ConfigCategory[] => [
         icon: FolderTree,
         component: GruposAcessoCRUD,
       },
+    ],
+  },
+  {
+    id: "cadastro-usuarios",
+    title: "Usuários",
+    icon: UserCog,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    abrirDireto: true,
+    items: [
       {
         id: "cadastro-usuarios",
         title: "Usuários",
@@ -155,6 +178,16 @@ const getConfigCategories = (): ConfigCategory[] => [
         icon: UserCog,
         component: UsuariosCRUD,
       },
+    ],
+  },
+  {
+    id: "segmentos",
+    title: "Segmentos",
+    icon: Tag,
+    color: "text-teal-500",
+    bgColor: "bg-teal-500/10",
+    abrirDireto: true,
+    items: [
       {
         id: "segmentos",
         title: "Segmentos",
@@ -231,6 +264,66 @@ const getConfigCategories = (): ConfigCategory[] => [
       },
     ],
   },
+  {
+    id: "recuperar-senha",
+    title: "Recuperação de Senha",
+    icon: Shield,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    abrirDireto: true,
+    items: [{
+      id: "recuperar-senha",
+      title: "Recuperação de Senha",
+      description: "Configure envio de códigos via WhatsApp",
+      icon: Shield,
+      navigateTo: "/config?secao=recuperar-senha",
+    }],
+  },
+  {
+    id: "email-config",
+    title: "Email Config",
+    icon: Mail,
+    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10",
+    abrirDireto: true,
+    items: [{
+      id: "email-config",
+      title: "Email Config",
+      description: "Configure servidor externo e OAuth",
+      icon: Mail,
+      navigateTo: "/config?secao=email-config",
+    }],
+  },
+  {
+    id: "notificacoes-sistema",
+    title: "Notificações do Sistema",
+    icon: Bell,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    abrirDireto: true,
+    items: [{
+      id: "notificacoes-sistema",
+      title: "Notificações do Sistema",
+      description: "Configure mensagens de confirmação e alertas",
+      icon: Bell,
+      navigateTo: "/config?secao=notificacoes-sistema",
+    }],
+  },
+  {
+    id: "visual-sistema",
+    title: "Visual do Sistema",
+    icon: Settings,
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
+    abrirDireto: true,
+    items: [{
+      id: "visual-sistema",
+      title: "Visual do Sistema",
+      description: "Tela de entrada, vídeo de fundo e aparência",
+      icon: Settings,
+      navigateTo: "/config?secao=visual-sistema",
+    }],
+  },
 ];
 
 export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome, categoriaInicial, onVoltar }: EstabelecimentoDetalhesProps) {
@@ -242,6 +335,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
   const [userEstabId, setUserEstabId] = useState<string | null>(null);
 
   const categories = getConfigCategories();
+  const { itensPermitidos: categoriasPermitidas } = useModulosPermitidos("Config Geral", categories);
 
   // Handle URL params
   useEffect(() => {
@@ -298,6 +392,12 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
   };
 
   const handleCategoryClick = (categoryId: string) => {
+    const category = categories.find((item) => item.id === categoryId);
+    if (category?.abrirDireto && category.items[0]) {
+      setSelectedCategory(categoryId);
+      handleItemClick(category.items[0]);
+      return;
+    }
     setSelectedCategory(categoryId);
     setSelectedItem(null);
   };
@@ -422,7 +522,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
   // Render categories list
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {categories.map((category) => (
+      {categoriasPermitidas.map((category) => (
         <Card 
           key={category.id}
           className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all group"
@@ -438,7 +538,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             <div className="min-w-0">
               <h3 className="font-semibold text-base">{category.title}</h3>
               <p className="text-xs text-muted-foreground">
-                {category.items.length} configurações
+                {category.abrirDireto ? category.items[0]?.description : `${category.items.length} configurações`}
               </p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
