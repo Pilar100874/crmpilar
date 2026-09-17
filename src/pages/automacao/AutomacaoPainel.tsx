@@ -926,44 +926,48 @@ export default function AutomacaoPainel() {
           const p = modo === "livre" ? posLivre(b, celula().cx) : null;
           const travado = estaTravado(b);
           const visivel = estaVisivel(b);
+          const selecionado = estaSelecionado(b.id);
+          const editando = podeEditar && selecionado;
           const zIndex = indice + 1;
           return (
             <div
               key={b.id}
               onPointerDown={(e) => aoArrastar(e, b)}
-              className={`relative ${podeEditar && estaSelecionado(b.id) ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
+              className={`relative ${editando ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
               style={
                 p
                   ? {
                       position: "absolute",
                       left: p.l, top: p.t, width: p.w, height: p.h,
                       zIndex,
-                      cursor: podeEditar ? (travado ? "not-allowed" : "grab") : undefined,
-                      touchAction: podeEditar && !travado ? "none" : undefined,
+                      cursor: editando ? (travado ? "not-allowed" : "grab") : undefined,
+                      touchAction: editando && !travado ? "none" : undefined,
                     }
                   : {
                       gridColumn: `${b.x + 1} / span ${b.w}`,
                       gridRow: `${b.y + 1} / span ${b.h}`,
                       zIndex,
-                      cursor: podeEditar ? (travado ? "not-allowed" : "grab") : undefined,
-                      touchAction: podeEditar && !travado ? "none" : undefined,
+                      cursor: editando ? (travado ? "not-allowed" : "grab") : undefined,
+                      touchAction: editando && !travado ? "none" : undefined,
                     }
               }
             >
-              <BlocoCard
-                bloco={b}
-                ligado={estados[b.id] ?? null}
-                edicao={podeEditar}
-                onEditar={() => setBlocoEdit(b)}
-                onDuplicar={() => duplicarBloco(b)}
-                onAcionar={() => { if (!podeEditar) dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null }); }}
-                onEstado={(v) => {
-                  aplicarEstado(b.device_id, b.id, v);
-                  if (!podeEditar) dispararRegras({ tipo: "mudanca", bloco: b, ligado: v });
-                }}
-              />
+              <div className={podeEditar && !selecionado ? "pointer-events-none" : ""}>
+                <BlocoCard
+                  bloco={b}
+                  ligado={estados[b.id] ?? null}
+                  edicao={editando}
+                  onEditar={() => setBlocoEdit(b)}
+                  onDuplicar={() => duplicarBloco(b)}
+                  onAcionar={() => { if (!podeEditar) dispararRegras({ tipo: "clique", bloco: b, ligado: estadosRef.current[b.id] ?? null }); }}
+                  onEstado={(v) => {
+                    aplicarEstado(b.device_id, b.id, v);
+                    if (!podeEditar) dispararRegras({ tipo: "mudanca", bloco: b, ligado: v });
+                  }}
+                />
+              </div>
 
-              {podeEditar && (
+              {editando && (
                 <>
                   <Button
                     size="icon"
@@ -1006,7 +1010,7 @@ export default function AutomacaoPainel() {
                   </Button>
                 </>
               )}
-              {podeEditar && !travado && (
+              {editando && !travado && (
                 <>
                   <div
                     onPointerDown={(e) => aoRedimensionar(e, b)}
