@@ -29,7 +29,8 @@ export type TipoBloco =
   | "web"
   | "abas"
   | "bubble"
-  | "expansivel";
+  | "expansivel"
+  | "marketing";
 
 export interface Ambiente {
   id: string;
@@ -187,6 +188,7 @@ export const TIPOS_BLOCO: {
   { valor: "ambiente", label: "Cartão de ambiente (foto)", descricao: "Foto que fica clara ao ligar e escura ao desligar", grupo: "Controle" },
   { valor: "imagemluz", label: "Imagem acesa / apagada", descricao: "Imagem com fundo transparente que aparece ao ligar (ideal para sobrepor)", grupo: "Controle" },
   { valor: "bubble", label: "Controle Rápido", descricao: "Ícone, estado e botão de ação", grupo: "Controle" },
+  { valor: "marketing", label: "Automação de marketing", descricao: "Botão que dispara uma automação de marketing já cadastrada", grupo: "Controle" },
   { valor: "expansivel", label: "Grupo expansível", descricao: "Um toque abre outros elementos escolhidos", grupo: "Controle" },
 ];
 
@@ -567,4 +569,20 @@ export async function comandoAutomacao(
     mensagem: r?.ok ? "Comando enviado." : r?.error || "Não foi possível concluir o comando.",
     ligado: r?.ligado ?? null,
   };
+}
+
+
+export interface AutomacaoMarketingSimples {
+  id: string;
+  name: string;
+  active: boolean | null;
+}
+
+/** Automações de marketing disponíveis para o elemento do painel. */
+export async function listarAutomacoesMarketing(): Promise<AutomacaoMarketingSimples[]> {
+  const { data } = await db
+    .from("marketing_automations")
+    .select("id, name, active")
+    .order("name");
+  return (data ?? []) as AutomacaoMarketingSimples[];
 }

@@ -32,7 +32,7 @@ const TIPOS_COM_LIGADO = ["luz", "tomada", "icone", "cena", "ambiente", "imageml
 /** Tipos que não controlam equipamento: não mostram Dispositivo nem Canal. */
 const TIPOS_SEM_DISPOSITIVO = [
   "camera", "mapa", "imagem", "rastreamento", "portaria", "pilarfone",
-  "interfone", "texto", "forma", "clima", "moeda", "web", "grafico", "abas", "expansivel",
+  "interfone", "marketing", "texto", "forma", "clima", "moeda", "web", "grafico", "abas", "expansivel",
 ];
 
 /** Ajustes visuais que o botão "Voltar ao padrão" apaga (não mexe em dispositivo, regras ou conteúdo). */
