@@ -89,14 +89,14 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
   const conteudo = (
     <div
       className={cn(
-        "h-full rounded-2xl overflow-hidden flex flex-col",
+        "relative h-full min-h-0 rounded-2xl overflow-hidden",
         cfg.transparente ? "border border-transparent bg-transparent" : "border border-border bg-card"
       )}
     >
       {mostrarBarra && (
       <div
         className={cn(
-          "flex items-center justify-between gap-2 px-3 py-2 select-none",
+          "absolute inset-x-2 top-2 z-[500] flex items-center justify-between gap-2 rounded-lg border border-border bg-background/90 px-3 py-2 shadow-sm backdrop-blur select-none",
           !edicao && podeAmpliar && "cursor-pointer hover:bg-muted/40 transition-colors"
         )}
         onClick={alternar}
@@ -122,7 +122,7 @@ export default function BlocoRastreamento({ bloco, edicao, onAcionar }: Props) {
         </span>
       </div>
       )}
-      <div className="relative flex-1 min-h-0">
+      <div className="absolute inset-0 min-h-0">
         {carregando ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
