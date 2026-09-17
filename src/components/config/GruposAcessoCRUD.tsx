@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, Search, ShieldCheck } from "lucide-react";
+import { Trash2, Edit, Plus, Search, ShieldCheck, UsersRound } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -14,6 +14,8 @@ import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArvorePermissoes } from "@/components/config/ArvorePermissoes";
 import { limparCachePermissoes } from "@/hooks/usePermissoesUsuario";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GerenciadorPermissoesGrupos } from "@/components/config/GerenciadorPermissoesGrupos";
 
 interface MenuPermissions {
   view: boolean;
@@ -57,6 +59,10 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
+  const [aba, setAba] = useState("grupos");
+  const [permissoesEmEdicao, setPermissoesEmEdicao] = useState<Record<string, Record<string, MenuPermissions>>>({});
+  const [gruposAlterados, setGruposAlterados] = useState<Set<string>>(new Set());
+  const [salvandoPermissoes, setSalvandoPermissoes] = useState(false);
   const { toast } = useToast();
 
 
@@ -81,7 +87,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
         variant: "destructive",
       });
     } else {
-      setGrupos((data || []).map(grupo => ({
+      const gruposCarregados = (data || []).map(grupo => ({
         id: grupo.id,
         nome: grupo.nome,
         perfil: ((grupo as any).perfil as string) || 'padrao',
@@ -90,7 +96,10 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           !Array.isArray(grupo.menus_permitidos)
           ? (grupo.menus_permitidos as unknown as Record<string, MenuPermissions>)
           : {}
-      })));
+      }));
+      setGrupos(gruposCarregados);
+      setPermissoesEmEdicao(Object.fromEntries(gruposCarregados.map((grupo) => [grupo.id, structuredClone(grupo.menus_permitidos)])));
+      setGruposAlterados(new Set());
     }
   };
 
@@ -183,6 +192,48 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     setMenusPermitidos(grupo.menus_permitidos || {});
     setEditingId(grupo.id);
     setFormOpen(true);
+    setAba("grupos");
+  };
+
+  const atualizarPermissoesGrupo = (grupoId: string, valor: Record<string, MenuPermissions>) => {
+    setPermissoesEmEdicao((atual) => ({ ...atual, [grupoId]: valor }));
+    setGruposAlterados((atuais) => new Set(atuais).add(grupoId));
+  };
+
+  const descartarPermissoes = () => {
+    setPermissoesEmEdicao(Object.fromEntries(grupos.map((grupo) => [grupo.id, structuredClone(grupo.menus_permitidos)])));
+    setGruposAlterados(new Set());
+  };
+
+  const salvarPermissoesEmLote = async () => {
+    if (gruposAlterados.size === 0) return;
+    setSalvandoPermissoes(true);
+    const falhas: string[] = [];
+    const salvos: string[] = [];
+    for (const grupoId of gruposAlterados) {
+      const grupo = grupos.find((item) => item.id === grupoId);
+      const { error } = await supabase
+        .from("grupos_acesso")
+        .update({ menus_permitidos: (permissoesEmEdicao[grupoId] || {}) as any })
+        .eq("id", grupoId);
+      if (error) falhas.push(grupo?.nome || grupoId);
+      else salvos.push(grupoId);
+    }
+    if (salvos.length > 0) {
+      setGrupos((atuais) => atuais.map((grupo) => salvos.includes(grupo.id)
+        ? { ...grupo, menus_permitidos: structuredClone(permissoesEmEdicao[grupo.id] || {}) }
+        : grupo));
+      limparCachePermissoes();
+    }
+    setGruposAlterados(new Set(falhas.length > 0
+      ? [...gruposAlterados].filter((id) => !salvos.includes(id))
+      : []));
+    setSalvandoPermissoes(false);
+    if (falhas.length > 0) {
+      toast({ title: "Alguns grupos não foram salvos", description: falhas.join(", "), variant: "destructive" });
+    } else {
+      toast({ title: "Permissões atualizadas", description: `${salvos.length} ${salvos.length === 1 ? "grupo salvo" : "grupos salvos"} com sucesso.` });
+    }
   };
 
 
@@ -272,19 +323,26 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">{grupos.length} {grupos.length === 1 ? "grupo cadastrado" : "grupos cadastrados"}</p>
-        <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo grupo</Button>
-      </div>
-      <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="pl-9" /></div>
+      <Tabs value={aba} onValueChange={setAba}>
+        <TabsList className="grid h-auto w-full grid-cols-2 sm:w-[460px]">
+          <TabsTrigger value="grupos"><UsersRound className="mr-2 h-4 w-4" />Grupos</TabsTrigger>
+          <TabsTrigger value="permissoes"><ShieldCheck className="mr-2 h-4 w-4" />Gerenciar permissões</TabsTrigger>
+        </TabsList>
 
-      {filteredGrupos.length === 0 ? <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : <>
+        <TabsContent value="grupos" className="space-y-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">{grupos.length} {grupos.length === 1 ? "grupo cadastrado" : "grupos cadastrados"}</p>
+            <Button onClick={() => { resetForm(); setFormOpen(true); }} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Novo grupo</Button>
+          </div>
+          <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar grupo de acesso" className="pl-9" /></div>
+
+          {filteredGrupos.length === 0 ? <div className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">{searchTerm ? "Nenhum grupo encontrado para esta pesquisa." : "Nenhum grupo cadastrado ainda."}</div> : <>
         <div className="md:hidden"><CadastroCardList items={filteredGrupos.map((grupo) => ({ id: grupo.id, title: grupo.nome, subtitle: PERFIL_LABEL[grupo.perfil || 'padrao'], fields: [{ label: "Permissões", value: formatPermissionsCompact(grupo.menus_permitidos), full: true }], actions: actionButtons(grupo) }))} /></div>
         <div className="hidden overflow-hidden rounded-lg border md:block"><Table><TableHeader><TableRow><TableHead>Grupo</TableHead><TableHead>Perfil</TableHead><TableHead>Permissões</TableHead><TableHead className="w-24 text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredGrupos.map((grupo) => <TableRow key={grupo.id}><TableCell className="font-medium">{grupo.nome}</TableCell><TableCell><Badge variant="secondary">{PERFIL_LABEL[grupo.perfil || 'padrao']}</Badge></TableCell><TableCell>{formatPermissionsCompact(grupo.menus_permitidos)}</TableCell><TableCell><div className="flex justify-end gap-1">{actionButtons(grupo)}</div></TableCell></TableRow>)}</TableBody></Table></div>
-      </>}
+          </>}
 
       {/* Formulário */}
-      {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
+          {formOpen && <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center gap-2 border-b pb-3"><ShieldCheck className="h-5 w-5 text-primary" /><h4 className="font-semibold">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</h4></div>
         {/* Nome do Grupo */}
         <Card className="p-4">
@@ -343,7 +401,21 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
             <ArvorePermissoes valor={menusPermitidos} onChange={setMenusPermitidos} />
           </div>
         </Card>
-      </form>}
+          </form>}
+        </TabsContent>
+
+        <TabsContent value="permissoes">
+          <GerenciadorPermissoesGrupos
+            grupos={grupos}
+            valores={permissoesEmEdicao}
+            alterados={gruposAlterados}
+            salvando={salvandoPermissoes}
+            onChange={atualizarPermissoesGrupo}
+            onSalvar={salvarPermissoesEmLote}
+            onDescartar={descartarPermissoes}
+          />
+        </TabsContent>
+      </Tabs>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
