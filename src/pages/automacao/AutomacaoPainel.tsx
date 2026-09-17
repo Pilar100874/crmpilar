@@ -397,23 +397,13 @@ export default function AutomacaoPainel() {
     }
   };
 
-  const gravarBloco = async (bloco: Bloco) => {
-    await salvarComAviso(
-      () =>
-        modo === "livre"
-          ? salvarBloco(bloco).then(() => true)
-          : moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h }).then(() => true),
-      "guardar a posição do elemento",
-    );
-  };
+  const gravarBloco = (bloco: Bloco) => marcarPendente(bloco.id);
 
-  const aoSoltar = async () => {
+  const aoSoltar = () => {
     const alvo = redim.current ?? arrasto.current;
     redim.current = null;
     arrasto.current = null;
-    if (!alvo) return;
-    const bloco = blocos.find((b) => b.id === alvo.id);
-    if (bloco) await gravarBloco(bloco);
+    if (alvo) marcarPendente(alvo.id);
   };
 
   /** Diz se o elemento está (mesmo que em parte) fora da área visível do painel. */
