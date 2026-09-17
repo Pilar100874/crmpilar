@@ -779,9 +779,19 @@ export default function AutomacaoPainel() {
 
           <div className="hidden sm:block h-6 w-px bg-border" />
 
-          <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={salvarPainel}>
-            <Save className="h-4 w-4 mr-2" /> Salvar painel
+          <Button
+            size="sm"
+            variant={pendentes.length ? "default" : "outline"}
+            disabled={salvandoPainel || !ambienteAtual}
+            onClick={salvarPainel}
+            title="Grava de uma vez tudo o que você mudou"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {salvandoPainel ? "Salvando..." : pendentes.length ? `Salvar tudo (${pendentes.length})` : "Salvar tudo"}
           </Button>
+          {!!pendentes.length && (
+            <span className="text-xs text-muted-foreground">Mudanças ainda não salvas.</span>
+          )}
           <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={duplicarPainel}>
             <CopyPlus className="h-4 w-4 mr-2" /> Duplicar painel
           </Button>
