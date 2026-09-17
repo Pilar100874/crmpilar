@@ -72,6 +72,9 @@ export default function AutomacaoPainel() {
   const [camadasAbertas, setCamadasAbertas] = useState(true);
   const [camadasAmpliadas, setCamadasAmpliadas] = useState(false);
   const [salvandoPainel, setSalvandoPainel] = useState(false);
+  // Durante a edição nada é gravado sozinho: as mudanças ficam na tela e
+  // são gravadas todas de uma vez quando o usuário salva.
+  const [pendentes, setPendentes] = useState<string[]>([]);
   const [regras, setRegras] = useState<Regra[]>([]);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
