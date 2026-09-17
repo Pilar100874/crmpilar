@@ -1153,8 +1153,8 @@ export default function AutomacaoPainel() {
       {podeEditar && (
         <p className="text-xs text-muted-foreground">
           {modo === "livre"
-            ? "Modo livre: arraste os elementos para qualquer ponto da tela. A posição é salva automaticamente."
-            : "Modo grade: os elementos encaixam nas colunas e linhas. A posição é salva automaticamente."}
+            ? "Modo livre: arraste os elementos para qualquer ponto da tela. Ao terminar, clique em Salvar tudo."
+            : "Modo grade: os elementos encaixam nas colunas e linhas. Ao terminar, clique em Salvar tudo."}
         </p>
       )}
 
