@@ -222,15 +222,33 @@ export default function AutomacaoPainel() {
   const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
   const doFundoParaFrente = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
 
+  /**
+   * Guarda a mudança no banco. Se der erro, avisa na tela e recarrega o painel
+   * com o que está gravado, para a tela nunca mostrar algo que não foi salvo.
+   */
+  const salvarComAviso = async <T,>(acao: () => Promise<T>, oQue: string): Promise<T | null> => {
+    try {
+      return await acao();
+    } catch (e) {
+      toast.error(`Não foi possível ${oQue}. ${(e as Error).message ?? ""}`.trim());
+      await carregar();
+      return null;
+    }
+  };
+
   const gravarCamadas = async (ordem: Bloco[]) => {
     const mapa = new Map(ordem.map((b, i) => [b.id, i]));
     setBlocos((ant) =>
       ant.map((b) => (mapa.has(b.id) ? { ...b, config: { ...(b.config ?? {}), camada: mapa.get(b.id) } } : b)),
     );
-    await Promise.all(
-      ordem.map((b, i) =>
-        camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
-      ),
+    await salvarComAviso(
+      () =>
+        Promise.all(
+          ordem.map((b, i) =>
+            camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
+          ),
+        ),
+      "guardar a ordem das camadas",
     );
   };
 
@@ -250,15 +268,21 @@ export default function AutomacaoPainel() {
     setBlocos((ant) =>
       ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
     );
-    await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } });
-    toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+    const ok = await salvarComAviso(
+      () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } }).then(() => true),
+      novo ? "bloquear o elemento" : "liberar o elemento",
+    );
+    if (ok) toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
   };
 
   const alternarVisivel = async (bloco: Bloco) => {
     const novo = !estaVisivel(bloco);
     setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
-    await salvarBloco({ ...bloco, visivel: novo });
-    toast.success(novo ? "Elemento visível." : "Elemento oculto.");
+    const ok = await salvarComAviso(
+      () => salvarBloco({ ...bloco, visivel: novo }).then(() => true),
+      novo ? "mostrar o elemento" : "ocultar o elemento",
+    );
+    if (ok) toast.success(novo ? "Elemento visível." : "Elemento oculto.");
   };
 
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
@@ -388,8 +412,13 @@ export default function AutomacaoPainel() {
   };
 
   const gravarBloco = async (bloco: Bloco) => {
-    if (modo === "livre") await salvarBloco(bloco);
-    else await moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h });
+    await salvarComAviso(
+      () =>
+        modo === "livre"
+          ? salvarBloco(bloco).then(() => true)
+          : moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h }).then(() => true),
+      "guardar a posição do elemento",
+    );
   };
 
   const aoSoltar = async () => {
@@ -427,13 +456,21 @@ export default function AutomacaoPainel() {
           t: Math.max(0, p.t + dy * passo),
         };
         atualizarPos(bloco.id, novo);
-        await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } });
+        const ok = await salvarComAviso(
+          () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } }),
+          "mover o elemento",
+        );
+        if (!ok) return;
       } else {
         const x = Math.max(0, Math.min(COLUNAS - bloco.w, bloco.x + dx));
         const y = Math.max(0, bloco.y + dy);
         if (x === bloco.x && y === bloco.y) continue;
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+        const ok = await salvarComAviso(
+          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
+          "mover o elemento",
+        );
+        if (!ok) return;
       }
     }
   };
@@ -482,7 +519,11 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") novo.t = Math.max(0, topo + (baseLim - topo - p.h) / 2);
         if (dir === "base") novo.t = Math.max(0, baseLim - p.h);
         atualizarPos(b.id, novo);
-        await salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } });
+        const ok = await salvarComAviso(
+          () => salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } }),
+          "alinhar o elemento",
+        );
+        if (!ok) return;
       }
     } else {
       const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
@@ -500,7 +541,11 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") y = Math.max(0, topo + Math.round((baseLim - topo - bloco.h) / 2));
         if (dir === "base") y = Math.max(0, baseLim - bloco.h);
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        await moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h });
+        const ok = await salvarComAviso(
+          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
+          "alinhar o elemento",
+        );
+        if (!ok) return;
       }
     }
     toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
@@ -535,8 +580,8 @@ export default function AutomacaoPainel() {
         config: { ...((b.config ?? {}) as any), camada },
       };
     }
-    const salvo = await salvarBloco(copia);
-    if (!salvo) { toast.error("Não foi possível duplicar o elemento."); return; }
+    const salvo = await salvarComAviso(() => salvarBloco(copia), "duplicar o elemento");
+    if (!salvo) return;
     await carregar();
     setSelecionados([salvo.id]);
     toast.success("Elemento duplicado.");
