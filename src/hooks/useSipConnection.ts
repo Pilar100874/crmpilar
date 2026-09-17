@@ -231,73 +231,40 @@ export const useSipConnection = () => {
       return;
     }
     ramalPresencaRef.current = config.extension.trim();
+
+    const comPorta = (host: string, porta?: string) => {
+      const h = host.trim();
+      if (!h) return h;
+      if (/^wss?:\/\//i.test(h) || h.includes(':')) return h;
+      return `${h}:${porta || '8089'}`;
+    };
+
+    // O UCM é sempre acessado pelo endereço externo (IP fixo/domínio).
+    const servidorExterno = comPorta(config.server, config.serverPort);
+
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
-      console.log('Servidor LOCAL:', config.server, 'Porta:', config.serverPort || '8089');
-      console.log('Servidor REMOTO:', config.remoteServer || 'Não configurado', 'Porta:', config.remoteServerPort || '8089');
+      console.log('Servidor externo do UCM:', servidorExterno);
       console.log('Ramal:', config.extension);
 
-      let ua: UserAgent | null = null;
-      let connectedServer = '';
-
-      const comPorta = (host: string, porta?: string) => {
-        const h = host.trim();
-        if (!h) return h;
-        if (/^wss?:\/\//i.test(h) || h.includes(':')) return h;
-        return `${h}:${porta || '8089'}`;
-      };
-
-      // Tentar local primeiro
-      try {
-        const result = await tryConnect(
-          comPorta(config.server, config.serverPort), 
-          config.extension, 
-          config.password, 
-          config.displayName || config.extension,
-          false,
-          config.authUser
-        );
-        ua = result.ua;
-        connectedServer = result.server;
-        console.log('✅ Conectado ao servidor LOCAL');
-      } catch (localError) {
-        console.warn('⚠️ Falha ao conectar no servidor local:', localError);
-        
-        // Se houver servidor remoto, tentar
-        if (config.remoteServer) {
-          console.log('🔄 Tentando servidor REMOTO...');
-          try {
-            const result = await tryConnect(
-              comPorta(config.remoteServer, config.remoteServerPort), 
-              config.extension, 
-              config.password, 
-              config.displayName || config.extension,
-              true,
-              config.authUser
-            );
-            ua = result.ua;
-            connectedServer = result.server;
-            console.log('✅ Conectado ao servidor REMOTO');
-          } catch (remoteError) {
-            console.error('❌ Falha ao conectar no servidor remoto:', remoteError);
-            throw new Error('Não foi possível conectar nem ao servidor local nem ao remoto');
-          }
-        } else {
-          throw localError;
-        }
-      }
-
-      if (!ua) {
-        throw new Error('Falha ao criar UserAgent');
-      }
+      const result = await tryConnect(
+        servidorExterno,
+        config.extension,
+        config.password,
+        config.displayName || config.extension,
+        config.authUser,
+      );
+      const ua = result.ua;
+      const connectedServer = result.server;
 
       const reg = new Registerer(ua);
-      
+      registererRef.current = reg;
+
       reg.stateChange.addListener((state) => {
         console.log('📊 Estado do registro mudou:', state);
         setIsRegistered(state === RegistererState.Registered);
-        
+
         if (state === RegistererState.Registered) {
           console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
           toast({
@@ -319,17 +286,15 @@ export const useSipConnection = () => {
     } catch (error) {
       console.error('❌ ERRO NA CONEXÃO:', error);
 
-      const host = (config.server || '').replace(/^wss?:\/\//i, '').split('/')[0].split(':')[0];
-      const ehRedeLocal = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+      const host = servidorExterno.replace(/^wss?:\/\//i, '').split('/')[0].split(':')[0];
+      const porta = (config.serverPort || '8089').trim() || '8089';
 
       let errorMsg = "Erro ao conectar ao UCM";
       if (error instanceof Error) {
         errorMsg = error.message;
 
         if (/WebSocket|indisponível|Transport|timeout/i.test(error.message)) {
-          errorMsg = ehRedeLocal
-            ? `O UCM ${host} está em rede interna. Conecte o aparelho ao Wi-Fi da empresa (ou VPN) e confirme se a porta 8089 (WSS) está liberada.`
-            : `Sem resposta em wss://${host}:8089/ws. Verifique se a porta 8089 está liberada e abra https://${host}:8089/ws no navegador uma vez para aceitar o certificado do UCM.`;
+          errorMsg = `Sem resposta em wss://${host}:${porta}/ws. Verifique se a porta ${porta} está liberada no UCM externo e abra https://${host}:${porta}/ws no navegador uma vez para aceitar o certificado.`;
         } else if (error.message.includes('401') || error.message.includes('403')) {
           errorMsg = "Credenciais inválidas. Verifique o ramal e senha.";
         }
