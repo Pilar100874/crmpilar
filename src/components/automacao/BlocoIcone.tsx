@@ -6,6 +6,17 @@ import { toast } from "sonner";
 import { Bloco, comandoAutomacao } from "@/lib/automacao/api";
 import { AnimacaoIcone, classeAnimacao, iconePorNome } from "@/lib/automacao/icones";
 
+function hexToRgba(hex: string, alpha: number) {
+  let c = hex.replace("#", "");
+  if (c.length === 3) c = c.split("").map((x) => x + x).join("");
+  const num = parseInt(c, 16);
+  if (Number.isNaN(num)) return hex;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 interface Props {
   bloco: Bloco;
   ligado: boolean | null;
@@ -21,6 +32,8 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
     cor?: string;
     corAtivo?: string;
     corInativo?: string;
+    corFundoAtivo?: string;
+    corFundoInativo?: string;
     fundo?: "circulo" | "quadrado" | "nenhum";
     mostrar_nome?: boolean;
     tamanho?: number;
@@ -29,6 +42,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
   const Icon = iconePorNome(cfg.icone ?? bloco.icone);
   const aceso = ligado === true;
   const corAtual = aceso ? (cfg.corAtivo ?? cfg.cor) : cfg.corInativo;
+  const corFundoAtual = aceso ? cfg.corFundoAtivo : cfg.corFundoInativo;
   const modo = cfg.acao ?? "alternar";
   const fundo = cfg.fundo ?? "circulo";
   const fixo = typeof cfg.tamanho === "number" && cfg.tamanho > 0 ? cfg.tamanho : null;
@@ -59,7 +73,7 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
           "flex items-center justify-center transition-all duration-300",
           fundo === "circulo" && "rounded-full",
           fundo === "quadrado" && "rounded-xl",
-          fundo !== "nenhum" && (aceso
+          fundo !== "nenhum" && !corFundoAtual && (aceso
             ? "bg-primary/25 ring-2 ring-primary/50"
             : "bg-muted/60 ring-1 ring-border group-hover:ring-primary/40"),
         )}
@@ -68,6 +82,12 @@ export default function BlocoIcone({ bloco, ligado, onEstado }: Props) {
             ? { height: fixo + 16, width: fixo + 16 }
             : { height: "62%", width: "62%", maxHeight: "100%", aspectRatio: "1/1" }),
           ...(corAtual ? { color: corAtual } : {}),
+          ...(corFundoAtual && fundo !== "nenhum"
+            ? {
+                backgroundColor: hexToRgba(corFundoAtual, aceso ? 0.25 : 0.6),
+                boxShadow: `inset 0 0 0 ${aceso ? 2 : 1}px ${hexToRgba(corFundoAtual, aceso ? 0.5 : 0.3)}`,
+              }
+            : {}),
           opacity: opacidade / 100,
         }}
       >
