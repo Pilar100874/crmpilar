@@ -815,61 +815,65 @@ export default function AutomacaoPainel() {
                     {fora && <span className="ml-2 text-[10px] uppercase tracking-wide text-destructive">fora da tela</span>}
                     {!visivel && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">oculto</span>}
                   </span>
-                  <Button
-                    size="icon" variant="ghost" className="h-7 w-7"
-                    title="Editar elemento"
-                    onClick={(e) => { e.stopPropagation(); setBlocoEdit(b); }}
-                  >
-                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                  <Button
-                    size="icon" variant="ghost" className="h-7 w-7"
-                    title="Duplicar elemento"
-                    onClick={(e) => { e.stopPropagation(); duplicarBloco(b); }}
-                  >
-                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                  <Button
-                    size="icon" variant="ghost" className="h-7 w-7"
-                    title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
-                    onClick={(e) => { e.stopPropagation(); alternarVisivel(b); }}
-                  >
-                    {visivel
-                      ? <Eye className="h-4 w-4 text-primary" />
-                      : <EyeOff className="h-4 w-4 text-muted-foreground" />}
-                  </Button>
-                  <Button
-                    size="icon" variant="ghost" className="h-7 w-7"
-                    title={estaTravado(b) ? "Liberar elemento" : "Bloquear elemento"}
-                    onClick={(e) => { e.stopPropagation(); alternarTravado(b); }}
-                  >
-                    {estaTravado(b)
-                      ? <Lock className="h-4 w-4 text-amber-500" />
-                      : <Unlock className="h-4 w-4 text-muted-foreground" />}
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Trazer para a frente"
-                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "frente"); }}>
-                    <ChevronsUp className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Avançar uma camada"
-                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "subir"); }}>
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Recuar uma camada"
-                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "descer"); }}>
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar para o fundo"
-                    onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "fundo"); }}>
-                    <ChevronsDown className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon" variant="ghost" className="h-7 w-7"
-                    title="Excluir elemento"
-                    onClick={(e) => { e.stopPropagation(); setExcluir({ tipo: "bloco", id: b.id, nome: b.nome || "Elemento" }); }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {ativo && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="icon" variant="ghost" className="h-7 w-7"
+                        title="Editar elemento"
+                        onClick={(e) => { e.stopPropagation(); setBlocoEdit(b); }}
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        size="icon" variant="ghost" className="h-7 w-7"
+                        title="Duplicar elemento"
+                        onClick={(e) => { e.stopPropagation(); duplicarBloco(b); }}
+                      >
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        size="icon" variant="ghost" className="h-7 w-7"
+                        title={visivel ? "Ocultar elemento" : "Mostrar elemento"}
+                        onClick={(e) => { e.stopPropagation(); alternarVisivel(b); }}
+                      >
+                        {visivel
+                          ? <Eye className="h-4 w-4 text-primary" />
+                          : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                      </Button>
+                      <Button
+                        size="icon" variant="ghost" className="h-7 w-7"
+                        title={estaTravado(b) ? "Liberar elemento" : "Bloquear elemento"}
+                        onClick={(e) => { e.stopPropagation(); alternarTravado(b); }}
+                      >
+                        {estaTravado(b)
+                          ? <Lock className="h-4 w-4 text-amber-500" />
+                          : <Unlock className="h-4 w-4 text-muted-foreground" />}
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" title="Trazer para a frente"
+                        onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "frente"); }}>
+                        <ChevronsUp className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" title="Avançar uma camada"
+                        onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "subir"); }}>
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" title="Recuar uma camada"
+                        onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "descer"); }}>
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar para o fundo"
+                        onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "fundo"); }}>
+                        <ChevronsDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon" variant="ghost" className="h-7 w-7"
+                        title="Excluir elemento"
+                        onClick={(e) => { e.stopPropagation(); setExcluir({ tipo: "bloco", id: b.id, nome: b.nome || "Elemento" }); }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })}
