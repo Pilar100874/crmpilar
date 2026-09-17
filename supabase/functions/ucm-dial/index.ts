@@ -7,14 +7,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/** Cliente da API HTTPS do UCM (porta 8089): challenge -> login -> ação. */
+/**
+ * Cliente da HTTPS API do Grandstream UCM (porta 8089):
+ * challenge -> login (md5(challenge + senha)) -> ação com o cookie da sessão.
+ * O cookie nunca sai do backend.
+ */
 class ClienteUcm {
   private cookie = "";
   constructor(private url: string, private usuario: string, private senha: string) {}
 
   private async chamar(corpo: Record<string, unknown>) {
     const controlador = new AbortController();
-    const tempo = setTimeout(() => controlador.abort(), 8000);
+    const tempo = setTimeout(() => controlador.abort(), 10000);
     try {
       const resposta = await fetch(this.url, {
         method: "POST",
@@ -48,6 +52,21 @@ class ClienteUcm {
 /** Mantém apenas o que o PABX entende: dígitos e os códigos * e #. */
 const normalizarNumero = (valor: string) => valor.replace(/[^\d*#]/g, "");
 
+/**
+ * Click-to-Call oficial da API do UCM.
+ *
+ * Operação escolhida: **dialOutbound** (parâmetros `caller` e `outbound`).
+ * É a única que faz exatamente o fluxo pedido: o UCM toca primeiro o ramal
+ * informado em `caller` e, quando ele atende, disca o número externo usando as
+ * rotas de saída já configuradas no PABX.
+ * - `dialExtension` liga um ramal a outro ramal interno (não usa rota de saída);
+ * - `dialOutboundTwo` é uma variante para dois números externos e o firmware
+ *   deste UCM6510 a recusa (status -1) com os mesmos parâmetros.
+ */
+async function initiateUcmCall(cliente: ClienteUcm, extension: string, destination: string) {
+  return await cliente.acao("dialOutbound", { caller: extension, outbound: destination });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -74,24 +93,27 @@ Deno.serve(async (req) => {
     if (authError || !user) return responder({ error: "Não autenticado" }, 401);
 
     const corpo = await req.json().catch(() => ({}));
-    const numero = normalizarNumero(String(corpo.number ?? ""));
-    const ramal = normalizarNumero(String(corpo.extension ?? ""));
+    const numero = normalizarNumero(String(corpo.number ?? corpo.destination ?? ""));
     if (!numero) return responder({ error: "Informe o número a ser discado" }, 400);
-    if (!ramal) return responder({ error: "Informe o ramal de origem" }, 400);
 
-    // O estabelecimento vem do próprio usuário (não do cliente).
+    // Estabelecimento e ramal vêm do próprio cadastro do usuário (nunca do cliente).
     const { data: usuario } = await supabase
       .from("usuarios")
-      .select("estabelecimento_id")
+      .select("estabelecimento_id, ramal")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
     const estabelecimentoId = usuario?.estabelecimento_id as string | undefined;
     if (!estabelecimentoId) return responder({ error: "Usuário sem estabelecimento" }, 403);
 
+    const ramal = normalizarNumero(String(usuario?.ramal ?? ""));
+    if (!ramal) {
+      return responder({ error: "Seu usuário não tem ramal cadastrado. Peça ao administrador para informar o ramal." }, 400);
+    }
+
     const { data: config } = await supabase
       .from("ucm_config")
-      .select("ucm_host, remote_ip, ucm_user, ucm_password, enabled")
+      .select("ucm_host, ucm_user, ucm_password, sip_porta, enabled")
       .eq("estabelecimento_id", estabelecimentoId)
       .maybeSingle();
 
@@ -99,39 +121,31 @@ Deno.serve(async (req) => {
       return responder({ error: "PABX não configurado ou desativado para este estabelecimento" }, 400);
     }
 
-    const comPorta = (host: string) => (host.includes(":") ? host : `${host}:8089`);
-    const candidatos = [config.remote_ip, config.ucm_host]
-      .filter((h): h is string => Boolean(h && h.trim()))
-      .map((h) => `https://${comPorta(h.replace(/^https?:\/\//i, "").trim())}/api`);
+    // Sempre o endereço externo (domínio do certificado), porta da API HTTPS.
+    const host = String(config.ucm_host).replace(/^https?:\/\//i, "").trim();
+    const porta = Number(config.sip_porta) || 8089;
+    const url = host.includes(":") ? `https://${host}/api` : `https://${host}:${porta}/api`;
 
-    let cliente: ClienteUcm | null = null;
-    let ultimoErro = "";
-    for (const url of candidatos) {
-      try {
-        const tentativa = new ClienteUcm(url, config.ucm_user, config.ucm_password);
-        await tentativa.autenticar();
-        cliente = tentativa;
-        break;
-      } catch (erro) {
-        ultimoErro = erro instanceof Error ? erro.message : String(erro);
-        console.log("Falha ao conectar no UCM:", url, ultimoErro);
-      }
+    const cliente = new ClienteUcm(url, config.ucm_user, config.ucm_password);
+    try {
+      await cliente.autenticar();
+    } catch (erro) {
+      const detalhe = erro instanceof Error ? erro.message : String(erro);
+      console.log("Falha ao autenticar no UCM:", url, detalhe);
+      return responder({ error: `Não foi possível falar com o PABX (${detalhe})` }, 502);
     }
 
-    if (!cliente) {
-      return responder({ error: `Não foi possível falar com o PABX (${ultimoErro || "sem resposta"})` }, 502);
-    }
-
-    const resultado = await cliente.acao("dialExtension", { caller: ramal, callee: numero });
+    const resultado = await initiateUcmCall(cliente, ramal, numero);
     const status = Number(resultado?.status ?? 0);
-    if (status !== 0) {
-      // -15 / -47: firmware do UCM sem comando de discagem pela API (só discagem pelo próprio ramal).
-      const mensagem = status === -15 || status === -47
-        ? "Este PABX não aceita discar pela API. Faça a ligação pelo Pilar Fone (ramal do usuário)."
-        : `O PABX recusou a discagem (código ${status})`;
-      return responder({ error: mensagem }, 400);
-    }
+    // Registro sanitizado: nunca logar senha, challenge ou cookie.
+    console.log("dialOutbound", JSON.stringify({ ramal, destino: numero, status }));
 
+    if (status !== 0) {
+      const mensagem = status === -15 || status === -47
+        ? "Este PABX não aceita esse comando de discagem pela API."
+        : `O PABX recusou a discagem (código ${status})`;
+      return responder({ error: mensagem, ucm: { action: "dialOutbound", status } }, 400);
+    }
 
     const { data: call } = await supabase
       .from("calls")
@@ -142,12 +156,19 @@ Deno.serve(async (req) => {
         ramal,
         status: "dialing",
         direcao: "outbound",
-        metadata: { ucm_response: resultado ?? null },
+        metadata: { ucm_action: "dialOutbound", ucm_status: status },
       })
       .select()
       .maybeSingle();
 
-    return responder({ success: true, call, message: "Chamada iniciada" });
+    return responder({
+      success: true,
+      call,
+      extension: ramal,
+      destination: numero,
+      ucm: { action: "dialOutbound", status },
+      message: `Chamando ramal ${ramal}. Atenda para o PABX discar ${numero}.`,
+    });
   } catch (error) {
     console.error("Erro em ucm-dial:", error);
     return responder({ error: error instanceof Error ? error.message : "Erro desconhecido" }, 500);
