@@ -130,8 +130,15 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   // Transparência do fundo: 100 = fundo cheio, 0 = fundo invisível.
   const opacidadeFundo = typeof cfg.opacidadeFundo === "number" ? Math.min(100, Math.max(0, cfg.opacidadeFundo)) : 100;
   const fundoParcial = !transparente && opacidadeFundo < 100;
-  const corBaseFundo = typeof cfg.corFundo === "string" && cfg.corFundo ? cfg.corFundo : "hsl(var(--card))";
-  const fundoCalculado = fundoParcial
+  // Cor do fundo por situação (ativado/desativado), válida para qualquer elemento.
+  const corEstado = aceso ? cfg.corFundoLigado : cfg.corFundoDesligado;
+  const corEscolhida = typeof corEstado === "string" && corEstado
+    ? corEstado
+    : typeof cfg.corFundo === "string" && cfg.corFundo
+      ? cfg.corFundo
+      : null;
+  const corBaseFundo = corEscolhida ?? "hsl(var(--card))";
+  const fundoCalculado = !transparente && (fundoParcial || corEscolhida)
     ? `color-mix(in srgb, ${corBaseFundo} ${opacidadeFundo}%, transparent)`
     : undefined;
   const comLegenda = cfg.legenda !== false;
