@@ -218,6 +218,38 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 </p>
               </div>
             )}
+            {cfg.transparente !== true && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Cor do fundo (ativado)</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(cfg.corFundoLigado as string) ?? (cfg.corFundo as string) ?? "#3b82f6"}
+                      onChange={(e) => setCfg({ corFundoLigado: e.target.value })}
+                      className="h-9 w-12 cursor-pointer rounded border bg-background"
+                    />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setCfg({ corFundoLigado: null })}>
+                      Padrão
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Cor do fundo (desativado)</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(cfg.corFundoDesligado as string) ?? (cfg.corFundo as string) ?? "#64748b"}
+                      onChange={(e) => setCfg({ corFundoDesligado: e.target.value })}
+                      className="h-9 w-12 cursor-pointer rounded border bg-background"
+                    />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setCfg({ corFundoDesligado: null })}>
+                      Padrão
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

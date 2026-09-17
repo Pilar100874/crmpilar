@@ -130,8 +130,15 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   // Transparência do fundo: 100 = fundo cheio, 0 = fundo invisível.
   const opacidadeFundo = typeof cfg.opacidadeFundo === "number" ? Math.min(100, Math.max(0, cfg.opacidadeFundo)) : 100;
   const fundoParcial = !transparente && opacidadeFundo < 100;
-  const corBaseFundo = typeof cfg.corFundo === "string" && cfg.corFundo ? cfg.corFundo : "hsl(var(--card))";
-  const fundoCalculado = fundoParcial
+  // Cor do fundo por situação (ativado/desativado), válida para qualquer elemento.
+  const corEstado = aceso ? cfg.corFundoLigado : cfg.corFundoDesligado;
+  const corEscolhida = typeof corEstado === "string" && corEstado
+    ? corEstado
+    : typeof cfg.corFundo === "string" && cfg.corFundo
+      ? cfg.corFundo
+      : null;
+  const corBaseFundo = corEscolhida ?? "hsl(var(--card))";
+  const fundoCalculado = !transparente && (fundoParcial || corEscolhida)
     ? `color-mix(in srgb, ${corBaseFundo} ${opacidadeFundo}%, transparent)`
     : undefined;
   const comLegenda = cfg.legenda !== false;
@@ -217,7 +224,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         className={cn(
           "relative h-full select-none",
           semCorte ? "overflow-visible z-[1300]" : "overflow-hidden",
-          (transparente || fundoParcial) &&
+          (transparente || fundoParcial || corEscolhida) &&
             "[&>*:not([data-cheio])]:!bg-transparent [&>*:not([data-cheio])]:!border-transparent",
         )}
         style={{
@@ -292,15 +299,19 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         "relative h-full border p-3 flex flex-col gap-2 transition-colors select-none",
         transparente
           ? "bg-transparent border-transparent"
-          : fundoParcial
+          : fundoParcial || corEscolhida
             ? "border-border"
             : aceso ? "bg-primary/15 border-primary/40" : "bg-card border-border",
       )}
         style={{
           borderRadius: raio,
-          background: fundoParcial
-            ? `color-mix(in srgb, ${aceso ? "hsl(var(--primary))" : corBaseFundo} ${opacidadeFundo}%, transparent)`
-            : undefined,
+          background: transparente
+            ? undefined
+            : corEscolhida
+              ? fundoCalculado
+              : fundoParcial
+                ? `color-mix(in srgb, ${aceso ? "hsl(var(--primary))" : corBaseFundo} ${opacidadeFundo}%, transparent)`
+                : undefined,
         }}
       >
       {dialogo}
