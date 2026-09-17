@@ -493,7 +493,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </Select>
                 </div>
                 <div>
-                  <Label>Fundo</Label>
+                  <Label>Formato da bola</Label>
                   <Select value={cfg.fundo ?? "circulo"} onValueChange={(v) => setCfg({ fundo: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-popover">
