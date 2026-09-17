@@ -52,10 +52,12 @@ interface Props {
   dispositivos: DispositivoSimples[];
   cameras: CameraSimples[];
   onChange: (b: Partial<Bloco> | null) => void;
-  onSalvo: (salvo?: Bloco | null) => void;
+  onSalvo: (salvo?: Bloco | null, rascunho?: boolean) => void;
+  /** Em edição do painel, as mudanças ficam na tela e são gravadas junto com o resto. */
+  rascunho?: boolean;
 }
 
-export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo }: Props) {
+export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo, rascunho }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
@@ -97,6 +99,15 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const gravar = async () => {
     if (!blocoEdit?.nome?.trim()) { toast.error("Informe o nome do elemento."); return; }
     if (!blocoEdit.ambiente_id) { toast.error("Escolha o ambiente."); return; }
+    // Em edição do painel, o elemento já existente fica pronto na tela e é
+    // gravado depois, junto com todo o resto, no botão "Salvar tudo".
+    if (rascunho && blocoEdit.id) {
+      const aplicado = { ...blocoEdit } as Bloco;
+      onChange(null);
+      toast.success("Alterações aplicadas. Clique em Salvar tudo para gravar.");
+      onSalvo(aplicado, true);
+      return;
+    }
     let salvo: Bloco | null = null;
     try {
       salvo = await salvarBloco(blocoEdit);

@@ -20,7 +20,7 @@ import AmbienteDialog from "@/components/automacao/AmbienteDialog";
 import {
   Ambiente, Bloco, CameraSimples, DispositivoSimples, FORMATOS_TELA, TELA_PADRAO, TIPOS_TELA, TipoTela,
   definirAtivoAmbiente, duplicarAmbiente, excluirAmbiente, excluirBloco, lerEstadosDosBlocos, listarAmbientes, listarBlocos,
-  listarCameras, listarDispositivos, moverBloco, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
+  listarCameras, listarDispositivos, salvarBloco, salvarModoAmbiente, urlImagemAutomacao,
 } from "@/lib/automacao/api";
 import { EventoPainel, Regra, listarRegras, rodarRegras } from "@/lib/automacao/workflow";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,6 +72,9 @@ export default function AutomacaoPainel() {
   const [camadasAbertas, setCamadasAbertas] = useState(true);
   const [camadasAmpliadas, setCamadasAmpliadas] = useState(false);
   const [salvandoPainel, setSalvandoPainel] = useState(false);
+  // Durante a edição nada é gravado sozinho: as mudanças ficam na tela e
+  // são gravadas todas de uma vez quando o usuário salva.
+  const [pendentes, setPendentes] = useState<string[]>([]);
   const [regras, setRegras] = useState<Regra[]>([]);
   const palcoRef = useRef<HTMLDivElement | null>(null);
   const gradeRef = useRef<HTMLDivElement | null>(null);
@@ -80,6 +83,16 @@ export default function AutomacaoPainel() {
   const regrasRef = useRef<Regra[]>([]);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
   const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
+  const pendentesRef = useRef<string[]>([]);
+  useEffect(() => { pendentesRef.current = pendentes; }, [pendentes]);
+  // Avisa se o usuário tentar sair com mudanças ainda não salvas.
+  useEffect(() => {
+    if (!pendentes.length) return;
+    const aviso = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", aviso);
+    return () => window.removeEventListener("beforeunload", aviso);
+  }, [pendentes.length]);
+
 
 
   const carregar = useCallback(async () => {
@@ -87,7 +100,11 @@ export default function AutomacaoPainel() {
       listarAmbientes(), listarBlocos(), listarDispositivos(), listarCameras(), listarRegras(),
     ]);
     setAmbientes(a);
-    setBlocos(b);
+    // Mantém na tela o que ainda não foi salvo, para a edição não se perder.
+    setBlocos((ant) => {
+      const naoSalvos = new Map(ant.filter((x) => pendentesRef.current.includes(x.id)).map((x) => [x.id, x]));
+      return b.map((x) => naoSalvos.get(x.id) ?? x);
+    });
     setDispositivos(d);
     setCameras(c);
     setRegras(r);
@@ -228,37 +245,26 @@ export default function AutomacaoPainel() {
   const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
   const doFundoParaFrente = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
 
-  /**
-   * Guarda a mudança no banco. Se der erro, avisa na tela e recarrega o painel
-   * com o que está gravado, para a tela nunca mostrar algo que não foi salvo.
-   */
-  const salvarComAviso = async <T,>(acao: () => Promise<T>, oQue: string): Promise<T | null> => {
-    try {
-      return await acao();
-    } catch (e) {
-      toast.error(`Não foi possível ${oQue}. ${(e as Error).message ?? ""}`.trim());
-      await carregar();
-      return null;
-    }
+  /** Marca elementos como alterados, para serem gravados na hora de salvar. */
+  const marcarPendente = (...ids: string[]) =>
+    setPendentes((ant) => Array.from(new Set([...ant, ...ids])));
+
+  /** Muda o elemento só na tela e anota que ele precisa ser gravado. */
+  const alterarBloco = (id: string, muda: (b: Bloco) => Bloco) => {
+    setBlocos((ant) => ant.map((b) => (b.id === id ? muda(b) : b)));
+    marcarPendente(id);
   };
 
-  const gravarCamadas = async (ordem: Bloco[]) => {
+  const gravarCamadas = (ordem: Bloco[]) => {
     const mapa = new Map(ordem.map((b, i) => [b.id, i]));
+    const mudaram = ordem.filter((b, i) => camadaDe(b) !== i).map((b) => b.id);
     setBlocos((ant) =>
       ant.map((b) => (mapa.has(b.id) ? { ...b, config: { ...(b.config ?? {}), camada: mapa.get(b.id) } } : b)),
     );
-    await salvarComAviso(
-      () =>
-        Promise.all(
-          ordem.map((b, i) =>
-            camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
-          ),
-        ),
-      "guardar a ordem das camadas",
-    );
+    if (mudaram.length) marcarPendente(...mudaram);
   };
 
-  const moverCamada = async (id: string, acao: "frente" | "fundo" | "subir" | "descer") => {
+  const moverCamada = (id: string, acao: "frente" | "fundo" | "subir" | "descer") => {
     const ordem = [...doFundoParaFrente];
     const i = ordem.findIndex((b) => b.id === id);
     if (i < 0) return;
@@ -266,29 +272,17 @@ export default function AutomacaoPainel() {
     const destino =
       acao === "frente" ? ordem.length : acao === "fundo" ? 0 : acao === "subir" ? Math.min(ordem.length, i + 1) : Math.max(0, i - 1);
     ordem.splice(destino, 0, item);
-    await gravarCamadas(ordem);
+    gravarCamadas(ordem);
   };
 
-  const alternarTravado = async (bloco: Bloco) => {
+  const alternarTravado = (bloco: Bloco) => {
     const novo = !estaTravado(bloco);
-    setBlocos((ant) =>
-      ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
-    );
-    const ok = await salvarComAviso(
-      () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } }).then(() => true),
-      novo ? "bloquear o elemento" : "liberar o elemento",
-    );
-    if (ok) toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+    alterarBloco(bloco.id, (b) => ({ ...b, config: { ...(b.config ?? {}), travado: novo } }));
   };
 
-  const alternarVisivel = async (bloco: Bloco) => {
+  const alternarVisivel = (bloco: Bloco) => {
     const novo = !estaVisivel(bloco);
-    setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
-    const ok = await salvarComAviso(
-      () => salvarBloco({ ...bloco, visivel: novo }).then(() => true),
-      novo ? "mostrar o elemento" : "ocultar o elemento",
-    );
-    if (ok) toast.success(novo ? "Elemento visível." : "Elemento oculto.");
+    alterarBloco(bloco.id, (b) => ({ ...b, visivel: novo }));
   };
 
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
@@ -417,23 +411,13 @@ export default function AutomacaoPainel() {
     }
   };
 
-  const gravarBloco = async (bloco: Bloco) => {
-    await salvarComAviso(
-      () =>
-        modo === "livre"
-          ? salvarBloco(bloco).then(() => true)
-          : moverBloco(bloco.id, { x: bloco.x, y: bloco.y, w: bloco.w, h: bloco.h }).then(() => true),
-      "guardar a posição do elemento",
-    );
-  };
+  const gravarBloco = (bloco: Bloco) => marcarPendente(bloco.id);
 
-  const aoSoltar = async () => {
+  const aoSoltar = () => {
     const alvo = redim.current ?? arrasto.current;
     redim.current = null;
     arrasto.current = null;
-    if (!alvo) return;
-    const bloco = blocos.find((b) => b.id === alvo.id);
-    if (bloco) await gravarBloco(bloco);
+    if (alvo) marcarPendente(alvo.id);
   };
 
   /** Diz se o elemento está (mesmo que em parte) fora da área visível do painel. */
@@ -448,7 +432,7 @@ export default function AutomacaoPainel() {
   };
 
   /** Move os elementos escolhidos com as setas do teclado. */
-  const moverPorTeclado = async (dx: number, dy: number, passoGrande: boolean) => {
+  const moverPorTeclado = (dx: number, dy: number, passoGrande: boolean) => {
     const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id) && !estaTravado(b));
     if (!escolhidos.length) return;
     const { cx } = celula();
@@ -462,21 +446,13 @@ export default function AutomacaoPainel() {
           t: Math.max(0, p.t + dy * passo),
         };
         atualizarPos(bloco.id, novo);
-        const ok = await salvarComAviso(
-          () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } }),
-          "mover o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(bloco.id);
       } else {
         const x = Math.max(0, Math.min(COLUNAS - bloco.w, bloco.x + dx));
         const y = Math.max(0, bloco.y + dy);
         if (x === bloco.x && y === bloco.y) continue;
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        const ok = await salvarComAviso(
-          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
-          "mover o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(bloco.id);
       }
     }
   };
@@ -499,7 +475,7 @@ export default function AutomacaoPainel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [podeEditar, selecionados, blocos, modo, telaL, telaA, ambienteId]);
 
-  const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
+  const alinhar = (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
     const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id));
     if (!escolhidos.length) { toast.error("Escolha um ou mais elementos tocando neles."); return; }
     const livres = escolhidos.filter((b) => !estaTravado(b));
@@ -525,11 +501,7 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") novo.t = Math.max(0, topo + (baseLim - topo - p.h) / 2);
         if (dir === "base") novo.t = Math.max(0, baseLim - p.h);
         atualizarPos(b.id, novo);
-        const ok = await salvarComAviso(
-          () => salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } }),
-          "alinhar o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(b.id);
       }
     } else {
       const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
@@ -547,11 +519,7 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") y = Math.max(0, topo + Math.round((baseLim - topo - bloco.h) / 2));
         if (dir === "base") y = Math.max(0, baseLim - bloco.h);
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        const ok = await salvarComAviso(
-          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
-          "alinhar o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(bloco.id);
       }
     }
     toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
@@ -586,9 +554,15 @@ export default function AutomacaoPainel() {
         config: { ...((b.config ?? {}) as any), camada },
       };
     }
-    const salvo = await salvarComAviso(() => salvarBloco(copia), "duplicar o elemento");
+    let salvo: Bloco | null = null;
+    try {
+      salvo = await salvarBloco(copia);
+    } catch (e) {
+      toast.error(`Não foi possível duplicar o elemento. ${(e as Error).message ?? ""}`.trim());
+      return;
+    }
     if (!salvo) return;
-    await carregar();
+    setBlocos((ant) => [...ant, salvo as Bloco]);
     setSelecionados([salvo.id]);
     toast.success("Elemento duplicado.");
   };
@@ -609,15 +583,22 @@ export default function AutomacaoPainel() {
     }
   };
 
-  /** Grava no sistema a posição e o formato de todos os elementos do painel. */
+  /**
+   * Grava de uma vez tudo o que foi mudado na edição: posições, tamanhos,
+   * camadas, cores e transparências. A tela continua como está, sem recarregar.
+   */
   const salvarPainel = async () => {
-    if (!ambienteAtual) return;
+    if (!pendentes.length) { toast.info("Não há mudanças para salvar."); return true; }
+    const mudados = blocos.filter((b) => pendentes.includes(b.id));
     setSalvandoPainel(true);
     try {
-      await Promise.all(doAmbiente.map((b) => salvarBloco(b)));
-      toast.success("Painel salvo.");
-    } catch {
-      toast.error("Não foi possível salvar o painel.");
+      await Promise.all(mudados.map((b) => salvarBloco(b)));
+      setPendentes([]);
+      toast.success(mudados.length > 1 ? `${mudados.length} elementos salvos.` : "Painel salvo.");
+      return true;
+    } catch (e) {
+      toast.error(`Não foi possível salvar o painel. ${(e as Error).message ?? ""}`.trim());
+      return false;
     } finally {
       setSalvandoPainel(false);
     }
@@ -629,7 +610,10 @@ export default function AutomacaoPainel() {
    */
   const alternarEdicao = async () => {
     if (edicao) {
-      await salvarPainel();
+      if (pendentes.length) {
+        const ok = await salvarPainel();
+        if (!ok) return;
+      }
       setSelecionados([]);
       setEdicao(false);
       localStorage.removeItem("automacao_edicao");
@@ -648,19 +632,35 @@ export default function AutomacaoPainel() {
     toast.success(novo ? "Painel ativado." : "Painel desativado — só administradores veem.");
   };
 
-  /** Depois de salvar no editor, o elemento novo já fica escolhido. */
-  const aoSalvarBloco = async (salvo?: Bloco | null) => {
-    await carregar();
-    if (salvo?.id) setSelecionados([salvo.id]);
+  /**
+   * Volta do editor do elemento. Em edição a mudança fica só na tela (rascunho)
+   * e entra na fila para ser gravada junto com o resto.
+   */
+  const aoSalvarBloco = (salvo?: Bloco | null, rascunho?: boolean) => {
+    if (!salvo?.id) return;
+    setBlocos((ant) => (ant.some((b) => b.id === salvo.id) ? ant.map((b) => (b.id === salvo.id ? { ...b, ...salvo } : b)) : [...ant, salvo]));
+    if (rascunho) marcarPendente(salvo.id);
+    setSelecionados([salvo.id]);
   };
 
   const confirmarExclusao = async () => {
     if (!excluir) return;
-    if (excluir.tipo === "ambiente") await excluirAmbiente(excluir.id);
-    else await excluirBloco(excluir.id);
+    const alvo = excluir;
     setExcluir(null);
-    toast.success("Excluído.");
-    carregar();
+    try {
+      if (alvo.tipo === "ambiente") {
+        await excluirAmbiente(alvo.id);
+        await carregar();
+      } else {
+        await excluirBloco(alvo.id);
+        setBlocos((ant) => ant.filter((b) => b.id !== alvo.id));
+        setPendentes((ant) => ant.filter((id) => id !== alvo.id));
+        setSelecionados((ant) => ant.filter((id) => id !== alvo.id));
+      }
+      toast.success("Excluído.");
+    } catch (e) {
+      toast.error(`Não foi possível excluir. ${(e as Error).message ?? ""}`.trim());
+    }
   };
 
   if (!ambientes.length) {
@@ -786,9 +786,19 @@ export default function AutomacaoPainel() {
 
           <div className="hidden sm:block h-6 w-px bg-border" />
 
-          <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={salvarPainel}>
-            <Save className="h-4 w-4 mr-2" /> Salvar painel
+          <Button
+            size="sm"
+            variant={pendentes.length ? "default" : "outline"}
+            disabled={salvandoPainel || !ambienteAtual}
+            onClick={salvarPainel}
+            title="Grava de uma vez tudo o que você mudou"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {salvandoPainel ? "Salvando..." : pendentes.length ? `Salvar tudo (${pendentes.length})` : "Salvar tudo"}
           </Button>
+          {!!pendentes.length && (
+            <span className="text-xs text-muted-foreground">Mudanças ainda não salvas.</span>
+          )}
           <Button size="sm" variant="outline" disabled={salvandoPainel || !ambienteAtual} onClick={duplicarPainel}>
             <CopyPlus className="h-4 w-4 mr-2" /> Duplicar painel
           </Button>
@@ -1143,8 +1153,8 @@ export default function AutomacaoPainel() {
       {podeEditar && (
         <p className="text-xs text-muted-foreground">
           {modo === "livre"
-            ? "Modo livre: arraste os elementos para qualquer ponto da tela. A posição é salva automaticamente."
-            : "Modo grade: os elementos encaixam nas colunas e linhas. A posição é salva automaticamente."}
+            ? "Modo livre: arraste os elementos para qualquer ponto da tela. Ao terminar, clique em Salvar tudo."
+            : "Modo grade: os elementos encaixam nas colunas e linhas. Ao terminar, clique em Salvar tudo."}
         </p>
       )}
 
@@ -1154,6 +1164,7 @@ export default function AutomacaoPainel() {
         cameras={cameras}
         onChange={setBlocoEdit}
         onSalvo={aoSalvarBloco}
+        rascunho={podeEditar}
       />
       <AmbienteDialog ambiente={ambienteEdit} onChange={setAmbienteEdit} onSalvo={carregar} abaInicial={abaAmbienteEdit} />
       <DeleteConfirmDialog
