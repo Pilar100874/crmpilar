@@ -127,6 +127,13 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
   const cfg = (bloco.config ?? {}) as Record<string, any>;
   const raio = typeof cfg.raio === "number" ? cfg.raio : 16;
   const transparente = cfg.transparente === true;
+  // Transparência do fundo: 100 = fundo cheio, 0 = fundo invisível.
+  const opacidadeFundo = typeof cfg.opacidadeFundo === "number" ? Math.min(100, Math.max(0, cfg.opacidadeFundo)) : 100;
+  const fundoParcial = !transparente && opacidadeFundo < 100;
+  const corBaseFundo = typeof cfg.corFundo === "string" && cfg.corFundo ? cfg.corFundo : "hsl(var(--card))";
+  const fundoCalculado = fundoParcial
+    ? `color-mix(in srgb, ${corBaseFundo} ${opacidadeFundo}%, transparent)`
+    : undefined;
   const comLegenda = cfg.legenda !== false;
   const mostrarNome = comLegenda && cfg.mostrarNome !== false;
   const mostrarSituacao = comLegenda && cfg.mostrarSituacao !== false;
