@@ -52,10 +52,12 @@ interface Props {
   dispositivos: DispositivoSimples[];
   cameras: CameraSimples[];
   onChange: (b: Partial<Bloco> | null) => void;
-  onSalvo: (salvo?: Bloco | null) => void;
+  onSalvo: (salvo?: Bloco | null, rascunho?: boolean) => void;
+  /** Em edição do painel, as mudanças ficam na tela e são gravadas junto com o resto. */
+  rascunho?: boolean;
 }
 
-export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo }: Props) {
+export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChange, onSalvo, rascunho }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [simLigado, setSimLigado] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
