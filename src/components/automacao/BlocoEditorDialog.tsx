@@ -926,13 +926,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   <Label className="text-xs">Cor do texto</Label>
                   <input type="color" value={cfg.cor || "#f1f5f9"} onChange={(e) => setCfg({ cor: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
                 </div>
-                <div>
-                  <Label className="text-xs">Fundo</Label>
-                  <input type="color" value={cfg.fundo || "#1c1f26"} onChange={(e) => setCfg({ fundo: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
-                  {cfg.fundo && (
-                    <button type="button" className="text-[11px] text-muted-foreground underline" onClick={() => setCfg({ fundo: undefined })}>remover</button>
-                  )}
-                </div>
               </div>
             </div>
           )}
@@ -1301,11 +1294,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     onChange={(e) => setCfg({ cor: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Fundo do botão</Label>
-                  <Input type="color" className="p-1" value={cfg.fundo ?? "#1f2937"}
-                    onChange={(e) => setCfg({ fundo: e.target.value })} />
-                </div>
-                <div>
                   <Label className="text-xs">Cor da tela aberta</Label>
                   <Input type="color" className="p-1" value={cfg.corAtiva ?? "#2563eb"}
                     onChange={(e) => setCfg({ corAtiva: e.target.value })} />
@@ -1344,7 +1332,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Tamanho</Label>
                   <Input
@@ -1365,22 +1353,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     <Input
                       value={cfg.cor ?? "#ffffff"}
                       onChange={(e) => setCfg({ cor: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Cor do fundo</Label>
-                  <div className="flex gap-1">
-                    <Input
-                      type="color"
-                      className="w-12 p-1"
-                      value={cfg.fundo ?? "#000000"}
-                      onChange={(e) => setCfg({ fundo: e.target.value })}
-                    />
-                    <Input
-                      value={cfg.fundo ?? ""}
-                      placeholder="transparente"
-                      onChange={(e) => setCfg({ fundo: e.target.value || undefined })}
                     />
                   </div>
                 </div>
