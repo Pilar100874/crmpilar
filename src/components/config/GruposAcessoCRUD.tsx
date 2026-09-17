@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, Search, ShieldCheck, UsersRound, UserRoundCog } from "lucide-react";
+import { Trash2, Edit, Plus, Search, ShieldCheck, UsersRound, UserRoundCog, ArrowLeft } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import { ArvorePermissoes } from "@/components/config/ArvorePermissoes";
 import { limparCachePermissoes } from "@/hooks/usePermissoesUsuario";
