@@ -445,7 +445,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs">Fundo ativado</Label>
+                  <Label className="text-xs">Cor da bola (ativada)</Label>
                   <input
                     type="color"
                     value={(cfg.corFundoAtivo as string) ?? "#3b82f6"}
@@ -454,7 +454,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs">Fundo desativado</Label>
+                  <Label className="text-xs">Cor da bola (desativada)</Label>
                   <input
                     type="color"
                     value={(cfg.corFundoInativo as string) ?? "#64748b"}
@@ -474,7 +474,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 <p className="text-[11px] text-muted-foreground">Em "Automático" o ícone cresce junto com o bloco.</p>
               </div>
               <div>
-                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <Label className="text-xs">Transparência do conteúdo ({cfg.opacidade ?? 100}%)</Label>
                 <input
                   type="range" min={0} max={100} step={5}
                   value={cfg.opacidade ?? 100}
@@ -493,7 +493,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </Select>
                 </div>
                 <div>
-                  <Label>Fundo</Label>
+                  <Label>Formato da bola</Label>
                   <Select value={cfg.fundo ?? "circulo"} onValueChange={(v) => setCfg({ fundo: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-popover">
@@ -543,18 +543,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Cor do fundo</Label>
-                <input
-                  type="color"
-                  value={(cfg.corFundo as string) ?? "#1e293b"}
-                  onChange={(e) => setCfg({ corFundo: e.target.value, transparente: false })}
-                  className="h-8 w-12 cursor-pointer rounded border bg-transparent"
-                />
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCfg({ corFundo: undefined })}>
-                  Padrão
-                </Button>
-              </div>
               <div>
                 <Label className="text-xs">Tamanho do ícone ({cfg.tamanhoIcone ?? 22}px)</Label>
                 <input
@@ -565,7 +553,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 />
               </div>
               <div>
-                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <Label className="text-xs">Transparência do conteúdo ({cfg.opacidade ?? 100}%)</Label>
                 <input
                   type="range" min={10} max={100} step={5}
                   value={cfg.opacidade ?? 100}
@@ -744,29 +732,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 </>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs">Cor do fundo</Label>
-                  <input
-                    type="color"
-                    value={(cfg.corFundo as string) ?? "#1e293b"}
-                    onChange={(e) => setCfg({ corFundo: e.target.value, transparente: false })}
-                    className="h-8 w-12 cursor-pointer rounded border bg-transparent"
-                  />
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCfg({ corFundo: undefined })}>
-                    Padrão
-                  </Button>
-                </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={cfg.transparente === true}
-                    onChange={(e) => setCfg({ transparente: e.target.checked })}
-                    className="h-4 w-4 accent-primary"
-                  />
-                  Sem fundo
-                </label>
-              </div>
 
               <div>
                 <Label className="text-xs">Texto secundário (opcional)</Label>
@@ -837,67 +802,9 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   />
                 </div>
               </div>
-              {blocoEdit?.tipo === "imagem" && (
-                <div className="rounded-md border p-3 space-y-2">
-                  <Label className="text-sm font-semibold">Fundo do bloco</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Deixe sem cor para usar imagens PNG com fundo transparente.
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="color"
-                      className="h-10 w-14 p-1"
-                      value={(cfg.fundo_cor as string) ?? "#000000"}
-                      onChange={(e) => setCfg({ fundo_cor: e.target.value })}
-                    />
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCfg({ fundo_cor: undefined })}>
-                      Sem fundo
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
-          {blocoEdit?.tipo === "ambiente" && (
-            <div className="space-y-2 rounded-md border p-3">
-              <Label className="text-sm font-semibold">Fundo do cartão</Label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={cfg.semFundo === true}
-                  onChange={(e) => setCfg({ semFundo: e.target.checked })}
-                />
-                Sem fundo (transparente)
-              </label>
-              {cfg.semFundo !== true && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label>Cor do fundo</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        className="h-10 w-14 p-1"
-                        value={(cfg.fundoCor as string) ?? "#1c1c1e"}
-                        onChange={(e) => setCfg({ fundoCor: e.target.value })}
-                      />
-                      <Button type="button" variant="outline" onClick={() => setCfg({ fundoCor: undefined })}>
-                        Padrão
-                      </Button>
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Tom do fundo (%)</Label>
-                    <Input
-                      type="number" min={0} max={100}
-                      value={(cfg.fundoOpacidade as number) ?? 100}
-                      onChange={(e) => setCfg({ fundoOpacidade: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {blocoEdit?.tipo === "imagemluz" && (
             <div className="space-y-2 rounded-md border p-3">
@@ -1003,13 +910,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     />
                   </label>
                   <label className="flex items-center justify-between gap-3">
-                    <span>Fundo transparente</span>
-                    <Switch
-                      checked={cfg.transparente === true}
-                      onCheckedChange={(v) => setCfg({ transparente: v })}
-                    />
-                  </label>
-                  <label className="flex items-center justify-between gap-3">
                     <span className="flex flex-col">
                       <span>Permitir maximizar</span>
                       <span className="text-[11px] text-muted-foreground">Mostra o botão para abrir o site em tela cheia</span>
@@ -1025,13 +925,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 <div>
                   <Label className="text-xs">Cor do texto</Label>
                   <input type="color" value={cfg.cor || "#f1f5f9"} onChange={(e) => setCfg({ cor: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
-                </div>
-                <div>
-                  <Label className="text-xs">Fundo</Label>
-                  <input type="color" value={cfg.fundo || "#1c1f26"} onChange={(e) => setCfg({ fundo: e.target.value })} className="h-8 w-full cursor-pointer rounded border bg-transparent" />
-                  {cfg.fundo && (
-                    <button type="button" className="text-[11px] text-muted-foreground underline" onClick={() => setCfg({ fundo: undefined })}>remover</button>
-                  )}
                 </div>
               </div>
             </div>
@@ -1121,10 +1014,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   )}
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={cfg.transparente === true} onChange={(e) => setCfg({ transparente: e.target.checked })} />
-                Fundo transparente
-              </label>
               <div>
                 <Label className="text-xs">Tamanho do valor</Label>
                 <Input type="number" min={12} value={cfg.tamanho_valor ?? 34} onChange={(e) => setCfg({ tamanho_valor: Number(e.target.value) })} />
@@ -1287,7 +1176,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
               )}
 
               <div>
-                <Label className="text-xs">Transparência ({cfg.opacidade ?? 100}%)</Label>
+                <Label className="text-xs">Transparência do conteúdo ({cfg.opacidade ?? 100}%)</Label>
                 <input type="range" min={0} max={100} value={cfg.opacidade ?? 100} onChange={(e) => setCfg({ opacidade: Number(e.target.value) })} className="w-full accent-primary" />
               </div>
 
@@ -1405,11 +1294,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     onChange={(e) => setCfg({ cor: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Fundo do botão</Label>
-                  <Input type="color" className="p-1" value={cfg.fundo ?? "#1f2937"}
-                    onChange={(e) => setCfg({ fundo: e.target.value })} />
-                </div>
-                <div>
                   <Label className="text-xs">Cor da tela aberta</Label>
                   <Input type="color" className="p-1" value={cfg.corAtiva ?? "#2563eb"}
                     onChange={(e) => setCfg({ corAtiva: e.target.value })} />
@@ -1448,7 +1332,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Tamanho</Label>
                   <Input
@@ -1469,22 +1353,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                     <Input
                       value={cfg.cor ?? "#ffffff"}
                       onChange={(e) => setCfg({ cor: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Cor do fundo</Label>
-                  <div className="flex gap-1">
-                    <Input
-                      type="color"
-                      className="w-12 p-1"
-                      value={cfg.fundo ?? "#000000"}
-                      onChange={(e) => setCfg({ fundo: e.target.value })}
-                    />
-                    <Input
-                      value={cfg.fundo ?? ""}
-                      placeholder="transparente"
-                      onChange={(e) => setCfg({ fundo: e.target.value || undefined })}
                     />
                   </div>
                 </div>
@@ -1548,14 +1416,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                 </label>
               </div>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={!cfg.fundo}
-                  onChange={(e) => setCfg({ fundo: e.target.checked ? undefined : "#000000" })}
-                />
-                Fundo transparente
-              </label>
             </div>
           )}
 
@@ -1655,13 +1515,6 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   <Switch
                     checked={cfg.mostrar_barra !== false}
                     onCheckedChange={(v) => setCfg({ mostrar_barra: v })}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3">
-                  <span>Fundo transparente</span>
-                  <Switch
-                    checked={cfg.transparente === true}
-                    onCheckedChange={(v) => setCfg({ transparente: v })}
                   />
                 </label>
                 <label className="flex items-center justify-between gap-3">
