@@ -512,12 +512,30 @@ export const useSipConnection = () => {
           },
         },
         requestDelegate: {
-          onReject: (response) => {
+          onReject: async (response) => {
             pararToqueChamando();
             console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
             console.error('❌ Headers da resposta:', response.message.headers);
+            const codigo = response.message.statusCode;
+
+            // O PABX recusa chamadas externas vindas do navegador (401/403/407).
+            // Nesses casos fazemos a ligação pelo próprio PABX: ele toca o ramal
+            // do usuário e, ao atender, disca o número pelas rotas de saída.
+            if (codigo === 401 || codigo === 403 || codigo === 407) {
+              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+              const resultado = await ligarPeloPabx(phoneNumber);
+              if (!resultado.error) return;
+              toast({
+                title: "Falha na chamada",
+                description: `${resultado.error}. Confira o ramal do usuário e as rotas de saída no PABX.`,
+                variant: "destructive",
+              });
+              return;
+            }
+
             let errorMsg = response.message.reasonPhrase;
             let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
+
 
             // Mensagens mais amigáveis para códigos comuns
             switch (response.message.statusCode) {
