@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
+import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
+import { useRamalUsuario } from "@/hooks/useRamalUsuario";
 
 interface ClientDetailsPanelProps {
   customer?: {
