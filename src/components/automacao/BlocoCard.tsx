@@ -217,9 +217,13 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
         className={cn(
           "relative h-full select-none",
           semCorte ? "overflow-visible z-[1300]" : "overflow-hidden",
-          transparente && "[&>*:not([data-cheio])]:!bg-transparent [&>*:not([data-cheio])]:!border-transparent",
+          (transparente || fundoParcial) &&
+            "[&>*:not([data-cheio])]:!bg-transparent [&>*:not([data-cheio])]:!border-transparent",
         )}
-        style={{ borderRadius: raio, background: transparente ? "transparent" : undefined }}
+        style={{
+          borderRadius: raio,
+          background: transparente ? "transparent" : fundoCalculado,
+        }}
       >
 
         {conteudo}
