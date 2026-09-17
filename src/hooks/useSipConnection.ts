@@ -197,6 +197,7 @@ export const useSipConnection = () => {
         authorizationUsername: (authUser || '').trim() || extension,
         authorizationPassword: password,
         displayName: displayName || extension,
+        sessionDescriptionHandlerFactory: criarSdhComSdpLimpo,
         sessionDescriptionHandlerFactoryOptions: {
           constraints: {
             audio: true,
