@@ -461,7 +461,7 @@ export default function AutomacaoPainel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [podeEditar, selecionados, blocos, modo, telaL, telaA, ambienteId]);
 
-  const alinhar = async (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
+  const alinhar = (dir: "esq" | "centroH" | "dir" | "topo" | "centroV" | "base") => {
     const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id));
     if (!escolhidos.length) { toast.error("Escolha um ou mais elementos tocando neles."); return; }
     const livres = escolhidos.filter((b) => !estaTravado(b));
@@ -487,11 +487,7 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") novo.t = Math.max(0, topo + (baseLim - topo - p.h) / 2);
         if (dir === "base") novo.t = Math.max(0, baseLim - p.h);
         atualizarPos(b.id, novo);
-        const ok = await salvarComAviso(
-          () => salvarBloco({ ...b, config: { ...(b.config ?? {}), pos: novo } }),
-          "alinhar o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(b.id);
       }
     } else {
       const linhas = Math.max(...doAmbiente.map((b) => b.y + b.h), 1);
@@ -509,11 +505,7 @@ export default function AutomacaoPainel() {
         if (dir === "centroV") y = Math.max(0, topo + Math.round((baseLim - topo - bloco.h) / 2));
         if (dir === "base") y = Math.max(0, baseLim - bloco.h);
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        const ok = await salvarComAviso(
-          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
-          "alinhar o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(bloco.id);
       }
     }
     toast.success(livres.length > 1 ? `${livres.length} elementos alinhados.` : "Elemento alinhado.");
