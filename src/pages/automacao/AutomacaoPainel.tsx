@@ -895,9 +895,11 @@ export default function AutomacaoPainel() {
       <div ref={palcoRef} className="w-full min-w-0 overflow-hidden" style={{ height: telaA * escala }}>
         <div
         ref={gradeRef}
+        onPointerDown={limparSelecao}
         onPointerMove={aoMover}
         onPointerUp={aoSoltar}
         onPointerCancel={aoSoltar}
+
         className={
           modo === "livre"
             ? "relative rounded-2xl border bg-muted/20 p-2 overflow-hidden"
@@ -941,8 +943,10 @@ export default function AutomacaoPainel() {
           return (
             <div
               key={b.id}
+              data-bloco="true"
               onPointerDown={(e) => aoArrastar(e, b)}
               className={`relative ${editando ? "ring-2 ring-primary rounded-xl" : ""} ${!visivel ? "opacity-40" : ""}`}
+
               style={
                 p
                   ? {
