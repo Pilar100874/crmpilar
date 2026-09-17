@@ -863,6 +863,13 @@ export default function AutomacaoPainel() {
                     onClick={(e) => { e.stopPropagation(); moverCamada(b.id, "fundo"); }}>
                     <ChevronsDown className="h-4 w-4" />
                   </Button>
+                  <Button
+                    size="icon" variant="ghost" className="h-7 w-7"
+                    title="Excluir elemento"
+                    onClick={(e) => { e.stopPropagation(); setExcluir({ tipo: "bloco", id: b.id, nome: b.nome || "Elemento" }); }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
               );
             })}
