@@ -123,9 +123,15 @@ Deno.serve(async (req) => {
     }
 
     const resultado = await cliente.acao("dialExtension", { caller: ramal, callee: numero });
-    if (resultado?.status !== undefined && Number(resultado.status) !== 0) {
-      return responder({ error: `O PABX recusou a discagem (código ${resultado.status})` }, 400);
+    const status = Number(resultado?.status ?? 0);
+    if (status !== 0) {
+      // -15 / -47: firmware do UCM sem comando de discagem pela API (só discagem pelo próprio ramal).
+      const mensagem = status === -15 || status === -47
+        ? "Este PABX não aceita discar pela API. Faça a ligação pelo Pilar Fone (ramal do usuário)."
+        : `O PABX recusou a discagem (código ${status})`;
+      return responder({ error: mensagem }, 400);
     }
+
 
     const { data: call } = await supabase
       .from("calls")
