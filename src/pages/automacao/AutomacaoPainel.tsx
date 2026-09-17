@@ -618,6 +618,22 @@ export default function AutomacaoPainel() {
     }
   };
 
+  /**
+   * Liga e desliga o modo de edição. Ao concluir, grava tudo (posições,
+   * tamanhos e camadas) para o painel voltar igual depois de recarregar.
+   */
+  const alternarEdicao = async () => {
+    if (edicao) {
+      await salvarPainel();
+      setSelecionados([]);
+      setEdicao(false);
+      localStorage.removeItem("automacao_edicao");
+      return;
+    }
+    setEdicao(true);
+    localStorage.setItem("automacao_edicao", "1");
+  };
+
   /** Desativa (ou reativa) o painel: desativado, só administradores enxergam. */
   const alternarAtivoPainel = async () => {
     if (!ambienteAtual) return;
