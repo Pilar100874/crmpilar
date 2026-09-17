@@ -802,15 +802,17 @@ export default function AutomacaoPainel() {
             {daFrenteParaTras.map((b, idx) => {
               const ativo = estaSelecionado(b.id);
               const visivel = estaVisivel(b);
+              const fora = foraDaArea(b);
               return (
                 <div
                   key={b.id}
                   onClick={(e) => selecionar(b.id, e)}
-                  className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${fora ? "bg-destructive/15 hover:bg-destructive/20" : ativo ? "bg-primary/10" : "hover:bg-muted/50"} ${!visivel ? "opacity-60" : ""}`}
                 >
-                  <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">{idx + 1}</span>
-                  <span className={`flex-1 truncate text-sm ${!visivel ? "line-through" : ""}`}>
+                  <span className={`w-5 shrink-0 text-center text-[10px] font-semibold ${fora ? "text-destructive" : "text-muted-foreground"}`}>{idx + 1}</span>
+                  <span className={`flex-1 truncate text-sm ${fora ? "font-medium text-destructive" : ""} ${!visivel ? "line-through" : ""}`}>
                     {b.nome || "Sem nome"}
+                    {fora && <span className="ml-2 text-[10px] uppercase tracking-wide text-destructive">fora da tela</span>}
                     {!visivel && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">oculto</span>}
                   </span>
                   <Button
