@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
+import { ligarPeloPabx } from '@/lib/telefonia/clickToCall';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
 const fabricaSdhPadrao = Web.defaultSessionDescriptionHandlerFactory();
