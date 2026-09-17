@@ -183,7 +183,12 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
           </div>
 
           <div className="space-y-2 rounded-lg border p-3">
-            <Label className="text-sm font-semibold">Aparência</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-sm font-semibold">Aparência</Label>
+              <Button type="button" variant="outline" size="sm" onClick={restaurarAparencia}>
+                Voltar ao padrão
+              </Button>
+            </div>
             <div>
               <Label className="text-xs">Curvatura das bordas ({cfg.raio ?? 16}px)</Label>
               <input
