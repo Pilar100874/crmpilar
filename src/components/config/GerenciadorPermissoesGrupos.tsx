@@ -119,6 +119,7 @@ export function GerenciadorPermissoesGrupos({ grupos, valores, alterados, salvan
     }
     setConfirmarCopia(false);
     setDestinos(new Set());
+    setCopiarAberto(false);
   };
 
   const renderNo = (no: NoPermissao, profundidade: number) => {
