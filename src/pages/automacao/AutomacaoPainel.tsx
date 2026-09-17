@@ -83,6 +83,9 @@ export default function AutomacaoPainel() {
   const regrasRef = useRef<Regra[]>([]);
   const arrasto = useRef<{ id: string; ox: number; oy: number; bx: number; by: number; pl: number; pt: number } | null>(null);
   const redim = useRef<{ id: string; ox: number; oy: number; bw: number; bh: number; pw: number; ph: number } | null>(null);
+  const pendentesRef = useRef<string[]>([]);
+  useEffect(() => { pendentesRef.current = pendentes; }, [pendentes]);
+
 
 
   const carregar = useCallback(async () => {
