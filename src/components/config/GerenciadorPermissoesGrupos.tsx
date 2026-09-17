@@ -60,6 +60,7 @@ export function GerenciadorPermissoesGrupos({ grupos, valores, alterados, salvan
   const [destinos, setDestinos] = useState<Set<string>>(new Set());
   const [modoCopia, setModoCopia] = useState<"substituir" | "acrescentar">("substituir");
   const [confirmarCopia, setConfirmarCopia] = useState(false);
+  const [copiarAberto, setCopiarAberto] = useState(false);
 
   const termoItem = buscaItem.trim().toLocaleLowerCase("pt-BR");
   const termoGrupo = buscaGrupo.trim().toLocaleLowerCase("pt-BR");
