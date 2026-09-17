@@ -202,6 +202,22 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
               />
               Fundo transparente
             </label>
+            {cfg.transparente !== true && (
+              <div>
+                <Label className="text-xs">
+                  Transparência do fundo ({100 - (typeof cfg.opacidadeFundo === "number" ? cfg.opacidadeFundo : 100)}%)
+                </Label>
+                <input
+                  type="range" min={0} max={100} step={5}
+                  value={100 - (typeof cfg.opacidadeFundo === "number" ? cfg.opacidadeFundo : 100)}
+                  onChange={(e) => setCfg({ opacidadeFundo: 100 - Number(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  0% deixa o fundo cheio; 100% deixa o fundo invisível.
+                </p>
+              </div>
+            )}
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
