@@ -743,6 +743,8 @@ export const useSipConnection = () => {
       clearInterval(keepAliveRef.current);
       keepAliveRef.current = undefined;
     }
+    ouvintesSaudeRef.current?.();
+    ouvintesSaudeRef.current = undefined;
     if (reconexaoRef.current.timer) {
       clearTimeout(reconexaoRef.current.timer);
       reconexaoRef.current.timer = undefined;
