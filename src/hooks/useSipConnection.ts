@@ -263,7 +263,8 @@ export const useSipConnection = () => {
       const connectedServer = result.server;
 
       // Registro curto (2 min): renova sozinho e mantém o caminho aberto no roteador/NAT.
-      const reg = new Registerer(ua, { expires: 120 });
+      // Registro curto (2 min) renovado na metade do tempo: mantém o ramal vivo mesmo com NAT agressivo.
+      const reg = new Registerer(ua, { expires: 120, refreshFrequency: 50 });
       registererRef.current = reg;
 
       reg.stateChange.addListener((state) => {
@@ -285,20 +286,36 @@ export const useSipConnection = () => {
       await reg.register();
       console.log('Registro iniciado, aguardando resposta do UCM...');
 
-      // Ping de manutenção: evita que roteador/proxy derrubem o WebSocket por inatividade.
-      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
-      keepAliveRef.current = window.setInterval(() => {
-        const transporte = ua.transport as unknown as { send?: (m: string) => Promise<void>; isConnected?: () => boolean };
+      // Vigia a saúde da conexão: reconecta e re-registra sozinho quando o caminho cai.
+      const verificarSaude = () => {
+        const transporte = ua.transport as unknown as { isConnected?: () => boolean };
         try {
           if (transporte.isConnected?.() === false) {
             agendarReconexao(ua);
             return;
           }
-          void transporte.send?.("\r\n\r\n");
+          if (registererRef.current?.state !== RegistererState.Registered) {
+            void registererRef.current?.register().catch(() => agendarReconexao(ua));
+          }
         } catch {
           agendarReconexao(ua);
         }
-      }, 25000);
+      };
+
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      keepAliveRef.current = window.setInterval(verificarSaude, 20000);
+
+      // Ao voltar a internet ou a aba ficar visível, confere na hora (timers ficam lentos em segundo plano).
+      const aoVoltar = () => verificarSaude();
+      window.addEventListener('online', aoVoltar);
+      window.addEventListener('focus', aoVoltar);
+      document.addEventListener('visibilitychange', aoVoltar);
+      ouvintesSaudeRef.current?.();
+      ouvintesSaudeRef.current = () => {
+        window.removeEventListener('online', aoVoltar);
+        window.removeEventListener('focus', aoVoltar);
+        document.removeEventListener('visibilitychange', aoVoltar);
+      };
 
       setUserAgent(ua);
       setRegisterer(reg);
