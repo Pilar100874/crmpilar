@@ -27,6 +27,7 @@ export function ClientDetailsPanel({
   onAddCompany
 }: ClientDetailsPanelProps) {
   const navigate = useNavigate();
+  const { temRamal } = useRamalUsuario();
 
   if (!customer) {
     return (
