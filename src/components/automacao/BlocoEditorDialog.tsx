@@ -99,6 +99,15 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const gravar = async () => {
     if (!blocoEdit?.nome?.trim()) { toast.error("Informe o nome do elemento."); return; }
     if (!blocoEdit.ambiente_id) { toast.error("Escolha o ambiente."); return; }
+    // Em edição do painel, o elemento já existente fica pronto na tela e é
+    // gravado depois, junto com todo o resto, no botão "Salvar tudo".
+    if (rascunho && blocoEdit.id) {
+      const aplicado = { ...blocoEdit } as Bloco;
+      onChange(null);
+      toast.success("Alterações aplicadas. Clique em Salvar tudo para gravar.");
+      onSalvo(aplicado, true);
+      return;
+    }
     let salvo: Bloco | null = null;
     try {
       salvo = await salvarBloco(blocoEdit);
