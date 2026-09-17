@@ -222,15 +222,33 @@ export default function AutomacaoPainel() {
   const daFrenteParaTras = [...doAmbiente].sort((a, b) => camadaDe(b) - camadaDe(a));
   const doFundoParaFrente = [...doAmbiente].sort((a, b) => camadaDe(a) - camadaDe(b));
 
+  /**
+   * Guarda a mudança no banco. Se der erro, avisa na tela e recarrega o painel
+   * com o que está gravado, para a tela nunca mostrar algo que não foi salvo.
+   */
+  const salvarComAviso = async <T,>(acao: () => Promise<T>, oQue: string): Promise<T | null> => {
+    try {
+      return await acao();
+    } catch (e) {
+      toast.error(`Não foi possível ${oQue}. ${(e as Error).message ?? ""}`.trim());
+      await carregar();
+      return null;
+    }
+  };
+
   const gravarCamadas = async (ordem: Bloco[]) => {
     const mapa = new Map(ordem.map((b, i) => [b.id, i]));
     setBlocos((ant) =>
       ant.map((b) => (mapa.has(b.id) ? { ...b, config: { ...(b.config ?? {}), camada: mapa.get(b.id) } } : b)),
     );
-    await Promise.all(
-      ordem.map((b, i) =>
-        camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
-      ),
+    await salvarComAviso(
+      () =>
+        Promise.all(
+          ordem.map((b, i) =>
+            camadaDe(b) === i ? null : salvarBloco({ ...b, config: { ...(b.config ?? {}), camada: i } }),
+          ),
+        ),
+      "guardar a ordem das camadas",
     );
   };
 
@@ -250,15 +268,21 @@ export default function AutomacaoPainel() {
     setBlocos((ant) =>
       ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
     );
-    await salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } });
-    toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
+    const ok = await salvarComAviso(
+      () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } }),
+      novo ? "bloquear o elemento" : "liberar o elemento",
+    );
+    if (ok) toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
   };
 
   const alternarVisivel = async (bloco: Bloco) => {
     const novo = !estaVisivel(bloco);
     setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
-    await salvarBloco({ ...bloco, visivel: novo });
-    toast.success(novo ? "Elemento visível." : "Elemento oculto.");
+    const ok = await salvarComAviso(
+      () => salvarBloco({ ...bloco, visivel: novo }),
+      novo ? "mostrar o elemento" : "ocultar o elemento",
+    );
+    if (ok) toast.success(novo ? "Elemento visível." : "Elemento oculto.");
   };
 
   // Tela de parede do ambiente: o painel é montado nesse tamanho e depois
