@@ -535,8 +535,8 @@ export default function AutomacaoPainel() {
         config: { ...((b.config ?? {}) as any), camada },
       };
     }
-    const salvo = await salvarBloco(copia);
-    if (!salvo) { toast.error("Não foi possível duplicar o elemento."); return; }
+    const salvo = await salvarComAviso(() => salvarBloco(copia), "duplicar o elemento");
+    if (!salvo) return;
     await carregar();
     setSelecionados([salvo.id]);
     toast.success("Elemento duplicado.");
