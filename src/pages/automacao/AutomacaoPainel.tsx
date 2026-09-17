@@ -418,7 +418,7 @@ export default function AutomacaoPainel() {
   };
 
   /** Move os elementos escolhidos com as setas do teclado. */
-  const moverPorTeclado = async (dx: number, dy: number, passoGrande: boolean) => {
+  const moverPorTeclado = (dx: number, dy: number, passoGrande: boolean) => {
     const escolhidos = doAmbiente.filter((b) => estaSelecionado(b.id) && !estaTravado(b));
     if (!escolhidos.length) return;
     const { cx } = celula();
@@ -432,21 +432,13 @@ export default function AutomacaoPainel() {
           t: Math.max(0, p.t + dy * passo),
         };
         atualizarPos(bloco.id, novo);
-        const ok = await salvarComAviso(
-          () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), pos: novo } }),
-          "mover o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(bloco.id);
       } else {
         const x = Math.max(0, Math.min(COLUNAS - bloco.w, bloco.x + dx));
         const y = Math.max(0, bloco.y + dy);
         if (x === bloco.x && y === bloco.y) continue;
         setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, x, y } : b)));
-        const ok = await salvarComAviso(
-          () => moverBloco(bloco.id, { x, y, w: bloco.w, h: bloco.h }).then(() => true),
-          "mover o elemento",
-        );
-        if (!ok) return;
+        marcarPendente(bloco.id);
       }
     }
   };
