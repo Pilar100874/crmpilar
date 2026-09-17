@@ -269,7 +269,7 @@ export default function AutomacaoPainel() {
       ant.map((b) => (b.id === bloco.id ? { ...b, config: { ...(b.config ?? {}), travado: novo } } : b)),
     );
     const ok = await salvarComAviso(
-      () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } }),
+      () => salvarBloco({ ...bloco, config: { ...(bloco.config ?? {}), travado: novo } }).then(() => true),
       novo ? "bloquear o elemento" : "liberar o elemento",
     );
     if (ok) toast.success(novo ? "Elemento bloqueado." : "Elemento liberado.");
@@ -279,7 +279,7 @@ export default function AutomacaoPainel() {
     const novo = !estaVisivel(bloco);
     setBlocos((ant) => ant.map((b) => (b.id === bloco.id ? { ...b, visivel: novo } : b)));
     const ok = await salvarComAviso(
-      () => salvarBloco({ ...bloco, visivel: novo }),
+      () => salvarBloco({ ...bloco, visivel: novo }).then(() => true),
       novo ? "mostrar o elemento" : "ocultar o elemento",
     );
     if (ok) toast.success(novo ? "Elemento visível." : "Elemento oculto.");
