@@ -540,9 +540,15 @@ export default function AutomacaoPainel() {
         config: { ...((b.config ?? {}) as any), camada },
       };
     }
-    const salvo = await salvarComAviso(() => salvarBloco(copia), "duplicar o elemento");
+    let salvo: Bloco | null = null;
+    try {
+      salvo = await salvarBloco(copia);
+    } catch (e) {
+      toast.error(`Não foi possível duplicar o elemento. ${(e as Error).message ?? ""}`.trim());
+      return;
+    }
     if (!salvo) return;
-    await carregar();
+    setBlocos((ant) => [...ant, salvo as Bloco]);
     setSelecionados([salvo.id]);
     toast.success("Elemento duplicado.");
   };
@@ -563,15 +569,22 @@ export default function AutomacaoPainel() {
     }
   };
 
-  /** Grava no sistema a posição e o formato de todos os elementos do painel. */
+  /**
+   * Grava de uma vez tudo o que foi mudado na edição: posições, tamanhos,
+   * camadas, cores e transparências. A tela continua como está, sem recarregar.
+   */
   const salvarPainel = async () => {
-    if (!ambienteAtual) return;
+    if (!pendentes.length) { toast.info("Não há mudanças para salvar."); return true; }
+    const mudados = blocos.filter((b) => pendentes.includes(b.id));
     setSalvandoPainel(true);
     try {
-      await Promise.all(doAmbiente.map((b) => salvarBloco(b)));
-      toast.success("Painel salvo.");
-    } catch {
-      toast.error("Não foi possível salvar o painel.");
+      await Promise.all(mudados.map((b) => salvarBloco(b)));
+      setPendentes([]);
+      toast.success(mudados.length > 1 ? `${mudados.length} elementos salvos.` : "Painel salvo.");
+      return true;
+    } catch (e) {
+      toast.error(`Não foi possível salvar o painel. ${(e as Error).message ?? ""}`.trim());
+      return false;
     } finally {
       setSalvandoPainel(false);
     }
@@ -583,7 +596,10 @@ export default function AutomacaoPainel() {
    */
   const alternarEdicao = async () => {
     if (edicao) {
-      await salvarPainel();
+      if (pendentes.length) {
+        const ok = await salvarPainel();
+        if (!ok) return;
+      }
       setSelecionados([]);
       setEdicao(false);
       localStorage.removeItem("automacao_edicao");
@@ -602,19 +618,35 @@ export default function AutomacaoPainel() {
     toast.success(novo ? "Painel ativado." : "Painel desativado — só administradores veem.");
   };
 
-  /** Depois de salvar no editor, o elemento novo já fica escolhido. */
-  const aoSalvarBloco = async (salvo?: Bloco | null) => {
-    await carregar();
-    if (salvo?.id) setSelecionados([salvo.id]);
+  /**
+   * Volta do editor do elemento. Em edição a mudança fica só na tela (rascunho)
+   * e entra na fila para ser gravada junto com o resto.
+   */
+  const aoSalvarBloco = (salvo?: Bloco | null, rascunho?: boolean) => {
+    if (!salvo?.id) return;
+    setBlocos((ant) => (ant.some((b) => b.id === salvo.id) ? ant.map((b) => (b.id === salvo.id ? { ...b, ...salvo } : b)) : [...ant, salvo]));
+    if (rascunho) marcarPendente(salvo.id);
+    setSelecionados([salvo.id]);
   };
 
   const confirmarExclusao = async () => {
     if (!excluir) return;
-    if (excluir.tipo === "ambiente") await excluirAmbiente(excluir.id);
-    else await excluirBloco(excluir.id);
+    const alvo = excluir;
     setExcluir(null);
-    toast.success("Excluído.");
-    carregar();
+    try {
+      if (alvo.tipo === "ambiente") {
+        await excluirAmbiente(alvo.id);
+        await carregar();
+      } else {
+        await excluirBloco(alvo.id);
+        setBlocos((ant) => ant.filter((b) => b.id !== alvo.id));
+        setPendentes((ant) => ant.filter((id) => id !== alvo.id));
+        setSelecionados((ant) => ant.filter((id) => id !== alvo.id));
+      }
+      toast.success("Excluído.");
+    } catch (e) {
+      toast.error(`Não foi possível excluir. ${(e as Error).message ?? ""}`.trim());
+    }
   };
 
   if (!ambientes.length) {
