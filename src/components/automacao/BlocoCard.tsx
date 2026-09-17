@@ -30,9 +30,10 @@ import BlocoForma from "./BlocoForma";
 import BlocoAbas from "./BlocoAbas";
 import BlocoBubble from "./BlocoBubble";
 import BlocoExpansivel from "./BlocoExpansivel";
+import BlocoMarketing from "./BlocoMarketing";
 
 
-const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "moeda", "web", "abas", "bubble", "expansivel"];
+const TIPOS_LIVRES = ["camera", "mapa", "grafico", "cena", "icone", "imagem", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "imagemluz", "texto", "forma", "clima", "moeda", "web", "abas", "bubble", "expansivel", "marketing"];
 
 const ICONES = { luz: Lightbulb, tomada: Plug, portao: DoorOpen, sensor: Activity } as const;
 
@@ -81,7 +82,7 @@ export default function BlocoCard(props: Props) {
   const { pedir, dialogo } = useConfirmacaoBloco(bloco);
 
   // Elementos que tratam o próprio clique (botões internos, tela cheia, etc.).
-  const proprioClick = ["camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "moeda", "web", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
+  const proprioClick = ["marketing", "camera", "rastreamento", "portaria", "pilarfone", "interfone", "clima", "moeda", "web", "texto", "grafico", "mapa", "abas", "expansivel"].includes(bloco.tipo);
 
   if (!semDispositivo || !onAcionar || edicao || proprioClick) {
     return (
@@ -211,6 +212,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       bloco.tipo === "mapa" ? <BlocoMapa bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
       bloco.tipo === "rastreamento" ? <BlocoRastreamento bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
       bloco.tipo === "portaria" ? <BlocoPortaria bloco={bloco} edicao={edicao} onAcionar={onAcionar} /> :
+      bloco.tipo === "marketing" ? <BlocoMarketing bloco={bloco} edicao={edicao} /> :
       bloco.tipo === "interfone" ? <BlocoInterfone bloco={bloco} /> :
       bloco.tipo === "pilarfone" ? <BlocoPilarFone bloco={bloco} /> :
       bloco.tipo === "grafico" ? <BlocoGrafico bloco={bloco} /> :
@@ -234,7 +236,7 @@ function BlocoCardInterno({ bloco, ligado, onEstado, edicao, onEditar, onDuplica
       >
 
         {conteudo}
-        {(mostrarNome || mostrarSituacao) && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "moeda", "web", "expansivel"].includes(bloco.tipo) && (
+        {(mostrarNome || mostrarSituacao) && bloco.tipo !== "icone" && bloco.tipo !== "cena" && !["marketing", "rastreamento", "portaria", "interfone", "pilarfone", "ambiente", "texto", "forma", "clima", "moeda", "web", "expansivel"].includes(bloco.tipo) && (
           <div className="pointer-events-none absolute bottom-1 left-2 right-2 flex items-center justify-between gap-1">
             {mostrarNome && (
               <span className="min-w-0 flex-1 truncate rounded bg-background/70 px-1.5 py-0.5 text-[11px] font-medium">
