@@ -484,15 +484,18 @@ export async function salvarBloco(b: Partial<Bloco>): Promise<Bloco | null> {
     config: b.config ?? {},
   };
   if (b.id) {
-    const { data } = await db.from("automacao_blocos").update(payload).eq("id", b.id).select().maybeSingle();
+    const { data, error } = await db.from("automacao_blocos").update(payload).eq("id", b.id).select().maybeSingle();
+    if (error) throw new Error(error.message);
     return data as Bloco | null;
   }
-  const { data } = await db.from("automacao_blocos").insert(payload).select().maybeSingle();
+  const { data, error } = await db.from("automacao_blocos").insert(payload).select().maybeSingle();
+  if (error) throw new Error(error.message);
   return data as Bloco | null;
 }
 
 export async function moverBloco(id: string, pos: { x: number; y: number; w?: number; h?: number }) {
-  await db.from("automacao_blocos").update(pos).eq("id", id);
+  const { error } = await db.from("automacao_blocos").update(pos).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function excluirBloco(id: string) {
