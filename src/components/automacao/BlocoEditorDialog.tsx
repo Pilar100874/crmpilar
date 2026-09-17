@@ -35,6 +35,16 @@ const TIPOS_SEM_DISPOSITIVO = [
   "interfone", "texto", "forma", "clima", "moeda", "web", "grafico", "abas", "expansivel",
 ];
 
+/** Ajustes visuais que o botão "Voltar ao padrão" apaga (não mexe em dispositivo, regras ou conteúdo). */
+const CHAVES_APARENCIA = [
+  "raio", "transparente", "opacidadeFundo", "corFundo", "corFundoLigado", "corFundoDesligado",
+  "legenda", "mostrarNome", "mostrarSituacao",
+  "fonteGeral", "corTextoGeral", "tamanhoTextoGeral", "negritoGeral",
+  "cor", "corAtivo", "corInativo", "corFundoAtivo", "corFundoInativo",
+  "fundo", "mostrar_nome", "tamanho", "opacidade", "opacidadeCaixa",
+  "opacidadeAceso", "opacidadeApagado", "animacao",
+];
+
 
 
 interface Props {
@@ -75,6 +85,14 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const cfg = (blocoEdit?.config ?? {}) as Record<string, any>;
   const setCfg = (patch: Record<string, any>) =>
     setBlocoEdit((b) => ({ ...b, config: { ...((b?.config ?? {}) as Record<string, any>), ...patch } }));
+
+  /** Devolve o visual do elemento ao padrão, sem mexer no dispositivo nem nas regras. */
+  const restaurarAparencia = () => {
+    const limpar: Record<string, any> = {};
+    for (const chave of CHAVES_APARENCIA) limpar[chave] = undefined;
+    setCfg(limpar);
+    toast.success("Aparência do elemento voltou ao padrão.");
+  };
 
   const gravar = async () => {
     if (!blocoEdit?.nome?.trim()) { toast.error("Informe o nome do elemento."); return; }
