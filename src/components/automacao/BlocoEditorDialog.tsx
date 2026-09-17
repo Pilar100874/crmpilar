@@ -79,7 +79,13 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const gravar = async () => {
     if (!blocoEdit?.nome?.trim()) { toast.error("Informe o nome do elemento."); return; }
     if (!blocoEdit.ambiente_id) { toast.error("Escolha o ambiente."); return; }
-    const salvo = await salvarBloco(blocoEdit);
+    let salvo: Bloco | null = null;
+    try {
+      salvo = await salvarBloco(blocoEdit);
+    } catch (e) {
+      toast.error(`Não foi possível salvar o elemento. ${(e as Error).message}`);
+      return;
+    }
     onChange(null);
     toast.success("Elemento salvo.");
     onSalvo(salvo);
