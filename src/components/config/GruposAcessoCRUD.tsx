@@ -362,67 +362,75 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           )}
           </div>
 
-      {/* Formulário */}
-          {formOpen && <form onSubmit={handleSubmit} className="overflow-hidden rounded-lg border bg-card shadow-sm">
-        <div className="flex items-center gap-3 border-b p-4 sm:p-5"><div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary"><ShieldCheck className="h-5 w-5" /></div><div><h4 className="font-semibold">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</h4><p className="text-xs text-muted-foreground">Defina o perfil e as permissões deste grupo.</p></div></div>
-        {/* Nome do Grupo */}
-        <div className="border-b p-4 sm:p-5">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-            <div className="flex-1">
-              <Label htmlFor="grupo-nome" className="text-sm font-medium">
-                {editingId ? 'Editando Grupo' : 'Novo Grupo'} *
-              </Label>
-              <Input
-                id="grupo-nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                placeholder="Digite o nome do grupo"
-                className="mt-1"
-                required
-              />
+      {/* Formulário em modal */}
+      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) resetForm(); setFormOpen(open); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="border-b p-4 sm:p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div className="text-left">
+                <DialogTitle className="text-base sm:text-lg">{editingId ? "Editar grupo de acesso" : "Novo grupo de acesso"}</DialogTitle>
+                <p className="text-xs text-muted-foreground">Defina o perfil e as permissões deste grupo.</p>
+              </div>
             </div>
-            <div className="sm:w-56">
-              <Label htmlFor="grupo-perfil" className="text-sm font-medium">Perfil *</Label>
-              <Select value={perfil} onValueChange={setPerfil}>
-                <SelectTrigger id="grupo-perfil" className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PERFIS_GRUPO.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Define as permissões especiais do usuário (admin, atendente, porteiro, gerente).
-              </p>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <Label htmlFor="grupo-nome" className="text-sm font-medium">
+                  {editingId ? 'Editando Grupo' : 'Novo Grupo'} *
+                </Label>
+                <Input
+                  id="grupo-nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Digite o nome do grupo"
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div className="sm:w-56">
+                <Label htmlFor="grupo-perfil" className="text-sm font-medium">Perfil *</Label>
+                <Select value={perfil} onValueChange={setPerfil}>
+                  <SelectTrigger id="grupo-perfil" className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERFIS_GRUPO.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Define as permissões especiais do usuário (admin, atendente, porteiro, gerente).
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button type="submit" size="sm">
+
+            <div className="space-y-3 rounded-lg border bg-muted/20 p-3 sm:p-4">
+              <div>
+                <Label className="text-sm font-medium">Permissões por menu, submenu e módulo</Label>
+                <p className="text-xs text-muted-foreground">
+                  Marque o que este grupo pode ver, criar, editar e excluir em cada menu, submenu e módulo interno das telas.
+                </p>
+              </div>
+              <ArvorePermissoes valor={menusPermitidos} onChange={setMenusPermitidos} />
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={resetForm}>
+                Cancelar
+              </Button>
+              <Button type="submit">
                 {editingId ? "Salvar" : <><Plus className="w-4 h-4 mr-1" /> Criar</>}
               </Button>
-              {editingId && (
-                <Button type="button" variant="outline" size="sm" onClick={resetForm}>
-                  Cancelar
-                </Button>
-              )}
             </div>
-          </div>
-        </div>
-
-        {/* Permissões por menu, submenu e módulo interno */}
-        <div className="bg-muted/20 p-4 sm:p-5">
-          <div className="space-y-3">
-            <div>
-              <Label className="text-sm font-medium">Permissões por menu, submenu e módulo</Label>
-              <p className="text-xs text-muted-foreground">
-                Marque o que este grupo pode ver, criar, editar e excluir em cada menu, submenu e módulo interno das telas.
-              </p>
-            </div>
-            <ArvorePermissoes valor={menusPermitidos} onChange={setMenusPermitidos} />
-          </div>
-        </div>
-          </form>}
+          </form>
+        </DialogContent>
+      </Dialog>
         </TabsContent>
 
         <TabsContent value="permissoes" className="mt-4">
