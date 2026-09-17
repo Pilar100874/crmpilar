@@ -382,8 +382,8 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
               </div>
 
               <form id="grupo-form" onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                  <div className="flex-1">
+                <div className="space-y-4">
+                  <div>
                     <Label htmlFor="grupo-nome" className="text-sm font-medium">
                       {editingId ? 'Editando Grupo' : 'Novo Grupo'} *
                     </Label>
@@ -396,7 +396,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
                       required
                     />
                   </div>
-                  <div className="sm:w-56">
+                  <div>
                     <Label htmlFor="grupo-perfil" className="text-sm font-medium">Perfil *</Label>
                     <Select value={perfil} onValueChange={setPerfil}>
                       <SelectTrigger id="grupo-perfil" className="mt-1">
