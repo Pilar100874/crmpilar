@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import {
   Bloco, CameraSimples, DispositivoSimples, TIPOS_BLOCO, TipoBloco,
   enviarImagemAutomacao, salvarBloco, listarUnidades, listarBlocos, UnidadeSimples,
+  listarAutomacoesMarketing, AutomacaoMarketingSimples,
 } from "@/lib/automacao/api";
 import { ANIMACOES } from "@/lib/automacao/icones";
 import SeletorIcone from "@/components/automacao/SeletorIcone";
@@ -63,6 +64,7 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
   const [unidades, setUnidades] = useState<UnidadeSimples[]>([]);
   const [blocosAmbiente, setBlocosAmbiente] = useState<Bloco[]>([]);
   const [ajustarTamanhos, setAjustarTamanhos] = useState(false);
+  const [automacoesMkt, setAutomacoesMkt] = useState<AutomacaoMarketingSimples[]>([]);
 
   
   const { ambientes: ambientesNav } = useNavegacaoAmbientes();
@@ -74,6 +76,12 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
       listarUnidades().then(setUnidades);
     }
   }, [bloco?.tipo, unidades.length]);
+  // Automações de marketing para o elemento de disparo.
+  useEffect(() => {
+    if (bloco?.tipo === "marketing" && automacoesMkt.length === 0) {
+      listarAutomacoesMarketing().then(setAutomacoesMkt);
+    }
+  }, [bloco?.tipo, automacoesMkt.length]);
   // Lista os outros elementos do mesmo ambiente para o grupo expansível.
   useEffect(() => {
     if (bloco?.tipo !== "expansivel" || !bloco?.ambiente_id) return;
@@ -1707,6 +1715,54 @@ export default function BlocoEditorDialog({ bloco, dispositivos, cameras, onChan
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {blocoEdit?.tipo === "marketing" && (
+            <div className="space-y-3 rounded-lg border p-3">
+              <Label className="text-sm font-semibold">Automação de marketing</Label>
+              <div>
+                <Label className="text-xs">Qual automação será disparada</Label>
+                <Select value={cfg.automacao_id ?? ""} onValueChange={(v) => setCfg({ automacao_id: v })}>
+                  <SelectTrigger className="text-left">
+                    <SelectValue placeholder="Escolha a automação" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {automacoesMkt.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name}{a.active === false ? " (desativada)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {automacoesMkt.length === 0 && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Nenhuma automação de marketing cadastrada ainda.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Ícone</Label>
+                <SeletorIcone valor={cfg.icone ?? blocoEdit.icone} onChange={(n) => setCfg({ icone: n })} />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.confirmar !== false}
+                  onChange={(e) => setCfg({ confirmar: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Pedir confirmação antes de disparar
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cfg.mostrar_status !== false}
+                  onChange={(e) => setCfg({ mostrar_status: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                Mostrar o nome da automação e o último disparo
+              </label>
             </div>
           )}
 
