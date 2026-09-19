@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         if (!Prefs.ativado(this) || !Prefs.sessaoSalva(this)) {
             startActivity(Intent(this, AtivacaoActivity::class.java))
+            overridePendingTransition(0, 0)
             finish()
             return
         }
@@ -51,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         web = findViewById(R.id.webPainel)
+        web.visibility = View.INVISIBLE
+        web.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         aviso = findViewById(R.id.painelAviso)
         status = findViewById(R.id.txtStatus)
         btnTentar = findViewById(R.id.btnTentarNovamente)
@@ -82,7 +85,10 @@ class MainActivity : AppCompatActivity() {
                     view.evaluateJavascript(scriptSessao()) { abrirPainel() }
                     return
                 }
-                if (!falhou) mostrarPainel()
+                if (!falhou) {
+                    // Pequena espera para o painel desenhar antes de revelar: evita ver a página carregando.
+                    Handler(Looper.getMainLooper()).postDelayed({ if (!falhou) mostrarPainel() }, 450L)
+                }
             }
 
             override fun onReceivedError(
@@ -143,6 +149,7 @@ class MainActivity : AppCompatActivity() {
     private fun recarregar() {
         falhou = false
         sessaoInjetada = false
+        web.visibility = View.INVISIBLE
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.GONE
         status.text = "Carregando painel…"
@@ -155,12 +162,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun mostrarPainel() {
+        web.visibility = View.VISIBLE
         aviso.visibility = View.GONE
         btnTentar.visibility = View.GONE
     }
 
     private fun mostrarErro(mensagem: String) {
         falhou = true
+        web.visibility = View.INVISIBLE
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.VISIBLE
         status.text = mensagem
@@ -174,10 +183,17 @@ class MainActivity : AppCompatActivity() {
             .put("access_token", Prefs.accessToken(this))
             .put("refresh_token", Prefs.refreshToken(this))
             .put("token_type", "bearer")
-            .put("expires_in", 60)
-            // Expirada de propósito: o painel renova sozinho e recupera o usuário.
-            .put("expires_at", System.currentTimeMillis() / 1000 - 60)
+            .put("expires_in", 3600)
+            // Usa a validade real quando ainda está no prazo: o painel abre sem precisar renovar.
+            .put("expires_at", validadeSessao())
             .put("user", JSONObject().put("id", Prefs.userId(this)))
         return "try{localStorage.setItem(${JSONObject.quote(chave)}, ${JSONObject.quote(sessao.toString())});}catch(e){}"
+    }
+
+    /** Validade real da sessão; se já venceu, marca como vencida para o painel renovar sozinho. */
+    private fun validadeSessao(): Long {
+        val agora = System.currentTimeMillis() / 1000
+        val salva = Prefs.expiresAt(this)
+        return if (salva > agora + 60) salva else agora - 60
     }
 }

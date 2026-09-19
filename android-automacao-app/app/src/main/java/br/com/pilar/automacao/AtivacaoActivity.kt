@@ -18,7 +18,7 @@ class AtivacaoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (Prefs.sessaoSalva(this)) {
+        if (Prefs.ativado(this) && Prefs.sessaoSalva(this)) {
             abrirPainel()
             return
         }
@@ -78,6 +78,7 @@ class AtivacaoActivity : AppCompatActivity() {
 
     private fun abrirPainel() {
         startActivity(Intent(this, MainActivity::class.java))
+        overridePendingTransition(0, 0)
         finish()
     }
 }
