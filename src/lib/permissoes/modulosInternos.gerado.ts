@@ -680,6 +680,260 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Visual do Sistema"
     }
   ],
+  "Config Administradores": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Config Recuperar Senha": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Config Conteudos": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Admin Config": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Admin Assistente Voz": [
+    {
+      "id": "telas",
+      "label": "Telas por voz"
+    },
+    {
+      "id": "frases",
+      "label": "Frases por voz"
+    },
+    {
+      "id": "testar",
+      "label": "Testar"
+    },
+    {
+      "id": "relatorios",
+      "label": "Relatórios por voz"
+    },
+    {
+      "id": "snapshots",
+      "label": "Snapshots"
+    },
+    {
+      "id": "config",
+      "label": "Configurações"
+    }
+  ],
+  "Admin Menu Customizacao": [
+    {
+      "id": "main",
+      "label": "Menu"
+    },
+    {
+      "id": "admin",
+      "label": "Admin"
+    },
+    {
+      "id": "user",
+      "label": "Usuário"
+    },
+    {
+      "id": "system",
+      "label": "Sistema"
+    },
+    {
+      "id": "pool",
+      "label": "Programas"
+    }
+  ],
+  "Campanhas": [
+    {
+      "id": "day",
+      "label": "Dia"
+    },
+    {
+      "id": "week",
+      "label": "Semana"
+    },
+    {
+      "id": "month",
+      "label": "Mês"
+    },
+    {
+      "id": "list",
+      "label": "Lista"
+    },
+    {
+      "id": "table",
+      "label": "Tabela"
+    }
+  ],
   "Config Estabelecimento": [
     {
       "id": "cadastro-unidades",
@@ -1095,6 +1349,158 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     }
   ],
   "Config Estab UCM": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Config Estab Painel Telefonia": [
+    {
+      "id": "ramais",
+      "label": "Ramais"
+    },
+    {
+      "id": "linhas",
+      "label": "Linhas"
+    },
+    {
+      "id": "ligacoes",
+      "label": "Ligações"
+    }
+  ],
+  "Config Estab Comunicacao": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Config Estab Integracoes": [
+    {
+      "id": "cadastro-unidades",
+      "label": "Unidades"
+    },
+    {
+      "id": "grupos-acesso",
+      "label": "Grupos de Acesso"
+    },
+    {
+      "id": "cadastro-usuarios",
+      "label": "Usuários"
+    },
+    {
+      "id": "segmentos",
+      "label": "Segmentos"
+    },
+    {
+      "id": "recuperar-senha",
+      "label": "Recuperação de Senha"
+    },
+    {
+      "id": "email-config",
+      "label": "Email Config"
+    },
+    {
+      "id": "comunicacao",
+      "label": "Comunicação"
+    },
+    {
+      "id": "integrações",
+      "label": "Integrações"
+    },
+    {
+      "id": "sistema",
+      "label": "Sistema"
+    },
+    {
+      "id": "notificacoes-sistema",
+      "label": "Notificações do Sistema"
+    },
+    {
+      "id": "visual-sistema",
+      "label": "Visual do Sistema"
+    }
+  ],
+  "Config Estab Sistema": [
     {
       "id": "cadastro-unidades",
       "label": "Unidades"
@@ -1693,412 +2099,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     }
   ],
   "Config Estab Regras Orcamento": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Config Administradores": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Config Recuperar Senha": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Config Conteudos": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Admin Config": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Admin Assistente Voz": [
-    {
-      "id": "telas",
-      "label": "Telas por voz"
-    },
-    {
-      "id": "frases",
-      "label": "Frases por voz"
-    },
-    {
-      "id": "testar",
-      "label": "Testar"
-    },
-    {
-      "id": "relatorios",
-      "label": "Relatórios por voz"
-    },
-    {
-      "id": "snapshots",
-      "label": "Snapshots"
-    },
-    {
-      "id": "config",
-      "label": "Configurações"
-    }
-  ],
-  "Admin Menu Customizacao": [
-    {
-      "id": "main",
-      "label": "Menu"
-    },
-    {
-      "id": "admin",
-      "label": "Admin"
-    },
-    {
-      "id": "user",
-      "label": "Usuário"
-    },
-    {
-      "id": "system",
-      "label": "Sistema"
-    },
-    {
-      "id": "pool",
-      "label": "Programas"
-    }
-  ],
-  "Campanhas": [
-    {
-      "id": "day",
-      "label": "Dia"
-    },
-    {
-      "id": "week",
-      "label": "Semana"
-    },
-    {
-      "id": "month",
-      "label": "Mês"
-    },
-    {
-      "id": "list",
-      "label": "Lista"
-    },
-    {
-      "id": "table",
-      "label": "Tabela"
-    }
-  ],
-  "Config Estab Painel Telefonia": [
-    {
-      "id": "ramais",
-      "label": "Ramais"
-    },
-    {
-      "id": "linhas",
-      "label": "Linhas"
-    },
-    {
-      "id": "ligacoes",
-      "label": "Ligações"
-    }
-  ],
-  "Config Estab Comunicacao": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Config Estab Integracoes": [
-    {
-      "id": "cadastro-unidades",
-      "label": "Unidades"
-    },
-    {
-      "id": "grupos-acesso",
-      "label": "Grupos de Acesso"
-    },
-    {
-      "id": "cadastro-usuarios",
-      "label": "Usuários"
-    },
-    {
-      "id": "segmentos",
-      "label": "Segmentos"
-    },
-    {
-      "id": "recuperar-senha",
-      "label": "Recuperação de Senha"
-    },
-    {
-      "id": "email-config",
-      "label": "Email Config"
-    },
-    {
-      "id": "comunicacao",
-      "label": "Comunicação"
-    },
-    {
-      "id": "integrações",
-      "label": "Integrações"
-    },
-    {
-      "id": "sistema",
-      "label": "Sistema"
-    },
-    {
-      "id": "notificacoes-sistema",
-      "label": "Notificações do Sistema"
-    },
-    {
-      "id": "visual-sistema",
-      "label": "Visual do Sistema"
-    }
-  ],
-  "Config Estab Sistema": [
     {
       "id": "cadastro-unidades",
       "label": "Unidades"
