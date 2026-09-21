@@ -19,7 +19,7 @@ export const somenteDigitosDiscagem = (valor: string) => (valor || "").replace(/
  * disca o número do cliente pelas rotas de saída do próprio PABX.
  * Não envolve WebRTC — a chamada é originada no servidor.
  */
-export async function ligarPeloPabx(destino: string): Promise<RespostaClickToCall> {
+export async function ligarPeloPabx(destino: string, nomeCliente?: string): Promise<RespostaClickToCall> {
   const numero = somenteDigitosDiscagem(destino);
   if (!numero) {
     return { error: "Informe o número a ser discado" };
@@ -36,9 +36,9 @@ export async function ligarPeloPabx(destino: string): Promise<RespostaClickToCal
       toast.error(mensagem, { id: aviso });
       return { error: mensagem };
     }
-    // Marca o disparo para o Pilar Fone reconhecer a chamada do discador
-    // e tocar a campainha diferenciada quando o ramal tocar.
-    marcarChamadaDiscador(numero);
+    // Marca o disparo para o Pilar Fone reconhecer a chamada do discador,
+    // tocar a campainha diferenciada e mostrar o resumo do cliente.
+    marcarChamadaDiscador(numero, nomeCliente);
     toast.success(resposta.message || "Chamada iniciada", { id: aviso });
     return resposta;
   } catch (erro) {
