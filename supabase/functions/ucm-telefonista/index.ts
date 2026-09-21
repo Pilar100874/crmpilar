@@ -331,30 +331,38 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // Sonda temporária para descobrir os parâmetros de fila (remover após o teste).
+    // Sonda temporária para descobrir os campos de fila (remover após o teste).
     if (acao === "sonda") {
       const resultado: Record<string, unknown> = {};
-      // 1) Criar fila de teste 9901
-      const criar = await cliente.acaoBruta("addQueue", { queue: "9901", queue_name: "Teste API" });
+      const criar = await cliente.acaoBruta("addQueue", {
+        extension: "9901",
+        queue_name: "Teste API",
+        strategy: "ringall",
+        maxlen: "10",
+        timeout: "15",
+        retry: "5",
+        wrapuptime: "10",
+        servicelevel: "60",
+        members: "2222",
+      });
       resultado.addQueue = { status: criar?.status ?? null, resposta: criar?.response ?? null };
       if (Number(criar?.status) === 0) {
-        // 2) Inspecionar campos
         const detalhe = await cliente.acaoBruta("getQueue", { queue: "9901" });
         resultado.getQueue = { status: detalhe?.status ?? null, resposta: detalhe?.response ?? null };
-        // 3) Atualizar estratégia
-        const atualizar = await cliente.acaoBruta("updateQueue", { queue: "9901", strategy: "rrmemory" });
+        const atualizar = await cliente.acaoBruta("updateQueue", {
+          queue: "9901",
+          strategy: "rrmemory",
+          maxlen: "5",
+        });
         resultado.updateQueue = { status: atualizar?.status ?? null, resposta: atualizar?.response ?? null };
-        // 4) Apagar a fila de teste
+        const agente = await cliente.acaoBruta("addQueueAgent", { queue: "9901", member: "1100" });
+        resultado.addQueueAgent = { status: agente?.status ?? null, resposta: agente?.response ?? null };
+        for (const nome of ["applyChanges", "applyConfig", "apply", "reload"]) {
+          const r = await cliente.acaoBruta(nome, {});
+          resultado[`aplicar_${nome}`] = { status: r?.status ?? null, resposta: r?.response ?? null };
+        }
         const apagar = await cliente.acaoBruta("deleteQueue", { queue: "9901" });
         resultado.deleteQueue = { status: apagar?.status ?? null, resposta: apagar?.response ?? null };
-      } else {
-        // Tentar variações de parâmetros para descobrir os obrigatórios
-        const v2 = await cliente.acaoBruta("addQueue", { extension: "9901", queue_name: "Teste API" });
-        resultado.addQueue_v2 = { status: v2?.status ?? null, resposta: v2?.response ?? null };
-        if (Number(v2?.status) === 0) {
-          const apagar2 = await cliente.acaoBruta("deleteQueue", { queue: "9901" });
-          resultado.deleteQueue_v2 = { status: apagar2?.status ?? null, resposta: apagar2?.response ?? null };
-        }
       }
       return responder({ ok: true, sonda: resultado });
     }
