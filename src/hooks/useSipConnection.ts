@@ -3,6 +3,8 @@ import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState,
 import { useToast } from '@/hooks/use-toast';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
+import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEntrada';
+import { chamadaPareceDiscador, limparChamadaDiscador } from '@/lib/telefonia/discadorMarker';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
@@ -34,6 +36,8 @@ interface CallSession {
   direction: 'inbound' | 'outbound';
   state: SessionState;
   startTime: Date;
+  /** Chamada originada pelo discador (click-to-call): ao atender, o PABX disca o cliente. */
+  viaDiscador?: boolean;
 }
 
 /** Remove apenas a formatação visual; códigos SIP digitados pelo usuário continuam intactos. */
