@@ -368,16 +368,25 @@ export const useSipConnection = () => {
 
   // Handle incoming call
   const handleIncomingCall = useCallback((session: Session) => {
-    console.log('📞 Chamada recebida de:', session.remoteIdentity.uri.user);
-    
+    const origem = session.remoteIdentity.uri.user || 'Desconhecido';
+    console.log('📞 Chamada recebida de:', origem);
+
+    // Ligação do discador (click-to-call): o PABX toca o ramal usando ele mesmo
+    // como chamador, ou há um disparo recente registrado pelo chat.
+    const viaDiscador = chamadaPareceDiscador(origem, ramalPresencaRef.current);
+
     const callSession: CallSession = {
       id: crypto.randomUUID(),
       session,
-      phoneNumber: session.remoteIdentity.uri.user || 'Desconhecido',
+      phoneNumber: origem,
       direction: 'inbound',
       state: session.state,
       startTime: new Date(),
+      viaDiscador,
     };
+
+    // Campainha: toque diferenciado para chamadas do discador.
+    iniciarToqueEntrada(viaDiscador ? 'discador' : 'padrao');
 
     setActiveCalls(prev => [
       ...prev.filter(c => c.session.state !== SessionState.Terminated && c.state !== SessionState.Terminated),
