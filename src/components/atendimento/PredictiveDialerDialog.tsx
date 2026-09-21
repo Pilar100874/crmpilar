@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { Phone, Play, Square, CheckCircle2, XCircle, Clock, Filter, Calendar, User } from "lucide-react";
+import { Phone, PhoneOutgoing, Play, Square, SkipForward, Eye, CheckCircle2, XCircle, Clock, Filter, Calendar, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+import { marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -64,10 +65,23 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
   // Available statuses from tasks
   const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
 
+  // Modo de discagem (flag do sistema, variável global "discador_previa"):
+  // ativado = mostra a próxima ligação e permite pular; desativado = sequencial sem pausa.
+  const [modoPrevia, setModoPrevia] = useState(false);
+  const [aguardandoAcao, setAguardandoAcao] = useState(false);
+  const pararRef = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (open) {
       loadTasks();
       loadUserExtension();
+    } else {
+      // Fechou a janela: interrompe qualquer sequência em andamento
+      pararRef.current = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setIsDialing(false);
+      setAguardandoAcao(false);
     }
   }, [open, selectedDate]);
 
