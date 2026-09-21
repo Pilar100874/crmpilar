@@ -237,6 +237,24 @@ export default function Telefonista() {
     ligarParaRamal(numero);
   };
 
+  const excluirFilaConfirmada = async () => {
+    if (!filaParaExcluir) return;
+    setExcluindoFila(true);
+    try {
+      const r = await painel.excluirFila(filaParaExcluir.numero);
+      toast({ title: "Fila excluída", description: (r as { message?: string }).message });
+      setFilaParaExcluir(null);
+    } catch (erro) {
+      toast({
+        title: "Não foi possível excluir a fila",
+        description: erro instanceof Error ? erro.message : "Erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      setExcluindoFila(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       {/* Cabeçalho */}
