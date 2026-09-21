@@ -250,6 +250,7 @@ export const useSipConnection = () => {
     // Sem ramal, senha ou servidor não há telefonia: não tenta conectar nem mostra avisos de erro.
     if (!config.extension?.trim() || !config.password?.trim() || !config.server?.trim()) {
       console.log('ℹ️ Telefonia não configurada (ramal ausente): conexão SIP ignorada.');
+      configRef.current = null;
       setIsConnecting(false);
       setIsRegistered(false);
       return;
