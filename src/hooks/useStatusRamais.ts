@@ -55,12 +55,18 @@ export function useStatusRamais(intervaloMs = 30000) {
     emAndamento.current = true;
     try {
       const desde = new Date(Date.now() - JANELA_PRESENCA_MS).toISOString();
+      // Sem sessão válida não adianta chamar a função: ela responderia 401
+      // ("Não autenticado") a cada ciclo de polling.
+      const { data: sessao } = await supabase.auth.getSession();
+      const logado = Boolean(sessao?.session?.access_token);
       const [presencaResp, ucmResp] = await Promise.all([
         supabase
           .from("sip_presenca")
           .select("ramal, origem, em_chamada, ultimo_ping")
           .gte("ultimo_ping", desde),
-        supabase.functions.invoke("ucm-status").catch(() => ({ data: null, error: true })),
+        logado
+          ? supabase.functions.invoke("ucm-status").catch(() => ({ data: null, error: true }))
+          : Promise.resolve({ data: null, error: true }),
       ]);
 
       const mapa: Record<string, StatusRamal> = {};
