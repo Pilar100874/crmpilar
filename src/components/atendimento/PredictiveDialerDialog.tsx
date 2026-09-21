@@ -225,34 +225,58 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
     await dialNextNumber(0);
   };
 
+  const marcarResultado = (index: number, dados: Partial<DialerResult>) => {
+    setDialerResults((prev) => prev.map((r, i) => (i === index ? { ...r, ...dados } : r)));
+  };
+
+  const agendarProxima = (index: number, ms: number) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      if (pararRef.current) return;
+      void dialNextNumber(index);
+    }, ms);
+  };
+
   const dialNextNumber = async (index: number) => {
+    if (pararRef.current) return;
     if (index >= filteredTasks.length) {
       setIsDialing(false);
+      setAguardandoAcao(false);
       toast.success("Discagem concluída");
       return;
     }
 
     const task = filteredTasks[index];
     const phone = task.customer?.telefone;
+    setCurrentIndex(index);
 
     if (!phone) {
-      setDialerResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: 'skipped', error: 'Sem telefone' } : r
-      ));
-      setCurrentIndex(index + 1);
-      // Wait a bit then continue
-      setTimeout(() => dialNextNumber(index + 1), 1000);
+      marcarResultado(index, { status: 'skipped', error: 'Sem telefone' });
+      agendarProxima(index + 1, 1000);
       return;
     }
 
-    // Update status to dialing
-    setDialerResults(prev => prev.map((r, i) => 
-      i === index ? { ...r, status: 'dialing' } : r
-    ));
+    if (modoPrevia) {
+      // Modo prévia: mostra a próxima ligação e espera o usuário ligar ou pular
+      setAguardandoAcao(true);
+      return;
+    }
+
+    await executarDiscagem(index);
+  };
+
+  const executarDiscagem = async (index: number) => {
+    if (pararRef.current) return;
+    const task = filteredTasks[index];
+    const phone = task.customer?.telefone;
+    if (!phone) return;
+
+    setAguardandoAcao(false);
+    marcarResultado(index, { status: 'dialing' });
     setCurrentIndex(index);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ucm-dial', {
+      const { error } = await supabase.functions.invoke('ucm-dial', {
         body: {
           number: phone,
           extension: userExtension,
@@ -262,9 +286,11 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
 
       if (error) throw error;
 
-      setDialerResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: 'success' } : r
-      ));
+      marcarResultado(index, { status: 'success' });
+
+      // Avisa o Pilar Fone que a próxima chamada no ramal é do discador:
+      // campainha diferente + resumo do cliente na tela de atendimento.
+      marcarChamadaDiscador(phone, task.contact_name);
 
       // Update task status
       await supabase
@@ -272,28 +298,32 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
         .update({ status: 'contatado' })
         .eq('id', task.id);
 
-      // Wait for call to complete (simplified - in production, listen for call events)
-      // For now, wait 30 seconds before next call
-      setTimeout(() => {
-        setCurrentIndex(index + 1);
-        dialNextNumber(index + 1);
-      }, 30000);
+      // Espera a conversa acontecer antes de seguir para a próxima ligação
+      agendarProxima(index + 1, 30000);
 
     } catch (error) {
       console.error("Erro ao discar:", error);
-      setDialerResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: 'failed', error: 'Erro na discagem' } : r
-      ));
-      
+      marcarResultado(index, { status: 'failed', error: 'Erro na discagem' });
+
       // Continue with next after error
-      setTimeout(() => {
-        setCurrentIndex(index + 1);
-        dialNextNumber(index + 1);
-      }, 3000);
+      agendarProxima(index + 1, 3000);
     }
   };
 
+  const confirmarLigacao = () => {
+    void executarDiscagem(currentIndex);
+  };
+
+  const pularAtual = () => {
+    marcarResultado(currentIndex, { status: 'skipped', error: 'Pulado pelo usuário' });
+    setAguardandoAcao(false);
+    void dialNextNumber(currentIndex + 1);
+  };
+
   const stopDialer = () => {
+    pararRef.current = true;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setAguardandoAcao(false);
     setIsDialing(false);
     toast.info("Discador interrompido");
   };
