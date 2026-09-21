@@ -143,7 +143,6 @@ Deno.serve(async (req) => {
     }
 
     // 2) Rotas de saída: privilégio exigido e padrões de número.
-    const rotas = await cliente.acao("listOutboundRoutes", { sidx: "sequence", sord: "asc", page: 1 });
     const lista = (rotas?.response?.outbound_route ?? rotas?.response?.outbound_routes ?? []) as Array<Record<string, unknown>>;
     if (Array.isArray(lista)) {
       resultado.rotas_saida = lista.map((r) => resumirRota(sanitizar(r) as Record<string, unknown>));
