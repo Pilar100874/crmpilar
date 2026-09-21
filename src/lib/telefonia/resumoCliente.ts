@@ -38,10 +38,10 @@ export async function buscarResumoClientePorTelefone(telefone: string): Promise<
     if (data.empresa_id) {
       const { data: emp } = await supabase
         .from("empresas")
-        .select("nome_fantasia, razao_social")
+        .select("nome_fantasia, nome")
         .eq("id", data.empresa_id)
         .maybeSingle();
-      empresa = emp?.nome_fantasia || emp?.razao_social || null;
+      empresa = emp?.nome_fantasia || emp?.nome || null;
     }
 
     return {
