@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
 import { useRamalUsuario } from "@/hooks/useRamalUsuario";
 
@@ -51,25 +50,18 @@ export function ClientDetailsPanel({
           <h3 className="font-semibold text-lg">{customer.nome}</h3>
           {customer.telefone && (
             <div className="flex gap-2 mt-2 text-xs items-center">
+              {/* No chat a ligação é sequencial: o PABX toca o ramal do usuário e,
+                  ao atender, disca o cliente pelas rotas de saída. */}
               <Button
-                variant="ghost"
                 size="sm"
-                className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-primary"
-                onClick={() => abrirPilarSip(customer.telefone)}
+                className="h-7 rounded-full px-3 text-xs"
+                disabled={!temRamal}
+                title={temRamal ? "Ligar pelo PABX (toca seu ramal primeiro)" : "Configure seu ramal para ligar"}
+                onClick={() => ligarPeloPabx(customer.telefone!)}
               >
                 <Phone className="w-3 h-3 mr-1" />
                 {customer.telefone}
               </Button>
-              {temRamal && (
-                <Button
-                  size="sm"
-                  className="h-7 rounded-full px-3 text-xs"
-                  onClick={() => ligarPeloPabx(customer.telefone!)}
-                >
-                  <Phone className="w-3 h-3 mr-1" />
-                  Ligar
-                </Button>
-              )}
             </div>
           )}
         </div>
