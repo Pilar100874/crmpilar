@@ -295,19 +295,10 @@ export const menuItems: MenuItem[] = [
     icon: Settings,
     subItems: [
       { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
-      { id: "Config Notificacoes Sistema", title: "Notificações do Sistema", url: "/config?secao=notificacoes-sistema", icon: LucideIcons.Bell },
-      { id: "Config Administradores", title: "Cadastro de Administradores", url: "/config?secao=cadastro-administradores", icon: LucideIcons.ShieldCheck },
-      { id: "Config Recuperar Senha", title: "Recuperar Senha", url: "/config?secao=recuperar-senha", icon: LucideIcons.ShieldCheck },
-      { id: "Config Conteudos", title: "Conteúdos", url: "/config?secao=conteudos", icon: LucideIcons.FileText },
       { id: "Config Variaveis Globais Menu", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
-      { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: LucideIcons.Users },
-      { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: LucideIcons.ListOrdered },
-      { id: "SLA Config", title: "SLA", url: "/config/sla", icon: LucideIcons.Clock },
-      { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: LucideIcons.Workflow },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
       { id: "Teste Campanhas Menu", title: "Teste Campanhas", url: "/config/campanhas", icon: LucideIcons.Megaphone },
       { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: LucideIcons.Star },
-      { id: "Config Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: LucideIcons.CreditCard },
     ]
   },
   {
@@ -315,7 +306,6 @@ export const menuItems: MenuItem[] = [
     title: "Admin",
     icon: LucideIcons.Shield,
     subItems: [
-      { id: "Admin Config", title: "Admin - Configurações", url: "/config", icon: Settings },
       { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Brain },
       
       { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
