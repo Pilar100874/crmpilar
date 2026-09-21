@@ -606,29 +606,32 @@ export const useSipConnection = () => {
                 break;
             }
 
-            toast({
-              title: "Falha na chamada",
-              description: `${errorMsg}. ${dica}`,
-              variant: "destructive",
-            });
-            setTimeout(() => {
-              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
-            }, 500);
+              toast({
+                title: "Falha na chamada",
+                description: `${errorMsg}. ${dica}`,
+                variant: "destructive",
+              });
+              setTimeout(() => {
+                setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+              }, 500);
+            },
+            onAccept: (response) => {
+              pararToqueChamando();
+              console.log('✅ Chamada aceita pelo outro lado');
+              console.log('📊 Headers da resposta:', response.message.headers);
+              console.log('📊 SDP remoto:', response.message.body);
+            },
+            onProgress: (response) => {
+              console.log('📊 Progresso da chamada:', response.message.statusCode, response.message.reasonPhrase);
+              if (response.message.body) {
+                console.log('📊 SDP early media:', response.message.body);
+              }
+            },
           },
-          onAccept: (response) => {
-            pararToqueChamando();
-            console.log('✅ Chamada aceita pelo outro lado');
-            console.log('📊 Headers da resposta:', response.message.headers);
-            console.log('📊 SDP remoto:', response.message.body);
-          },
-          onProgress: (response) => {
-            console.log('📊 Progresso da chamada:', response.message.statusCode, response.message.reasonPhrase);
-            if (response.message.body) {
-              console.log('📊 SDP early media:', response.message.body);
-            }
-          },
-        },
-      });
+        });
+      };
+
+      await convidar(primeiroInviter);
       
       toast({
         title: "Discando",
