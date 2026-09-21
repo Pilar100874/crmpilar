@@ -163,6 +163,7 @@ export const menuItems: MenuItem[] = [
       { id: "Config Atendimento", title: "Configurações de Chats", url: "/atendimento-config", icon: Settings },
     ]
   },
+  { id: "Telefonista", title: "Telefonista", url: "/telefonista", icon: LucideIcons.Headset },
   {
     id: "Campanhas",
     title: "Calendário",

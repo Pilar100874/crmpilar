@@ -97,6 +97,7 @@ const ImportacaoProdutos = React.lazy(() => import("./pages/ImportacaoProdutos")
 const ImportacaoProdutosLista = React.lazy(() => import("./pages/ImportacaoProdutosLista"));
 const Softphone = React.lazy(() => import("./pages/Softphone"));
 const PainelTelefoniaSIP = React.lazy(() => import("./pages/PainelTelefoniaSIP"));
+const Telefonista = React.lazy(() => import("./pages/telefonia/Telefonista"));
 const VideoCall = React.lazy(() => import("./pages/VideoCall"));
 const StimulsoftViewer = React.lazy(() => import("./pages/StimulsoftViewer"));
 const ReportBroViewerPage = React.lazy(() => import("./pages/ReportBroViewerPage"));
@@ -630,6 +631,7 @@ const App = () => (
               <Route path="/importacao-produtos/editar/:id" element={<ImportacaoProdutos />} />
               <Route path="/softphone" element={<Softphone />} />
               <Route path="/telefonia-sip" element={<PainelTelefoniaSIP />} />
+              <Route path="/telefonista" element={<Telefonista />} />
               <Route path="/videocall" element={<VideoCall />} />
               <Route path="/chat-webhook" element={<ChatWebhook />} />
               <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />

@@ -57,6 +57,9 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   // ============ Menu Principal - Funil ============
   { path: "/funil", titulo: "Funil", aliases: ["funil de vendas", "funil de leads", "kanban de vendas"] },
 
+  // ============ Menu Principal - Telefonista ============
+  { path: "/telefonista", titulo: "Telefonista", aliases: ["telefonista", "mesa de telefonista", "mesa operadora", "console da telefonista", "posicao da telefonista"] },
+
   // ============ Menu Principal - Chats ============
   { path: "/atendimento", titulo: "Painel de Chats", aliases: ["chats", "atendimento", "painel de atendimento", "painel dos chats"] },
   { path: "/agentes-chat", titulo: "Agentes IA", aliases: ["agentes de ia", "agentes de inteligencia artificial", "agentes do chat"] },
