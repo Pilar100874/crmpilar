@@ -355,12 +355,6 @@ export default function PilarFone({
     };
   }, [chamadaAtual?.id, chamadaAtual?.viaDiscador, chamadaAtual?.phoneNumber]);
 
-  const nomeExibidoChamada = !chamadaAtual
-    ? ""
-    : chamadaAtual.viaDiscador
-      ? resumoDiscador?.nome || destinoDiscador || chamadaAtual.phoneNumber
-      : nomePorNumero(chamadaAtual.phoneNumber);
-
   // Avisa o container (aba lateral) que há chamada entrante para piscar o botão
   useEffect(() => {
     if (chamadaEntrante) onChamadaRecebida?.();
@@ -394,6 +388,13 @@ export default function PilarFone({
     },
     [contatos, ramais],
   );
+
+  // Nome grande da tela de chamada: no discador mostra o cliente, não o próprio ramal.
+  const nomeExibidoChamada = !chamadaAtual
+    ? ""
+    : chamadaAtual.viaDiscador
+      ? resumoDiscador?.nome || destinoDiscador || chamadaAtual.phoneNumber
+      : nomePorNumero(chamadaAtual.phoneNumber);
 
   const ligar = useCallback(
     (destino: string, comVideo = false, comVivaVoz = false) => {
