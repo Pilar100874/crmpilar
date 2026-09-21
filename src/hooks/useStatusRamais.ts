@@ -134,7 +134,16 @@ export function useStatusRamais(intervaloMs = 30000) {
   useEffect(() => {
     void atualizar();
     const t = setInterval(() => void atualizar(), intervaloMs);
-    return () => clearInterval(t);
+    // Login ou renovação de token libera as chamadas de novo.
+    const { data: sub } = supabase.auth.onAuthStateChange((evento) => {
+      if (evento === "SIGNED_IN" || evento === "TOKEN_REFRESHED") {
+        bloqueadoPor401.current = false;
+      }
+    });
+    return () => {
+      clearInterval(t);
+      sub.subscription.unsubscribe();
+    };
   }, [atualizar, intervaloMs]);
 
   const ramaisOnline = useMemo(
