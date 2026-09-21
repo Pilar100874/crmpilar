@@ -18,6 +18,15 @@ const criarSdhComSdpLimpo: typeof fabricaSdhPadrao = (session, options) => {
   return sdh;
 };
 
+/**
+ * O SIP.js aplica estes modificadores imediatamente antes de entregar o SDP ao
+ * navegador. Mantemos também a fábrica protegida acima para renegociações.
+ */
+const limparDescricaoRemota = async (descricao: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => ({
+  ...descricao,
+  sdp: descricao.sdp ? sanitizarSdp(descricao.sdp) : descricao.sdp,
+});
+
 /** Extrai o motivo Q.850 do cabeçalho Reason (ex.: "Q.850 ;cause=16") devolvido pela operadora. */
 const MOTIVOS_Q850: Record<string, string> = {
   '1': 'número não existe',
@@ -184,6 +193,8 @@ export const useSipConnection = () => {
   const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
   const keepAliveRef = useRef<number | undefined>(undefined);
   const ouvintesSaudeRef = useRef<(() => void) | undefined>(undefined);
+  /** Evita dois accept() simultâneos quando o atendimento automático atualiza a tela. */
+  const atendendoRef = useRef<Set<string>>(new Set());
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
@@ -801,13 +812,20 @@ export const useSipConnection = () => {
   // Answer incoming call (pode atender já com vídeo/viva-voz)
   const answer = useCallback(async (callId: string, opcoes?: { video?: boolean; vivaVoz?: boolean }) => {
     const call = activeCalls.find(c => c.id === callId);
-    if (!call || call.direction !== 'inbound') return;
+    if (
+      !call ||
+      call.direction !== 'inbound' ||
+      call.session.state !== SessionState.Initial ||
+      atendendoRef.current.has(callId)
+    ) return;
 
+    atendendoRef.current.add(callId);
     try {
       await (call.session as any).accept({
         sessionDescriptionHandlerOptions: {
           constraints: { audio: true, video: !!opcoes?.video },
         },
+        sessionDescriptionHandlerModifiers: [limparDescricaoRemota],
       });
       if (opcoes?.vivaVoz) {
         setVivaVoz(true);
@@ -829,6 +847,8 @@ export const useSipConnection = () => {
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
+    } finally {
+      atendendoRef.current.delete(callId);
     }
   }, [activeCalls, aplicarVivaVoz, toast]);
 
