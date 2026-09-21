@@ -1,8 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { UserAgent, Registerer, RegistererState, Inviter, Invitation, Session, SessionState } from 'sip.js';
+import { UserAgent, Registerer, RegistererState, Inviter, Invitation, Session, SessionState, Web } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
+
+const fabricaSdhPadrao = Web.defaultSessionDescriptionHandlerFactory();
+const criarSdhComSdpLimpo: typeof fabricaSdhPadrao = (session, options) => {
+  const sdh = fabricaSdhPadrao(session, options) as Web.SessionDescriptionHandler;
+  const setDescriptionOriginal = sdh.setDescription.bind(sdh);
+  sdh.setDescription = (sdp, opcoes, modificadores) =>
+    setDescriptionOriginal(sanitizarSdp(sdp), opcoes, modificadores);
+  return sdh;
+};
+
+const limparDescricaoRemota = async (descricao: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => ({
+  ...descricao,
+  sdp: descricao.sdp ? sanitizarSdp(descricao.sdp) : descricao.sdp,
+});
 
 interface SipConfig {
   server: string;
@@ -34,6 +49,7 @@ export const useVideoCall = () => {
   
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
+  const atendendoRef = useRef<Set<Invitation>>(new Set());
 
   // Obter mídia local (câmera + microfone)
   const getLocalMedia = useCallback(async () => {
@@ -95,6 +111,7 @@ export const useVideoCall = () => {
       authorizationUsername: extension,
       authorizationPassword: password,
       displayName: displayName || extension,
+      sessionDescriptionHandlerFactory: criarSdhComSdpLimpo,
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: true,
@@ -149,10 +166,11 @@ export const useVideoCall = () => {
       }
 
       const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) throw new Error('Estabelecimento não identificado');
       const { data: ucmData } = await supabase
         .from('ucm_config')
         .select('ucm_host, remote_ip, conference_room_number')
-        .eq('estabelecimento_id', estabelecimentoId!)
+        .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 
       if (!ucmData?.ucm_host) {
@@ -261,6 +279,7 @@ export const useVideoCall = () => {
       if (!target) throw new Error('URI inválida');
 
       const inviter = new Inviter(userAgent, target, {
+        sessionDescriptionHandlerModifiers: [limparDescricaoRemota],
         sessionDescriptionHandlerOptions: {
           constraints: {
             audio: true,
@@ -339,15 +358,25 @@ export const useVideoCall = () => {
 
     setActiveCalls(prev => [...prev, callSession]);
 
-    // Auto aceitar chamadas recebidas
-    session.accept({
+    // Auto aceitar chamadas recebidas uma única vez e sempre com o SDP limpo.
+    if (session.state !== SessionState.Initial || atendendoRef.current.has(session)) return;
+    atendendoRef.current.add(session);
+    void session.accept({
+      sessionDescriptionHandlerModifiers: [limparDescricaoRemota],
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: true,
           video: true,
         }
       }
-    });
+    }).catch((error) => {
+      console.error('❌ Erro ao atender videochamada:', error);
+      toast({
+        title: "Erro ao atender",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }).finally(() => atendendoRef.current.delete(session));
 
     toast({
       title: "Chamada recebida",
