@@ -51,7 +51,7 @@ const ROTULO_ESTADO: Record<EstadoRamal, string> = {
 };
 
 /** Extrai os números (2+ dígitos) de um texto de origem/destino do PABX. */
-const numerosDe = (texto?: string) => (texto || "").match(/\d{2,}/g) ?? [];
+const numerosDe = (texto?: string): string[] => (texto || "").match(/\d{2,}/g) ?? [];
 
 const ramalNaChamada = (c: ChamadaAoVivo, ramal: string) =>
   numerosDe(c.origem).includes(ramal) || numerosDe(c.destino).includes(ramal);
@@ -346,9 +346,11 @@ export default function Telefonista() {
                             {souEu ? " (você)" : ""}
                           </span>
                           <div className="flex items-center gap-1 text-muted-foreground">
-                            {r.noSistema && <Monitor className="h-3.5 w-3.5" title="Conectado pelo sistema" />}
+                            {r.noSistema && (
+                              <span title="Conectado pelo sistema"><Monitor className="h-3.5 w-3.5" /></span>
+                            )}
                             {(r.onlinePabx || r.noSistema) && (
-                              <Smartphone className="h-3.5 w-3.5" title="Registrado no PABX" />
+                              <span title="Registrado no PABX"><Smartphone className="h-3.5 w-3.5" /></span>
                             )}
                             <span className="text-[11px]">{ROTULO_ESTADO[estado]}</span>
                           </div>
