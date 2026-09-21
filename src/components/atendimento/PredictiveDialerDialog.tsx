@@ -444,6 +444,13 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
             {userExtension && (
               <Badge variant="outline">Ramal: {userExtension}</Badge>
             )}
+            <Badge
+              variant={modoPrevia ? "default" : "secondary"}
+              title="Altere na variável global discador_previa (Configurações de Chats > Variáveis Globais)"
+            >
+              {modoPrevia ? <Eye className="h-3 w-3 mr-1" /> : <Play className="h-3 w-3 mr-1" />}
+              {modoPrevia ? "Modo prévia: você confirma ou pula" : "Modo sequencial: sem pausa"}
+            </Badge>
           </div>
 
           {/* Progress */}
@@ -454,6 +461,34 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} />
+            </div>
+          )}
+
+          {/* Prévia da próxima ligação (modo com confirmação e pulo) */}
+          {isDialing && aguardandoAcao && filteredTasks[currentIndex] && (
+            <div className="rounded-lg border-2 border-primary p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <PhoneOutgoing className="h-4 w-4" />
+                Próxima ligação
+              </div>
+              <div className="space-y-1">
+                <p className="text-lg font-semibold">{filteredTasks[currentIndex].contact_name}</p>
+                <p className="text-sm text-muted-foreground">{filteredTasks[currentIndex].customer?.telefone}</p>
+                <p className="text-xs text-muted-foreground">
+                  {filteredTasks[currentIndex].title}
+                  {filteredTasks[currentIndex].time ? ` • ${filteredTasks[currentIndex].time}` : ""}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={confirmarLigacao}>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Ligar agora
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={pularAtual}>
+                  <SkipForward className="h-4 w-4 mr-2" />
+                  Pular
+                </Button>
+              </div>
             </div>
           )}
 
