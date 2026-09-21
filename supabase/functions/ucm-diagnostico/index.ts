@@ -127,6 +127,13 @@ Deno.serve(async (req) => {
     const corpo = await req.json().catch(() => ({}));
     const resultado: Record<string, unknown> = { ramal_consultado: ramal };
 
+    // Consulta genérica somente-leitura (ações list*/get*), para sondar a API do UCM.
+    if (typeof corpo?.acao === "string" && /^(list|get)[A-Za-z]+$/.test(corpo.acao)) {
+      const extras = (corpo.extras && typeof corpo.extras === "object") ? corpo.extras as Record<string, unknown> : {};
+      const r = await cliente.acao(corpo.acao, extras);
+      return responder({ acao: corpo.acao, status: r?.status, response: sanitizar(r?.response) });
+    }
+
     // 1) Dados do ramal do usuário: privilégio de discagem.
     const listagem = await cliente.acao("listExtension", { sidx: "extension", sord: "asc", page: 1 });
     const rotas = await cliente.acao("listOutboundRoutes", { sidx: "sequence", sord: "asc", page: 1 });
