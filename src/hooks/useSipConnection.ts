@@ -538,27 +538,44 @@ export const useSipConnection = () => {
         // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
         iniciarToqueChamando();
 
-      await inviter.invite({
-        sessionDescriptionHandlerOptions: {
-          constraints: {
-            audio: true,
-            video: !!opcoes?.video,
+        await inviter.invite({
+          sessionDescriptionHandlerOptions: {
+            constraints: {
+              audio: true,
+              video: !!opcoes?.video,
+            },
           },
-        },
-        requestDelegate: {
-          onReject: async (response) => {
-            pararToqueChamando();
-            console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
-            console.error('❌ Headers da resposta:', response.message.headers);
-            // O Pilar Fone disca direto, como um telefone comum: se o PABX recusar,
-            // apenas informamos o motivo (a discagem sequencial pelo PABX fica
-            // exclusiva do discador da tela de chat).
-            let errorMsg = response.message.reasonPhrase;
-            let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
+          requestOptions: extraHeaders ? { extraHeaders } : undefined,
+          requestDelegate: {
+            onReject: async (response) => {
+              const codigo = response.message.statusCode;
+              console.error('❌ Chamada rejeitada:', codigo, response.message.reasonPhrase);
+              console.error('❌ Headers da resposta:', response.message.headers);
 
+              // O PABX pediu a senha do ramal para liberar a ligação: respondemos
+              // o desafio com o digest e discamos novamente (apenas uma vez).
+              const desafio = (codigo === 401 || codigo === 407)
+                ? extrairDesafio(response.message.headers as Record<string, Array<{ raw?: string }>>, codigo)
+                : null;
+              if (desafio && !tentouAutenticar && configRef.current) {
+                tentouAutenticar = true;
+                const cfg = configRef.current;
+                const usuarioAuth = (cfg.authUser || '').trim() || cfg.extension;
+                const cabecalho = calcularCabecalhoAuth(desafio, 'INVITE', sipUri, usuarioAuth, cfg.password);
+                console.log('🔐 PABX pediu senha para discar; rediscando com autenticação.');
+                await convidar(new Inviter(userAgent, target), [`${desafio.tipo}: ${cabecalho}`]);
+                return;
+              }
 
-            // Mensagens mais amigáveis para códigos comuns
-            switch (response.message.statusCode) {
+              pararToqueChamando();
+              // O Pilar Fone disca direto, como um telefone comum: se o PABX recusar,
+              // apenas informamos o motivo (a discagem sequencial pelo PABX fica
+              // exclusiva do discador da tela de chat).
+              let errorMsg = response.message.reasonPhrase;
+              let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
+
+              // Mensagens mais amigáveis para códigos comuns
+              switch (codigo) {
               case 401:
               case 407:
                 errorMsg = "Senha do ramal recusada pelo PABX";
