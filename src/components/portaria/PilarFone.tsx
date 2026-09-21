@@ -30,6 +30,8 @@ import PilarFoneContatos, { type ContatoCadastro } from "@/components/portaria/P
 import PilarFoneWhatsapp, { type AlvoWhatsapp } from "@/components/portaria/PilarFoneWhatsapp";
 import PilarFoneHistorico from "@/components/portaria/PilarFoneHistorico";
 import { registrarChamada } from "@/lib/portaria/historicoChamadas";
+import { obterMarcadorDiscador } from "@/lib/telefonia/discadorMarker";
+import { buscarResumoClientePorTelefone, type ResumoCliente } from "@/lib/telefonia/resumoCliente";
 
 import {
   lerConfigSip,
@@ -328,6 +330,36 @@ export default function PilarFone({
   );
   // Sempre a chamada mais recente: evita exibir "Em conversa" de uma chamada antiga presa.
   const chamadaAtual = chamadasVivas[chamadasVivas.length - 1] ?? null;
+
+  // Ligações do discador: guarda o destino real (quando o ramal toca, a origem
+  // costuma ser o próprio ramal) e busca o resumo do cliente no cadastro.
+  const [destinoDiscador, setDestinoDiscador] = useState("");
+  const [resumoDiscador, setResumoDiscador] = useState<ResumoCliente | null>(null);
+
+  useEffect(() => {
+    if (!chamadaAtual?.viaDiscador) {
+      setDestinoDiscador("");
+      setResumoDiscador(null);
+      return;
+    }
+    const marcador = obterMarcadorDiscador();
+    const alvo = marcador?.destino || chamadaAtual.phoneNumber;
+    setDestinoDiscador(alvo);
+    setResumoDiscador(marcador?.nome ? { nome: marcador.nome, telefone: alvo } : null);
+    let ativo = true;
+    void buscarResumoClientePorTelefone(alvo).then((r) => {
+      if (ativo && r) setResumoDiscador(r);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [chamadaAtual?.id, chamadaAtual?.viaDiscador, chamadaAtual?.phoneNumber]);
+
+  const nomeExibidoChamada = !chamadaAtual
+    ? ""
+    : chamadaAtual.viaDiscador
+      ? resumoDiscador?.nome || destinoDiscador || chamadaAtual.phoneNumber
+      : nomePorNumero(chamadaAtual.phoneNumber);
 
   // Avisa o container (aba lateral) que há chamada entrante para piscar o botão
   useEffect(() => {
