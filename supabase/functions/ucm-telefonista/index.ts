@@ -411,7 +411,19 @@ Deno.serve(async (req) => {
       filas.push(fila);
     }
 
-    return responder({ ok: true, ramais, chamadas, troncos, filas, meu_ramal: meuRamal });
+    // Quando a conta da API não tem privilégio de troncos (status -47), a UI
+    // mostra um aviso explicativo em vez de uma lista vazia sem contexto.
+    const troncosDisponiveis = !(troncosSip === null && troncosAnalog === null);
+
+    return responder({
+      ok: true,
+      ramais,
+      chamadas,
+      troncos,
+      troncos_disponiveis: troncosDisponiveis,
+      filas,
+      meu_ramal: meuRamal,
+    });
   } catch (erro) {
     console.error("Erro em ucm-telefonista:", erro);
     return responder(
