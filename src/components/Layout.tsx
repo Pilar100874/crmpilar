@@ -294,7 +294,6 @@ export const menuItems: MenuItem[] = [
       { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
       { id: "Config Variaveis Globais Menu", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
-      { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: LucideIcons.Star },
     ]
   },
   {
