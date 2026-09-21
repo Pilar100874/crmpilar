@@ -557,7 +557,7 @@ export function UnifiedDetailsPanel({
                 ) : telefone ? (
                   <button
                     type="button"
-                    onClick={() => ligarPeloPabx(telefone.replace(/\D/g, ''))}
+                    onClick={() => ligarPeloPabx(telefone.replace(/\D/g, ''), nome)}
                     title="Ligar pelo PABX (toca seu ramal primeiro)"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"
                   >
