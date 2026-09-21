@@ -146,6 +146,47 @@ export function FluxoAtendimentoPanel({
     setEmailSubject("");
   }, [currentIndex]);
 
+  const discarParaAtual = async () => {
+    const tarefa = tasks[currentIndex];
+    const fone = tarefa?.customers?.telefone;
+    if (!tarefa || !fone) {
+      setLigacaoStatus('sem_telefone');
+      return;
+    }
+    discadosRef.current.add(tarefa.id);
+    setLigacaoErro("");
+    setLigacaoStatus('discando');
+    const resposta = await ligarPeloPabx(fone, tarefa.contact_name);
+    if (resposta.error) {
+      setLigacaoStatus('falha');
+      setLigacaoErro(resposta.error);
+    } else {
+      setLigacaoStatus('chamando');
+    }
+  };
+
+  // Discador: ao chegar em um contato, o modo sequencial disca na hora;
+  // o modo prévia espera o "Ligar agora". Nunca repete contato já discado.
+  useEffect(() => {
+    if (!discadorModo) return;
+    const tarefa = tasks[currentIndex];
+    if (!tarefa) return;
+    if (!tarefa.customers?.telefone) {
+      setLigacaoStatus('sem_telefone');
+      return;
+    }
+    if (discadosRef.current.has(tarefa.id)) {
+      setLigacaoStatus('chamando');
+      return;
+    }
+    if (discadorModo === 'sequencial' && avancoRef.current) {
+      void discarParaAtual();
+    } else {
+      setLigacaoStatus('aguardando');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, discadorModo, tasks]);
+
   // Notify parent of current task changes
   useEffect(() => {
     onCurrentTaskChange?.(currentTask || null);
@@ -349,6 +390,7 @@ export function FluxoAtendimentoPanel({
         toast.success('Fluxo de atendimento concluído!');
         onClose();
       } else {
+        avancoRef.current = true;
         setCurrentIndex(prev => prev + 1);
         toast.success('Atendimento registrado');
       }
@@ -365,6 +407,7 @@ export function FluxoAtendimentoPanel({
       toast.info('Fluxo finalizado');
       onClose();
     } else {
+      avancoRef.current = true;
       setCurrentIndex(prev => prev + 1);
     }
   };
