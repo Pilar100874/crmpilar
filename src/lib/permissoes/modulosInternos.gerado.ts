@@ -110,6 +110,14 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     {
       "id": "retencao-dados",
       "label": "Retenção de Dados"
+    },
+    {
+      "id": "variaveis-globais",
+      "label": "Variáveis Globais"
+    },
+    {
+      "id": "teste-webhooks",
+      "label": "Teste de Webhooks"
     }
   ],
   "Calendario Painel": [
