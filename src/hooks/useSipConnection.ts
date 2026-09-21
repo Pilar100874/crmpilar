@@ -5,6 +5,7 @@ import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presen
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEntrada';
 import { chamadaPareceDiscador, limparChamadaDiscador } from '@/lib/telefonia/discadorMarker';
+import { extrairDesafio, calcularCabecalhoAuth } from '@/lib/telefonia/digestSip';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
@@ -156,6 +157,8 @@ export const useSipConnection = () => {
 
   /** Reconexão automática: a queda do WebSocket não deve derrubar o ramal de vez. */
   const registererRef = useRef<Registerer | null>(null);
+  /** Credenciais em uso, para responder ao desafio de senha (401/407) ao discar. */
+  const configRef = useRef<SipConfig | null>(null);
   const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
   const keepAliveRef = useRef<number | undefined>(undefined);
   const ouvintesSaudeRef = useRef<(() => void) | undefined>(undefined);
@@ -247,11 +250,13 @@ export const useSipConnection = () => {
     // Sem ramal, senha ou servidor não há telefonia: não tenta conectar nem mostra avisos de erro.
     if (!config.extension?.trim() || !config.password?.trim() || !config.server?.trim()) {
       console.log('ℹ️ Telefonia não configurada (ramal ausente): conexão SIP ignorada.');
+      configRef.current = null;
       setIsConnecting(false);
       setIsRegistered(false);
       return;
     }
     ramalPresencaRef.current = config.extension.trim();
+    configRef.current = config;
 
     const comPorta = (host: string, porta?: string) => {
       const h = host.trim();
@@ -457,14 +462,14 @@ export const useSipConnection = () => {
         throw new Error('URI inválida');
       }
 
-      const inviter = new Inviter(userAgent, target);
-      
+      const primeiroInviter = new Inviter(userAgent, target);
+
       const callSession: CallSession = {
         id: crypto.randomUUID(),
-        session: inviter,
+        session: primeiroInviter,
         phoneNumber,
         direction: 'outbound',
-        state: inviter.state,
+        state: primeiroInviter.state,
         startTime: new Date(),
       };
 
@@ -480,68 +485,97 @@ export const useSipConnection = () => {
         void aplicarVivaVoz(true);
       }
 
-      // Setup session state change handler
-      inviter.stateChange.addListener(async (state) => {
-        console.log('Estado da chamada mudou:', state);
-        setActiveCalls(prev => 
-          prev.map(call => 
-            call.id === callSession.id 
-              ? { ...call, state } 
-              : call
-          )
-        );
+      // O PABX pode pedir a senha do ramal ao discar (401/407). O SIP.js só
+      // responde a esse desafio no registro, então rediscamos uma vez com o
+      // digest calculado a partir do desafio recebido.
+      let tentouAutenticar = false;
 
-        if (state === SessionState.Established) {
-          pararToqueChamando();
-          console.log('🎤 Configurando mídia para chamada estabelecida...');
-          await setupRemoteMedia(inviter);
-          if (opcoes?.video) {
-            const sdh = inviter.sessionDescriptionHandler as { localMediaStream?: MediaStream } | undefined;
-            if (sdh?.localMediaStream?.getVideoTracks().length) {
-              setLocalVideoStream(sdh.localMediaStream);
-            }
-          }
-          toast({
-            title: "Chamada conectada",
-            description: `Conectado com ${phoneNumber}`,
-          });
-        } else if (state === SessionState.Terminated) {
-          pararToqueChamando();
-          // Remove da lista após um pequeno delay para garantir que a UI atualize
-          setTimeout(() => {
-            setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
-          }, 500);
-          toast({
-            title: "Chamada encerrada",
-            description: `Chamada com ${phoneNumber} finalizada`,
-          });
-        }
-      });
+      const convidar = async (inviter: Inviter, extraHeaders?: string[]): Promise<void> => {
+        // A tentativa atual passa a ser a sessão ativa desta chamada.
+        callSession.session = inviter;
+        callSession.state = inviter.state;
 
-      // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
-      iniciarToqueChamando();
+        // Setup session state change handler
+        inviter.stateChange.addListener(async (state) => {
+          // Ignora eventos de tentativas antigas (ex.: a 1ª discagem recusada pelo desafio de senha).
+          if (callSession.session !== inviter) return;
+          console.log('Estado da chamada mudou:', state);
+          setActiveCalls(prev =>
+            prev.map(call =>
+              call.id === callSession.id
+                ? { ...call, state }
+                : call
+            )
+          );
 
-      await inviter.invite({
-        sessionDescriptionHandlerOptions: {
-          constraints: {
-            audio: true,
-            video: !!opcoes?.video,
-          },
-        },
-        requestDelegate: {
-          onReject: async (response) => {
+          if (state === SessionState.Established) {
             pararToqueChamando();
-            console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
-            console.error('❌ Headers da resposta:', response.message.headers);
-            // O Pilar Fone disca direto, como um telefone comum: se o PABX recusar,
-            // apenas informamos o motivo (a discagem sequencial pelo PABX fica
-            // exclusiva do discador da tela de chat).
-            let errorMsg = response.message.reasonPhrase;
-            let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
+            console.log('🎤 Configurando mídia para chamada estabelecida...');
+            await setupRemoteMedia(inviter);
+            if (opcoes?.video) {
+              const sdh = inviter.sessionDescriptionHandler as { localMediaStream?: MediaStream } | undefined;
+              if (sdh?.localMediaStream?.getVideoTracks().length) {
+                setLocalVideoStream(sdh.localMediaStream);
+              }
+            }
+            toast({
+              title: "Chamada conectada",
+              description: `Conectado com ${phoneNumber}`,
+            });
+          } else if (state === SessionState.Terminated) {
+            pararToqueChamando();
+            // Remove da lista após um pequeno delay para garantir que a UI atualize
+            setTimeout(() => {
+              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+            }, 500);
+            toast({
+              title: "Chamada encerrada",
+              description: `Chamada com ${phoneNumber} finalizada`,
+            });
+          }
+        });
 
+        // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
+        iniciarToqueChamando();
 
-            // Mensagens mais amigáveis para códigos comuns
-            switch (response.message.statusCode) {
+        await inviter.invite({
+          sessionDescriptionHandlerOptions: {
+            constraints: {
+              audio: true,
+              video: !!opcoes?.video,
+            },
+          },
+          requestOptions: extraHeaders ? { extraHeaders } : undefined,
+          requestDelegate: {
+            onReject: async (response) => {
+              const codigo = response.message.statusCode;
+              console.error('❌ Chamada rejeitada:', codigo, response.message.reasonPhrase);
+              console.error('❌ Headers da resposta:', response.message.headers);
+
+              // O PABX pediu a senha do ramal para liberar a ligação: respondemos
+              // o desafio com o digest e discamos novamente (apenas uma vez).
+              const desafio = (codigo === 401 || codigo === 407)
+                ? extrairDesafio(response.message.headers as Record<string, Array<{ raw?: string }>>, codigo)
+                : null;
+              if (desafio && !tentouAutenticar && configRef.current) {
+                tentouAutenticar = true;
+                const cfg = configRef.current;
+                const usuarioAuth = (cfg.authUser || '').trim() || cfg.extension;
+                const cabecalho = calcularCabecalhoAuth(desafio, 'INVITE', sipUri, usuarioAuth, cfg.password);
+                console.log('🔐 PABX pediu senha para discar; rediscando com autenticação.');
+                await convidar(new Inviter(userAgent, target), [`${desafio.tipo}: ${cabecalho}`]);
+                return;
+              }
+
+              pararToqueChamando();
+              // O Pilar Fone disca direto, como um telefone comum: se o PABX recusar,
+              // apenas informamos o motivo (a discagem sequencial pelo PABX fica
+              // exclusiva do discador da tela de chat).
+              let errorMsg = response.message.reasonPhrase;
+              let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
+
+              // Mensagens mais amigáveis para códigos comuns
+              switch (codigo) {
               case 401:
               case 407:
                 errorMsg = "Senha do ramal recusada pelo PABX";
@@ -572,29 +606,32 @@ export const useSipConnection = () => {
                 break;
             }
 
-            toast({
-              title: "Falha na chamada",
-              description: `${errorMsg}. ${dica}`,
-              variant: "destructive",
-            });
-            setTimeout(() => {
-              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
-            }, 500);
+              toast({
+                title: "Falha na chamada",
+                description: `${errorMsg}. ${dica}`,
+                variant: "destructive",
+              });
+              setTimeout(() => {
+                setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+              }, 500);
+            },
+            onAccept: (response) => {
+              pararToqueChamando();
+              console.log('✅ Chamada aceita pelo outro lado');
+              console.log('📊 Headers da resposta:', response.message.headers);
+              console.log('📊 SDP remoto:', response.message.body);
+            },
+            onProgress: (response) => {
+              console.log('📊 Progresso da chamada:', response.message.statusCode, response.message.reasonPhrase);
+              if (response.message.body) {
+                console.log('📊 SDP early media:', response.message.body);
+              }
+            },
           },
-          onAccept: (response) => {
-            pararToqueChamando();
-            console.log('✅ Chamada aceita pelo outro lado');
-            console.log('📊 Headers da resposta:', response.message.headers);
-            console.log('📊 SDP remoto:', response.message.body);
-          },
-          onProgress: (response) => {
-            console.log('📊 Progresso da chamada:', response.message.statusCode, response.message.reasonPhrase);
-            if (response.message.body) {
-              console.log('📊 SDP early media:', response.message.body);
-            }
-          },
-        },
-      });
+        });
+      };
+
+      await convidar(primeiroInviter);
       
       toast({
         title: "Discando",
@@ -786,6 +823,7 @@ export const useSipConnection = () => {
     }
     reconexaoRef.current.tentativas = 0;
     registererRef.current = null;
+    configRef.current = null;
     try {
       // Hangup all active calls
       for (const call of activeCalls) {
