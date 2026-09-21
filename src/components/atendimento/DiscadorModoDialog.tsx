@@ -24,7 +24,9 @@ export function DiscadorModoDialog({ open, onOpenChange, totalContatos, onSelect
             Discador
           </DialogTitle>
           <DialogDescription>
-            Como deseja ligar para os {totalContatos} contato{totalContatos === 1 ? '' : 's'} com telefone da lista?
+            {totalContatos === 1
+              ? 'Como deseja ligar para o contato com telefone da lista?'
+              : `Como deseja ligar para os ${totalContatos} contatos com telefone da lista?`}
           </DialogDescription>
         </DialogHeader>
 
