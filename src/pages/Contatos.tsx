@@ -2321,9 +2321,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </div>
           ) : (
             <>
-            {/* Celular/tablet: cartões */}
+            {/* Cartões em todas as larguras (celular, tablet e desktop) */}
             <CadastroCardList
-              className="lg:hidden"
               items={sortedContacts.map((contact) => ({
                 id: contact.id,
                 title: contact.name,

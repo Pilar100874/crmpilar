@@ -2074,9 +2074,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           ) : (
             <>
-            {/* Celular/tablet: cartões */}
+            {/* Cartões em todas as larguras (celular, tablet e desktop) */}
             <CadastroCardList
-              className="lg:hidden"
               items={sortedEmpresas.map((empresa: any) => ({
                 id: empresa.id,
                 title: empresa.nome_fantasia || empresa.nome || "-",

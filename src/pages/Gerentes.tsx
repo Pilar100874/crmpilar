@@ -507,7 +507,6 @@ export default function Gerentes() {
           ) : (
             <>
             <CadastroCardList
-              className="lg:hidden"
               items={filtrados.map(g => ({
                 id: g.id,
                 title: g.nome,
