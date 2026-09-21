@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
+import { limparChamadaDiscador, marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
 
 export interface RespostaClickToCall {
   success?: boolean;
@@ -26,22 +26,25 @@ export async function ligarPeloPabx(destino: string, nomeCliente?: string): Prom
   }
 
   const aviso = toast.loading("Iniciando chamada...");
+  // Marca ANTES de chamar o PABX: o UCM pode tocar o ramal antes da resposta
+  // HTTP voltar, e o Pilar Fone precisa do destino para identificar o cliente
+  // (sem o marcador, a origem da chamada é o próprio ramal).
+  marcarChamadaDiscador(numero, nomeCliente);
   try {
     const { data, error } = await supabase.functions.invoke("ucm-dial", {
       body: { destination: numero },
     });
     const resposta = (data || {}) as RespostaClickToCall;
     if (error || resposta.error) {
+      limparChamadaDiscador();
       const mensagem = resposta.error || "Não foi possível iniciar a chamada";
       toast.error(mensagem, { id: aviso });
       return { error: mensagem };
     }
-    // Marca o disparo para o Pilar Fone reconhecer a chamada do discador,
-    // tocar a campainha diferenciada e mostrar o resumo do cliente.
-    marcarChamadaDiscador(numero, nomeCliente);
     toast.success(resposta.message || "Chamada iniciada", { id: aviso });
     return resposta;
   } catch (erro) {
+    limparChamadaDiscador();
     const mensagem = erro instanceof Error ? erro.message : "Não foi possível iniciar a chamada";
     toast.error(mensagem, { id: aviso });
     return { error: mensagem };

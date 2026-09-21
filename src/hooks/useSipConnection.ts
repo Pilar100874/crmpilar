@@ -195,6 +195,8 @@ export const useSipConnection = () => {
   const ouvintesSaudeRef = useRef<(() => void) | undefined>(undefined);
   /** Evita dois accept() simultâneos quando o atendimento automático atualiza a tela. */
   const atendendoRef = useRef<Set<string>>(new Set());
+  /** Chamadas encerradas pelo próprio usuário (para não confundir com queda do PABX). */
+  const desligadasPeloUsuarioRef = useRef<Set<string>>(new Set());
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
@@ -431,25 +433,45 @@ export const useSipConnection = () => {
       callSession,
     ]);
 
+    // Marca o momento do atendimento para detectar queda imediata (PABX que
+    // recusa a perna externa derruba a chamada do ramal poucos segundos depois).
+    let estabelecidaEm: number | null = null;
+
     // Setup session state change handler
     session.stateChange.addListener(async (state) => {
       console.log('📊 Estado da chamada recebida mudou:', state);
-      setActiveCalls(prev => 
-        prev.map(call => 
-          call.id === callSession.id 
-            ? { ...call, state } 
+      setActiveCalls(prev =>
+        prev.map(call =>
+          call.id === callSession.id
+            ? { ...call, state }
             : call
         )
       );
 
       if (state === SessionState.Established) {
         console.log('✅ Chamada recebida estabelecida');
+        estabelecidaEm = Date.now();
         pararToqueEntrada();
         if (callSession.viaDiscador) limparChamadaDiscador();
         await setupRemoteMedia(session);
       } else if (state === SessionState.Terminated) {
         console.log('❌ Chamada recebida encerrada');
         pararToqueEntrada();
+        // Discador: ramal atendeu e a ligação caiu logo em seguida — quase sempre
+        // é o PABX recusando a perna externa (permissão do ramal ou rota de saída).
+        if (
+          callSession.viaDiscador &&
+          estabelecidaEm &&
+          Date.now() - estabelecidaEm < 12000 &&
+          !desligadasPeloUsuarioRef.current.has(callSession.id)
+        ) {
+          toast({
+            title: "O PABX não completou a ligação",
+            description: "Seu ramal atendeu, mas a chamada caiu em seguida. Verifique no UCM se a permissão do ramal está como National e se existe rota de saída para o número.",
+            variant: "destructive",
+          });
+        }
+        desligadasPeloUsuarioRef.current.delete(callSession.id);
         // Remove chamada encerrada após delay
         setTimeout(() => {
           setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -774,6 +796,7 @@ export const useSipConnection = () => {
   const hangup = useCallback(async (callId: string) => {
     const call = activeCalls.find(c => c.id === callId);
     if (!call) return;
+    desligadasPeloUsuarioRef.current.add(callId);
 
     pararToqueChamando();
 
