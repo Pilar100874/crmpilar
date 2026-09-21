@@ -331,38 +331,44 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // Sonda temporária para descobrir os campos de fila (remover após o teste).
+    // Sonda temporária para mapear os campos aceitos por addQueue (remover após o teste).
     if (acao === "sonda") {
       const resultado: Record<string, unknown> = {};
-      const criar = await cliente.acaoBruta("addQueue", {
-        extension: "9901",
-        queue_name: "Teste API",
-        strategy: "ringall",
-        maxlen: "10",
-        timeout: "15",
-        retry: "5",
-        wrapuptime: "10",
-        servicelevel: "60",
-        members: "2222",
-      });
-      resultado.addQueue = { status: criar?.status ?? null, resposta: criar?.response ?? null };
-      if (Number(criar?.status) === 0) {
-        const detalhe = await cliente.acaoBruta("getQueue", { queue: "9901" });
-        resultado.getQueue = { status: detalhe?.status ?? null, resposta: detalhe?.response ?? null };
-        const atualizar = await cliente.acaoBruta("updateQueue", {
-          queue: "9901",
-          strategy: "rrmemory",
-          maxlen: "5",
+      const testes: Record<string, string>[] = [
+        { strategy: "ringall" },
+        { maxlen: "10" },
+        { timeout: "15" },
+        { retry: "5" },
+        { wrapuptime: "10" },
+        { servicelevel: "60" },
+        { members: "2222" },
+        { priority: "1" },
+        { agent_timeout: "15" },
+        { max_wait_time: "300" },
+      ];
+      let esquemaCapturado = false;
+      for (const extra of testes) {
+        const chave = Object.keys(extra)[0];
+        const criar = await cliente.acaoBruta("addQueue", {
+          extension: "9901",
+          queue_name: "Teste API",
+          ...extra,
         });
-        resultado.updateQueue = { status: atualizar?.status ?? null, resposta: atualizar?.response ?? null };
-        const agente = await cliente.acaoBruta("addQueueAgent", { queue: "9901", member: "1100" });
-        resultado.addQueueAgent = { status: agente?.status ?? null, resposta: agente?.response ?? null };
-        for (const nome of ["applyChanges", "applyConfig", "apply", "reload"]) {
-          const r = await cliente.acaoBruta(nome, {});
-          resultado[`aplicar_${nome}`] = { status: r?.status ?? null, resposta: r?.response ?? null };
+        const st = criar?.status ?? null;
+        resultado[`add_${chave}`] = { status: st, resposta: criar?.response ?? null };
+        if (Number(st) === 0) {
+          if (!esquemaCapturado) {
+            esquemaCapturado = true;
+            const detalhe = await cliente.acaoBruta("getQueue", { queue: "9901" });
+            resultado.getQueue = { status: detalhe?.status ?? null, resposta: detalhe?.response ?? null };
+          }
+          await cliente.acaoBruta("deleteQueue", { queue: "9901" });
         }
-        const apagar = await cliente.acaoBruta("deleteQueue", { queue: "9901" });
-        resultado.deleteQueue = { status: apagar?.status ?? null, resposta: apagar?.response ?? null };
+      }
+      // Aplicar mudanças (need_apply: yes)
+      for (const nome of ["applyChanges", "applyConfig", "apply"]) {
+        const r = await cliente.acaoBruta(nome, {});
+        resultado[`aplicar_${nome}`] = { status: r?.status ?? null, resposta: r?.response ?? null };
       }
       return responder({ ok: true, sonda: resultado });
     }
