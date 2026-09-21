@@ -3550,6 +3550,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             await supabase.from('customer_empresas').delete().eq('empresa_id', empresaToDelete.id);
             const { error } = await supabase.from('empresas').delete().eq('id', empresaToDelete.id);
             if (error) throw error;
+            // Libera o prospect na Prospecção de Empresas: volta como "novo" para poder ser selecionado de novo
+            const { error: prospeccaoError } = await supabase
+              .from('prospeccao_empresas')
+              .update({ empresa_id: null, status: 'novo', importado_em: null })
+              .eq('empresa_id', empresaToDelete.id);
+            if (prospeccaoError) console.error('Erro ao liberar prospect na prospecção:', prospeccaoError);
             if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
           }}
           onInactivated={() => { if (estabelecimentoId) fetchEmpresas(estabelecimentoId); }}
