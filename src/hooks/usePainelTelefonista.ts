@@ -151,7 +151,19 @@ export function usePainelTelefonista(intervaloMs = 10000) {
       if (painel?.ok) {
         setPabxDisponivel(true);
         setMotivoPabx(null);
-        setChamadas(painel.chamadas ?? []);
+        const lista = painel.chamadas ?? [];
+        // Duração ao vivo: guarda a base de cada canal para somar o tempo entre leituras.
+        const canaisVivos = new Set<string>();
+        for (const c of lista) {
+          const chave = c.canal ?? `${c.origem ?? ""}->${c.destino ?? ""}`;
+          canaisVivos.add(chave);
+          basesDuracao.current.set(chave, c.duracao_seg ?? 0);
+        }
+        for (const chave of [...basesDuracao.current.keys()]) {
+          if (!canaisVivos.has(chave)) basesDuracao.current.delete(chave);
+        }
+        setLidoEm(Date.now());
+        setChamadas(lista);
         setTroncos(painel.troncos ?? []);
         setTroncosDisponiveis(painel.troncos_disponiveis !== false);
         setFilas(Array.isArray(painel.filas) ? painel.filas : []);
