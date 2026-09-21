@@ -448,31 +448,58 @@ export default function Telefonista() {
               {painel.chamadas.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma chamada em andamento.</p>
               ) : (
-                painel.chamadas.map((c, i) => (
-                  <div key={c.canal ?? i} className="flex items-center gap-2 rounded-md border p-2">
-                    <PhoneCall className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {c.origem || "?"} → {c.destino || "?"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {c.estado}
-                        {c.duracao ? ` · ${c.duracao}` : ""}
-                      </p>
+                painel.chamadas.map((c, i) => {
+                  const esperandoFila = c.estado === "Aguardando na fila";
+                  const emConversa = c.estado === "Em conversa";
+                  const varianteDirecao =
+                    c.direcao === "Entrante"
+                      ? "default"
+                      : c.direcao === "Sainte"
+                        ? "secondary"
+                        : "outline";
+                  return (
+                    <div key={c.canal ?? i} className="flex items-center gap-2 rounded-md border p-2">
+                      <PhoneCall className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          {c.direcao && (
+                            <Badge variant={varianteDirecao} className="px-1.5 py-0 text-[10px]">
+                              {c.direcao}
+                            </Badge>
+                          )}
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {c.origem || "?"} → {c.destino || "?"}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {c.estado}
+                          {esperandoFila && c.fila
+                            ? ` ${c.fila_nome || c.fila} · aguardando há ${fmtSeg(painel.segundosAoVivo(c))}`
+                            : emConversa || esperandoFila
+                              ? ` · ${fmtSeg(painel.segundosAoVivo(c))}`
+                              : ""}
+                        </p>
+                        {c.atendente && (
+                          <p className="text-xs text-muted-foreground">
+                            Atendido por {c.atendente}
+                            {c.atendente_nome ? ` (${c.atendente_nome})` : ""}
+                          </p>
+                        )}
+                      </div>
+                      {c.canal && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          title="Encerrar esta chamada"
+                          onClick={() => setChamadaParaEncerrar(c)}
+                        >
+                          <PhoneOff className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    {c.canal && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        title="Encerrar esta chamada"
-                        onClick={() => setChamadaParaEncerrar(c)}
-                      >
-                        <PhoneOff className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </CardContent>
           </Card>
