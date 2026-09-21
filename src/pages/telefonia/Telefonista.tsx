@@ -96,6 +96,10 @@ export default function Telefonista() {
   const [chamadaParaEncerrar, setChamadaParaEncerrar] = useState<ChamadaAoVivo | null>(null);
   const [encerrando, setEncerrando] = useState(false);
   const [acaoEmRamal, setAcaoEmRamal] = useState<string | null>(null);
+  const [filaDialogAberto, setFilaDialogAberto] = useState(false);
+  const [filaEmEdicao, setFilaEmEdicao] = useState<FilaPainel | null>(null);
+  const [filaParaExcluir, setFilaParaExcluir] = useState<FilaPainel | null>(null);
+  const [excluindoFila, setExcluindoFila] = useState(false);
 
   // Conecta o ramal do usuário automaticamente, como o Pilar Fone faz.
   const conectarRef = useRef(sip.connect);
