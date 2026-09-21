@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      _tmp_bkp_fone: {
+        Row: {
+          id: string | null
+          ramal: string | null
+          senha_sip: string | null
+          usuario_sip: string | null
+        }
+        Insert: {
+          id?: string | null
+          ramal?: string | null
+          senha_sip?: string | null
+          usuario_sip?: string | null
+        }
+        Update: {
+          id?: string | null
+          ramal?: string | null
+          senha_sip?: string | null
+          usuario_sip?: string | null
+        }
+        Relationships: []
+      }
       ad_accounts: {
         Row: {
           created_at: string | null
