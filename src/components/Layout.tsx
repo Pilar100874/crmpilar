@@ -305,7 +305,6 @@ export const menuItems: MenuItem[] = [
       { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: Brain },
       
       { id: "Admin Menu Customizacao", title: "Personalizar Menu", url: "/admin/menu-customizacao", icon: LucideIcons.ListTree },
-      { id: "Admin Atualizacoes Apps", title: "Atualizações dos Aplicativos", url: "/admin/apps/atualizacoes", icon: LucideIcons.RefreshCw },
 
     ],
   },
