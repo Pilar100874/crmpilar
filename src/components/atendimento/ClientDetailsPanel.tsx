@@ -57,7 +57,7 @@ export function ClientDetailsPanel({
                 className="h-7 rounded-full px-3 text-xs"
                 disabled={!temRamal}
                 title={temRamal ? "Ligar pelo PABX (toca seu ramal primeiro)" : "Configure seu ramal para ligar"}
-                onClick={() => ligarPeloPabx(customer.telefone!)}
+                onClick={() => ligarPeloPabx(customer.telefone!, customer.nome)}
               >
                 <Phone className="w-3 h-3 mr-1" />
                 {customer.telefone}
