@@ -18,9 +18,10 @@ import {
   Phone, MessageSquare, Mail, Users, CalendarIcon, 
   ChevronLeft, ChevronRight, Check, Mic, MicOff, 
   Loader2, AlertCircle, X, Play, Clock, FileText, Building2,
-  Send, ChevronDown, ChevronUp
+  Send, ChevronDown, ChevronUp, PhoneCall, PhoneOutgoing, RotateCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
 import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
 import { EmbeddedChatPanel } from "./EmbeddedChatPanel";
 import { EmbeddedEmailPanel } from "./EmbeddedEmailPanel";
@@ -65,6 +66,8 @@ interface FluxoAtendimentoPanelProps {
   onToggleDetails?: () => void;
   initialTaskIndex?: number;
   onNavigateToItem?: (type: 'chat' | 'orcamento' | 'email', id: string) => void;
+  /** Quando definido, o fluxo vira discador: liga para cada contato pelo PABX. */
+  discadorModo?: 'previa' | 'sequencial' | null;
 }
 
 const ALL_TIPOS_CONTATO = [
@@ -84,7 +87,8 @@ export function FluxoAtendimentoPanel({
   showDetails,
   onToggleDetails,
   initialTaskIndex = 0,
-  onNavigateToItem
+  onNavigateToItem,
+  discadorModo = null
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(initialTaskIndex);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
@@ -101,6 +105,15 @@ export function FluxoAtendimentoPanel({
   const [contactMessage, setContactMessage] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [isSendingContact, setIsSendingContact] = useState(false);
+
+  // Discador integrado: liga para o contato atual pelo PABX (o ramal do
+  // usuário toca primeiro; ao atender, o PABX disca o cliente).
+  const [ligacaoStatus, setLigacaoStatus] = useState<'aguardando' | 'discando' | 'chamando' | 'falha' | 'sem_telefone'>('aguardando');
+  const [ligacaoErro, setLigacaoErro] = useState("");
+  const discadosRef = useRef<Set<string>>(new Set());
+  // Só disca sozinho (modo sequencial) quando o contato foi alcançado para
+  // frente: abertura do fluxo, Finalizar ou Pular. Voltar/histórico não disca.
+  const avancoRef = useRef(true);
 
   const currentTask = tasks[currentIndex];
   const isLastTask = currentIndex === tasks.length - 1;
