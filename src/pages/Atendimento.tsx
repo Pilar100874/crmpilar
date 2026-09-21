@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
-import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
+import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -175,8 +175,9 @@ export default function Atendimento() {
   const [showSoftphone, setShowSoftphone] = useState(false);
   const [softphoneNumber, setSoftphoneNumber] = useState("");
   
-  // Predictive Dialer state
-  const [showPredictiveDialer, setShowPredictiveDialer] = useState(false);
+  // Discador: popup de escolha do modo e modo ativo dentro do Fluxo de Atendimento
+  const [showDiscadorModo, setShowDiscadorModo] = useState(false);
+  const [discadorModo, setDiscadorModo] = useState<'previa' | 'sequencial' | null>(null);
   
   // Tool trigger state (for radial menu -> ChatInput communication)
   const [triggerTool, setTriggerTool] = useState<import("@/components/chat/ChatInput").ChatToolTrigger>(null);
@@ -3533,7 +3534,7 @@ ${recentMessages}
         setShowConversationsList(true);
         break;
       case "dialer":
-        setShowPredictiveDialer(true);
+        setShowDiscadorModo(true);
         break;
       // Tools submenu items - ações diretas
       case "tool-image":
@@ -4361,10 +4362,12 @@ ${recentMessages}
                     estabelecimentoId={estabelecimentoId}
                     usuarioId={usuarioId}
                     onTaskCompleted={loadTodayTasks}
+                    discadorModo={discadorModo}
                     onClose={() => {
                       setAgendaViewMode('default');
                       setFluxoCurrentTask(null);
                       setFluxoInitialIndex(0);
+                      setDiscadorModo(null);
                     }}
                     onCurrentTaskChange={setFluxoCurrentTask}
                     showDetails={showClientDetailsFluxo}
@@ -4372,6 +4375,7 @@ ${recentMessages}
                     initialTaskIndex={fluxoInitialIndex}
                     onNavigateToItem={(type, id) => {
                       setAgendaViewMode('default');
+                      setDiscadorModo(null);
                       if (type === 'chat') {
                         setActiveTab('chat');
                         setSelectedConversation(id);
@@ -4550,7 +4554,8 @@ ${recentMessages}
                     setMobileView("main");
                   }
                 }}
-                showPredictiveDialer={() => setShowPredictiveDialer(true)}
+                showPredictiveDialer={() => setShowDiscadorModo(true)}
+                setDiscadorModo={setDiscadorModo}
                 atendente={atendente}
                 usuarioId={usuarioId}
                 loadAtendente={loadAtendente}
@@ -4852,10 +4857,6 @@ ${recentMessages}
             open={showSoftphone}
             onOpenChange={setShowSoftphone}
             initialNumber={softphoneNumber}
-          />
-          <PredictiveDialerDialog 
-            open={showPredictiveDialer}
-            onOpenChange={setShowPredictiveDialer}
           />
           <FluxoAtendimentoDialog
             open={showFluxoAtendimento}
