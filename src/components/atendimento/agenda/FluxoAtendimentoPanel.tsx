@@ -462,6 +462,11 @@ export function FluxoAtendimentoPanel({
               <h3 className="font-medium text-sm">Fluxo de Atendimento</h3>
               <p className="text-xs text-muted-foreground">
                 Tarefa {currentIndex + 1} de {tasks.length}
+                {discadorModo && (
+                  <span className="text-primary font-medium">
+                    {" "}• Discador {discadorModo === 'previa' ? '(aprovação uma a uma)' : '(sequencial)'}
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -531,6 +536,77 @@ export function FluxoAtendimentoPanel({
               </div>
             </div>
           </div>
+
+          {/* Discador: ligação pelo PABX (o ramal toca primeiro; ao atender, o PABX disca o cliente) */}
+          {discadorModo && (
+            <div className={cn(
+              "p-3 rounded-lg border space-y-2",
+              ligacaoStatus === 'falha'
+                ? "border-destructive/40 bg-destructive/5"
+                : "border-primary/30 bg-primary/5"
+            )}>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-medium">
+                  <PhoneCall className="h-3.5 w-3.5 text-primary" />
+                  Ligação pelo discador
+                </span>
+                <Badge variant="secondary" className="text-[10px] font-normal h-4">
+                  {discadorModo === 'previa' ? 'Aprovação uma a uma' : 'Sequencial'}
+                </Badge>
+              </div>
+
+              {ligacaoStatus === 'sem_telefone' && (
+                <p className="text-xs text-muted-foreground">
+                  Este contato não tem telefone cadastrado. Registre o atendimento ou use <strong>Pular</strong> para ir ao próximo.
+                </p>
+              )}
+
+              {ligacaoStatus === 'aguardando' && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Próxima ligação: <strong>{currentTask.contact_name}</strong> • {currentTask.customers?.telefone}
+                  </p>
+                  <Button size="sm" className="w-full h-9 gap-2 rounded-lg" onClick={() => void discarParaAtual()}>
+                    <Phone className="h-4 w-4" />
+                    Ligar agora
+                  </Button>
+                </div>
+              )}
+
+              {ligacaoStatus === 'discando' && (
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Iniciando chamada pelo PABX…
+                </p>
+              )}
+
+              {ligacaoStatus === 'chamando' && (
+                <div className="space-y-1.5">
+                  <p className="text-xs flex items-center gap-2">
+                    <PhoneOutgoing className="h-3.5 w-3.5 text-primary animate-pulse flex-shrink-0" />
+                    <span>Seu ramal está tocando — <strong>atenda</strong> para o PABX discar <strong>{currentTask.customers?.telefone}</strong>.</span>
+                  </p>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] gap-1.5" onClick={() => void discarParaAtual()}>
+                    <RotateCcw className="h-3 w-3" />
+                    Ligar novamente
+                  </Button>
+                </div>
+              )}
+
+              {ligacaoStatus === 'falha' && (
+                <div className="space-y-1.5">
+                  <p className="text-xs text-destructive flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    {ligacaoErro || 'Falha na discagem'}
+                  </p>
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => void discarParaAtual()}>
+                    <RotateCcw className="h-3 w-3" />
+                    Tentar novamente
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Tipo de contato - compacto inline - filtrado por dados disponíveis */}
           <div className="space-y-2">
@@ -762,6 +838,7 @@ export function FluxoAtendimentoPanel({
                 // Encontrar a tarefa na lista e navegar para ela
                 const taskIndex = tasks.findIndex(t => t.id === event.originalId);
                 if (taskIndex !== -1) {
+                  avancoRef.current = false;
                   setCurrentIndex(taskIndex);
                   toast.success(`Navegando para: ${tasks[taskIndex].title}`);
                 } else {
@@ -791,7 +868,7 @@ export function FluxoAtendimentoPanel({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+            onClick={() => { avancoRef.current = false; setCurrentIndex(prev => Math.max(0, prev - 1)); }}
             disabled={currentIndex === 0}
             className="h-9 rounded-lg"
           >
