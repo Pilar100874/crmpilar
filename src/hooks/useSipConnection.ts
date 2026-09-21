@@ -406,9 +406,12 @@ export const useSipConnection = () => {
 
       if (state === SessionState.Established) {
         console.log('✅ Chamada recebida estabelecida');
+        pararToqueEntrada();
+        if (callSession.viaDiscador) limparChamadaDiscador();
         await setupRemoteMedia(session);
       } else if (state === SessionState.Terminated) {
         console.log('❌ Chamada recebida encerrada');
+        pararToqueEntrada();
         // Remove chamada encerrada após delay
         setTimeout(() => {
           setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -417,8 +420,10 @@ export const useSipConnection = () => {
     });
 
     toast({
-      title: "Chamada recebida",
-      description: `De: ${callSession.phoneNumber}`,
+      title: callSession.viaDiscador ? "Ligação do discador" : "Chamada recebida",
+      description: callSession.viaDiscador
+        ? "Atenda para o PABX discar o cliente"
+        : `De: ${callSession.phoneNumber}`,
     });
   }, [toast]);
 
