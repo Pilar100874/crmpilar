@@ -18,6 +18,28 @@ const criarSdhComSdpLimpo: typeof fabricaSdhPadrao = (session, options) => {
   return sdh;
 };
 
+/** Extrai o motivo Q.850 do cabeçalho Reason (ex.: "Q.850 ;cause=16") devolvido pela operadora. */
+const MOTIVOS_Q850: Record<string, string> = {
+  '1': 'número não existe',
+  '16': 'recusada pelo destino',
+  '17': 'ocupado',
+  '18': 'sem resposta',
+  '19': 'não atendeu',
+  '21': 'chamada rejeitada',
+  '27': 'destino fora de serviço',
+  '28': 'número inválido ou incompleto',
+  '34': 'rede sem canal disponível',
+  '38': 'rede fora de serviço',
+  '41': 'falha temporária na rede',
+  '42': 'rede congestionada',
+};
+const extrairMotivoQ850 = (headers: Record<string, Array<{ raw?: string }>> | undefined): string | null => {
+  const bruto = headers?.['Reason']?.[0]?.raw || '';
+  const m = /cause=(\d+)/i.exec(bruto);
+  if (!m) return null;
+  return MOTIVOS_Q850[m[1]] ? `${MOTIVOS_Q850[m[1]]} (causa ${m[1]})` : `causa ${m[1]}`;
+};
+
 interface SipConfig {
   server: string;
   serverPort?: string;
