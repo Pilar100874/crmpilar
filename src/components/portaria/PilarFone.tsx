@@ -343,9 +343,14 @@ export default function PilarFone({
       return;
     }
     const marcador = obterMarcadorDiscador();
-    const alvo = marcador?.destino || chamadaAtual.phoneNumber;
+    // Nunca usar o número do próprio ramal como destino: quando o PABX toca o
+    // ramal no click-to-call, a origem da chamada é ele mesmo.
+    const origemEhRamalProprio =
+      !!config.ramal.trim() && chamadaAtual.phoneNumber === config.ramal.trim();
+    const alvo = marcador?.destino || (origemEhRamalProprio ? "" : chamadaAtual.phoneNumber);
     setDestinoDiscador(alvo);
     setResumoDiscador(marcador?.nome ? { nome: marcador.nome, telefone: alvo } : null);
+    if (!alvo) return;
     let ativo = true;
     void buscarResumoClientePorTelefone(alvo).then((r) => {
       if (ativo && r) setResumoDiscador(r);
@@ -353,7 +358,7 @@ export default function PilarFone({
     return () => {
       ativo = false;
     };
-  }, [chamadaAtual?.id, chamadaAtual?.viaDiscador, chamadaAtual?.phoneNumber]);
+  }, [chamadaAtual?.id, chamadaAtual?.viaDiscador, chamadaAtual?.phoneNumber, config.ramal]);
 
   // Avisa o container (aba lateral) que há chamada entrante para piscar o botão
   useEffect(() => {
@@ -393,7 +398,7 @@ export default function PilarFone({
   const nomeExibidoChamada = !chamadaAtual
     ? ""
     : chamadaAtual.viaDiscador
-      ? resumoDiscador?.nome || destinoDiscador || chamadaAtual.phoneNumber
+      ? resumoDiscador?.nome || destinoDiscador || "Ligação do discador"
       : nomePorNumero(chamadaAtual.phoneNumber);
 
   const ligar = useCallback(
@@ -950,12 +955,14 @@ export default function PilarFone({
                       <p className="text-xs text-white/70">{resumoDiscador.cidade}</p>
                     )}
                   </div>
-                ) : (
+                 ) : (
                   <p className="mt-1 text-sm text-white/80">
-                    {destinoDiscador || chamadaAtual.phoneNumber}
-                    <span className="block text-xs text-white/60">
-                      Cliente não encontrado no cadastro
-                    </span>
+                    {destinoDiscador || "Atenda para o PABX discar o cliente."}
+                    {destinoDiscador && (
+                      <span className="block text-xs text-white/60">
+                        Cliente não encontrado no cadastro
+                      </span>
+                    )}
                   </p>
                 )}
               </div>

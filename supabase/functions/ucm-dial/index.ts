@@ -135,6 +135,25 @@ Deno.serve(async (req) => {
       return responder({ error: `Não foi possível falar com o PABX (${detalhe})` }, 502);
     }
 
+    // Confere a permissão do ramal antes de discar: com "Internal" o UCM toca o
+    // ramal, mas recusa a perna externa e a ligação morre em silêncio depois
+    // que o usuário atende. Se a consulta falhar, seguimos sem bloquear.
+    let permissaoRamal = "";
+    try {
+      const ext = await cliente.acao("getExtension", { extension: ramal });
+      const dados = (ext?.response?.extension ?? ext?.response ?? {}) as Record<string, unknown>;
+      permissaoRamal = String(dados.permission ?? "").toLowerCase();
+      console.log("getExtension", JSON.stringify({ ramal, permission: permissaoRamal }));
+    } catch (e) {
+      console.log("getExtension falhou (seguindo sem validar):", e instanceof Error ? e.message : e);
+    }
+    if (permissaoRamal === "internal") {
+      return responder({
+        error: `O ramal ${ramal} está com permissão "Internal" no PABX e só faz ligações internas. No UCM: Extension/Trunk → Extensions → ramal ${ramal} → mude "Permission" para "National" e aplique as alterações.`,
+        ucm: { action: "getExtension", permission: permissaoRamal },
+      }, 400);
+    }
+
     const resultado = await initiateUcmCall(cliente, ramal, numero);
     const status = Number(resultado?.status ?? 0);
     // Registro sanitizado: nunca logar senha, challenge ou cookie.
