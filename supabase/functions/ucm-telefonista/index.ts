@@ -94,10 +94,11 @@ class ClienteUcm {
     this.cookie = cookie;
   }
 
-  /** Ação tolerante: falha vira null em vez de exceção. */
+  /** Ação tolerante: falha ou status diferente de 0 viram null. */
   async acao(nome: string, extras: Record<string, unknown> = {}) {
     try {
       const r = await this.chamar({ action: nome, cookie: this.cookie, ...extras });
+      if (Number(r?.status ?? -1) !== 0) return null;
       return r?.response ?? null;
     } catch (erro) {
       console.log(`Ação ${nome} indisponível:`, erro instanceof Error ? erro.message : erro);
