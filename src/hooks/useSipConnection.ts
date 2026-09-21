@@ -601,8 +601,8 @@ export const useSipConnection = () => {
                 dica = "A chamada foi encerrada antes de ser atendida.";
                 break;
               case 603:
-                errorMsg = "Chamada recusada";
-                dica = "A outra pessoa recusou a ligação.";
+                errorMsg = "O PABX recusou a ligação";
+                dica = "Se era um número externo, confira no PABX se o ramal tem permissão para chamadas externas (privilégio Nacional/Internacional) e se a rota de saída aceita o formato discado (ex.: DDD + número).";
                 break;
             }
 
