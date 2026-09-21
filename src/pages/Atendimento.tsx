@@ -3565,7 +3565,7 @@ ${recentMessages}
         setShowConversationsList(true);
         break;
       case "dialer":
-        setShowDiscadorModo(true);
+        void abrirDiscador();
         break;
       // Tools submenu items - ações diretas
       case "tool-image":
@@ -4585,7 +4585,7 @@ ${recentMessages}
                     setMobileView("main");
                   }
                 }}
-                showPredictiveDialer={() => setShowDiscadorModo(true)}
+                showPredictiveDialer={() => void abrirDiscador()}
                 setDiscadorModo={setDiscadorModo}
                 atendente={atendente}
                 usuarioId={usuarioId}
@@ -5490,7 +5490,7 @@ ${recentMessages}
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setShowDiscadorModo(true)}
+                    onClick={() => void abrirDiscador()}
                     className="h-7 px-2 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs"
                   >
                     <PhoneCall className="w-3 h-3 mr-1" />
