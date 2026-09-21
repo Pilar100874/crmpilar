@@ -18,7 +18,7 @@ import {
   Phone, MessageSquare, Mail, Users, CalendarIcon, 
   ChevronLeft, ChevronRight, Check, Mic, MicOff, 
   Loader2, AlertCircle, X, Play, Clock, FileText, Building2,
-  Send, ChevronDown, ChevronUp, PhoneCall, PhoneOutgoing, RotateCcw
+  Send, ChevronDown, ChevronUp, PhoneCall, PhoneOutgoing, RotateCcw, Square
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
@@ -114,6 +114,9 @@ export function FluxoAtendimentoPanel({
   // Só disca sozinho (modo sequencial) quando o contato foi alcançado para
   // frente: abertura do fluxo, Finalizar ou Pular. Voltar/histórico não disca.
   const avancoRef = useRef(true);
+  // Controle da discagem automática no modo sequencial: "Parar" impede que a
+  // próxima ligação saia sozinha; "Iniciar" retoma (e já disca o contato atual).
+  const [discadorAtivo, setDiscadorAtivo] = useState(true);
 
   const currentTask = tasks[currentIndex];
   const isLastTask = currentIndex === tasks.length - 1;
@@ -165,8 +168,24 @@ export function FluxoAtendimentoPanel({
     }
   };
 
-  // Discador: ao chegar em um contato, o modo sequencial disca na hora;
-  // o modo prévia espera o "Ligar agora". Nunca repete contato já discado.
+  // "Iniciar": retoma a discagem automática e já liga para o contato atual,
+  // se ele ainda não foi discado nesta sessão.
+  const handleIniciarDiscagem = () => {
+    setDiscadorAtivo(true);
+    const tarefa = tasks[currentIndex];
+    if (tarefa?.customers?.telefone && !discadosRef.current.has(tarefa.id)) {
+      void discarParaAtual();
+    }
+  };
+
+  // Ao abrir/trocar o modo, o sequencial começa ativo
+  useEffect(() => {
+    setDiscadorAtivo(discadorModo === 'sequencial');
+  }, [discadorModo]);
+
+  // Discador: ao chegar em um contato, o modo sequencial disca na hora
+  // (se estiver ativo); o modo prévia espera o "Ligar agora".
+  // Nunca repete contato já discado.
   useEffect(() => {
     if (!discadorModo) return;
     const tarefa = tasks[currentIndex];
@@ -179,7 +198,7 @@ export function FluxoAtendimentoPanel({
       setLigacaoStatus('chamando');
       return;
     }
-    if (discadorModo === 'sequencial' && avancoRef.current) {
+    if (discadorModo === 'sequencial' && avancoRef.current && discadorAtivo) {
       void discarParaAtual();
     } else {
       setLigacaoStatus('aguardando');
@@ -554,6 +573,37 @@ export function FluxoAtendimentoPanel({
                   {discadorModo === 'previa' ? 'Aprovação uma a uma' : 'Sequencial'}
                 </Badge>
               </div>
+
+              {/* Controle da discagem automática (modo sequencial) */}
+              {discadorModo === 'sequencial' && (
+                <div className="flex items-center gap-2">
+                  {discadorAtivo ? (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-7 text-xs gap-1.5 px-3"
+                      onClick={() => setDiscadorAtivo(false)}
+                    >
+                      <Square className="h-3 w-3" />
+                      Parar
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs gap-1.5 px-3"
+                      onClick={handleIniciarDiscagem}
+                    >
+                      <Play className="h-3 w-3" />
+                      Iniciar
+                    </Button>
+                  )}
+                  <span className="text-[10px] text-muted-foreground leading-tight">
+                    {discadorAtivo
+                      ? 'Discagem automática ativa — a próxima sai ao Finalizar/Pular'
+                      : 'Discagem pausada — a próxima não sai sozinha'}
+                  </span>
+                </div>
+              )}
 
               {ligacaoStatus === 'sem_telefone' && (
                 <p className="text-xs text-muted-foreground">
