@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { abrirPilarSip, abrirWhatsappPilarFone } from "@/components/portaria/PilarFoneWeb";
+import { abrirWhatsappPilarFone } from "@/components/portaria/PilarFoneWeb";
+import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
@@ -556,8 +557,8 @@ export function UnifiedDetailsPanel({
                 ) : telefone ? (
                   <button
                     type="button"
-                    onClick={() => abrirPilarSip(telefone.replace(/\D/g, ''))}
-                    title="Ligar pelo telefone"
+                    onClick={() => ligarPeloPabx(telefone.replace(/\D/g, ''))}
+                    title="Ligar pelo PABX (toca seu ramal primeiro)"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"
                   >
                     {telefone}

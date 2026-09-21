@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
-import { ligarPeloPabx } from '@/lib/telefonia/clickToCall';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
 const fabricaSdhPadrao = Web.defaultSessionDescriptionHandlerFactory();
@@ -516,23 +515,9 @@ export const useSipConnection = () => {
             pararToqueChamando();
             console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
             console.error('❌ Headers da resposta:', response.message.headers);
-            const codigo = response.message.statusCode;
-
-            // O PABX recusa chamadas externas vindas do navegador (401/403/407).
-            // Nesses casos fazemos a ligação pelo próprio PABX: ele toca o ramal
-            // do usuário e, ao atender, disca o número pelas rotas de saída.
-            if (codigo === 401 || codigo === 403 || codigo === 407) {
-              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
-              const resultado = await ligarPeloPabx(phoneNumber);
-              if (!resultado.error) return;
-              toast({
-                title: "Falha na chamada",
-                description: `${resultado.error}. Confira o ramal do usuário e as rotas de saída no PABX.`,
-                variant: "destructive",
-              });
-              return;
-            }
-
+            // O Pilar Fone disca direto, como um telefone comum: se o PABX recusar,
+            // apenas informamos o motivo (a discagem sequencial pelo PABX fica
+            // exclusiva do discador da tela de chat).
             let errorMsg = response.message.reasonPhrase;
             let dica = "Verifique as permissões do ramal e as rotas de saída no PABX.";
 
