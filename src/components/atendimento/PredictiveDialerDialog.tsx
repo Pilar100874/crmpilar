@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { Phone, Play, Square, CheckCircle2, XCircle, Clock, Filter, Calendar, User } from "lucide-react";
+import { Phone, PhoneOutgoing, Play, Square, SkipForward, Eye, CheckCircle2, XCircle, Clock, Filter, Calendar, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+import { marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -64,10 +65,23 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
   // Available statuses from tasks
   const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
 
+  // Modo de discagem (flag do sistema, variável global "discador_previa"):
+  // ativado = mostra a próxima ligação e permite pular; desativado = sequencial sem pausa.
+  const [modoPrevia, setModoPrevia] = useState(false);
+  const [aguardandoAcao, setAguardandoAcao] = useState(false);
+  const pararRef = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (open) {
       loadTasks();
       loadUserExtension();
+    } else {
+      // Fechou a janela: interrompe qualquer sequência em andamento
+      pararRef.current = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setIsDialing(false);
+      setAguardandoAcao(false);
     }
   }, [open, selectedDate]);
 
@@ -80,6 +94,17 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
       const estabId = await getEstabelecimentoId();
       if (!estabId) return;
       setEstabelecimentoId(estabId);
+
+      // Flag do sistema que define o modo de discagem
+      const { data: flags } = await supabase
+        .from("global_variables")
+        .select("default_value, estabelecimento_id")
+        .eq("name", "discador_previa");
+      const linhas = flags || [];
+      const localFlag = linhas.find((l) => l.estabelecimento_id === estabId);
+      const globalFlag = linhas.find((l) => !l.estabelecimento_id);
+      const valor = (localFlag ?? globalFlag)?.default_value;
+      setModoPrevia(valor === true || valor === "true");
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -185,6 +210,8 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
       return;
     }
 
+    pararRef.current = false;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setIsDialing(true);
     setCurrentIndex(0);
     setDialerResults(filteredTasks.map(task => ({
@@ -198,34 +225,58 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
     await dialNextNumber(0);
   };
 
+  const marcarResultado = (index: number, dados: Partial<DialerResult>) => {
+    setDialerResults((prev) => prev.map((r, i) => (i === index ? { ...r, ...dados } : r)));
+  };
+
+  const agendarProxima = (index: number, ms: number) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      if (pararRef.current) return;
+      void dialNextNumber(index);
+    }, ms);
+  };
+
   const dialNextNumber = async (index: number) => {
+    if (pararRef.current) return;
     if (index >= filteredTasks.length) {
       setIsDialing(false);
+      setAguardandoAcao(false);
       toast.success("Discagem concluída");
       return;
     }
 
     const task = filteredTasks[index];
     const phone = task.customer?.telefone;
+    setCurrentIndex(index);
 
     if (!phone) {
-      setDialerResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: 'skipped', error: 'Sem telefone' } : r
-      ));
-      setCurrentIndex(index + 1);
-      // Wait a bit then continue
-      setTimeout(() => dialNextNumber(index + 1), 1000);
+      marcarResultado(index, { status: 'skipped', error: 'Sem telefone' });
+      agendarProxima(index + 1, 1000);
       return;
     }
 
-    // Update status to dialing
-    setDialerResults(prev => prev.map((r, i) => 
-      i === index ? { ...r, status: 'dialing' } : r
-    ));
+    if (modoPrevia) {
+      // Modo prévia: mostra a próxima ligação e espera o usuário ligar ou pular
+      setAguardandoAcao(true);
+      return;
+    }
+
+    await executarDiscagem(index);
+  };
+
+  const executarDiscagem = async (index: number) => {
+    if (pararRef.current) return;
+    const task = filteredTasks[index];
+    const phone = task.customer?.telefone;
+    if (!phone) return;
+
+    setAguardandoAcao(false);
+    marcarResultado(index, { status: 'dialing' });
     setCurrentIndex(index);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ucm-dial', {
+      const { error } = await supabase.functions.invoke('ucm-dial', {
         body: {
           number: phone,
           extension: userExtension,
@@ -235,9 +286,11 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
 
       if (error) throw error;
 
-      setDialerResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: 'success' } : r
-      ));
+      marcarResultado(index, { status: 'success' });
+
+      // Avisa o Pilar Fone que a próxima chamada no ramal é do discador:
+      // campainha diferente + resumo do cliente na tela de atendimento.
+      marcarChamadaDiscador(phone, task.contact_name);
 
       // Update task status
       await supabase
@@ -245,28 +298,32 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
         .update({ status: 'contatado' })
         .eq('id', task.id);
 
-      // Wait for call to complete (simplified - in production, listen for call events)
-      // For now, wait 30 seconds before next call
-      setTimeout(() => {
-        setCurrentIndex(index + 1);
-        dialNextNumber(index + 1);
-      }, 30000);
+      // Espera a conversa acontecer antes de seguir para a próxima ligação
+      agendarProxima(index + 1, 30000);
 
     } catch (error) {
       console.error("Erro ao discar:", error);
-      setDialerResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: 'failed', error: 'Erro na discagem' } : r
-      ));
-      
+      marcarResultado(index, { status: 'failed', error: 'Erro na discagem' });
+
       // Continue with next after error
-      setTimeout(() => {
-        setCurrentIndex(index + 1);
-        dialNextNumber(index + 1);
-      }, 3000);
+      agendarProxima(index + 1, 3000);
     }
   };
 
+  const confirmarLigacao = () => {
+    void executarDiscagem(currentIndex);
+  };
+
+  const pularAtual = () => {
+    marcarResultado(currentIndex, { status: 'skipped', error: 'Pulado pelo usuário' });
+    setAguardandoAcao(false);
+    void dialNextNumber(currentIndex + 1);
+  };
+
   const stopDialer = () => {
+    pararRef.current = true;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setAguardandoAcao(false);
     setIsDialing(false);
     toast.info("Discador interrompido");
   };
@@ -387,6 +444,13 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
             {userExtension && (
               <Badge variant="outline">Ramal: {userExtension}</Badge>
             )}
+            <Badge
+              variant={modoPrevia ? "default" : "secondary"}
+              title="Altere na variável global discador_previa (Configurações de Chats > Variáveis Globais)"
+            >
+              {modoPrevia ? <Eye className="h-3 w-3 mr-1" /> : <Play className="h-3 w-3 mr-1" />}
+              {modoPrevia ? "Modo prévia: você confirma ou pula" : "Modo sequencial: sem pausa"}
+            </Badge>
           </div>
 
           {/* Progress */}
@@ -397,6 +461,34 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} />
+            </div>
+          )}
+
+          {/* Prévia da próxima ligação (modo com confirmação e pulo) */}
+          {isDialing && aguardandoAcao && filteredTasks[currentIndex] && (
+            <div className="rounded-lg border-2 border-primary p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <PhoneOutgoing className="h-4 w-4" />
+                Próxima ligação
+              </div>
+              <div className="space-y-1">
+                <p className="text-lg font-semibold">{filteredTasks[currentIndex].contact_name}</p>
+                <p className="text-sm text-muted-foreground">{filteredTasks[currentIndex].customer?.telefone}</p>
+                <p className="text-xs text-muted-foreground">
+                  {filteredTasks[currentIndex].title}
+                  {filteredTasks[currentIndex].time ? ` • ${filteredTasks[currentIndex].time}` : ""}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={confirmarLigacao}>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Ligar agora
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={pularAtual}>
+                  <SkipForward className="h-4 w-4 mr-2" />
+                  Pular
+                </Button>
+              </div>
             </div>
           )}
 

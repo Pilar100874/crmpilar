@@ -30,6 +30,8 @@ import PilarFoneContatos, { type ContatoCadastro } from "@/components/portaria/P
 import PilarFoneWhatsapp, { type AlvoWhatsapp } from "@/components/portaria/PilarFoneWhatsapp";
 import PilarFoneHistorico from "@/components/portaria/PilarFoneHistorico";
 import { registrarChamada } from "@/lib/portaria/historicoChamadas";
+import { obterMarcadorDiscador } from "@/lib/telefonia/discadorMarker";
+import { buscarResumoClientePorTelefone, type ResumoCliente } from "@/lib/telefonia/resumoCliente";
 
 import {
   lerConfigSip,
@@ -329,6 +331,30 @@ export default function PilarFone({
   // Sempre a chamada mais recente: evita exibir "Em conversa" de uma chamada antiga presa.
   const chamadaAtual = chamadasVivas[chamadasVivas.length - 1] ?? null;
 
+  // Ligações do discador: guarda o destino real (quando o ramal toca, a origem
+  // costuma ser o próprio ramal) e busca o resumo do cliente no cadastro.
+  const [destinoDiscador, setDestinoDiscador] = useState("");
+  const [resumoDiscador, setResumoDiscador] = useState<ResumoCliente | null>(null);
+
+  useEffect(() => {
+    if (!chamadaAtual?.viaDiscador) {
+      setDestinoDiscador("");
+      setResumoDiscador(null);
+      return;
+    }
+    const marcador = obterMarcadorDiscador();
+    const alvo = marcador?.destino || chamadaAtual.phoneNumber;
+    setDestinoDiscador(alvo);
+    setResumoDiscador(marcador?.nome ? { nome: marcador.nome, telefone: alvo } : null);
+    let ativo = true;
+    void buscarResumoClientePorTelefone(alvo).then((r) => {
+      if (ativo && r) setResumoDiscador(r);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [chamadaAtual?.id, chamadaAtual?.viaDiscador, chamadaAtual?.phoneNumber]);
+
   // Avisa o container (aba lateral) que há chamada entrante para piscar o botão
   useEffect(() => {
     if (chamadaEntrante) onChamadaRecebida?.();
@@ -362,6 +388,13 @@ export default function PilarFone({
     },
     [contatos, ramais],
   );
+
+  // Nome grande da tela de chamada: no discador mostra o cliente, não o próprio ramal.
+  const nomeExibidoChamada = !chamadaAtual
+    ? ""
+    : chamadaAtual.viaDiscador
+      ? resumoDiscador?.nome || destinoDiscador || chamadaAtual.phoneNumber
+      : nomePorNumero(chamadaAtual.phoneNumber);
 
   const ligar = useCallback(
     (destino: string, comVideo = false, comVivaVoz = false) => {
@@ -873,15 +906,15 @@ export default function PilarFone({
             {!temVideoRemoto && (
               <span
                 className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold text-white"
-                style={{ backgroundColor: corAvatar(nomePorNumero(chamadaAtual.phoneNumber)) }}
+                style={{ backgroundColor: corAvatar(nomeExibidoChamada) }}
               >
-                {iniciais(nomePorNumero(chamadaAtual.phoneNumber))}
+                {iniciais(nomeExibidoChamada)}
               </span>
             )}
             <p
               className={`text-2xl font-semibold ${temVideoRemoto ? "rounded-full bg-black/50 px-4 py-1 backdrop-blur" : ""}`}
             >
-              {nomePorNumero(chamadaAtual.phoneNumber)}
+              {nomeExibidoChamada}
             </p>
             <p
               className={`text-sm ${temVideoRemoto ? "rounded-full bg-black/50 px-3 py-0.5 text-white/80 backdrop-blur" : "text-[#8696A0]"}`}
@@ -896,6 +929,37 @@ export default function PilarFone({
                     : "Chamada recebida"
                   : "Chamando..."}
             </p>
+
+            {/* Ligação do discador: sempre mostra o resumo do cliente */}
+            {chamadaAtual.viaDiscador && (
+              <div className="mt-1 w-full max-w-xs rounded-2xl bg-white/10 px-4 py-3 text-left backdrop-blur">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#53BDEB]">
+                  Resumo do cliente
+                </p>
+                {resumoDiscador ? (
+                  <div className="mt-1 space-y-0.5">
+                    <p className="text-base font-semibold text-white">{resumoDiscador.nome}</p>
+                    <p className="text-sm text-white/80">{resumoDiscador.telefone}</p>
+                    {resumoDiscador.empresa && (
+                      <p className="text-xs text-white/70">{resumoDiscador.empresa}</p>
+                    )}
+                    {resumoDiscador.email && (
+                      <p className="text-xs text-white/70">{resumoDiscador.email}</p>
+                    )}
+                    {resumoDiscador.cidade && (
+                      <p className="text-xs text-white/70">{resumoDiscador.cidade}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-white/80">
+                    {destinoDiscador || chamadaAtual.phoneNumber}
+                    <span className="block text-xs text-white/60">
+                      Cliente não encontrado no cadastro
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Controles da chamada */}
@@ -963,7 +1027,11 @@ export default function PilarFone({
                   type="button"
                   aria-label="Atender"
                   onClick={() => void answer(chamadaAtual.id, { vivaVoz: false })}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A884] text-[#0B141A] shadow-lg transition active:scale-95"
+                  className={`flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition active:scale-95 ${
+                    chamadaAtual.viaDiscador
+                      ? "animate-pulse bg-[#7C3AED] text-white"
+                      : "bg-[#00A884] text-[#0B141A]"
+                  }`}
                 >
                   <Phone className="h-7 w-7" />
                 </button>
