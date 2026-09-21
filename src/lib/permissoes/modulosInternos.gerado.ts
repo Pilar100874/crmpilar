@@ -382,6 +382,16 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Links das Redes Sociais"
     }
   ],
+  "Politicas Internas": [
+    {
+      "id": "consultar",
+      "label": "Consultar"
+    },
+    {
+      "id": "ia",
+      "label": "Pergunte à IA"
+    }
+  ],
   "Logística": [
     {
       "id": "dashboard",
