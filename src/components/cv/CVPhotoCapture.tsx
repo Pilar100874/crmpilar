@@ -214,6 +214,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
 
   const addExtra = (file: File | undefined) => {
     if (!file) return;
+    if (extrasBloqueadas) {
+      toast.error(`Envie primeiro as fotos principais: ${pendentesObrigatorias.map((a) => a.label).join(", ")}`);
+      return;
+    }
     const count = valueRef.current.filter((p) => p.is_extra).length + 1;
     const key = `extra-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     uploadPhoto(key, `Foto extra ${count}`, file, { extra: true });
@@ -234,6 +238,9 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   };
 
   const extras = value.filter((p) => p.is_extra);
+  // Fotos extras só liberam depois que TODAS as fotos principais obrigatórias foram enviadas.
+  const pendentesObrigatorias = angles.filter((a) => a.required && !value.some((p) => p.angle_key === a.key));
+  const extrasBloqueadas = pendentesObrigatorias.length > 0;
 
 
   const captureFromIpCamera = async (angle: PhotoAngle, cameraId: string) => {
@@ -582,10 +589,23 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
               <Badge variant="outline" className="text-[10px]">{extras.length}</Badge>
             </div>
             <div className="flex gap-2">
-              <Button type="button" size="sm" variant="outline" onClick={() => extraInputRef.current?.click()}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={extrasBloqueadas}
+                title={extrasBloqueadas ? "Envie primeiro as fotos principais obrigatórias" : "Adicionar foto extra pelo celular"}
+                onClick={() => extraInputRef.current?.click()}
+              >
                 <Smartphone className="h-4 w-4 mr-2" /> Celular
               </Button>
-              <Button type="button" size="sm" onClick={() => setWebcamFor({ key: "extra", label: "Foto extra", extra: true })}>
+              <Button
+                type="button"
+                size="sm"
+                disabled={extrasBloqueadas}
+                title={extrasBloqueadas ? "Envie primeiro as fotos principais obrigatórias" : "Adicionar foto extra pela câmera"}
+                onClick={() => setWebcamFor({ key: "extra", label: "Foto extra", extra: true })}
+              >
                 <Video className="h-4 w-4 mr-2" /> Câmera
               </Button>
             </div>
@@ -598,6 +618,12 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
             className="hidden"
             onChange={(e) => { addExtra(e.target.files?.[0]); e.currentTarget.value = ""; }}
           />
+          {extrasBloqueadas && (
+            <p className="text-[11px] text-warning flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 shrink-0" />
+              Fotos extras bloqueadas — envie primeiro as fotos principais: <strong>{pendentesObrigatorias.map((a) => a.label).join(", ")}</strong>
+            </p>
+          )}
           {extras.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">
               Adicione fotos além dos ângulos obrigatórios (detalhes, avarias, documentos...) e escreva uma observação em cada uma.

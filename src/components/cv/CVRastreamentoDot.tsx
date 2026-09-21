@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusPingDot } from "@/components/StatusPingDot";
 
@@ -10,6 +10,10 @@ type Props = {
 
 export function CVRastreamentoDot({ veiculoLogisticaId, className, dotOnly = false }: Props) {
   const [ultimoContato, setUltimoContato] = useState<string | null>(null);
+  // Sufixo único por instância: o Supabase reutiliza canais com o mesmo nome e
+  // quebra ("cannot add callbacks after subscribe()") quando dois pontinhos do
+  // mesmo veículo aparecem na tela (ex.: cabeçalho + confirmação da entrada).
+  const instanciaId = useRef(Math.random().toString(36).slice(2, 8)).current;
 
   useEffect(() => {
     if (!veiculoLogisticaId) return;
@@ -47,7 +51,7 @@ export function CVRastreamentoDot({ veiculoLogisticaId, className, dotOnly = fal
     carregar();
 
     const ch = supabase
-      .channel(`rastreamento-pos-${veiculoLogisticaId}`)
+      .channel(`rastreamento-pos-${veiculoLogisticaId}-${instanciaId}`)
       .on(
         "postgres_changes",
         {

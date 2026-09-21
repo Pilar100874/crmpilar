@@ -348,7 +348,7 @@ export default function PortariaDispositivos() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Canal do relé</Label><Input type="number" value={form.canal_rele ?? 0} onChange={(e) => setForm({ ...form, canal_rele: Number(e.target.value) })} /></div>
+                <div><Label>Canal do relé</Label><Input type="number" value={form.canal_rele ?? ""} onChange={(e) => setForm({ ...form, canal_rele: e.target.value === "" ? null : Number(e.target.value) })} /></div>
                 {config.geracao === "cloud" && (
                   <>
                     <div><Label>Servidor Cloud</Label><Input value={(config.cloud_server as string) ?? ""} onChange={(e) => setConfig("cloud_server", e.target.value)} placeholder="shelly-XX-eu.shelly.cloud" /></div>
@@ -391,7 +391,7 @@ export default function PortariaDispositivos() {
                       </div>
                       <div>
                         <Label>Tempo para auto-desligar (segundos)</Label>
-                        <Input type="number" min={0} value={Number(config.auto_off_delay ?? 0)} onChange={(e) => setConfig("auto_off_delay", Number(e.target.value))} disabled={!config.auto_off} />
+                        <Input type="number" min={0} value={(config.auto_off_delay as number) ?? ""} onChange={(e) => setConfig("auto_off_delay", e.target.value === "" ? null : Number(e.target.value))} disabled={!config.auto_off} />
                       </div>
                     </>
                   )}
@@ -456,7 +456,7 @@ export default function PortariaDispositivos() {
               <div className="sm:col-span-2 rounded-md border px-3 py-2 bg-card">
                 <Label>Duração do pulso (ms)</Label>
                 <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
-                  <Input type="number" min={100} step={100} value={form.pulso_ms ?? 1000} onChange={(e) => setForm({ ...form, pulso_ms: Number(e.target.value) })} className="sm:max-w-44" />
+                  <Input type="number" min={100} step={100} value={form.pulso_ms ?? ""} placeholder="1000" onChange={(e) => setForm({ ...form, pulso_ms: e.target.value === "" ? null : Number(e.target.value) })} className="sm:max-w-44" />
                   <p className="text-[11px] text-muted-foreground">Tempo em que o contato permanece acionado antes de desligar sozinho.</p>
                 </div>
               </div>
