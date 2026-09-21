@@ -6,15 +6,19 @@ import {
   ListOrdered,
   Monitor,
   Pause,
+  Pencil,
   Phone,
   PhoneCall,
   PhoneForwarded,
   PhoneIncoming,
   PhoneOff,
   Play,
+  Plus,
   RefreshCw,
   Search,
   Smartphone,
+  Trash2,
+  Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -37,9 +41,12 @@ import { useSipConnection } from "@/hooks/useSipConnection";
 import {
   usePainelTelefonista,
   type ChamadaAoVivo,
+  type FilaPainel,
   type RamalTelefonista,
 } from "@/hooks/usePainelTelefonista";
 import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
+import { FilaDialog, rotuloEstrategia } from "@/components/telefonia/FilaDialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type EstadoRamal = "livre" | "tocando" | "conversa" | "offline";
 
@@ -55,6 +62,17 @@ const numerosDe = (texto?: string): string[] => (texto || "").match(/\d{2,}/g) ?
 
 const ramalNaChamada = (c: ChamadaAoVivo, ramal: string) =>
   numerosDe(c.origem).includes(ramal) || numerosDe(c.destino).includes(ramal);
+
+/** Formata segundos em mm:ss (ou h:mm:ss) para as durações ao vivo. */
+const fmtSeg = (total: number) => {
+  const s = Math.max(0, Math.floor(total));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const seg = s % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(seg).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+};
 
 function CorEstado({ estado }: { estado: EstadoRamal }) {
   const classe =
