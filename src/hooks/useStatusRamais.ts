@@ -49,6 +49,9 @@ export function useStatusRamais(intervaloMs = 30000) {
   const [motivoPabx, setMotivoPabx] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const emAndamento = useRef(false);
+  // Quando a função responde 401 ("Não autenticado"), a sessão expirou:
+  // paramos de chamar até o usuário entrar de novo (evento de auth).
+  const bloqueadoPor401 = useRef(false);
 
   const atualizar = useCallback(async () => {
     if (emAndamento.current) return;
@@ -58,14 +61,18 @@ export function useStatusRamais(intervaloMs = 30000) {
       // Sem sessão válida não adianta chamar a função: ela responderia 401
       // ("Não autenticado") a cada ciclo de polling.
       const { data: sessao } = await supabase.auth.getSession();
-      const logado = Boolean(sessao?.session?.access_token);
+      const logado = Boolean(sessao?.session?.access_token) && !bloqueadoPor401.current;
       const [presencaResp, ucmResp] = await Promise.all([
         supabase
           .from("sip_presenca")
           .select("ramal, origem, em_chamada, ultimo_ping")
           .gte("ultimo_ping", desde),
         logado
-          ? supabase.functions.invoke("ucm-status").catch(() => ({ data: null, error: true }))
+          ? supabase.functions.invoke("ucm-status").catch((erro) => {
+              const status = (erro as { context?: { status?: number } })?.context?.status;
+              if (status === 401) bloqueadoPor401.current = true;
+              return { data: null, error: true };
+            })
           : Promise.resolve({ data: null, error: true }),
       ]);
 
