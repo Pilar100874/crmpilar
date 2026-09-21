@@ -3548,6 +3548,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               throw new Error('Não é possível excluir: existem orçamentos vinculados. Use Inativar.');
             }
             await supabase.from('customer_empresas').delete().eq('empresa_id', empresaToDelete.id);
+            // Libera o prospect na Prospecção de Empresas: volta como "novo" para poder ser selecionado de novo
+            const { error: prospeccaoError } = await supabase
+              .from('prospeccao_empresas')
+              .update({ empresa_id: null, status: 'novo', importado_em: null })
+              .eq('empresa_id', empresaToDelete.id);
+            if (prospeccaoError) console.error('Erro ao liberar prospect na prospecção:', prospeccaoError);
             const { error } = await supabase.from('empresas').delete().eq('id', empresaToDelete.id);
             if (error) throw error;
             if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
