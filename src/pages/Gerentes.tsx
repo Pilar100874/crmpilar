@@ -507,7 +507,6 @@ export default function Gerentes() {
           ) : (
             <>
             <CadastroCardList
-              className="lg:hidden"
               items={filtrados.map(g => ({
                 id: g.id,
                 title: g.nome,
@@ -527,7 +526,7 @@ export default function Gerentes() {
               }))}
             />
 
-            <div className="hidden lg:block bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
+            <div className="hidden bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
               <table className="w-full table-fixed">
 
                 <thead className="border-b border-border/40 bg-muted/40 backdrop-blur-sm">

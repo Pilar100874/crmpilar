@@ -28,7 +28,7 @@ interface CadastroCardListProps {
  */
 export const CadastroCardList: React.FC<CadastroCardListProps> = ({ items, className }) => {
   return (
-    <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-3", className)}>
+    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3", className)}>
       {items.map((item) => (
         <div
           key={item.id}

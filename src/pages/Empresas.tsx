@@ -2074,9 +2074,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           ) : (
             <>
-            {/* Celular/tablet: cartões */}
+            {/* Cartões em todas as larguras (celular, tablet e desktop) */}
             <CadastroCardList
-              className="lg:hidden"
               items={sortedEmpresas.map((empresa: any) => ({
                 id: empresa.id,
                 title: empresa.nome_fantasia || empresa.nome || "-",
@@ -2129,8 +2128,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               }))}
             />
 
-            {/* Desktop: tabela */}
-            <div className="hidden lg:block bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
+            {/* Tabela desktop desativada: listagem sempre em cartões */}
+            <div className="hidden bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto relative">
               <table className="w-full table-fixed">
 
 
