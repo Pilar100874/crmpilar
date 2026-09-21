@@ -331,6 +331,26 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
+    // Sonda temporária para medir suporte do firmware (remover após o teste).
+    if (acao === "sonda") {
+      const candidatos: Array<[string, Record<string, unknown>]> = [
+        ["updateQueue", { queue: "9999" }],
+        ["createQueue", {}],
+        ["addQueue", {}],
+        ["deleteQueue", {}],
+        ["listQueueAgent", { queue: "9999" }],
+        ["listQueueStatus", {}],
+        ["queueSummary", {}],
+        ["getQueueStatus", { queue: "9999" }],
+      ];
+      const resultado: Record<string, unknown> = {};
+      for (const [nome, extras] of candidatos) {
+        const r = await cliente.acaoBruta(nome, extras);
+        resultado[nome] = { status: r?.status ?? null, resposta: r?.response ?? null };
+      }
+      return responder({ ok: true, sonda: resultado });
+    }
+
     // ---------- Painel (padrão) ----------
 
     const [contas, pontes, livres, troncosSip, troncosAnalog, filasBrutas] = await Promise.all([
