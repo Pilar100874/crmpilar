@@ -206,6 +206,7 @@ export const menuItems: MenuItem[] = [
     icon: LucideIcons.Users,
     subItems: [
       { id: "Controle de Ponto", title: "Controle de Ponto", url: "/ponto", icon: Clock },
+      { id: "Politicas Internas", title: "Políticas Internas", url: "/politicas-internas", icon: LucideIcons.BookOpen },
     ],
   },
 
