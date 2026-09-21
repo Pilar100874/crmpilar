@@ -20,7 +20,15 @@ export interface ChamadaAoVivo {
   origem?: string;
   destino?: string;
   duracao?: string;
+  duracao_seg?: number;
   estado?: string;
+  direcao?: "Entrante" | "Sainte" | "Interna";
+  /** Ramal que atendeu (ou está falando) nesta chamada. */
+  atendente?: string;
+  atendente_nome?: string;
+  /** Número da fila em que a chamada está aguardando. */
+  fila?: string;
+  fila_nome?: string;
 }
 
 export interface TroncoPainel {
@@ -41,6 +49,32 @@ export interface FilaPainel {
   nome?: string;
   estrategia?: string;
   agentes: AgenteFila[];
+  /** Chamadas esperando atendimento nesta fila agora. */
+  aguardando: number;
+  /** Maior tempo de espera atual na fila (segundos, no momento da leitura). */
+  espera_max_seg: number;
+  /** Tempo máximo de espera configurado na fila (segundos). */
+  espera_max_config_seg?: number;
+  /** Tempo que toca em cada agente (segundos). */
+  toque_agente_seg?: number;
+  /** Máximo de pessoas aguardando na fila. */
+  max_aguardando?: number;
+  /** Intervalo entre tentativas de chamar os agentes (segundos). */
+  intervalo_tentativa_seg?: number;
+  /** Descanso do agente após cada ligação (segundos). */
+  descanso_seg?: number;
+}
+
+export interface DadosFila {
+  numero: string;
+  nome: string;
+  estrategia: string;
+  membros: string[];
+  espera_max_seg: number;
+  toque_agente_seg: number;
+  max_aguardando: number;
+  intervalo_tentativa_seg: number;
+  descanso_seg: number;
 }
 
 interface RespostaPainel {
