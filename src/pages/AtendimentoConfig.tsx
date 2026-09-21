@@ -29,7 +29,8 @@ import {
   Activity,
   Bot,
   HardDrive,
-  Smartphone
+  Smartphone,
+  Globe
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +70,8 @@ import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
 import SmsConfigCRUD from '@/components/config/SmsConfigCRUD';
+import GlobalVariables from './GlobalVariables';
+import ChatWebhook from './ChatWebhook';
 
 
 // Import Bot components
@@ -112,6 +115,8 @@ const todosTabItems: TabItem[] = [
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'sms', label: 'Envio de SMS', icon: Smartphone },
   { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
+  { id: 'variaveis-globais', label: 'Variáveis Globais', icon: FileText },
+  { id: 'teste-webhooks', label: 'Teste de Webhooks', icon: Globe },
 ];
 
 // Skills Manager Component (embedded)
@@ -727,6 +732,20 @@ export default function AtendimentoConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatRetencaoCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="variaveis-globais" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><FileText className="h-4 w-4 sm:h-5 sm:w-5" />Variáveis Globais</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Variáveis compartilhadas entre todos os bots</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6"><GlobalVariables embedded /></CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="teste-webhooks" className="mt-0 h-full overflow-hidden flex flex-col">
+              <ChatWebhook embedded />
             </TabsContent>
           </div>
         </Tabs>
