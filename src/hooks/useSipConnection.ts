@@ -779,6 +779,7 @@ export const useSipConnection = () => {
     }
     ouvintesSaudeRef.current?.();
     ouvintesSaudeRef.current = undefined;
+    pararToqueEntrada();
     if (reconexaoRef.current.timer) {
       clearTimeout(reconexaoRef.current.timer);
       reconexaoRef.current.timer = undefined;
