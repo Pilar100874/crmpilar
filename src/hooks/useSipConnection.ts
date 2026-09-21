@@ -3,6 +3,8 @@ import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState,
 import { useToast } from '@/hooks/use-toast';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
+import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEntrada';
+import { chamadaPareceDiscador, limparChamadaDiscador } from '@/lib/telefonia/discadorMarker';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
@@ -34,6 +36,8 @@ interface CallSession {
   direction: 'inbound' | 'outbound';
   state: SessionState;
   startTime: Date;
+  /** Chamada originada pelo discador (click-to-call): ao atender, o PABX disca o cliente. */
+  viaDiscador?: boolean;
 }
 
 /** Remove apenas a formatação visual; códigos SIP digitados pelo usuário continuam intactos. */
@@ -364,16 +368,25 @@ export const useSipConnection = () => {
 
   // Handle incoming call
   const handleIncomingCall = useCallback((session: Session) => {
-    console.log('📞 Chamada recebida de:', session.remoteIdentity.uri.user);
-    
+    const origem = session.remoteIdentity.uri.user || 'Desconhecido';
+    console.log('📞 Chamada recebida de:', origem);
+
+    // Ligação do discador (click-to-call): o PABX toca o ramal usando ele mesmo
+    // como chamador, ou há um disparo recente registrado pelo chat.
+    const viaDiscador = chamadaPareceDiscador(origem, ramalPresencaRef.current);
+
     const callSession: CallSession = {
       id: crypto.randomUUID(),
       session,
-      phoneNumber: session.remoteIdentity.uri.user || 'Desconhecido',
+      phoneNumber: origem,
       direction: 'inbound',
       state: session.state,
       startTime: new Date(),
+      viaDiscador,
     };
+
+    // Campainha: toque diferenciado para chamadas do discador.
+    iniciarToqueEntrada(viaDiscador ? 'discador' : 'padrao');
 
     setActiveCalls(prev => [
       ...prev.filter(c => c.session.state !== SessionState.Terminated && c.state !== SessionState.Terminated),
@@ -393,9 +406,12 @@ export const useSipConnection = () => {
 
       if (state === SessionState.Established) {
         console.log('✅ Chamada recebida estabelecida');
+        pararToqueEntrada();
+        if (callSession.viaDiscador) limparChamadaDiscador();
         await setupRemoteMedia(session);
       } else if (state === SessionState.Terminated) {
         console.log('❌ Chamada recebida encerrada');
+        pararToqueEntrada();
         // Remove chamada encerrada após delay
         setTimeout(() => {
           setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -404,8 +420,10 @@ export const useSipConnection = () => {
     });
 
     toast({
-      title: "Chamada recebida",
-      description: `De: ${callSession.phoneNumber}`,
+      title: callSession.viaDiscador ? "Ligação do discador" : "Chamada recebida",
+      description: callSession.viaDiscador
+        ? "Atenda para o PABX discar o cliente"
+        : `De: ${callSession.phoneNumber}`,
     });
   }, [toast]);
 
@@ -761,6 +779,7 @@ export const useSipConnection = () => {
     }
     ouvintesSaudeRef.current?.();
     ouvintesSaudeRef.current = undefined;
+    pararToqueEntrada();
     if (reconexaoRef.current.timer) {
       clearTimeout(reconexaoRef.current.timer);
       reconexaoRef.current.timer = undefined;

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
 
 export interface RespostaClickToCall {
   success?: boolean;
@@ -35,6 +36,9 @@ export async function ligarPeloPabx(destino: string): Promise<RespostaClickToCal
       toast.error(mensagem, { id: aviso });
       return { error: mensagem };
     }
+    // Marca o disparo para o Pilar Fone reconhecer a chamada do discador
+    // e tocar a campainha diferenciada quando o ramal tocar.
+    marcarChamadaDiscador(numero);
     toast.success(resposta.message || "Chamada iniciada", { id: aviso });
     return resposta;
   } catch (erro) {

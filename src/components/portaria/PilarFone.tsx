@@ -891,7 +891,9 @@ export default function PilarFone({
                   ? "Videochamada"
                   : "Em conversa"
                 : chamadaAtual.direction === "inbound"
-                  ? "Chamada recebida"
+                  ? chamadaAtual.viaDiscador
+                    ? "Ligação do discador — atenda para chamar o cliente"
+                    : "Chamada recebida"
                   : "Chamando..."}
             </p>
           </div>
