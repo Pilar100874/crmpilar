@@ -95,6 +95,17 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
       if (!estabId) return;
       setEstabelecimentoId(estabId);
 
+      // Flag do sistema que define o modo de discagem
+      const { data: flags } = await supabase
+        .from("global_variables")
+        .select("default_value, estabelecimento_id")
+        .eq("name", "discador_previa");
+      const linhas = flags || [];
+      const localFlag = linhas.find((l) => l.estabelecimento_id === estabId);
+      const globalFlag = linhas.find((l) => !l.estabelecimento_id);
+      const valor = (localFlag ?? globalFlag)?.default_value;
+      setModoPrevia(valor === true || valor === "true");
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -199,6 +210,8 @@ export function PredictiveDialerDialog({ open, onOpenChange }: PredictiveDialerD
       return;
     }
 
+    pararRef.current = false;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setIsDialing(true);
     setCurrentIndex(0);
     setDialerResults(filteredTasks.map(task => ({
