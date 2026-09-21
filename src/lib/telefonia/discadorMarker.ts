@@ -10,15 +10,17 @@
 const CHAVE = "pilar.discador.chamada";
 const JANELA_MS = 3 * 60 * 1000; // 3 minutos
 
-interface MarcadorDiscador {
+export interface MarcadorDiscador {
   em: number;
   destino: string;
+  /** Nome do cliente, quando quem disparou já conhece. */
+  nome?: string;
 }
 
 /** Registra que uma ligação pelo discador acabou de ser iniciada. */
-export function marcarChamadaDiscador(destino: string) {
+export function marcarChamadaDiscador(destino: string, nome?: string) {
   try {
-    const marcador: MarcadorDiscador = { em: Date.now(), destino };
+    const marcador: MarcadorDiscador = { em: Date.now(), destino, ...(nome ? { nome } : {}) };
     localStorage.setItem(CHAVE, JSON.stringify(marcador));
   } catch {
     /* armazenamento indisponível — a detecção por ramal ainda funciona */
@@ -34,6 +36,19 @@ export function limparChamadaDiscador() {
   }
 }
 
+/** Devolve o marcador recente (dentro da janela de 3 minutos), se houver. */
+export function obterMarcadorDiscador(): MarcadorDiscador | null {
+  try {
+    const bruto = localStorage.getItem(CHAVE);
+    if (!bruto) return null;
+    const marcador = JSON.parse(bruto) as MarcadorDiscador;
+    if (Date.now() - marcador.em >= JANELA_MS) return null;
+    return marcador;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Indica se a chamada recebida parece vir do discador:
  * há um disparo recente pelo click-to-call OU a origem é o próprio ramal
@@ -41,12 +56,5 @@ export function limparChamadaDiscador() {
  */
 export function chamadaPareceDiscador(origem: string, ramalProprio?: string): boolean {
   if (ramalProprio && origem && origem === ramalProprio) return true;
-  try {
-    const bruto = localStorage.getItem(CHAVE);
-    if (!bruto) return false;
-    const marcador = JSON.parse(bruto) as MarcadorDiscador;
-    return Date.now() - marcador.em < JANELA_MS;
-  } catch {
-    return false;
-  }
+  return obterMarcadorDiscador() !== null;
 }
