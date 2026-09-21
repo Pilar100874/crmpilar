@@ -8,6 +8,7 @@
 /** Payloads estáticos reservados pelo padrão RTP (RFC 3551). */
 const ESTATICOS: Record<string, string> = {
   "0": "PCMU/8000",
+  "2": "G721/8000",
   "3": "GSM/8000",
   "4": "G723/8000",
   "5": "DVI4/8000",
