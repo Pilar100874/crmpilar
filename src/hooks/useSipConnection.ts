@@ -5,6 +5,7 @@ import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presen
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEntrada';
 import { chamadaPareceDiscador, limparChamadaDiscador } from '@/lib/telefonia/discadorMarker';
+import { extrairDesafio, calcularCabecalhoAuth } from '@/lib/telefonia/digestSip';
 import { sanitizarSdp } from '@/lib/telefonia/sdpSanitizar';
 
 /** Fábrica padrão do SIP.js com limpeza do SDP recebido do PABX. */
@@ -156,6 +157,8 @@ export const useSipConnection = () => {
 
   /** Reconexão automática: a queda do WebSocket não deve derrubar o ramal de vez. */
   const registererRef = useRef<Registerer | null>(null);
+  /** Credenciais em uso, para responder ao desafio de senha (401/407) ao discar. */
+  const configRef = useRef<SipConfig | null>(null);
   const reconexaoRef = useRef<{ timer?: number; tentativas: number }>({ tentativas: 0 });
   const keepAliveRef = useRef<number | undefined>(undefined);
   const ouvintesSaudeRef = useRef<(() => void) | undefined>(undefined);
