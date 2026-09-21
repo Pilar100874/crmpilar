@@ -600,10 +600,14 @@ export const useSipConnection = () => {
                 errorMsg = "Chamada cancelada";
                 dica = "A chamada foi encerrada antes de ser atendida.";
                 break;
-              case 603:
-                errorMsg = "O PABX recusou a ligação";
-                dica = "Se era um número externo, confira no PABX se o ramal tem permissão para chamadas externas (privilégio Nacional/Internacional) e se a rota de saída aceita o formato discado (ex.: DDD + número).";
+              case 603: {
+                errorMsg = "Chamada recusada pela rede de destino";
+                const motivo = extrairMotivoQ850(response.message.headers as Record<string, Array<{ raw?: string }>>);
+                dica = motivo
+                  ? `A operadora do número chamado recusou a ligação (${motivo}) antes de tocar. Isso costuma acontecer quando o identificador de chamadas (DOD) do ramal está vazio ou inválido no PABX, ou quando o celular bloqueia chamadas de números desconhecidos/anti-spam.`
+                  : "A operadora ou o aparelho do número chamado recusou a ligação antes de tocar. Confira o identificador de chamadas (DOD) do ramal no PABX e teste com o bloqueio de spam do celular desativado.";
                 break;
+              }
             }
 
               toast({
