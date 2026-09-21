@@ -3515,6 +3515,37 @@ ${recentMessages}
     }] : []),
   ];
 
+  // O discador só abre se o PABX estiver configurado no estabelecimento
+  // e o usuário tiver ramal vinculado — sem os dois, a ligação nunca sai.
+  const abrirDiscador = async () => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const [{ data: usuario }, { data: telefonia }] = await Promise.all([
+        supabase.from("usuarios").select("ramal").eq("auth_user_id", auth.user.id).maybeSingle(),
+        supabase.rpc("get_telefonia_estabelecimento"),
+      ]);
+      const estab = (Array.isArray(telefonia) ? telefonia[0] : telefonia) as
+        | { servidor?: string | null; ativo?: boolean | null }
+        | undefined;
+      if (!estab?.servidor || estab?.ativo === false) {
+        toast.error("Telefonia (PABX) não configurada", {
+          description: "Configure o UCM do estabelecimento antes de usar o discador.",
+        });
+        return;
+      }
+      if (!usuario?.ramal) {
+        toast.error("Você não tem ramal vinculado", {
+          description: "Peça ao administrador para cadastrar um ramal no seu usuário.",
+        });
+        return;
+      }
+      setShowDiscadorModo(true);
+    } catch {
+      toast.error("Não foi possível verificar a configuração de telefonia");
+    }
+  };
+
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
     switch (item.id) {
       case "chat":
