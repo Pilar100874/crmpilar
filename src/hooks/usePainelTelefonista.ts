@@ -103,6 +103,8 @@ export function usePainelTelefonista(intervaloMs = 10000) {
   const [pabxDisponivel, setPabxDisponivel] = useState<boolean | null>(null);
   const [motivoPabx, setMotivoPabx] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
+  // Momento da última leitura do PABX: base para o "tick" das durações ao vivo.
+  const [lidoEm, setLidoEm] = useState<number>(Date.now());
   const emAndamento = useRef(false);
   // Sessão expirada (401): para de chamar até o usuário entrar de novo.
   const bloqueadoPor401 = useRef(false);
