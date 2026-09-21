@@ -18,6 +18,28 @@ const criarSdhComSdpLimpo: typeof fabricaSdhPadrao = (session, options) => {
   return sdh;
 };
 
+/** Extrai o motivo Q.850 do cabeçalho Reason (ex.: "Q.850 ;cause=16") devolvido pela operadora. */
+const MOTIVOS_Q850: Record<string, string> = {
+  '1': 'número não existe',
+  '16': 'recusada pelo destino',
+  '17': 'ocupado',
+  '18': 'sem resposta',
+  '19': 'não atendeu',
+  '21': 'chamada rejeitada',
+  '27': 'destino fora de serviço',
+  '28': 'número inválido ou incompleto',
+  '34': 'rede sem canal disponível',
+  '38': 'rede fora de serviço',
+  '41': 'falha temporária na rede',
+  '42': 'rede congestionada',
+};
+const extrairMotivoQ850 = (headers: Record<string, Array<{ raw?: string }>> | undefined): string | null => {
+  const bruto = headers?.['Reason']?.[0]?.raw || '';
+  const m = /cause=(\d+)/i.exec(bruto);
+  if (!m) return null;
+  return MOTIVOS_Q850[m[1]] ? `${MOTIVOS_Q850[m[1]]} (causa ${m[1]})` : `causa ${m[1]}`;
+};
+
 interface SipConfig {
   server: string;
   serverPort?: string;
@@ -600,10 +622,14 @@ export const useSipConnection = () => {
                 errorMsg = "Chamada cancelada";
                 dica = "A chamada foi encerrada antes de ser atendida.";
                 break;
-              case 603:
-                errorMsg = "O PABX recusou a ligação";
-                dica = "Se era um número externo, confira no PABX se o ramal tem permissão para chamadas externas (privilégio Nacional/Internacional) e se a rota de saída aceita o formato discado (ex.: DDD + número).";
+              case 603: {
+                errorMsg = "Chamada recusada pela rede de destino";
+                const motivo = extrairMotivoQ850(response.message.headers as Record<string, Array<{ raw?: string }>>);
+                dica = motivo
+                  ? `A operadora do número chamado recusou a ligação (${motivo}) antes de tocar. Isso costuma acontecer quando o identificador de chamadas (DOD) do ramal está vazio ou inválido no PABX, ou quando o celular bloqueia chamadas de números desconhecidos/anti-spam.`
+                  : "A operadora ou o aparelho do número chamado recusou a ligação antes de tocar. Confira o identificador de chamadas (DOD) do ramal no PABX e teste com o bloqueio de spam do celular desativado.";
                 break;
+              }
             }
 
               toast({
