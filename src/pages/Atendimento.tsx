@@ -7227,6 +7227,7 @@ interface MobileListContentProps {
   chatsNaoLidosPerPhone: Record<string, number>;
   agendaViewMode: 'default' | 'fluxo' | 'massa';
   setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
+  setDiscadorModo: (modo: 'previa' | 'sequencial' | null) => void;
   setFluxoInitialIndex: (index: number) => void;
   setShowConfigDatas: (show: boolean) => void;
   setShowEnvioMassaWizard: (show: boolean) => void;
@@ -7283,6 +7284,7 @@ function MobileListContent({
   chatsNaoLidosPerPhone,
   agendaViewMode,
   setAgendaViewMode,
+  setDiscadorModo,
   setFluxoInitialIndex,
   setShowConfigDatas,
   setShowEnvioMassaWizard,
@@ -7381,7 +7383,7 @@ function MobileListContent({
                 <div className="flex items-center justify-center">
                   <div className="inline-flex items-center bg-muted/50 rounded-xl p-1 gap-1">
                     <button 
-                      onClick={() => setAgendaViewMode('fluxo')}
+                      onClick={() => { setDiscadorModo(null); setAgendaViewMode('fluxo'); }}
                       disabled={filteredTasks.length === 0}
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50",
@@ -7423,7 +7425,7 @@ function MobileListContent({
                   <button 
                     onClick={() => showPredictiveDialer()} 
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50 text-xs font-medium text-green-700 dark:text-green-400 transition-all"
-                    title="Discador preditivo"
+                    title="Discador"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
                     Discador
@@ -7707,6 +7709,7 @@ function MobileListContent({
             key={task.id}
             onClick={() => {
               const taskIndex = filteredTasks.findIndex(t => t.id === task.id);
+              setDiscadorModo(null);
               setFluxoInitialIndex(taskIndex >= 0 ? taskIndex : 0);
               setAgendaViewMode('fluxo');
             }}
