@@ -278,7 +278,8 @@ Deno.serve(async (req) => {
     if (acao === "desligar") {
       const canal = String(corpo.canal ?? "").trim();
       if (!canal) return responder({ error: "Informe a chamada a desligar" }, 400);
-      const tentativas = ["hangupCall", "hangupcall", "hangupChannel", "hangup"];
+      // "hangup" é o nome confirmado no UCM6510; os demais cobrem outros firmwares.
+      const tentativas = ["hangup", "hangupCall", "hangupcall", "hangupChannel"];
       for (const nome of tentativas) {
         const r = await cliente.acaoBruta(nome, { channel: canal });
         const status = Number(r?.status ?? -999);
@@ -327,15 +328,6 @@ Deno.serve(async (req) => {
           ? `O PABX recusou a operação na fila (código ${ultimoStatus})`
           : "Este PABX não permite pausar agentes pela API. Use o código de pausa no próprio ramal.",
       }, 400);
-    }
-
-    // Sonda temporária (descoberta de capacidades do firmware).
-    if (acao === "sonda") {
-      const nome = String(corpo.acao_sonda ?? "").trim();
-      if (!nome || !/^[a-zA-Z]+$/.test(nome)) return responder({ error: "Ação inválida" }, 400);
-      const extras = (corpo.extras && typeof corpo.extras === "object") ? corpo.extras as Record<string, unknown> : {};
-      const r = await cliente.acaoBruta(nome, extras);
-      return responder({ ok: true, status: Number(r?.status ?? -999), response: r?.response ?? null });
     }
 
     // ---------- Painel (padrão) ----------
