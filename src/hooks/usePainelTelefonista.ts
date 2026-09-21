@@ -213,6 +213,56 @@ export function usePainelTelefonista(intervaloMs = 10000) {
     };
   }, [atualizar, intervaloMs]);
 
+  // Relógio de 1s para as durações "correrem" na tela entre uma leitura e outra.
+  const [agora, setAgora] = useState<number>(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  /** Duração ao vivo de uma chamada, em segundos, contando entre as leituras. */
+  const segundosAoVivo = useCallback(
+    (c: ChamadaAoVivo) => {
+      const chave = c.canal ?? `${c.origem ?? ""}->${c.destino ?? ""}`;
+      const base = basesDuracao.current.get(chave) ?? c.duracao_seg ?? 0;
+      return base + Math.max(0, Math.floor((agora - lidoEm) / 1000));
+    },
+    [agora, lidoEm],
+  );
+
+  /** Maior espera atual de uma fila, contando os segundos desde a última leitura. */
+  const esperaAoVivo = useCallback(
+    (f: FilaPainel) => {
+      if (!f.aguardando) return 0;
+      return f.espera_max_seg + Math.max(0, Math.floor((agora - lidoEm) / 1000));
+    },
+    [agora, lidoEm],
+  );
+
+  const invocarFila = useCallback(
+    async (corpo: Record<string, unknown>) => {
+      const { data, error } = await supabase.functions.invoke("ucm-telefonista", { body: corpo });
+      const resposta = (data || {}) as { ok?: boolean; error?: string; message?: string };
+      if (error || resposta.error || !resposta.ok) {
+        throw new Error(resposta.error || "O PABX recusou a operação");
+      }
+      void atualizar();
+      return resposta;
+    },
+    [atualizar],
+  );
+
+  const salvarFila = useCallback(
+    (dados: DadosFila, criar: boolean) =>
+      invocarFila({ acao: criar ? "fila_criar" : "fila_atualizar", ...dados }),
+    [invocarFila],
+  );
+
+  const excluirFila = useCallback(
+    (numero: string) => invocarFila({ acao: "fila_excluir", numero }),
+    [invocarFila],
+  );
+
   return {
     ramais,
     chamadas,
@@ -224,5 +274,9 @@ export function usePainelTelefonista(intervaloMs = 10000) {
     motivoPabx,
     carregando,
     atualizar,
+    segundosAoVivo,
+    esperaAoVivo,
+    salvarFila,
+    excluirFila,
   };
 }
