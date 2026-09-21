@@ -256,6 +256,7 @@ export const useSipConnection = () => {
       return;
     }
     ramalPresencaRef.current = config.extension.trim();
+    configRef.current = config;
 
     const comPorta = (host: string, porta?: string) => {
       const h = host.trim();
