@@ -832,6 +832,38 @@ export const useSipConnection = () => {
     }
   }, [activeCalls, localVideoStream, toast]);
 
+  /**
+   * Transferência cega (SIP REFER): a chamada ativa é entregue ao destino e
+   * some da sua tela — como o botão "transferir" de um telefone físico.
+   * Funciona apenas para chamadas atendidas/feitas por ESTA conexão (Pilar Fone).
+   */
+  const transferirChamada = useCallback(async (callId: string, destino: string): Promise<boolean> => {
+    const call = activeCalls.find((c) => c.id === callId);
+    const host = userAgent?.configuration.uri?.host;
+    const numero = normalizarNumeroDiscagem(destino);
+    if (!call || !host || !numero) return false;
+    const alvo = UserAgent.makeURI(`sip:${numero.replace(/#/g, '%23')}@${host}`);
+    if (!alvo) return false;
+    const sessao = call.session as Session & { refer?: (r: unknown) => Promise<unknown> };
+    if (typeof sessao.refer !== "function") return false;
+    try {
+      await sessao.refer(alvo);
+      toast({
+        title: "Transferência enviada",
+        description: `Encaminhando a ligação para ${numero}.`,
+      });
+      return true;
+    } catch (erro) {
+      console.error('Erro ao transferir:', erro);
+      toast({
+        title: "Falha ao transferir",
+        description: "O PABX recusou a transferência. Tente pelo próprio telefone.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [activeCalls, userAgent, toast]);
+
   // Answer incoming call (pode atender já com vídeo/viva-voz)
   const answer = useCallback(async (callId: string, opcoes?: { video?: boolean; vivaVoz?: boolean }) => {
     const call = activeCalls.find(c => c.id === callId);
@@ -958,6 +990,7 @@ export const useSipConnection = () => {
     dial,
     hangup,
     answer,
+    transferirChamada,
     isRegistered,
     isConnecting,
     activeCalls,
