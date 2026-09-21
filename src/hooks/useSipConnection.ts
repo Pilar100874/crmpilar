@@ -462,14 +462,14 @@ export const useSipConnection = () => {
         throw new Error('URI inválida');
       }
 
-      const inviter = new Inviter(userAgent, target);
-      
+      const primeiroInviter = new Inviter(userAgent, target);
+
       const callSession: CallSession = {
         id: crypto.randomUUID(),
-        session: inviter,
+        session: primeiroInviter,
         phoneNumber,
         direction: 'outbound',
-        state: inviter.state,
+        state: primeiroInviter.state,
         startTime: new Date(),
       };
 
@@ -485,46 +485,58 @@ export const useSipConnection = () => {
         void aplicarVivaVoz(true);
       }
 
-      // Setup session state change handler
-      inviter.stateChange.addListener(async (state) => {
-        console.log('Estado da chamada mudou:', state);
-        setActiveCalls(prev => 
-          prev.map(call => 
-            call.id === callSession.id 
-              ? { ...call, state } 
-              : call
-          )
-        );
+      // O PABX pode pedir a senha do ramal ao discar (401/407). O SIP.js só
+      // responde a esse desafio no registro, então rediscamos uma vez com o
+      // digest calculado a partir do desafio recebido.
+      let tentouAutenticar = false;
 
-        if (state === SessionState.Established) {
-          pararToqueChamando();
-          console.log('🎤 Configurando mídia para chamada estabelecida...');
-          await setupRemoteMedia(inviter);
-          if (opcoes?.video) {
-            const sdh = inviter.sessionDescriptionHandler as { localMediaStream?: MediaStream } | undefined;
-            if (sdh?.localMediaStream?.getVideoTracks().length) {
-              setLocalVideoStream(sdh.localMediaStream);
+      const convidar = async (inviter: Inviter, extraHeaders?: string[]): Promise<void> => {
+        // A tentativa atual passa a ser a sessão ativa desta chamada.
+        callSession.session = inviter;
+        callSession.state = inviter.state;
+
+        // Setup session state change handler
+        inviter.stateChange.addListener(async (state) => {
+          // Ignora eventos de tentativas antigas (ex.: a 1ª discagem recusada pelo desafio de senha).
+          if (callSession.session !== inviter) return;
+          console.log('Estado da chamada mudou:', state);
+          setActiveCalls(prev =>
+            prev.map(call =>
+              call.id === callSession.id
+                ? { ...call, state }
+                : call
+            )
+          );
+
+          if (state === SessionState.Established) {
+            pararToqueChamando();
+            console.log('🎤 Configurando mídia para chamada estabelecida...');
+            await setupRemoteMedia(inviter);
+            if (opcoes?.video) {
+              const sdh = inviter.sessionDescriptionHandler as { localMediaStream?: MediaStream } | undefined;
+              if (sdh?.localMediaStream?.getVideoTracks().length) {
+                setLocalVideoStream(sdh.localMediaStream);
+              }
             }
+            toast({
+              title: "Chamada conectada",
+              description: `Conectado com ${phoneNumber}`,
+            });
+          } else if (state === SessionState.Terminated) {
+            pararToqueChamando();
+            // Remove da lista após um pequeno delay para garantir que a UI atualize
+            setTimeout(() => {
+              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+            }, 500);
+            toast({
+              title: "Chamada encerrada",
+              description: `Chamada com ${phoneNumber} finalizada`,
+            });
           }
-          toast({
-            title: "Chamada conectada",
-            description: `Conectado com ${phoneNumber}`,
-          });
-        } else if (state === SessionState.Terminated) {
-          pararToqueChamando();
-          // Remove da lista após um pequeno delay para garantir que a UI atualize
-          setTimeout(() => {
-            setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
-          }, 500);
-          toast({
-            title: "Chamada encerrada",
-            description: `Chamada com ${phoneNumber} finalizada`,
-          });
-        }
-      });
+        });
 
-      // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
-      iniciarToqueChamando();
+        // Toque de "chamando" na caixa de som enquanto a outra ponta não atende.
+        iniciarToqueChamando();
 
       await inviter.invite({
         sessionDescriptionHandlerOptions: {
