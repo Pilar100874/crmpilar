@@ -5367,7 +5367,7 @@ ${recentMessages}
                   <Button 
                     variant={agendaViewMode === 'fluxo' ? "default" : "ghost"}
                     size="sm" 
-                    onClick={() => setAgendaViewMode('fluxo')}
+                    onClick={() => { setDiscadorModo(null); setAgendaViewMode('fluxo'); }}
                     disabled={filteredTasks.length === 0}
                     className={cn(
                       "h-7 px-2 rounded text-xs font-medium transition-all",
@@ -5459,7 +5459,7 @@ ${recentMessages}
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setShowPredictiveDialer(true)}
+                    onClick={() => setShowDiscadorModo(true)}
                     className="h-7 px-2 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs"
                   >
                     <PhoneCall className="w-3 h-3 mr-1" />
@@ -6538,10 +6538,12 @@ ${recentMessages}
             estabelecimentoId={estabelecimentoId}
             usuarioId={usuarioId}
             onTaskCompleted={loadTodayTasks}
+            discadorModo={discadorModo}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
               setFluxoInitialIndex(0);
+              setDiscadorModo(null);
             }}
             onCurrentTaskChange={setFluxoCurrentTask}
             showDetails={showClientDetailsFluxo}
@@ -6549,6 +6551,7 @@ ${recentMessages}
             initialTaskIndex={fluxoInitialIndex}
             onNavigateToItem={(type, id) => {
               setAgendaViewMode('default');
+              setDiscadorModo(null);
               if (type === 'chat') {
                 setActiveTab('chat');
                 setSelectedConversation(id);
@@ -6718,7 +6721,7 @@ ${recentMessages}
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => setAgendaViewMode('fluxo')}
+                      onClick={() => { setDiscadorModo(null); setAgendaViewMode('fluxo'); }}
                       className="gap-2"
                     >
                       <Play className="h-4 w-4" />
@@ -7041,12 +7044,6 @@ ${recentMessages}
         initialNumber={softphoneNumber}
       />
 
-      <PredictiveDialerDialog 
-        open={showPredictiveDialer}
-        onOpenChange={setShowPredictiveDialer}
-      />
-
-
       <AlertDialog open={!!confirmDeleteOrcamento} onOpenChange={(open) => !open && setConfirmDeleteOrcamento(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -7121,6 +7118,20 @@ ${recentMessages}
     </RadialMenu>
     
     {/* Global Dialogs - render regardless of mobile/desktop */}
+    <DiscadorModoDialog
+      open={showDiscadorModo}
+      onOpenChange={setShowDiscadorModo}
+      totalContatos={filteredTasks.filter(t => t.customers?.telefone).length}
+      onSelect={(modo) => {
+        setDiscadorModo(modo);
+        setShowDiscadorModo(false);
+        setActiveTab("agenda");
+        setShowConversationsList(true);
+        setMobileView("main");
+        setFluxoInitialIndex(0);
+        setAgendaViewMode('fluxo');
+      }}
+    />
     <FluxoAtendimentoDialog
       open={showFluxoAtendimento}
       onOpenChange={setShowFluxoAtendimento}
