@@ -124,10 +124,15 @@ Deno.serve(async (req) => {
     const cliente = new ClienteUcm(url, config.ucm_user, config.ucm_password);
     await cliente.autenticar();
 
+    const corpo = await req.json().catch(() => ({}));
     const resultado: Record<string, unknown> = { ramal_consultado: ramal };
 
     // 1) Dados do ramal do usuário: privilégio de discagem.
     const listagem = await cliente.acao("listExtension", { sidx: "extension", sord: "asc", page: 1 });
+    const rotas = await cliente.acao("listOutboundRoutes", { sidx: "sequence", sord: "asc", page: 1 });
+    if (corpo?.raw) {
+      return responder({ listExtension: sanitizar(listagem), listOutboundRoutes: sanitizar(rotas) });
+    }
     const ramais = (listagem?.response?.extension ?? []) as Array<Record<string, unknown>>;
     if (Array.isArray(ramais)) {
       const meu = ramais.find((r) => String(r.extension) === ramal);
