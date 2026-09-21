@@ -823,6 +823,7 @@ export const useSipConnection = () => {
     }
     reconexaoRef.current.tentativas = 0;
     registererRef.current = null;
+    configRef.current = null;
     try {
       // Hangup all active calls
       for (const call of activeCalls) {
