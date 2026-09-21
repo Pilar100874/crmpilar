@@ -173,19 +173,41 @@ export function UCMAjudaGuia() {
 
             <AccordionItem value="p4">
               <AccordionTrigger>4. Criar e configurar o ramal do usuário</AccordionTrigger>
-              <AccordionContent className="space-y-3">
+              <AccordionContent className="space-y-4">
                 <Passos
                   itens={[
-                    "No UCM, vá em Ramal/Tronco → Ramais → Adicionar e escolha o tipo SIP.",
-                    "Número do ramal: use 3 ou 4 dígitos (ex.: 1001). Preencha o nome do usuário.",
-                    "Senha SIP: crie uma senha forte (letras, números e símbolos). Essa mesma senha vai no cadastro do usuário no CRM.",
-                    "Na aba Mídia, ative os codecs OPUS, G.722, G.711 (PCMU/PCMA) e, se for usar vídeo, VP8/H.264.",
-                    "Ative NAT / 'Suporte a NAT' e 'ICE' no ramal — essencial para chamadas fora da empresa.",
-                    "Ative WebRTC no ramal (em firmwares mais novos aparece como 'Enable WebRTC Support'). Sem isso o Pilar Fone não registra.",
-                    "Na aba Recursos, defina o Privilégio de discagem (Interno, Local, Nacional ou Internacional) conforme o que o usuário pode ligar. Sem privilégio, ligações externas caem na hora.",
-                    "Salve e clique em Aplicar Alterações (barra laranja no topo do UCM).",
+                    "No UCM, vá em Extension/Trunk → Extensions → Add e escolha o tipo SIP.",
+                    "Preencha os campos essenciais da tabela abaixo.",
+                    "Ao final, clique em Save e depois em Apply Changes (barra amarela no topo do UCM). Sem o Apply Changes, nada do que você mudou passa a valer.",
                   ]}
                 />
+                <div>
+                  <Badge variant="secondary" className="mb-2">
+                    Campos essenciais do ramal (sem eles o Pilar Fone não funciona)
+                  </Badge>
+                  <Tabela
+                    cabecalho={["Campo no UCM", "O que colocar", "Valor recomendado"]}
+                    linhas={[
+                      ["Extension (número do ramal)", "3 ou 4 dígitos, sem repetir outro ramal", "Ex.: 1001"],
+                      ["CallerID Name (nome)", "Nome do usuário que aparece nas chamadas internas", "Ex.: Maria Silva"],
+                      ["CallerID Number", "Número da empresa (com DDD), usado na identificação das ligações externas", "Ex.: 1121354444"],
+                      ["SIP/IAX Password (senha do ramal)", "Senha forte — é a mesma que vai no cadastro do usuário no CRM", "Letras, números e símbolos"],
+                      ["Permission (permissão de discagem)", "Define até onde o ramal pode ligar. Para ligar para celulares e fixos do Brasil, precisa ser National. Em Internal a ligação externa é recusada antes de chamar.", "National"],
+                      ["DOD (Direct Outward Dialing)", "Vincule o DOD do tronco de saída com o CallerID da empresa — sem ele, a operadora pode recusar a ligação", "DOD do tronco principal"],
+                      ["NAT Support", "Ligado — essencial para chamadas fora da empresa", "Ligado"],
+                      ["ICE Support", "Ligado — ajuda o áudio a atravessar roteadores e 4G", "Ligado"],
+                      ["Enable WebRTC", "Ligado — sem isso o Pilar Fone não registra o ramal", "Ligado"],
+                      ["Codecs de áudio", "Deixe PCMU, PCMA, G.722 e OPUS. Desative G726 — o navegador recusa esse codec e a chamada falha ao atender.", "PCMU, PCMA, G.722, OPUS"],
+                      ["DTMF Mode", "Forma de envio dos dígitos em menus (URA)", "RFC2833"],
+                      ["Voicemail (caixa postal)", "Opcional, conforme a necessidade do usuário", "A critério da empresa"],
+                    ]}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Importante: os dois erros mais comuns são deixar <strong>Permission em Internal</strong>{" "}
+                  (a ligação externa é recusada antes de o celular tocar) e salvar sem clicar em{" "}
+                  <strong>Apply Changes</strong>. Depois de qualquer ajuste no ramal, confirme as duas coisas.
+                </p>
               </AccordionContent>
             </AccordionItem>
 
