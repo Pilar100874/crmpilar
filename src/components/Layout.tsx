@@ -161,6 +161,8 @@ export const menuItems: MenuItem[] = [
       { id: "Monitor de Funcionários", title: "Monitor de Funcionários", url: "/monitor-funcionarios", icon: Monitor },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
       { id: "Config Atendimento", title: "Configurações de Chats", url: "/atendimento-config", icon: Settings },
+      { id: "Config Variaveis Globais Menu", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
+      { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
     ]
   },
   {
@@ -292,8 +294,6 @@ export const menuItems: MenuItem[] = [
     icon: Settings,
     subItems: [
       { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
-      { id: "Config Variaveis Globais Menu", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
-      { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
     ]
   },
   {
