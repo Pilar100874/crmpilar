@@ -44,8 +44,10 @@ export default function CVVehicleEntry() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(0);
+  // entry_km fica como texto para permitir apagar tudo antes de digitar
+  // (campo numérico controlado como número voltava para 0 ao apagar).
   const [form, setForm] = useState({
-    entry_km: 0,
+    entry_km: "",
     reported_defects: "",
     defect_type_id: "",
     damage_notes: "",
@@ -100,7 +102,7 @@ export default function CVVehicleEntry() {
   const handleSelectVehicle = (move: any) => {
     setSelected(move);
     setForm({
-      entry_km: (move.exit_km ?? 0) + 1,
+      entry_km: String((move.exit_km ?? 0) + 1),
       reported_defects: "",
       defect_type_id: "",
       damage_notes: "",
@@ -131,7 +133,8 @@ export default function CVVehicleEntry() {
   const canNext = () => {
     if (step === 1) {
       if (!selected) return false;
-      if (form.entry_km <= selected.exit_km) return false;
+      const km = Number(form.entry_km);
+      if (!form.entry_km.trim() || !Number.isFinite(km) || km <= (selected.exit_km ?? 0)) return false;
       if (form.reported_defects.trim() && !form.defect_type_id) return false;
       return true;
     }
@@ -142,7 +145,7 @@ export default function CVVehicleEntry() {
   const goNext = () => {
     if (!canNext()) {
       if (step === 1) {
-        if (form.entry_km <= selected.exit_km) toast.error(`KM deve ser maior que ${selected.exit_km}`);
+        if (!form.entry_km.trim() || Number(form.entry_km) <= (selected?.exit_km ?? 0)) toast.error(`KM deve ser maior que ${selected?.exit_km ?? 0}`);
         else if (form.reported_defects.trim() && !form.defect_type_id) toast.error("Selecione a categoria do defeito");
       } else if (step === 2) {
         toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
@@ -171,12 +174,13 @@ export default function CVVehicleEntry() {
 
     const porteiro = await getRegistroPorteiro();
     if (!porteiro.porteiro_id) { setBusy(false); return toast.error(MSG_SEM_PERMISSAO_PORTEIRO); }
+    const kmEntrada = Number(form.entry_km);
     const { error } = await supabase.from("cv_vehicle_movements").update({
       status: "returned",
       porteiro_entrada_id: porteiro.porteiro_id,
       porteiro_entrada_nome: porteiro.porteiro_nome,
       entry_time: new Date().toISOString(),
-      entry_km: form.entry_km,
+      entry_km: kmEntrada,
       reported_defects: form.reported_defects || null,
       damage_notes: form.damage_notes || null,
       inspected_by: user?.id ?? null,
@@ -186,7 +190,7 @@ export default function CVVehicleEntry() {
 
     if (error) { setBusy(false); return toast.error(error.message); }
 
-    await supabase.from("cv_vehicles").update({ current_km: form.entry_km }).eq("id", selected.vehicle_id);
+    await supabase.from("cv_vehicles").update({ current_km: kmEntrada }).eq("id", selected.vehicle_id);
 
     if (photos.length > 0) {
       await supabase.from("cv_movement_photos").insert(
@@ -209,7 +213,7 @@ export default function CVVehicleEntry() {
         driver_id: selected.driver_id,
         movement_id: selected.id,
         defect_type_id: form.defect_type_id,
-        vehicle_km: form.entry_km,
+        vehicle_km: kmEntrada,
         defect_description: form.reported_defects,
         reported_by: user?.id ?? null,
         status: "pending",
@@ -232,7 +236,7 @@ export default function CVVehicleEntry() {
           driver_id: selected.driver_id,
           movement_id: selected.id,
           defect_type_id: bw.id,
-          vehicle_km: form.entry_km,
+          vehicle_km: kmEntrada,
           defect_description: form.damage_notes,
           reported_by: user?.id ?? null,
           status: "pending",
@@ -375,19 +379,20 @@ export default function CVVehicleEntry() {
                 <Label>Quilometragem de Entrada</Label>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min={(selected.exit_km ?? 0) + 1}
                   value={form.entry_km}
-                  onChange={(e) => setForm({ ...form, entry_km: +e.target.value })}
-                  onBlur={(e) => recalcSelected(+e.target.value)}
-                  className={form.entry_km <= (selected.exit_km ?? 0) ? "border-destructive focus-visible:ring-destructive" : ""}
+                  onChange={(e) => setForm({ ...form, entry_km: e.target.value.replace(/\D/g, "") })}
+                  onBlur={(e) => recalcSelected(Number(e.target.value) || 0)}
+                  className={!form.entry_km || Number(form.entry_km) <= (selected.exit_km ?? 0) ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
                   KM da saída: {selected.exit_km?.toLocaleString()} · mínimo permitido: {((selected.exit_km ?? 0) + 1).toLocaleString()}
-                  {form.entry_km > (selected.exit_km ?? 0) && (
-                    <span className="ml-2 text-primary">(+{(form.entry_km - selected.exit_km).toLocaleString()} km)</span>
+                  {form.entry_km && Number(form.entry_km) > (selected.exit_km ?? 0) && (
+                    <span className="ml-2 text-primary">(+{(Number(form.entry_km) - (selected.exit_km ?? 0)).toLocaleString()} km)</span>
                   )}
                 </p>
-                {form.entry_km <= (selected.exit_km ?? 0) && (
+                {(!form.entry_km || Number(form.entry_km) <= (selected.exit_km ?? 0)) && (
                   <p className="text-xs text-destructive">A KM de entrada deve ser maior que a KM de saída.</p>
                 )}
               </div>
@@ -466,7 +471,7 @@ export default function CVVehicleEntry() {
               <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
                 <p className="flex items-center gap-2"><strong>Veículo:</strong> {selected.vehicle?.name} — {selected.vehicle?.plate} <CVRastreamentoDot veiculoLogisticaId={(selected.vehicle as any)?.veiculo_id} /></p>
                 <p><strong>Motorista:</strong> {selected.driver?.name}</p>
-                <p><strong>KM entrada:</strong> {form.entry_km.toLocaleString()} (+{(form.entry_km - selected.exit_km).toLocaleString()} km)</p>
+                <p><strong>KM entrada:</strong> {Number(form.entry_km).toLocaleString()} (+{(Number(form.entry_km) - (selected.exit_km ?? 0)).toLocaleString()} km)</p>
                 {form.reported_defects && <p><strong>Defeitos reportados:</strong> {form.reported_defects}</p>}
                 {form.damage_notes && <p><strong>Avarias:</strong> {form.damage_notes}</p>}
                 <p><strong>Fotos:</strong> {photos.length} de {angles.length}</p>

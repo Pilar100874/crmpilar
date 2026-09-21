@@ -219,7 +219,7 @@ export default function PortariaConfiguracoes() {
               <Label>Canal / número da porta</Label>
               <Input value={form.acao ?? ""} onChange={(e) => setForm({ ...form, acao: e.target.value })} placeholder="0 (Shelly) ou 1 (iDFace)" />
             </div>
-            <div><Label>Ordem</Label><Input type="number" value={form.ordem ?? 0} onChange={(e) => setForm({ ...form, ordem: Number(e.target.value) })} /></div>
+            <div><Label>Ordem</Label><Input type="number" value={form.ordem ?? ""} placeholder="0" onChange={(e) => setForm({ ...form, ordem: e.target.value === "" ? null : Number(e.target.value) })} /></div>
             <div className="flex items-center justify-between rounded-md border px-3 py-2">
               <Label className="text-sm">Confirmar antes de abrir</Label>
               <Switch checked={form.confirmar_abertura ?? true} onCheckedChange={(v) => setForm({ ...form, confirmar_abertura: v })} />
