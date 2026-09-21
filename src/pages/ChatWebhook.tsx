@@ -52,7 +52,7 @@ export interface WebhookType {
   name: string;
 }
 
-export default function ChatWebhook() {
+export default function ChatWebhook({ embedded = false }: { embedded?: boolean }) {
   const { openSubmenu } = useLayout();
   const [messages, setMessages] = useState<Message[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
@@ -581,16 +581,20 @@ export default function ChatWebhook() {
         {/* Header */}
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex-1">
-            <div className="flex items-center gap-4 mb-2">
-              <SubMenuHeader 
-                title="Configurações"
-                onOpenSubmenu={() => openSubmenu("Configurações")}
-              />
-              <h2 className="text-lg font-bold text-foreground">Teste de Webhooks</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Configure e teste suas integrações
-            </p>
+            {!embedded && (
+              <>
+                <div className="flex items-center gap-4 mb-2">
+                  <SubMenuHeader
+                    title="Configurações"
+                    onOpenSubmenu={() => openSubmenu("Configurações")}
+                  />
+                  <h2 className="text-lg font-bold text-foreground">Teste de Webhooks</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Configure e teste suas integrações
+                </p>
+              </>
+            )}
             {currentWebhook && (
               <div className="mt-2 flex items-center gap-2">
                 <span className="text-sm font-medium">Webhook:</span>

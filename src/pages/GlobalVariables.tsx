@@ -48,7 +48,7 @@ const variableTypeLabels = {
   boolean: "Booleano",
 };
 
-export default function GlobalVariables() {
+export default function GlobalVariables({ embedded = false }: { embedded?: boolean }) {
   const { openSubmenu } = useLayout();
   const [variables, setVariables] = useState<GlobalVariable[]>([]);
   const [loadingVariables, setLoadingVariables] = useState(true);
@@ -202,18 +202,22 @@ export default function GlobalVariables() {
   };
   
   return (
-    <div className="p-8 bg-background dark:bg-background min-h-full">
-      <div className="flex items-center gap-4 mb-8">
-        <SubMenuHeader 
-          title="Configurações"
-          onOpenSubmenu={() => openSubmenu("Configurações")}
-        />
-        <h1 className="text-lg font-bold text-foreground">Variáveis Globais</h1>
-      </div>
-      
-      <p className="text-muted-foreground mb-8">
-        Variáveis compartilhadas entre todos os bots
-      </p>
+    <div className={`${embedded ? "" : "p-8 "}bg-background dark:bg-background min-h-full`}>
+      {!embedded && (
+        <>
+          <div className="flex items-center gap-4 mb-8">
+            <SubMenuHeader
+              title="Configurações"
+              onOpenSubmenu={() => openSubmenu("Configurações")}
+            />
+            <h1 className="text-lg font-bold text-foreground">Variáveis Globais</h1>
+          </div>
+
+          <p className="text-muted-foreground mb-8">
+            Variáveis compartilhadas entre todos os bots
+          </p>
+        </>
+      )}
       
       <div className="space-y-6 max-w-4xl">
         {/* Formulário para adicionar nova variável */}
