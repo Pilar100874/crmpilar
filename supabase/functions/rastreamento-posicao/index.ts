@@ -80,11 +80,17 @@ function parseOsmAndFormat(url: URL): PosicaoPayload | null {
   if (!id || !lat || !lon) {
     return null;
   }
+
+  const latitude = Number.parseFloat(lat);
+  const longitude = Number.parseFloat(lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
   
   return {
     veiculoId: id,
-    lat: parseFloat(lat),
-    lng: parseFloat(lon),
+    lat: latitude,
+    lng: longitude,
     velocidade: speed ? parseFloat(speed) * 3.6 : 0, // Convert m/s to km/h
     direcao: bearing ? parseFloat(bearing) : undefined,
     dataHora: timestamp ? new Date(parseInt(timestamp) * 1000).toISOString() : new Date().toISOString(),
@@ -149,7 +155,14 @@ async function findVeiculoInfo(supabase: any, deviceId: string, estabelecimentoI
 
 async function savePosition(supabase: any, payload: PosicaoPayload, estabelecimentoId?: string) {
   // Validate coordinates range
-  if (payload.lat < -90 || payload.lat > 90 || payload.lng < -180 || payload.lng > 180) {
+  if (
+    !Number.isFinite(payload.lat) ||
+    !Number.isFinite(payload.lng) ||
+    payload.lat < -90 ||
+    payload.lat > 90 ||
+    payload.lng < -180 ||
+    payload.lng > 180
+  ) {
     return { error: 'Invalid coordinates', status: 400 };
   }
 
