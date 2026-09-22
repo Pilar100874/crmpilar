@@ -1,19 +1,27 @@
 /**
  * Regras de discagem configuradas por estabelecimento.
+ * - ddiLocal: código do país onde fica o PABX (não é discado; padrão 55).
  * - dddLocal: DDD da cidade onde fica o PABX (não é discado).
  * - prefixoOutroDdd: código discado antes do DDD quando a ligação é para outro DDD.
  */
 export interface RegrasDiscagem {
   ativas: boolean;
+  ddiLocal: string;
   dddLocal: string;
   prefixoOutroDdd: string;
 }
 
 export const REGRAS_DISCAGEM_PADRAO: RegrasDiscagem = {
   ativas: true,
+  ddiLocal: "55",
   dddLocal: "11",
   prefixoOutroDdd: "015",
 };
+
+/** Código da operadora sem o zero da frente (015 -> 15), usado no internacional. */
+export function codigoOperadora(prefixoOutroDdd: string): string {
+  return (prefixoOutroDdd || "").replace(/\D/g, "").replace(/^0+/, "");
+}
 
 /**
  * Prepara o número para a discagem no PABX.
@@ -21,29 +29,50 @@ export const REGRAS_DISCAGEM_PADRAO: RegrasDiscagem = {
  * O cadastro guarda telefones com o código do país (ex.: 5511999611194).
  * As rotas de saída do UCM esperam o número como se fosse discado do
  * aparelho, então:
- * - o DDI 55 é sempre removido;
+ * - o DDI local (55) é sempre removido;
  * - se o DDD for o local, ele também é removido (disca só o número);
  * - se for outro DDD, o código da operadora é colocado na frente
- *   (ex.: 015 + 21 + número).
+ *   (ex.: 015 + 21 + número);
+ * - se o DDI for de outro país: 00 + operadora + DDI + DDD + número.
  * Códigos de serviço digitados com * e # são preservados.
  */
 export function prepararNumeroDiscagem(valor: string, regras?: Partial<RegrasDiscagem>): string {
-  const limpo = (valor || "").replace(/[^\d*#+]/g, "").replace(/\+/g, "");
+  const bruto = (valor || "").replace(/[^\d*#+]/g, "");
+  const marcadoInternacional = bruto.startsWith("+") || bruto.startsWith("00");
+  const limpo = bruto.replace(/\+/g, "");
   if (!limpo || /[*#]/.test(limpo)) return limpo;
 
+  const r = { ...REGRAS_DISCAGEM_PADRAO, ...(regras || {}) };
+  const ddiLocal = (r.ddiLocal || "").replace(/\D/g, "") || "55";
+  const operadora = codigoOperadora(r.prefixoOutroDdd);
+
   let numero = limpo;
-  // DDI do Brasil: 55 + DDD (2) + número (8 ou 9)
-  if (numero.length >= 12 && numero.length <= 13 && numero.startsWith("55")) {
-    numero = numero.slice(2);
-  } else if (numero.length >= 14 && numero.startsWith("0055")) {
-    numero = numero.slice(4);
+  // Retira o prefixo internacional digitado (00 ou +).
+  let semPrefixoInternacional = numero;
+  if (numero.startsWith("00")) semPrefixoInternacional = numero.slice(2);
+
+  if (marcadoInternacional || numero.length >= 12) {
+    const semDdi = semPrefixoInternacional.startsWith(ddiLocal)
+      ? semPrefixoInternacional.slice(ddiLocal.length)
+      : null;
+
+    // Número nacional com DDI: 55 + DDD (2) + assinante (8 ou 9)
+    if (semDdi !== null && (semDdi.length === 10 || semDdi.length === 11)) {
+      numero = semDdi;
+    } else if (marcadoInternacional) {
+      // Outro país: 00 + operadora + DDI + DDD + número
+      if (!r.ativas) return semPrefixoInternacional;
+      return operadora ? `00${operadora}${semPrefixoInternacional}` : `00${semPrefixoInternacional}`;
+    }
   }
 
-  const r = { ...REGRAS_DISCAGEM_PADRAO, ...(regras || {}) };
   if (!r.ativas) return numero;
 
   const dddLocal = (r.dddLocal || "").replace(/\D/g, "");
   const prefixo = (r.prefixoOutroDdd || "").replace(/\D/g, "");
+
+  // Já veio no formato internacional montado: não mexe (idempotente).
+  if (operadora && numero.startsWith(`00${operadora}`)) return numero;
 
   // Já veio com o código da operadora na frente: não mexe (idempotente).
   if (prefixo && numero.startsWith(prefixo) && numero.length > prefixo.length + 10) {
