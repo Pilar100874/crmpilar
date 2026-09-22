@@ -119,14 +119,25 @@ class ClienteUcm {
     }
   }
 
+  /** O UCM recusa logins de forma intermitente sob rajada de pedidos — tenta de novo 1x. */
   async autenticar() {
-    const desafio = await this.chamar({ action: "challenge", user: this.usuario, version: "1.0" });
-    const valor = String(desafio?.response?.challenge ?? "");
-    if (!valor) throw new Error("UCM não retornou o desafio de autenticação");
-    const login = await this.chamar({ action: "login", user: this.usuario, token: md5(valor + this.senha) });
-    const cookie = String(login?.response?.cookie ?? "");
-    if (!cookie) throw new Error("Usuário ou senha da API do UCM inválidos");
-    this.cookie = cookie;
+    let ultimoErro: unknown = null;
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      try {
+        if (tentativa > 0) await new Promise((r) => setTimeout(r, 1200));
+        const desafio = await this.chamar({ action: "challenge", user: this.usuario, version: "1.0" });
+        const valor = String(desafio?.response?.challenge ?? "");
+        if (!valor) throw new Error("UCM não retornou o desafio de autenticação");
+        const login = await this.chamar({ action: "login", user: this.usuario, token: md5(valor + this.senha) });
+        const cookie = String(login?.response?.cookie ?? "");
+        if (!cookie) throw new Error("Usuário ou senha da API do UCM inválidos");
+        this.cookie = cookie;
+        return;
+      } catch (erro) {
+        ultimoErro = erro;
+      }
+    }
+    throw ultimoErro instanceof Error ? ultimoErro : new Error("Falha ao autenticar no UCM");
   }
 
   /** Ação tolerante: falha ou status diferente de 0 viram null. */
