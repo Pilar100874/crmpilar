@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -693,22 +693,25 @@ export default function Calendario() {
 
   const loadTasks = useCallback(async () => {
     try {
-      console.log('[LOAD_TASKS] Iniciando carregamento - isAdmin:', isAdmin, 'selectedUserIds:', selectedUserIds);
-      
-      const { data: { user } } = await supabase.auth.getUser();
+      const [{ data: sessionData }, estabelecimentoId] = await Promise.all([
+        supabase.auth.getSession(),
+        getEstabelecimentoId(),
+      ]);
+      const user = sessionData?.session?.user;
       if (!user) return;
-
-      const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) return;
 
       // Buscar o ID do usuário na tabela usuarios (a FK user_id referencia usuarios, não auth.users)
-      const { data: currentUsuario } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-      
-      const currentUsuarioId = currentUsuario?.id;
+      let currentUsuarioId: string | undefined;
+      if (!isAdmin) {
+        const { data: currentUsuario } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        currentUsuarioId = currentUsuario?.id;
+      }
+
 
       let query = (supabase as any)
         .from('calendario_tarefas')
@@ -767,16 +770,13 @@ export default function Calendario() {
           campanhasMap = new Map(campanhasData?.map((c: any) => [c.id, c.nome]) || []);
         }
         
-        console.log("=== DEBUG TAREFAS CARREGADAS ===");
-        console.log("Primeira tarefa raw do banco:", tarefas[0]);
-        
         const tasksWithDates = tarefas.map((task: any) => {
           // Parse date in LOCAL timezone without relying on ISO parsing to avoid UTC shifts
           // Expected DB format: 'yyyy-MM-dd'
           const [year, month, day] = (task.date || "").split("-").map(Number);
           // Use noon to be extra safe against DST edges while remaining in local time
           const parsedDate = new Date(year, (month || 1) - 1, day || 1, 12, 0, 0, 0);
-          console.log(`Tarefa ${task.id}: date do banco="${task.date}", parsed="${parsedDate.toString()}", localDate="${parsedDate.toLocaleDateString()}"`)
+
           
           return {
             id: task.id,
@@ -803,24 +803,24 @@ export default function Calendario() {
         });
         
         console.log('[COLORS] userColors state:', userColors);
-        console.log('[COLORS] Tarefas carregadas:', tasksWithDates.map(t => ({ 
-          id: t.id.substring(0, 8), 
-          userId: t.userId?.substring(0, 8),
-          color: t.userId ? userColors[t.userId] : 'NO_COLOR'
-        })));
-        
         setTasks(tasksWithDates);
       }
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
       toast.error("Erro ao carregar tarefas");
     }
-  }, [selectedUserIds, isAdmin, currentAdminId, userColors]);
+  }, [selectedUserIds, isAdmin]);
+
+  const loadTasksRef = useRef(loadTasks);
+  loadTasksRef.current = loadTasks;
 
   useEffect(() => {
     loadTasks();
+  }, [loadTasks]);
 
-    // Configurar realtime para atualizações automáticas
+  // Realtime: assina apenas uma vez, sem recriar o canal a cada mudança de filtro
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel('calendario_tarefas_changes')
       .on(
@@ -831,15 +831,18 @@ export default function Calendario() {
           table: 'calendario_tarefas'
         },
         () => {
-          loadTasks();
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => loadTasksRef.current(), 300);
         }
       )
       .subscribe();
 
     return () => {
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [loadTasks]);
+  }, []);
+
 
   // Carregar regras do calendário do banco
   useEffect(() => {
