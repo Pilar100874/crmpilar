@@ -330,7 +330,6 @@ export const useSipConnection = () => {
         config.authUser,
       );
       const ua = result.ua;
-      const connectedServer = result.server;
 
       // Registro curto (2 min): renova sozinho e mantém o caminho aberto no roteador/NAT.
       // Registro curto (2 min) renovado na metade do tempo: mantém o ramal vivo mesmo com NAT agressivo.
@@ -343,10 +342,6 @@ export const useSipConnection = () => {
 
         if (state === RegistererState.Registered) {
           console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
-          toast({
-            title: "Conectado",
-            description: `Ramal ${config.extension} registrado (${connectedServer})`,
-          });
         } else if (state === RegistererState.Unregistered) {
           console.log('⚠️ Ramal não registrado');
         }
@@ -1023,7 +1018,6 @@ export const useSipConnection = () => {
 
   // Disconnect
   const disconnect = useCallback(async () => {
-    const tinhaConexaoSip = Boolean(userAgent || registerer || isRegistered || activeCalls.length > 0);
     // Desconexão pedida pelo usuário: cancela qualquer reconexão automática pendente.
     if (keepAliveRef.current) {
       clearInterval(keepAliveRef.current);
@@ -1066,13 +1060,6 @@ export const useSipConnection = () => {
         void removerPresencaSip(ramalPresencaRef.current);
       }
 
-      // Não exibe aviso no cleanup de telas ou para usuários sem ramal configurado.
-      if (tinhaConexaoSip) {
-        toast({
-          title: "Desconectado",
-          description: "Ramal desconectado do UCM",
-        });
-      }
     } catch (error) {
       console.error('Erro ao desconectar:', error);
     }
