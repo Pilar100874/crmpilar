@@ -118,6 +118,8 @@ interface Props {
   abasPermitidas?: Aba[];
   /** Disparado quando chega uma chamada SIP. */
   onChamadaRecebida?: () => void;
+  /** Informa o estado do ramal à aba externa do Pilar Fone. */
+  onStatusRamalChange?: (status: { registrado: boolean; conectando: boolean }) => void;
 }
 
 /** Telefone SIP da Pilar com visual de app de mensagens: agenda, teclado e chamadas. */
@@ -138,6 +140,7 @@ export default function PilarFone({
   headerExtra,
   abasPermitidas,
   onChamadaRecebida,
+  onStatusRamalChange,
 }: Props) {
 
   const { toast } = useToast();
@@ -161,6 +164,10 @@ export default function PilarFone({
     iniciarGravacao,
     pararGravacao,
   } = useSipConnection();
+
+  useEffect(() => {
+    onStatusRamalChange?.({ registrado: isRegistered, conectando: isConnecting });
+  }, [isRegistered, isConnecting, onStatusRamalChange]);
 
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
   const [configSincronizada, setConfigSincronizada] = useState(false);
