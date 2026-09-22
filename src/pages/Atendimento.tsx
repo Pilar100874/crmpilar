@@ -3463,6 +3463,16 @@ ${recentMessages}
       });
     }
 
+    // Contato selecionado na lista da aba E-mails
+    const emailContato = contatoEmailSelecionado?.email?.toLowerCase().trim();
+    if (emailContato) {
+      emails = emails.filter(
+        (email) =>
+          email.from_email?.toLowerCase().includes(emailContato) ||
+          email.to_email?.toLowerCase().includes(emailContato)
+      );
+    }
+
     // Apply global filter
     if (!globalFilter) return emails;
     
