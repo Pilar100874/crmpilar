@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState, Web } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { iniciarGravador, extensaoDoMime, type GravadorChamada } from '@/lib/telefonia/gravacaoChamada';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEntrada';
@@ -197,6 +199,15 @@ export const useSipConnection = () => {
   const atendendoRef = useRef<Set<string>>(new Set());
   /** Chamadas encerradas pelo próprio usuário (para não confundir com queda do PABX). */
   const desligadasPeloUsuarioRef = useRef<Set<string>>(new Set());
+  /** Gravação de conversa em andamento (no máximo uma por vez). */
+  const gravacaoRef = useRef<{
+    callId: string;
+    gravador: GravadorChamada;
+    iniciouEm: number;
+    numero: string;
+    direcao: 'entrada' | 'saida';
+  } | null>(null);
+  const [gravando, setGravando] = useState<{ callId: string; iniciouEm: number } | null>(null);
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
