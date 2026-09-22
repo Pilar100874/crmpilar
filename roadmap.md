@@ -15,3 +15,7 @@
 - [x] Verificar a permissão da função de estabelecimento do módulo Operacional.
 - [x] Verificar falhas recentes no recebimento de posições GPS.
 - [x] Restaurar o acesso ao Painel da Portaria no menu, preservando itens internos nas telas correspondentes.
+
+## Pilar Automação
+- [x] Ocultar completamente a abertura da web antes de exibir o painel.
+- [x] Corrigir a retomada do aplicativo após fechar e abrir novamente.
