@@ -5091,6 +5091,19 @@ ${recentMessages}
                     compact
                   />
                 </div>
+
+                {/* Flag: usar agenda como origem dos contatos */}
+                <div className="flex items-center justify-between gap-2 mt-2 px-1">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
+                    <span className="text-xs font-medium text-foreground">Usar agenda</span>
+                  </div>
+                  <Switch
+                    checked={usarAgenda}
+                    onCheckedChange={setUsarAgenda}
+                    aria-label="Usar agenda"
+                  />
+                </div>
               </div>
             </div>
 
@@ -5106,24 +5119,38 @@ ${recentMessages}
                   icon: MessageSquare, 
                   badge: activeConversationsCount
                 },
+                { title: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
                 { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
                 { title: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
               ]}
-              activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "email" ? 2 : activeTab === "orcamento" ? 3 : null}
+              activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : null}
               onChange={(index) => {
                 if (index === 0) setActiveTab("agenda");
                 else if (index === 1) setActiveTab("chat");
-                else if (index === 2) setActiveTab("email");
-                else if (index === 3) setActiveTab("orcamento");
+                else if (index === 2) setActiveTab("tel");
+                else if (index === 3) setActiveTab("email");
+                else if (index === 4) setActiveTab("orcamento");
               }}
               activeColor="text-primary"
               className="w-full justify-center"
             />
           </div>
+
+          {/* Tel Tab - contatos com telefone */}
+          <TabsContent value="tel" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-muted/30 to-background dark:to-card">
+            <ContatosCanalList
+              contatos={contatosBase}
+              canal="tel"
+              titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
+              acaoLabel="Ligar"
+              vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
+              onSelecionar={(contato) => void ligarParaContato(contato)}
+            />
+          </TabsContent>
           
           {/* Email Folders - Vertical list below tabs when email is active */}
           {activeTab === "email" && (
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
               <EmailFolderSidebar
                 emails={userEmails}
                 activeFolder={emailFolder}
@@ -5135,8 +5162,23 @@ ${recentMessages}
                 onComposeClick={() => setShowComposeEmail(true)}
                 onRefresh={() => loadUserEmails()}
               />
+              <div className="px-2 py-2 border-t border-border/30">
+                <ContatosCanalList
+                  contatos={contatosBase}
+                  canal="email"
+                  titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
+                  acaoLabel="Escrever"
+                  vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
+                  onSelecionar={(contato) => {
+                    setComposeEmailDefaults({ to: contato.email, subject: '', body: '' });
+                    setComposeEmailMode('compose');
+                    setShowComposeEmail(true);
+                  }}
+                />
+              </div>
             </div>
           )}
+
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-muted/30 to-background dark:to-card">
