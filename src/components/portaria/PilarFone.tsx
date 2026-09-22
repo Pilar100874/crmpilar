@@ -10,7 +10,6 @@ import {
   Mic,
   MicOff,
   Phone,
-  PhoneIncoming,
   PhoneOff,
   RefreshCw,
   Search,
