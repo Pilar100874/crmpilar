@@ -61,7 +61,11 @@ export function FilaDialog({ open, onOpenChange, fila, ramais, onSalvar }: Props
     if (!open) return;
     setNumero(fila?.numero ?? "");
     setNome(fila?.nome ?? "");
-    setEstrategia(fila?.estrategia && rotuloEstrategia(fila.estrategia) ? fila.estrategia : "ringall");
+    setEstrategia(
+      fila?.estrategia && ESTRATEGIAS.some((e) => e.valor === fila.estrategia)
+        ? fila.estrategia
+        : "ringall",
+    );
     setMembros(fila?.agentes.map((a) => a.ramal) ?? []);
     setEsperaMax(String(fila?.espera_max_config_seg ?? 300));
     setToqueAgente(String(fila?.toque_agente_seg ?? 15));
