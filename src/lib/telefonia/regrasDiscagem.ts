@@ -25,11 +25,14 @@ export async function obterRegrasDiscagem(): Promise<RegrasDiscagem> {
       if (!estabelecimentoId) return REGRAS_DISCAGEM_PADRAO;
       const { data } = await supabase
         .from("ucm_config")
-        .select("discagem_regras_ativas, discagem_ddd_local, discagem_prefixo_outro_ddd")
+        .select(
+          "discagem_regras_ativas, discagem_ddi_local, discagem_ddd_local, discagem_prefixo_outro_ddd",
+        )
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
       const regras: RegrasDiscagem = {
         ativas: data?.discagem_regras_ativas ?? REGRAS_DISCAGEM_PADRAO.ativas,
+        ddiLocal: data?.discagem_ddi_local ?? REGRAS_DISCAGEM_PADRAO.ddiLocal,
         dddLocal: data?.discagem_ddd_local ?? REGRAS_DISCAGEM_PADRAO.dddLocal,
         prefixoOutroDdd:
           data?.discagem_prefixo_outro_ddd ?? REGRAS_DISCAGEM_PADRAO.prefixoOutroDdd,
