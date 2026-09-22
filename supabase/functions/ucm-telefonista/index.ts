@@ -542,10 +542,20 @@ Deno.serve(async (req) => {
         }
       }
       if (!clienteCdr) {
-        return responder({
-          error:
-            "O histórico de ligações (CDR) não está acessível no PABX. No UCM, ative a API de CDR (CDR → Configurações de API) para este usuário.",
-        }, 502);
+        // Alguns firmwares expõem o CDR pela API principal — sonda antes de desistir.
+        const sonda = await cliente.acaoBruta("listCdr", {
+          options: "uniqueid,src,dst,disposition,start,duration,billsec",
+          numRecords: "5",
+        });
+        console.log("listCdr na API principal:", JSON.stringify(sonda).slice(0, 400));
+        if (Number(sonda?.status) === 0) {
+          clienteCdr = cliente;
+        } else {
+          return responder({
+            error:
+              "O histórico de ligações (CDR) não está acessível no PABX. No UCM, ative a API de CDR (CDR → Configurações de API) para este usuário.",
+          }, 502);
+        }
       }
 
       // "Hoje" no horário de Brasília — o PABX grava o CDR em hora local.
