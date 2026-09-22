@@ -803,24 +803,24 @@ export default function Calendario() {
         });
         
         console.log('[COLORS] userColors state:', userColors);
-        console.log('[COLORS] Tarefas carregadas:', tasksWithDates.map(t => ({ 
-          id: t.id.substring(0, 8), 
-          userId: t.userId?.substring(0, 8),
-          color: t.userId ? userColors[t.userId] : 'NO_COLOR'
-        })));
-        
         setTasks(tasksWithDates);
       }
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
       toast.error("Erro ao carregar tarefas");
     }
-  }, [selectedUserIds, isAdmin, currentAdminId, userColors]);
+  }, [selectedUserIds, isAdmin]);
+
+  const loadTasksRef = useRef(loadTasks);
+  loadTasksRef.current = loadTasks;
 
   useEffect(() => {
     loadTasks();
+  }, [loadTasks]);
 
-    // Configurar realtime para atualizações automáticas
+  // Realtime: assina apenas uma vez, sem recriar o canal a cada mudança de filtro
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel('calendario_tarefas_changes')
       .on(
@@ -831,15 +831,18 @@ export default function Calendario() {
           table: 'calendario_tarefas'
         },
         () => {
-          loadTasks();
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => loadTasksRef.current(), 300);
         }
       )
       .subscribe();
 
     return () => {
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [loadTasks]);
+  }, []);
+
 
   // Carregar regras do calendário do banco
   useEffect(() => {
