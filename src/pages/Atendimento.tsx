@@ -3452,7 +3452,16 @@ ${recentMessages}
     } else if (emailFolder === "starred") {
       emails = emails.filter(e => e.starred);
     }
-    
+
+    // Quando "Usar agenda" está ligada, apenas e-mails de contatos da agenda do dia
+    if (usarAgenda) {
+      emails = emails.filter((email) => {
+        const de = email.from_email?.toLowerCase().trim();
+        const para = email.to_email?.toLowerCase().trim();
+        return (de && agendaEmails.has(de)) || (para && agendaEmails.has(para));
+      });
+    }
+
     // Apply global filter
     if (!globalFilter) return emails;
     
@@ -3467,7 +3476,7 @@ ${recentMessages}
       return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
              email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
     });
-  }, [userEmails, globalFilter, emailFolder]);
+  }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails]);
 
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
