@@ -5792,7 +5792,18 @@ ${recentMessages}
 
             {/* Tasks List */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-              {filteredTasks.length === 0 ? (
+              {!usarAgenda ? (
+                <ContatosCanalList
+                  contatos={contatosVinculados}
+                  canal="todos"
+                  titulo="Meus contatos"
+                  acaoLabel="Abrir"
+                  vazioTexto="Nenhum contato vinculado a você"
+                  onSelecionar={(contato) => {
+                    setGlobalFilter({ type: 'customer', id: contato.id, nome: contato.nome });
+                  }}
+                />
+              ) : filteredTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
                     <CalendarIcon className="w-8 h-8 text-orange-300" />
