@@ -12,7 +12,7 @@ import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
@@ -43,6 +43,8 @@ import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
 import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
+
+const ModuloCalendario = lazy(() => import("./Calendario"));
 import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
 import { EmailPanel } from "@/components/email/EmailPanel";
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
@@ -6825,29 +6827,10 @@ ${recentMessages}
                 </>
               )}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-4 p-6">
-                  <div className="text-center">
-                    <h2 className="text-lg font-semibold text-foreground">Calendário</h2>
-                    <p className="text-sm capitalize text-muted-foreground">
-                      {format(agendaDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </p>
-                  </div>
-                  <Calendar
-                    mode="single"
-                    selected={agendaDate}
-                    onSelect={(date) => {
-                      if (!date) return;
-                      setAgendaDate(date);
-                      setSelectedTaskId(null);
-                      setSelectedTaskData(null);
-                    }}
-                    locale={ptBR}
-                    className="rounded-md border bg-card p-4 shadow-sm"
-                  />
-                  <Button variant="outline" size="sm" onClick={handleToday}>
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    Hoje
-                  </Button>
+                <div className="absolute inset-0 overflow-hidden text-left">
+                  <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
+                    <ModuloCalendario />
+                  </Suspense>
                 </div>
               )}
               {/* Desktop: inline wizard */}
