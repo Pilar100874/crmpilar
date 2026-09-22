@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState, Web } from 'sip.js';
 import { prepararNumeroComRegras } from '@/lib/telefonia/regrasDiscagem';
+import { validarNumeroDiscagem } from '@/lib/telefonia/numeroDiscagem';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { iniciarGravador, extensaoDoMime, type GravadorChamada } from '@/lib/telefonia/gravacaoChamada';
