@@ -31,6 +31,7 @@
                 android:textColor="@color/text_muted" android:textSize="12sp" />
             <TextView
                 android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:id="@+id/txt_rotulo_chave"
                 android:layout_marginTop="20dp" android:text="Chave da empresa"
                 android:textColor="@color/text_primary" android:textSize="14sp" />
             <EditText

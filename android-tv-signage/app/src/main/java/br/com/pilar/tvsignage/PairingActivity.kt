@@ -63,6 +63,14 @@ class PairingActivity : AppCompatActivity() {
         }
 
         // Versão instalada e atualização manual para a última versão publicada
+        // Já pareado antes: reconecta sozinho com o código guardado, sem pedir de novo.
+        val codigoSalvo = DeviceStore.pairCodigo(this)
+        if (!codigoSalvo.isNullOrEmpty()) {
+            b.inputCodigo.setText(codigoSalvo)
+            b.txtStatus.text = "Reconectando..."
+            pair(codigoSalvo)
+        }
+
         b.txtVersao.text = "Versão instalada: v${BuildConfig.VERSION_NAME}"
         b.btnAtualizarApp.setOnClickListener {
             b.btnAtualizarApp.isEnabled = false
