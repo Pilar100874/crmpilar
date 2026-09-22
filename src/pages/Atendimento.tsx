@@ -5518,7 +5518,7 @@ ${recentMessages}
                   </Button>
                 </div>
 
-                {/* Action Buttons Group - Massa/Monitor */}
+                {/* Ações, filtros e configurações da agenda */}
                 <div className="flex items-center gap-0.5 bg-white dark:bg-card rounded-lg border border-orange-100 dark:border-orange-900/30 p-0.5">
                   <Button 
                     variant="ghost"
@@ -5535,86 +5535,69 @@ ${recentMessages}
                     <Users className="w-3 h-3 mr-1" />
                     Massa
                   </Button>
-                  <Button 
-                    variant="ghost"
-                    size="sm" 
-                    onClick={() => navigate('/atendimento-config?tab=monitor-envio')}
-                    className={cn(
-                      "h-7 px-2 rounded text-xs font-medium transition-all",
-                      "hover:bg-blue-50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400"
-                    )}
-                  >
-                    <Activity className="w-3 h-3 mr-1" />
-                    Monitor
-                  </Button>
-                </div>
-
-                {/* Contact Type Filters */}
-                <div className="flex items-center gap-0.5 bg-white dark:bg-card rounded-lg border border-orange-100 dark:border-orange-900/30 p-0.5">
                   <Button
                     variant={agendaFilterPossuiTel ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setAgendaFilterPossuiTel(!agendaFilterPossuiTel)}
+                    aria-label="Filtrar por telefone"
+                    title="Filtrar por telefone"
                     className={cn(
-                      "h-7 px-2 rounded text-xs font-medium transition-all",
+                      "h-7 w-7 p-0 rounded transition-all",
                       agendaFilterPossuiTel 
                         ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm" 
                         : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
                     )}
                   >
-                    <Phone className="w-3 h-3 mr-1" />
-                    Tel
+                    <Phone className="w-3 h-3" />
                   </Button>
                   <Button
                     variant={agendaFilterPossuiWhatsapp ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setAgendaFilterPossuiWhatsapp(!agendaFilterPossuiWhatsapp)}
+                    aria-label="Filtrar por WhatsApp"
+                    title="Filtrar por WhatsApp"
                     className={cn(
-                      "h-7 px-2 rounded text-xs font-medium transition-all",
+                      "h-7 w-7 p-0 rounded transition-all",
                       agendaFilterPossuiWhatsapp 
                         ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm" 
                         : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
                     )}
                   >
-                    <MessageSquare className="w-3 h-3 mr-1" />
-                    Whats
+                    <MessageSquare className="w-3 h-3" />
                   </Button>
                   <Button
                     variant={agendaFilterPossuiEmail ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setAgendaFilterPossuiEmail(!agendaFilterPossuiEmail)}
+                    aria-label="Filtrar por e-mail"
+                    title="Filtrar por e-mail"
                     className={cn(
-                      "h-7 px-2 rounded text-xs font-medium transition-all",
+                      "h-7 w-7 p-0 rounded transition-all",
                       agendaFilterPossuiEmail 
                         ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm" 
                         : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
                     )}
                   >
-                    <Mail className="w-3 h-3 mr-1" />
-                    Email
+                    <Mail className="w-3 h-3" />
                   </Button>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="flex items-center gap-1">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => setShowConfigDatas(true)}
                     className="h-7 w-7 p-0 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                    title="Configurar Datas Padrão"
+                    aria-label="Dias padrão para próximo contato"
+                    title="Dias padrão para próximo contato"
                   >
                     <Settings2 className="w-3 h-3 text-orange-600 dark:text-orange-400" />
                   </Button>
-                </div>
-                {/* Sort Button */}
-                <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
+                  <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="h-7 w-7 p-0 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30" 
-                      title="Ordenação"
+                      aria-label="Configurar ordenação"
+                      title="Configurar ordenação"
                     >
                       <ArrowUpDown className="w-3 h-3 text-orange-600 dark:text-orange-400" />
                     </Button>
@@ -5764,7 +5747,8 @@ ${recentMessages}
                       </div>
                     </div>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                </div>
 
                 {/* Toggle Details Button */}
                 <div className="ml-auto">
