@@ -733,6 +733,7 @@ Deno.serve(async (req) => {
             conta: (reg.accountcode as string) || undefined,
           };
         })
+        .filter((l) => (l.origem || l.destino) && !l.id.startsWith("undefined--"))
         .sort((a, b) => String(b.inicio ?? "").localeCompare(String(a.inicio ?? "")));
 
       return responder({
