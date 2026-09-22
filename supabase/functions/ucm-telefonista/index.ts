@@ -735,7 +735,13 @@ Deno.serve(async (req) => {
         })
         .sort((a, b) => String(b.inicio ?? "").localeCompare(String(a.inicio ?? "")));
 
-      return responder({ ok: true, ligacoes, periodo: { inicio, fim }, dia: fim });
+      return responder({
+        ok: true,
+        ligacoes,
+        periodo: { inicio, fim },
+        dia: fim,
+        debug: ligacoes.some((l) => l.id.startsWith("undefined")) ? { raw: cdrRoot.slice(0, 2) } : undefined,
+      });
     }
 
     // ---------- Painel (padrão) ----------
