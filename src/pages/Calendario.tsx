@@ -34,6 +34,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getEstabelecimentoId, isAnyAdmin } from "@/lib/estabelecimentoUtils";
 import { CalendarioMobileHeader } from "./CalendarioMobileHeader";
+import { notificarTarefasAlteradas } from "@/lib/calendario/eventos";
 
 // Utilitário para aplicar alpha em cores HSL, gerando hsla()
 const toAlpha = (hslColor: string, alpha: number) => {
