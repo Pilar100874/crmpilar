@@ -64,6 +64,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
   const semAcessoRef = useRef(semAcesso);
   semAcessoRef.current = semAcesso;
   const [alerta, setAlerta] = useState(false);
+  const [statusRamal, setStatusRamal] = useState({ registrado: false, conectando: false });
   const [numeroInicial, setNumeroInicial] = useState<string | undefined>();
   const [abaInicial, setAbaInicial] = useState<AbaPilarFone | undefined>();
   const [contatoInicial, setContatoInicial] = useState<{ nome: string; numero: string } | undefined>();
@@ -289,6 +290,7 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
       embedded
       initialNumber={numeroInicial}
       onChamadaRecebida={() => setAlerta(true)}
+      onStatusRamalChange={setStatusRamal}
       initialAba={abaInicial}
       initialWhatsapp={contatoInicial}
 
@@ -419,6 +421,18 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
         }}
       >
         <Phone className="w-3 h-3" />
+        <span
+          role="status"
+          aria-label={statusRamal.registrado ? "Ramal conectado" : statusRamal.conectando ? "Ramal conectando" : "Ramal desconectado"}
+          title={statusRamal.registrado ? "Ramal conectado" : statusRamal.conectando ? "Ramal conectando" : "Ramal desconectado"}
+          className={`absolute bottom-2 right-1 h-1.5 w-1.5 rounded-full ring-1 ring-background ${
+            statusRamal.registrado
+              ? "bg-emerald-400"
+              : statusRamal.conectando
+                ? "animate-pulse bg-amber-400"
+                : "bg-destructive"
+          }`}
+        />
         {alerta && !aberto && (
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
         )}

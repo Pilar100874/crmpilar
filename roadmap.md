@@ -26,3 +26,4 @@
 ## Telefonia
 - [x] Remover os avisos automáticos de ramal registrado e desconectado.
 - [x] Deixar apenas uma bolinha no cabeçalho do Pilar Fone indicando status do ramal.
+- [x] Mostrar uma bolinha discreta de conexão na aba lateral que abre o Pilar Fone.
