@@ -5,7 +5,7 @@ plugins {
 
 val baseVersionCode = 6
 val ciVersionCode = System.getenv("AUTO_VERSION_CODE")?.toIntOrNull() ?: baseVersionCode
-val ciVersionName = System.getenv("AUTO_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.9.1"
+val ciVersionName = System.getenv("AUTO_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.9.3"
 
 android {
     namespace = "br.com.pilar.automacao"
@@ -18,7 +18,7 @@ android {
         versionCode = ciVersionCode
         versionName = ciVersionName
 
-        buildConfigField("String", "APP_BASE_URL", "\"https://crmpilar.lovable.app\"")
+        buildConfigField("String", "APP_BASE_URL", "\"https://crm.pilar.com.br\"")
         buildConfigField("String", "SUPABASE_URL", "\"https://ioxugupvxlcdweldocmq.supabase.co\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc\"")
     }

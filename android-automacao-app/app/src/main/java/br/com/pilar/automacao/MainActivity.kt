@@ -27,7 +27,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnTentar: Button
 
     private var sessaoInjetada = false
+    private var carregandoPainel = false
     private var falhou = false
+    private val carregamentoHandler = Handler(Looper.getMainLooper())
+    private val tempoLimiteCarregamento = Runnable {
+        if (carregandoPainel && !falhou) {
+            mostrarErro("O painel demorou para abrir. Toque abaixo para tentar novamente.")
+        }
+    }
 
     private val atualizacaoHandler = Handler(Looper.getMainLooper())
     private val verificarAtualizacao = object : Runnable {
@@ -53,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         web = findViewById(R.id.webPainel)
         web.visibility = View.INVISIBLE
-        web.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        web.setBackgroundColor(getColor(R.color.bg_page))
         aviso = findViewById(R.id.painelAviso)
         status = findViewById(R.id.txtStatus)
         btnTentar = findViewById(R.id.btnTentarNovamente)
@@ -80,14 +87,18 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: WebView, url: String?) {
+                val caminho = runCatching { Uri.parse(url.orEmpty()).path.orEmpty() }.getOrDefault("")
                 if (!sessaoInjetada) {
                     sessaoInjetada = true
                     view.evaluateJavascript(scriptSessao()) { abrirPainel() }
                     return
                 }
-                if (!falhou) {
-                    // Pequena espera para o painel desenhar antes de revelar: evita ver a página carregando.
-                    Handler(Looper.getMainLooper()).postDelayed({ if (!falhou) mostrarPainel() }, 450L)
+                // Nunca revela páginas intermediárias. Assim a abertura da web e o login não piscam
+                // antes do painel atribuído ao aparelho terminar de carregar.
+                if (!falhou && caminho == "/automacao/tela") {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        if (!falhou && carregandoPainel) mostrarPainel()
+                    }, 450L)
                 }
             }
 
@@ -139,7 +150,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         atualizacaoHandler.removeCallbacks(verificarAtualizacao)
+        carregamentoHandler.removeCallbacks(tempoLimiteCarregamento)
+        if (::web.isInitialized) {
+            web.stopLoading()
+            web.destroy()
+        }
         super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::web.isInitialized) web.onResume()
+    }
+
+    override fun onPause() {
+        if (::web.isInitialized) web.onPause()
+        super.onPause()
     }
 
     override fun onBackPressed() {
@@ -148,7 +174,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun recarregar() {
         falhou = false
+        carregandoPainel = true
         sessaoInjetada = false
+        carregamentoHandler.removeCallbacks(tempoLimiteCarregamento)
+        carregamentoHandler.postDelayed(tempoLimiteCarregamento, 20_000L)
+        web.stopLoading()
+        web.clearHistory()
         web.visibility = View.INVISIBLE
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.GONE
@@ -162,6 +193,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun mostrarPainel() {
+        carregandoPainel = false
+        carregamentoHandler.removeCallbacks(tempoLimiteCarregamento)
         web.visibility = View.VISIBLE
         aviso.visibility = View.GONE
         btnTentar.visibility = View.GONE
@@ -169,6 +202,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun mostrarErro(mensagem: String) {
         falhou = true
+        carregandoPainel = false
+        carregamentoHandler.removeCallbacks(tempoLimiteCarregamento)
         web.visibility = View.INVISIBLE
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.VISIBLE

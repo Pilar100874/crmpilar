@@ -11,9 +11,15 @@ object Prefs {
     private fun sp(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE)
 
-    fun baseUrl(ctx: Context): String =
-        sp(ctx).getString("base_url", PADRAO_URL)?.trim()?.trimEnd('/').orEmpty()
-            .ifBlank { PADRAO_URL }
+    fun baseUrl(ctx: Context): String {
+        val salva = sp(ctx).getString("base_url", PADRAO_URL)?.trim()?.trimEnd('/').orEmpty()
+        // O endereço antigo redireciona para o domínio atual. Usar diretamente o domínio final
+        // mantém a sessão na mesma origem e evita uma tela vazia ao reabrir instalações existentes.
+        return when (salva) {
+            "https://crmpilar.lovable.app" -> PADRAO_URL
+            else -> salva.ifBlank { PADRAO_URL }
+        }
+    }
 
     fun chave(ctx: Context): String = sp(ctx).getString("chave", "")?.trim().orEmpty()
 
