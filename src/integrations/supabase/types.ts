@@ -11156,6 +11156,53 @@ export type Database = {
         }
         Relationships: []
       }
+      gravacoes_chamadas: {
+        Row: {
+          caminho: string
+          created_at: string
+          direcao: string
+          duracao_seg: number
+          id: string
+          inicio: string
+          nome: string | null
+          numero: string | null
+          tamanho_bytes: number | null
+          usuario_id: string
+        }
+        Insert: {
+          caminho: string
+          created_at?: string
+          direcao?: string
+          duracao_seg?: number
+          id?: string
+          inicio?: string
+          nome?: string | null
+          numero?: string | null
+          tamanho_bytes?: number | null
+          usuario_id: string
+        }
+        Update: {
+          caminho?: string
+          created_at?: string
+          direcao?: string
+          duracao_seg?: number
+          id?: string
+          inicio?: string
+          nome?: string | null
+          numero?: string | null
+          tamanho_bytes?: number | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gravacoes_chamadas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grupos_acesso: {
         Row: {
           created_at: string | null

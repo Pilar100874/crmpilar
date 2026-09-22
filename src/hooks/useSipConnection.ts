@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState, Web } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { iniciarGravador, extensaoDoMime, type GravadorChamada } from '@/lib/telefonia/gravacaoChamada';
 import { registrarPresencaSip, removerPresencaSip } from '@/lib/telefonia/presencaSip';
 import { iniciarToqueChamando, pararToqueChamando } from '@/lib/telefonia/toqueChamada';
 import { iniciarToqueEntrada, pararToqueEntrada } from '@/lib/telefonia/toqueEntrada';
@@ -197,6 +199,15 @@ export const useSipConnection = () => {
   const atendendoRef = useRef<Set<string>>(new Set());
   /** Chamadas encerradas pelo próprio usuário (para não confundir com queda do PABX). */
   const desligadasPeloUsuarioRef = useRef<Set<string>>(new Set());
+  /** Gravação de conversa em andamento (no máximo uma por vez). */
+  const gravacaoRef = useRef<{
+    callId: string;
+    gravador: GravadorChamada;
+    iniciouEm: number;
+    numero: string;
+    direcao: 'entrada' | 'saida';
+  } | null>(null);
+  const [gravando, setGravando] = useState<{ callId: string; iniciouEm: number } | null>(null);
 
   const agendarReconexao = useCallback((ua: UserAgent) => {
     const estado = reconexaoRef.current;
@@ -457,6 +468,7 @@ export const useSipConnection = () => {
       } else if (state === SessionState.Terminated) {
         console.log('❌ Chamada recebida encerrada');
         pararToqueEntrada();
+        if (gravacaoRef.current?.callId === callSession.id) void pararGravacao(false);
         // Discador: ramal atendeu e a ligação caiu logo em seguida — quase sempre
         // é o PABX recusando a perna externa (permissão do ramal ou rota de saída).
         if (
@@ -579,6 +591,7 @@ export const useSipConnection = () => {
             });
           } else if (state === SessionState.Terminated) {
             pararToqueChamando();
+            if (gravacaoRef.current?.callId === callSession.id) void pararGravacao(false);
             // Remove da lista após um pequeno delay para garantir que a UI atualize
             setTimeout(() => {
               setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -797,6 +810,7 @@ export const useSipConnection = () => {
     const call = activeCalls.find(c => c.id === callId);
     if (!call) return;
     desligadasPeloUsuarioRef.current.add(callId);
+    if (gravacaoRef.current?.callId === callId) void pararGravacao(false);
 
     pararToqueChamando();
 
@@ -831,6 +845,102 @@ export const useSipConnection = () => {
       console.error('Erro ao desligar:', error);
     }
   }, [activeCalls, localVideoStream, toast]);
+
+  /**
+   * Inicia a gravação da conversa de uma chamada estabelecida.
+   * O áudio das duas pontas é misturado no navegador (microfone + voz remota).
+   */
+  const iniciarGravacao = useCallback((callId: string) => {
+    if (gravacaoRef.current) return;
+    const call = activeCalls.find((c) => c.id === callId);
+    if (!call || call.state !== SessionState.Established) return;
+    const pc = obterPeerConnection(call.session);
+    if (!pc) return;
+    const gravador = iniciarGravador(pc);
+    if (!gravador) {
+      toast({
+        title: 'Gravação indisponível',
+        description: 'O áudio da chamada não ficou disponível para gravação neste aparelho.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    gravacaoRef.current = {
+      callId,
+      gravador,
+      iniciouEm: Date.now(),
+      numero: call.phoneNumber,
+      direcao: call.direction === 'inbound' ? 'entrada' : 'saida',
+    };
+    setGravando({ callId, iniciouEm: Date.now() });
+    toast({
+      title: 'Gravando conversa',
+      description: 'Avise a outra pessoa que a ligação está sendo gravada.',
+    });
+  }, [activeCalls, toast]);
+
+  /**
+   * Encerra a gravação em andamento (se houver), salva o áudio no armazenamento
+   * e registra os dados da conversa para consulta na aba Gravações.
+   */
+  const pararGravacao = useCallback(async (avisoManual = true): Promise<void> => {
+    const g = gravacaoRef.current;
+    if (!g) return;
+    gravacaoRef.current = null;
+    setGravando(null);
+
+    const blob = await g.gravador.parar();
+    if (!blob) {
+      if (avisoManual) {
+        toast({
+          title: 'Gravação descartada',
+          description: 'A conversa foi curta demais para gerar um arquivo de áudio.',
+        });
+      }
+      return;
+    }
+
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) throw new Error('Sessão não encontrada');
+
+      const caminho = `${auth.user.id}/${Date.now()}.${extensaoDoMime(g.gravador.mimeType)}`;
+      const { error: erroUpload } = await supabase.storage
+        .from('gravacoes-chamadas')
+        .upload(caminho, blob, { contentType: g.gravador.mimeType, upsert: false });
+      if (erroUpload) throw erroUpload;
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', auth.user.id)
+        .maybeSingle();
+
+      if (usuario?.id) {
+        await supabase.from('gravacoes_chamadas').insert({
+          usuario_id: usuario.id,
+          numero: g.numero,
+          direcao: g.direcao,
+          inicio: new Date(g.iniciouEm).toISOString(),
+          duracao_seg: Math.max(1, Math.round((Date.now() - g.iniciouEm) / 1000)),
+          caminho,
+          tamanho_bytes: blob.size,
+        });
+      }
+
+      toast({
+        title: 'Gravação salva',
+        description: 'Disponível na aba Gravações do Pilar Fone.',
+      });
+    } catch (erro) {
+      console.error('Erro ao salvar gravação:', erro);
+      toast({
+        title: 'Falha ao salvar gravação',
+        description: erro instanceof Error ? erro.message : 'Não foi possível guardar o áudio da conversa.',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
 
   /**
    * Transferência cega (SIP REFER): a chamada ativa é entregue ao destino e
@@ -926,6 +1036,7 @@ export const useSipConnection = () => {
     registererRef.current = null;
     configRef.current = null;
     try {
+      if (gravacaoRef.current) void pararGravacao(false);
       // Hangup all active calls
       for (const call of activeCalls) {
         try {
@@ -991,6 +1102,9 @@ export const useSipConnection = () => {
     hangup,
     answer,
     transferirChamada,
+    gravando,
+    iniciarGravacao,
+    pararGravacao,
     isRegistered,
     isConnecting,
     activeCalls,
