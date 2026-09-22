@@ -14,6 +14,7 @@ interface Tab {
   disabled?: boolean;
   onClick?: () => void;
   statusColor?: string; // Optional status indicator color
+  iconOnly?: boolean; // Never show title text next to the icon
 }
 
 interface Separator {
