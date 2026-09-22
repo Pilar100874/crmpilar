@@ -5149,7 +5149,6 @@ ${recentMessages}
                 contatos={contatosBase}
                 canal="tel"
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                acaoLabel="Ligar"
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
               />
             </div>
@@ -7691,7 +7690,6 @@ function MobileListContent({
             contatos={contatosTelefone}
             canal="tel"
             titulo="Contatos com telefone"
-            acaoLabel="Ligar"
             vazioTexto="Nenhum contato com telefone"
           />
         )}
