@@ -87,6 +87,7 @@ export function LigacoesDiaPanel() {
   const [ligacoes, setLigacoes] = useState<LigacaoDia[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+  const [avisoCdr, setAvisoCdr] = useState("");
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todas");
   const [filtroDirecao, setFiltroDirecao] = useState("todas");
@@ -98,7 +99,23 @@ export function LigacoesDiaPanel() {
       const { data, error } = await supabase.functions.invoke("ucm-telefonista", {
         body: { acao: "ligacoes_dia" },
       });
-      const resposta = (data || {}) as { ok?: boolean; error?: string; ligacoes?: LigacaoDia[] };
+      const resposta = (data || {}) as {
+        ok?: boolean;
+        error?: string;
+        aviso?: string;
+        cdr_disponivel?: boolean;
+        ligacoes?: LigacaoDia[];
+      };
+      // CDR desativado no PABX é situação esperada: mostra orientação, não erro.
+      if (resposta.cdr_disponivel === false) {
+        setAvisoCdr(
+          resposta.aviso ||
+            "O histórico de ligações (CDR) está desativado no PABX. Ative no UCM em CDR → Configurações de API.",
+        );
+        setLigacoes([]);
+        return;
+      }
+      setAvisoCdr("");
       if (error || resposta.error || !resposta.ok) {
         let mensagem = resposta.error || "";
         const contexto = (error as { context?: Response } | null)?.context;
@@ -122,9 +139,10 @@ export function LigacoesDiaPanel() {
 
   useEffect(() => {
     void carregar();
-    const intervalo = setInterval(() => void carregar(true), 60000);
+    // Com o CDR desativado, re-testa a cada 5 min (pega a ativação sem spam).
+    const intervalo = setInterval(() => void carregar(true), avisoCdr ? 300000 : 60000);
     return () => clearInterval(intervalo);
-  }, [carregar]);
+  }, [carregar, avisoCdr]);
 
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
