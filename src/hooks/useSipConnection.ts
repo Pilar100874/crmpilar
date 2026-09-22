@@ -844,6 +844,102 @@ export const useSipConnection = () => {
   }, [activeCalls, localVideoStream, toast]);
 
   /**
+   * Inicia a gravação da conversa de uma chamada estabelecida.
+   * O áudio das duas pontas é misturado no navegador (microfone + voz remota).
+   */
+  const iniciarGravacao = useCallback((callId: string) => {
+    if (gravacaoRef.current) return;
+    const call = activeCalls.find((c) => c.id === callId);
+    if (!call || call.state !== SessionState.Established) return;
+    const pc = obterPeerConnection(call.session);
+    if (!pc) return;
+    const gravador = iniciarGravador(pc);
+    if (!gravador) {
+      toast({
+        title: 'Gravação indisponível',
+        description: 'O áudio da chamada não ficou disponível para gravação neste aparelho.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    gravacaoRef.current = {
+      callId,
+      gravador,
+      iniciouEm: Date.now(),
+      numero: call.phoneNumber,
+      direcao: call.direction === 'inbound' ? 'entrada' : 'saida',
+    };
+    setGravando({ callId, iniciouEm: Date.now() });
+    toast({
+      title: 'Gravando conversa',
+      description: 'Avise a outra pessoa que a ligação está sendo gravada.',
+    });
+  }, [activeCalls, toast]);
+
+  /**
+   * Encerra a gravação em andamento (se houver), salva o áudio no armazenamento
+   * e registra os dados da conversa para consulta na aba Gravações.
+   */
+  const pararGravacao = useCallback(async (avisoManual = true): Promise<void> => {
+    const g = gravacaoRef.current;
+    if (!g) return;
+    gravacaoRef.current = null;
+    setGravando(null);
+
+    const blob = await g.gravador.parar();
+    if (!blob) {
+      if (avisoManual) {
+        toast({
+          title: 'Gravação descartada',
+          description: 'A conversa foi curta demais para gerar um arquivo de áudio.',
+        });
+      }
+      return;
+    }
+
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) throw new Error('Sessão não encontrada');
+
+      const caminho = `${auth.user.id}/${Date.now()}.${extensaoDoMime(g.gravador.mimeType)}`;
+      const { error: erroUpload } = await supabase.storage
+        .from('gravacoes-chamadas')
+        .upload(caminho, blob, { contentType: g.gravador.mimeType, upsert: false });
+      if (erroUpload) throw erroUpload;
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', auth.user.id)
+        .maybeSingle();
+
+      if (usuario?.id) {
+        await supabase.from('gravacoes_chamadas').insert({
+          usuario_id: usuario.id,
+          numero: g.numero,
+          direcao: g.direcao,
+          inicio: new Date(g.iniciouEm).toISOString(),
+          duracao_seg: Math.max(1, Math.round((Date.now() - g.iniciouEm) / 1000)),
+          caminho,
+          tamanho_bytes: blob.size,
+        });
+      }
+
+      toast({
+        title: 'Gravação salva',
+        description: 'Disponível na aba Gravações do Pilar Fone.',
+      });
+    } catch (erro) {
+      console.error('Erro ao salvar gravação:', erro);
+      toast({
+        title: 'Falha ao salvar gravação',
+        description: erro instanceof Error ? erro.message : 'Não foi possível guardar o áudio da conversa.',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+  /**
    * Transferência cega (SIP REFER): a chamada ativa é entregue ao destino e
    * some da sua tela — como o botão "transferir" de um telefone físico.
    * Funciona apenas para chamadas atendidas/feitas por ESTA conexão (Pilar Fone).
