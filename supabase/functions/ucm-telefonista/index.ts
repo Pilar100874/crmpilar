@@ -551,10 +551,15 @@ Deno.serve(async (req) => {
         if (Number(sonda?.status) === 0) {
           clienteCdr = cliente;
         } else {
+          // Responde 200 com aviso amigável: CDR desativado é situação
+          // esperada, não falha da função (evita tela de erro no app).
           return responder({
-            error:
-              "O histórico de ligações (CDR) não está acessível no PABX. No UCM, ative a API de CDR (CDR → Configurações de API) para este usuário.",
-          }, 502);
+            ok: false,
+            cdr_disponivel: false,
+            ligacoes: [],
+            aviso:
+              "O histórico de ligações (CDR) está desativado no PABX. Para ativar: abra o UCM → CDR → Configurações de API, ative a API de CDR e clique em Apply Changes. A tela passa a listar as ligações sozinha.",
+          });
         }
       }
 
@@ -576,8 +581,11 @@ Deno.serve(async (req) => {
 
       if (Number(bruto?.status) !== 0) {
         return responder({
-          error: `O PABX recusou a consulta do histórico (código ${Number(bruto?.status ?? -999)}).`,
-        }, 400);
+          ok: false,
+          cdr_disponivel: false,
+          ligacoes: [],
+          aviso: `O PABX recusou a consulta do histórico (código ${Number(bruto?.status ?? -999)}). Ative a API de CDR no UCM (CDR → Configurações de API) e clique em Apply Changes.`,
+        });
       }
 
       // Nomes dos ramais e das filas para enriquecer origem/destino.
