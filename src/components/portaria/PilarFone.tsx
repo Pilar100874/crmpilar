@@ -3,6 +3,7 @@ import { useStatusRamais } from "@/hooks/useStatusRamais";
 import {
   BellRing,
   BookUser,
+  Disc3,
   MessageCircle,
   Delete,
   Grid3X3,
@@ -14,6 +15,7 @@ import {
   RefreshCw,
   Search,
   Smartphone,
+  Square,
   Users,
   Video,
   VideoOff,
@@ -29,6 +31,7 @@ import AvisoInline from "@/components/portaria/AvisoInline";
 import PilarFoneContatos, { type ContatoCadastro } from "@/components/portaria/PilarFoneContatos";
 import PilarFoneWhatsapp, { type AlvoWhatsapp } from "@/components/portaria/PilarFoneWhatsapp";
 import PilarFoneHistorico from "@/components/portaria/PilarFoneHistorico";
+import PilarFoneGravacoes from "@/components/portaria/PilarFoneGravacoes";
 import { registrarChamada } from "@/lib/portaria/historicoChamadas";
 import { obterMarcadorDiscador } from "@/lib/telefonia/discadorMarker";
 import { buscarResumoClientePorTelefone, type ResumoCliente } from "@/lib/telefonia/resumoCliente";
@@ -88,7 +91,7 @@ function Avatar({ nome }: { nome: string }) {
   );
 }
 
-type Aba = "ramais" | "cadastros" | "whatsapp" | "chamadas";
+type Aba = "ramais" | "cadastros" | "gravacoes" | "whatsapp" | "chamadas";
 
 interface Props {
   /** Abre a tela do interfone (campainha). */
@@ -156,6 +159,9 @@ export default function PilarFone({
     toggleVivaVoz,
     toggleMudo,
     toggleCamera,
+    gravando,
+    iniciarGravacao,
+    pararGravacao,
   } = useSipConnection();
 
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
@@ -191,12 +197,15 @@ export default function PilarFone({
     const todas = [
       { id: "ramais" as Aba, rotulo: "Ramais", Icone: Users },
       { id: "cadastros" as Aba, rotulo: "Cadastros", Icone: BookUser },
+      { id: "gravacoes" as Aba, rotulo: "Gravações", Icone: Disc3 },
       { id: "whatsapp" as Aba, rotulo: "WhatsApp", Icone: MessageCircle },
       ...(mostrarInterfone ? [{ id: "chamadas" as Aba, rotulo: "Interfone", Icone: BellRing }] : []),
     ];
     // `undefined` = ainda carregando (mostra tudo). Lista vazia = nenhuma aba liberada.
     if (!abasPermitidas) return todas;
-    return todas.filter((t) => abasPermitidas.includes(t.id));
+    // As gravações são pessoais de cada usuário: a aba aparece mesmo quando a
+    // lista de abas liberadas foi definida antes de ela existir.
+    return todas.filter((t) => t.id === "gravacoes" || abasPermitidas.includes(t.id));
   }, [mostrarInterfone, abasPermitidas]);
 
   useEffect(() => {
@@ -383,6 +392,20 @@ export default function PilarFone({
   }, [localVideoStream]);
 
   const temVideoRemoto = !!remoteStream && remoteStream.getVideoTracks().length > 0;
+
+  // Relógio da gravação: atualiza a cada segundo enquanto grava.
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    if (!gravando) return;
+    const intervalo = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(intervalo);
+  }, [gravando]);
+
+  const gravandoChamadaAtual = !!chamadaAtual && gravando?.callId === chamadaAtual.id;
+  const tempoGravacao = gravandoChamadaAtual
+    ? Math.max(0, Math.floor((agora - (gravando?.iniciouEm ?? agora)) / 1000))
+    : 0;
+  const tempoGravacaoFmt = `${String(Math.floor(tempoGravacao / 60)).padStart(2, "0")}:${String(tempoGravacao % 60).padStart(2, "0")}`;
 
   const nomePorNumero = useCallback(
     (num: string) => {
@@ -698,6 +721,8 @@ export default function PilarFone({
           </div>
         )}
 
+        {aba === "gravacoes" && <PilarFoneGravacoes />}
+
         {aba === "whatsapp" && (
           <div className={embedded ? "h-full" : "h-[calc(100vh-220px)]"}>
             <PilarFoneWhatsapp alvo={alvoWhatsapp} onAlvoConsumido={() => setAlvoWhatsapp(null)} />
@@ -932,8 +957,14 @@ export default function PilarFone({
                   ? chamadaAtual.viaDiscador
                     ? "Ligação do discador — atenda para chamar o cliente"
                     : "Chamada recebida"
-                  : "Chamando..."}
+                : "Chamando..."}
             </p>
+            {gravandoChamadaAtual && (
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-400">
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                Gravando {tempoGravacaoFmt}
+              </p>
+            )}
 
             {/* Ligação do discador: sempre mostra o resumo do cliente */}
             {chamadaAtual.viaDiscador && (
@@ -1002,6 +1033,23 @@ export default function PilarFone({
                   }`}
                 >
                   {localVideoStream ? <VideoOff className="h-6 w-6" /> : <Video className="h-6 w-6" />}
+                </button>
+                <button
+                  type="button"
+                  aria-label={gravandoChamadaAtual ? "Parar gravação" : "Gravar conversa"}
+                  title={gravandoChamadaAtual ? "Parar gravação" : "Gravar conversa"}
+                  onClick={() =>
+                    gravandoChamadaAtual
+                      ? void pararGravacao()
+                      : iniciarGravacao(chamadaAtual.id)
+                  }
+                  className={`flex h-14 w-14 flex-col items-center justify-center rounded-full transition active:scale-95 ${
+                    gravandoChamadaAtual
+                      ? "animate-pulse bg-red-500 text-white shadow-lg"
+                      : "bg-white/15 text-white backdrop-blur"
+                  }`}
+                >
+                  {gravandoChamadaAtual ? <Square className="h-6 w-6" /> : <Disc3 className="h-6 w-6" />}
                 </button>
                 <button
                   type="button"
