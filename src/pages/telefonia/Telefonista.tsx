@@ -675,6 +675,26 @@ export default function Telefonista() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Criar/editar fila de atendimento */}
+      <FilaDialog
+        open={filaDialogAberto}
+        onOpenChange={setFilaDialogAberto}
+        fila={filaEmEdicao}
+        ramais={painel.ramais}
+        onSalvar={(dados, criar) => painel.salvarFila(dados, criar).then(() => undefined)}
+      />
+
+      {/* Confirmação para excluir fila */}
+      <DeleteConfirmDialog
+        open={!!filaParaExcluir}
+        onOpenChange={(aberto) => !aberto && setFilaParaExcluir(null)}
+        onConfirm={() => void excluirFilaConfirmada()}
+        title="Excluir fila"
+        itemName={filaParaExcluir ? `${filaParaExcluir.numero} ${filaParaExcluir.nome ?? ""}`.trim() : undefined}
+        description="A fila é removida do PABX na hora e ligações futuras para esse número deixam de entrar nela."
+        isLoading={excluindoFila}
+      />
     </div>
   );
 }
