@@ -408,11 +408,13 @@ export const useSipConnection = () => {
         }
       }
 
-      toast({
-        title: "Erro de conexão",
-        description: errorMsg,
-        variant: "destructive",
-      });
+      if (!config.silencioso) {
+        toast({
+          title: "Erro de conexão",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      }
 
     } finally {
       setIsConnecting(false);
