@@ -30,3 +30,6 @@
 
 ## Telefonia
 - [x] Regras de discagem configuráveis (DDD local sem DDD, outros DDDs com 015) na tela de configuração do PABX
+
+## Atendimento
+- [x] Mover o discador e o fluxo da Agenda para a aba Tel no Atendimento.
