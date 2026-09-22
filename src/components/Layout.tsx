@@ -216,6 +216,7 @@ export const menuItems: MenuItem[] = [
     title: "Portaria",
     icon: LucideIcons.ShieldCheck,
     subItems: [
+      { id: "Portaria Painel", title: "Painel da Portaria", url: "/portaria/painel", icon: LucideIcons.LayoutDashboard },
       { id: "Transportadoras", title: "Transportadoras", url: "/transportadoras", icon: LucideIcons.Truck },
       { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
       { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },

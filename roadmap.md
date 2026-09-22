@@ -10,3 +10,8 @@
 - [x] Permitir copiar permissões substituindo ou acrescentando.
 - [x] Salvar somente grupos alterados e permitir descartar mudanças.
 - [x] Validar atualização imediata, computador e celular.
+
+## Alertas do Project monitoring
+- [x] Verificar a permissão da função de estabelecimento do módulo Operacional.
+- [x] Verificar falhas recentes no recebimento de posições GPS.
+- [x] Restaurar o acesso ao Painel da Portaria no menu, preservando itens internos nas telas correspondentes.
