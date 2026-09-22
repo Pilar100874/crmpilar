@@ -246,7 +246,18 @@ export function usePainelTelefonista(intervaloMs = 10000) {
       const { data, error } = await supabase.functions.invoke("ucm-telefonista", { body: corpo });
       const resposta = (data || {}) as { ok?: boolean; error?: string; message?: string };
       if (error || resposta.error || !resposta.ok) {
-        throw new Error(resposta.error || "O PABX recusou a operação");
+        // Erros HTTP carregam a mensagem real do PABX no corpo da resposta.
+        const contexto = (error as { context?: Response } | null)?.context;
+        let mensagem = resposta.error || "";
+        if (!mensagem && contexto) {
+          try {
+            const corpoErro = (await contexto.json()) as { error?: string };
+            mensagem = corpoErro?.error || "";
+          } catch {
+            /* sem corpo legível */
+          }
+        }
+        throw new Error(mensagem || "O PABX recusou a operação");
       }
       void atualizar();
       return resposta;
