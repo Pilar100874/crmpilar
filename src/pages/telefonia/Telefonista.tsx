@@ -118,6 +118,7 @@ export default function Telefonista() {
         authUser: config.usuarioSip,
         password: config.senha,
         displayName: config.nome,
+        silencioso: true,
       });
     })();
     return () => {
