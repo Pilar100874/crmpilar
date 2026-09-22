@@ -27,6 +27,9 @@ interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; 
 
 const navItems: NavItem[] = [
   { to: "/portaria", label: "Interfone", icon: PhoneCall, end: true },
+  { to: "/portaria/painel", label: "Painel", icon: LayoutDashboard },
+  { to: "/portaria/pendencias", label: "Pendências", icon: FileWarning },
+  { to: "/portaria/relatorio-unidades", label: "Relatório por unidade", icon: History },
   { to: "/portaria/configuracoes", label: "Configurações", icon: Settings, gestor: true },
 ];
 

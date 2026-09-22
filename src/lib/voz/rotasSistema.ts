@@ -134,6 +134,8 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
 
   // ============ Menu Principal - Interfone ============
   { path: "/portaria", titulo: "Interfone", aliases: ["interfone", "portaria", "controle de acesso", "abrir portao", "abrir porta"] },
+  { path: "/portaria/painel", titulo: "Portaria - Painel", aliases: ["painel da portaria", "painel portaria"] },
+  { path: "/portaria/pendencias", titulo: "Portaria - Pendências", aliases: ["pendencias da portaria", "pendencias portaria"] },
   { path: "/portaria/acessos", titulo: "Interfone - Acessos", aliases: ["acessos portaria", "acessos interfone", "abrir portao remoto"] },
   { path: "/portaria/pessoas", titulo: "Interfone - Pessoas", aliases: ["moradores portaria", "pessoas portaria", "pessoas interfone"] },
   { path: "/portaria/visitantes", titulo: "Interfone - Visitantes", aliases: ["visitantes portaria", "visitantes interfone"] },
