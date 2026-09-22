@@ -513,6 +513,8 @@ export const useSipConnection = () => {
     try {
       // Envia exatamente o número digitado, removendo apenas espaços e pontuação visual.
       // O UCM aplica a rota de saída; acrescentar "#" muda o destino e pode encerrar a chamada.
+      const validacao = validarNumeroDiscagem(phoneNumber);
+      if (!validacao.valido) throw new Error(validacao.motivo || 'Informe um número válido');
       const dialNumber = await normalizarNumeroDiscagem(phoneNumber);
       if (!dialNumber) throw new Error('Informe um número válido');
       
