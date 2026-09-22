@@ -49,8 +49,18 @@ class ClienteUcm {
   }
 }
 
-/** Mantém apenas o que o PABX entende: dígitos e os códigos * e #. */
-const normalizarNumero = (valor: string) => valor.replace(/[^\d*#]/g, "");
+/**
+ * Mantém apenas o que o PABX entende (dígitos e os códigos * e #) e remove o
+ * DDI 55 dos telefones do cadastro: as rotas de saída do UCM esperam o número
+ * como se fosse discado do aparelho (DDD + número).
+ */
+const normalizarNumero = (valor: string) => {
+  const limpo = (valor || "").replace(/[^\d*#]/g, "");
+  if (!limpo || /[*#]/.test(limpo)) return limpo;
+  if (limpo.length >= 12 && limpo.length <= 13 && limpo.startsWith("55")) return limpo.slice(2);
+  if (limpo.length >= 14 && limpo.startsWith("0055")) return limpo.slice(4);
+  return limpo;
+};
 
 /**
  * Click-to-Call oficial da API do UCM.
