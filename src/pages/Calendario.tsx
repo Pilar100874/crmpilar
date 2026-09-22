@@ -2713,8 +2713,8 @@ export default function Calendario() {
 
         {/* Desktop Header (>= lg) */}
         <div className="hidden lg:block px-3 xl:px-6 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-3 xl:gap-6">
-            {/* Esquerda: Navegação e Visualização */}
+          <div className="flex flex-wrap items-center gap-3 xl:gap-6">
+            {/* Navegação e Visualização */}
             <div className="flex min-w-0 flex-wrap items-center gap-2 xl:gap-4">
               <div className="flex items-center gap-2">
                 <Button 
@@ -2760,8 +2760,8 @@ export default function Calendario() {
               </Tabs>
             </div>
 
-            {/* Direita: Filtros e Ações */}
-            <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 xl:gap-3">
+            {/* Filtros e Ações */}
+            <div className="flex min-w-0 flex-wrap items-center gap-2 xl:gap-3">
               <div className="relative w-36 xl:w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -2815,7 +2815,6 @@ export default function Calendario() {
                   </SelectContent>
                 </Select>
               )}
-
 
               <Button 
                 variant="ghost" 
