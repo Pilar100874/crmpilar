@@ -125,14 +125,27 @@ export interface ResultadoValidacaoNumero {
  * fixo (8 dígitos) e celular (9 dígitos iniciando em 9).
  * Ramais curtos e códigos de serviço (* #) são sempre aceitos.
  */
-export function validarNumeroDiscagem(valor: string): ResultadoValidacaoNumero {
-  const limpo = (valor || "").replace(/[^\d*#+]/g, "").replace(/\+/g, "");
+export function validarNumeroDiscagem(valor: string, ddiLocal = "55"): ResultadoValidacaoNumero {
+  const bruto = (valor || "").replace(/[^\d*#+]/g, "");
+  const limpo = bruto.replace(/\+/g, "");
   if (!limpo) return { valido: false, motivo: "Informe um número para discar." };
   if (/[*#]/.test(limpo)) return { valido: true };
 
+  const ddi = (ddiLocal || "55").replace(/\D/g, "") || "55";
+  const internacional = bruto.startsWith("+") || bruto.startsWith("00");
   let numero = limpo;
-  if (numero.length >= 12 && numero.length <= 13 && numero.startsWith("55")) numero = numero.slice(2);
-  else if (numero.length >= 14 && numero.startsWith("0055")) numero = numero.slice(4);
+  if (internacional) {
+    const resto = numero.startsWith("00") ? numero.slice(2) : numero;
+    // Outro país: só exigimos um número plausível (DDI + assinante).
+    if (!resto.startsWith(ddi)) {
+      return resto.length >= 8
+        ? { valido: true }
+        : { valido: false, motivo: "Número internacional incompleto." };
+    }
+    numero = resto.slice(ddi.length);
+  } else if (numero.length >= 12 && numero.length <= 13 && numero.startsWith(ddi)) {
+    numero = numero.slice(ddi.length);
+  }
 
   // Ramal interno
   if (numero.length <= 7) return { valido: true };
