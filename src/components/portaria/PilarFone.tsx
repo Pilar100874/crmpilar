@@ -610,6 +610,49 @@ export default function PilarFone({
               })}
             </div>
 
+            {/* Tabelinha resumo dos ramais */}
+            {ramaisFiltrados.length > 0 && (
+              <div className="mx-4 mb-3 overflow-hidden rounded-xl border border-white/10 bg-[#111B21]">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-white/[0.04] text-[11px] uppercase tracking-wide text-[#8696A0]">
+                    <tr>
+                      <th className="px-3 py-2 font-medium">Ramal</th>
+                      <th className="px-3 py-2 font-medium">Nome</th>
+                      <th className="px-3 py-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {ramaisFiltrados.slice(0, 6).map((r) => {
+                      const st = statusPorRamal[r.ramal];
+                      const online = Boolean(st?.noSistema || st?.registradoPabx);
+                      const statusTexto = st?.emChamada
+                        ? "Em ligação"
+                        : online
+                          ? "Online"
+                          : "Offline";
+                      const statusCor = st?.emChamada
+                        ? "text-amber-400"
+                        : online
+                          ? "text-[#00A884]"
+                          : "text-[#8696A0]";
+                      return (
+                        <tr key={`resumo-${r.id}`} className="hover:bg-white/[0.03]">
+                          <td className="px-3 py-2 font-medium text-[#E9EDEF]">{r.ramal}</td>
+                          <td className="px-3 py-2 text-[#E9EDEF]">{r.nome}</td>
+                          <td className={`px-3 py-2 ${statusCor}`}>{statusTexto}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {ramaisFiltrados.length > 6 && (
+                  <p className="px-3 py-2 text-center text-[11px] text-[#8696A0]">
+                    +{ramaisFiltrados.length - 6} ramais na lista abaixo
+                  </p>
+                )}
+              </div>
+            )}
+
             {mostrarInterfone && (
               <button
                 type="button"
