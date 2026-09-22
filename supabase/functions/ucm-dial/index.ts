@@ -63,6 +63,27 @@ const normalizarNumero = (valor: string) => {
 };
 
 /**
+ * Regras de discagem do estabelecimento: o DDD local não é discado e os
+ * demais DDDs recebem o código da operadora na frente (ex.: 015 + DDD).
+ */
+const aplicarRegrasDiscagem = (
+  numero: string,
+  regras: { ativas: boolean; dddLocal: string; prefixo: string },
+) => {
+  if (!numero || /[*#]/.test(numero) || !regras.ativas) return numero;
+  const dddLocal = (regras.dddLocal || "").replace(/\D/g, "");
+  const prefixo = (regras.prefixo || "").replace(/\D/g, "");
+  if (prefixo && numero.startsWith(prefixo) && numero.length > prefixo.length + 10) return numero;
+  if (numero.length !== 10 && numero.length !== 11) return numero;
+  if (numero.startsWith("0")) return numero;
+  const ddd = numero.slice(0, 2);
+  const assinante = numero.slice(2);
+  if (dddLocal && ddd === dddLocal) return assinante;
+  if (prefixo) return `${prefixo}${ddd}${assinante}`;
+  return numero;
+};
+
+/**
  * Click-to-Call oficial da API do UCM.
  *
  * Operação escolhida: **dialOutbound** (parâmetros `caller` e `outbound`).
@@ -103,8 +124,8 @@ Deno.serve(async (req) => {
     if (authError || !user) return responder({ error: "Não autenticado" }, 401);
 
     const corpo = await req.json().catch(() => ({}));
-    const numero = normalizarNumero(String(corpo.number ?? corpo.destination ?? ""));
-    if (!numero) return responder({ error: "Informe o número a ser discado" }, 400);
+    const numeroBruto = normalizarNumero(String(corpo.number ?? corpo.destination ?? ""));
+    if (!numeroBruto) return responder({ error: "Informe o número a ser discado" }, 400);
 
     // Estabelecimento e ramal vêm do próprio cadastro do usuário (nunca do cliente).
     const { data: usuario } = await supabase
@@ -123,13 +144,19 @@ Deno.serve(async (req) => {
 
     const { data: config } = await supabase
       .from("ucm_config")
-      .select("ucm_host, ucm_user, ucm_password, sip_porta, enabled")
+      .select("ucm_host, ucm_user, ucm_password, sip_porta, enabled, discagem_regras_ativas, discagem_ddd_local, discagem_prefixo_outro_ddd")
       .eq("estabelecimento_id", estabelecimentoId)
       .maybeSingle();
 
     if (!config || !config.enabled || !config.ucm_host) {
       return responder({ error: "PABX não configurado ou desativado para este estabelecimento" }, 400);
     }
+
+    const numero = aplicarRegrasDiscagem(numeroBruto, {
+      ativas: config.discagem_regras_ativas ?? true,
+      dddLocal: String(config.discagem_ddd_local ?? "11"),
+      prefixo: String(config.discagem_prefixo_outro_ddd ?? "015"),
+    });
 
     // Sempre o endereço externo (domínio do certificado), porta da API HTTPS.
     const host = String(config.ucm_host).replace(/^https?:\/\//i, "").trim();

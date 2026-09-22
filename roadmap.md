@@ -27,3 +27,6 @@
 - [x] Remover os avisos automáticos de ramal registrado e desconectado.
 - [x] Deixar apenas uma bolinha no cabeçalho do Pilar Fone indicando status do ramal.
 - [x] Mostrar uma bolinha discreta de conexão na aba lateral que abre o Pilar Fone.
+
+## Telefonia
+- [x] Regras de discagem configuráveis (DDD local sem DDD, outros DDDs com 015) na tela de configuração do PABX
