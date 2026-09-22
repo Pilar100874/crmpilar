@@ -60,7 +60,6 @@ import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
-import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
@@ -3293,17 +3292,6 @@ ${recentMessages}
       }));
   }, [contatosBase, filteredConversations]);
 
-  // Abre uma ligação para o contato selecionado na aba Tel
-  const ligarParaContato = async (contato: ContatoAtendimento) => {
-    const numero = contato.tel || contato.telefone;
-    if (!numero) {
-      toast.error("Contato sem telefone cadastrado");
-      return;
-    }
-    await ligarPeloPabx(numero, contato.nome);
-  };
-
-
   // Filtered tasks based on global filter and contact filters
   const filteredTasks = useMemo(() => {
     const today = new Date();
@@ -4585,7 +4573,6 @@ ${recentMessages}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
                 contatosTelefone={contatosBase}
-                onLigarContato={(contato) => void ligarParaContato(contato)}
                 onStartConversation={async (contactId, nome, telefone) => {
                   // Criar conversa para o contato da agenda
                   await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
@@ -5162,9 +5149,7 @@ ${recentMessages}
                 contatos={contatosBase}
                 canal="tel"
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                acaoLabel="Ligar"
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
-                onSelecionar={(contato) => void ligarParaContato(contato)}
               />
             </div>
           </TabsContent>
@@ -7303,7 +7288,6 @@ interface MobileListContentProps {
     taskTitle?: string;
   }>;
   contatosTelefone: ContatoAtendimento[];
-  onLigarContato: (contato: ContatoAtendimento) => void;
   onStartConversation: (contactId: string, nome: string, telefone: string) => void;
   selectedConversation: string | null;
   setSelectedConversation: (id: string | null) => void;
@@ -7366,7 +7350,6 @@ function MobileListContent({
   otherConversations,
   agendaContactsWithoutConversation,
   contatosTelefone,
-  onLigarContato,
   onStartConversation,
   selectedConversation,
   setSelectedConversation,
@@ -7707,9 +7690,7 @@ function MobileListContent({
             contatos={contatosTelefone}
             canal="tel"
             titulo="Contatos com telefone"
-            acaoLabel="Ligar"
             vazioTexto="Nenhum contato com telefone"
-            onSelecionar={onLigarContato}
           />
         )}
 

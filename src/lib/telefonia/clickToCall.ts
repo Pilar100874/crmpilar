@@ -64,7 +64,7 @@ export async function ligarPeloPabx(destino: string, nomeCliente?: string): Prom
       toast.error(mensagem, { id: aviso });
       return { error: mensagem };
     }
-    toast.success(resposta.message || "Chamada iniciada", { id: aviso });
+    toast.dismiss(aviso);
     return resposta;
   } catch (erro) {
     limparChamadaDiscador();
