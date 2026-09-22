@@ -289,8 +289,15 @@ export default function PilarFoneWeb({ janela = false }: PilarFoneWebProps) {
     <PilarFone
       embedded
       initialNumber={numeroInicial}
-      onChamadaRecebida={() => setAlerta(true)}
-      onStatusRamalChange={setStatusRamal}
+      onChamadaRecebida={() => {
+        // Chamada tocando: pisca a aba e abre o telefone para o botão Atender ficar à vista.
+        setAlerta(true);
+        setAberto(true);
+      }}
+      onStatusRamalChange={(s) => {
+        setStatusRamal(s);
+        definirStatusRamalGlobal(s);
+      }}
       initialAba={abaInicial}
       initialWhatsapp={contatoInicial}
 
