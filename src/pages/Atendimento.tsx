@@ -3487,7 +3487,7 @@ ${recentMessages}
       return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
              email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
     });
-  }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails]);
+  }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails, contatoEmailSelecionado]);
 
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
