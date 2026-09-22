@@ -1572,6 +1572,37 @@ export default function Atendimento() {
     }
   }, [agendaDate, taskSortOrder, activeTab, usarAgenda]);
 
+  // Mantém as abas sincronizadas quando as tarefas da agenda mudam (criação, edição, mudança de data, exclusão)
+  const loadTodayTasksRef = useRef(loadTodayTasks);
+  loadTodayTasksRef.current = loadTodayTasks;
+
+  useEffect(() => {
+    if (activeTab !== 'agenda' && !usarAgenda) return;
+
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    const recarregar = () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        void loadTodayTasksRef.current(agendaDate);
+      }, 300);
+    };
+
+    const canal = supabase
+      .channel(`atendimento-calendario-tarefas-${Date.now()}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'calendario_tarefas' },
+        recarregar,
+      )
+      .subscribe();
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+      void supabase.removeChannel(canal);
+    };
+  }, [agendaDate, activeTab, usarAgenda]);
+
+
   const loadAvailableOrigens = async () => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
