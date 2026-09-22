@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight, Search, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface Vendedor {
   id: string;
@@ -62,13 +63,8 @@ export default function VinculosVendedorUsuario() {
         .order("nome_fantasia");
       setVendedores(vendedoresData || []);
 
-      const { data: usuariosData } = await supabase
-        .from("usuarios")
-        .select("id, nome, email")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .eq("tipo", "gerente")
-        .order("nome");
-      setUsuarios(usuariosData || []);
+      const usuariosData = await carregarGerentesEAdministradores(estabelecimentoId);
+      setUsuarios(usuariosData);
 
       const { data: vinculosData } = await supabase
         .from("empresa_vinculos")

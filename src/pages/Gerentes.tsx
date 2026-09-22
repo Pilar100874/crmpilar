@@ -12,11 +12,12 @@ import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface Gerente {
   id: string;
   nome: string;
-  email: string;
+  email: string | null;
   whatsapp: string | null;
 }
 
@@ -64,17 +65,12 @@ export default function Gerentes() {
 
   const loadGerentes = async () => {
     if (!estabelecimentoId) return;
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("id, nome, email, whatsapp, grupos_acesso!inner(perfil)")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .eq("grupos_acesso.perfil", "gerente")
-      .order("nome");
-    if (error) {
-      toast.error("Erro ao carregar gerentes: " + error.message);
-      return;
+    try {
+      setGerentes(await carregarGerentesEAdministradores(estabelecimentoId));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error("Erro ao carregar gerentes: " + message);
     }
-    setGerentes(data || []);
   };
 
   const loadListas = async () => {
@@ -486,7 +482,7 @@ export default function Gerentes() {
             <CardContent className="p-3 sm:p-4 flex items-start gap-3">
               <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Esta tela mostra apenas usuários cujo <strong>Grupo de Acesso</strong> tem perfil <strong>Gerente</strong>. Para criar ou editar o cadastro,
+                Esta tela mostra usuários com perfil <strong>Gerente</strong> e todos os <strong>Administradores</strong>. Para criar ou editar o cadastro,
                 acesse <strong>Configurações → Usuários</strong>.
               </p>
             </CardContent>
@@ -500,7 +496,7 @@ export default function Gerentes() {
                 </div>
                 <p className="text-base sm:text-lg font-light text-foreground mb-2">Nenhum gerente encontrado</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Defina o tipo "Gerente" no cadastro de usuários para que apareçam aqui
+                  Defina o perfil "Gerente" ou "Administrador" no cadastro de usuários para que apareçam aqui
                 </p>
               </div>
             </div>
