@@ -14,7 +14,6 @@ interface Tab {
   disabled?: boolean;
   onClick?: () => void;
   statusColor?: string; // Optional status indicator color
-  iconOnly?: boolean; // Never show title text next to the icon
 }
 
 interface Separator {
@@ -106,18 +105,16 @@ export function ExpandableTabs({
 
         const tabItem = tab as Tab;
         const Icon = tabItem.icon;
-        const showTitle = selected === index && !tabItem.iconOnly;
         return (
           <motion.button
             key={tabItem.title}
             variants={buttonVariants}
             initial={false}
             animate="animate"
-            custom={showTitle}
+            custom={selected === index}
             onClick={() => handleSelect(index, tabItem)}
             disabled={tabItem.disabled}
             transition={transition}
-            aria-label={tabItem.title}
             className={cn(
               "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
               selected === index
@@ -133,7 +130,7 @@ export function ExpandableTabs({
               )}
             </div>
             <AnimatePresence initial={false}>
-              {showTitle && (
+              {selected === index && (
                 <motion.span
                   variants={spanVariants}
                   initial="initial"

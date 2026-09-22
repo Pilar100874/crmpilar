@@ -5186,7 +5186,7 @@ ${recentMessages}
                 },
                 { title: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
                 { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
-                { title: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount, iconOnly: true },
+                { title: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
               ]}
               activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : null}
               onChange={(index) => {
