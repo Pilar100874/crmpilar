@@ -19,3 +19,6 @@
 ## Pilar Automação
 - [x] Ocultar completamente a abertura da web antes de exibir o painel.
 - [x] Corrigir a retomada do aplicativo após fechar e abrir novamente.
+
+## Pilar Remotas
+- [x] Aceitar e validar a chave completa no formato XXXX-XXXX.

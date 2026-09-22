@@ -88,7 +88,7 @@
                 android:hint="@string/pair_code_hint"
                 android:importantForAutofill="no"
                 android:inputType="textCapCharacters"
-                android:maxLength="8"
+                android:maxLength="9"
                 android:padding="14dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#94A3B8"

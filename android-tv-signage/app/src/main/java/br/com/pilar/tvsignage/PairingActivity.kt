@@ -21,7 +21,7 @@ class PairingActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            val codigo = result.data?.getStringExtra("codigo")?.trim()?.uppercase().orEmpty()
+            val codigo = formatarCodigo(result.data?.getStringExtra("codigo").orEmpty())
             if (codigo.isNotEmpty()) {
                 b.inputCodigo.setText(codigo)
                 b.txtStatus.text = "QR Code lido — conectando..."
@@ -53,11 +53,12 @@ class PairingActivity : AppCompatActivity() {
         }
 
         b.btnPair.setOnClickListener {
-            val codigo = b.inputCodigo.text.toString().trim().uppercase()
-            if (codigo.isEmpty()) {
-                Toast.makeText(this, "Preencha o código", Toast.LENGTH_SHORT).show()
+            val codigo = formatarCodigo(b.inputCodigo.text.toString())
+            if (!CODIGO_REGEX.matches(codigo)) {
+                Toast.makeText(this, "Informe o código no formato XXXX-XXXX", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            b.inputCodigo.setText(codigo)
             pair(codigo)
         }
 
@@ -118,5 +119,14 @@ class PairingActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun formatarCodigo(valor: String): String {
+        val caracteres = valor.uppercase().filter { it.isLetterOrDigit() }.take(8)
+        return if (caracteres.length > 4) caracteres.take(4) + "-" + caracteres.drop(4) else caracteres
+    }
+
+    companion object {
+        private val CODIGO_REGEX = Regex("^[A-Z0-9]{4}-[A-Z0-9]{4}$")
     }
 }
