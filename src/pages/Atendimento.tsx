@@ -58,6 +58,9 @@ import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDial
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
+import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
+import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
+import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
@@ -246,6 +249,11 @@ export default function Atendimento() {
   
   // Tab states
   const [activeTab, setActiveTab] = useState("agenda");
+  // Flag "Usar agenda": ligada usa os contatos da agenda do dia; desligada usa os contatos vinculados ao usuário
+  const [usarAgenda, setUsarAgenda] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("atendimento_usar_agenda") !== "false";
+  });
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
