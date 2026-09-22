@@ -5,7 +5,7 @@ plugins {
 
 val baseVersionCode = 6
 val ciVersionCode = System.getenv("AUTO_VERSION_CODE")?.toIntOrNull() ?: baseVersionCode
-    val ciVersionName = System.getenv("AUTO_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.9.3"
+val ciVersionName = System.getenv("AUTO_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.9.3"
 
 android {
     namespace = "br.com.pilar.automacao"

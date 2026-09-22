@@ -151,8 +151,10 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         atualizacaoHandler.removeCallbacks(verificarAtualizacao)
         carregamentoHandler.removeCallbacks(tempoLimiteCarregamento)
-        web.stopLoading()
-        web.destroy()
+        if (::web.isInitialized) {
+            web.stopLoading()
+            web.destroy()
+        }
         super.onDestroy()
     }
 
