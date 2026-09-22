@@ -485,12 +485,21 @@ export default function PilarFone({
         className="sticky top-0 z-20 shrink-0 bg-[#1F2C34]"
         style={{ paddingTop: padTop }}
       >
-        <div className="flex items-center gap-2 px-4 py-3">
-          <div className="flex-1">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex flex-1 items-center gap-2">
+            <span
+              role="status"
+              aria-label={isRegistered ? "Ramal conectado" : isConnecting ? "Ramal conectando" : "Ramal desconectado"}
+              title={isRegistered ? `Ramal ${config.ramal} conectado` : isConnecting ? "Conectando..." : "Ramal desconectado"}
+              className={`inline-block h-3 w-3 rounded-full ${
+                isRegistered
+                  ? "bg-[#00A884] shadow-[0_0_6px_rgba(0,168,132,0.8)]"
+                  : isConnecting
+                    ? "animate-pulse bg-amber-400"
+                    : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+              }`}
+            />
             <h1 className="text-xl font-semibold tracking-tight">Pilar Fone</h1>
-            {config.ramal ? (
-              <p className="text-xs text-muted-foreground">Ramal: {config.ramal}</p>
-            ) : null}
           </div>
           {headerExtra}
           {onFechar && (
@@ -503,35 +512,6 @@ export default function PilarFone({
               <X className="h-4 w-4" />
             </button>
           )}
-        </div>
-
-
-        <div className="flex items-center gap-2 px-4 pb-2 text-[11px]">
-          <span
-            role="status"
-            aria-label={isRegistered ? "Ramal conectado" : isConnecting ? "Ramal conectando" : "Ramal desconectado"}
-            title={isRegistered ? `Ramal ${config.ramal} conectado` : isConnecting ? "Conectando..." : "Ramal desconectado"}
-            className={`inline-block h-2.5 w-2.5 rounded-full ${
-              isRegistered
-                ? "bg-[#00A884] shadow-[0_0_6px_rgba(0,168,132,0.8)]"
-                : isConnecting
-                  ? "animate-pulse bg-amber-400"
-                  : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
-            }`}
-          />
-          <label
-            htmlFor="pf-auto-atender"
-            className="ml-auto inline-flex cursor-pointer items-center gap-1.5 font-semibold text-[#AEBAC1]"
-          >
-            <PhoneIncoming className="h-3 w-3" />
-            Atender automaticamente
-            <Switch
-              id="pf-auto-atender"
-              checked={config.autoAtender}
-              onCheckedChange={alternarAutoAtender}
-              className="scale-[0.7] data-[state=checked]:bg-[#00A884]"
-            />
-          </label>
         </div>
 
         <nav className="px-3 pb-3">
