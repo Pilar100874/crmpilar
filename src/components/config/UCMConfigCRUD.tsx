@@ -267,29 +267,41 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </div>
           </div>
 
-          <div className="rounded-md bg-muted p-3 text-xs space-y-1">
-            <p className="font-medium">Como vai discar:</p>
-            <p>
-              55 {config.discagem_ddd_local || "11"} 99961-1194 →{" "}
-              <span className="font-mono">
-                {prepararNumeroDiscagem(`55${config.discagem_ddd_local || "11"}999611194`, {
-                  ativas: config.discagem_regras_ativas ?? true,
-                  dddLocal: config.discagem_ddd_local || "",
-                  prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
-                })}
-              </span>
-            </p>
-            <p>
-              55 21 99961-1194 →{" "}
-              <span className="font-mono">
-                {prepararNumeroDiscagem("5521999611194", {
-                  ativas: config.discagem_regras_ativas ?? true,
-                  dddLocal: config.discagem_ddd_local || "",
-                  prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
-                })}
-              </span>
-            </p>
-          </div>
+          {(() => {
+            const regrasPreview = {
+              ativas: config.discagem_regras_ativas ?? true,
+              ddiLocal: config.discagem_ddi_local || "55",
+              dddLocal: config.discagem_ddd_local || "",
+              prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
+            };
+            const ddi = config.discagem_ddi_local || "55";
+            return (
+              <div className="rounded-md bg-muted p-3 text-xs space-y-1">
+                <p className="font-medium">Como vai discar:</p>
+                <p>
+                  {ddi} {config.discagem_ddd_local || "11"} 99961-1194 →{" "}
+                  <span className="font-mono">
+                    {prepararNumeroDiscagem(
+                      `${ddi}${config.discagem_ddd_local || "11"}999611194`,
+                      regrasPreview,
+                    )}
+                  </span>
+                </p>
+                <p>
+                  {ddi} 21 99961-1194 →{" "}
+                  <span className="font-mono">
+                    {prepararNumeroDiscagem(`${ddi}21999611194`, regrasPreview)}
+                  </span>
+                </p>
+                <p>
+                  +351 21 1234567 (Portugal) →{" "}
+                  <span className="font-mono">
+                    {prepararNumeroDiscagem("+351211234567", regrasPreview)}
+                  </span>
+                </p>
+              </div>
+            );
+          })()}
         </div>
 
 
