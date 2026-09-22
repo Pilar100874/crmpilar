@@ -28699,6 +28699,9 @@ export type Database = {
           conference_room_number: string | null
           conference_room_password: string | null
           created_at: string
+          discagem_ddd_local: string | null
+          discagem_prefixo_outro_ddd: string | null
+          discagem_regras_ativas: boolean
           enabled: boolean | null
           estabelecimento_id: string
           id: string
@@ -28716,6 +28719,9 @@ export type Database = {
           conference_room_number?: string | null
           conference_room_password?: string | null
           created_at?: string
+          discagem_ddd_local?: string | null
+          discagem_prefixo_outro_ddd?: string | null
+          discagem_regras_ativas?: boolean
           enabled?: boolean | null
           estabelecimento_id: string
           id?: string
@@ -28733,6 +28739,9 @@ export type Database = {
           conference_room_number?: string | null
           conference_room_password?: string | null
           created_at?: string
+          discagem_ddd_local?: string | null
+          discagem_prefixo_outro_ddd?: string | null
+          discagem_regras_ativas?: boolean
           enabled?: boolean | null
           estabelecimento_id?: string
           id?: string
