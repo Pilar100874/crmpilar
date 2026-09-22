@@ -179,6 +179,7 @@ class MainActivity : AppCompatActivity() {
         carregamentoHandler.removeCallbacks(tempoLimiteCarregamento)
         carregamentoHandler.postDelayed(tempoLimiteCarregamento, 20_000L)
         web.stopLoading()
+        web.clearHistory()
         web.visibility = View.INVISIBLE
         aviso.visibility = View.VISIBLE
         btnTentar.visibility = View.GONE
