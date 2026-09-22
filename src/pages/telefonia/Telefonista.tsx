@@ -154,7 +154,18 @@ export default function Telefonista() {
     const { data, error } = await supabase.functions.invoke("ucm-telefonista", { body: corpo });
     const resposta = (data || {}) as { ok?: boolean; error?: string; message?: string };
     if (error || resposta.error) {
-      throw new Error(resposta.error || "O PABX recusou a operação");
+      // Erros HTTP carregam a mensagem real do PABX no corpo da resposta.
+      let mensagem = resposta.error || "";
+      const contexto = (error as { context?: Response } | null)?.context;
+      if (!mensagem && contexto) {
+        try {
+          const corpoErro = (await contexto.json()) as { error?: string };
+          mensagem = corpoErro?.error || "";
+        } catch {
+          /* sem corpo legível */
+        }
+      }
+      throw new Error(mensagem || "O PABX recusou a operação");
     }
     return resposta;
   };
