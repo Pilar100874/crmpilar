@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { UCMAjudaGuia } from "./UCMAjudaGuia";
 import { UCMTesteLigacao } from "./UCMTesteLigacao";
+import { invalidarRegrasDiscagem } from "@/lib/telefonia/regrasDiscagem";
+import { prepararNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 
 interface UCMConfigCRUDProps {
   estabelecimentoId: string;
@@ -27,6 +29,9 @@ interface UCMConfig {
   is_local: boolean;
   conference_room_number?: string;
   conference_room_password?: string;
+  discagem_regras_ativas?: boolean;
+  discagem_ddd_local?: string | null;
+  discagem_prefixo_outro_ddd?: string | null;
 }
 
 export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
@@ -43,6 +48,9 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     is_local: true,
     conference_room_number: "",
     conference_room_password: "",
+    discagem_regras_ativas: true,
+    discagem_ddd_local: "11",
+    discagem_prefixo_outro_ddd: "015",
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -98,12 +106,16 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           is_local: false,
           conference_room_number: config.conference_room_number || null,
           conference_room_password: config.conference_room_password || null,
+          discagem_regras_ativas: config.discagem_regras_ativas ?? true,
+          discagem_ddd_local: (config.discagem_ddd_local || "").replace(/\D/g, "") || null,
+          discagem_prefixo_outro_ddd: (config.discagem_prefixo_outro_ddd || "").replace(/\D/g, "") || null,
         }, {
           onConflict: 'estabelecimento_id'
         });
 
       if (error) throw error;
 
+      invalidarRegrasDiscagem();
       toast({
         title: "Sucesso",
         description: "Configuração UCM salva com sucesso",
@@ -178,6 +190,88 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
               value={config.ramal_portaria || ""}
               onChange={(e) => setConfig({ ...config, ramal_portaria: e.target.value })}
             />
+          </div>
+        </div>
+
+
+        <div className="rounded-lg border border-border p-3 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label>Regras de discagem</Label>
+              <p className="text-xs text-muted-foreground">
+                Define como o número do cadastro é discado: o código do país (55) é sempre retirado,
+                o DDD da própria cidade não é discado e os demais DDDs recebem o código da operadora na frente.
+              </p>
+            </div>
+            <Switch
+              id="discagem_regras_ativas"
+              checked={config.discagem_regras_ativas ?? true}
+              onCheckedChange={(checked) => setConfig({ ...config, discagem_regras_ativas: checked })}
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="discagem_ddd_local">DDD da sua cidade</Label>
+              <Input
+                id="discagem_ddd_local"
+                inputMode="numeric"
+                placeholder="11"
+                maxLength={3}
+                value={config.discagem_ddd_local ?? ""}
+                onChange={(e) =>
+                  setConfig({ ...config, discagem_ddd_local: e.target.value.replace(/\D/g, "") })
+                }
+                disabled={!(config.discagem_regras_ativas ?? true)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ligações para este DDD são discadas só com o número.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discagem_prefixo_outro_ddd">Código antes de outros DDDs</Label>
+              <Input
+                id="discagem_prefixo_outro_ddd"
+                inputMode="numeric"
+                placeholder="015"
+                maxLength={5}
+                value={config.discagem_prefixo_outro_ddd ?? ""}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    discagem_prefixo_outro_ddd: e.target.value.replace(/\D/g, ""),
+                  })
+                }
+                disabled={!(config.discagem_regras_ativas ?? true)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Discado automaticamente antes do DDD quando a cidade for diferente.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-md bg-muted p-3 text-xs space-y-1">
+            <p className="font-medium">Como vai discar:</p>
+            <p>
+              55 {config.discagem_ddd_local || "11"} 99961-1194 →{" "}
+              <span className="font-mono">
+                {prepararNumeroDiscagem(`55${config.discagem_ddd_local || "11"}999611194`, {
+                  ativas: config.discagem_regras_ativas ?? true,
+                  dddLocal: config.discagem_ddd_local || "",
+                  prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
+                })}
+              </span>
+            </p>
+            <p>
+              55 21 99961-1194 →{" "}
+              <span className="font-mono">
+                {prepararNumeroDiscagem("5521999611194", {
+                  ativas: config.discagem_regras_ativas ?? true,
+                  dddLocal: config.discagem_ddd_local || "",
+                  prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
+                })}
+              </span>
+            </p>
           </div>
         </div>
 
