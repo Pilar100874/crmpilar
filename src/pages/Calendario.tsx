@@ -1010,6 +1010,7 @@ export default function Calendario() {
         return false;
       }
 
+      notificarTarefasAlteradas();
       return true;
     } catch (error) {
       console.error('Erro ao deletar tarefa:', error);
