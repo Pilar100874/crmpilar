@@ -3206,6 +3206,9 @@ ${recentMessages}
   const filteredConversations = useMemo(() => {
     const seenCustomers = new Set<string>();
     return conversations.filter((conv) => {
+      if (usarAgenda && !agendaContactIds.has(conv.customer_id)) {
+        return false;
+      }
       if (!conv.customer?.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
@@ -3228,7 +3231,7 @@ ${recentMessages}
       seenCustomers.add(conv.customer_id);
       return true;
     });
-  }, [conversations, searchTerm, globalFilter]);
+  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds]);
 
   // Separar conversas: contatos da agenda do dia vs outras conversas abertas
   // Também incluir contatos da agenda que NÃO têm conversa ativa para permitir iniciar chat
