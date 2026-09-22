@@ -3184,9 +3184,31 @@ ${recentMessages}
   };
 
   // Deduplica conversas por cliente, mantendo apenas a mais recente (já ordenado por updated_at desc)
+  // Quando a flag "Usar agenda" está ligada, todas as abas mostram apenas os contatos da agenda do dia
+  const agendaContactIds = useMemo(() => {
+    const ids = new Set<string>();
+    todayTasks.forEach((task: any) => {
+      const id = task.customers?.id || task.contact_id;
+      if (id) ids.add(id);
+    });
+    return ids;
+  }, [todayTasks]);
+
+  const agendaEmails = useMemo(() => {
+    const emails = new Set<string>();
+    todayTasks.forEach((task: any) => {
+      const email = task.customers?.email;
+      if (email) emails.add(String(email).toLowerCase().trim());
+    });
+    return emails;
+  }, [todayTasks]);
+
   const filteredConversations = useMemo(() => {
     const seenCustomers = new Set<string>();
     return conversations.filter((conv) => {
+      if (usarAgenda && !agendaContactIds.has(conv.customer_id)) {
+        return false;
+      }
       if (!conv.customer?.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
@@ -3209,7 +3231,7 @@ ${recentMessages}
       seenCustomers.add(conv.customer_id);
       return true;
     });
-  }, [conversations, searchTerm, globalFilter]);
+  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds]);
 
   // Separar conversas: contatos da agenda do dia vs outras conversas abertas
   // Também incluir contatos da agenda que NÃO têm conversa ativa para permitir iniciar chat
@@ -3430,7 +3452,16 @@ ${recentMessages}
     } else if (emailFolder === "starred") {
       emails = emails.filter(e => e.starred);
     }
-    
+
+    // Quando "Usar agenda" está ligada, apenas e-mails de contatos da agenda do dia
+    if (usarAgenda) {
+      emails = emails.filter((email) => {
+        const de = email.from_email?.toLowerCase().trim();
+        const para = email.to_email?.toLowerCase().trim();
+        return (de && agendaEmails.has(de)) || (para && agendaEmails.has(para));
+      });
+    }
+
     // Apply global filter
     if (!globalFilter) return emails;
     
@@ -3445,11 +3476,17 @@ ${recentMessages}
       return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
              email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
     });
-  }, [userEmails, globalFilter, emailFolder]);
+  }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails]);
 
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
     let result = orcamentos;
+
+    // Quando "Usar agenda" está ligada, apenas orçamentos de contatos da agenda do dia
+    if (usarAgenda) {
+      result = result.filter((orc) => orc.cliente_id && agendaContactIds.has(orc.cliente_id));
+    }
+    
     
     // Filtrar por "Meus" orçamentos - verifica se o contato do orçamento tem vínculo com o usuário logado
     if (showOnlyMyOrcamentos && currentUsuarioTableId) {
@@ -3479,7 +3516,7 @@ ${recentMessages}
     }
     
     return result;
-  }, [orcamentos, globalFilter, showOnlyMyOrcamentos, currentUsuarioTableId]);
+  }, [orcamentos, globalFilter, showOnlyMyOrcamentos, currentUsuarioTableId, usarAgenda, agendaContactIds]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
