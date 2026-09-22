@@ -770,16 +770,13 @@ export default function Calendario() {
           campanhasMap = new Map(campanhasData?.map((c: any) => [c.id, c.nome]) || []);
         }
         
-        console.log("=== DEBUG TAREFAS CARREGADAS ===");
-        console.log("Primeira tarefa raw do banco:", tarefas[0]);
-        
         const tasksWithDates = tarefas.map((task: any) => {
           // Parse date in LOCAL timezone without relying on ISO parsing to avoid UTC shifts
           // Expected DB format: 'yyyy-MM-dd'
           const [year, month, day] = (task.date || "").split("-").map(Number);
           // Use noon to be extra safe against DST edges while remaining in local time
           const parsedDate = new Date(year, (month || 1) - 1, day || 1, 12, 0, 0, 0);
-          console.log(`Tarefa ${task.id}: date do banco="${task.date}", parsed="${parsedDate.toString()}", localDate="${parsedDate.toLocaleDateString()}"`)
+
           
           return {
             id: task.id,
