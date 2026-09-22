@@ -33,3 +33,4 @@
 
 ## Atendimento
 - [x] Mover o discador e o fluxo da Agenda para a aba Tel no Atendimento.
+- [x] Remover o aviso de chamada iniciada e impedir ligação ao clicar nos contatos da aba Tel.

@@ -10,7 +10,7 @@ interface ContatosCanalListProps {
   titulo: string;
   acaoLabel?: string;
   vazioTexto?: string;
-  onSelecionar: (contato: ContatoAtendimento) => void;
+  onSelecionar?: (contato: ContatoAtendimento) => void;
 }
 
 const icones = {
@@ -61,8 +61,8 @@ export default function ContatosCanalList({
       {lista.map((contato) => (
         <div
           key={`${canal}-${contato.id}`}
-          onClick={() => onSelecionar(contato)}
-          className="relative px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 bg-card/60 hover:bg-card border border-transparent hover:shadow-sm"
+          onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
+          className={`relative px-3 py-3 rounded-xl transition-all duration-200 bg-card/60 border border-transparent ${onSelecionar ? "cursor-pointer hover:bg-card hover:shadow-sm" : "cursor-default"}`}
         >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10">
