@@ -108,6 +108,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           conference_room_number: config.conference_room_number || null,
           conference_room_password: config.conference_room_password || null,
           discagem_regras_ativas: config.discagem_regras_ativas ?? true,
+          discagem_ddi_local: (config.discagem_ddi_local || "").replace(/\D/g, "") || "55",
           discagem_ddd_local: (config.discagem_ddd_local || "").replace(/\D/g, "") || null,
           discagem_prefixo_outro_ddd: (config.discagem_prefixo_outro_ddd || "").replace(/\D/g, "") || null,
         }, {
