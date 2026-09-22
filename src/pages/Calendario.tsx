@@ -693,22 +693,25 @@ export default function Calendario() {
 
   const loadTasks = useCallback(async () => {
     try {
-      console.log('[LOAD_TASKS] Iniciando carregamento - isAdmin:', isAdmin, 'selectedUserIds:', selectedUserIds);
-      
-      const { data: { user } } = await supabase.auth.getUser();
+      const [{ data: sessionData }, estabelecimentoId] = await Promise.all([
+        supabase.auth.getSession(),
+        getEstabelecimentoId(),
+      ]);
+      const user = sessionData?.session?.user;
       if (!user) return;
-
-      const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) return;
 
       // Buscar o ID do usuário na tabela usuarios (a FK user_id referencia usuarios, não auth.users)
-      const { data: currentUsuario } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-      
-      const currentUsuarioId = currentUsuario?.id;
+      let currentUsuarioId: string | undefined;
+      if (!isAdmin) {
+        const { data: currentUsuario } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        currentUsuarioId = currentUsuario?.id;
+      }
+
 
       let query = (supabase as any)
         .from('calendario_tarefas')
