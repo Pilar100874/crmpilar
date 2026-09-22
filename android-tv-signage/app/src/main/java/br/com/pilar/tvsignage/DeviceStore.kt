@@ -45,7 +45,18 @@ object DeviceStore {
     }
 
     fun clear(ctx: Context) {
-        // Preserva a senha de saída ao desparear, para não perder acesso ao dispositivo
+        // Preserva a senha de saída e o código já usado: o aparelho volta a conectar sozinho
+        // sem pedir o código de novo.
+        val pwd = exitPassword(ctx)
+        val codigo = pairCodigo(ctx)
+        prefs(ctx).edit().clear()
+            .putString(K_EXIT_PASSWORD, pwd)
+            .putString(K_PAIR_CODIGO, codigo)
+            .apply()
+    }
+
+    /** Remove tudo, inclusive o código guardado (usado só quando se quer trocar de aparelho). */
+    fun clearTudo(ctx: Context) {
         val pwd = exitPassword(ctx)
         prefs(ctx).edit().clear().putString(K_EXIT_PASSWORD, pwd).apply()
     }
