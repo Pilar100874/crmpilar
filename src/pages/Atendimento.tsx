@@ -260,6 +260,7 @@ export default function Atendimento() {
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
+  const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; email: string } | null>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
