@@ -5248,12 +5248,14 @@ ${recentMessages}
                   contatos={contatosBase}
                   canal="email"
                   titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                  acaoLabel="Escrever"
                   vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
+                  selecionadoId={contatoEmailSelecionado?.id ?? null}
                   onSelecionar={(contato) => {
-                    setComposeEmailDefaults({ to: contato.email, subject: '', body: '' });
-                    setComposeEmailMode('compose');
-                    setShowComposeEmail(true);
+                    setSelectedEmailId(null);
+                    setSelectedEmailData(null);
+                    setContatoEmailSelecionado((atual) =>
+                      atual?.id === contato.id ? null : { id: contato.id, email: contato.email || "" }
+                    );
                   }}
                 />
               </div>
