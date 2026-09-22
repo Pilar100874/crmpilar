@@ -3516,7 +3516,7 @@ ${recentMessages}
     }
     
     return result;
-  }, [orcamentos, globalFilter, showOnlyMyOrcamentos, currentUsuarioTableId]);
+  }, [orcamentos, globalFilter, showOnlyMyOrcamentos, currentUsuarioTableId, usarAgenda, agendaContactIds]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
