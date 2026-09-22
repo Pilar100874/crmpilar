@@ -62,6 +62,7 @@ import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
+import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
@@ -1596,8 +1597,12 @@ export default function Atendimento() {
       )
       .subscribe();
 
+    // Atualização imediata quando a alteração vem do próprio calendário aberto na tela
+    const pararDeOuvir = ouvirTarefasAlteradas(recarregar);
+
     return () => {
       if (timeout) clearTimeout(timeout);
+      pararDeOuvir();
       void supabase.removeChannel(canal);
     };
   }, [agendaDate, activeTab, usarAgenda]);
