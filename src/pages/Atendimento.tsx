@@ -3630,7 +3630,7 @@ ${recentMessages}
     { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
     { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: todayTasksCount },
     { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
-    { id: "orcamento", icon: Receipt, label: "Orçamentos", badge: orcamentosEmAndamentoCount },
+    { id: "orcamento", icon: Receipt, label: "Orç.", badge: orcamentosEmAndamentoCount },
     { id: "dialer", icon: PhoneCall, label: "Discador" },
     ...(dynamicRadialTools.length > 0 ? [{ 
       id: "tools", 
@@ -4971,7 +4971,7 @@ ${recentMessages}
                   { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
                   { id: "tel", label: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
                   { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
-                  { id: "orcamento", label: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
+                  { id: "orcamento", label: "Orç.", icon: FileText, badge: orcamentosEmAndamentoCount },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -5186,7 +5186,7 @@ ${recentMessages}
                 },
                 { title: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
                 { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
-                { title: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
+                { title: "Orç.", icon: FileText, badge: orcamentosEmAndamentoCount },
               ]}
               activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : null}
               onChange={(index) => {
