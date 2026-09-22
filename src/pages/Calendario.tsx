@@ -2712,10 +2712,10 @@ export default function Calendario() {
         </div>
 
         {/* Desktop Header (>= lg) */}
-        <div className="hidden lg:block px-6 py-3">
-          <div className="flex items-center justify-between gap-6">
+        <div className="hidden lg:block px-3 xl:px-6 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 xl:gap-6">
             {/* Esquerda: Navegação e Visualização */}
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 xl:gap-4">
               <div className="flex items-center gap-2">
                 <Button 
                   variant="ghost" 
@@ -2725,7 +2725,7 @@ export default function Calendario() {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-base font-medium min-w-[180px] text-center">
+                <h2 className="min-w-[145px] text-center text-sm font-medium xl:min-w-[180px] xl:text-base">
                   {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM", { locale: ptBR })}
                 </h2>
                 <Button 
@@ -2742,7 +2742,7 @@ export default function Calendario() {
                 variant="ghost" 
                 size="sm" 
                 onClick={handleToday}
-                className="h-9 px-4 font-medium"
+                className="h-9 px-3 font-medium xl:px-4"
               >
                 Hoje
               </Button>
@@ -2751,18 +2751,18 @@ export default function Calendario() {
 
               <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-auto">
                 <TabsList className="bg-muted/50 h-9">
-                  <TabsTrigger value="day" className="text-xs px-3">Dia</TabsTrigger>
-                  <TabsTrigger value="week" className="text-xs px-3">Semana</TabsTrigger>
-                  <TabsTrigger value="month" className="text-xs px-3">Mês</TabsTrigger>
-                  <TabsTrigger value="list" className="text-xs px-3">Lista</TabsTrigger>
-                  <TabsTrigger value="table" className="text-xs px-3">Tabela</TabsTrigger>
+                  <TabsTrigger value="day" className="px-2 text-xs xl:px-3">Dia</TabsTrigger>
+                  <TabsTrigger value="week" className="px-2 text-xs xl:px-3">Semana</TabsTrigger>
+                  <TabsTrigger value="month" className="px-2 text-xs xl:px-3">Mês</TabsTrigger>
+                  <TabsTrigger value="list" className="px-2 text-xs xl:px-3">Lista</TabsTrigger>
+                  <TabsTrigger value="table" className="px-2 text-xs xl:px-3">Tabela</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
 
             {/* Direita: Filtros e Ações */}
-            <div className="flex items-center gap-3">
-              <div className="relative w-56">
+            <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 xl:gap-3">
+              <div className="relative w-36 xl:w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={searchQuery}
@@ -2784,7 +2784,7 @@ export default function Calendario() {
                     }
                   }}
                 >
-                  <SelectTrigger className="w-[180px] h-9 text-xs">
+                  <SelectTrigger className="h-9 w-[150px] text-xs xl:w-[180px]">
                     <div className="flex items-center gap-2">
                       <Users className="w-3.5 h-3.5" />
                       <SelectValue placeholder="Todos os usuários">

@@ -4998,7 +4998,7 @@ ${recentMessages}
             size="sm"
             variant="ghost"
             onClick={() => setShowConversationsList(true)}
-            className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-background/90 dark:bg-card/90 shadow-md hover:bg-card dark:hover:bg-card border border-border/50"
+            className="absolute top-3 left-3 z-50 h-9 w-9 p-0 rounded-full bg-background/90 dark:bg-card/90 shadow-md hover:bg-card dark:hover:bg-card border border-border/50"
             title="Abrir painel"
           >
             <PanelLeft className="h-4 w-4" />
