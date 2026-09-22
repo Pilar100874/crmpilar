@@ -11,6 +11,7 @@ interface ContatosCanalListProps {
   acaoLabel?: string;
   vazioTexto?: string;
   onSelecionar?: (contato: ContatoAtendimento) => void;
+  selecionadoId?: string | null;
 }
 
 const icones = {
