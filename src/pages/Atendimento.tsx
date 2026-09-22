@@ -1596,8 +1596,12 @@ export default function Atendimento() {
       )
       .subscribe();
 
+    // Atualização imediata quando a alteração vem do próprio calendário aberto na tela
+    const pararDeOuvir = ouvirTarefasAlteradas(recarregar);
+
     return () => {
       if (timeout) clearTimeout(timeout);
+      pararDeOuvir();
       void supabase.removeChannel(canal);
     };
   }, [agendaDate, activeTab, usarAgenda]);
