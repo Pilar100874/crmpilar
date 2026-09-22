@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Tag, Trash2, Plus, Search } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface Segmento { id: string; nome: string; }
-interface Usuario { id: string; nome: string; email: string; }
+interface Usuario { id: string; nome: string; email: string | null; }
 interface Vinculo { id: string; usuario_id: string; segmento_id: string; }
 
 export default function VinculosSegmentoProspectUsuario() {
@@ -35,13 +36,13 @@ export default function VinculosSegmentoProspectUsuario() {
 
   const carregar = async () => {
     setLoading(true);
-    const [segRes, usrRes, vincRes] = await Promise.all([
+    const [segRes, usuariosGerentes, vincRes] = await Promise.all([
       supabase.from("segmentos").select("id, nome").eq("estabelecimento_id", estabId).eq("is_prospect", true).order("nome"),
-      supabase.from("usuarios").select("id, nome, email").eq("estabelecimento_id", estabId).eq("tipo", "gerente").order("nome"),
+      carregarGerentesEAdministradores(estabId),
       supabase.from("usuario_segmentos").select("id, usuario_id, segmento_id"),
     ]);
     setSegmentos((segRes.data as any) || []);
-    setUsuarios((usrRes.data as any) || []);
+    setUsuarios(usuariosGerentes);
     setVinculos((vincRes.data as any) || []);
     setLoading(false);
   };

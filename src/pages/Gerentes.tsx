@@ -12,11 +12,12 @@ import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { CadastroCardList } from "@/components/cadastros/CadastroCardList";
 
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface Gerente {
   id: string;
   nome: string;
-  email: string;
+  email: string | null;
   whatsapp: string | null;
 }
 
@@ -64,17 +65,12 @@ export default function Gerentes() {
 
   const loadGerentes = async () => {
     if (!estabelecimentoId) return;
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("id, nome, email, whatsapp, grupos_acesso!inner(perfil)")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .eq("grupos_acesso.perfil", "gerente")
-      .order("nome");
-    if (error) {
-      toast.error("Erro ao carregar gerentes: " + error.message);
-      return;
+    try {
+      setGerentes(await carregarGerentesEAdministradores(estabelecimentoId));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error("Erro ao carregar gerentes: " + message);
     }
-    setGerentes(data || []);
   };
 
   const loadListas = async () => {
