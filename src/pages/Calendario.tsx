@@ -988,6 +988,7 @@ export default function Calendario() {
         return false;
       }
 
+      notificarTarefasAlteradas();
       return true;
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
