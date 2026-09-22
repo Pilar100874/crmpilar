@@ -1564,11 +1564,12 @@ export default function Atendimento() {
 
   // Reload tasks when date or sort order changes
   useEffect(() => {
-    if (activeTab === 'agenda') {
+    // Com a flag "Usar agenda" ligada as demais abas também usam os contatos da agenda
+    if (activeTab === 'agenda' || usarAgenda) {
       loadTodayTasks(agendaDate);
       loadAvailableOrigens();
     }
-  }, [agendaDate, taskSortOrder, activeTab]);
+  }, [agendaDate, taskSortOrder, activeTab, usarAgenda]);
 
   const loadAvailableOrigens = async () => {
     try {
@@ -5154,7 +5155,7 @@ ${recentMessages}
                   <>
                     <div className="flex items-center gap-2 px-2 py-1.5">
                       <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
-                      <span className="text-xs font-medium text-orange-600">Agenda do Dia</span>
+                      <span className="text-xs font-medium text-orange-600">{usarAgenda ? "Agenda do Dia" : "Meus contatos"}</span>
                       <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
                         {agendaConversations.length + contatosSemConversa.length}
                       </Badge>
