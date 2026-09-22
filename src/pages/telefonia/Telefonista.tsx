@@ -487,7 +487,7 @@ export default function Telefonista() {
                   const varianteDirecao =
                     c.direcao === "Entrante"
                       ? "default"
-                      : c.direcao === "Sainte"
+                      : c.direcao === "Saída"
                         ? "secondary"
                         : "outline";
                   return (

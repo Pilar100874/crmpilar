@@ -33,7 +33,7 @@ interface ChamadaUcm {
   duracao?: string;
   duracao_seg?: number;
   estado?: string;
-  direcao?: "Entrante" | "Sainte" | "Interna";
+  direcao?: "Entrante" | "Saída" | "Interna";
   atendente?: string;
   atendente_nome?: string;
   fila?: string;
@@ -715,8 +715,8 @@ Deno.serve(async (req) => {
           const destino = String(reg.dst ?? reg.callee ?? "");
           const ehRamalOrigem = nomesRamais.has(origem);
           const ehRamalDestino = nomesRamais.has(destino);
-          let direcao: "Entrante" | "Sainte" | "Interna" = "Interna";
-          if (ehRamalOrigem && !ehRamalDestino && !nomesFilas.has(destino)) direcao = "Sainte";
+          let direcao: "Entrante" | "Saída" | "Interna" = "Interna";
+          if (ehRamalOrigem && !ehRamalDestino && !nomesFilas.has(destino)) direcao = "Saída";
           else if (!ehRamalOrigem) direcao = "Entrante";
           return {
             id: String(reg.uniqueid ?? `${reg.start}-${origem}-${destino}`),
@@ -811,9 +811,9 @@ Deno.serve(async (req) => {
 
       let direcao: ChamadaUcm["direcao"] = "Entrante";
       if (ramalOrigem && ramalDestino) direcao = "Interna";
-      else if (ramalOrigem) direcao = "Sainte";
+      else if (ramalOrigem) direcao = "Saída";
 
-      const atendente = direcao === "Sainte" ? ramalOrigem : ramalDestino;
+      const atendente = direcao === "Saída" ? ramalOrigem : ramalDestino;
       const estado = conversando ? "Em conversa" : filaDestino ? "Aguardando na fila" : "Chamando";
 
       return {

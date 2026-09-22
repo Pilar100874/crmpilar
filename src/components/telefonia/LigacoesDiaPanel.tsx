@@ -41,12 +41,12 @@ export interface LigacaoDia {
   duracao_seg: number;
   conversa_seg: number;
   status: string;
-  direcao: "Entrante" | "Sainte" | "Interna";
+  direcao: "Entrante" | "Saída" | "Interna";
 }
 
 const STATUS_PERDIDA = ["Não atendida", "Ocupado", "Falhou"];
 const OPCOES_STATUS = ["Atendida", "Não atendida", "Ocupado", "Falhou"];
-const OPCOES_DIRECAO = ["Entrante", "Sainte", "Interna"];
+const OPCOES_DIRECAO = ["Entrante", "Saída", "Interna"];
 
 const fmtSeg = (total: number) => {
   if (!total || total <= 0) return "00:00";
@@ -75,7 +75,7 @@ const varianteStatus = (status: string) => {
 
 const IconeDirecao = ({ direcao }: { direcao: LigacaoDia["direcao"] }) => {
   if (direcao === "Entrante") return <PhoneIncoming className="h-3.5 w-3.5 text-green-500" />;
-  if (direcao === "Sainte") return <PhoneOutgoing className="h-3.5 w-3.5 text-blue-500" />;
+  if (direcao === "Saída") return <PhoneOutgoing className="h-3.5 w-3.5 text-blue-500" />;
   return <PhoneCall className="h-3.5 w-3.5 text-muted-foreground" />;
 };
 
