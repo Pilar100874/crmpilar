@@ -22,6 +22,13 @@ export const somenteDigitosDiscagem = (valor: string) => prepararNumeroComRegras
  * Não envolve WebRTC — a chamada é originada no servidor.
  */
 export async function ligarPeloPabx(destino: string, nomeCliente?: string): Promise<RespostaClickToCall> {
+  const validacao = validarNumeroDiscagem(destino);
+  if (!validacao.valido) {
+    const mensagem = validacao.motivo || "Número inválido";
+    toast.error(mensagem);
+    return { error: mensagem };
+  }
+
   const numero = await somenteDigitosDiscagem(destino);
   if (!numero) {
     return { error: "Informe o número a ser discado" };
