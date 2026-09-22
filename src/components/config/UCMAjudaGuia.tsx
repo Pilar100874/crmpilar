@@ -212,12 +212,12 @@ export function UCMAjudaGuia() {
             </AccordionItem>
 
             <AccordionItem value="p5">
-              <AccordionTrigger>5. Criar o usuário de API (integração com o sistema)</AccordionTrigger>
+              <AccordionTrigger>5. Ativar a API do UCM (integração com o sistema)</AccordionTrigger>
               <AccordionContent>
                 <Passos
                   itens={[
-                    "No UCM, vá em Configurações do Sistema → Configuração de API / HTTPS API e ative a API.",
-                    "Crie um usuário exclusivo para a integração (ex.: apicrm) com uma senha forte — não use a conta do administrador principal.",
+                    "No UCM, vá em Value-added Features → API Configuration → HTTPS API Settings (New). Ative a opção Enable, defina um usuário e senha fortes (ex.: apicrm) — não use a conta do administrador principal — e salve.",
+                    "Clique em Apply Changes (barra amarela no topo) para a API começar a responder. Sem isso as requisições falham com erro de autenticação.",
                     "Se houver lista de IPs permitidos, inclua a rede do CRM ou deixe liberado apenas se o acesso for interno.",
                     "Anote usuário e senha: eles vão nos campos 'Usuário API' e 'Senha' desta tela.",
                   ]}
@@ -280,8 +280,27 @@ export function UCMAjudaGuia() {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="p8">
-              <AccordionTrigger>8. Problemas comuns e solução</AccordionTrigger>
+            <AccordionItem value="p8_cdr">
+              <AccordionTrigger>8. Histórico de ligações (CDR) na Mesa da Telefonista</AccordionTrigger>
+              <AccordionContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  A aba "Ligações do dia" da Telefonista lê o CDR do próprio UCM pela API HTTPS. Se ela
+                  ficar vazia ou mostrar aviso, o UCM ainda não está expondo os registros.
+                </p>
+                <Passos
+                  itens={[
+                    "Confirme que a API HTTPS New está ativa e com Apply Changes aplicado (passo 5).",
+                    "Verifique se o usuário e senha de API estão iguais nos campos 'Usuário API' e 'Senha' desta tela.",
+                    "O UCM grava o CDR em hora local; a consulta usa o fuso de Brasília. Certifique-se de que o relógio do PABX está correto (Sistema → Data e Hora).",
+                    "A configuração 'CDR Real-time Output Settings' é opcional — não precisa estar ativada só para ler o histórico.",
+                    "A API legada na porta 8443 funciona como fallback, mas prefira manter a API New na 8089.",
+                  ]}
+                />
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="p9">
+              <AccordionTrigger>9. Problemas comuns e solução</AccordionTrigger>
               <AccordionContent>
                 <Tabela
                   cabecalho={["Sintoma", "Causa mais provável", "O que fazer"]}

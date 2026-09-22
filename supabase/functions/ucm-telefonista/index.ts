@@ -171,6 +171,89 @@ class ClienteUcm {
   }
 }
 
+/** Cliente legado da API de CDR do UCM (porta 8443, digest auth). */
+class ClienteCdrLegacy {
+  constructor(private host: string, private usuario: string, private senha: string) {}
+
+  private md5(texto: string) {
+    return md5(texto); // js-md5 já importado no topo do arquivo
+  }
+
+  private parseWwwAuthenticate(cabecalho: string) {
+    const params: Record<string, string> = {};
+    const matches = cabecalho.matchAll(/(\w+)=([^",\s]+|"([^"]*)")/g);
+    for (const m of matches) {
+      const chave = m[1];
+      const valor = m[3] !== undefined ? m[3] : m[2];
+      params[chave] = valor;
+    }
+    return params;
+  }
+
+  private gerarCnonce() {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async consultar(query: Record<string, string>, timeoutMs = 15000) {
+    const url = new URL(`https://${this.host}:8443/cdrapi`);
+    for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
+    const uri = url.pathname + url.search;
+
+    const controlador = new AbortController();
+    const tempo = setTimeout(() => controlador.abort(), timeoutMs);
+    try {
+      // Primeiro GET para obter o desafio digest.
+      const primeiro = await fetch(url.toString(), {
+        method: "GET",
+        signal: controlador.signal,
+        ...clienteUcmTls(),
+      } as RequestInit);
+      if (primeiro.status !== 401) return primeiro;
+      const www = primeiro.headers.get("www-authenticate") || "";
+      if (!www.startsWith("Digest")) return primeiro;
+
+      const p = this.parseWwwAuthenticate(www);
+      const realm = p.realm || "";
+      const nonce = p.nonce || "";
+      const opaque = p.opaque || "";
+      const qop = p.qop || "auth";
+      const algorithm = (p.algorithm || "MD5").toUpperCase();
+      const cnonce = this.gerarCnonce();
+      const nc = "00000001";
+
+      const a1 = `${this.usuario}:${realm}:${this.senha}`;
+      const a2 = `GET:${uri}`;
+      const ha1 = algorithm === "MD5-SESS" ? await this.md5(`${await this.md5(a1)}:${nonce}:${cnonce}`) : await this.md5(a1);
+      const ha2 = await this.md5(a2);
+      const response = qop ? await this.md5(`${ha1}:${nonce}:${nc}:${cnonce}:${qop}:${ha2}`) : await this.md5(`${ha1}:${nonce}:${ha2}`);
+
+      const partes = [
+        `username="${this.usuario}"`,
+        `realm="${realm}"`,
+        `nonce="${nonce}"`,
+        `uri="${uri}"`,
+        `response="${response}"`,
+        qop ? `qop=${qop}` : "",
+        qop ? `nc=${nc}` : "",
+        qop ? `cnonce="${cnonce}"` : "",
+        opaque ? `opaque="${opaque}"` : "",
+        algorithm ? `algorithm="${algorithm}"` : "",
+      ].filter(Boolean);
+
+      return await fetch(url.toString(), {
+        method: "GET",
+        headers: { Authorization: `Digest ${partes.join(", ")}` },
+        signal: controlador.signal,
+        ...clienteUcmTls(),
+      } as RequestInit);
+    } finally {
+      clearTimeout(tempo);
+    }
+  }
+}
+
 const listaDe = (resposta: Record<string, unknown> | null, ...chaves: string[]) => {
   if (!resposta) return [] as Record<string, unknown>[];
   for (const chave of chaves) {
@@ -520,73 +603,85 @@ Deno.serve(async (req) => {
     // ---------- Ligações do dia (histórico CDR do PABX) ----------
 
     if (acao === "ligacoes_dia") {
-      // A API de CDR do Grandstream fica em /cdrapi — na mesma porta da API
-      // principal ou na porta 8443, dependendo do firmware/configuração.
-      const base = urlSucesso.replace(/\/api$/, "");
-      const semPorta = base.replace(/:\d+$/, "");
-      const candidatosCdr = [
-        `${base}/cdrapi?format=json`,
-        `${semPorta}:8443/cdrapi?format=json`,
-      ];
-      let clienteCdr: ClienteUcm | null = null;
-      let erroCdr = "";
-      for (const urlCdr of candidatosCdr) {
-        try {
-          const tentativa = new ClienteUcm(urlCdr, config.ucm_user, config.ucm_password);
-          await tentativa.autenticar();
-          clienteCdr = tentativa;
-          break;
-        } catch (erro) {
-          erroCdr = erro instanceof Error ? erro.message : String(erro);
-          console.log("CDR indisponível em", urlCdr, ":", erroCdr);
-        }
-      }
-      if (!clienteCdr) {
-        // Alguns firmwares expõem o CDR pela API principal — sonda antes de desistir.
-        const sonda = await cliente.acaoBruta("listCdr", {
-          options: "uniqueid,src,dst,disposition,start,duration,billsec",
-          numRecords: "5",
-        });
-        console.log("listCdr na API principal:", JSON.stringify(sonda).slice(0, 400));
-        if (Number(sonda?.status) === 0) {
-          clienteCdr = cliente;
-        } else {
-          // Responde 200 com aviso amigável: CDR desativado é situação
-          // esperada, não falha da função (evita tela de erro no app).
-          return responder({
-            ok: false,
-            cdr_disponivel: false,
-            ligacoes: [],
-            aviso:
-              "O histórico de ligações (CDR) está desativado no PABX. Para ativar: abra o UCM → CDR → Configurações de API, ative a API de CDR e clique em Apply Changes. A tela passa a listar as ligações sozinha.",
-          });
-        }
-      }
-
-      // "Hoje" no horário de Brasília — o PABX grava o CDR em hora local.
-      const hoje = new Intl.DateTimeFormat("en-CA", {
+      // A API nova do UCM (porta 8089) expõe CDR pela action "cdrapi".
+      // Documentação: UCM6xxx HTTPS API Guide, action "cdrapi" retorna cdr_root.
+      // Não precisa abrir a porta 8443 nem usar o CDR Real-time Output.
+      const dias = Math.min(30, Math.max(1, Number(corpo?.dias ?? 1)));
+      const agora = new Date();
+      const fim = new Intl.DateTimeFormat("en-CA", {
         timeZone: "America/Sao_Paulo",
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-      }).format(new Date());
+      }).format(agora);
+      const inicioObj = new Date(agora);
+      inicioObj.setDate(inicioObj.getDate() - dias + 1);
+      const inicio = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(inicioObj);
 
-      const bruto = await clienteCdr.acaoBruta("listCdr", {
-        options:
-          "uniqueid,src,dst,channel,dstchannel,disposition,start,answer,end,duration,billsec,accountcode",
-        startTime: `${hoje} 00:00:00`,
-        endTime: `${hoje} 23:59:59`,
-        numRecords: "500",
-      }, 15000);
+      let bruto = await cliente.acaoBruta(
+        "cdrapi",
+        {
+          format: "json",
+          startTime: `${inicio}T00:00:00`,
+          endTime: `${fim}T23:59:59`,
+          numRecords: "500",
+        },
+        15000,
+      );
 
-      if (Number(bruto?.status) !== 0) {
+      console.log("cdrapi raw:", JSON.stringify(bruto).slice(0, 600));
+
+      // A action cdrapi retorna cdr_root quando bem-sucedida; status só vem em erros.
+      let cdrRoot: unknown[] | null = Array.isArray(bruto?.cdr_root) ? bruto.cdr_root : null;
+
+      // Fallback: API legada de CDR na porta 8443 (digest auth).
+      let fallbackStatus = "não tentado";
+      let fallbackErro = "";
+      if (!cdrRoot && config.ucm_user && config.ucm_password) {
+        try {
+          const host = new URL(urlSucesso).hostname;
+          const legacy = new ClienteCdrLegacy(host, config.ucm_user, config.ucm_password);
+          const resposta = await legacy.consultar({
+            format: "json",
+            startTime: `${inicio}T00:00:00`,
+            endTime: `${fim}T23:59:59`,
+            numRecords: "500",
+          });
+          fallbackStatus = String(resposta.status);
+          if (resposta.ok) {
+            const json = await resposta.json() as Record<string, unknown>;
+            console.log("cdrapi legacy raw:", JSON.stringify(json).slice(0, 400));
+            if (Array.isArray(json?.cdr_root)) {
+              cdrRoot = json.cdr_root;
+              bruto = { cdr_root: json.cdr_root };
+            }
+          } else {
+            fallbackErro = String(resposta.statusText || "");
+          }
+        } catch (erro) {
+          fallbackErro = erro instanceof Error ? erro.message : String(erro);
+          fallbackStatus = "erro";
+          console.log("Fallback CDR legado falhou:", fallbackErro);
+        }
+      }
+
+      if (!cdrRoot) {
+        // Responde 200 com aviso amigável: CDR desativado é situação
+        // esperada, não falha da função (evita tela de erro no app).
         return responder({
           ok: false,
           cdr_disponivel: false,
           ligacoes: [],
-          aviso: `O PABX recusou a consulta do histórico (código ${Number(bruto?.status ?? -999)}). Ative a API de CDR no UCM (CDR → Configurações de API) e clique em Apply Changes.`,
+          aviso:
+            "O histórico de ligações (CDR) não está acessível pela API do PABX. Verifique se a API HTTPS está ativa em Value-added Features → API Configuration → HTTPS API Settings (New) e clique em Apply Changes.",
         });
       }
+
 
       // Nomes dos ramais e das filas para enriquecer origem/destino.
       const [contas, filasBrutas] = await Promise.all([
@@ -611,7 +706,7 @@ Deno.serve(async (req) => {
         return v ? String(disposicao) : "Desconhecido";
       };
 
-      const ligacoes = listaDe(bruto.response, "cdrroot", "cdr", "list")
+      const ligacoes = listaDe(bruto, "cdr_root", "cdrroot", "cdr", "list")
         .map((item) => {
           const reg = (
             item.cdr && typeof item.cdr === "object" ? item.cdr : item
@@ -638,9 +733,10 @@ Deno.serve(async (req) => {
             conta: (reg.accountcode as string) || undefined,
           };
         })
+        .filter((l) => (l.origem || l.destino) && !l.id.startsWith("undefined--"))
         .sort((a, b) => String(b.inicio ?? "").localeCompare(String(a.inicio ?? "")));
 
-      return responder({ ok: true, ligacoes, dia: hoje });
+      return responder({ ok: true, ligacoes, periodo: { inicio, fim }, dia: fim });
     }
 
     // ---------- Painel (padrão) ----------

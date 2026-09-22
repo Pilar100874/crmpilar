@@ -106,11 +106,11 @@ export function LigacoesDiaPanel() {
         cdr_disponivel?: boolean;
         ligacoes?: LigacaoDia[];
       };
-      // CDR desativado no PABX é situação esperada: mostra orientação, não erro.
+      // CDR indisponível no PABX é situação esperada: mostra orientação, não erro.
       if (resposta.cdr_disponivel === false) {
         setAvisoCdr(
           resposta.aviso ||
-            "O histórico de ligações (CDR) está desativado no PABX. Ative no UCM em CDR → Configurações de API.",
+            "O histórico de ligações (CDR) não está acessível no PABX. Ative em Value-added Features → API Configuration → HTTPS API Settings (New) e clique em Apply Changes.",
         );
         setLigacoes([]);
         return;
