@@ -6,15 +6,19 @@ import {
   ListOrdered,
   Monitor,
   Pause,
+  Pencil,
   Phone,
   PhoneCall,
   PhoneForwarded,
   PhoneIncoming,
   PhoneOff,
   Play,
+  Plus,
   RefreshCw,
   Search,
   Smartphone,
+  Trash2,
+  Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -37,9 +41,12 @@ import { useSipConnection } from "@/hooks/useSipConnection";
 import {
   usePainelTelefonista,
   type ChamadaAoVivo,
+  type FilaPainel,
   type RamalTelefonista,
 } from "@/hooks/usePainelTelefonista";
 import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
+import { FilaDialog, rotuloEstrategia } from "@/components/telefonia/FilaDialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type EstadoRamal = "livre" | "tocando" | "conversa" | "offline";
 
@@ -55,6 +62,17 @@ const numerosDe = (texto?: string): string[] => (texto || "").match(/\d{2,}/g) ?
 
 const ramalNaChamada = (c: ChamadaAoVivo, ramal: string) =>
   numerosDe(c.origem).includes(ramal) || numerosDe(c.destino).includes(ramal);
+
+/** Formata segundos em mm:ss (ou h:mm:ss) para as durações ao vivo. */
+const fmtSeg = (total: number) => {
+  const s = Math.max(0, Math.floor(total));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const seg = s % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(seg).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+};
 
 function CorEstado({ estado }: { estado: EstadoRamal }) {
   const classe =
@@ -78,6 +96,10 @@ export default function Telefonista() {
   const [chamadaParaEncerrar, setChamadaParaEncerrar] = useState<ChamadaAoVivo | null>(null);
   const [encerrando, setEncerrando] = useState(false);
   const [acaoEmRamal, setAcaoEmRamal] = useState<string | null>(null);
+  const [filaDialogAberto, setFilaDialogAberto] = useState(false);
+  const [filaEmEdicao, setFilaEmEdicao] = useState<FilaPainel | null>(null);
+  const [filaParaExcluir, setFilaParaExcluir] = useState<FilaPainel | null>(null);
+  const [excluindoFila, setExcluindoFila] = useState(false);
 
   // Conecta o ramal do usuário automaticamente, como o Pilar Fone faz.
   const conectarRef = useRef(sip.connect);
@@ -132,7 +154,18 @@ export default function Telefonista() {
     const { data, error } = await supabase.functions.invoke("ucm-telefonista", { body: corpo });
     const resposta = (data || {}) as { ok?: boolean; error?: string; message?: string };
     if (error || resposta.error) {
-      throw new Error(resposta.error || "O PABX recusou a operação");
+      // Erros HTTP carregam a mensagem real do PABX no corpo da resposta.
+      let mensagem = resposta.error || "";
+      const contexto = (error as { context?: Response } | null)?.context;
+      if (!mensagem && contexto) {
+        try {
+          const corpoErro = (await contexto.json()) as { error?: string };
+          mensagem = corpoErro?.error || "";
+        } catch {
+          /* sem corpo legível */
+        }
+      }
+      throw new Error(mensagem || "O PABX recusou a operação");
     }
     return resposta;
   };
@@ -213,6 +246,24 @@ export default function Telefonista() {
     const numero = discagem.trim();
     if (!numero) return;
     ligarParaRamal(numero);
+  };
+
+  const excluirFilaConfirmada = async () => {
+    if (!filaParaExcluir) return;
+    setExcluindoFila(true);
+    try {
+      const r = await painel.excluirFila(filaParaExcluir.numero);
+      toast({ title: "Fila excluída", description: (r as { message?: string }).message });
+      setFilaParaExcluir(null);
+    } catch (erro) {
+      toast({
+        title: "Não foi possível excluir a fila",
+        description: erro instanceof Error ? erro.message : "Erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      setExcluindoFila(false);
+    }
   };
 
   return (
@@ -408,31 +459,58 @@ export default function Telefonista() {
               {painel.chamadas.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma chamada em andamento.</p>
               ) : (
-                painel.chamadas.map((c, i) => (
-                  <div key={c.canal ?? i} className="flex items-center gap-2 rounded-md border p-2">
-                    <PhoneCall className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {c.origem || "?"} → {c.destino || "?"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {c.estado}
-                        {c.duracao ? ` · ${c.duracao}` : ""}
-                      </p>
+                painel.chamadas.map((c, i) => {
+                  const esperandoFila = c.estado === "Aguardando na fila";
+                  const emConversa = c.estado === "Em conversa";
+                  const varianteDirecao =
+                    c.direcao === "Entrante"
+                      ? "default"
+                      : c.direcao === "Sainte"
+                        ? "secondary"
+                        : "outline";
+                  return (
+                    <div key={c.canal ?? i} className="flex items-center gap-2 rounded-md border p-2">
+                      <PhoneCall className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          {c.direcao && (
+                            <Badge variant={varianteDirecao} className="px-1.5 py-0 text-[10px]">
+                              {c.direcao}
+                            </Badge>
+                          )}
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {c.origem || "?"} → {c.destino || "?"}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {c.estado}
+                          {esperandoFila && c.fila
+                            ? ` ${c.fila_nome || c.fila} · aguardando há ${fmtSeg(painel.segundosAoVivo(c))}`
+                            : emConversa || esperandoFila
+                              ? ` · ${fmtSeg(painel.segundosAoVivo(c))}`
+                              : ""}
+                        </p>
+                        {c.atendente && (
+                          <p className="text-xs text-muted-foreground">
+                            Atendido por {c.atendente}
+                            {c.atendente_nome ? ` (${c.atendente_nome})` : ""}
+                          </p>
+                        )}
+                      </div>
+                      {c.canal && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          title="Encerrar esta chamada"
+                          onClick={() => setChamadaParaEncerrar(c)}
+                        >
+                          <PhoneOff className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    {c.canal && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        title="Encerrar esta chamada"
-                        onClick={() => setChamadaParaEncerrar(c)}
-                      >
-                        <PhoneOff className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </CardContent>
           </Card>
@@ -440,22 +518,91 @@ export default function Telefonista() {
           {/* Filas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <ListOrdered className="h-4 w-4" /> Filas
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ListOrdered className="h-4 w-4" /> Filas
+                </CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setFilaEmEdicao(null);
+                    setFilaDialogAberto(true);
+                  }}
+                >
+                  <Plus className="mr-1 h-4 w-4" /> Nova fila
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {painel.filas.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma fila configurada no PABX.</p>
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <p className="text-sm text-muted-foreground">Nenhuma fila configurada no PABX.</p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setFilaEmEdicao(null);
+                      setFilaDialogAberto(true);
+                    }}
+                  >
+                    <Plus className="mr-1 h-4 w-4" /> Criar a primeira fila
+                  </Button>
+                </div>
               ) : (
                 painel.filas.map((f) => (
                   <div key={f.numero} className="rounded-md border p-2">
-                    <p className="text-sm font-semibold text-foreground">
-                      {f.numero} {f.nome ? `— ${f.nome}` : ""}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 truncate text-sm font-semibold text-foreground">
+                        {f.numero} {f.nome ? `— ${f.nome}` : ""}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="Editar fila"
+                        onClick={() => {
+                          setFilaEmEdicao(f);
+                          setFilaDialogAberto(true);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        title="Excluir fila"
+                        onClick={() => setFilaParaExcluir(f)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                     {f.estrategia && (
-                      <p className="text-xs text-muted-foreground">Estratégia: {f.estrategia}</p>
+                      <Badge variant="outline" className="mt-1 text-[11px]">
+                        {rotuloEstrategia(f.estrategia)}
+                      </Badge>
                     )}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
+                        {f.agentes.length} {f.agentes.length === 1 ? "ramal" : "ramais"}
+                      </span>
+                      <span
+                        className={
+                          f.aguardando > 0 ? "font-medium text-foreground" : undefined
+                        }
+                      >
+                        {f.aguardando} aguardando
+                      </span>
+                      {f.aguardando > 0 && (
+                        <span className="text-destructive">
+                          espera máx. {fmtSeg(painel.esperaAoVivo(f))}
+                        </span>
+                      )}
+                      {typeof f.espera_max_config_seg === "number" && f.espera_max_config_seg > 0 && (
+                        <span>limite de espera {fmtSeg(f.espera_max_config_seg)}</span>
+                      )}
+                    </div>
                     <div className="mt-1 flex flex-col gap-1">
                       {f.agentes.length === 0 ? (
                         <p className="text-xs text-muted-foreground">Sem agentes nesta fila.</p>
@@ -539,6 +686,26 @@ export default function Telefonista() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Criar/editar fila de atendimento */}
+      <FilaDialog
+        open={filaDialogAberto}
+        onOpenChange={setFilaDialogAberto}
+        fila={filaEmEdicao}
+        ramais={painel.ramais}
+        onSalvar={(dados, criar) => painel.salvarFila(dados, criar).then(() => undefined)}
+      />
+
+      {/* Confirmação para excluir fila */}
+      <DeleteConfirmDialog
+        open={!!filaParaExcluir}
+        onOpenChange={(aberto) => !aberto && setFilaParaExcluir(null)}
+        onConfirm={() => void excluirFilaConfirmada()}
+        title="Excluir fila"
+        itemName={filaParaExcluir ? `${filaParaExcluir.numero} ${filaParaExcluir.nome ?? ""}`.trim() : undefined}
+        description="A fila é removida do PABX na hora e ligações futuras para esse número deixam de entrar nela."
+        isLoading={excluindoFila}
+      />
     </div>
   );
 }

@@ -20,7 +20,15 @@ export interface ChamadaAoVivo {
   origem?: string;
   destino?: string;
   duracao?: string;
+  duracao_seg?: number;
   estado?: string;
+  direcao?: "Entrante" | "Sainte" | "Interna";
+  /** Ramal que atendeu (ou está falando) nesta chamada. */
+  atendente?: string;
+  atendente_nome?: string;
+  /** Número da fila em que a chamada está aguardando. */
+  fila?: string;
+  fila_nome?: string;
 }
 
 export interface TroncoPainel {
@@ -41,6 +49,32 @@ export interface FilaPainel {
   nome?: string;
   estrategia?: string;
   agentes: AgenteFila[];
+  /** Chamadas esperando atendimento nesta fila agora. */
+  aguardando: number;
+  /** Maior tempo de espera atual na fila (segundos, no momento da leitura). */
+  espera_max_seg: number;
+  /** Tempo máximo de espera configurado na fila (segundos). */
+  espera_max_config_seg?: number;
+  /** Tempo que toca em cada agente (segundos). */
+  toque_agente_seg?: number;
+  /** Máximo de pessoas aguardando na fila. */
+  max_aguardando?: number;
+  /** Intervalo entre tentativas de chamar os agentes (segundos). */
+  intervalo_tentativa_seg?: number;
+  /** Descanso do agente após cada ligação (segundos). */
+  descanso_seg?: number;
+}
+
+export interface DadosFila {
+  numero: string;
+  nome: string;
+  estrategia: string;
+  membros: string[];
+  espera_max_seg: number;
+  toque_agente_seg: number;
+  max_aguardando: number;
+  intervalo_tentativa_seg: number;
+  descanso_seg: number;
 }
 
 interface RespostaPainel {
@@ -69,6 +103,10 @@ export function usePainelTelefonista(intervaloMs = 10000) {
   const [pabxDisponivel, setPabxDisponivel] = useState<boolean | null>(null);
   const [motivoPabx, setMotivoPabx] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
+  // Momento da última leitura do PABX: base para o "tick" das durações ao vivo.
+  const [lidoEm, setLidoEm] = useState<number>(Date.now());
+  // Canal → duração base; soma o tempo decorrido entre leituras sem pular.
+  const basesDuracao = useRef(new Map<string, number>());
   const emAndamento = useRef(false);
   // Sessão expirada (401): para de chamar até o usuário entrar de novo.
   const bloqueadoPor401 = useRef(false);
@@ -115,7 +153,19 @@ export function usePainelTelefonista(intervaloMs = 10000) {
       if (painel?.ok) {
         setPabxDisponivel(true);
         setMotivoPabx(null);
-        setChamadas(painel.chamadas ?? []);
+        const lista = painel.chamadas ?? [];
+        // Duração ao vivo: guarda a base de cada canal para somar o tempo entre leituras.
+        const canaisVivos = new Set<string>();
+        for (const c of lista) {
+          const chave = c.canal ?? `${c.origem ?? ""}->${c.destino ?? ""}`;
+          canaisVivos.add(chave);
+          basesDuracao.current.set(chave, c.duracao_seg ?? 0);
+        }
+        for (const chave of [...basesDuracao.current.keys()]) {
+          if (!canaisVivos.has(chave)) basesDuracao.current.delete(chave);
+        }
+        setLidoEm(Date.now());
+        setChamadas(lista);
         setTroncos(painel.troncos ?? []);
         setTroncosDisponiveis(painel.troncos_disponiveis !== false);
         setFilas(Array.isArray(painel.filas) ? painel.filas : []);
@@ -165,6 +215,67 @@ export function usePainelTelefonista(intervaloMs = 10000) {
     };
   }, [atualizar, intervaloMs]);
 
+  // Relógio de 1s para as durações "correrem" na tela entre uma leitura e outra.
+  const [agora, setAgora] = useState<number>(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  /** Duração ao vivo de uma chamada, em segundos, contando entre as leituras. */
+  const segundosAoVivo = useCallback(
+    (c: ChamadaAoVivo) => {
+      const chave = c.canal ?? `${c.origem ?? ""}->${c.destino ?? ""}`;
+      const base = basesDuracao.current.get(chave) ?? c.duracao_seg ?? 0;
+      return base + Math.max(0, Math.floor((agora - lidoEm) / 1000));
+    },
+    [agora, lidoEm],
+  );
+
+  /** Maior espera atual de uma fila, contando os segundos desde a última leitura. */
+  const esperaAoVivo = useCallback(
+    (f: FilaPainel) => {
+      if (!f.aguardando) return 0;
+      return f.espera_max_seg + Math.max(0, Math.floor((agora - lidoEm) / 1000));
+    },
+    [agora, lidoEm],
+  );
+
+  const invocarFila = useCallback(
+    async (corpo: Record<string, unknown>) => {
+      const { data, error } = await supabase.functions.invoke("ucm-telefonista", { body: corpo });
+      const resposta = (data || {}) as { ok?: boolean; error?: string; message?: string };
+      if (error || resposta.error || !resposta.ok) {
+        // Erros HTTP carregam a mensagem real do PABX no corpo da resposta.
+        const contexto = (error as { context?: Response } | null)?.context;
+        let mensagem = resposta.error || "";
+        if (!mensagem && contexto) {
+          try {
+            const corpoErro = (await contexto.json()) as { error?: string };
+            mensagem = corpoErro?.error || "";
+          } catch {
+            /* sem corpo legível */
+          }
+        }
+        throw new Error(mensagem || "O PABX recusou a operação");
+      }
+      void atualizar();
+      return resposta;
+    },
+    [atualizar],
+  );
+
+  const salvarFila = useCallback(
+    (dados: DadosFila, criar: boolean) =>
+      invocarFila({ acao: criar ? "fila_criar" : "fila_atualizar", ...dados }),
+    [invocarFila],
+  );
+
+  const excluirFila = useCallback(
+    (numero: string) => invocarFila({ acao: "fila_excluir", numero }),
+    [invocarFila],
+  );
+
   return {
     ramais,
     chamadas,
@@ -176,5 +287,9 @@ export function usePainelTelefonista(intervaloMs = 10000) {
     motivoPabx,
     carregando,
     atualizar,
+    segundosAoVivo,
+    esperaAoVivo,
+    salvarFila,
+    excluirFila,
   };
 }

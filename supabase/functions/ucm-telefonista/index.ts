@@ -10,7 +10,12 @@ const corsHeaders = {
 /**
  * Mesa de telefonista: consolida ramais, chamadas ao vivo, troncos e filas do
  * UCM e executa as ações da operadora (discar, puxar chamada, transferir,
- * pausar/retomar agente em fila, desligar).
+ * pausar/retomar agente em fila, desligar, criar/editar/excluir filas).
+ *
+ * Confirmado no UCM6510 do cliente (sondagem em 21/09/2026):
+ * - addQueue/updateQueue/deleteQueue funcionam (addQueue usa "extension").
+ * - applyChanges existe, mas leva mais de 8s: usar timeout maior.
+ * - transfercall/redirectCall/listSIPTrunk/listQueueAgent: sem privilégio (-47).
  */
 
 interface RamalUcm {
@@ -26,7 +31,13 @@ interface ChamadaUcm {
   origem?: string;
   destino?: string;
   duracao?: string;
+  duracao_seg?: number;
   estado?: string;
+  direcao?: "Entrante" | "Sainte" | "Interna";
+  atendente?: string;
+  atendente_nome?: string;
+  fila?: string;
+  fila_nome?: string;
 }
 
 interface TroncoUcm {
@@ -47,7 +58,16 @@ interface FilaUcm {
   nome?: string;
   estrategia?: string;
   agentes: AgenteFila[];
+  aguardando: number;
+  espera_max_seg: number;
+  espera_max_config_seg?: number;
+  toque_agente_seg?: number;
+  max_aguardando?: number;
+  intervalo_tentativa_seg?: number;
+  descanso_seg?: number;
 }
+
+const ESTRATEGIAS_FILA = ["ringall", "linear", "rrmemory", "leastrecent", "fewestcalls", "random"] as const;
 
 const textoStatus = (valor: unknown) => String(valor ?? "").trim().toLowerCase();
 
@@ -61,14 +81,29 @@ const estaOnline = (registro: Record<string, unknown>) => {
 const estaPausado = (registro: Record<string, unknown>) =>
   /paused|pause|1|true|yes/.test(textoStatus(registro.paused ?? registro.pause ?? registro.paused_status));
 
+/** Extrai os números (2+ dígitos) de um texto de origem/destino do PABX. */
+const digitosDe = (texto?: string): string[] => (texto || "").match(/\d{2,}/g) ?? [];
+
+/** "00:01:23" | "01:23" | "83" -> segundos. */
+const duracaoParaSeg = (valor?: string): number => {
+  if (!valor) return 0;
+  const v = valor.trim();
+  if (/^\d+$/.test(v)) return Number(v);
+  const partes = v.split(":").map(Number);
+  if (partes.some((n) => Number.isNaN(n))) return 0;
+  if (partes.length === 3) return partes[0] * 3600 + partes[1] * 60 + partes[2];
+  if (partes.length === 2) return partes[0] * 60 + partes[1];
+  return 0;
+};
+
 /** Cliente da API HTTPS do UCM (challenge -> login md5 -> cookie de sessão). */
 class ClienteUcm {
   private cookie = "";
   constructor(private url: string, private usuario: string, private senha: string) {}
 
-  private async chamar(corpo: Record<string, unknown>) {
+  private async chamar(corpo: Record<string, unknown>, timeoutMs = 8000) {
     const controlador = new AbortController();
-    const tempo = setTimeout(() => controlador.abort(), 8000);
+    const tempo = setTimeout(() => controlador.abort(), timeoutMs);
     try {
       const resposta = await fetch(this.url, {
         method: "POST",
@@ -84,14 +119,25 @@ class ClienteUcm {
     }
   }
 
+  /** O UCM recusa logins de forma intermitente sob rajada de pedidos — tenta de novo 1x. */
   async autenticar() {
-    const desafio = await this.chamar({ action: "challenge", user: this.usuario, version: "1.0" });
-    const valor = String(desafio?.response?.challenge ?? "");
-    if (!valor) throw new Error("UCM não retornou o desafio de autenticação");
-    const login = await this.chamar({ action: "login", user: this.usuario, token: md5(valor + this.senha) });
-    const cookie = String(login?.response?.cookie ?? "");
-    if (!cookie) throw new Error("Usuário ou senha da API do UCM inválidos");
-    this.cookie = cookie;
+    let ultimoErro: unknown = null;
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      try {
+        if (tentativa > 0) await new Promise((r) => setTimeout(r, 1200));
+        const desafio = await this.chamar({ action: "challenge", user: this.usuario, version: "1.0" });
+        const valor = String(desafio?.response?.challenge ?? "");
+        if (!valor) throw new Error("UCM não retornou o desafio de autenticação");
+        const login = await this.chamar({ action: "login", user: this.usuario, token: md5(valor + this.senha) });
+        const cookie = String(login?.response?.cookie ?? "");
+        if (!cookie) throw new Error("Usuário ou senha da API do UCM inválidos");
+        this.cookie = cookie;
+        return;
+      } catch (erro) {
+        ultimoErro = erro;
+      }
+    }
+    throw ultimoErro instanceof Error ? ultimoErro : new Error("Falha ao autenticar no UCM");
   }
 
   /** Ação tolerante: falha ou status diferente de 0 viram null. */
@@ -107,12 +153,21 @@ class ClienteUcm {
   }
 
   /** Ação completa: devolve status + resposta para inspeção. */
-  async acaoBruta(nome: string, extras: Record<string, unknown> = {}) {
+  async acaoBruta(nome: string, extras: Record<string, unknown> = {}, timeoutMs = 8000) {
     try {
-      return await this.chamar({ action: nome, cookie: this.cookie, ...extras });
+      return await this.chamar({ action: nome, cookie: this.cookie, ...extras }, timeoutMs);
     } catch (erro) {
       return { status: -999, response: { erro: erro instanceof Error ? erro.message : String(erro) } };
     }
+  }
+
+  /**
+   * Aplica as mudanças pendentes no UCM (equivalente ao botão Apply Changes).
+   * O reload leva vários segundos — por isso o timeout maior.
+   */
+  async aplicarMudancas(): Promise<boolean> {
+    const r = await this.acaoBruta("applyChanges", {}, 25000);
+    return Number(r?.status) === 0;
   }
 }
 
@@ -156,6 +211,8 @@ const interpretarAgentes = (bruto: unknown): AgenteFila[] => {
   }
   return [];
 };
+
+const numeroDe = (v: unknown) => Number(v ?? NaN);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -331,6 +388,133 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
+    // ---------- Filas: criar / atualizar / excluir (confirmado no UCM6510) ----------
+
+    if (acao === "fila_criar" || acao === "fila_atualizar") {
+      const ehCriacao = acao === "fila_criar";
+      const numero = String(corpo.numero ?? "").replace(/\D/g, "");
+      const nome = String(corpo.nome ?? "").trim();
+      const estrategia = String(corpo.estrategia ?? "ringall").trim();
+      const membros: string[] = Array.isArray(corpo.membros)
+        ? corpo.membros.map((m: unknown) => String(m).replace(/\D/g, "")).filter(Boolean)
+        : [];
+
+      if (!/^\d{3,6}$/.test(numero)) {
+        return responder({ error: "Número da fila inválido (use de 3 a 6 dígitos, ex.: 6500)" }, 400);
+      }
+      if (nome.length < 2 || nome.length > 40) {
+        return responder({ error: "Informe um nome para a fila (2 a 40 caracteres)" }, 400);
+      }
+      if (!ESTRATEGIAS_FILA.includes(estrategia as (typeof ESTRATEGIAS_FILA)[number])) {
+        return responder({ error: "Estratégia de distribuição inválida" }, 400);
+      }
+      if (membros.length === 0) {
+        return responder({ error: "Inclua pelo menos um ramal na fila" }, 400);
+      }
+
+      const esperaMax = numeroDe(corpo.espera_max_seg);
+      const toque = numeroDe(corpo.toque_agente_seg);
+      const maxAguardando = numeroDe(corpo.max_aguardando);
+      const intervalo = numeroDe(corpo.intervalo_tentativa_seg);
+      const descanso = numeroDe(corpo.descanso_seg);
+      const limites: Array<[string, number, number, number]> = [
+        ["tempo máximo de espera", esperaMax, 10, 3600],
+        ["tempo tocando em cada agente", toque, 5, 120],
+        ["máximo de pessoas aguardando", maxAguardando, 0, 100],
+        ["intervalo entre tentativas", intervalo, 0, 60],
+        ["descanso após cada ligação", descanso, 0, 300],
+      ];
+      for (const [rotulo, valor, min, max] of limites) {
+        if (!Number.isFinite(valor) || valor < min || valor > max) {
+          return responder({ error: `${rotulo}: use um valor entre ${min} e ${max}` }, 400);
+        }
+      }
+
+      // Na criação, o número não pode colidir com ramal ou fila existente.
+      if (ehCriacao) {
+        const contas = await cliente.acao("listAccount", { options: "extension", item_num: 500, page: 1 });
+        const usados = new Set(
+          listaDe(contas, "account", "extension", "list").map((c) => String(c.extension ?? "")),
+        );
+        const filasAtuais = await cliente.acao("listQueue", { options: "extension", item_num: 100, page: 1 });
+        for (const f of listaDe(filasAtuais, "queue", "list")) {
+          usados.add(String(f.extension ?? ""));
+        }
+        if (usados.has(numero)) {
+          return responder({ error: `O número ${numero} já está em uso no PABX. Escolha outro.` }, 400);
+        }
+      }
+
+      const campos: Record<string, unknown> = {
+        queue_name: nome,
+        strategy: estrategia,
+        members: membros.join(","),
+        queue_timeout: String(Math.round(esperaMax)),
+        ringtime: String(Math.round(toque)),
+        maxlen: String(Math.round(maxAguardando)),
+        retry: String(Math.round(intervalo)),
+        wrapuptime: String(Math.round(descanso)),
+      };
+
+      let r = ehCriacao
+        ? await cliente.acaoBruta("addQueue", { extension: numero, ...campos })
+        : await cliente.acaoBruta("updateQueue", { queue: numero, ...campos });
+
+      // Alguns firmwares recusam campos que não conhecem (-1): repete só com o básico.
+      if (Number(r?.status) === -1) {
+        const basico: Record<string, unknown> = {
+          queue_name: nome,
+          strategy: estrategia,
+          members: membros.join(","),
+          queue_timeout: campos.queue_timeout,
+          ringtime: campos.ringtime,
+        };
+        r = ehCriacao
+          ? await cliente.acaoBruta("addQueue", { extension: numero, ...basico })
+          : await cliente.acaoBruta("updateQueue", { queue: numero, ...basico });
+      }
+
+      const status = Number(r?.status ?? -999);
+      if (status !== 0) {
+        const detalhe = status === -16
+          ? `A fila ${numero} não existe no PABX`
+          : `O PABX recusou a operação (código ${status})`;
+        return responder({ error: detalhe }, 400);
+      }
+
+      const precisaAplicar = textoStatus(r?.response?.need_apply) === "yes";
+      const aplicado = precisaAplicar ? await cliente.aplicarMudancas() : true;
+
+      return responder({
+        ok: true,
+        aplicado,
+        message: aplicado
+          ? `Fila "${nome}" ${ehCriacao ? "criada" : "atualizada"} e aplicada no PABX.`
+          : `Fila salva. Abra o UCM e clique em "Apply Changes" para valer.`,
+      });
+    }
+
+    if (acao === "fila_excluir") {
+      const numero = String(corpo.numero ?? "").replace(/\D/g, "");
+      if (!numero) return responder({ error: "Informe a fila a excluir" }, 400);
+      const r = await cliente.acaoBruta("deleteQueue", { queue: numero });
+      const status = Number(r?.status ?? -999);
+      if (status !== 0) {
+        return responder({
+          error: status === -16 ? `A fila ${numero} não existe no PABX` : `O PABX recusou a exclusão (código ${status})`,
+        }, 400);
+      }
+      const precisaAplicar = textoStatus(r?.response?.need_apply) === "yes";
+      const aplicado = precisaAplicar ? await cliente.aplicarMudancas() : true;
+      return responder({
+        ok: true,
+        aplicado,
+        message: aplicado
+          ? `Fila ${numero} excluída e aplicada no PABX.`
+          : `Fila excluída. Abra o UCM e clique em "Apply Changes" para valer.`,
+      });
+    }
+
     // ---------- Painel (padrão) ----------
 
     const [contas, pontes, livres, troncosSip, troncosAnalog, filasBrutas] = await Promise.all([
@@ -346,7 +530,7 @@ Deno.serve(async (req) => {
       cliente.acao("listSIPTrunk", { options: "trunk_name,technology,out_of_service" }),
       cliente.acao("listAnalogTrunk", { options: "trunk_name,out_of_service" }),
       cliente.acao("listQueue", {
-        options: "extension,queue_name,strategy,members",
+        options: "extension,queue_name,strategy,members,queue_timeout,ringtime,maxlen,retry,wrapuptime",
         item_num: 100,
         page: 1,
         sidx: "extension",
@@ -362,18 +546,80 @@ Deno.serve(async (req) => {
       tipo: (c.account_type as string) || undefined,
     })).filter((r) => r.ramal);
 
-    const normalizarChamada = (c: Record<string, unknown>, estado: string): ChamadaUcm => ({
-      canal: (c.channel as string) ?? (c.channelname as string) ?? undefined,
-      origem: (c.callerid as string) ?? (c.src as string) ?? (c.caller as string) ?? undefined,
-      destino: (c.dialplan as string) ?? (c.dest as string) ?? (c.callee as string) ?? undefined,
-      duracao: (c.duration as string) ?? undefined,
-      estado,
-    });
+    const ramaisPorNumero = new Map(ramais.map((r) => [r.ramal, r]));
+
+    // Filas: listagem resumida + detalhe de cada uma (config completa e agentes).
+    const filas: FilaUcm[] = [];
+    const listaFilas = listaDe(filasBrutas, "queue", "list");
+    for (const f of listaFilas) {
+      const numero = String(f.extension ?? f.queue ?? "");
+      if (!numero) continue;
+      const detalhe = await cliente.acao("getQueue", { queue: numero });
+      const dados = (detalhe?.queue ?? detalhe ?? {}) as Record<string, unknown>;
+      const membrosBrutos = dados.members ?? dados.member ?? f.members;
+      filas.push({
+        numero,
+        nome: (dados.queue_name as string) || (f.queue_name as string) || (f.name as string) || undefined,
+        estrategia: (dados.strategy as string) || (f.strategy as string) || undefined,
+        agentes: interpretarAgentes(membrosBrutos),
+        aguardando: 0,
+        espera_max_seg: 0,
+        espera_max_config_seg: numeroDe(dados.queue_timeout ?? f.queue_timeout) || undefined,
+        toque_agente_seg: numeroDe(dados.ringtime ?? f.ringtime) || undefined,
+        max_aguardando: numeroDe(dados.maxlen ?? f.maxlen) || undefined,
+        intervalo_tentativa_seg: numeroDe(dados.retry ?? f.retry) || undefined,
+        descanso_seg: numeroDe(dados.wrapuptime ?? f.wrapuptime) || undefined,
+      });
+    }
+    const filasPorNumero = new Map(filas.map((f) => [f.numero, f]));
+
+    /** Classifica a chamada: direção, quem atendeu e se está aguardando numa fila. */
+    const normalizarChamada = (c: Record<string, unknown>, conversando: boolean): ChamadaUcm => {
+      const origem = (c.callerid as string) ?? (c.src as string) ?? (c.caller as string) ?? undefined;
+      const destino = (c.dialplan as string) ?? (c.dest as string) ?? (c.callee as string) ?? undefined;
+      const duracao = (c.duration as string) ?? undefined;
+
+      const numsOrigem = digitosDe(origem);
+      const numsDestino = digitosDe(destino);
+      const ramalOrigem = numsOrigem.find((n) => ramaisPorNumero.has(n));
+      const ramalDestino = numsDestino.find((n) => ramaisPorNumero.has(n));
+      const filaDestino = numsDestino.find((n) => filasPorNumero.has(n));
+
+      let direcao: ChamadaUcm["direcao"] = "Entrante";
+      if (ramalOrigem && ramalDestino) direcao = "Interna";
+      else if (ramalOrigem) direcao = "Sainte";
+
+      const atendente = direcao === "Sainte" ? ramalOrigem : ramalDestino;
+      const estado = conversando ? "Em conversa" : filaDestino ? "Aguardando na fila" : "Chamando";
+
+      return {
+        canal: (c.channel as string) ?? (c.channelname as string) ?? undefined,
+        origem,
+        destino,
+        duracao,
+        duracao_seg: duracaoParaSeg(duracao),
+        estado,
+        direcao,
+        atendente: atendente || undefined,
+        atendente_nome: atendente ? ramaisPorNumero.get(atendente)?.nome : undefined,
+        fila: filaDestino || undefined,
+        fila_nome: filaDestino ? filasPorNumero.get(filaDestino)?.nome : undefined,
+      };
+    };
 
     const chamadas: ChamadaUcm[] = [
-      ...listaDe(pontes, "channel", "list").map((c) => normalizarChamada(c, "Em conversa")),
-      ...listaDe(livres, "channel", "list").map((c) => normalizarChamada(c, "Chamando")),
+      ...listaDe(pontes, "channel", "list").map((c) => normalizarChamada(c, true)),
+      ...listaDe(livres, "channel", "list").map((c) => normalizarChamada(c, false)),
     ];
+
+    // Quem está esperando em cada fila (para o painel de tempo de espera).
+    for (const c of chamadas) {
+      if (c.estado !== "Aguardando na fila" || !c.fila) continue;
+      const fila = filasPorNumero.get(c.fila);
+      if (!fila) continue;
+      fila.aguardando += 1;
+      fila.espera_max_seg = Math.max(fila.espera_max_seg, c.duracao_seg ?? 0);
+    }
 
     const troncos: TroncoUcm[] = [
       ...listaDe(troncosSip, "sip_trunk", "trunk", "list").map((t) => ({
@@ -387,30 +633,6 @@ Deno.serve(async (req) => {
         status: textoStatus(t.out_of_service) === "1" ? "Fora de serviço" : "Ativo",
       })),
     ];
-
-    // Filas: tenta a listagem resumida e, por fila, o detalhe com os agentes.
-    const filas: FilaUcm[] = [];
-    const listaFilas = listaDe(filasBrutas, "queue", "list");
-    for (const f of listaFilas) {
-      const numero = String(f.extension ?? f.queue ?? "");
-      if (!numero) continue;
-      const fila: FilaUcm = {
-        numero,
-        nome: (f.queue_name as string) || (f.name as string) || undefined,
-        estrategia: (f.strategy as string) || undefined,
-        agentes: interpretarAgentes(f.members),
-      };
-      if (fila.agentes.length === 0) {
-        const detalhe = await cliente.acao("getQueue", { queue: numero });
-        const dados = (detalhe?.queue ?? detalhe ?? {}) as Record<string, unknown>;
-        fila.agentes = interpretarAgentes(
-          dados.members ?? dados.member ?? dados.agent ?? dados.agents,
-        );
-        if (!fila.nome) fila.nome = (dados.queue_name as string) || undefined;
-        if (!fila.estrategia) fila.estrategia = (dados.strategy as string) || undefined;
-      }
-      filas.push(fila);
-    }
 
     // Quando a conta da API não tem privilégio de troncos (status -47), a UI
     // mostra um aviso explicativo em vez de uma lista vazia sem contexto.
