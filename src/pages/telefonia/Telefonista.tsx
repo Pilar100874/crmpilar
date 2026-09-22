@@ -46,6 +46,7 @@ import {
 } from "@/hooks/usePainelTelefonista";
 import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
 import { FilaDialog, rotuloEstrategia } from "@/components/telefonia/FilaDialog";
+import { LigacoesDiaPanel } from "@/components/telefonia/LigacoesDiaPanel";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type EstadoRamal = "livre" | "tocando" | "conversa" | "offline";
