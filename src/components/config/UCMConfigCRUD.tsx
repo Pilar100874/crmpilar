@@ -50,6 +50,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     conference_room_number: "",
     conference_room_password: "",
     discagem_regras_ativas: true,
+    discagem_ddi_local: "55",
     discagem_ddd_local: "11",
     discagem_prefixo_outro_ddd: "015",
   });
