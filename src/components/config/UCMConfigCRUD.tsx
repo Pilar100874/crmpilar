@@ -30,6 +30,7 @@ interface UCMConfig {
   conference_room_number?: string;
   conference_room_password?: string;
   discagem_regras_ativas?: boolean;
+  discagem_ddi_local?: string | null;
   discagem_ddd_local?: string | null;
   discagem_prefixo_outro_ddd?: string | null;
 }
