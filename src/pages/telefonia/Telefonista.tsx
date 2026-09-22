@@ -46,6 +46,7 @@ import {
 } from "@/hooks/usePainelTelefonista";
 import { lerConfigSipDoUsuario } from "@/lib/portaria/sipConfigUsuario";
 import { FilaDialog, rotuloEstrategia } from "@/components/telefonia/FilaDialog";
+import { LigacoesDiaPanel } from "@/components/telefonia/LigacoesDiaPanel";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type EstadoRamal = "livre" | "tocando" | "conversa" | "offline";
@@ -100,6 +101,7 @@ export default function Telefonista() {
   const [filaEmEdicao, setFilaEmEdicao] = useState<FilaPainel | null>(null);
   const [filaParaExcluir, setFilaParaExcluir] = useState<FilaPainel | null>(null);
   const [excluindoFila, setExcluindoFila] = useState(false);
+  const [aba, setAba] = useState<"mesa" | "ligacoes">("mesa");
 
   // Conecta o ramal do usuário automaticamente, como o Pilar Fone faz.
   const conectarRef = useRef(sip.connect);
@@ -293,6 +295,24 @@ export default function Telefonista() {
         </div>
       </div>
 
+      {/* Alternar entre mesa operadora e ligações do dia */}
+      <div className="flex gap-2">
+        <Button
+          variant={aba === "mesa" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setAba("mesa")}
+        >
+          <Headset className="mr-2 h-4 w-4" /> Mesa operadora
+        </Button>
+        <Button
+          variant={aba === "ligacoes" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setAba("ligacoes")}
+        >
+          <PhoneCall className="mr-2 h-4 w-4" /> Ligações do dia
+        </Button>
+      </div>
+
       {painel.pabxDisponivel === false && painel.motivoPabx && (
         <Card className="border-destructive/50">
           <CardContent className="py-3 text-sm text-destructive">{painel.motivoPabx}</CardContent>
@@ -334,6 +354,7 @@ export default function Telefonista() {
         </Card>
       )}
 
+      {aba === "mesa" && (
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Ramais */}
         <Card className="lg:col-span-2">
@@ -660,6 +681,9 @@ export default function Telefonista() {
           </Card>
         </div>
       </div>
+      )}
+
+      {aba === "ligacoes" && <LigacoesDiaPanel />}
 
       {/* Confirmação para encerrar chamada de terceiros */}
       <AlertDialog open={!!chamadaParaEncerrar} onOpenChange={(aberto) => !aberto && setChamadaParaEncerrar(null)}>

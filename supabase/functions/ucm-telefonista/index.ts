@@ -271,11 +271,13 @@ Deno.serve(async (req) => {
 
     let cliente: ClienteUcm | null = null;
     let ultimoErro = "";
+    let urlSucesso = "";
     for (const url of candidatos) {
       try {
         const tentativa = new ClienteUcm(url, config.ucm_user, config.ucm_password);
         await tentativa.autenticar();
         cliente = tentativa;
+        urlSucesso = url;
         break;
       } catch (erro) {
         ultimoErro = erro instanceof Error ? erro.message : String(erro);
@@ -513,6 +515,124 @@ Deno.serve(async (req) => {
           ? `Fila ${numero} excluída e aplicada no PABX.`
           : `Fila excluída. Abra o UCM e clique em "Apply Changes" para valer.`,
       });
+    }
+
+    // ---------- Ligações do dia (histórico CDR do PABX) ----------
+
+    if (acao === "ligacoes_dia") {
+      // A API de CDR do Grandstream fica em /cdrapi — na mesma porta da API
+      // principal ou na porta 8443, dependendo do firmware/configuração.
+      const base = urlSucesso.replace(/\/api$/, "");
+      const semPorta = base.replace(/:\d+$/, "");
+      const candidatosCdr = [
+        `${base}/cdrapi?format=json`,
+        `${semPorta}:8443/cdrapi?format=json`,
+      ];
+      let clienteCdr: ClienteUcm | null = null;
+      let erroCdr = "";
+      for (const urlCdr of candidatosCdr) {
+        try {
+          const tentativa = new ClienteUcm(urlCdr, config.ucm_user, config.ucm_password);
+          await tentativa.autenticar();
+          clienteCdr = tentativa;
+          break;
+        } catch (erro) {
+          erroCdr = erro instanceof Error ? erro.message : String(erro);
+          console.log("CDR indisponível em", urlCdr, ":", erroCdr);
+        }
+      }
+      if (!clienteCdr) {
+        // Alguns firmwares expõem o CDR pela API principal — sonda antes de desistir.
+        const sonda = await cliente.acaoBruta("listCdr", {
+          options: "uniqueid,src,dst,disposition,start,duration,billsec",
+          numRecords: "5",
+        });
+        console.log("listCdr na API principal:", JSON.stringify(sonda).slice(0, 400));
+        if (Number(sonda?.status) === 0) {
+          clienteCdr = cliente;
+        } else {
+          return responder({
+            error:
+              "O histórico de ligações (CDR) não está acessível no PABX. No UCM, ative a API de CDR (CDR → Configurações de API) para este usuário.",
+          }, 502);
+        }
+      }
+
+      // "Hoje" no horário de Brasília — o PABX grava o CDR em hora local.
+      const hoje = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+
+      const bruto = await clienteCdr.acaoBruta("listCdr", {
+        options:
+          "uniqueid,src,dst,channel,dstchannel,disposition,start,answer,end,duration,billsec,accountcode",
+        startTime: `${hoje} 00:00:00`,
+        endTime: `${hoje} 23:59:59`,
+        numRecords: "500",
+      }, 15000);
+
+      if (Number(bruto?.status) !== 0) {
+        return responder({
+          error: `O PABX recusou a consulta do histórico (código ${Number(bruto?.status ?? -999)}).`,
+        }, 400);
+      }
+
+      // Nomes dos ramais e das filas para enriquecer origem/destino.
+      const [contas, filasBrutas] = await Promise.all([
+        cliente.acao("listAccount", { options: "extension,fullname", item_num: 500, page: 1 }),
+        cliente.acao("listQueue", { options: "extension,queue_name", item_num: 100, page: 1 }),
+      ]);
+      const nomesRamais = new Map<string, string>();
+      for (const c of listaDe(contas, "account", "extension", "list")) {
+        nomesRamais.set(String(c.extension ?? ""), String(c.fullname ?? ""));
+      }
+      const nomesFilas = new Map<string, string>();
+      for (const f of listaDe(filasBrutas, "queue", "list")) {
+        nomesFilas.set(String(f.extension ?? ""), String(f.queue_name ?? ""));
+      }
+
+      const statusDe = (disposicao: unknown): string => {
+        const v = textoStatus(disposicao);
+        if (v === "answered") return "Atendida";
+        if (v === "no answer" || v === "noanswer") return "Não atendida";
+        if (v === "busy") return "Ocupado";
+        if (v === "failed" || v === "congestion") return "Falhou";
+        return v ? String(disposicao) : "Desconhecido";
+      };
+
+      const ligacoes = listaDe(bruto.response, "cdrroot", "cdr", "list")
+        .map((item) => {
+          const reg = (
+            item.cdr && typeof item.cdr === "object" ? item.cdr : item
+          ) as Record<string, unknown>;
+          const origem = String(reg.src ?? reg.caller ?? "");
+          const destino = String(reg.dst ?? reg.callee ?? "");
+          const ehRamalOrigem = nomesRamais.has(origem);
+          const ehRamalDestino = nomesRamais.has(destino);
+          let direcao: "Entrante" | "Sainte" | "Interna" = "Interna";
+          if (ehRamalOrigem && !ehRamalDestino && !nomesFilas.has(destino)) direcao = "Sainte";
+          else if (!ehRamalOrigem) direcao = "Entrante";
+          return {
+            id: String(reg.uniqueid ?? `${reg.start}-${origem}-${destino}`),
+            origem,
+            destino,
+            origem_nome: nomesRamais.get(origem) || nomesFilas.get(origem) || undefined,
+            destino_nome: nomesRamais.get(destino) || nomesFilas.get(destino) || undefined,
+            inicio: (reg.start as string) || undefined,
+            fim: (reg.end as string) || undefined,
+            duracao_seg: duracaoParaSeg(String(reg.duration ?? "")),
+            conversa_seg: duracaoParaSeg(String(reg.billsec ?? "")),
+            status: statusDe(reg.disposition),
+            direcao,
+            conta: (reg.accountcode as string) || undefined,
+          };
+        })
+        .sort((a, b) => String(b.inicio ?? "").localeCompare(String(a.inicio ?? "")));
+
+      return responder({ ok: true, ligacoes, dia: hoje });
     }
 
     // ---------- Painel (padrão) ----------
