@@ -654,32 +654,6 @@ export default function Telefonista() {
               )}
             </CardContent>
           </Card>
-
-          {/* Linhas (troncos) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Linhas</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {!painel.troncosDisponiveis ? (
-                <p className="text-sm text-muted-foreground">
-                  A conta da API do PABX não tem permissão para listar as linhas neste UCM.
-                </p>
-              ) : painel.troncos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma linha configurada.</p>
-              ) : (
-                painel.troncos.map((t, i) => (
-                  <div key={`${t.nome ?? "linha"}-${i}`} className="flex items-center gap-2 rounded-md border p-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{t.nome || "Linha"}</p>
-                      <p className="text-xs text-muted-foreground">{t.tipo}</p>
-                    </div>
-                    <Badge variant={t.status === "Ativo" ? "default" : "destructive"}>{t.status}</Badge>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
       )}
