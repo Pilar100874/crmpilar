@@ -507,22 +507,91 @@ export default function Telefonista() {
           {/* Filas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <ListOrdered className="h-4 w-4" /> Filas
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ListOrdered className="h-4 w-4" /> Filas
+                </CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setFilaEmEdicao(null);
+                    setFilaDialogAberto(true);
+                  }}
+                >
+                  <Plus className="mr-1 h-4 w-4" /> Nova fila
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {painel.filas.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma fila configurada no PABX.</p>
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <p className="text-sm text-muted-foreground">Nenhuma fila configurada no PABX.</p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setFilaEmEdicao(null);
+                      setFilaDialogAberto(true);
+                    }}
+                  >
+                    <Plus className="mr-1 h-4 w-4" /> Criar a primeira fila
+                  </Button>
+                </div>
               ) : (
                 painel.filas.map((f) => (
                   <div key={f.numero} className="rounded-md border p-2">
-                    <p className="text-sm font-semibold text-foreground">
-                      {f.numero} {f.nome ? `— ${f.nome}` : ""}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 truncate text-sm font-semibold text-foreground">
+                        {f.numero} {f.nome ? `— ${f.nome}` : ""}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="Editar fila"
+                        onClick={() => {
+                          setFilaEmEdicao(f);
+                          setFilaDialogAberto(true);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        title="Excluir fila"
+                        onClick={() => setFilaParaExcluir(f)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                     {f.estrategia && (
-                      <p className="text-xs text-muted-foreground">Estratégia: {f.estrategia}</p>
+                      <Badge variant="outline" className="mt-1 text-[11px]">
+                        {rotuloEstrategia(f.estrategia)}
+                      </Badge>
                     )}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
+                        {f.agentes.length} {f.agentes.length === 1 ? "ramal" : "ramais"}
+                      </span>
+                      <span
+                        className={
+                          f.aguardando > 0 ? "font-medium text-foreground" : undefined
+                        }
+                      >
+                        {f.aguardando} aguardando
+                      </span>
+                      {f.aguardando > 0 && (
+                        <span className="text-destructive">
+                          espera máx. {fmtSeg(painel.esperaAoVivo(f))}
+                        </span>
+                      )}
+                      {typeof f.espera_max_config_seg === "number" && f.espera_max_config_seg > 0 && (
+                        <span>limite de espera {fmtSeg(f.espera_max_config_seg)}</span>
+                      )}
+                    </div>
                     <div className="mt-1 flex flex-col gap-1">
                       {f.agentes.length === 0 ? (
                         <p className="text-xs text-muted-foreground">Sem agentes nesta fila.</p>
