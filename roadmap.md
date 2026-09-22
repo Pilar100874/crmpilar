@@ -22,3 +22,6 @@
 
 ## Pilar Remotas
 - [x] Aceitar e validar a chave completa no formato XXXX-XXXX.
+
+## Telefonia
+- [x] Remover os avisos automáticos de ramal registrado e desconectado.
