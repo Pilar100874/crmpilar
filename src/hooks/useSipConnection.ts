@@ -61,6 +61,8 @@ interface SipConfig {
   authUser?: string;
   password: string;
   displayName?: string;
+  /** Conexão automática: não mostra aviso na tela quando o PABX não responde. */
+  silencioso?: boolean;
 }
 
 interface CallSession {
@@ -406,11 +408,13 @@ export const useSipConnection = () => {
         }
       }
 
-      toast({
-        title: "Erro de conexão",
-        description: errorMsg,
-        variant: "destructive",
-      });
+      if (!config.silencioso) {
+        toast({
+          title: "Erro de conexão",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      }
 
     } finally {
       setIsConnecting(false);

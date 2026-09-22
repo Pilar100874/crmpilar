@@ -268,7 +268,7 @@ export default function PilarFone({
 
 
 
-  const conectar = useCallback(async () => {
+  const conectar = useCallback(async (silencioso = true) => {
     if (!configValida) {
       setAviso(
         "Telefonia não configurada. O servidor e a porta vêm do cadastro da unidade; o ramal e a senha, do seu cadastro de usuário.",
@@ -285,6 +285,7 @@ export default function PilarFone({
       authUser: (config.usuarioSip || "").trim() || undefined,
       password: config.senha,
       displayName: config.nome.trim() || config.ramal.trim(),
+      silencioso,
     });
   }, [config, configValida, connect]);
 
