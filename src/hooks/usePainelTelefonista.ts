@@ -22,7 +22,7 @@ export interface ChamadaAoVivo {
   duracao?: string;
   duracao_seg?: number;
   estado?: string;
-  direcao?: "Entrante" | "Sainte" | "Interna";
+  direcao?: "Entrante" | "Saída" | "Interna";
   /** Ramal que atendeu (ou está falando) nesta chamada. */
   atendente?: string;
   atendente_nome?: string;
