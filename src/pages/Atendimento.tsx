@@ -3250,6 +3250,59 @@ ${recentMessages}
     };
   }, [filteredConversations, todayTasks]);
 
+  // Guarda a preferência da flag "Usar agenda"
+  useEffect(() => {
+    localStorage.setItem("atendimento_usar_agenda", usarAgenda ? "true" : "false");
+  }, [usarAgenda]);
+
+  // Contatos vinculados ao usuário (usados quando a flag está desligada)
+  const { contatos: contatosVinculados } = useContatosVinculados(usuarioId || null, !usarAgenda);
+
+  // Base de contatos das abas Tel / Chats / E-mails
+  const contatosBase = useMemo<ContatoAtendimento[]>(() => {
+    if (!usarAgenda) return contatosVinculados;
+    const mapa = new Map<string, ContatoAtendimento>();
+    todayTasks.forEach((task: any) => {
+      const c = task.customers;
+      if (!c?.id || mapa.has(c.id)) return;
+      mapa.set(c.id, {
+        id: c.id,
+        nome: c.nome || task.contact_name || "Sem nome",
+        telefone: c.telefone || "",
+        tel: c.tel || "",
+        email: c.email || "",
+        referencia: task.title || "Tarefa agendada",
+      });
+    });
+    return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  }, [usarAgenda, contatosVinculados, todayTasks]);
+
+  // Contatos com WhatsApp que ainda não possuem conversa aberta
+  const contatosSemConversa = useMemo(() => {
+    const comConversa = new Set(filteredConversations.map((c) => c.customer_id));
+    return contatosBase
+      .filter((c) => c.telefone.trim() !== "" && !comConversa.has(c.id))
+      .map((c) => ({
+        contactId: c.id,
+        nome: c.nome,
+        telefone: c.telefone,
+        email: c.email,
+        taskTitle: c.referencia,
+        linkedUsers: [] as Array<{ usuarios: { id: string; nome: string } }>,
+      }));
+  }, [contatosBase, filteredConversations]);
+
+  // Abre uma ligação para o contato selecionado na aba Tel
+  const ligarParaContato = async (contato: ContatoAtendimento) => {
+    const numero = contato.tel || contato.telefone;
+    if (!numero) {
+      toast.error("Contato sem telefone cadastrado");
+      return;
+    }
+    await ligarPeloPabx(numero, contato.nome);
+  };
+
+
   // Filtered tasks based on global filter and contact filters
   const filteredTasks = useMemo(() => {
     const today = new Date();
