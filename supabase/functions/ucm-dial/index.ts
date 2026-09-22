@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
 
     const { data: config } = await supabase
       .from("ucm_config")
-      .select("ucm_host, ucm_user, ucm_password, sip_porta, enabled, discagem_regras_ativas, discagem_ddd_local, discagem_prefixo_outro_ddd")
+      .select("ucm_host, ucm_user, ucm_password, sip_porta, enabled, discagem_regras_ativas, discagem_ddi_local, discagem_ddd_local, discagem_prefixo_outro_ddd")
       .eq("estabelecimento_id", estabelecimentoId)
       .maybeSingle();
 
@@ -176,6 +176,7 @@ Deno.serve(async (req) => {
 
     const numero = aplicarRegrasDiscagem(numeroBruto, {
       ativas: config.discagem_regras_ativas ?? true,
+      ddiLocal: String(config.discagem_ddi_local ?? "55"),
       dddLocal: String(config.discagem_ddd_local ?? "11"),
       prefixo: String(config.discagem_prefixo_outro_ddd ?? "015"),
     });
