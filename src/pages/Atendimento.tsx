@@ -4582,7 +4582,7 @@ ${recentMessages}
                 filteredConversations={filteredConversations}
                 agendaConversations={agendaConversations}
                 otherConversations={otherConversations}
-                agendaContactsWithoutConversation={agendaContactsWithoutConversation}
+                agendaContactsWithoutConversation={contatosSemConversa}
                 onStartConversation={async (contactId, nome, telefone) => {
                   // Criar conversa para o contato da agenda
                   await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
@@ -5139,7 +5139,7 @@ ${recentMessages}
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-muted/30 to-background dark:to-card">
-            {agendaConversations.length === 0 && otherConversations.length === 0 && agendaContactsWithoutConversation.length === 0 ? (
+            {agendaConversations.length === 0 && otherConversations.length === 0 && contatosSemConversa.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                   <MessageSquare className="w-8 h-8 text-primary/40" />
@@ -5150,13 +5150,13 @@ ${recentMessages}
             ) : (
               <div className="space-y-1.5">
                 {/* Grupo: Agenda do Dia - Conversas ativas + Contatos sem conversa */}
-                {(agendaConversations.length > 0 || agendaContactsWithoutConversation.length > 0) && (
+                {(agendaConversations.length > 0 || contatosSemConversa.length > 0) && (
                   <>
                     <div className="flex items-center gap-2 px-2 py-1.5">
                       <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
                       <span className="text-xs font-medium text-orange-600">Agenda do Dia</span>
                       <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
-                        {agendaConversations.length + agendaContactsWithoutConversation.length}
+                        {agendaConversations.length + contatosSemConversa.length}
                       </Badge>
                     </div>
                     
@@ -5236,7 +5236,7 @@ ${recentMessages}
                     ))}
 
                     {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
-                    {agendaContactsWithoutConversation.map((contact) => (
+                    {contatosSemConversa.map((contact) => (
                       <div
                         key={`contact-${contact.contactId}`}
                         onClick={async () => {
