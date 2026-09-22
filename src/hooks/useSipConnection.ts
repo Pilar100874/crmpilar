@@ -76,9 +76,9 @@ interface CallSession {
   viaDiscador?: boolean;
 }
 
-/** Remove apenas a formatação visual; códigos SIP digitados pelo usuário continuam intactos. */
+/** Remove a formatação visual e o DDI 55; códigos com * e # continuam intactos. */
 const normalizarNumeroDiscagem = (phoneNumber: string) =>
-  phoneNumber.trim().replace(/[\s().-]/g, '');
+  prepararNumeroDiscagem(phoneNumber.trim());
 
 export const useSipConnection = () => {
   const { toast } = useToast();
