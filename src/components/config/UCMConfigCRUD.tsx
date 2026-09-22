@@ -249,7 +249,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="discagem_prefixo_outro_ddd">Código antes de outros DDDs</Label>
+              <Label htmlFor="discagem_prefixo_outro_ddd">Código da operadora</Label>
               <Input
                 id="discagem_prefixo_outro_ddd"
                 inputMode="numeric"
