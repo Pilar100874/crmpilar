@@ -520,13 +520,28 @@ Deno.serve(async (req) => {
     // ---------- Ligações do dia (histórico CDR do PABX) ----------
 
     if (acao === "ligacoes_dia") {
-      // A API de CDR do Grandstream fica em /cdrapi (mesma autenticação por challenge).
-      const urlCdr = urlSucesso.replace(/\/api$/, "/cdrapi?format=json");
-      const clienteCdr = new ClienteUcm(urlCdr, config.ucm_user, config.ucm_password);
-      try {
-        await clienteCdr.autenticar();
-      } catch (erro) {
-        console.log("CDR indisponível:", erro instanceof Error ? erro.message : erro);
+      // A API de CDR do Grandstream fica em /cdrapi — na mesma porta da API
+      // principal ou na porta 8443, dependendo do firmware/configuração.
+      const base = urlSucesso.replace(/\/api$/, "");
+      const semPorta = base.replace(/:\d+$/, "");
+      const candidatosCdr = [
+        `${base}/cdrapi?format=json`,
+        `${semPorta}:8443/cdrapi?format=json`,
+      ];
+      let clienteCdr: ClienteUcm | null = null;
+      let erroCdr = "";
+      for (const urlCdr of candidatosCdr) {
+        try {
+          const tentativa = new ClienteUcm(urlCdr, config.ucm_user, config.ucm_password);
+          await tentativa.autenticar();
+          clienteCdr = tentativa;
+          break;
+        } catch (erro) {
+          erroCdr = erro instanceof Error ? erro.message : String(erro);
+          console.log("CDR indisponível em", urlCdr, ":", erroCdr);
+        }
+      }
+      if (!clienteCdr) {
         return responder({
           error:
             "O histórico de ligações (CDR) não está acessível no PABX. No UCM, ative a API de CDR (CDR → Configurações de API) para este usuário.",
