@@ -55,9 +55,60 @@ export function prepararNumeroDiscagem(valor: string, regras?: Partial<RegrasDis
   if (numero.startsWith("0")) return numero;
 
   const ddd = numero.slice(0, 2);
-  const assinante = numero.slice(2);
+  const assinante = normalizarAssinante(numero.slice(2));
 
   if (dddLocal && ddd === dddLocal) return assinante;
   if (prefixo) return `${prefixo}${ddd}${assinante}`;
-  return numero;
+  return `${ddd}${assinante}`;
+}
+
+/**
+ * Regra de números permitidos (sem o DDD):
+ * - fixo: 8 dígitos, começando de 2 a 5 (XXXX-XXXX);
+ * - celular: 9 dígitos, sempre começando com 9 (9XXXX-XXXX).
+ * Celular antigo com 8 dígitos (começando de 6 a 9) recebe o 9 na frente.
+ */
+export function normalizarAssinante(assinante: string): string {
+  const d = (assinante || "").replace(/\D/g, "");
+  if (d.length === 8 && /^[6-9]/.test(d)) return `9${d}`;
+  return d;
+}
+
+export function assinanteValido(assinante: string): boolean {
+  const d = (assinante || "").replace(/\D/g, "");
+  if (d.length === 8) return /^[2-5]\d{7}$/.test(d);
+  if (d.length === 9) return /^9\d{8}$/.test(d);
+  return false;
+}
+
+export interface ResultadoValidacaoNumero {
+  valido: boolean;
+  motivo?: string;
+}
+
+/**
+ * Valida o número informado (com ou sem DDI/DDD) contra a regra de
+ * fixo (8 dígitos) e celular (9 dígitos iniciando em 9).
+ * Ramais curtos e códigos de serviço (* #) são sempre aceitos.
+ */
+export function validarNumeroDiscagem(valor: string): ResultadoValidacaoNumero {
+  const limpo = (valor || "").replace(/[^\d*#+]/g, "").replace(/\+/g, "");
+  if (!limpo) return { valido: false, motivo: "Informe um número para discar." };
+  if (/[*#]/.test(limpo)) return { valido: true };
+
+  let numero = limpo;
+  if (numero.length >= 12 && numero.length <= 13 && numero.startsWith("55")) numero = numero.slice(2);
+  else if (numero.length >= 14 && numero.startsWith("0055")) numero = numero.slice(4);
+
+  // Ramal interno
+  if (numero.length <= 7) return { valido: true };
+
+  const assinante = numero.length === 10 || numero.length === 11 ? numero.slice(2) : numero;
+  if (assinanteValido(normalizarAssinante(assinante))) return { valido: true };
+
+  return {
+    valido: false,
+    motivo:
+      "Número inválido. Use fixo com 8 dígitos (XXXX-XXXX) ou celular com 9 dígitos começando por 9 (9XXXX-XXXX), além do DDD.",
+  };
 }
