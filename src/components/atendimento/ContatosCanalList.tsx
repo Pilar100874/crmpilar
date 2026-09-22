@@ -11,6 +11,7 @@ interface ContatosCanalListProps {
   acaoLabel?: string;
   vazioTexto?: string;
   onSelecionar?: (contato: ContatoAtendimento) => void;
+  selecionadoId?: string | null;
 }
 
 const icones = {
@@ -35,6 +36,7 @@ export default function ContatosCanalList({
   acaoLabel,
   vazioTexto = "Nenhum contato",
   onSelecionar,
+  selecionadoId = null,
 }: ContatosCanalListProps) {
   const Icone = icones[canal];
   const lista = contatos.filter((c) => valorDoCanal(c, canal).trim() !== "");
@@ -62,7 +64,11 @@ export default function ContatosCanalList({
         <div
           key={`${canal}-${contato.id}`}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
-          className={`relative px-3 py-3 rounded-xl transition-all duration-200 bg-card/60 border border-transparent ${onSelecionar ? "cursor-pointer hover:bg-card hover:shadow-sm" : "cursor-default"}`}
+          className={`relative px-3 py-3 rounded-xl transition-all duration-200 border ${
+            selecionadoId === contato.id
+              ? "bg-primary/10 border-primary/30 shadow-sm"
+              : "bg-card/60 border-transparent"
+          } ${onSelecionar ? "cursor-pointer hover:bg-card hover:shadow-sm" : "cursor-default"}`}
         >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10">

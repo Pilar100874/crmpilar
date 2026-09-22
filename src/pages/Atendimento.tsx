@@ -260,6 +260,7 @@ export default function Atendimento() {
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
+  const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; email: string } | null>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
@@ -585,6 +586,7 @@ export default function Atendimento() {
     if (activeTab !== 'email') {
       setSelectedEmailId(null);
       setSelectedEmailData(null);
+      setContatoEmailSelecionado(null);
     }
     
     // Fechar orçamento quando não estiver na aba orçamento
@@ -3462,6 +3464,16 @@ ${recentMessages}
       });
     }
 
+    // Contato selecionado na lista da aba E-mails
+    const emailContato = contatoEmailSelecionado?.email?.toLowerCase().trim();
+    if (emailContato) {
+      emails = emails.filter(
+        (email) =>
+          email.from_email?.toLowerCase().includes(emailContato) ||
+          email.to_email?.toLowerCase().includes(emailContato)
+      );
+    }
+
     // Apply global filter
     if (!globalFilter) return emails;
     
@@ -3476,7 +3488,7 @@ ${recentMessages}
       return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
              email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
     });
-  }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails]);
+  }, [userEmails, globalFilter, emailFolder, usarAgenda, agendaEmails, contatoEmailSelecionado]);
 
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
@@ -5248,12 +5260,14 @@ ${recentMessages}
                   contatos={contatosBase}
                   canal="email"
                   titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                  acaoLabel="Escrever"
                   vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
+                  selecionadoId={contatoEmailSelecionado?.id ?? null}
                   onSelecionar={(contato) => {
-                    setComposeEmailDefaults({ to: contato.email, subject: '', body: '' });
-                    setComposeEmailMode('compose');
-                    setShowComposeEmail(true);
+                    setSelectedEmailId(null);
+                    setSelectedEmailData(null);
+                    setContatoEmailSelecionado((atual) =>
+                      atual?.id === contato.id ? null : { id: contato.id, email: contato.email || "" }
+                    );
                   }}
                 />
               </div>
