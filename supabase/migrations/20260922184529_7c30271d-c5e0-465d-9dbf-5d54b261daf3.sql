@@ -1,0 +1,1 @@
+ALTER TABLE public.ucm_config ADD COLUMN IF NOT EXISTS discagem_ddi_local text NOT NULL DEFAULT '55';

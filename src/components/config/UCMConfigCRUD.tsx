@@ -30,6 +30,7 @@ interface UCMConfig {
   conference_room_number?: string;
   conference_room_password?: string;
   discagem_regras_ativas?: boolean;
+  discagem_ddi_local?: string | null;
   discagem_ddd_local?: string | null;
   discagem_prefixo_outro_ddd?: string | null;
 }
@@ -49,6 +50,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     conference_room_number: "",
     conference_room_password: "",
     discagem_regras_ativas: true,
+    discagem_ddi_local: "55",
     discagem_ddd_local: "11",
     discagem_prefixo_outro_ddd: "015",
   });
@@ -107,6 +109,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           conference_room_number: config.conference_room_number || null,
           conference_room_password: config.conference_room_password || null,
           discagem_regras_ativas: config.discagem_regras_ativas ?? true,
+          discagem_ddi_local: (config.discagem_ddi_local || "").replace(/\D/g, "") || "55",
           discagem_ddd_local: (config.discagem_ddd_local || "").replace(/\D/g, "") || null,
           discagem_prefixo_outro_ddd: (config.discagem_prefixo_outro_ddd || "").replace(/\D/g, "") || null,
         }, {
@@ -210,7 +213,24 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="discagem_ddi_local">Código do país (DDI)</Label>
+              <Input
+                id="discagem_ddi_local"
+                inputMode="numeric"
+                placeholder="55"
+                maxLength={4}
+                value={config.discagem_ddi_local ?? ""}
+                onChange={(e) =>
+                  setConfig({ ...config, discagem_ddi_local: e.target.value.replace(/\D/g, "") })
+                }
+                disabled={!(config.discagem_regras_ativas ?? true)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Não é discado no país. Para outros países: 00 + operadora + DDI + DDD + número.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="discagem_ddd_local">DDD da sua cidade</Label>
               <Input
@@ -250,29 +270,41 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </div>
           </div>
 
-          <div className="rounded-md bg-muted p-3 text-xs space-y-1">
-            <p className="font-medium">Como vai discar:</p>
-            <p>
-              55 {config.discagem_ddd_local || "11"} 99961-1194 →{" "}
-              <span className="font-mono">
-                {prepararNumeroDiscagem(`55${config.discagem_ddd_local || "11"}999611194`, {
-                  ativas: config.discagem_regras_ativas ?? true,
-                  dddLocal: config.discagem_ddd_local || "",
-                  prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
-                })}
-              </span>
-            </p>
-            <p>
-              55 21 99961-1194 →{" "}
-              <span className="font-mono">
-                {prepararNumeroDiscagem("5521999611194", {
-                  ativas: config.discagem_regras_ativas ?? true,
-                  dddLocal: config.discagem_ddd_local || "",
-                  prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
-                })}
-              </span>
-            </p>
-          </div>
+          {(() => {
+            const regrasPreview = {
+              ativas: config.discagem_regras_ativas ?? true,
+              ddiLocal: config.discagem_ddi_local || "55",
+              dddLocal: config.discagem_ddd_local || "",
+              prefixoOutroDdd: config.discagem_prefixo_outro_ddd || "",
+            };
+            const ddi = config.discagem_ddi_local || "55";
+            return (
+              <div className="rounded-md bg-muted p-3 text-xs space-y-1">
+                <p className="font-medium">Como vai discar:</p>
+                <p>
+                  {ddi} {config.discagem_ddd_local || "11"} 99961-1194 →{" "}
+                  <span className="font-mono">
+                    {prepararNumeroDiscagem(
+                      `${ddi}${config.discagem_ddd_local || "11"}999611194`,
+                      regrasPreview,
+                    )}
+                  </span>
+                </p>
+                <p>
+                  {ddi} 21 99961-1194 →{" "}
+                  <span className="font-mono">
+                    {prepararNumeroDiscagem(`${ddi}21999611194`, regrasPreview)}
+                  </span>
+                </p>
+                <p>
+                  +351 21 1234567 (Portugal) →{" "}
+                  <span className="font-mono">
+                    {prepararNumeroDiscagem("+351211234567", regrasPreview)}
+                  </span>
+                </p>
+              </div>
+            );
+          })()}
         </div>
 
 

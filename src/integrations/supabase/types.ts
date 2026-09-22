@@ -28700,6 +28700,7 @@ export type Database = {
           conference_room_password: string | null
           created_at: string
           discagem_ddd_local: string | null
+          discagem_ddi_local: string
           discagem_prefixo_outro_ddd: string | null
           discagem_regras_ativas: boolean
           enabled: boolean | null
@@ -28720,6 +28721,7 @@ export type Database = {
           conference_room_password?: string | null
           created_at?: string
           discagem_ddd_local?: string | null
+          discagem_ddi_local?: string
           discagem_prefixo_outro_ddd?: string | null
           discagem_regras_ativas?: boolean
           enabled?: boolean | null
@@ -28740,6 +28742,7 @@ export type Database = {
           conference_room_password?: string | null
           created_at?: string
           discagem_ddd_local?: string | null
+          discagem_ddi_local?: string
           discagem_prefixo_outro_ddd?: string | null
           discagem_regras_ativas?: boolean
           enabled?: boolean | null
