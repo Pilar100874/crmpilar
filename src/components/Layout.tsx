@@ -217,6 +217,8 @@ export const menuItems: MenuItem[] = [
     icon: LucideIcons.ShieldCheck,
     subItems: [
       { id: "Portaria Painel", title: "Painel da Portaria", url: "/portaria/painel", icon: LucideIcons.LayoutDashboard },
+      { id: "Portaria Pendencias", title: "Pendências da Portaria", url: "/portaria/pendencias", icon: LucideIcons.FileWarning },
+      { id: "Portaria Relatorio Unidades", title: "Relatório por Unidade", url: "/portaria/relatorio-unidades", icon: LucideIcons.FileBarChart },
       { id: "Transportadoras", title: "Transportadoras", url: "/transportadoras", icon: LucideIcons.Truck },
       { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
       { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },

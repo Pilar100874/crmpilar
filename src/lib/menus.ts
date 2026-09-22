@@ -91,6 +91,8 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   // Portaria
   { id: "Atendimento Portaria", label: "Portaria (Categoria)", category: "Portaria" },
   { id: "Portaria Painel", label: "Painel da Portaria", category: "Portaria" },
+  { id: "Portaria Pendencias", label: "Pendências da Portaria", category: "Portaria" },
+  { id: "Portaria Relatorio Unidades", label: "Relatório por Unidade", category: "Portaria" },
 
   // Livro de Ocorrência
   { id: "Livro de Ocorrência", label: "Livro de Ocorrência (Portaria + Encomendas)", category: "Portaria" },
