@@ -285,6 +285,7 @@ export default function PilarFone({
       authUser: (config.usuarioSip || "").trim() || undefined,
       password: config.senha,
       displayName: config.nome.trim() || config.ramal.trim(),
+      silencioso,
     });
   }, [config, configValida, connect]);
 
