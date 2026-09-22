@@ -41,12 +41,12 @@ export interface LigacaoDia {
   duracao_seg: number;
   conversa_seg: number;
   status: string;
-  direcao: "Entrante" | "Sainte" | "Interna";
+  direcao: "Entrante" | "Saída" | "Interna";
 }
 
 const STATUS_PERDIDA = ["Não atendida", "Ocupado", "Falhou"];
 const OPCOES_STATUS = ["Atendida", "Não atendida", "Ocupado", "Falhou"];
-const OPCOES_DIRECAO = ["Entrante", "Sainte", "Interna"];
+const OPCOES_DIRECAO = ["Entrante", "Saída", "Interna"];
 
 const fmtSeg = (total: number) => {
   if (!total || total <= 0) return "00:00";
