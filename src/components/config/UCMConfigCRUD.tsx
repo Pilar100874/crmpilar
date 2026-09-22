@@ -210,7 +210,24 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="discagem_ddi_local">Código do país (DDI)</Label>
+              <Input
+                id="discagem_ddi_local"
+                inputMode="numeric"
+                placeholder="55"
+                maxLength={4}
+                value={config.discagem_ddi_local ?? ""}
+                onChange={(e) =>
+                  setConfig({ ...config, discagem_ddi_local: e.target.value.replace(/\D/g, "") })
+                }
+                disabled={!(config.discagem_regras_ativas ?? true)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Não é discado no país. Para outros países: 00 + operadora + DDI + DDD + número.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="discagem_ddd_local">DDD da sua cidade</Label>
               <Input
