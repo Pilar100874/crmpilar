@@ -36,6 +36,7 @@ export default function ContatosCanalList({
   acaoLabel,
   vazioTexto = "Nenhum contato",
   onSelecionar,
+  selecionadoId = null,
 }: ContatosCanalListProps) {
   const Icone = icones[canal];
   const lista = contatos.filter((c) => valorDoCanal(c, canal).trim() !== "");
