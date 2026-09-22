@@ -6825,22 +6825,30 @@ ${recentMessages}
                 </>
               )}
               {activeTab === "agenda" && !showEnvioMassaWizard && (
-                <>
-                  <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
-                  <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
-                  <div className="flex gap-2 mt-4 justify-center">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowEnvioMassaWizard(true)}
-                      className="gap-2"
-                    >
-                      <Users className="h-4 w-4" />
-                      Envio em Massa
-                    </Button>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-4 p-6">
+                  <div className="text-center">
+                    <h2 className="text-lg font-semibold text-foreground">Calendário</h2>
+                    <p className="text-sm capitalize text-muted-foreground">
+                      {format(agendaDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </p>
                   </div>
-                </>
+                  <Calendar
+                    mode="single"
+                    selected={agendaDate}
+                    onSelect={(date) => {
+                      if (!date) return;
+                      setAgendaDate(date);
+                      setSelectedTaskId(null);
+                      setSelectedTaskData(null);
+                    }}
+                    locale={ptBR}
+                    className="rounded-md border bg-card p-4 shadow-sm"
+                  />
+                  <Button variant="outline" size="sm" onClick={handleToday}>
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    Hoje
+                  </Button>
+                </div>
               )}
               {/* Desktop: inline wizard */}
               {activeTab === "agenda" && showEnvioMassaWizard && (
