@@ -3481,6 +3481,12 @@ ${recentMessages}
   // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
     let result = orcamentos;
+
+    // Quando "Usar agenda" está ligada, apenas orçamentos de contatos da agenda do dia
+    if (usarAgenda) {
+      result = result.filter((orc) => orc.cliente_id && agendaContactIds.has(orc.cliente_id));
+    }
+    
     
     // Filtrar por "Meus" orçamentos - verifica se o contato do orçamento tem vínculo com o usuário logado
     if (showOnlyMyOrcamentos && currentUsuarioTableId) {
