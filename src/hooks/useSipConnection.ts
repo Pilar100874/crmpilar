@@ -61,6 +61,8 @@ interface SipConfig {
   authUser?: string;
   password: string;
   displayName?: string;
+  /** Conexão automática: não mostra aviso na tela quando o PABX não responde. */
+  silencioso?: boolean;
 }
 
 interface CallSession {
