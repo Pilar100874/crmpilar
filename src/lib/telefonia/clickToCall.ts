@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { limparChamadaDiscador, marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
 import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
+import { validarNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { obterStatusRamalGlobal } from "@/lib/telefonia/statusRamalGlobal";
 
 export interface RespostaClickToCall {
