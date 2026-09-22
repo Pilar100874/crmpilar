@@ -586,6 +586,7 @@ export default function Atendimento() {
     if (activeTab !== 'email') {
       setSelectedEmailId(null);
       setSelectedEmailData(null);
+      setContatoEmailSelecionado(null);
     }
     
     // Fechar orçamento quando não estiver na aba orçamento
