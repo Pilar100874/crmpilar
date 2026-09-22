@@ -46,6 +46,11 @@ export function prepararNumeroDiscagem(valor: string, regras?: Partial<RegrasDis
   const ddiLocal = (r.ddiLocal || "").replace(/\D/g, "") || "55";
   const operadora = codigoOperadora(r.prefixoOutroDdd);
 
+  // Já montado como internacional (00 + operadora + ...): não mexe.
+  if (operadora && limpo.startsWith(`00${operadora}`) && limpo.length > operadora.length + 6) {
+    return limpo;
+  }
+
   let numero = limpo;
   // Retira o prefixo internacional digitado (00 ou +).
   let semPrefixoInternacional = numero;
