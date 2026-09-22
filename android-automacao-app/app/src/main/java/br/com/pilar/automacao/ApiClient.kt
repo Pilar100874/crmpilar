@@ -84,6 +84,38 @@ object ApiClient {
         )
     }
 
+    /** Renova a sessão guardada no aparelho, para não pedir chave e senha de novo. */
+    fun renovarSessao(refreshToken: String, tipoTela: String): Sessao {
+        val resposta = requisicaoJson(
+            url = "${BuildConfig.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token",
+            metodo = "POST",
+            autorizacao = BuildConfig.SUPABASE_ANON_KEY,
+            corpo = JSONObject().put("refresh_token", refreshToken),
+        )
+        val accessToken = resposta.getString("access_token")
+        val novoRefresh = resposta.optString("refresh_token").ifBlank { refreshToken }
+        val expiresAt = resposta.optLong(
+            "expires_at",
+            System.currentTimeMillis() / 1000 + resposta.optLong("expires_in", 3600),
+        )
+        val userId = resposta.optJSONObject("user")?.optString("id").orEmpty()
+        if (accessToken.isBlank() || userId.isBlank()) throw IllegalStateException("Sessão expirada")
+        val campos = "estabelecimento_id,automacao_ambiente_celular,automacao_ambiente_tablet"
+        val perfil = requisicaoArray(
+            "${BuildConfig.SUPABASE_URL}/rest/v1/usuarios?auth_user_id=eq.${codificar(userId)}&select=$campos",
+            accessToken,
+        ).optJSONObject(0) ?: throw IllegalStateException("Usuário não encontrado no sistema")
+        return Sessao(
+            accessToken = accessToken,
+            refreshToken = novoRefresh,
+            expiresAt = expiresAt,
+            userId = userId,
+            ambienteCelular = perfil.optString("automacao_ambiente_celular"),
+            ambienteTablet = perfil.optString("automacao_ambiente_tablet"),
+            estabelecimentoId = perfil.optString("estabelecimento_id"),
+        )
+    }
+
     /** Carrega somente o ambiente atribuído ao usuário autenticado e seus blocos visíveis. */
     fun carregarPainel(accessToken: String, ambienteId: String): Painel {
         val ambiente = requisicaoArray(

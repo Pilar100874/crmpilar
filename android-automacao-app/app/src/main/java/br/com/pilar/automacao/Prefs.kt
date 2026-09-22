@@ -77,10 +77,10 @@ object Prefs {
             .apply()
     }
 
+    /** Mantém o refresh token: o aparelho volta a entrar sozinho, sem pedir a chave de novo. */
     fun limparSessao(ctx: Context) {
         sp(ctx).edit()
             .remove("access_token")
-            .remove("refresh_token")
             .remove("expires_at")
             .remove("user_id")
             .remove("ambiente")
