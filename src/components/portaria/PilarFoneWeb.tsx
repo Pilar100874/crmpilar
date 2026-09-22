@@ -8,6 +8,7 @@ import InterfonePopup from "./InterfonePopup";
 import PilarFone from "./PilarFone";
 import { useAbasPermitidas } from "@/lib/portaria/abasPilarFone";
 import { toast } from "sonner";
+import { definirStatusRamalGlobal } from "@/lib/telefonia/statusRamalGlobal";
 
 const EVENTO_ABRIR = "pilar-sip:abrir";
 
