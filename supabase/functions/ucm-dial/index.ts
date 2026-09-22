@@ -77,10 +77,12 @@ const aplicarRegrasDiscagem = (
   if (numero.length !== 10 && numero.length !== 11) return numero;
   if (numero.startsWith("0")) return numero;
   const ddd = numero.slice(0, 2);
-  const assinante = numero.slice(2);
+  // Fixo = 8 dígitos (2 a 5); celular = 9 dígitos começando por 9.
+  const bruto = numero.slice(2);
+  const assinante = bruto.length === 8 && /^[6-9]/.test(bruto) ? `9${bruto}` : bruto;
   if (dddLocal && ddd === dddLocal) return assinante;
   if (prefixo) return `${prefixo}${ddd}${assinante}`;
-  return numero;
+  return `${ddd}${assinante}`;
 };
 
 /**
