@@ -36,3 +36,4 @@
 - [x] Remover o aviso de chamada iniciada e impedir ligação ao clicar nos contatos da aba Tel.
 - [x] Exibir o calendário no painel direito ao abrir o Atendimento sem tarefa selecionada.
 - [x] Abrir o módulo Calendário completo no painel direito do Atendimento.
+- [x] Manter o botão de expandir a Agenda visível e ajustar a barra do Calendário à largura disponível.
