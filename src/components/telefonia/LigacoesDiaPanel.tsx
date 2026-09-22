@@ -272,7 +272,14 @@ export function LigacoesDiaPanel() {
           </div>
         </CardHeader>
         <CardContent>
-          {erro ? (
+          {avisoCdr ? (
+            <div className="flex flex-col items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-4">
+              <p className="text-sm text-foreground">{avisoCdr}</p>
+              <Button variant="outline" size="sm" onClick={() => void carregar()}>
+                Verificar novamente
+              </Button>
+            </div>
+          ) : erro ? (
             <div className="flex flex-col items-start gap-2">
               <p className="text-sm text-destructive">{erro}</p>
               <Button variant="outline" size="sm" onClick={() => void carregar()}>
