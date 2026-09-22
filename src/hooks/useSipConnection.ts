@@ -468,6 +468,7 @@ export const useSipConnection = () => {
       } else if (state === SessionState.Terminated) {
         console.log('❌ Chamada recebida encerrada');
         pararToqueEntrada();
+        if (gravacaoRef.current?.callId === callSession.id) void pararGravacao(false);
         // Discador: ramal atendeu e a ligação caiu logo em seguida — quase sempre
         // é o PABX recusando a perna externa (permissão do ramal ou rota de saída).
         if (
@@ -590,6 +591,7 @@ export const useSipConnection = () => {
             });
           } else if (state === SessionState.Terminated) {
             pararToqueChamando();
+            if (gravacaoRef.current?.callId === callSession.id) void pararGravacao(false);
             // Remove da lista após um pequeno delay para garantir que a UI atualize
             setTimeout(() => {
               setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -808,6 +810,7 @@ export const useSipConnection = () => {
     const call = activeCalls.find(c => c.id === callId);
     if (!call) return;
     desligadasPeloUsuarioRef.current.add(callId);
+    if (gravacaoRef.current?.callId === callId) void pararGravacao(false);
 
     pararToqueChamando();
 
@@ -1033,6 +1036,7 @@ export const useSipConnection = () => {
     registererRef.current = null;
     configRef.current = null;
     try {
+      if (gravacaoRef.current) void pararGravacao(false);
       // Hangup all active calls
       for (const call of activeCalls) {
         try {
@@ -1098,6 +1102,9 @@ export const useSipConnection = () => {
     hangup,
     answer,
     transferirChamada,
+    gravando,
+    iniciarGravacao,
+    pararGravacao,
     isRegistered,
     isConnecting,
     activeCalls,
