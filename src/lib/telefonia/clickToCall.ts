@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { limparChamadaDiscador, marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
-import { prepararNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
+import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
 import { obterStatusRamalGlobal } from "@/lib/telefonia/statusRamalGlobal";
 
 export interface RespostaClickToCall {
@@ -14,7 +14,7 @@ export interface RespostaClickToCall {
 }
 
 /** Remove formatação do telefone e o DDI 55, deixando o número como se fosse discado do aparelho. */
-export const somenteDigitosDiscagem = (valor: string) => prepararNumeroDiscagem(valor);
+export const somenteDigitosDiscagem = (valor: string) => prepararNumeroComRegras(valor);
 
 /**
  * Click-to-Call pelo PABX: o UCM toca o ramal do usuário e, ao atender,
@@ -22,7 +22,7 @@ export const somenteDigitosDiscagem = (valor: string) => prepararNumeroDiscagem(
  * Não envolve WebRTC — a chamada é originada no servidor.
  */
 export async function ligarPeloPabx(destino: string, nomeCliente?: string): Promise<RespostaClickToCall> {
-  const numero = somenteDigitosDiscagem(destino);
+  const numero = await somenteDigitosDiscagem(destino);
   if (!numero) {
     return { error: "Informe o número a ser discado" };
   }

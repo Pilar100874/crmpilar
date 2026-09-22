@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState, Web } from 'sip.js';
-import { prepararNumeroDiscagem } from '@/lib/telefonia/numeroDiscagem';
+import { prepararNumeroComRegras } from '@/lib/telefonia/regrasDiscagem';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { iniciarGravador, extensaoDoMime, type GravadorChamada } from '@/lib/telefonia/gravacaoChamada';
@@ -79,7 +79,7 @@ interface CallSession {
 
 /** Remove a formatação visual e o DDI 55; códigos com * e # continuam intactos. */
 const normalizarNumeroDiscagem = (phoneNumber: string) =>
-  prepararNumeroDiscagem(phoneNumber.trim());
+  prepararNumeroComRegras(phoneNumber.trim());
 
 export const useSipConnection = () => {
   const { toast } = useToast();
@@ -513,7 +513,7 @@ export const useSipConnection = () => {
     try {
       // Envia exatamente o número digitado, removendo apenas espaços e pontuação visual.
       // O UCM aplica a rota de saída; acrescentar "#" muda o destino e pode encerrar a chamada.
-      const dialNumber = normalizarNumeroDiscagem(phoneNumber);
+      const dialNumber = await normalizarNumeroDiscagem(phoneNumber);
       if (!dialNumber) throw new Error('Informe um número válido');
       
       // Codifica # somente quando ele tiver sido digitado intencionalmente.
@@ -950,7 +950,7 @@ export const useSipConnection = () => {
   const transferirChamada = useCallback(async (callId: string, destino: string): Promise<boolean> => {
     const call = activeCalls.find((c) => c.id === callId);
     const host = userAgent?.configuration.uri?.host;
-    const numero = normalizarNumeroDiscagem(destino);
+    const numero = await normalizarNumeroDiscagem(destino);
     if (!call || !host || !numero) return false;
     const alvo = UserAgent.makeURI(`sip:${numero.replace(/#/g, '%23')}@${host}`);
     if (!alvo) return false;
