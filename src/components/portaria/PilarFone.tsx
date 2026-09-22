@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { SessionState } from "sip.js";
 import { supabase } from "@/integrations/supabase/client";
-import { Switch } from "@/components/ui/switch";
 import { useSipConnection } from "@/hooks/useSipConnection";
 import { useToast } from "@/hooks/use-toast";
 import AvisoInline from "@/components/portaria/AvisoInline";
