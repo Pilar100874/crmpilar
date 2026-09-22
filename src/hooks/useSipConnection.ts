@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState, Web } from 'sip.js';
+import { prepararNumeroDiscagem } from '@/lib/telefonia/numeroDiscagem';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { iniciarGravador, extensaoDoMime, type GravadorChamada } from '@/lib/telefonia/gravacaoChamada';
@@ -76,9 +77,9 @@ interface CallSession {
   viaDiscador?: boolean;
 }
 
-/** Remove apenas a formatação visual; códigos SIP digitados pelo usuário continuam intactos. */
+/** Remove a formatação visual e o DDI 55; códigos com * e # continuam intactos. */
 const normalizarNumeroDiscagem = (phoneNumber: string) =>
-  phoneNumber.trim().replace(/[\s().-]/g, '');
+  prepararNumeroDiscagem(phoneNumber.trim());
 
 export const useSipConnection = () => {
   const { toast } = useToast();

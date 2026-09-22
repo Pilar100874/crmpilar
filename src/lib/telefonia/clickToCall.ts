@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { limparChamadaDiscador, marcarChamadaDiscador } from "@/lib/telefonia/discadorMarker";
+import { prepararNumeroDiscagem } from "@/lib/telefonia/numeroDiscagem";
 import { obterStatusRamalGlobal } from "@/lib/telefonia/statusRamalGlobal";
 
 export interface RespostaClickToCall {
@@ -12,8 +13,8 @@ export interface RespostaClickToCall {
   ucm?: { action: string; status: number };
 }
 
-/** Remove formatação do telefone (espaços, parênteses, traços) sem mexer em DDD/prefixos. */
-export const somenteDigitosDiscagem = (valor: string) => (valor || "").replace(/[^\d*#]/g, "");
+/** Remove formatação do telefone e o DDI 55, deixando o número como se fosse discado do aparelho. */
+export const somenteDigitosDiscagem = (valor: string) => prepararNumeroDiscagem(valor);
 
 /**
  * Click-to-Call pelo PABX: o UCM toca o ramal do usuário e, ao atender,
