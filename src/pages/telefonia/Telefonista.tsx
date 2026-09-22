@@ -354,6 +354,7 @@ export default function Telefonista() {
         </Card>
       )}
 
+      {aba === "mesa" && (
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Ramais */}
         <Card className="lg:col-span-2">
@@ -680,6 +681,9 @@ export default function Telefonista() {
           </Card>
         </div>
       </div>
+      )}
+
+      {aba === "ligacoes" && <LigacoesDiaPanel />}
 
       {/* Confirmação para encerrar chamada de terceiros */}
       <AlertDialog open={!!chamadaParaEncerrar} onOpenChange={(aberto) => !aberto && setChamadaParaEncerrar(null)}>
