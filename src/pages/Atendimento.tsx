@@ -4584,6 +4584,8 @@ ${recentMessages}
                 agendaConversations={agendaConversations}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
+                contatosTelefone={contatosBase}
+                onLigarContato={(contato) => void ligarParaContato(contato)}
                 onStartConversation={async (contactId, nome, telefone) => {
                   // Criar conversa para o contato da agenda
                   await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
@@ -7316,6 +7318,8 @@ interface MobileListContentProps {
     email: string;
     taskTitle?: string;
   }>;
+  contatosTelefone: ContatoAtendimento[];
+  onLigarContato: (contato: ContatoAtendimento) => void;
   onStartConversation: (contactId: string, nome: string, telefone: string) => void;
   selectedConversation: string | null;
   setSelectedConversation: (id: string | null) => void;
@@ -7377,6 +7381,8 @@ function MobileListContent({
   agendaConversations,
   otherConversations,
   agendaContactsWithoutConversation,
+  contatosTelefone,
+  onLigarContato,
   onStartConversation,
   selectedConversation,
   setSelectedConversation,
@@ -7432,6 +7438,7 @@ function MobileListContent({
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
               {activeTab === "chat" && <MessageSquare className="h-5 w-5 text-white" />}
               {activeTab === "agenda" && <CalendarIcon className="h-5 w-5 text-white" />}
+              {activeTab === "tel" && <Phone className="h-5 w-5 text-white" />}
               {activeTab === "email" && <Mail className="h-5 w-5 text-white" />}
               {activeTab === "orcamento" && <Receipt className="h-5 w-5 text-white" />}
             </div>
@@ -7439,26 +7446,30 @@ function MobileListContent({
               <h2 className="text-base font-bold text-foreground">
                 {activeTab === "chat" && "Conversas"}
                 {activeTab === "agenda" && "Agenda"}
+                {activeTab === "tel" && "Telefone"}
                 {activeTab === "email" && "E-mails"}
                 {activeTab === "orcamento" && "Orçamentos"}
               </h2>
               <p className="text-[10px] text-muted-foreground">
                 {activeTab === "chat" && `${filteredConversations.length} conversas`}
                 {activeTab === "agenda" && format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                {activeTab === "tel" && `${contatosTelefone.filter((contato) => contato.tel.trim() !== "").length} contatos`}
                 {activeTab === "email" && `${filteredEmails.length} emails`}
                 {activeTab === "orcamento" && `${filteredOrcamentos.length} orçamentos`}
               </p>
             </div>
           </div>
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={onShowCustomerSearch}
-            className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-            title="Puxar ou criar cadastro"
-          >
-            <Plus className="h-4 w-4 text-primary" />
-          </Button>
+          {activeTab !== "tel" && (
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={onShowCustomerSearch}
+              className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+              title="Puxar ou criar cadastro"
+            >
+              <Plus className="h-4 w-4 text-primary" />
+            </Button>
+          )}
         </div>
 
         {/* Search/Filter */}
@@ -7511,22 +7522,9 @@ function MobileListContent({
               
               {/* Corpo com Ações */}
               <div className="p-3 space-y-3">
-                {/* Toggle Fluxo/Massa */}
+                {/* Envio em massa */}
                 <div className="flex items-center justify-center">
                   <div className="inline-flex items-center bg-muted/50 rounded-xl p-1 gap-1">
-                    <button 
-                      onClick={() => { setDiscadorModo(null); setAgendaViewMode('fluxo'); }}
-                      disabled={filteredTasks.length === 0}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50",
-                        agendaViewMode === 'fluxo' 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-background dark:bg-card dark:hover:bg-background"
-                      )}
-                    >
-                      <Play className="w-3.5 h-3.5" fill={agendaViewMode === 'fluxo' ? 'currentColor' : 'none'} />
-                      Fluxo
-                    </button>
                     <button 
                       onClick={() => {
                         setAgendaViewMode('default');
@@ -7552,15 +7550,6 @@ function MobileListContent({
                   >
                     <CalendarDays className="w-3.5 h-3.5" />
                     Hoje
-                  </button>
-                  
-                  <button 
-                    onClick={() => showPredictiveDialer()} 
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50 text-xs font-medium text-green-700 dark:text-green-400 transition-all"
-                    title="Discador"
-                  >
-                    <PhoneCall className="w-3.5 h-3.5" />
-                    Discador
                   </button>
                   
                   <button 
@@ -7595,6 +7584,27 @@ function MobileListContent({
                 </div>
                 <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "tel" && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={agendaViewMode === 'fluxo' ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setDiscadorModo(null); setAgendaViewMode('fluxo'); }}
+                disabled={filteredTasks.length === 0}
+                className="h-10 gap-2"
+              >
+                <Play className="h-4 w-4" />
+                Fluxo
+              </Button>
+              <Button variant="outline" size="sm" onClick={showPredictiveDialer} className="h-10 gap-2">
+                <PhoneCall className="h-4 w-4" />
+                Discador
+              </Button>
             </div>
           </div>
         )}
@@ -7708,6 +7718,17 @@ function MobileListContent({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
+        {activeTab === "tel" && (
+          <ContatosCanalList
+            contatos={contatosTelefone}
+            canal="tel"
+            titulo="Contatos com telefone"
+            acaoLabel="Ligar"
+            vazioTexto="Nenhum contato com telefone"
+            onSelecionar={onLigarContato}
+          />
+        )}
+
         {activeTab === "chat" && (
           <>
             {/* Grupo: Agenda do Dia - Conversas ativas + Contatos sem conversa */}
@@ -7840,10 +7861,8 @@ function MobileListContent({
           <div
             key={task.id}
             onClick={() => {
-              const taskIndex = filteredTasks.findIndex(t => t.id === task.id);
               setDiscadorModo(null);
-              setFluxoInitialIndex(taskIndex >= 0 ? taskIndex : 0);
-              setAgendaViewMode('fluxo');
+              setSelectedTaskId(task.id);
             }}
             className={`relative rounded-xl cursor-pointer transition-all overflow-hidden ${
               selectedTaskId === task.id
