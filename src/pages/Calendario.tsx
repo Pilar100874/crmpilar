@@ -968,14 +968,22 @@ export default function Calendario() {
       if (updates.origem) dbUpdates.origem = updates.origem;
       if (updates.campaignId !== undefined) dbUpdates.campaign_id = updates.campaignId;
 
-      const { error } = await (supabase as any)
+      const { data: linhas, error } = await (supabase as any)
         .from('calendario_tarefas')
         .update(dbUpdates)
-        .eq('id', taskId);
+        .eq('id', taskId)
+        .select('id');
 
       if (error) {
         console.error('Erro ao atualizar tarefa:', error);
         toast.error("Erro ao atualizar tarefa");
+        return false;
+      }
+
+      // Se nenhuma linha foi alterada, a gravação não aconteceu (permissão)
+      if (!linhas || linhas.length === 0) {
+        console.error('Nenhuma tarefa atualizada', { taskId, dbUpdates });
+        toast.error("Não foi possível salvar a alteração da tarefa");
         return false;
       }
 
