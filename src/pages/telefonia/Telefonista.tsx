@@ -101,6 +101,7 @@ export default function Telefonista() {
   const [filaEmEdicao, setFilaEmEdicao] = useState<FilaPainel | null>(null);
   const [filaParaExcluir, setFilaParaExcluir] = useState<FilaPainel | null>(null);
   const [excluindoFila, setExcluindoFila] = useState(false);
+  const [aba, setAba] = useState<"mesa" | "ligacoes">("mesa");
 
   // Conecta o ramal do usuário automaticamente, como o Pilar Fone faz.
   const conectarRef = useRef(sip.connect);
@@ -292,6 +293,24 @@ export default function Telefonista() {
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Alternar entre mesa operadora e ligações do dia */}
+      <div className="flex gap-2">
+        <Button
+          variant={aba === "mesa" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setAba("mesa")}
+        >
+          <Headset className="mr-2 h-4 w-4" /> Mesa operadora
+        </Button>
+        <Button
+          variant={aba === "ligacoes" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setAba("ligacoes")}
+        >
+          <PhoneCall className="mr-2 h-4 w-4" /> Ligações do dia
+        </Button>
       </div>
 
       {painel.pabxDisponivel === false && painel.motivoPabx && (
