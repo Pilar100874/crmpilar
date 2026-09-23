@@ -5295,7 +5295,9 @@ ${recentMessages}
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
               <ContatosCanalList
-                contatos={contatosBase}
+                contatos={contatosBase.filter((contato) =>
+                  !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
+                )}
                 canal="tel"
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
