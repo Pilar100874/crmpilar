@@ -3459,24 +3459,72 @@ ${recentMessages}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsVisiveisChave]);
 
-  const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && equipeVisivel.membros.length > 0 ? (
-    <div className="flex items-center gap-2 mt-2 px-1">
-      <Users className="w-3.5 h-3.5 text-primary shrink-0" />
-      <Select value={escopoEquipe} onValueChange={setEscopoEquipe}>
-        <SelectTrigger className="h-7 text-xs" aria-label="Ver clientes de">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="meus">Somente os meus</SelectItem>
-          <SelectItem value="equipe">Toda a equipe</SelectItem>
-          {equipeVisivel.membros.map((m) => (
-            <SelectItem key={m.id} value={m.id}>
-              {m.nome} ({m.papel === "gerente" ? "Gerente" : "Vendedor"})
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+  const membrosEquipe = equipeVisivel?.membros ?? [];
+  const gerentesEquipe = membrosEquipe.filter((m) => m.papel === "gerente");
+  const escopoMembro = membrosEquipe.find((m) => m.id === escopoEquipe);
+  // Gerente atualmente filtrado (admin): o próprio escolhido ou o gerente do vendedor escolhido
+  const gerenteFiltrado = escopoMembro?.papel === "gerente" ? escopoMembro.id : escopoMembro?.gerenteId;
+  const vendedoresDoFiltro = equipeVisivel?.papel === "admin"
+    ? (gerenteFiltrado ? membrosEquipe.filter((m) => m.papel === "vendedor" && m.gerenteId === gerenteFiltrado) : [])
+    : membrosEquipe.filter((m) => m.papel === "vendedor");
+
+  const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && membrosEquipe.length > 0 ? (
+    equipeVisivel.papel === "admin" ? (
+      <div className="flex flex-col gap-1.5 mt-2 px-1">
+        <div className="flex items-center gap-2">
+          <Users className="w-3.5 h-3.5 text-primary shrink-0" />
+          <Select
+            value={gerenteFiltrado ?? (escopoEquipe === "equipe" ? "equipe" : "meus")}
+            onValueChange={setEscopoEquipe}
+          >
+            <SelectTrigger className="h-7 text-xs" aria-label="Filtrar por gerente">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="meus">Somente os meus</SelectItem>
+              <SelectItem value="equipe">Toda a equipe</SelectItem>
+              {gerentesEquipe.map((g) => (
+                <SelectItem key={g.id} value={g.id}>Gerente: {g.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {gerenteFiltrado && (
+          <div className="flex items-center gap-2 pl-5">
+            <Select value={escopoEquipe} onValueChange={setEscopoEquipe}>
+              <SelectTrigger className="h-7 text-xs" aria-label="Filtrar por vendedor">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={gerenteFiltrado}>Gerente + todos os vendedores</SelectItem>
+                {vendedoresDoFiltro.length === 0 && (
+                  <SelectItem value="__sem" disabled>Nenhum vendedor vinculado</SelectItem>
+                )}
+                {vendedoresDoFiltro.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>Vendedor: {v.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+    ) : (
+      <div className="flex items-center gap-2 mt-2 px-1">
+        <Users className="w-3.5 h-3.5 text-primary shrink-0" />
+        <Select value={escopoEquipe} onValueChange={setEscopoEquipe}>
+          <SelectTrigger className="h-7 text-xs" aria-label="Ver clientes de">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="meus">Somente os meus</SelectItem>
+            <SelectItem value="equipe">Eu + todos os vendedores</SelectItem>
+            {vendedoresDoFiltro.map((v) => (
+              <SelectItem key={v.id} value={v.id}>Vendedor: {v.nome}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )
   ) : null;
 
   // Base de contatos das abas Tel / Chats / E-mails
