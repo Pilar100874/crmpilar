@@ -62,6 +62,7 @@ import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { BotaoHistoricoCard } from "@/components/atendimento/BotaoHistoricoCard";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
@@ -5948,6 +5949,7 @@ ${recentMessages}
                         setShowClientDetailsAgenda(true);
                       }}
                    >
+                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
                       {task.linkedUsers && task.linkedUsers.length > 0 ? (
                         <div 
@@ -7828,6 +7830,7 @@ function MobileListContent({
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
             }`}
           >
+            <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
             {/* Tarja lateral indicando vínculo com nome do usuário */}
             {task.linkedUsers && task.linkedUsers.length > 0 ? (
               <div 
