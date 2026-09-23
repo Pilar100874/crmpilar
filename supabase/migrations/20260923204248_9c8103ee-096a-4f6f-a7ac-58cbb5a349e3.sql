@@ -1,0 +1,2 @@
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS vendedor_empresa_id uuid REFERENCES public.empresas(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS usuarios_vendedor_empresa_id_uniq ON public.usuarios(vendedor_empresa_id) WHERE vendedor_empresa_id IS NOT NULL;
