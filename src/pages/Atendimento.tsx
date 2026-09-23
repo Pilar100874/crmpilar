@@ -5580,6 +5580,10 @@ ${recentMessages}
                           }
                         }}
                         indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
+                    historicoClienteId={contact.contactId}
+                    historicoClienteNome={contact.nome}
+                        historicoClienteId={contact.contactId}
+                        historicoClienteNome={contact.nome}
                       >
                         {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
                         <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
@@ -7743,6 +7747,8 @@ function MobileListContent({
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
                     indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
+                    historicoClienteId={contact.contactId}
+                    historicoClienteNome={contact.nome}
                   >
                     {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
                     <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
