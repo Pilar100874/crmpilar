@@ -284,6 +284,8 @@ export default function Atendimento() {
   const [contatoEmailDetalhe, setContatoEmailDetalhe] = useState<any>(null);
   const [contatoOrcamentoDetalhe, setContatoOrcamentoDetalhe] = useState<any>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
+  // true quando a escrita de e-mail foi aberta embutida na aba E-mail (não deve virar popup ao trocar de aba)
+  const [composeEmailInline, setComposeEmailInline] = useState(false);
   const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
   const [composeEmailDefaults, setComposeEmailDefaults] = useState<{ to: string; subject: string; body: string }>({ to: '', subject: '', body: '' });
