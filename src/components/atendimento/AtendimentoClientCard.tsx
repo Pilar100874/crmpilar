@@ -62,23 +62,16 @@ export function AtendimentoClientCard({
         className,
       )}
     >
-      <div
-        className={cn(
-          "absolute inset-y-0 left-0 flex items-center justify-center rounded-l-xl bg-primary text-primary-foreground",
-          rotuloGenerico ? "w-5" : "w-8",
-        )}
-      >
+      <div className="absolute inset-y-0 left-0 flex w-5 items-center justify-center overflow-hidden rounded-l-xl bg-primary text-primary-foreground">
         <span
-          className={cn(
-            "-rotate-90 whitespace-nowrap font-semibold",
-            rotuloGenerico ? "text-[8px]" : "text-[10px]",
-          )}
+          className="-rotate-90 max-w-[96px] truncate whitespace-nowrap text-[8px] font-semibold"
+          title={rotuloGenerico ? sideLabel : `Cliente de ${sideLabel}`}
         >
-          {rotuloGenerico ? sideLabel : `Cliente: ${sideLabel}`}
+          {rotuloGenerico ? sideLabel : sideLabel.slice(0, 12)}
         </span>
       </div>
 
-      <div className={cn("flex min-w-0 items-start gap-3", rotuloGenerico ? "pl-4" : "pl-7")}>
+      <div className="flex min-w-0 items-start gap-3 pl-4">
         {icon && (
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             {icon || <User className="h-5 w-5" />}

@@ -5863,6 +5863,7 @@ ${recentMessages}
                             loadConversations();
                             if (newConv) {
                               setSelectedConversation(newConv.id);
+                              openDetailsPanel(setShowClientDetailsChat);
                             }
                           } catch (error) {
                             console.error('Erro ao criar conversa:', error);
