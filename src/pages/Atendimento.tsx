@@ -1441,6 +1441,7 @@ export default function Atendimento() {
       }
 
       setCustomerVinculos({ linkedToUser, userSegments, customerSegments: contactSegments });
+      setVinculosCarregados(true);
     } catch (error) {
       console.error("Erro ao carregar vínculos:", error);
     }
