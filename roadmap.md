@@ -43,3 +43,4 @@
 - [x] Manter o botão de expandir a Agenda visível e ajustar a barra do Calendário à largura disponível.
 - [x] Padronizar os cards e detalhes de todas as abas do Atendimento e agrupar orçamentos expansíveis por empresa.
 - [x] Padronizar as informações exibidas nos cartões de todas as abas do Atendimento.
+- [x] Repetir nas demais abas exatamente o conjunto de informações do cartão da Agenda.
