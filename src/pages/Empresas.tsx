@@ -3599,6 +3599,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         />
       )}
       
+      {/* Confirmação de vínculo de usuário: avisa que uma tarefa será criada na agenda */}
+      <AlertDialog open={confirmVinculoOpen} onOpenChange={setConfirmVinculoOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar vínculo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao vincular {novosUsuariosVinculo.length === 1 ? "este usuário" : "estes usuários"} a esta empresa, será criada automaticamente uma tarefa na agenda de hoje de cada usuário vinculado. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={executarVinculoUsuarios}>
+              Confirmar vínculo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Dialog de confirmação para descartar alterações */}
       <AlertDialog
         open={discardDialogOpen}
