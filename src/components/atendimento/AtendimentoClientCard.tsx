@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { CalendarCheck, History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
+import { TituloCartao } from "@/lib/atendimento/tituloCartao";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
 
@@ -84,7 +85,7 @@ export function AtendimentoClientCard({
           </div>
         )}
         <div className="min-w-0 flex-1 pr-12">
-          <p className="truncate text-base font-bold text-foreground">{title}</p>
+          <p className="truncate text-base font-bold text-foreground"><TituloCartao titulo={title} /></p>
           {customerName && (
             <p className="truncate text-sm font-medium text-muted-foreground">{customerName}</p>
           )}
