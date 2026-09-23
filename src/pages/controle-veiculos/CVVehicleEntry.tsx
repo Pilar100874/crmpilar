@@ -25,10 +25,12 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
 import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
+import { lerRascunhoVistoria, limparRascunhoVistoria, useRascunhoVistoria } from "@/lib/cv/rascunhoVistoria";
 
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
+const RASCUNHO_CHAVE = "cv-entrada";
 
 export default function CVVehicleEntry() {
   const [openMoves, setOpenMoves] = useState<any[]>([]);
@@ -37,23 +39,26 @@ export default function CVVehicleEntry() {
   const [photosRequired, setPhotosRequired] = useState(true);
   const [aiCompare, setAiCompare] = useState(true);
   const [pendentesOpen, setPendentesOpen] = useState(false);
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selected, setSelected] = useState<any | null>(() => lerRascunhoVistoria<any>(RASCUNHO_CHAVE)?.selected ?? null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const geradosRef = useRef<Set<string>>(new Set());
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [step, setStep] = useState(0);
+  // Rascunho salvo no navegador: evita voltar à etapa inicial quando a câmera
+  // do celular descarrega a página durante a vistoria fotográfica.
+  const [rascunho] = useState(() => lerRascunhoVistoria<any>(RASCUNHO_CHAVE));
+  const [step, setStep] = useState<number>(rascunho?.step ?? 0);
   // entry_km fica como texto para permitir apagar tudo antes de digitar
   // (campo numérico controlado como número voltava para 0 ao apagar).
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(rascunho?.form ?? {
     entry_km: "",
     reported_defects: "",
     defect_type_id: "",
     damage_notes: "",
     inspected_all_sides: false,
   });
-  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const [photos, setPhotos] = useState<CapturedPhoto[]>(rascunho?.photos ?? []);
   const [mapaVeiculo, setMapaVeiculo] = useState<{ id: string | null; titulo: string } | null>(null);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
@@ -88,6 +93,8 @@ export default function CVVehicleEntry() {
     }
   };
   useEffect(() => { load(); }, []);
+
+  useRascunhoVistoria(RASCUNHO_CHAVE, { step, selected, form, photos }, !!selected && step > 0);
 
   const movesFiltrados = filtrarPorGrupo(openMoves, grupoId, (m: any) => m.vehicle?.unidade_id);
 
@@ -248,6 +255,7 @@ export default function CVVehicleEntry() {
 
     setBusy(false);
     toast.success("Entrada registrada com sucesso!");
+    limparRascunhoVistoria(RASCUNHO_CHAVE);
     setSelected(null);
     setStep(0);
     setPhotos([]);

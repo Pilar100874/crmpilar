@@ -24,10 +24,12 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
 import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
+import { lerRascunhoVistoria, limparRascunhoVistoria, useRascunhoVistoria } from "@/lib/cv/rascunhoVistoria";
 
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
+const RASCUNHO_CHAVE = "cv-saida";
 
 export default function CVVehicleExit() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -47,14 +49,18 @@ export default function CVVehicleExit() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successDetails, setSuccessDetails] = useState<any>(null);
 
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({
+  // Rascunho salvo no navegador: a câmera do celular pode descarregar a página
+  // durante a vistoria fotográfica e a tela voltava para a etapa inicial.
+  const [rascunho] = useState(() => lerRascunhoVistoria<any>(RASCUNHO_CHAVE));
+  const [step, setStep] = useState<number>(rascunho?.step ?? 0);
+  const [form, setForm] = useState(rascunho?.form ?? {
     vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "",
   });
   const [helperDialogOpen, setHelperDialogOpen] = useState(false);
   const [helperForm, setHelperForm] = useState({ name: "", phone: "", document: "" });
   const [helperBusy, setHelperBusy] = useState(false);
-  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const [photos, setPhotos] = useState<CapturedPhoto[]>(rascunho?.photos ?? []);
+  useRascunhoVistoria(RASCUNHO_CHAVE, { step, form, photos }, step > 0 && !!form.vehicle_id);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
   const load = async () => {
@@ -218,6 +224,7 @@ export default function CVVehicleExit() {
     });
     setShowSuccess(true);
     toast.success("Saída autorizada! Boa viagem");
+    limparRascunhoVistoria(RASCUNHO_CHAVE);
     setForm({ vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "" });
     setPhotos([]);
 
