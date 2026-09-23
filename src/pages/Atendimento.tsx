@@ -64,7 +64,7 @@ import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAt
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
-import { TituloCartao } from "@/lib/atendimento/tituloCartao";
+import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
@@ -5875,7 +5875,7 @@ ${recentMessages}
                       >
                         {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
                         <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
-                        {contact.taskTitle && <Badge variant="secondary"><TituloCartao titulo={contact.taskTitle} /></Badge>}
+                        {contact.taskTitle && <Badge variant="secondary">{parseTituloCartao(contact.taskTitle).nome}</Badge>}
                         {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
                       </AtendimentoClientCard>
                     ))}
@@ -6265,7 +6265,7 @@ ${recentMessages}
                       
                       <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
                        <div className="flex-1 min-w-0">
-                         <p className="font-bold text-base truncate"><TituloCartao titulo={task.title} /></p>
+                         <p className="font-bold text-base truncate">{parseTituloCartao(task.title).nome}</p>
                          <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                            <AtendimentoHoraBadge hora={task.time || ""} />
@@ -6345,6 +6345,19 @@ ${recentMessages}
                                   Pendente
                                 </button>
                               )}
+                              {(() => {
+                                const { canal } = parseTituloCartao(task.title);
+                                if (!canal) return null;
+                                const IconeCanal = ICONES_CANAL[canal];
+                                return (
+                                  <span
+                                    title={ROTULOS_CANAL[canal]}
+                                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
+                                  >
+                                    <IconeCanal className="h-3.5 w-3.5" />
+                                  </span>
+                                );
+                              })()}
                             </div>
                        </div>
                      </div>
@@ -8190,7 +8203,7 @@ function MobileListContent({
                   >
                     {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
                     <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
-                    {contact.taskTitle && <Badge variant="secondary"><TituloCartao titulo={contact.taskTitle} /></Badge>}
+                    {contact.taskTitle && <Badge variant="secondary">{parseTituloCartao(contact.taskTitle).nome}</Badge>}
                     {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
                   </AtendimentoClientCard>
                 ))}
@@ -8292,7 +8305,7 @@ function MobileListContent({
             
             <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-base truncate"><TituloCartao titulo={task.title} /></p>
+                <p className="font-bold text-base truncate">{parseTituloCartao(task.title).nome}</p>
                 <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <AtendimentoHoraBadge hora={task.time || ""} />
@@ -8356,6 +8369,19 @@ function MobileListContent({
                         Pendente
                       </button>
                     )}
+                    {(() => {
+                      const { canal } = parseTituloCartao(task.title);
+                      if (!canal) return null;
+                      const IconeCanal = ICONES_CANAL[canal];
+                      return (
+                        <span
+                          title={ROTULOS_CANAL[canal]}
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
+                        >
+                          <IconeCanal className="h-3.5 w-3.5" />
+                        </span>
+                      );
+                    })()}
                   </div>
               </div>
             </div>
