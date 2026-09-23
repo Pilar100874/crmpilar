@@ -487,7 +487,7 @@ export function CustomerHistoryTimeline({
   const renderFilters = () => (
     <div className={cn("flex flex-col gap-3 mb-3", isFullView && "mb-4")}>
       {/* Filtro por tipo - chips horizontais com scroll */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+      <div className="flex flex-wrap gap-1.5 pb-1">
         <Button
           variant={typeFilter === null ? "default" : "outline"}
           size="sm"
@@ -559,12 +559,7 @@ export function CustomerHistoryTimeline({
   // Modo tela cheia (para aba)
   if (isFullView) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 mb-3">
-          <Clock className="w-4 h-4 text-primary" />
-          <span className="font-semibold text-sm">Histórico do Cliente</span>
-          <Badge variant="secondary" className="text-[10px]">{filteredEvents.length} eventos</Badge>
-        </div>
+      <div className="flex flex-col h-full overflow-x-hidden">
         {renderFilters()}
         {renderTimeline()}
       </div>
