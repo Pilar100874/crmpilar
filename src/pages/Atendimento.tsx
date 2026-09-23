@@ -6764,7 +6764,7 @@ ${recentMessages}
                 className="h-8 w-8 p-0"
                 title={showClientDetailsFluxo ? "Ocultar detalhes" : "Mostrar detalhes"}
               >
-                {showClientDetailsFluxo ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                {showClientDetailsFluxo ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             </div>
           </div>
