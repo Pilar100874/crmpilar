@@ -13,6 +13,7 @@ import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog"
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
+import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
@@ -1423,9 +1424,10 @@ export default function Atendimento() {
         .select('customer_id, usuario_id')
         .eq('estabelecimento_id', estabId);
 
+      const idsDono = new Set(idsVisiveisRef.current.length ? idsVisiveisRef.current : [currentUsuarioId]);
       if (customerVinculosData) {
         customerVinculosData.forEach(v => {
-          if (v.usuario_id === currentUsuarioId) {
+          if (idsDono.has(v.usuario_id)) {
             linkedToUser.add(v.customer_id);
           }
         });
