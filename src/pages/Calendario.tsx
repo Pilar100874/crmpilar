@@ -2378,22 +2378,23 @@ export default function Calendario() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {sortedTasks.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead className="border-b border-border sticky top-0 bg-background z-10">
                 <tr>
-                  {tableColumns.filter(col => col.visible).map((column, index) => (
+                  {visibleColumns.map((column, index) => (
                     <th
                       key={column.id}
-                      className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
-                        column.id === 'status' ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                      className={`text-left p-2 font-medium text-xs text-muted-foreground relative overflow-hidden ${
+                        column.id === 'status' ? 'bg-background border-r border-border' : ''
                       }`}
-                      style={{ width: column.width, minWidth: column.width }}
+                      style={{ width: colPercent(column.width) }}
+
                     >
                       <div className="flex items-center justify-between gap-2 pr-4">
                         <span>{column.label.toUpperCase()}</span>
