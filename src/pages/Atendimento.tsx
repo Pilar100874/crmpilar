@@ -8340,8 +8340,20 @@ function MobileListContent({
                  </div>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                    {task.contact_id && lerPendencias().includes(task.contact_id) && (
-                      <span className="inline-flex items-center rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">Pendente</span>
+                    {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
+                      <button
+                        type="button"
+                        title="Finalizar atendimento (próximo contato)"
+                        aria-label="Finalizar atendimento"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          pedirFinalizacao({ customerId: task.contact_id!, nome: task.contact_name });
+                        }}
+                        className="flex h-6 items-center gap-1 rounded-full border border-destructive/50 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <CalendarCheck className="h-3.5 w-3.5" />
+                        Pendente
+                      </button>
                     )}
                   </div>
               </div>
