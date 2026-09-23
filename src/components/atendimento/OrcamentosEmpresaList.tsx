@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
+import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 interface OrcamentosEmpresaListProps {
   orcamentos: any[];
@@ -99,12 +100,11 @@ export function OrcamentosEmpresaList({
               onClick={() => alternarGrupo(grupo.id)}
               indicators={<><AtendimentoCardIndicators diasAtraso={diasAtraso} emailsNaoLidos={emailsNaoLidosPerEmail[email] || 0} chatsPendentes={chatsNaoLidosPerPhone[telefone] || 0} orcamentosAbertos={grupo.orcamentos.length} />{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
             >
-              {tarefaAgenda?.time && (
-                <Badge variant="outline" className="gap-1 bg-background/70">
-                  {tarefaAgenda.time}
-                </Badge>
-              )}
-              {tarefaAgenda?.origem && <Badge variant="outline">{tarefaAgenda.origem}</Badge>}
+              <AtendimentoHoraBadge hora={tarefaAgenda?.time || ""} />
+              {tarefaAgenda?.origem && <AtendimentoInfoBadge>{tarefaAgenda.origem}</AtendimentoInfoBadge>}
+              <AtendimentoInfoBadge>
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(total)}
+              </AtendimentoInfoBadge>
             </AtendimentoClientCard>
 
             {aberto && (

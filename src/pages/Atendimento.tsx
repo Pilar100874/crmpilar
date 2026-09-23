@@ -63,6 +63,8 @@ import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpres
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
+import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
+import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -5934,12 +5936,7 @@ ${recentMessages}
                          <p className="font-bold text-base truncate">{task.title}</p>
                          <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                           {task.time && (
-                             <span className="text-[10px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex items-center font-medium">
-                               <Clock className="w-3 h-3 mr-1" />
-                               {task.time}
-                             </span>
-                           )}
+                           <AtendimentoHoraBadge hora={task.time || ""} />
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
                                {task.origem}
@@ -5951,119 +5948,53 @@ ${recentMessages}
                                +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                              </Badge>
                            )}
-                            {/* Stacked indicators in top-right corner */}
-                            <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
-                              {task.diasAtraso > 0 && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
-                                        {task.diasAtraso}
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                              {(() => {
-                                const customerEmail = task.customers?.email?.toLowerCase();
-                                const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                                if (unreadEmailCount > 0) {
-                                  const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
-                                  return (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setActiveTab('email');
-                                              if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
-                                            }}
-                                            className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600 transition-colors"
-                                          >
-                                            {unreadEmailCount}
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>{unreadEmailCount} email{unreadEmailCount > 1 ? 's' : ''} não lido{unreadEmailCount > 1 ? 's' : ''}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  );
-                                }
-                                return null;
-                              })()}
-                              {(() => {
-                                const customerPhone = normalizePhone(task.customers?.telefone);
-                                const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                                if (unreadChatsCount > 0) {
-                                  const firstUnreadChat = conversations.find(c => 
-                                    (c.chat_status === 'em_fila' || c.chat_status === 'novo') && 
-                                    normalizePhone(c.customer?.telefone) === customerPhone
-                                  );
-                                  return (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setActiveTab('chat');
-                                              if (firstUnreadChat) setSelectedConversation(firstUnreadChat.id);
-                                            }}
-                                            className="bg-purple-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-purple-600 transition-colors"
-                                          >
-                                            {unreadChatsCount}
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  );
-                                }
-                                return null;
-                              })()}
-                           {(() => {
-                              // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
-                              const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                              // Also check if contact_id IS an empresa_id directly
-                              const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
-                              const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                              const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                              const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
-                              
-                              if (totalBudgetCount > 0) {
-                                return (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      // Find first open budget for this customer, empresa directly, or linked empresas
-                                      const firstOrcamento = orcamentos.find(o => 
-                                        o.status !== 'cancelado' && 
-                                        o.status !== 'ganho' &&
-                                        (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
-                                      );
-                                     if (firstOrcamento) {
-                                       setActiveTab('orcamento');
-                                       setSelectedOrcamentoId(firstOrcamento.id);
-                                       setOrcamentoSheetOpen(true);
-                                     }
-                                   }}
-                                   className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
-                                   title="Ver orçamentos em aberto"
-                                 >
-                                   {totalBudgetCount}
-                                 </button>
-                               );
-                              }
-                              return null;
-                            })()}
-                             </div>
+                             {/* Stacked indicators in top-right corner */}
+                             <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
+                               {(() => {
+                                 const customerEmail = task.customers?.email?.toLowerCase();
+                                 const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                                 const customerPhone = normalizePhone(task.customers?.telefone);
+                                 const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                                 const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                                 const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                                 const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                                 const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                                 const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
+                                 return (
+                                   <AtendimentoCardIndicators
+                                     diasAtraso={task.diasAtraso || 0}
+                                     emailsNaoLidos={unreadEmailCount}
+                                     chatsPendentes={unreadChatsCount}
+                                     orcamentosAbertos={totalBudgetCount}
+                                     onEmailClick={() => {
+                                       const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
+                                       setActiveTab('email');
+                                       if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
+                                     }}
+                                     onChatClick={() => {
+                                       const firstUnreadChat = conversations.find(c =>
+                                         (c.chat_status === 'em_fila' || c.chat_status === 'novo') &&
+                                         normalizePhone(c.customer?.telefone) === customerPhone
+                                       );
+                                       setActiveTab('chat');
+                                       if (firstUnreadChat) setSelectedConversation(firstUnreadChat.id);
+                                     }}
+                                     onOrcamentoClick={() => {
+                                       const firstOrcamento = orcamentos.find(o =>
+                                         o.status !== 'cancelado' &&
+                                         o.status !== 'ganho' &&
+                                         (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                                       );
+                                       if (firstOrcamento) {
+                                         setActiveTab('orcamento');
+                                         setSelectedOrcamentoId(firstOrcamento.id);
+                                         setOrcamentoSheetOpen(true);
+                                       }
+                                     }}
+                                   />
+                                 );
+                               })()}
+                              </div>
                           </div>
                        </div>
                      </div>
@@ -7869,12 +7800,7 @@ function MobileListContent({
                 <p className="font-bold text-base truncate">{task.title}</p>
                 <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  {task.time && (
-                    <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                      <Clock className="w-2.5 h-2.5 mr-0.5" />
-                      {task.time}
-                    </Badge>
-                  )}
+                  <AtendimentoHoraBadge hora={task.time || ""} />
                   {/* Badge de usuários vinculados adicional */}
                   {task.linkedUsers && task.linkedUsers.length > 1 && (
                     <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
@@ -7883,90 +7809,27 @@ function MobileListContent({
                   )}
                   {/* Stacked indicators in top-right corner */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
-                    {task.diasAtraso > 0 && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
-                              {task.diasAtraso}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
                     {(() => {
                       const customerEmail = task.customers?.email?.toLowerCase();
                       const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                      if (unreadEmailCount > 0) {
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('email');
-                                  }}
-                                  className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600 transition-colors"
-                                >
-                                  {unreadEmailCount}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{unreadEmailCount} email{unreadEmailCount > 1 ? 's' : ''} não lido{unreadEmailCount > 1 ? 's' : ''}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      }
-                      return null;
-                    })()}
-                    {(() => {
                       const customerPhone = normalizePhone(task.customers?.telefone);
                       const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                      if (unreadChatsCount > 0) {
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('chat');
-                                  }}
-                                  className="bg-purple-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-purple-600 transition-colors"
-                                >
-                                  {unreadChatsCount}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      }
-                      return null;
-                    })()}
-                  {(() => {
-                    // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
-                    const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                    // Also check if contact_id IS an empresa_id directly
-                    const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
-                    const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                    const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                    const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
-                    
-                    if (totalBudgetCount > 0) {
+                      const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                      const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                      const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                      const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                      const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
                       return (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const firstOrcamento = orcamentos.find(o => 
-                              o.status !== 'cancelado' && 
+                        <AtendimentoCardIndicators
+                          diasAtraso={task.diasAtraso || 0}
+                          emailsNaoLidos={unreadEmailCount}
+                          chatsPendentes={unreadChatsCount}
+                          orcamentosAbertos={totalBudgetCount}
+                          onEmailClick={() => setActiveTab('email')}
+                          onChatClick={() => setActiveTab('chat')}
+                          onOrcamentoClick={() => {
+                            const firstOrcamento = orcamentos.find(o =>
+                              o.status !== 'cancelado' &&
                               o.status !== 'ganho' &&
                               (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
                             );
@@ -7976,15 +7839,9 @@ function MobileListContent({
                               setOrcamentoSheetOpen(true);
                             }
                           }}
-                          className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
-                          title="Ver orçamentos em aberto"
-                        >
-                          {totalBudgetCount}
-                        </button>
+                        />
                       );
-                    }
-                    return null;
-                  })()}
+                    })()}
                   </div>
                 </div>
               </div>
