@@ -330,6 +330,7 @@ export default function Atendimento() {
     userSegments: Set<string>;
     customerSegments: Record<string, string[]>;
   }>({ linkedToUser: new Set(), userSegments: new Set(), customerSegments: {} });
+  const [vinculosCarregados, setVinculosCarregados] = useState(false);
   
   // Tab counters
   const [activeConversationsCount, setActiveConversationsCount] = useState(0);
