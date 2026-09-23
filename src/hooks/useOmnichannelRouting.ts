@@ -194,7 +194,7 @@ export const useOmnichannelRouting = () => {
    */
   const setupMessageListener = (estabelecimentoId: string) => {
     const channel = supabase
-      .channel('new-customer-messages')
+      .channel(`new-customer-messages-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
