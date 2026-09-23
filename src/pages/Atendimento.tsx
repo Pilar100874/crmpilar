@@ -2257,6 +2257,13 @@ export default function Atendimento() {
   }, []);
 
 
+  // Ao abrir um orçamento, encolher o painel de detalhes
+  useEffect(() => {
+    if (orcamentoSheetOpen) {
+      setShowClientDetailsOrcamento(false);
+    }
+  }, [orcamentoSheetOpen]);
+
   // Criar orçamento a partir de um contato selecionado
   const handleCreateOrcamentoFromContact = async (type: 'customer' | 'empresa', data: any) => {
     setOrcamentoSheetOpen(false);
