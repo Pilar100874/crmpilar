@@ -5334,6 +5334,7 @@ ${recentMessages}
             estabelecimentoId={estabelecimentoId}
             onOpenConsultaEstoque={() => {
               setKeepComposeEmailOpen(true);
+              setComposeEmailInline(false);
               setShowComposeEmail(true);
               setShowConsultaEstoqueDialog(true);
             }}
