@@ -5454,6 +5454,10 @@ ${recentMessages}
                             </div>
                             <p className="text-sm font-medium text-muted-foreground truncate mb-1.5">{conv.customer?.nome || "Cliente"}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="outline" className="gap-1 bg-background/70 text-[10px]">
+                                <MessageSquare className="h-3 w-3" />
+                                WhatsApp
+                              </Badge>
                               {/* Badge de usuários vinculados extra */}
                               {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
@@ -5577,6 +5581,10 @@ ${recentMessages}
                             </div>
                             <p className="text-sm font-medium text-muted-foreground truncate mb-1.5">{conv.customer?.nome || "Cliente"}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="outline" className="gap-1 bg-background/70 text-[10px]">
+                                <MessageSquare className="h-3 w-3" />
+                                WhatsApp
+                              </Badge>
                               {/* Badge de usuários vinculados extra */}
                               {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
@@ -7807,29 +7815,19 @@ function MobileListContent({
 
                 {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
                 {agendaContactsWithoutConversation.map((contact) => (
-                  <div
+                  <AtendimentoClientCard
                     key={`contact-${contact.contactId}`}
+                    title={`Chat - ${contact.nome}`}
+                    customerName={contact.nome}
+                    sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
-                    className="px-3 py-3 rounded-xl cursor-pointer transition-all border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent"
+                    indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100">
-                        <User className="w-5 h-5 text-orange-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-semibold text-sm truncate text-orange-700">{contact.nome}</span>
-                          <Badge className="text-[9px] bg-orange-100 text-orange-600 border-0 px-1.5">
-                            Iniciar chat
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-orange-500 truncate flex items-center gap-1">
-                          <CalendarIcon className="w-3 h-3" />
-                          {contact.taskTitle || "Tarefa agendada"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
+                    <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
+                    {contact.taskTitle && <Badge variant="secondary">{contact.taskTitle}</Badge>}
+                    {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
+                  </AtendimentoClientCard>
                 ))}
               </>
             )}
