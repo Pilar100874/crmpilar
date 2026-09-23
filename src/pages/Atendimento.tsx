@@ -2226,6 +2226,11 @@ export default function Atendimento() {
       setHistoricoCliente({ customerId: detalhe.customerId, nome: detalhe.nome });
       setMobileView('main');
     });
+    const pararExtras = ouvirAbrirExtrasDaEmpresa((detalhe) => {
+      if (!detalhe.empresaId) return;
+      setExtrasEmpresa({ tipo: detalhe.tipo, empresaId: detalhe.empresaId, empresaNome: detalhe.empresaNome });
+      setMobileView('main');
+    });
     const pararEmail = ouvirNovoEmailParaContato(({ customerId, email, nome }) => {
       // Seleciona o contato na aba E-mail para abrir a escrita embutida (sem popup)
       setContatoEmailSelecionado({
