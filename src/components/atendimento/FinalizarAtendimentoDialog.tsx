@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Loader2, UserX } from "lucide-react";
+import { CalendarIcon, Loader2, UserX, Undo2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ import {
   ROTULO_CANAL,
   type CanalAtendimento,
   type TarefaFutura,
+  limparPendencia,
 } from "@/lib/atendimento/finalizarAtendimento";
 
 /** Pergunta qual data manter quando já existe um próximo contato agendado. */
