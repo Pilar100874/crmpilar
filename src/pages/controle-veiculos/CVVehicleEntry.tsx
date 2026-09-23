@@ -37,7 +37,7 @@ export default function CVVehicleEntry() {
   const [photosRequired, setPhotosRequired] = useState(true);
   const [aiCompare, setAiCompare] = useState(true);
   const [pendentesOpen, setPendentesOpen] = useState(false);
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selected, setSelected] = useState<any | null>(() => lerRascunhoVistoria<any>(RASCUNHO_CHAVE)?.selected ?? null);
   const [alertas, setAlertas] = useState<Record<string, AlertaManutencao[]>>({});
   const geradosRef = useRef<Set<string>>(new Set());
 
