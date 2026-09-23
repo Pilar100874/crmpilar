@@ -14,6 +14,7 @@ interface OrcamentosEmpresaListProps {
   tarefasAgenda?: any[];
   selectedOrcamentoId: string | null;
   onSelectOrcamento: (orcamento: any) => void;
+  onSelectEmpresa?: (orcamentoReferencia: any) => void;
   onDuplicate?: (orcamentoId: string) => void;
   onDelete?: (orcamentoId: string) => void;
   emailsNaoLidosPerEmail?: Record<string, number>;

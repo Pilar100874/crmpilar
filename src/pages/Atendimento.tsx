@@ -276,6 +276,8 @@ export default function Atendimento() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; nome: string; email: string } | null>(null);
+  const [contatoEmailDetalhe, setContatoEmailDetalhe] = useState<any>(null);
+  const [contatoOrcamentoDetalhe, setContatoOrcamentoDetalhe] = useState<any>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
@@ -4787,6 +4789,7 @@ ${recentMessages}
                   setSelectedEmailData(null);
                   setShowComposeEmail(false);
                   setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
+                  setContatoEmailDetalhe(contato);
                   openDetailsPanel(setShowClientDetailsEmail);
                 }}
                 selectedEmailId={selectedEmailId}
@@ -5447,6 +5450,7 @@ ${recentMessages}
                   setSelectedEmailData(null);
                   setShowComposeEmail(false);
                   setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
+                  setContatoEmailDetalhe(contato);
                   openDetailsPanel(setShowClientDetailsEmail);
                 }}
               />
@@ -6159,6 +6163,10 @@ ${recentMessages}
                   setSelectedOrcamentoId(orcamento.id);
                   setSelectedOrcamentoData(orcamento);
                   setOrcamentoSheetOpen(true);
+                  openDetailsPanel(setShowClientDetailsOrcamento);
+                }}
+                onSelectEmpresa={(orcamento) => {
+                  setContatoOrcamentoDetalhe(orcamento);
                   openDetailsPanel(setShowClientDetailsOrcamento);
                 }}
                 onDuplicate={setConfirmDuplicateOrcamento}
@@ -6946,6 +6954,33 @@ ${recentMessages}
         </div>
       )}
 
+      {/* Detalhes do cliente ao clicar no card na aba E-mail */}
+      {!orcamentoSheetOpen && activeTab === "email" && !selectedEmailId && contatoEmailDetalhe && showClientDetailsEmail && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="email"
+            nome={contatoEmailDetalhe.nome}
+            telefone={contatoEmailDetalhe.tel}
+            whatsapp={contatoEmailDetalhe.telefone}
+            email={contatoEmailDetalhe.email}
+            customerId={contatoEmailDetalhe.id}
+            companies={contatoEmailDetalhe.companies || []}
+            onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
+            }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
+          />
+        </div>
+      )}
+
       {/* Right Sidebar - Email Details Panel */}
       {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
@@ -7094,6 +7129,33 @@ ${recentMessages}
           />
         </div>
       ) : null}
+
+      {/* Detalhes do cliente ao clicar no card da empresa em Orçamentos */}
+      {!orcamentoSheetOpen && activeTab === "orcamento" && contatoOrcamentoDetalhe && showClientDetailsOrcamento && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="orcamento"
+            nome={contatoOrcamentoDetalhe.customers?.nome || contatoOrcamentoDetalhe.empresas?.nome_fantasia || contatoOrcamentoDetalhe.empresas?.nome || "Contato Desconhecido"}
+            telefone={contatoOrcamentoDetalhe.customers?.tel}
+            whatsapp={contatoOrcamentoDetalhe.customers?.telefone}
+            email={contatoOrcamentoDetalhe.customers?.email}
+            customerId={contatoOrcamentoDetalhe.customers?.id}
+            companies={contatoOrcamentoDetalhe.empresas ? [{ empresas: contatoOrcamentoDetalhe.empresas, is_primary: true }] : (contatoOrcamentoDetalhe.customers?.customer_empresas || [])}
+            onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
+            }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+          />
+        </div>
+      )}
 
       {/* Client Details Panel - Orçamento */}
       {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
