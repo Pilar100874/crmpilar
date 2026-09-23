@@ -106,7 +106,7 @@ export function FluxoAtendimentoPanel({
   const [configDatas, setConfigDatas] = useState<ConfigProximaData[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
-  const tipoContato = tipoContatoFixo;
+  const tipoContato: string = tipoContatoFixo;
   const [conflito, setConflito] = useState<TarefaFutura | null>(null);
   const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
   const [isRecording, setIsRecording] = useState(false);
