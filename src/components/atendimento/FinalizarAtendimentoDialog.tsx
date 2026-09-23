@@ -157,7 +157,7 @@ export function FinalizarAtendimentoDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => { if (!salvando && !obrigatorio) onOpenChange(o); }}>
+      <Dialog open={open} onOpenChange={(o) => { if (!salvando) onOpenChange(o); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{modoInativar ? "Inativar cliente" : "Finalizar atendimento"}</DialogTitle>
@@ -215,7 +215,7 @@ export function FinalizarAtendimentoDialog({
               {modoInativar ? "Voltar" : (<><UserX className="mr-1 h-3.5 w-3.5" />Inativar cliente</>)}
             </Button>
             <div className="flex gap-2">
-              {!obrigatorio && (
+              {(
                 <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>Cancelar</Button>
               )}
               <Button onClick={() => void confirmar()} disabled={salvando} variant={modoInativar ? "destructive" : "default"}>
