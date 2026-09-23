@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
 import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
-import { abrirChatDoContato, novoEmailParaContato } from "@/lib/atendimento/navegacaoContato";
+import { abrirChatDoContato, novoEmailParaContato, abrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
 
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
