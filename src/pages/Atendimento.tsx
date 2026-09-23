@@ -6812,6 +6812,17 @@ ${recentMessages}
       {/* Right Sidebar - Agenda Details Panel */}
       {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <div className="flex items-center justify-end px-2 py-1 border-b border-border shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowClientDetailsAgenda(false)}
+              className="h-7 w-7 p-0"
+              title="Ocultar detalhes"
+            >
+              <ChevronRight className="h-4 w-4 text-orange-600" />
+            </Button>
+          </div>
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
