@@ -4670,6 +4670,11 @@ ${recentMessages}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
                 contatosTelefone={contatosBase}
+                contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
+                onSelecionarContatoTelefone={(contato) => {
+                  setSelectedTelContato(contato);
+                  openDetailsPanel(setShowClientDetailsFluxo);
+                }}
                 onStartConversation={async (contactId, nome, telefone) => {
                   // Criar conversa para o contato da agenda
                   await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
@@ -4687,7 +4692,7 @@ ${recentMessages}
                   if (id) {
                     const task = todayTasks.find(t => t.id === id);
                     setSelectedTaskData(task);
-                    setMobileView("main");
+                    openDetailsPanel(setShowClientDetailsAgenda);
                   }
                 }}
                 agendaDate={agendaDate}
@@ -4710,7 +4715,7 @@ ${recentMessages}
                   if (id) {
                     const email = userEmails.find(e => e.id === id);
                     setSelectedEmailData(email);
-                    setMobileView("main");
+                    openDetailsPanel(setShowClientDetailsEmail);
                   }
                 }}
                 filteredOrcamentos={filteredOrcamentos}
@@ -4946,6 +4951,7 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
                 />
               )}
               {activeTab === "agenda" && selectedTaskData && (
@@ -4973,6 +4979,7 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
                 />
               )}
               {activeTab === "email" && selectedEmailData && (
@@ -5009,6 +5016,7 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
                 />
               )}
               {activeTab === "orcamento" && selectedOrcamentoData && (
@@ -5042,6 +5050,25 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+                />
+              )}
+              {activeTab === "tel" && agendaViewMode === "default" && selectedTelContato && (
+                <UnifiedDetailsPanel
+                  type="agenda"
+                  nome={selectedTelContato.nome}
+                  telefone={selectedTelContato.tel}
+                  whatsapp={selectedTelContato.telefone}
+                  email={selectedTelContato.email}
+                  customerId={selectedTelContato.id}
+                  companies={[]}
+                  onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
+                  }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
                 />
               )}
             </div>
@@ -7073,6 +7100,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
           />
         </div>
       )}
@@ -7104,6 +7132,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
           />
         </div>
       )}
@@ -7134,6 +7163,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
         </div>
       )}
@@ -7154,6 +7184,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
         </div>
@@ -7195,6 +7226,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
         </div>
       )}
@@ -7491,6 +7523,8 @@ interface MobileListContentProps {
     taskTitle?: string;
   }>;
   contatosTelefone: ContatoAtendimento[];
+  contatoTelefoneSelecionadoId: string | null;
+  onSelecionarContatoTelefone: (contato: ContatoAtendimento) => void;
   onStartConversation: (contactId: string, nome: string, telefone: string) => void;
   selectedConversation: string | null;
   setSelectedConversation: (id: string | null) => void;
@@ -7556,6 +7590,8 @@ function MobileListContent({
   otherConversations,
   agendaContactsWithoutConversation,
   contatosTelefone,
+  contatoTelefoneSelecionadoId,
+  onSelecionarContatoTelefone,
   onStartConversation,
   selectedConversation,
   setSelectedConversation,
@@ -7845,6 +7881,8 @@ function MobileListContent({
             canal="tel"
             titulo="Contatos com telefone"
             vazioTexto="Nenhum contato com telefone"
+            selecionadoId={contatoTelefoneSelecionadoId}
+            onSelecionar={onSelecionarContatoTelefone}
           />
         )}
 
