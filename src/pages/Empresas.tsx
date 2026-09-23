@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { KeyRound } from "lucide-react";
+import { VendedorAcessoTab } from "@/components/cadastros/VendedorAcessoTab";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
