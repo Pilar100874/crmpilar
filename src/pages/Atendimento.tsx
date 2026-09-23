@@ -330,6 +330,7 @@ export default function Atendimento() {
     userSegments: Set<string>;
     customerSegments: Record<string, string[]>;
   }>({ linkedToUser: new Set(), userSegments: new Set(), customerSegments: {} });
+  const [vinculosCarregados, setVinculosCarregados] = useState(false);
   
   // Tab counters
   const [activeConversationsCount, setActiveConversationsCount] = useState(0);
@@ -1441,6 +1442,7 @@ export default function Atendimento() {
       }
 
       setCustomerVinculos({ linkedToUser, userSegments, customerSegments: contactSegments });
+      setVinculosCarregados(true);
     } catch (error) {
       console.error("Erro ao carregar vínculos:", error);
     }
@@ -4835,6 +4837,7 @@ ${recentMessages}
                 setEmailFolder={setEmailFolder}
                 setShowComposeEmail={setShowComposeEmail}
                 customerVinculos={customerVinculos}
+                vinculosCarregados={vinculosCarregados}
                 orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
                 orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
                 orcamentos={orcamentos}
@@ -5922,11 +5925,11 @@ ${recentMessages}
                       ) : (
                         <div 
                           className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
-                            isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
+                            !vinculosCarregados ? 'bg-muted' : isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
                           }`}
                         >
                           <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                            {isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
+                            {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
                           </span>
                         </div>
                       )}
@@ -7320,6 +7323,7 @@ interface MobileListContentProps {
     userSegments: Set<string>;
     customerSegments: Record<string, string[]>;
   };
+  vinculosCarregados?: boolean;
   orcamentosAbertosPerCustomer: Record<string, number>;
   orcamentosAbertosPerEmpresa: Record<string, number>;
   orcamentos: any[];
@@ -7383,6 +7387,7 @@ function MobileListContent({
   setEmailFolder,
   setShowComposeEmail,
   customerVinculos,
+  vinculosCarregados = false,
   orcamentosAbertosPerCustomer,
   orcamentosAbertosPerEmpresa,
   orcamentos,
@@ -7786,11 +7791,11 @@ function MobileListContent({
             ) : (
               <div 
                 className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
-                  isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
+                  !vinculosCarregados ? 'bg-muted' : isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
                 }`}
               >
                 <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                  {isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
+                  {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
                 </span>
               </div>
             )}

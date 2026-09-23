@@ -39,8 +39,7 @@ export function AtendimentoClientCard({
         onClick();
       }}
       className={cn(
-        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card pr-4 py-3 shadow-sm transition-all",
-        rotuloGenerico ? "pl-7" : "pl-10",
+        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card p-3 shadow-sm transition-all",
         selected
           ? "border-primary/40 bg-primary/10 shadow-md"
           : "border-border/70 hover:border-primary/30 hover:bg-muted/40 hover:shadow-md",
@@ -64,21 +63,23 @@ export function AtendimentoClientCard({
         </span>
       </div>
 
-      <div className="flex min-w-0 items-start gap-3">
+      <div className={cn("flex min-w-0 items-start gap-3", rotuloGenerico ? "pl-4" : "pl-7")}>
         {icon && (
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             {icon || <User className="h-5 w-5" />}
           </div>
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 pr-12">
           <p className="truncate text-base font-bold text-foreground">{title}</p>
           {customerName && (
             <p className="truncate text-sm font-medium text-muted-foreground">{customerName}</p>
           )}
-          {children && <div className="mt-2 flex flex-wrap items-center gap-1.5">{children}</div>}
+          {children && <div className="mt-1.5 flex flex-wrap items-center gap-2">{children}</div>}
         </div>
-        {indicators && <div className="flex shrink-0 flex-col items-center gap-1 text-[10px]">{indicators}</div>}
       </div>
+      {indicators && (
+        <div className="absolute right-2 top-2 flex flex-col items-center gap-1 text-[10px]">{indicators}</div>
+      )}
     </div>
   );
 }
