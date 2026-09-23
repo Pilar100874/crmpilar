@@ -26,6 +26,9 @@ export function canalDaAba(aba: string): CanalAtendimento | null {
 }
 
 const STATUS_PENDENTES = ["pendente", "pending"];
+const ORIGENS_VALIDAS = ["bot","campanha","ligacao","visita","email_enviado","email_recebido","pedido_orcamento","pedido_negociacao","pedido_aprovacao"];
+const ORIGEM_CANAL: Record<CanalAtendimento, string> = { whatsapp: "bot", email: "email_enviado", telefone: "ligacao", presencial: "visita", orcamento: "pedido_orcamento" };
+const origemValida = (o: string | null | undefined, canal: CanalAtendimento) => (o && ORIGENS_VALIDAS.includes(o) ? o : ORIGEM_CANAL[canal]);
 const hojeStr = () => format(new Date(), "yyyy-MM-dd");
 
 export interface TarefaFutura {
@@ -74,7 +77,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
   // 1) Tarefa do dia (ou atrasada) — cria uma quando o cliente não está na agenda.
   let tarefaId = p.tarefaAtualId ?? null;
   let tarefaTitulo = `Contato - ${p.contactName}`;
-  let tarefaOrigem = "manual";
+  let tarefaOrigem = ORIGEM_CANAL[p.canal];
   let dataOriginal: string | null = hoje;
   if (!tarefaId) {
     const { data } = await supabase
@@ -90,7 +93,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
     if (t) {
       tarefaId = t.id;
       tarefaTitulo = t.title;
-      tarefaOrigem = t.origem || "manual";
+      tarefaOrigem = origemValida(t.origem, p.canal);
       dataOriginal = t.data_original || t.date;
     }
   } else {
@@ -101,7 +104,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
       .maybeSingle();
     if (t) {
       tarefaTitulo = t.title;
-      tarefaOrigem = t.origem || "manual";
+      tarefaOrigem = origemValida(t.origem, p.canal);
       dataOriginal = t.data_original || t.date;
     }
   }
@@ -115,8 +118,8 @@ export async function finalizarAtendimento(p: FinalizarParams) {
         contact_name: p.contactName,
         title: tarefaTitulo,
         date: hoje,
-        origem: "manual",
-        status: "pendente",
+        origem: tarefaOrigem,
+        status: "pending",
       })
       .select("id")
       .single();
@@ -142,7 +145,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
   // 3) Conclui a tarefa atual
   const { error: updErr } = await supabase
     .from("calendario_tarefas")
-    .update({ status: "concluido", updated_at: new Date().toISOString() })
+    .update({ status: "completed", updated_at: new Date().toISOString() })
     .eq("id", tarefaId);
   if (updErr) throw updErr;
 
@@ -172,7 +175,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
       description: `Último contato (${ROTULO_CANAL[p.canal]}): ${format(new Date(), "dd/MM/yyyy")}${obs ? ` - ${obs}` : ""}`,
       date: proxima,
       origem: tarefaOrigem,
-      status: "pendente",
+      status: "pending",
       data_original: dataOriginal,
     });
     if (novaErr) throw novaErr;
@@ -200,7 +203,7 @@ export async function inativarClienteDoFluxo(p: {
   if (error) throw error;
   await supabase
     .from("calendario_tarefas")
-    .update({ status: "cancelado", updated_at: new Date().toISOString() })
+    .update({ status: "completed", updated_at: new Date().toISOString() })
     .eq("contact_id", p.contactId)
     .eq("user_id", p.usuarioId)
     .in("status", STATUS_PENDENTES);
