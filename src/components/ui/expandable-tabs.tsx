@@ -31,6 +31,7 @@ interface ExpandableTabsProps {
   activeIndex?: number | null;
   onChange?: (index: number | null) => void;
   deselectOnClickOutside?: boolean;
+  hideTitles?: boolean;
 }
 
 const buttonVariants = {
@@ -65,6 +66,7 @@ export function ExpandableTabs({
   activeIndex,
   onChange,
   deselectOnClickOutside = false,
+  hideTitles = false,
 }: ExpandableTabsProps) {
   const [selected, setSelected] = React.useState<number | null>(activeIndex ?? null);
   const outsideClickRef = React.useRef<HTMLDivElement>(null);
