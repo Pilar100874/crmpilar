@@ -56,3 +56,24 @@ export function ouvirAbrirHistoricoDoContato(handler: (detalhe: ContatoHistorico
   return () => window.removeEventListener(EVENTO_HISTORICO, ouvinte);
 }
 
+const EVENTO_EXTRAS = "atendimento:abrir-extras-empresa";
+
+export interface EmpresaExtrasEvento {
+  tipo: "localizacao" | "qualificacao";
+  empresaId: string;
+  empresaNome?: string;
+}
+
+export function abrirExtrasDaEmpresa(detalhe: EmpresaExtrasEvento) {
+  window.dispatchEvent(new CustomEvent(EVENTO_EXTRAS, { detail: detalhe }));
+}
+
+export function ouvirAbrirExtrasDaEmpresa(handler: (detalhe: EmpresaExtrasEvento) => void) {
+  const ouvinte = (evento: Event) => {
+    const detalhe = (evento as CustomEvent<EmpresaExtrasEvento>).detail;
+    if (detalhe?.empresaId) handler(detalhe);
+  };
+  window.addEventListener(EVENTO_EXTRAS, ouvinte);
+  return () => window.removeEventListener(EVENTO_EXTRAS, ouvinte);
+}
+

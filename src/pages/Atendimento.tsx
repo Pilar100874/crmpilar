@@ -69,7 +69,8 @@ import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoC
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
-import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
+import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato, ouvirAbrirExtrasDaEmpresa } from "@/lib/atendimento/navegacaoContato";
+import { EmpresaExtrasOverlay } from "@/components/atendimento/EmpresaExtrasOverlay";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
@@ -151,6 +152,7 @@ export default function Atendimento() {
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
   const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
+  const [extrasEmpresa, setExtrasEmpresa] = useState<{ tipo: "localizacao" | "qualificacao"; empresaId: string; empresaNome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
@@ -2224,6 +2226,11 @@ export default function Atendimento() {
       setHistoricoCliente({ customerId: detalhe.customerId, nome: detalhe.nome });
       setMobileView('main');
     });
+    const pararExtras = ouvirAbrirExtrasDaEmpresa((detalhe) => {
+      if (!detalhe.empresaId) return;
+      setExtrasEmpresa({ tipo: detalhe.tipo, empresaId: detalhe.empresaId, empresaNome: detalhe.empresaNome });
+      setMobileView('main');
+    });
     const pararEmail = ouvirNovoEmailParaContato(({ customerId, email, nome }) => {
       // Seleciona o contato na aba E-mail para abrir a escrita embutida (sem popup)
       setContatoEmailSelecionado({
@@ -2241,6 +2248,7 @@ export default function Atendimento() {
       pararChat();
       pararEmail();
       pararHistorico();
+      pararExtras();
     };
   }, []);
 
@@ -6307,6 +6315,15 @@ ${recentMessages}
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
       <div className="relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
+        {/* Extras da empresa (localização/qualificação) em tela central */}
+        {extrasEmpresa && (
+          <EmpresaExtrasOverlay
+            tipo={extrasEmpresa.tipo}
+            empresaId={extrasEmpresa.empresaId}
+            empresaNome={extrasEmpresa.empresaNome}
+            onClose={() => setExtrasEmpresa(null)}
+          />
+        )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
           <div className="absolute inset-0 z-[110] flex flex-col bg-background">
