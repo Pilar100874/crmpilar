@@ -61,6 +61,7 @@ import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAten
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
+import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
