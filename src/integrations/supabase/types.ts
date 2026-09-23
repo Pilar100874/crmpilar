@@ -6347,6 +6347,42 @@ export type Database = {
           },
         ]
       }
+      customer_fluxo_inativacoes: {
+        Row: {
+          ativo: boolean
+          canal: string | null
+          created_at: string
+          customer_id: string
+          estabelecimento_id: string
+          id: string
+          motivo: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          canal?: string | null
+          created_at?: string
+          customer_id: string
+          estabelecimento_id: string
+          id?: string
+          motivo: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          ativo?: boolean
+          canal?: string | null
+          created_at?: string
+          customer_id?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       customer_segmentos: {
         Row: {
           created_at: string | null
