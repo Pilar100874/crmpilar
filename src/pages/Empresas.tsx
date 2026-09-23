@@ -2556,7 +2556,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
           <TabsContent value="qualificacao" className="p-6">
             <Card className={`p-6 space-y-8 ${empresaIdInicial ? "pointer-events-none select-text" : ""}`}>
-              <div className={`rounded-md ${empresaIdInicial ? "hidden" : ""} border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
+              <div className={`rounded-md ${empresaIdInicial ? "hidden" : ""} border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground`}>
                 Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
               </div>
 
