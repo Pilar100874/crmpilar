@@ -173,6 +173,7 @@ export default function Atendimento() {
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [selectedTaskData, setSelectedTaskData] = useState<any>(null);
   const [selectedEmailData, setSelectedEmailData] = useState<any>(null);
+  const clientePendenteTrocaAbaRef = useRef<string | null>(null);
   
   // AI Chat states
   const [showAIChat, setShowAIChat] = useState(false);
@@ -3773,59 +3774,6 @@ ${recentMessages}
     return `${diffDays}d`;
   };
 
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando conversas...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
-    { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
-    { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: todayTasksCount },
-    { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
-    { id: "orcamento", icon: Receipt, label: "Orç.", badge: orcamentosEmAndamentoCount },
-    { id: "dialer", icon: PhoneCall, label: "Discador" },
-    ...(dynamicRadialTools.length > 0 ? [{ 
-      id: "tools", 
-      icon: Plus, 
-      label: "Ferramentas",
-      subItems: dynamicRadialTools
-    }] : []),
-  ];
-
-  // O discador só abre se o PABX estiver configurado no estabelecimento
-  // e o usuário tiver ramal vinculado — sem os dois, a ligação nunca sai.
-  const abrirFluxoComContato = (contato: ContatoAtendimento) => {
-    const index = filteredTasks.findIndex((task) => task.contact_id === contato.id);
-    setFluxoInitialIndex(index >= 0 ? index : 0);
-    setDiscadorModo(null);
-    setShowClientDetailsFluxo(false);
-    setAgendaViewMode('fluxo');
-    setMobileView('main');
-  };
-
-  // Mantém o cliente selecionado ao trocar de aba (quando ele existir na aba de destino).
-  // A seleção é aplicada DEPOIS do efeito que limpa as seleções ao trocar de aba.
-  const clientePendenteTrocaAbaRef = useRef<string | null>(null);
-  const trocarAba = (novaAba: string) => {
-    if (novaAba === activeTab) { setActiveTab(novaAba); return; }
-    let clienteId: string | null = null;
-    if (activeTab === 'agenda') clienteId = (selectedTaskData as any)?.contact_id ?? null;
-    else if (activeTab === 'chat') {
-      const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation);
-      clienteId = (conv as any)?.customer_id ?? null;
-    } else if (activeTab === 'tel') clienteId = selectedTelContato?.id ?? (fluxoCurrentTask as any)?.contact_id ?? null;
-    else if (activeTab === 'email') clienteId = contatoEmailSelecionado?.id ?? null;
-    else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? (contatoOrcamentoDetalhe as any)?.cliente_id ?? null;
-    clientePendenteTrocaAbaRef.current = clienteId;
-    setActiveTab(novaAba);
-  };
-
   useEffect(() => {
     const clienteId = clientePendenteTrocaAbaRef.current;
     clientePendenteTrocaAbaRef.current = null;
@@ -3880,6 +3828,58 @@ ${recentMessages}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando conversas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
+    { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
+    { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: todayTasksCount },
+    { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
+    { id: "orcamento", icon: Receipt, label: "Orç.", badge: orcamentosEmAndamentoCount },
+    { id: "dialer", icon: PhoneCall, label: "Discador" },
+    ...(dynamicRadialTools.length > 0 ? [{ 
+      id: "tools", 
+      icon: Plus, 
+      label: "Ferramentas",
+      subItems: dynamicRadialTools
+    }] : []),
+  ];
+
+  // O discador só abre se o PABX estiver configurado no estabelecimento
+  // e o usuário tiver ramal vinculado — sem os dois, a ligação nunca sai.
+  const abrirFluxoComContato = (contato: ContatoAtendimento) => {
+    const index = filteredTasks.findIndex((task) => task.contact_id === contato.id);
+    setFluxoInitialIndex(index >= 0 ? index : 0);
+    setDiscadorModo(null);
+    setShowClientDetailsFluxo(false);
+    setAgendaViewMode('fluxo');
+    setMobileView('main');
+  };
+
+  // Mantém o cliente selecionado ao trocar de aba (quando ele existir na aba de destino).
+  // A seleção é aplicada DEPOIS do efeito que limpa as seleções ao trocar de aba.
+  const trocarAba = (novaAba: string) => {
+    if (novaAba === activeTab) { setActiveTab(novaAba); return; }
+    let clienteId: string | null = null;
+    if (activeTab === 'agenda') clienteId = (selectedTaskData as any)?.contact_id ?? null;
+    else if (activeTab === 'chat') {
+      const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation);
+      clienteId = (conv as any)?.customer_id ?? null;
+    } else if (activeTab === 'tel') clienteId = selectedTelContato?.id ?? (fluxoCurrentTask as any)?.contact_id ?? null;
+    else if (activeTab === 'email') clienteId = contatoEmailSelecionado?.id ?? null;
+    else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? (contatoOrcamentoDetalhe as any)?.cliente_id ?? null;
+    clientePendenteTrocaAbaRef.current = clienteId;
+    setActiveTab(novaAba);
+  };
 
   const abrirDiscador = async () => {
     try {
