@@ -13,6 +13,7 @@ import { DiscadorModoDialog } from "@/components/atendimento/DiscadorModoDialog"
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useRef, useMemo } from "react";
+import { carregarEquipeVisivel, resolverIdsVisiveis, type EquipeVisivel } from "@/lib/atendimento/equipeVisivel";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
@@ -285,6 +286,12 @@ export default function Atendimento() {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("atendimento_usar_agenda") !== "false";
   });
+  // Visibilidade por equipe (vendedor / gerente / admin)
+  const [equipeVisivel, setEquipeVisivel] = useState<EquipeVisivel | null>(null);
+  const [escopoEquipe, setEscopoEquipe] = useState<string>("meus");
+  const idsVisiveis = useMemo(() => resolverIdsVisiveis(equipeVisivel, escopoEquipe), [equipeVisivel, escopoEquipe]);
+  const idsVisiveisRef = useRef<string[]>([]);
+  idsVisiveisRef.current = idsVisiveis;
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
@@ -1417,9 +1424,10 @@ export default function Atendimento() {
         .select('customer_id, usuario_id')
         .eq('estabelecimento_id', estabId);
 
+      const idsDono = new Set(idsVisiveisRef.current.length ? idsVisiveisRef.current : [currentUsuarioId]);
       if (customerVinculosData) {
         customerVinculosData.forEach(v => {
-          if (v.usuario_id === currentUsuarioId) {
+          if (idsDono.has(v.usuario_id)) {
             linkedToUser.add(v.customer_id);
           }
         });
@@ -1433,7 +1441,7 @@ export default function Atendimento() {
 
       if (empresaVinculosData) {
         empresaVinculosData.forEach(v => {
-          if (v.usuario_id === currentUsuarioId) {
+          if (v.usuario_id && idsDono.has(v.usuario_id)) {
             linkedToUser.add(v.empresa_id);
           }
           if (v.segmento_id) {
@@ -1490,7 +1498,7 @@ export default function Atendimento() {
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
         .select('*')
-        .eq('user_id', usuarioData.id)
+        .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
         .eq('date', dateStr);
 
       if (error) {
@@ -3434,7 +3442,42 @@ ${recentMessages}
   }, []);
 
   // Contatos vinculados ao usuário (usados quando a flag está desligada)
-  const { contatos: contatosVinculados } = useContatosVinculados(usuarioId || null, !usarAgenda);
+  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, !usarAgenda);
+
+  // Carrega equipe visível (papel do usuário) ao definir o estabelecimento
+  useEffect(() => {
+    if (!estabelecimentoId) return;
+    carregarEquipeVisivel(estabelecimentoId).then(setEquipeVisivel).catch((e) => console.error("Erro ao carregar equipe:", e));
+  }, [estabelecimentoId]);
+
+  // Recarrega agenda e vínculos quando o escopo da equipe muda
+  const idsVisiveisChave = idsVisiveis.join(",");
+  useEffect(() => {
+    if (!idsVisiveisChave) return;
+    loadTodayTasks(agendaDate);
+    loadCustomerVinculos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsVisiveisChave]);
+
+  const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && equipeVisivel.membros.length > 0 ? (
+    <div className="flex items-center gap-2 mt-2 px-1">
+      <Users className="w-3.5 h-3.5 text-primary shrink-0" />
+      <Select value={escopoEquipe} onValueChange={setEscopoEquipe}>
+        <SelectTrigger className="h-7 text-xs" aria-label="Ver clientes de">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="meus">Somente os meus</SelectItem>
+          <SelectItem value="equipe">Toda a equipe</SelectItem>
+          {equipeVisivel.membros.map((m) => (
+            <SelectItem key={m.id} value={m.id}>
+              {m.nome} ({m.papel === "gerente" ? "Gerente" : "Vendedor"})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : null;
 
   // Base de contatos das abas Tel / Chats / E-mails
   const contatosPendentes = useContatosPendentes(pendenciasAtendimento);
@@ -4942,6 +4985,7 @@ ${recentMessages}
                   aria-label="Usar agenda"
                 />
               </div>
+              {seletorEquipe && <div className="flex-shrink-0 px-3 pb-2 border-b border-border/50 bg-card">{seletorEquipe}</div>}
               <div className="flex-1 min-h-0">
               <MobileListContent
 
@@ -5593,6 +5637,7 @@ ${recentMessages}
                     aria-label="Usar agenda"
                   />
                 </div>
+                {seletorEquipe}
               </div>
             </div>
 
