@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 
 export interface ContatoAtendimento {
   id: string;
@@ -95,6 +96,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
 
   useEffect(() => {
     void carregar();
+    return ouvirTarefasAlteradas(() => void carregar());
   }, [carregar]);
 
   return { contatos, carregando, recarregar: carregar };
