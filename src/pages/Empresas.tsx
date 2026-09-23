@@ -2383,7 +2383,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       ) : (
         <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-muted/30 via-background to-muted/20">
       {/* Header modernizado com ações */}
-      <div className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur-md shadow-sm">
+      <div className="sticky top-0 z-20 hidden-embutido border-b bg-card/95 backdrop-blur-md shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Button
