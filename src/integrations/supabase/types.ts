@@ -29274,6 +29274,7 @@ export type Database = {
           updated_at: string | null
           usar_autenticacao: boolean | null
           usuario_sip: string | null
+          vendedor_empresa_id: string | null
           whatsapp: string | null
           whatsapp_numero_id: string | null
           whatsapp_status: Database["public"]["Enums"]["whatsapp_status_enum"]
@@ -29319,6 +29320,7 @@ export type Database = {
           updated_at?: string | null
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
+          vendedor_empresa_id?: string | null
           whatsapp?: string | null
           whatsapp_numero_id?: string | null
           whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
@@ -29364,6 +29366,7 @@ export type Database = {
           updated_at?: string | null
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
+          vendedor_empresa_id?: string | null
           whatsapp?: string | null
           whatsapp_numero_id?: string | null
           whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
@@ -29411,6 +29414,13 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_vendedor_empresa_id_fkey"
+            columns: ["vendedor_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
           {
