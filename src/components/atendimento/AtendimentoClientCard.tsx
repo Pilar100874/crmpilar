@@ -84,7 +84,7 @@ export function AtendimentoClientCard({
           </div>
         )}
         <div className="min-w-0 flex-1 pr-12">
-          <p className="truncate text-base font-bold text-foreground">{title}</p>
+          <p className="truncate text-base font-bold text-foreground"><TituloCartao titulo={title} /></p>
           {customerName && (
             <p className="truncate text-sm font-medium text-muted-foreground">{customerName}</p>
           )}
