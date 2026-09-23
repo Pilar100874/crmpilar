@@ -3909,13 +3909,18 @@ ${recentMessages}
     } else if (activeTab === 'tel' || activeTab === 'visita') clienteId = selectedTelContato?.id ?? (fluxoCurrentTask as any)?.contact_id ?? null;
     else if (activeTab === 'email') clienteId = contatoEmailSelecionado?.id ?? null;
     else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? (contatoOrcamentoDetalhe as any)?.cliente_id ?? null;
-    if (clienteId && pendenciasAtendimento.includes(clienteId)) {
-      const nome = contatosBase.find((c) => c.id === clienteId)?.nome || "Cliente";
-      setFinalizarCtx({ id: clienteId, nome, canal: canalDaAba(activeTab) || "telefone", obrigatorio: true, depois: () => { clientePendenteTrocaAbaRef.current = clienteId; setActiveTab(novaAba); } });
-      return;
-    }
     clientePendenteTrocaAbaRef.current = clienteId;
     setActiveTab(novaAba);
+  };
+
+  // Bloqueia a seleção de outro cliente enquanto houver atendimento pendente de finalização.
+  // Trocar de aba é permitido; clicar em outro cliente abre a janela de finalizar.
+  const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
+    const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
+    if (!pendenteId) return false;
+    const nome = contatosBase.find((c) => c.id === pendenteId)?.nome || "Cliente";
+    setFinalizarCtx({ id: pendenteId, nome, canal: canalDaAba(activeTab) || "telefone", obrigatorio: true });
+    return true;
   };
 
   const abrirDiscador = async () => {
@@ -4942,6 +4947,7 @@ ${recentMessages}
                 contatosTelefone={contatosComIndicadores}
                 contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
                  onSelecionarContatoTelefone={(contato) => {
+                   if (bloquearTrocaClientePendente(contato.id)) return;
                    setSelectedTelContato(contato);
                    abrirFluxoComContato(contato);
                  }}
@@ -4952,17 +4958,24 @@ ${recentMessages}
                 }}
                 selectedConversation={selectedConversation}
                 setSelectedConversation={(id) => {
+                  if (id) {
+                    const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === id);
+                    if (bloquearTrocaClientePendente((conv as any)?.customer_id)) return;
+                  }
                   setSelectedConversation(id);
                   if (id) openDetailsPanel(setShowClientDetailsChat);
                 }}
                 filteredTasks={filteredTasks}
                 selectedTaskId={selectedTaskId}
                 setSelectedTaskId={(id) => {
-                  setSelectedTaskId(id);
                   if (id) {
                     const task = todayTasks.find(t => t.id === id);
+                    if (bloquearTrocaClientePendente((task as any)?.contact_id)) return;
+                    setSelectedTaskId(id);
                     setSelectedTaskData(task);
                     openDetailsPanel(setShowClientDetailsAgenda);
+                  } else {
+                    setSelectedTaskId(id);
                   }
                 }}
                 agendaDate={agendaDate}
@@ -4973,6 +4986,7 @@ ${recentMessages}
                 contatosEmail={contatosComIndicadores}
                 contatoEmailSelecionadoId={contatoEmailSelecionado?.id ?? null}
                 onSelecionarContatoEmail={(contato) => {
+                  if (bloquearTrocaClientePendente(contato.id)) return;
                   setSelectedEmailId(null);
                   setSelectedEmailData(null);
                   setShowComposeEmail(false);
@@ -5622,6 +5636,7 @@ ${recentMessages}
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
                 selecionadoId={selectedTelContato?.id ?? null}
                  onSelecionar={(contato) => {
+                   if (bloquearTrocaClientePendente(contato.id)) return;
                    setSelectedTelContato(contato);
                    abrirFluxoComContato(contato);
                  }}
@@ -5641,6 +5656,7 @@ ${recentMessages}
                 vazioTexto={usarAgenda ? "Nenhum contato na agenda" : "Nenhum contato vinculado"}
                 selecionadoId={selectedTelContato?.id ?? null}
                 onSelecionar={(contato) => {
+                  if (bloquearTrocaClientePendente(contato.id)) return;
                   setSelectedTelContato(contato);
                   abrirFluxoComContato(contato);
                 }}
@@ -5658,6 +5674,7 @@ ${recentMessages}
                 vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
                 selecionadoId={contatoEmailSelecionado?.id ?? null}
                 onSelecionar={(contato) => {
+                  if (bloquearTrocaClientePendente(contato.id)) return;
                   setSelectedEmailId(null);
                   setSelectedEmailData(null);
                   setShowComposeEmail(false);
@@ -5702,6 +5719,7 @@ ${recentMessages}
                         selecionado={selectedConversation === conv.id}
                         tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                         onClick={() => {
+                          if (bloquearTrocaClientePendente((conv as any)?.customer_id)) return;
                           setSelectedConversation(conv.id);
                           openDetailsPanel(setShowClientDetailsChat);
                         }}
@@ -5716,6 +5734,7 @@ ${recentMessages}
                         customerName={contact.nome}
                         sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                         onClick={async () => {
+                          if (bloquearTrocaClientePendente(contact.contactId)) return;
                           // Criar conversa para o contato da agenda
                           try {
                             const estabId = await getEstabelecimentoId();
@@ -5777,6 +5796,7 @@ ${recentMessages}
                         selecionado={selectedConversation === conv.id}
                         tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                         onClick={() => {
+                          if (bloquearTrocaClientePendente((conv as any)?.customer_id)) return;
                           setSelectedConversation(conv.id);
                           openDetailsPanel(setShowClientDetailsChat);
                         }}
@@ -6108,6 +6128,7 @@ ${recentMessages}
                           : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
                      }`}
                       onClick={() => {
+                        if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
                         setShowClientDetailsAgenda(true);
@@ -6361,6 +6382,7 @@ ${recentMessages}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
                 selectedOrcamentoId={selectedOrcamentoId}
                 onSelectOrcamento={(orcamento) => {
+                  if (bloquearTrocaClientePendente((orcamento as any)?.cliente_id)) return;
                   setSelectedOrcamentoId(orcamento.id);
                   setSelectedOrcamentoData(orcamento);
                   setOrcamentoSheetOpen(true);

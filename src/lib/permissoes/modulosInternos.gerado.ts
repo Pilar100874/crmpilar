@@ -18,6 +18,32 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Métricas"
     }
   ],
+  "Painel Chats": [
+    {
+      "id": "agenda",
+      "label": "Agenda"
+    },
+    {
+      "id": "chat",
+      "label": "Chats"
+    },
+    {
+      "id": "tel",
+      "label": "Tel"
+    },
+    {
+      "id": "email",
+      "label": "E-mails"
+    },
+    {
+      "id": "orcamento",
+      "label": "Orç."
+    },
+    {
+      "id": "visita",
+      "label": "Visita"
+    }
+  ],
   "Config Atendimento": [
     {
       "id": "ferramentas",
