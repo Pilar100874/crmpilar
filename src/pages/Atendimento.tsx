@@ -6223,9 +6223,12 @@ ${recentMessages}
                                  })()}
                                 </div>
                            </div>
-                           <div className="mt-1.5">
-                             <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                           </div>
+                            <div className="mt-1.5 flex items-center gap-1.5">
+                              <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
+                              {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
+                                <span className="inline-flex items-center rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">Pendente</span>
+                              )}
+                            </div>
                        </div>
                      </div>
                    </div>
@@ -8209,9 +8212,12 @@ function MobileListContent({
                       })()}
                     </div>
                  </div>
-                 <div className="mt-1.5">
-                   <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                 </div>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
+                    {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
+                      <span className="inline-flex items-center rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">Pendente</span>
+                    )}
+                  </div>
               </div>
             </div>
           </div>
