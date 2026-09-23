@@ -224,6 +224,7 @@ export default function CVVehicleExit() {
     });
     setShowSuccess(true);
     toast.success("Saída autorizada! Boa viagem");
+    limparRascunhoVistoria(RASCUNHO_CHAVE);
     setForm({ vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "" });
     setPhotos([]);
 
