@@ -25,6 +25,14 @@ import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
 import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
 import { EmbeddedChatPanel } from "./EmbeddedChatPanel";
 import { EmbeddedEmailPanel } from "./EmbeddedEmailPanel";
+import { ConflitoDataDialog } from "../FinalizarAtendimentoDialog";
+import {
+  buscarProximoContatoFuturo,
+  finalizarAtendimento,
+  type CanalAtendimento,
+  type TarefaFutura,
+} from "@/lib/atendimento/finalizarAtendimento";
+
 
 interface Task {
   id: string;
@@ -68,6 +76,8 @@ interface FluxoAtendimentoPanelProps {
   onNavigateToItem?: (type: 'chat' | 'orcamento' | 'email', id: string) => void;
   /** Quando definido, o fluxo vira discador: liga para cada contato pelo PABX. */
   discadorModo?: 'previa' | 'sequencial' | null;
+  /** Tipo de contato definido pela aba: Tel = telefone, Visita = presencial. */
+  tipoContatoFixo?: 'telefone' | 'presencial';
 }
 
 const ALL_TIPOS_CONTATO = [
@@ -88,14 +98,16 @@ export function FluxoAtendimentoPanel({
   onToggleDetails,
   initialTaskIndex = 0,
   onNavigateToItem,
-  discadorModo = null
+  discadorModo = null,
+  tipoContatoFixo = 'telefone',
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(initialTaskIndex);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
   const [configDatas, setConfigDatas] = useState<ConfigProximaData[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
-  const [tipoContato, setTipoContato] = useState<string>("telefone");
+  const tipoContato: string = tipoContatoFixo;
+  const [conflito, setConflito] = useState<TarefaFutura | null>(null);
   const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
   const [isRecording, setIsRecording] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -354,55 +366,26 @@ export function FluxoAtendimentoPanel({
     return false;
   };
 
-  const canProceed = selectedFlag !== null && proximaData !== null;
+  const canProceed = selectedFlag !== null && proximaData !== null && observacao.trim() !== "";
 
-  const handleSaveAndNext = async () => {
-    if (!canProceed || !currentTask) return;
-
+  const salvarAtendimento = async (escolha?: "nova" | "antiga") => {
+    if (!currentTask) return;
     setIsSaving(true);
     try {
-      const { error: registroError } = await supabase
-        .from('atendimento_registros')
-        .insert({
-          tarefa_id: currentTask.id,
-          estabelecimento_id: estabelecimentoId,
-          usuario_id: usuarioId,
-          tipo_contato: tipoContato,
-          flag_id: selectedFlag,
-          observacao: observacao || null,
-          data_proximo_contato: format(proximaData, 'yyyy-MM-dd'),
-          envio_massa: false
-        });
-
-      if (registroError) throw registroError;
-
-      const { error: tarefaError } = await supabase
-        .from('calendario_tarefas')
-        .update({ 
-          status: 'concluido',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentTask.id);
-
-      if (tarefaError) throw tarefaError;
-
-      const { error: novaTarefaError } = await supabase
-        .from('calendario_tarefas')
-        .insert({
-          user_id: usuarioId,
-          estabelecimento_id: estabelecimentoId,
-          contact_id: currentTask.contact_id,
-          contact_name: currentTask.contact_name,
-          title: `Retorno: ${currentTask.title}`,
-          description: `Último contato: ${format(new Date(), 'dd/MM/yyyy')} - ${flags.find(f => f.id === selectedFlag)?.nome || ''}${observacao ? ` - ${observacao}` : ''}`,
-          date: format(proximaData, 'yyyy-MM-dd'),
-          origem: currentTask.origem,
-          status: 'pendente',
-          data_original: currentTask.date
-        });
-
-      if (novaTarefaError) throw novaTarefaError;
-
+      const flagNome = flags.find(f => f.id === selectedFlag)?.nome || '';
+      await finalizarAtendimento({
+        contactId: currentTask.contact_id,
+        contactName: currentTask.contact_name,
+        canal: tipoContato as CanalAtendimento,
+        observacao: flagNome ? `${flagNome} - ${observacao}` : observacao,
+        flagId: selectedFlag,
+        proximaData,
+        usuarioId,
+        estabelecimentoId,
+        tarefaAtualId: currentTask.id,
+        escolha,
+      });
+      setConflito(null);
       onTaskCompleted();
 
       if (isLastTask) {
@@ -419,6 +402,21 @@ export function FluxoAtendimentoPanel({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSaveAndNext = async () => {
+    if (!currentTask) return;
+    if (!observacao.trim()) {
+      toast.error('Descreva o que foi conversado');
+      return;
+    }
+    if (!canProceed) return;
+    const futura = await buscarProximoContatoFuturo(currentTask.contact_id, usuarioId);
+    if (futura && futura.date !== format(proximaData, 'yyyy-MM-dd')) {
+      setConflito(futura);
+      return;
+    }
+    await salvarAtendimento(futura ? "antiga" : undefined);
   };
 
   const handleSkip = () => {
@@ -637,53 +635,14 @@ export function FluxoAtendimentoPanel({
             </div>
           )}
 
-          {/* Tipo de contato - compacto inline - filtrado por dados disponíveis */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Tipo de contato</label>
-            <div className="flex gap-1.5">
-              {ALL_TIPOS_CONTATO
-                .filter(tipo => {
-                  // Sempre mostrar presencial e telefone
-                  if (tipo.requiresData === null) return true;
-                  // Mostrar apenas se o cliente tiver o dado requerido
-                  if (tipo.requiresData === 'email') return !!currentTask?.customers?.email;
-                  if (tipo.requiresData === 'telefone') return !!currentTask?.customers?.telefone;
-                  return false;
-                })
-                .map(tipo => {
-                const isSelected = tipoContato === tipo.id;
-                const IconComponent = tipo.icon;
-                const hasResource = hasContactResource(tipo.id);
-                return (
-                  <button
-                    key={tipo.id}
-                    onClick={() => {
-                      setTipoContato(tipo.id);
-                      // Abrir área de contato automaticamente se tiver recurso
-                      if (hasResource) {
-                        setShowContactArea(true);
-                      } else {
-                        setShowContactArea(false);
-                      }
-                    }}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all relative",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "bg-muted/50 border border-border/60 hover:border-primary/40 hover:bg-primary/5"
-                    )}
-                  >
-                    <IconComponent className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{tipo.label}</span>
-                    {/* Indicador de recurso disponível */}
-                    {hasResource && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-green-500" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Tipo de contato definido pela aba (Tel = Telefone, Visita = Presencial) */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium">Tipo de contato:</span>
+            <span className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+              {tipoContato === 'presencial' ? 'Visita' : 'Telefone'}
+            </span>
           </div>
+
 
           {/* Área de contato expandível - Email/WhatsApp com componentes completos */}
           {(tipoContato === 'email' || tipoContato === 'whatsapp') && (
@@ -789,7 +748,7 @@ export function FluxoAtendimentoPanel({
           {/* Observação - linha separada */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Observação</label>
+              <label className="text-xs font-medium text-muted-foreground">O que foi conversado *</label>
               <Button
                 variant="ghost"
                 size="sm"
@@ -895,6 +854,12 @@ export function FluxoAtendimentoPanel({
           )}
         </Button>
       </div>
+      <ConflitoDataDialog
+        futura={conflito}
+        nova={proximaData}
+        onCancelar={() => setConflito(null)}
+        onEscolher={(e) => void salvarAtendimento(e)}
+      />
     </div>
   );
 }

@@ -45,3 +45,4 @@
 - [x] Padronizar as informações exibidas nos cartões de todas as abas do Atendimento.
 - [x] Repetir nas demais abas exatamente o conjunto de informações do cartão da Agenda.
 - [x] Exibir em todas as abas as bolinhas da Agenda: atraso, e-mail não lido, chat pendente e orçamento.
+- [x] Finalizar atendimento com próxima data obrigatória, aba Visita, inativação

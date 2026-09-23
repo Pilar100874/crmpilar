@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
-import { History, User } from "lucide-react";
+import { CalendarCheck, History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
+import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
+import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
 
 interface AtendimentoClientCardProps {
   title: string;
@@ -34,6 +36,8 @@ export function AtendimentoClientCard({
   historicoClienteNome,
 }: AtendimentoClientCardProps) {
   const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
+  const pendencias = usePendenciasAtendimento();
+  const pendente = !!historicoClienteId && pendencias.includes(historicoClienteId);
 
   return (
     <div
@@ -83,7 +87,7 @@ export function AtendimentoClientCard({
           )}
           {children && <div className="mt-1.5 flex flex-wrap items-center gap-2">{children}</div>}
           {historicoClienteId && (
-            <div className="mt-1.5">
+            <div className="mt-1.5 flex items-center gap-1.5">
               <button
                 type="button"
                 title="Ver histórico do cliente"
@@ -95,6 +99,24 @@ export function AtendimentoClientCard({
                 className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <History className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                title="Finalizar atendimento (próximo contato)"
+                aria-label="Finalizar atendimento"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  pedirFinalizacao({ customerId: historicoClienteId, nome: historicoClienteNome });
+                }}
+                className={cn(
+                  "flex h-6 items-center gap-1 rounded-full border px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  pendente
+                    ? "border-destructive/50 bg-destructive/10 text-destructive"
+                    : "border-border/70 bg-background/90 text-muted-foreground hover:border-primary/40 hover:text-primary",
+                )}
+              >
+                <CalendarCheck className="h-3.5 w-3.5" />
+                {pendente ? "Pendente" : "Finalizar"}
               </button>
             </div>
           )}
