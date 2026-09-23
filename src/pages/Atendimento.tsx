@@ -63,12 +63,13 @@ import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpres
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { BotaoHistoricoCard } from "@/components/atendimento/BotaoHistoricoCard";
+import CustomerHistoryTimeline from "@/components/atendimento/agenda/CustomerHistoryTimeline";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
-import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato } from "@/lib/atendimento/navegacaoContato";
+import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato, ouvirAbrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
 
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
@@ -149,6 +150,7 @@ export default function Atendimento() {
   // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
+  const [historicoCliente, setHistoricoCliente] = useState<{ customerId?: string; nome?: string } | null>(null);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
@@ -2215,6 +2217,10 @@ export default function Atendimento() {
       setMobileView('main');
       void handleCreateConversationFromContact('customer', { id: customerId, nome, telefone: whatsapp });
     });
+    const pararHistorico = ouvirAbrirHistoricoDoContato((detalhe) => {
+      setHistoricoCliente({ customerId: detalhe.customerId, nome: detalhe.nome });
+      setMobileView('main');
+    });
     const pararEmail = ouvirNovoEmailParaContato(({ email, nome }) => {
       setActiveTab('email');
       setMobileView('main');
@@ -2223,6 +2229,7 @@ export default function Atendimento() {
     return () => {
       pararChat();
       pararEmail();
+      pararHistorico();
     };
   }, []);
 
@@ -6226,7 +6233,30 @@ ${recentMessages}
 
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
-      <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
+      <div className="relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
+        {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
+        {historicoCliente && estabelecimentoId && (
+          <div className="absolute inset-0 z-30 flex flex-col bg-background">
+            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">Histórico do cliente</p>
+                <p className="truncate text-xs text-muted-foreground">{historicoCliente.nome || "Cliente"}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setHistoricoCliente(null)} title="Fechar histórico">
+                <X className="h-4 w-4 mr-1" />
+                Fechar
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <CustomerHistoryTimeline
+                contactId={historicoCliente.customerId}
+                contactName={historicoCliente.nome}
+                estabelecimentoId={estabelecimentoId}
+                isFullView
+              />
+            </div>
+          </div>
+        )}
         {/* Listas Panel - Tem prioridade sobre outros conteúdos */}
         {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
           <ListasPanel
