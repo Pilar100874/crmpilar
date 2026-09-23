@@ -3291,7 +3291,7 @@ ${recentMessages}
   // Quando a flag "Usar agenda" está ligada, todas as abas mostram apenas os contatos da agenda do dia
   const agendaContactIds = useMemo(() => {
     const ids = new Set<string>();
-    todayTasks.filter((t: any) => t.status !== "concluido" && t.status !== "cancelado").forEach((task: any) => {
+    todayTasks.filter((t: any) => !["concluido","cancelado","completed"].includes(t.status)).forEach((task: any) => {
       const id = task.customers?.id || task.contact_id;
       if (id) ids.add(id);
     });
@@ -3533,7 +3533,7 @@ ${recentMessages}
   const contatosBaseSemPendentes = useMemo<ContatoAtendimento[]>(() => {
     if (!usarAgenda) return contatosVinculados;
     const mapa = new Map<string, ContatoAtendimento>();
-    todayTasks.filter((t: any) => t.status !== "concluido" && t.status !== "cancelado").forEach((task: any) => {
+    todayTasks.filter((t: any) => !["concluido","cancelado","completed"].includes(t.status)).forEach((task: any) => {
       const c = task.customers;
       if (!c?.id || mapa.has(c.id)) return;
       mapa.set(c.id, {
@@ -3597,7 +3597,7 @@ ${recentMessages}
     today.setHours(0, 0, 0, 0);
     
     // Calculate delay days for each task based on data_original
-    let tasks = todayTasks.map(task => {
+    let tasks = todayTasks.filter((t: any) => !["concluido","cancelado","completed"].includes(t.status)).map(task => {
       let diasAtraso = 0;
       if (task.data_original) {
         const dataOriginal = new Date(task.data_original);
