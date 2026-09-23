@@ -5588,8 +5588,6 @@ ${recentMessages}
                           }
                         }}
                         indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
-                    historicoClienteId={contact.contactId}
-                    historicoClienteNome={contact.nome}
                         historicoClienteId={contact.contactId}
                         historicoClienteNome={contact.nome}
                       >
