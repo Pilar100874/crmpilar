@@ -7817,90 +7817,27 @@ function MobileListContent({
                   )}
                   {/* Stacked indicators in top-right corner */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
-                    {task.diasAtraso > 0 && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
-                              {task.diasAtraso}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
                     {(() => {
                       const customerEmail = task.customers?.email?.toLowerCase();
                       const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                      if (unreadEmailCount > 0) {
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('email');
-                                  }}
-                                  className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600 transition-colors"
-                                >
-                                  {unreadEmailCount}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{unreadEmailCount} email{unreadEmailCount > 1 ? 's' : ''} não lido{unreadEmailCount > 1 ? 's' : ''}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      }
-                      return null;
-                    })()}
-                    {(() => {
                       const customerPhone = normalizePhone(task.customers?.telefone);
                       const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                      if (unreadChatsCount > 0) {
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('chat');
-                                  }}
-                                  className="bg-purple-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-purple-600 transition-colors"
-                                >
-                                  {unreadChatsCount}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      }
-                      return null;
-                    })()}
-                  {(() => {
-                    // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
-                    const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                    // Also check if contact_id IS an empresa_id directly
-                    const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
-                    const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                    const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                    const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
-                    
-                    if (totalBudgetCount > 0) {
+                      const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                      const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                      const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                      const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                      const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
                       return (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const firstOrcamento = orcamentos.find(o => 
-                              o.status !== 'cancelado' && 
+                        <AtendimentoCardIndicators
+                          diasAtraso={task.diasAtraso || 0}
+                          emailsNaoLidos={unreadEmailCount}
+                          chatsPendentes={unreadChatsCount}
+                          orcamentosAbertos={totalBudgetCount}
+                          onEmailClick={() => setActiveTab('email')}
+                          onChatClick={() => setActiveTab('chat')}
+                          onOrcamentoClick={() => {
+                            const firstOrcamento = orcamentos.find(o =>
+                              o.status !== 'cancelado' &&
                               o.status !== 'ganho' &&
                               (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
                             );
@@ -7910,15 +7847,9 @@ function MobileListContent({
                               setOrcamentoSheetOpen(true);
                             }
                           }}
-                          className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
-                          title="Ver orçamentos em aberto"
-                        >
-                          {totalBudgetCount}
-                        </button>
+                        />
                       );
-                    }
-                    return null;
-                  })()}
+                    })()}
                   </div>
                 </div>
               </div>
