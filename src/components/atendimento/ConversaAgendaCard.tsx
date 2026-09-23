@@ -33,6 +33,8 @@ export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, onClick
       selected={selecionado}
       onClick={onClick}
       indicators={<AtendimentoCardIndicators {...dadosAgenda} />}
+      historicoClienteId={conversa.customer_id}
+      historicoClienteNome={nome}
     >
       <AtendimentoHoraBadge hora={dadosAgenda?.time || ""} />
       {dadosAgenda?.origem && <AtendimentoInfoBadge>{dadosAgenda.origem}</AtendimentoInfoBadge>}

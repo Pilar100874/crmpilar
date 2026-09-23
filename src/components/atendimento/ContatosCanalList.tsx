@@ -72,6 +72,8 @@ export default function ContatosCanalList({
           selected={selecionadoId === contato.id}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
           indicators={<AtendimentoCardIndicators {...contato} />}
+          historicoClienteId={contato.id}
+          historicoClienteNome={contato.nome}
         >
           <AtendimentoHoraBadge hora={contato.horario || ""} />
           {contato.origem && <AtendimentoInfoBadge>{contato.origem}</AtendimentoInfoBadge>}

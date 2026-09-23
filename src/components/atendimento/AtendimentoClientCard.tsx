@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { User } from "lucide-react";
+import { History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
 
 interface AtendimentoClientCardProps {
   title: string;
@@ -12,7 +13,11 @@ interface AtendimentoClientCardProps {
   indicators?: ReactNode;
   children?: ReactNode;
   className?: string;
+  /** Quando informado, mostra o botão que abre o histórico do cliente na tela central. */
+  historicoClienteId?: string;
+  historicoClienteNome?: string;
 }
+
 
 /** Cartão único das listas do Atendimento, baseado no cartão da Agenda. */
 export function AtendimentoClientCard({
@@ -25,6 +30,8 @@ export function AtendimentoClientCard({
   indicators,
   children,
   className,
+  historicoClienteId,
+  historicoClienteNome,
 }: AtendimentoClientCardProps) {
   const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
 
@@ -80,6 +87,21 @@ export function AtendimentoClientCard({
       {indicators && (
         <div className="absolute right-2 top-2 flex flex-col items-center gap-1 text-[10px]">{indicators}</div>
       )}
+      {historicoClienteId && (
+        <button
+          type="button"
+          title="Ver histórico do cliente"
+          aria-label="Ver histórico do cliente"
+          onClick={(event) => {
+            event.stopPropagation();
+            abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
+          }}
+          className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <History className="h-3.5 w-3.5" />
+        </button>
+      )}
+
     </div>
   );
 }

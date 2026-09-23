@@ -37,3 +37,21 @@ export function ouvirNovoEmailParaContato(handler: (detalhe: ContatoEmailEvento)
   window.addEventListener(EVENTO_EMAIL, ouvinte);
   return () => window.removeEventListener(EVENTO_EMAIL, ouvinte);
 }
+
+const EVENTO_HISTORICO = "atendimento:abrir-historico-contato";
+
+export interface ContatoHistoricoEvento {
+  customerId?: string;
+  nome?: string;
+}
+
+export function abrirHistoricoDoContato(detalhe: ContatoHistoricoEvento) {
+  window.dispatchEvent(new CustomEvent(EVENTO_HISTORICO, { detail: detalhe }));
+}
+
+export function ouvirAbrirHistoricoDoContato(handler: (detalhe: ContatoHistoricoEvento) => void) {
+  const ouvinte = (evento: Event) => handler((evento as CustomEvent<ContatoHistoricoEvento>).detail || {});
+  window.addEventListener(EVENTO_HISTORICO, ouvinte);
+  return () => window.removeEventListener(EVENTO_HISTORICO, ouvinte);
+}
+
