@@ -87,6 +87,21 @@ export function AtendimentoClientCard({
       {indicators && (
         <div className="absolute right-2 top-2 flex flex-col items-center gap-1 text-[10px]">{indicators}</div>
       )}
+      {historicoClienteId && (
+        <button
+          type="button"
+          title="Ver histórico do cliente"
+          aria-label="Ver histórico do cliente"
+          onClick={(event) => {
+            event.stopPropagation();
+            abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
+          }}
+          className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <History className="h-3.5 w-3.5" />
+        </button>
+      )}
+
     </div>
   );
 }
