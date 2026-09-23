@@ -5474,16 +5474,6 @@ ${recentMessages}
           {/* Tel Tab - contatos com telefone */}
           <TabsContent value="tel" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-muted/30 to-background dark:to-card">
             <div className="flex-shrink-0 flex items-center gap-2 border-b border-border/30 px-3 py-2.5">
-              <Button
-                variant={agendaViewMode === 'fluxo' ? "default" : "outline"}
-                size="sm"
-                onClick={() => { setDiscadorModo(null); setAgendaViewMode('fluxo'); }}
-                disabled={filteredTasks.length === 0}
-                className="h-8 gap-1.5"
-              >
-                <Play className="h-3.5 w-3.5" />
-                Fluxo
-              </Button>
               <Button variant="outline" size="sm" onClick={() => void abrirDiscador()} className="h-8 gap-1.5">
                 <PhoneCall className="h-3.5 w-3.5" />
                 Discador

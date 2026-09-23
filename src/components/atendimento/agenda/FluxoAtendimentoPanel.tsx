@@ -471,9 +471,6 @@ export function FluxoAtendimentoPanel({
       <div className="px-3 py-2.5 border-b border-border/50 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={onClose} className="h-8 w-8 p-0 rounded-full">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Play className="w-4 h-4 text-primary" />
             </div>
