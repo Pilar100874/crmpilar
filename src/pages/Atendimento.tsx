@@ -64,7 +64,7 @@ import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAt
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
-import { TituloCartao } from "@/lib/atendimento/tituloCartao";
+import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
@@ -6265,7 +6265,7 @@ ${recentMessages}
                       
                       <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
                        <div className="flex-1 min-w-0">
-                         <p className="font-bold text-base truncate"><TituloCartao titulo={task.title} /></p>
+                         <p className="font-bold text-base truncate">{parseTituloCartao(task.title).nome}</p>
                          <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                            <AtendimentoHoraBadge hora={task.time || ""} />
@@ -8292,7 +8292,7 @@ function MobileListContent({
             
             <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-base truncate"><TituloCartao titulo={task.title} /></p>
+                <p className="font-bold text-base truncate">{parseTituloCartao(task.title).nome}</p>
                 <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <AtendimentoHoraBadge hora={task.time || ""} />
