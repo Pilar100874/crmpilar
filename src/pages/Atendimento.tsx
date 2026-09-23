@@ -4876,7 +4876,9 @@ ${recentMessages}
                   else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
                 }}
               />
+              </div>
             </div>
+
 
             {/* Conteúdo Principal */}
             <div
