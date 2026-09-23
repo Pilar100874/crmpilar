@@ -292,7 +292,7 @@ function DraggableTaskCard({
                 className="cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <span className={`text-xs sm:text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
+                <span className={`block break-words text-xs sm:text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
                   {task.title}
                 </span>
                 {task.description && (
