@@ -748,7 +748,7 @@ export function FluxoAtendimentoPanel({
           {/* Observação - linha separada */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Observação</label>
+              <label className="text-xs font-medium text-muted-foreground">O que foi conversado *</label>
               <Button
                 variant="ghost"
                 size="sm"
@@ -854,6 +854,12 @@ export function FluxoAtendimentoPanel({
           )}
         </Button>
       </div>
+      <ConflitoDataDialog
+        futura={conflito}
+        nova={proximaData}
+        onCancelar={() => setConflito(null)}
+        onEscolher={(e) => void salvarAtendimento(e)}
+      />
     </div>
   );
 }
