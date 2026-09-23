@@ -43,17 +43,20 @@ export default function CVVehicleEntry() {
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [step, setStep] = useState(0);
+  // Rascunho salvo no navegador: evita voltar à etapa inicial quando a câmera
+  // do celular descarrega a página durante a vistoria fotográfica.
+  const [rascunho] = useState(() => lerRascunhoVistoria<any>(RASCUNHO_CHAVE));
+  const [step, setStep] = useState<number>(rascunho?.step ?? 0);
   // entry_km fica como texto para permitir apagar tudo antes de digitar
   // (campo numérico controlado como número voltava para 0 ao apagar).
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(rascunho?.form ?? {
     entry_km: "",
     reported_defects: "",
     defect_type_id: "",
     damage_notes: "",
     inspected_all_sides: false,
   });
-  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const [photos, setPhotos] = useState<CapturedPhoto[]>(rascunho?.photos ?? []);
   const [mapaVeiculo, setMapaVeiculo] = useState<{ id: string | null; titulo: string } | null>(null);
   const { grupoId, setGrupoId, grupos } = useCvGrupoFilter();
 
