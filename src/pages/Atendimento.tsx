@@ -61,6 +61,7 @@ import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
+import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -3257,11 +3258,13 @@ ${recentMessages}
       telefone: string;
       email: string;
       taskTitle?: string;
+      horario?: string;
+      companies?: any[];
       linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
     }>;
   } => {
     // Obter contact_ids da agenda do dia com dados do contato
-    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string; linkedUsers: any[] }>();
+    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string; horario: string; companies: any[]; linkedUsers: any[] }>();
     todayTasks
       .filter(task => task.contact_id && task.customers)
       .forEach(task => {
@@ -3271,6 +3274,8 @@ ${recentMessages}
             telefone: task.customers?.telefone || '',
             email: task.customers?.email || '',
             taskTitle: task.title || '',
+            horario: task.time || '',
+            companies: task.customers?.customer_empresas || [],
             linkedUsers: task.linkedUsers || []
           });
         }
@@ -3299,6 +3304,8 @@ ${recentMessages}
       telefone: string;
       email: string;
       taskTitle?: string;
+      horario?: string;
+      companies?: any[];
       linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
     }> = [];
 
@@ -3311,6 +3318,8 @@ ${recentMessages}
           telefone: data.telefone,
           email: data.email,
           taskTitle: data.taskTitle,
+          horario: data.horario,
+          companies: data.companies,
           linkedUsers: data.linkedUsers
         });
       }
@@ -3364,6 +3373,8 @@ ${recentMessages}
         telefone: c.telefone,
         email: c.email,
         taskTitle: c.referencia,
+        horario: c.horario,
+        companies: c.companies,
         linkedUsers: [] as Array<{ usuarios: { id: string; nome: string } }>,
       }));
   }, [contatosBase, filteredConversations]);
