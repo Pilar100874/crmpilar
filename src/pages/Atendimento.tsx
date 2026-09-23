@@ -5600,6 +5600,7 @@ ${recentMessages}
               }}
               activeColor="text-primary"
               className="w-full justify-center"
+              hideTitles
             />
           </div>
 
