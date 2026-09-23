@@ -5962,7 +5962,6 @@ ${recentMessages}
                         setShowClientDetailsAgenda(true);
                       }}
                    >
-                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
                       {task.linkedUsers && task.linkedUsers.length > 0 ? (
                         <div 
@@ -6044,10 +6043,11 @@ ${recentMessages}
                                          setOrcamentoSheetOpen(true);
                                        }
                                      }}
-                                   />
-                                 );
-                               })()}
-                              </div>
+                                    />
+                                  );
+                                })()}
+                                <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
+                               </div>
                           </div>
                        </div>
                      </div>
@@ -7866,7 +7866,6 @@ function MobileListContent({
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
             }`}
           >
-            <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
             {/* Tarja lateral indicando vínculo com nome do usuário */}
             {task.linkedUsers && task.linkedUsers.length > 0 ? (
               <div 
@@ -7932,10 +7931,11 @@ function MobileListContent({
                               setOrcamentoSheetOpen(true);
                             }
                           }}
-                        />
-                      );
-                    })()}
-                  </div>
+                         />
+                       );
+                     })()}
+                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
+                   </div>
                 </div>
               </div>
             </div>

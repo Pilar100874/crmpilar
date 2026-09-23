@@ -19,7 +19,7 @@ export function BotaoHistoricoCard({ clienteId, clienteNome }: BotaoHistoricoCar
         event.stopPropagation();
         abrirHistoricoDoContato({ customerId: clienteId, nome: clienteNome || undefined });
       }}
-      className="absolute bottom-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <History className="h-3.5 w-3.5" />
     </button>
