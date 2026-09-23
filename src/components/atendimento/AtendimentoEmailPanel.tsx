@@ -1,4 +1,4 @@
-import { Archive, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
+import { Archive, ChevronLeft, ChevronRight, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmailPanel } from "@/components/email/EmailPanel";
@@ -24,6 +24,7 @@ interface AtendimentoEmailPanelProps {
   onReply: (email: any) => void;
   onForward: (email: any) => void;
   onToggleDetails?: () => void;
+  detailsOpen?: boolean;
   toolsSlot?: React.ReactNode;
   onOpenConsultaEstoque?: () => void;
   pendingAppendText?: string | null;
@@ -59,6 +60,7 @@ export function AtendimentoEmailPanel({
   onReply,
   onForward,
   onToggleDetails,
+  detailsOpen,
   toolsSlot,
   onOpenConsultaEstoque,
   pendingAppendText,
@@ -91,6 +93,17 @@ export function AtendimentoEmailPanel({
           <Button variant="ghost" size="icon" onClick={onRefresh} className="h-9 w-9" title="Atualizar e-mails">
             <RefreshCw className="h-4 w-4" />
           </Button>
+          {onToggleDetails && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleDetails}
+              className="h-9 w-9"
+              title={detailsOpen ? "Ocultar detalhes" : "Mostrar detalhes"}
+            >
+              {detailsOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          )}
         </div>
         <div className="mt-3 flex gap-1 overflow-x-auto pb-1">
           {pastas.map((pasta) => {
