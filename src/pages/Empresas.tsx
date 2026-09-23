@@ -1486,8 +1486,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }));
       const { error } = await supabase.from("empresa_vinculos").insert(rows);
       if (error) throw error;
-      toast.success("Usuários vinculados!");
+      toast.success("Usuários vinculados! Uma tarefa foi criada na agenda de hoje de cada usuário.");
       setNovosUsuariosVinculo([]);
+      setConfirmVinculoOpen(false);
       await fetchEmpresas(estabelecimentoId);
     } catch (error: any) {
       toast.error("Erro ao vincular usuários: " + error.message);
