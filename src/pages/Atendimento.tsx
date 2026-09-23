@@ -1514,7 +1514,8 @@ export default function Atendimento() {
               empresas:empresa_id (
                 id,
                 nome,
-                nome_fantasia
+                nome_fantasia,
+                cnpj
               )
             )
           `)
@@ -1923,8 +1924,10 @@ export default function Atendimento() {
             email
           ),
           empresas:empresa_id (
+            id,
             nome_fantasia,
-            nome
+            nome,
+            cnpj
           ),
           itens:orcamento_itens (
             id,

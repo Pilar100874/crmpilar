@@ -351,7 +351,7 @@ export function UnifiedDetailsPanel({
                             {empresa?.nome_fantasia || empresa?.nome}
                           </p>
                           {empresa?.cnpj && (
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-muted-foreground whitespace-nowrap truncate" title={`CNPJ: ${empresa.cnpj}`}>
                               CNPJ: {empresa.cnpj}
                             </p>
                           )}
