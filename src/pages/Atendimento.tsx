@@ -3366,6 +3366,14 @@ ${recentMessages}
             .filter(Boolean);
           return orcamento.cliente_id === c.id || orcamento.empresa_id === c.id || empresaIds.includes(orcamento.empresa_id);
         }).length,
+        diasAtraso: (() => {
+          if (!task.data_original) return 0;
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          const original = new Date(task.data_original);
+          original.setHours(0, 0, 0, 0);
+          return Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000));
+        })(),
       });
     });
     return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -3616,8 +3624,38 @@ ${recentMessages}
     return { orcamentosAbertosPerCustomer: customerMap, orcamentosAbertosPerEmpresa: empresaMap };
   }, [orcamentos]);
 
+  // Count unread emails per contact email
+  const emailsNaoLidosPerEmail = useMemo(() => {
+    const emailMap: Record<string, number> = {};
+    userEmails
+      .filter(e => !e.read && (e.folder === 'inbox' || !e.folder))
+      .forEach(e => {
+        const fromEmail = e.from_email?.toLowerCase();
+        if (fromEmail) emailMap[fromEmail] = (emailMap[fromEmail] || 0) + 1;
+      });
+    return emailMap;
+  }, [userEmails]);
+
+  // Count unread chats per customer phone
+  const chatsNaoLidosPerPhone = useMemo(() => {
+    const phoneMap: Record<string, number> = {};
+    conversations
+      .filter(c => c.chat_status === 'em_fila' || c.chat_status === 'novo')
+      .forEach(c => {
+        const customerPhone = normalizePhone(c.customer?.telefone);
+        if (customerPhone) phoneMap[customerPhone] = (phoneMap[customerPhone] || 0) + 1;
+      });
+    return phoneMap;
+  }, [conversations]);
+
+  const contatosComIndicadores = useMemo(() => contatosBase.map((contato) => ({
+    ...contato,
+    emailsNaoLidos: emailsNaoLidosPerEmail[contato.email.toLowerCase()] || 0,
+    chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(contato.telefone)] || 0,
+  })), [contatosBase, emailsNaoLidosPerEmail, chatsNaoLidosPerPhone]);
+
   const dadosAgendaPorContato = useMemo(() => {
-    const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number }>();
+    const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
     todayTasks.forEach((task: any) => {
       if (!task.contact_id || mapa.has(task.contact_id)) return;
       const empresaIds = task.customers?.customer_empresas
@@ -3632,38 +3670,20 @@ ${recentMessages}
         origem: task.origem || "",
         responsavel: task.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente",
         orcamentosAbertos,
+        diasAtraso: (() => {
+          if (!task.data_original) return 0;
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          const original = new Date(task.data_original);
+          original.setHours(0, 0, 0, 0);
+          return Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000));
+        })(),
+        emailsNaoLidos: emailsNaoLidosPerEmail[String(task.customers?.email || "").toLowerCase()] || 0,
+        chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(task.customers?.telefone)] || 0,
       });
     });
     return mapa;
-  }, [todayTasks, orcamentosAbertosPerCustomer, orcamentosAbertosPerEmpresa]);
-
-  // Count unread emails per contact email
-  const emailsNaoLidosPerEmail = useMemo(() => {
-    const emailMap: Record<string, number> = {};
-    userEmails
-      .filter(e => !e.read && (e.folder === 'inbox' || !e.folder))
-      .forEach(e => {
-        const fromEmail = e.from_email?.toLowerCase();
-        if (fromEmail) {
-          emailMap[fromEmail] = (emailMap[fromEmail] || 0) + 1;
-        }
-      });
-    return emailMap;
-  }, [userEmails]);
-
-  // Count unread chats per customer phone
-  const chatsNaoLidosPerPhone = useMemo(() => {
-    const phoneMap: Record<string, number> = {};
-    conversations
-      .filter(c => c.chat_status === 'em_fila' || c.chat_status === 'novo')
-      .forEach(c => {
-        const customerPhone = normalizePhone(c.customer?.telefone);
-        if (customerPhone) {
-          phoneMap[customerPhone] = (phoneMap[customerPhone] || 0) + 1;
-        }
-      });
-    return phoneMap;
-  }, [conversations]);
+  }, [todayTasks, orcamentosAbertosPerCustomer, orcamentosAbertosPerEmpresa, emailsNaoLidosPerEmail, chatsNaoLidosPerPhone]);
 
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
   const currentTabType = activeTab as TabType;
@@ -4725,7 +4745,7 @@ ${recentMessages}
                 agendaConversations={agendaConversations}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
-                contatosTelefone={contatosBase}
+                contatosTelefone={contatosComIndicadores}
                 contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
                 onSelecionarContatoTelefone={(contato) => {
                   setSelectedTelContato(contato);
@@ -4756,7 +4776,7 @@ ${recentMessages}
                 handleNextDay={handleNextDay}
                 handleToday={handleToday}
                 filteredEmails={filteredEmails}
-                contatosEmail={contatosBase}
+                contatosEmail={contatosComIndicadores}
                 contatoEmailSelecionadoId={contatoEmailSelecionado?.id ?? null}
                 onSelecionarContatoEmail={(contato) => {
                   setSelectedEmailId(null);
@@ -5393,7 +5413,7 @@ ${recentMessages}
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
               <ContatosCanalList
-                contatos={contatosBase.filter((contato) =>
+                 contatos={contatosComIndicadores.filter((contato) =>
                   !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
                 )}
                 canal="tel"
@@ -5412,7 +5432,7 @@ ${recentMessages}
           {activeTab === "email" && (
             <div className="flex-1 overflow-y-auto px-2 py-2">
               <ContatosCanalList
-                contatos={contatosBase}
+                 contatos={contatosComIndicadores}
                 canal="email"
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
@@ -6008,7 +6028,6 @@ ${recentMessages}
                                 }
                                 return null;
                               })()}
-                            </div>
                            {(() => {
                               // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                               const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
@@ -6035,21 +6054,16 @@ ${recentMessages}
                                        setOrcamentoSheetOpen(true);
                                      }
                                    }}
-                                   className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                                   className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
                                    title="Ver orçamentos em aberto"
                                  >
-                                   <FileText className="w-3 h-3 mr-1" />
-                                   Orçamento
-                                   {totalBudgetCount > 1 && (
-                                     <span className="ml-1 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
-                                       {totalBudgetCount}
-                                     </span>
-                                   )}
+                                   {totalBudgetCount}
                                  </button>
                                );
                               }
                               return null;
                             })()}
+                             </div>
                           </div>
                        </div>
                      </div>
@@ -6203,7 +6217,9 @@ ${recentMessages}
             ) : (
               <OrcamentosEmpresaList
                 orcamentos={orcamentosVisiveis}
-                tarefasAgenda={todayTasks}
+                tarefasAgenda={filteredTasks}
+                emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
+                chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
                 selectedOrcamentoId={selectedOrcamentoId}
                 onSelectOrcamento={(orcamento) => {
                   setSelectedOrcamentoId(orcamento.id);
@@ -7935,7 +7951,6 @@ function MobileListContent({
                       }
                       return null;
                     })()}
-                  </div>
                   {(() => {
                     // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                     const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
@@ -7961,20 +7976,16 @@ function MobileListContent({
                               setOrcamentoSheetOpen(true);
                             }
                           }}
-                          className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
+                          title="Ver orçamentos em aberto"
                         >
-                          <FileText className="w-2.5 h-2.5 mr-0.5" />
-                          Orç.
-                          {totalBudgetCount > 1 && (
-                            <span className="ml-0.5 bg-emerald-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
-                              {totalBudgetCount}
-                            </span>
-                          )}
+                          {totalBudgetCount}
                         </button>
                       );
                     }
                     return null;
                   })()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -8000,6 +8011,8 @@ function MobileListContent({
               .filter((orcamento) => orcamento.status !== 'cancelado' && orcamento.status !== 'ganho')
               .filter((orcamento) => !orcamentosStatusFilter || orcamento.etapa === orcamentosStatusFilter)}
             tarefasAgenda={filteredTasks}
+            emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
+            chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
             selectedOrcamentoId={selectedOrcamentoId}
             onSelectOrcamento={(orcamento) => setSelectedOrcamentoId(orcamento.id)}
           />

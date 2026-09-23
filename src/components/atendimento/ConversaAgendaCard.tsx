@@ -1,5 +1,6 @@
-import { Clock, FileText } from "lucide-react";
+import { Clock } from "lucide-react";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 import { Badge } from "@/components/ui/badge";
 
 interface DadosAgenda {
@@ -8,6 +9,9 @@ interface DadosAgenda {
   origem: string;
   responsavel: string;
   orcamentosAbertos: number;
+  diasAtraso: number;
+  emailsNaoLidos: number;
+  chatsPendentes: number;
 }
 
 interface ConversaAgendaCardProps {
@@ -28,7 +32,12 @@ export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, 
       sideLabel={dadosAgenda?.responsavel || conversa.customerLinkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
       selected={selecionado}
       onClick={onClick}
-      indicators={<span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{tempo}</span>}
+      indicators={
+        <>
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{tempo}</span>
+          <AtendimentoCardIndicators {...dadosAgenda} />
+        </>
+      }
     >
       {dadosAgenda?.time && (
         <Badge variant="outline" className="gap-1 bg-background/70">
@@ -37,13 +46,6 @@ export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, 
         </Badge>
       )}
       {dadosAgenda?.origem && <Badge variant="outline">{dadosAgenda.origem}</Badge>}
-      {!!dadosAgenda?.orcamentosAbertos && (
-        <Badge variant="outline" className="gap-1 bg-background/70">
-          <FileText className="h-3.5 w-3.5" />
-          Orçamento
-          {dadosAgenda.orcamentosAbertos > 1 && <span>{dadosAgenda.orcamentosAbertos}</span>}
-        </Badge>
-      )}
     </AtendimentoClientCard>
   );
 }
