@@ -1,3 +1,4 @@
+import { marcarPendencia } from "@/lib/atendimento/finalizarAtendimento";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -764,7 +765,7 @@ export function FluxoAtendimentoPanel({
             </div>
             <Textarea
               value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
+              onChange={(e) => { setObservacao(e.target.value); if (e.target.value.trim()) marcarPendencia(currentTask?.contact_id); }}
               placeholder="Detalhes..."
               rows={2}
               className="resize-none rounded-lg text-xs min-h-[60px]"

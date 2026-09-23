@@ -2013,6 +2013,7 @@ export default function Atendimento() {
         .select('*, itens:orcamento_itens(*)')
         .eq('id', orcamentoId)
         .single();
+      marcarPendencia((original as any)?.cliente_id);
 
       if (fetchError || !original) {
         toast.error("Erro ao buscar orçamento");
@@ -5178,6 +5179,7 @@ ${recentMessages}
                   loadOrcamentos();
                 }}
                 onOrcamentoSave={() => {
+                  marcarPendencia(selectedOrcamentoData?.cliente_id);
                   loadOrcamentos();
                 }}
                 onReply={(email) => {
@@ -7355,6 +7357,7 @@ ${recentMessages}
               loadOrcamentos();
             }}
             onSave={() => {
+              marcarPendencia(selectedOrcamentoData?.cliente_id);
               loadOrcamentos();
             }}
             showClientDetails={showClientDetailsOrcamento}
