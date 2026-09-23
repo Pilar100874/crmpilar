@@ -2333,6 +2333,7 @@ export default function Atendimento() {
             id,
             nome,
             telefone,
+            tel,
             email,
             custom_fields,
             customer_empresas (
