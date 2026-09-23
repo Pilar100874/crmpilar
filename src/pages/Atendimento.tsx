@@ -5424,14 +5424,12 @@ ${recentMessages}
                         }`}
                       >
                         {/* Tarja lateral com nome do usuário vinculado */}
-                        {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
-                          <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary">
-                            <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                              {conv.customerLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                            </span>
-                          </div>
-                        )}
-                        <div className={`flex items-start gap-3 p-3 ${conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 ? 'pl-10' : 'pl-4'}`}>
+                        <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary">
+                          <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
+                            {conv.customerLinkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || 'Meu Cliente'}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-3 p-3 pl-10">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5">
                               <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
@@ -5581,14 +5579,12 @@ ${recentMessages}
                         }`}
                       >
                         {/* Tarja lateral com nome do usuário vinculado */}
-                        {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
-                          <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary">
-                            <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                              {conv.customerLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                            </span>
-                          </div>
-                        )}
-                        <div className={`flex items-start gap-3 p-3 ${conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 ? 'pl-10' : 'pl-4'}`}>
+                        <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary">
+                          <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
+                            {conv.customerLinkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || 'Meu Cliente'}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-3 p-3 pl-10">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5">
                               <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
@@ -5990,14 +5986,14 @@ ${recentMessages}
                             {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                           </span>
                         </div>
-                      ) : (isLinkedToUser || isSameSegment) && (
+                      ) : (
                         <div 
                           className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
                             isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
                           }`}
                         >
                           <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                            {isLinkedToUser ? 'Meu Cliente' : 'Mesmo Seg.'}
+                            {isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
                           </span>
                         </div>
                       )}
@@ -7935,14 +7931,14 @@ function MobileListContent({
                   {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                 </span>
               </div>
-            ) : (isLinkedToUser || isSameSegment) && (
+            ) : (
               <div 
                 className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
                   isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
                 }`}
               >
                 <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                  {isLinkedToUser ? 'Meu Cliente' : 'Mesmo Seg.'}
+                  {isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
                 </span>
               </div>
             )}
