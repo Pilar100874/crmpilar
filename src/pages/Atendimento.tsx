@@ -7405,6 +7405,9 @@ interface MobileListContentProps {
     telefone: string;
     email: string;
     taskTitle?: string;
+    horario?: string;
+    companies?: any[];
+    linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
   }>;
   contatosTelefone: ContatoAtendimento[];
   contatoTelefoneSelecionadoId: string | null;
