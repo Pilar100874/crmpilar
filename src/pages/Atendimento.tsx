@@ -6722,8 +6722,12 @@ ${recentMessages}
               setDiscadorModo(null);
             }}
             onCurrentTaskChange={(task) => {
-              setFluxoCurrentTask(task);
-              if (task) openDetailsPanel(setShowClientDetailsFluxo);
+              setFluxoCurrentTask((prev: any) => {
+                if (task && (prev as any)?.id !== (task as any).id) {
+                  openDetailsPanel(setShowClientDetailsFluxo);
+                }
+                return (prev as any)?.id === (task as any)?.id ? prev : task;
+              });
             }}
             showDetails={showClientDetailsFluxo}
             onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
