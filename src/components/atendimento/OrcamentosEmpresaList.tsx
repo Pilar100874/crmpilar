@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
+import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 interface OrcamentosEmpresaListProps {
   orcamentos: any[];
