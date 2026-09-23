@@ -29,6 +29,7 @@ import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
+const RASCUNHO_CHAVE = "cv-entrada";
 
 export default function CVVehicleEntry() {
   const [openMoves, setOpenMoves] = useState<any[]>([]);
