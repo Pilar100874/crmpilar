@@ -37,6 +37,8 @@ export function AtendimentoClientCard({
   historicoClienteNome,
 }: AtendimentoClientCardProps) {
   const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
+  const nomeCartao = parseTituloCartao(title).nome;
+  const nomeDuplicado = !!customerName && customerName.trim().toLowerCase() === nomeCartao.trim().toLowerCase();
   const pendencias = usePendenciasAtendimento();
   const pendente = !!historicoClienteId && pendencias.includes(historicoClienteId);
   const bloqueado = pendencias.length > 0 && !pendente;
@@ -64,10 +66,10 @@ export function AtendimentoClientCard({
     >
       <div className="absolute inset-y-0 left-0 flex w-5 items-center justify-center overflow-hidden rounded-l-xl bg-primary text-primary-foreground">
         <span
-          className="-rotate-90 max-w-[96px] truncate whitespace-nowrap text-[8px] font-semibold"
+          className="-rotate-90 max-w-[88px] truncate whitespace-nowrap text-[8px] font-semibold leading-none"
           title={rotuloGenerico ? sideLabel : `Cliente de ${sideLabel}`}
         >
-          {rotuloGenerico ? sideLabel : sideLabel.slice(0, 12)}
+          {rotuloGenerico ? sideLabel : sideLabel.slice(0, 10)}
         </span>
       </div>
 
@@ -77,10 +79,10 @@ export function AtendimentoClientCard({
             {icon || <User className="h-5 w-5" />}
           </div>
         )}
-        <div className="min-w-0 flex-1 pr-12">
-          <p className="truncate text-base font-bold text-foreground">{parseTituloCartao(title).nome}</p>
-          {customerName && (
-            <p className="truncate text-sm font-medium text-muted-foreground">{customerName}</p>
+        <div className="min-w-0 flex-1 pr-14">
+          <p className="truncate text-base font-bold text-foreground" title={nomeCartao}>{nomeCartao}</p>
+          {customerName && !nomeDuplicado && (
+            <p className="truncate text-sm font-medium text-muted-foreground" title={customerName}>{customerName}</p>
           )}
           {children && <div className="mt-1.5 flex flex-wrap items-center gap-2">{children}</div>}
           {historicoClienteId && (
