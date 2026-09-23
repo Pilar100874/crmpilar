@@ -1,4 +1,4 @@
-import { Mail, MessageSquare, Phone, User, Users } from "lucide-react";
+import { Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
