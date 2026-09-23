@@ -3442,7 +3442,42 @@ ${recentMessages}
   }, []);
 
   // Contatos vinculados ao usuário (usados quando a flag está desligada)
-  const { contatos: contatosVinculados } = useContatosVinculados(usuarioId || null, !usarAgenda);
+  const { contatos: contatosVinculados } = useContatosVinculados(idsVisiveis, !usarAgenda);
+
+  // Carrega equipe visível (papel do usuário) ao definir o estabelecimento
+  useEffect(() => {
+    if (!estabelecimentoId) return;
+    carregarEquipeVisivel(estabelecimentoId).then(setEquipeVisivel).catch((e) => console.error("Erro ao carregar equipe:", e));
+  }, [estabelecimentoId]);
+
+  // Recarrega agenda e vínculos quando o escopo da equipe muda
+  const idsVisiveisChave = idsVisiveis.join(",");
+  useEffect(() => {
+    if (!idsVisiveisChave) return;
+    loadTodayTasks(agendaDate);
+    loadCustomerVinculos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsVisiveisChave]);
+
+  const seletorEquipe = equipeVisivel && equipeVisivel.papel !== "vendedor" && equipeVisivel.membros.length > 0 ? (
+    <div className="flex items-center gap-2 mt-2 px-1">
+      <Users className="w-3.5 h-3.5 text-primary shrink-0" />
+      <Select value={escopoEquipe} onValueChange={setEscopoEquipe}>
+        <SelectTrigger className="h-7 text-xs" aria-label="Ver clientes de">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="meus">Somente os meus</SelectItem>
+          <SelectItem value="equipe">Toda a equipe</SelectItem>
+          {equipeVisivel.membros.map((m) => (
+            <SelectItem key={m.id} value={m.id}>
+              {m.nome} ({m.papel === "gerente" ? "Gerente" : "Vendedor"})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : null;
 
   // Base de contatos das abas Tel / Chats / E-mails
   const contatosPendentes = useContatosPendentes(pendenciasAtendimento);

@@ -34,12 +34,14 @@ export interface ContatoAtendimento {
  * Contatos vinculados ao usuário logado (customer_vinculos).
  * Usado quando a flag "Usar agenda" está desligada.
  */
-export function useContatosVinculados(usuarioId: string | null, ativo: boolean) {
+export function useContatosVinculados(usuarioIds: string[], ativo: boolean) {
+  const chave = usuarioIds.join(",");
   const [contatos, setContatos] = useState<ContatoAtendimento[]>([]);
   const [carregando, setCarregando] = useState(false);
 
   const carregar = useCallback(async () => {
-    if (!usuarioId || !ativo) {
+    const ids = chave ? chave.split(",") : [];
+    if (ids.length === 0 || !ativo) {
       setContatos([]);
       return;
     }
@@ -48,9 +50,25 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
       const { data, error } = await supabase
         .from("customer_vinculos")
         .select("customer_id, customers:customer_id ( id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) ) )")
-        .eq("usuario_id", usuarioId);
+        .in("usuario_id", ids);
 
       if (error) throw error;
+
+      // Contatos das empresas vinculadas aos usuários visíveis
+      const { data: empVinc } = await supabase
+        .from("empresa_vinculos")
+        .select("empresa_id")
+        .in("usuario_id", ids)
+        .is("vendedor_id", null);
+      const empresaIds = [...new Set(((empVinc ?? []) as any[]).map((e) => e.empresa_id).filter(Boolean))];
+      let viaEmpresa: any[] = [];
+      if (empresaIds.length) {
+        const { data: ce } = await supabase
+          .from("customer_empresas")
+          .select("customers:customer_id ( id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) ) )")
+          .in("empresa_id", empresaIds.slice(0, 500));
+        viaEmpresa = ce ?? [];
+      }
 
       // Fora da lista: quem já tem próximo contato no futuro ou foi inativado do fluxo.
       const hoje = new Date().toISOString().slice(0, 10);
@@ -58,7 +76,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
         supabase
           .from("calendario_tarefas")
           .select("contact_id")
-          .eq("user_id", usuarioId)
+          .in("user_id", ids)
           .in("status", ["pendente", "pending"])
           .gt("date", hoje),
         supabase.from("customer_fluxo_inativacoes" as any).select("customer_id").eq("ativo", true),
@@ -69,7 +87,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
       ]);
 
       const mapa = new Map<string, ContatoAtendimento>();
-      (data ?? []).forEach((vinculo: any) => {
+      [...(data ?? []), ...viaEmpresa].forEach((vinculo: any) => {
         const c = vinculo.customers;
         if (!c?.id || mapa.has(c.id) || ocultos.has(c.id)) return;
         mapa.set(c.id, {
@@ -92,7 +110,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
     } finally {
       setCarregando(false);
     }
-  }, [usuarioId, ativo]);
+  }, [chave, ativo]);
 
   useEffect(() => {
     void carregar();
