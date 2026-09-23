@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 
 interface OrcamentosEmpresaListProps {
   orcamentos: any[];
@@ -14,6 +15,8 @@ interface OrcamentosEmpresaListProps {
   onSelectOrcamento: (orcamento: any) => void;
   onDuplicate?: (orcamentoId: string) => void;
   onDelete?: (orcamentoId: string) => void;
+  emailsNaoLidosPerEmail?: Record<string, number>;
+  chatsNaoLidosPerPhone?: Record<string, number>;
 }
 
 interface GrupoEmpresa {
@@ -30,6 +33,8 @@ export function OrcamentosEmpresaList({
   onSelectOrcamento,
   onDuplicate,
   onDelete,
+  emailsNaoLidosPerEmail = {},
+  chatsNaoLidosPerPhone = {},
 }: OrcamentosEmpresaListProps) {
   const grupos = useMemo<GrupoEmpresa[]>(() => {
     const mapa = new Map<string, GrupoEmpresa>();
@@ -81,6 +86,9 @@ export function OrcamentosEmpresaList({
         const total = grupo.orcamentos.reduce((soma, orcamento) => soma + Number(orcamento.valor_total || 0), 0);
         const clienteId = grupo.orcamentos[0]?.cliente_id;
         const tarefaAgenda = tarefasAgenda.find((tarefa) => tarefa.contact_id === clienteId);
+        const email = String(grupo.orcamentos[0]?.customers?.email || "").toLowerCase();
+        const telefone = String(grupo.orcamentos[0]?.customers?.telefone || "").replace(/\D/g, "");
+        const diasAtraso = Number(tarefaAgenda?.diasAtraso || 0);
 
         return (
           <div key={grupo.id} className="space-y-1.5">
@@ -89,7 +97,7 @@ export function OrcamentosEmpresaList({
               customerName={grupo.contato}
               sideLabel={tarefaAgenda?.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
               onClick={() => alternarGrupo(grupo.id)}
-              indicators={<><Badge className="min-w-7 justify-center px-1.5">{grupo.orcamentos.length}</Badge>{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
+              indicators={<><AtendimentoCardIndicators diasAtraso={diasAtraso} emailsNaoLidos={emailsNaoLidosPerEmail[email] || 0} chatsPendentes={chatsNaoLidosPerPhone[telefone] || 0} orcamentosAbertos={grupo.orcamentos.length} />{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
             >
               {tarefaAgenda?.time && (
                 <Badge variant="outline" className="gap-1 bg-background/70">
@@ -97,10 +105,6 @@ export function OrcamentosEmpresaList({
                 </Badge>
               )}
               {tarefaAgenda?.origem && <Badge variant="outline">{tarefaAgenda.origem}</Badge>}
-              <Badge variant="outline" className="gap-1 bg-background/70">
-                <Receipt className="h-3.5 w-3.5" />
-                {grupo.orcamentos.length > 1 ? `${grupo.orcamentos.length} orçamentos` : "Orçamento"}
-              </Badge>
             </AtendimentoClientCard>
 
             {aberto && (

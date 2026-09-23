@@ -17,6 +17,12 @@ export interface ContatoAtendimento {
   origem?: string;
   /** Quantidade de orçamentos em aberto do contato e suas empresas. */
   orcamentosAbertos?: number;
+  /** Quantidade de dias em atraso da tarefa da agenda. */
+  diasAtraso?: number;
+  /** Quantidade de e-mails ainda não lidos deste contato. */
+  emailsNaoLidos?: number;
+  /** Quantidade de chats pendentes deste contato. */
+  chatsPendentes?: number;
   /** Nome curto exibido na faixa lateral do cartão. */
   responsavel?: string;
   /** Empresas vinculadas ao contato para o painel unificado de detalhes. */

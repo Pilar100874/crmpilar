@@ -1,7 +1,8 @@
-import { Clock, FileText, Mail, MessageSquare, Phone, Users } from "lucide-react";
+import { Clock, Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 
 export type CanalContato = "tel" | "whatsapp" | "email" | "todos";
 
@@ -69,7 +70,11 @@ export default function ContatosCanalList({
           sideLabel={contato.responsavel || "Meu Cliente"}
           selected={selecionadoId === contato.id}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
-          indicators={acaoLabel ? <Badge className="min-w-6 justify-center px-1.5">{acaoLabel}</Badge> : undefined}
+          indicators={
+            contato.diasAtraso || contato.emailsNaoLidos || contato.chatsPendentes || contato.orcamentosAbertos
+              ? <AtendimentoCardIndicators {...contato} />
+              : acaoLabel ? <Badge className="min-w-6 justify-center px-1.5 text-[10px]">{acaoLabel}</Badge> : undefined
+          }
         >
           {contato.horario && (
             <Badge variant="outline" className="gap-1 bg-background/70 text-xs font-medium">
@@ -79,15 +84,6 @@ export default function ContatosCanalList({
           )}
           {contato.origem && (
             <Badge variant="outline" className="max-w-full truncate text-xs">{contato.origem}</Badge>
-          )}
-          {!!contato.orcamentosAbertos && (
-            <Badge variant="outline" className="gap-1 bg-background/70 text-xs font-medium">
-              <FileText className="h-3.5 w-3.5" />
-              Orçamento
-              {contato.orcamentosAbertos > 1 && (
-                <span className="ml-0.5">{contato.orcamentosAbertos}</span>
-              )}
-            </Badge>
           )}
         </AtendimentoClientCard>
       ))}
