@@ -6770,6 +6770,7 @@ ${recentMessages}
               }
             }}
             onToggleDetails={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
+            detailsOpen={showClientDetailsEmail}
             onReply={(email) => {
               const replySubject = email.subject?.startsWith('Re:') ? email.subject : `Re: ${email.subject || ''}`;
               const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
