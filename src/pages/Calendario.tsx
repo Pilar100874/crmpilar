@@ -263,7 +263,7 @@ function DraggableTaskCard({
           <div {...attributes} {...listeners} className="mt-1 hidden sm:block">
             <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
           </div>
-          <div className="flex-1 space-y-1.5 sm:space-y-2">
+          <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs sm:text-sm">
               <span className="font-medium whitespace-nowrap">
                 {format(task.date, "dd/MM", { locale: ptBR })}
@@ -292,7 +292,7 @@ function DraggableTaskCard({
                 className="cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <span className={`text-xs sm:text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
+                <span className={`block break-words text-xs sm:text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
                   {task.title}
                 </span>
                 {task.description && (
@@ -2352,8 +2352,12 @@ export default function Calendario() {
 
   // Renderizar visualização em tabela
   const renderTableView = () => {
+    const visibleColumns = tableColumns.filter(col => col.visible);
+    const totalColumnsWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0) || 1;
+    const colPercent = (width: number) => `${(width / totalColumnsWidth) * 100}%`;
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-w-0 max-w-full">
+
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 max-w-md">
@@ -2374,25 +2378,27 @@ export default function Calendario() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {sortedTasks.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead className="border-b border-border sticky top-0 bg-background z-10">
                 <tr>
-                  {tableColumns.filter(col => col.visible).map((column, index) => (
+                  {visibleColumns.map((column, index) => (
                     <th
                       key={column.id}
-                      className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
-                        column.id === 'status' ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                      className={`text-left p-2 font-medium text-xs text-muted-foreground relative overflow-hidden ${
+                        column.id === 'status' ? 'bg-background border-r border-border' : ''
                       }`}
-                      style={{ width: column.width, minWidth: column.width }}
+                      style={{ width: colPercent(column.width) }}
+
                     >
-                      <div className="flex items-center justify-between gap-2 pr-4">
-                        <span>{column.label.toUpperCase()}</span>
+                      <div className="flex min-w-0 items-center justify-between gap-1 pr-2">
+                        <span className="truncate">{column.label.toUpperCase()}</span>
+
                         {column.id !== 'actions' && column.id !== 'status' && (
                           <Button
                             variant="ghost"
@@ -2451,10 +2457,10 @@ export default function Calendario() {
                       backgroundColor: toAlpha(userColors[task.userId], 0.08)
                     } : {}}
                   >
-                    {tableColumns.filter(col => col.visible).map((column) => {
+                    {visibleColumns.map((column) => {
                       if (column.id === 'status') {
                         return (
-                          <td key="status" className="p-3 sticky left-0 bg-background border-r border-border">
+                          <td key="status" className="p-2 bg-background border-r border-border" style={{ width: colPercent(column.width) }}>
                             <input
                               type="checkbox"
                               checked={task.status === "completed"}
@@ -2467,12 +2473,12 @@ export default function Calendario() {
 
                       if (column.id === 'actions') {
                         return (
-                          <td key="actions" className="p-3">
-                            <div className="flex items-center gap-1">
+                          <td key="actions" className="p-2" style={{ width: colPercent(column.width) }}>
+                            <div className="flex items-center gap-0.5">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7"
                                 onClick={() => handleEditTask(task)}
                               >
                                 <Edit className="w-4 h-4" />
@@ -2480,7 +2486,7 @@ export default function Calendario() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive"
+                                className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
                                 onClick={() => handleDeleteTask(task.id)}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -2493,9 +2499,10 @@ export default function Calendario() {
                       return (
                         <td 
                           key={column.id} 
-                          className="p-3 group relative"
-                          style={{ width: column.width, maxWidth: column.width }}
+                          className="p-2 group relative overflow-hidden text-sm"
+                          style={{ width: colPercent(column.width) }}
                         >
+
                           {editingCell?.taskId === task.id && editingCell?.field === column.id ? (
                             <div className="flex items-center gap-2">
                               <Input
@@ -2603,7 +2610,7 @@ export default function Calendario() {
     });
 
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid w-full max-w-full grid-cols-1 gap-3 overflow-x-hidden sm:grid-cols-2 sm:gap-4 xl:grid-cols-4 [&>div]:min-w-0">
         <div>
           <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
             <h3 className="font-semibold text-xs sm:text-sm uppercase">HOJE</h3>
