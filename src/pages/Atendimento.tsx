@@ -4921,6 +4921,8 @@ ${recentMessages}
                   onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
                   pendingAppendText={pendingEmailAppendText}
                   onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
+                  onToggleDetails={() => openDetailsPanel(setShowClientDetailsEmail)}
+                  detailsOpen={showClientDetailsEmail}
                 />
               ) : <MobileMainContent
                 activeTab={activeTab}
