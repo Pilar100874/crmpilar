@@ -1,6 +1,7 @@
-import { Mail, MessageSquare, Phone, User, Users } from "lucide-react";
+import { Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
+import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 
 export type CanalContato = "tel" | "whatsapp" | "email" | "todos";
 
@@ -61,38 +62,22 @@ export default function ContatosCanalList({
       </div>
 
       {lista.map((contato) => (
-        <div
+        <AtendimentoClientCard
           key={`${canal}-${contato.id}`}
+          title={`${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
+          customerName={contato.nome}
+          selected={selecionadoId === contato.id}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
-          className={`relative overflow-hidden px-3 py-3 rounded-xl transition-all duration-200 border ${
-            selecionadoId === contato.id
-              ? "bg-primary/10 border-primary/30 shadow-sm"
-              : "bg-card border-border/60 shadow-sm"
-          } ${onSelecionar ? "cursor-pointer hover:bg-muted/60 hover:shadow-md" : "cursor-default"}`}
+          indicators={acaoLabel ? <Badge className="min-w-6 justify-center px-1.5">{acaoLabel}</Badge> : undefined}
         >
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10">
-              <User className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className="font-semibold text-sm truncate">{contato.nome}</span>
-                {acaoLabel && (
-                  <Badge className="text-[9px] bg-primary/10 text-primary border-0 px-1.5 flex-shrink-0">
-                    {acaoLabel}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                <Icone className="w-3 h-3" />
-                {valorDoCanal(contato, canal)}
-              </p>
-              {contato.referencia && (
-                <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">{contato.referencia}</p>
-              )}
-            </div>
-          </div>
-        </div>
+          <Badge variant="outline" className="gap-1 bg-background/70 text-xs font-medium">
+            <Icone className="h-3.5 w-3.5" />
+            <span className="max-w-[190px] truncate">{valorDoCanal(contato, canal)}</span>
+          </Badge>
+          {contato.referencia && (
+            <Badge variant="secondary" className="max-w-full truncate text-xs">{contato.referencia}</Badge>
+          )}
+        </AtendimentoClientCard>
       ))}
     </div>
   );

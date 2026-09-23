@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, ChevronDown, ChevronRight, Copy, MoreVertical, Receipt, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, MoreVertical, Receipt, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 
 interface OrcamentosEmpresaListProps {
   orcamentos: any[];
@@ -76,31 +77,24 @@ export function OrcamentosEmpresaList({
         const total = grupo.orcamentos.reduce((soma, orcamento) => soma + Number(orcamento.valor_total || 0), 0);
 
         return (
-          <div key={grupo.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-            <Button
-              type="button"
-              variant="ghost"
+          <div key={grupo.id} className="space-y-1.5">
+            <AtendimentoClientCard
+              title={`Orçamentos - ${grupo.nome}`}
+              customerName={grupo.nome}
+              sideLabel="Empresa"
               onClick={() => alternarGrupo(grupo.id)}
-              aria-expanded={aberto}
-              className="h-auto w-full justify-start rounded-none px-3 py-3 hover:bg-muted/60"
+              indicators={<><Badge className="min-w-7 justify-center px-1.5">{grupo.orcamentos.length}</Badge>{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
             >
-              <div className="flex w-full min-w-0 items-center gap-3 text-left">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-foreground">{grupo.nome}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {grupo.orcamentos.length} orçamento{grupo.orcamentos.length === 1 ? "" : "s"} · {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(total)}
-                  </p>
-                </div>
-                <Badge className="shrink-0 border-0 bg-primary/10 text-primary">{grupo.orcamentos.length}</Badge>
-                {aberto ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-              </div>
-            </Button>
+              <Badge variant="outline" className="bg-background/70">
+                {grupo.orcamentos.length} orçamento{grupo.orcamentos.length === 1 ? "" : "s"}
+              </Badge>
+              <Badge variant="secondary">
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(total)}
+              </Badge>
+            </AtendimentoClientCard>
 
             {aberto && (
-              <div className="space-y-1.5 border-t border-border bg-muted/20 p-2 pl-5">
+              <div className="ml-8 space-y-1.5 border-l-2 border-primary/20 py-1 pl-3">
                 {grupo.orcamentos.map((orcamento) => {
                   const selecionado = selectedOrcamentoId === orcamento.id;
                   return (
