@@ -51,10 +51,26 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
 
       if (error) throw error;
 
+      // Fora da lista: quem já tem próximo contato no futuro ou foi inativado do fluxo.
+      const hoje = new Date().toISOString().slice(0, 10);
+      const [{ data: futuras }, { data: inativos }] = await Promise.all([
+        supabase
+          .from("calendario_tarefas")
+          .select("contact_id")
+          .eq("user_id", usuarioId)
+          .in("status", ["pendente", "pending"])
+          .gt("date", hoje),
+        supabase.from("customer_fluxo_inativacoes" as any).select("customer_id").eq("ativo", true),
+      ]);
+      const ocultos = new Set<string>([
+        ...((futuras ?? []) as any[]).map((t) => t.contact_id).filter(Boolean),
+        ...((inativos ?? []) as any[]).map((t) => t.customer_id),
+      ]);
+
       const mapa = new Map<string, ContatoAtendimento>();
       (data ?? []).forEach((vinculo: any) => {
         const c = vinculo.customers;
-        if (!c?.id || mapa.has(c.id)) return;
+        if (!c?.id || mapa.has(c.id) || ocultos.has(c.id)) return;
         mapa.set(c.id, {
           id: c.id,
           nome: c.nome || "Sem nome",
