@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { abrirWhatsappPilarFone } from "@/components/portaria/PilarFoneWeb";
-import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
+import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
+import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
+import { abrirChatDoContato, novoEmailParaContato } from "@/lib/atendimento/navegacaoContato";
+
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
