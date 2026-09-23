@@ -78,6 +78,7 @@ export function UnifiedDetailsPanel({
 }: UnifiedDetailsPanelProps) {
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
+  const [extrasOpen, setExtrasOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
   const [showVincularContatoDialog, setShowVincularContatoDialog] = useState(false);
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
