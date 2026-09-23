@@ -35,7 +35,7 @@
 - [x] Regras de discagem configuráveis (DDD local sem DDD, outros DDDs com 015) na tela de configuração do PABX
 
 ## Atendimento
-- [ ] Padronizar os cartões de empresa e o painel de detalhes do cliente em todas as abas.
+- [x] Padronizar os cartões de empresa e o painel de detalhes do cliente em todas as abas.
 - [x] Mover o discador e o fluxo da Agenda para a aba Tel no Atendimento.
 - [x] Remover o aviso de chamada iniciada e impedir ligação ao clicar nos contatos da aba Tel.
 - [x] Exibir o calendário no painel direito ao abrir o Atendimento sem tarefa selecionada.

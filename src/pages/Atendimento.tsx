@@ -144,6 +144,17 @@ export default function Atendimento() {
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
+  const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
+
+  const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
+    setVisible(true);
+    if (isMobile || isTablet) {
+      setMobileView("details");
+    }
+    if (isTablet && showConversationsList) {
+      setShowConversationsList(false);
+    }
+  };
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -4659,6 +4670,11 @@ ${recentMessages}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
                 contatosTelefone={contatosBase}
+                contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
+                onSelecionarContatoTelefone={(contato) => {
+                  setSelectedTelContato(contato);
+                  openDetailsPanel(setShowClientDetailsFluxo);
+                }}
                 onStartConversation={async (contactId, nome, telefone) => {
                   // Criar conversa para o contato da agenda
                   await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
@@ -4667,7 +4683,7 @@ ${recentMessages}
                 selectedConversation={selectedConversation}
                 setSelectedConversation={(id) => {
                   setSelectedConversation(id);
-                  if (id) setMobileView("main");
+                  if (id) openDetailsPanel(setShowClientDetailsChat);
                 }}
                 filteredTasks={filteredTasks}
                 selectedTaskId={selectedTaskId}
@@ -4676,7 +4692,7 @@ ${recentMessages}
                   if (id) {
                     const task = todayTasks.find(t => t.id === id);
                     setSelectedTaskData(task);
-                    setMobileView("main");
+                    openDetailsPanel(setShowClientDetailsAgenda);
                   }
                 }}
                 agendaDate={agendaDate}
@@ -4691,7 +4707,7 @@ ${recentMessages}
                   setSelectedEmailData(null);
                   setShowComposeEmail(false);
                   setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
-                  setMobileView("main");
+                  openDetailsPanel(setShowClientDetailsEmail);
                 }}
                 selectedEmailId={selectedEmailId}
                 setSelectedEmailId={(id) => {
@@ -4699,7 +4715,7 @@ ${recentMessages}
                   if (id) {
                     const email = userEmails.find(e => e.id === id);
                     setSelectedEmailData(email);
-                    setMobileView("main");
+                    openDetailsPanel(setShowClientDetailsEmail);
                   }
                 }}
                 filteredOrcamentos={filteredOrcamentos}
@@ -4714,7 +4730,7 @@ ${recentMessages}
                     const orc = orcamentos.find(o => o.id === id);
                     setSelectedOrcamentoData(orc);
                     setOrcamentoSheetOpen(true);
-                    setMobileView("main");
+                    openDetailsPanel(setShowClientDetailsOrcamento);
                   }
                 }}
                 setOrcamentoSheetOpen={(open) => {
@@ -4935,6 +4951,7 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
                 />
               )}
               {activeTab === "agenda" && selectedTaskData && (
@@ -4962,6 +4979,7 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
                 />
               )}
               {activeTab === "email" && selectedEmailData && (
@@ -4998,6 +5016,7 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
                 />
               )}
               {activeTab === "orcamento" && selectedOrcamentoData && (
@@ -5031,6 +5050,25 @@ ${recentMessages}
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
                   }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+                />
+              )}
+              {activeTab === "tel" && agendaViewMode === "default" && selectedTelContato && (
+                <UnifiedDetailsPanel
+                  type="agenda"
+                  nome={selectedTelContato.nome}
+                  telefone={selectedTelContato.tel}
+                  whatsapp={selectedTelContato.telefone}
+                  email={selectedTelContato.email}
+                  customerId={selectedTelContato.id}
+                  companies={[]}
+                  onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
+                  }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
                 />
               )}
             </div>
@@ -5301,6 +5339,11 @@ ${recentMessages}
                 canal="tel"
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
+                selecionadoId={selectedTelContato?.id ?? null}
+                onSelecionar={(contato) => {
+                  setSelectedTelContato(contato);
+                  openDetailsPanel(setShowClientDetailsFluxo);
+                }}
               />
             </div>
           </TabsContent>
@@ -5319,6 +5362,7 @@ ${recentMessages}
                   setSelectedEmailData(null);
                   setShowComposeEmail(false);
                   setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
+                  openDetailsPanel(setShowClientDetailsEmail);
                 }}
               />
             </div>
@@ -5352,7 +5396,10 @@ ${recentMessages}
                     {agendaConversations.map((conv) => (
                       <div
                         key={conv.id}
-                        onClick={() => setSelectedConversation(conv.id)}
+                        onClick={() => {
+                          setSelectedConversation(conv.id);
+                          openDetailsPanel(setShowClientDetailsChat);
+                        }}
                         className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedConversation === conv.id 
                             ? "bg-orange-100 border border-orange-200 shadow-sm" 
@@ -5517,7 +5564,10 @@ ${recentMessages}
                     {otherConversations.map((conv) => (
                       <div
                         key={conv.id}
-                        onClick={() => setSelectedConversation(conv.id)}
+                        onClick={() => {
+                          setSelectedConversation(conv.id);
+                          openDetailsPanel(setShowClientDetailsChat);
+                        }}
                         className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedConversation === conv.id 
                             ? "bg-primary/10 border border-primary/30 shadow-sm" 
@@ -6284,6 +6334,7 @@ ${recentMessages}
                     onClick={() => {
                       setSelectedOrcamentoId(orc.id);
                       setOrcamentoSheetOpen(true);
+                      openDetailsPanel(setShowClientDetailsOrcamento);
                     }}
                   >
                     {/* Tarja lateral com nome do usuário vinculado */}
@@ -6796,7 +6847,10 @@ ${recentMessages}
               setFluxoInitialIndex(0);
               setDiscadorModo(null);
             }}
-            onCurrentTaskChange={setFluxoCurrentTask}
+            onCurrentTaskChange={(task) => {
+              setFluxoCurrentTask(task);
+              if (task) openDetailsPanel(setShowClientDetailsFluxo);
+            }}
             showDetails={showClientDetailsFluxo}
             onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
             initialTaskIndex={fluxoInitialIndex}
@@ -6818,6 +6872,24 @@ ${recentMessages}
               }
             }}
           />
+        ) : activeTab === "tel" && selectedTelContato ? (
+          <div className="flex flex-1 flex-col bg-card">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-semibold">{selectedTelContato.nome}</h3>
+                <p className="truncate text-xs text-muted-foreground">{selectedTelContato.tel}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
+                className="h-8 w-8 p-0"
+                title={showClientDetailsFluxo ? "Ocultar detalhes" : "Mostrar detalhes"}
+              >
+                {showClientDetailsFluxo ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
           <EnvioMassaPanel
@@ -6912,6 +6984,7 @@ ${recentMessages}
             onEmailSelect={(id, data) => {
               setSelectedEmailId(id);
               setSelectedEmailData(data);
+              openDetailsPanel(setShowClientDetailsEmail);
             }}
             onEmailClose={() => {
               setSelectedEmailId(null);
@@ -7027,6 +7100,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsChat)}
           />
         </div>
       )}
@@ -7058,6 +7132,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
           />
         </div>
       )}
@@ -7088,6 +7163,28 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
+          />
+        </div>
+      )}
+
+      {!orcamentoSheetOpen && activeTab === "tel" && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="agenda"
+            nome={selectedTelContato.nome}
+            telefone={selectedTelContato.tel}
+            whatsapp={selectedTelContato.telefone}
+            email={selectedTelContato.email}
+            customerId={selectedTelContato.id}
+            companies={[]}
+            onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
+            }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
         </div>
       )}
@@ -7128,6 +7225,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
           />
         </div>
       )}
@@ -7273,6 +7371,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
         </div>
       )}
@@ -7424,6 +7523,8 @@ interface MobileListContentProps {
     taskTitle?: string;
   }>;
   contatosTelefone: ContatoAtendimento[];
+  contatoTelefoneSelecionadoId: string | null;
+  onSelecionarContatoTelefone: (contato: ContatoAtendimento) => void;
   onStartConversation: (contactId: string, nome: string, telefone: string) => void;
   selectedConversation: string | null;
   setSelectedConversation: (id: string | null) => void;
@@ -7489,6 +7590,8 @@ function MobileListContent({
   otherConversations,
   agendaContactsWithoutConversation,
   contatosTelefone,
+  contatoTelefoneSelecionadoId,
+  onSelecionarContatoTelefone,
   onStartConversation,
   selectedConversation,
   setSelectedConversation,
@@ -7778,6 +7881,8 @@ function MobileListContent({
             canal="tel"
             titulo="Contatos com telefone"
             vazioTexto="Nenhum contato com telefone"
+            selecionadoId={contatoTelefoneSelecionadoId}
+            onSelecionar={onSelecionarContatoTelefone}
           />
         )}
 

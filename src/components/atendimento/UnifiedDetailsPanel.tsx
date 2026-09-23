@@ -47,6 +47,7 @@ interface UnifiedDetailsPanelProps {
   // Criação inline
   onCreateContato?: () => void;
   onCreateEmpresa?: (customerId?: string) => void;
+  onCompanyCardClick?: (empresa: any) => void;
 }
 
 export function UnifiedDetailsPanel({ 
@@ -70,7 +71,8 @@ export function UnifiedDetailsPanel({
   onEditContato,
   onEditEmpresa,
   onCreateContato,
-  onCreateEmpresa
+  onCreateEmpresa,
+  onCompanyCardClick
 }: UnifiedDetailsPanelProps) {
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
@@ -326,7 +328,20 @@ export function UnifiedDetailsPanel({
                 {companies.map((company, idx) => {
                   const empresa = company.empresas || company;
                   return (
-                    <Card key={idx} className="p-3 rounded-2xl hover:bg-muted/50 transition-colors">
+                    <Card
+                      key={idx}
+                      role={onCompanyCardClick ? "button" : undefined}
+                      tabIndex={onCompanyCardClick ? 0 : undefined}
+                      aria-label={onCompanyCardClick ? `Abrir detalhes de ${empresa?.nome_fantasia || empresa?.nome || "empresa"}` : undefined}
+                      onClick={() => onCompanyCardClick?.(empresa)}
+                      onKeyDown={(event) => {
+                        if (onCompanyCardClick && (event.key === "Enter" || event.key === " ")) {
+                          event.preventDefault();
+                          onCompanyCardClick(empresa);
+                        }
+                      }}
+                      className={`p-3 rounded-2xl hover:bg-muted/50 transition-colors ${onCompanyCardClick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : ""}`}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">
@@ -351,7 +366,10 @@ export function UnifiedDetailsPanel({
                               size="sm"
                               className="h-7 w-7 p-0 text-orange-600 hover:bg-orange-50"
                               title="Editar empresa"
-                              onClick={() => onEditEmpresa(empresa.id, company.id)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onEditEmpresa(empresa.id, company.id);
+                              }}
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </Button>
@@ -362,10 +380,13 @@ export function UnifiedDetailsPanel({
                             size="sm"
                             className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
                             title="Desvincular empresa"
-                            onClick={() => setDesvincularEmpresa({
-                              id: company.id,
-                              nome: empresa?.nome_fantasia || empresa?.nome || 'esta empresa'
-                            })}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setDesvincularEmpresa({
+                                id: company.id,
+                                nome: empresa?.nome_fantasia || empresa?.nome || 'esta empresa'
+                              });
+                            }}
                           >
                             <Unlink className="w-3.5 h-3.5" />
                           </Button>
