@@ -5936,12 +5936,7 @@ ${recentMessages}
                          <p className="font-bold text-base truncate">{task.title}</p>
                          <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                           {task.time && (
-                             <span className="text-[10px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex items-center font-medium">
-                               <Clock className="w-3 h-3 mr-1" />
-                               {task.time}
-                             </span>
-                           )}
+                           <AtendimentoHoraBadge hora={task.time || ""} />
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
                                {task.origem}
@@ -7805,12 +7800,7 @@ function MobileListContent({
                 <p className="font-bold text-base truncate">{task.title}</p>
                 <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  {task.time && (
-                    <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                      <Clock className="w-2.5 h-2.5 mr-0.5" />
-                      {task.time}
-                    </Badge>
-                  )}
+                  <AtendimentoHoraBadge hora={task.time || ""} />
                   {/* Badge de usuários vinculados adicional */}
                   {task.linkedUsers && task.linkedUsers.length > 1 && (
                     <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
