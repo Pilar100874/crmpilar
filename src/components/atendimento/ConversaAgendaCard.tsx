@@ -1,7 +1,6 @@
-import { Clock } from "lucide-react";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
-import { Badge } from "@/components/ui/badge";
+import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 interface DadosAgenda {
   title: string;
@@ -24,6 +23,10 @@ interface ConversaAgendaCardProps {
 
 export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, onClick }: ConversaAgendaCardProps) {
   const nome = conversa.customer?.nome || "Cliente";
+  const diasAtraso = Number(dadosAgenda?.diasAtraso || 0);
+  const textoTempo = diasAtraso > 0
+    ? `${diasAtraso} ${diasAtraso === 1 ? "dia" : "dias"} atrasado`
+    : tempo;
 
   return (
     <AtendimentoClientCard
@@ -34,18 +37,15 @@ export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, 
       onClick={onClick}
       indicators={
         <>
-          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{tempo}</span>
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            {textoTempo}
+          </span>
           <AtendimentoCardIndicators {...dadosAgenda} />
         </>
       }
     >
-      {dadosAgenda?.time && (
-        <Badge variant="outline" className="gap-1 bg-background/70">
-          <Clock className="h-3.5 w-3.5" />
-          {dadosAgenda.time}
-        </Badge>
-      )}
-      {dadosAgenda?.origem && <Badge variant="outline">{dadosAgenda.origem}</Badge>}
+      <AtendimentoHoraBadge hora={dadosAgenda?.time || ""} />
+      {dadosAgenda?.origem && <AtendimentoInfoBadge>{dadosAgenda.origem}</AtendimentoInfoBadge>}
     </AtendimentoClientCard>
   );
 }
