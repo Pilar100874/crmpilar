@@ -240,7 +240,7 @@ export function EmbeddedChatPanel({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-2 border-t border-border/50 relative z-[100] overflow-visible">
+      <div className="p-2 border-t border-border/50 relative z-10 overflow-visible">
         <ChatInput
           onSendMessage={handleSendMessage}
           disabled={false}

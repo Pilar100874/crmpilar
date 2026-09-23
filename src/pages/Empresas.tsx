@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
@@ -87,9 +87,13 @@ interface Contato {
 interface EmpresasProps {
   hideAdminButtons?: boolean;
   variant?: "empresa" | "vendedor" | "transportadora";
+  /** Modo embutido: abre direto o cadastro desta empresa na aba indicada */
+  empresaIdInicial?: string;
+  abaInicial?: string;
+  onFecharEmbutido?: () => void;
 }
 
-export default function Empresas({ hideAdminButtons = false, variant = "empresa" }: EmpresasProps) {
+export default function Empresas({ hideAdminButtons = false, variant = "empresa", empresaIdInicial, abaInicial, onFecharEmbutido }: EmpresasProps) {
   const entityConfig = {
     empresa: { singular: "Empresa", plural: "Empresas", tipo_cliente: "B2B", subtitle: "Gerencie sua carteira de clientes", showSegmento: true, showTipoCliente: true },
     vendedor: { singular: "Vendedor", plural: "Vendedores", tipo_cliente: "vendedor", subtitle: "Gerencie seus vendedores", showSegmento: true, showTipoCliente: false },
@@ -674,6 +678,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       setContatosFiltrados(filtrados);
     }
   }, [buscaContato, contatos, contatosVinculados]);
+
+  // Modo embutido: carrega a empresa direto pelo id e abre na aba solicitada
+  const embutidoAbertoRef = useRef(false);
+  useEffect(() => {
+    if (!empresaIdInicial || embutidoAbertoRef.current) return;
+    embutidoAbertoRef.current = true;
+    (async () => {
+      const { data } = await supabase.from("empresas").select("*").eq("id", empresaIdInicial).maybeSingle();
+      if (!data) { toast.error("Empresa não encontrada"); onFecharEmbutido?.(); return; }
+      await handleEditEmpresa(data as any);
+      if (abaInicial) setActiveTab(abaInicial);
+    })();
+  }, [empresaIdInicial]);
+  const showFormAnteriorRef = useRef(false);
+  useEffect(() => {
+    if (empresaIdInicial && showFormAnteriorRef.current && !showForm) onFecharEmbutido?.();
+    showFormAnteriorRef.current = showForm;
+  }, [showForm]);
 
   const handleEditEmpresa = async (empresa: Empresa) => {
     setEditingEmpresa(empresa);
@@ -1946,6 +1968,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       return 0;
     });
   }, [filteredEmpresas, sortConfig]);
+
+  if (empresaIdInicial && !showForm) {
+    return <div className="flex-1 flex items-center justify-center p-8 text-sm text-muted-foreground">Carregando empresa...</div>;
+  }
 
   return (
     <>

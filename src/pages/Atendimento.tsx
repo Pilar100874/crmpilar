@@ -3809,7 +3809,9 @@ ${recentMessages}
     setMobileView('main');
   };
 
-  // Mantém o cliente selecionado ao trocar de aba (quando ele existir na aba de destino)
+  // Mantém o cliente selecionado ao trocar de aba (quando ele existir na aba de destino).
+  // A seleção é aplicada DEPOIS do efeito que limpa as seleções ao trocar de aba.
+  const clientePendenteTrocaAbaRef = useRef<string | null>(null);
   const trocarAba = (novaAba: string) => {
     if (novaAba === activeTab) { setActiveTab(novaAba); return; }
     let clienteId: string | null = null;
@@ -3817,12 +3819,20 @@ ${recentMessages}
     else if (activeTab === 'chat') {
       const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation);
       clienteId = (conv as any)?.customer_id ?? null;
-    } else if (activeTab === 'tel') clienteId = selectedTelContato?.id ?? null;
+    } else if (activeTab === 'tel') clienteId = selectedTelContato?.id ?? (fluxoCurrentTask as any)?.contact_id ?? null;
     else if (activeTab === 'email') clienteId = contatoEmailSelecionado?.id ?? null;
-    else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? null;
-
+    else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? (contatoOrcamentoDetalhe as any)?.cliente_id ?? null;
+    clientePendenteTrocaAbaRef.current = clienteId;
     setActiveTab(novaAba);
+  };
+
+  useEffect(() => {
+    const clienteId = clientePendenteTrocaAbaRef.current;
+    clientePendenteTrocaAbaRef.current = null;
     if (!clienteId) return;
+    const novaAba = activeTab;
+    setMobileView('main');
+    if (novaAba !== 'tel') { setAgendaViewMode('default'); setDiscadorModo(null); }
 
     if (novaAba === 'agenda') {
       const task = filteredTasks.find((t: any) => t.contact_id === clienteId);
@@ -3835,7 +3845,13 @@ ${recentMessages}
       const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.customer_id === clienteId);
       if (conv) {
         setSelectedConversation(conv.id);
+        setShowConversationsList(true);
         openDetailsPanel(setShowClientDetailsChat);
+      } else {
+        const contato: any = contatosComIndicadores.find((c: any) => c.id === clienteId);
+        if (contato?.whatsapp || contato?.telefone) {
+          void handleCreateConversationFromContact('customer', { id: contato.id, nome: contato.nome, telefone: contato.whatsapp || contato.telefone });
+        }
       }
     } else if (novaAba === 'tel') {
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
@@ -3854,14 +3870,16 @@ ${recentMessages}
         openDetailsPanel(setShowClientDetailsEmail);
       }
     } else if (novaAba === 'orcamento') {
-      const orc = orcamentos.find((o: any) => o.cliente_id === clienteId);
+      const orc: any = orcamentos.find((o: any) => o.cliente_id === clienteId);
       if (orc) {
+        setContatoOrcamentoDetalhe(orc);
         setSelectedOrcamentoId(orc.id);
         setSelectedOrcamentoData(orc);
         openDetailsPanel(setShowClientDetailsOrcamento);
       }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const abrirDiscador = async () => {
     try {
