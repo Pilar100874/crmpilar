@@ -1,4 +1,4 @@
-import { Archive, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
+import { Archive, ChevronLeft, ChevronRight, FileText, Inbox, Mail, RefreshCw, Send, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmailPanel } from "@/components/email/EmailPanel";
@@ -24,6 +24,7 @@ interface AtendimentoEmailPanelProps {
   onReply: (email: any) => void;
   onForward: (email: any) => void;
   onToggleDetails?: () => void;
+  detailsOpen?: boolean;
   toolsSlot?: React.ReactNode;
   onOpenConsultaEstoque?: () => void;
   pendingAppendText?: string | null;
