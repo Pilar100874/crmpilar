@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
@@ -39,6 +40,7 @@ export function OrcamentosEmpresaList({
   emailsNaoLidosPerEmail = {},
   chatsNaoLidosPerPhone = {},
 }: OrcamentosEmpresaListProps) {
+  const pendencias = usePendenciasAtendimento();
   const grupos = useMemo<GrupoEmpresa[]>(() => {
     const mapa = new Map<string, GrupoEmpresa>();
 
@@ -84,7 +86,7 @@ export function OrcamentosEmpresaList({
 
   return (
     <div className="space-y-2">
-      {grupos.map((grupo) => {
+      {ordenarPendentesPrimeiro(grupos, (g) => g.orcamentos[0]?.cliente_id, pendencias).map((grupo) => {
         const aberto = gruposAbertos.has(grupo.id);
         const total = grupo.orcamentos.reduce((soma, orcamento) => soma + Number(orcamento.valor_total || 0), 0);
         const clienteId = grupo.orcamentos[0]?.cliente_id;

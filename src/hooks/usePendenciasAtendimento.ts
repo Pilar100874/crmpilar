@@ -15,3 +15,10 @@ export function usePendenciasAtendimento() {
   }, []);
   return ids;
 }
+
+/** Ordena a lista colocando primeiro os clientes com atendimento a finalizar. */
+export function ordenarPendentesPrimeiro<T>(lista: T[], getId: (item: T) => string | null | undefined, pendencias: string[]): T[] {
+  if (!pendencias.length) return lista;
+  const set = new Set(pendencias);
+  return [...lista].sort((a, b) => Number(set.has(getId(b) || "")) - Number(set.has(getId(a) || "")));
+}

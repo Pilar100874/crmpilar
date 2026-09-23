@@ -38,6 +38,7 @@ export function AtendimentoClientCard({
   const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
   const pendencias = usePendenciasAtendimento();
   const pendente = !!historicoClienteId && pendencias.includes(historicoClienteId);
+  const bloqueado = pendencias.length > 0 && !pendente;
 
   return (
     <div
@@ -55,6 +56,8 @@ export function AtendimentoClientCard({
           ? "border-primary/40 bg-primary/10 shadow-md"
           : "border-border/70 hover:border-primary/30 hover:bg-muted/40 hover:shadow-md",
         onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        bloqueado && "opacity-50 grayscale",
+        pendente && "ring-2 ring-destructive/60",
         className,
       )}
     >
