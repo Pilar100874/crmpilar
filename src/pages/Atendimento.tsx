@@ -3789,6 +3789,15 @@ ${recentMessages}
 
   // O discador só abre se o PABX estiver configurado no estabelecimento
   // e o usuário tiver ramal vinculado — sem os dois, a ligação nunca sai.
+  const abrirFluxoComContato = (contato: ContatoAtendimento) => {
+    const index = filteredTasks.findIndex((task) => task.contact_id === contato.id);
+    setFluxoInitialIndex(index >= 0 ? index : 0);
+    setDiscadorModo(null);
+    setShowClientDetailsFluxo(false);
+    setAgendaViewMode('fluxo');
+    setMobileView('main');
+  };
+
   const abrirDiscador = async () => {
     try {
       const { data: auth } = await supabase.auth.getUser();
