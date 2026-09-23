@@ -60,7 +60,7 @@ import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
-import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
+import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { canalDaAba, marcarPendencia, EVENTO_FINALIZAR } from "@/lib/atendimento/finalizarAtendimento";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
@@ -3299,7 +3299,7 @@ ${recentMessages}
 
   const filteredConversations = useMemo(() => {
     const seenCustomers = new Set<string>();
-    return conversations.filter((conv) => {
+    const filtradas = conversations.filter((conv) => {
       if (usarAgenda && !agendaContactIds.has(conv.customer_id)) {
         return false;
       }
@@ -3325,7 +3325,8 @@ ${recentMessages}
       seenCustomers.add(conv.customer_id);
       return true;
     });
-  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds]);
+    return ordenarPendentesPrimeiro(filtradas, (c: any) => c.customer_id, pendenciasAtendimento);
+  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds, pendenciasAtendimento]);
 
   // Separar conversas: contatos da agenda do dia vs outras conversas abertas
   // Também incluir contatos da agenda que NÃO têm conversa ativa para permitir iniciar chat
@@ -3568,8 +3569,8 @@ ${recentMessages}
       return 0;
     });
     
-    return tasks;
-  }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder]);
+    return ordenarPendentesPrimeiro(tasks, (t: any) => t.contact_id, pendenciasAtendimento);
+  }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder, pendenciasAtendimento]);
 
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {

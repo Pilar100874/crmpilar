@@ -1,5 +1,6 @@
 import { Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
@@ -42,7 +43,8 @@ export default function ContatosCanalList({
   selecionadoId = null,
 }: ContatosCanalListProps) {
   const Icone = icones[canal];
-  const lista = contatos.filter((c) => valorDoCanal(c, canal).trim() !== "");
+  const pendencias = usePendenciasAtendimento();
+  const lista = ordenarPendentesPrimeiro(contatos.filter((c) => valorDoCanal(c, canal).trim() !== ""), (c) => c.id, pendencias);
 
   if (lista.length === 0) {
     return (
