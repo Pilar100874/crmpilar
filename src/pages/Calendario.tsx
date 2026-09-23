@@ -2352,8 +2352,12 @@ export default function Calendario() {
 
   // Renderizar visualização em tabela
   const renderTableView = () => {
+    const visibleColumns = tableColumns.filter(col => col.visible);
+    const totalColumnsWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0) || 1;
+    const colPercent = (width: number) => `${(width / totalColumnsWidth) * 100}%`;
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-w-0 max-w-full">
+
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 max-w-md">
