@@ -6345,6 +6345,19 @@ ${recentMessages}
                                   Pendente
                                 </button>
                               )}
+                              {(() => {
+                                const { canal } = parseTituloCartao(task.title);
+                                if (!canal) return null;
+                                const IconeCanal = ICONES_CANAL[canal];
+                                return (
+                                  <span
+                                    title={ROTULOS_CANAL[canal]}
+                                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
+                                  >
+                                    <IconeCanal className="h-3.5 w-3.5" />
+                                  </span>
+                                );
+                              })()}
                             </div>
                        </div>
                      </div>
@@ -8356,6 +8369,19 @@ function MobileListContent({
                         Pendente
                       </button>
                     )}
+                    {(() => {
+                      const { canal } = parseTituloCartao(task.title);
+                      if (!canal) return null;
+                      const IconeCanal = ICONES_CANAL[canal];
+                      return (
+                        <span
+                          title={ROTULOS_CANAL[canal]}
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
+                        >
+                          <IconeCanal className="h-3.5 w-3.5" />
+                        </span>
+                      );
+                    })()}
                   </div>
               </div>
             </div>
