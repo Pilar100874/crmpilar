@@ -74,7 +74,7 @@ export function AtendimentoClientCard({
             rotuloGenerico ? "text-[8px]" : "text-[10px]",
           )}
         >
-          {sideLabel}
+          {rotuloGenerico ? sideLabel : `Cliente: ${sideLabel}`}
         </span>
       </div>
 
@@ -85,7 +85,7 @@ export function AtendimentoClientCard({
           </div>
         )}
         <div className="min-w-0 flex-1 pr-12">
-          <p className="truncate text-base font-bold text-foreground"><TituloCartao titulo={title} /></p>
+          <p className="truncate text-base font-bold text-foreground">{parseTituloCartao(title).nome}</p>
           {customerName && (
             <p className="truncate text-sm font-medium text-muted-foreground">{customerName}</p>
           )}
@@ -123,6 +123,19 @@ export function AtendimentoClientCard({
                 <CalendarCheck className="h-3.5 w-3.5" />
                 {pendente ? "Pendente" : "Finalizar"}
               </button>
+              {(() => {
+                const { canal } = parseTituloCartao(title);
+                if (!canal) return null;
+                const IconeCanal = ICONES_CANAL[canal];
+                return (
+                  <span
+                    title={ROTULOS_CANAL[canal]}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
+                  >
+                    <IconeCanal className="h-3.5 w-3.5" />
+                  </span>
+                );
+              })()}
             </div>
           )}
         </div>
