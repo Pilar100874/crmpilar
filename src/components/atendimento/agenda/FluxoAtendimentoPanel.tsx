@@ -517,22 +517,6 @@ export function FluxoAtendimentoPanel({
       {/* Content with Tabs */}
       <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="px-6 pt-4 flex-shrink-0">
-          <TabsList className="w-full grid grid-cols-2 h-10 bg-muted/50 p-1 rounded-lg">
-            <TabsTrigger 
-              value="atendimento" 
-              className="gap-2 text-xs rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              Atendimento
-            </TabsTrigger>
-            <TabsTrigger 
-              value="historico" 
-              className="gap-2 text-xs rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              <Clock className="h-3.5 w-3.5" />
-              Histórico
-            </TabsTrigger>
-          </TabsList>
         </div>
         
         {/* Tab Atendimento */}
@@ -875,41 +859,6 @@ export function FluxoAtendimentoPanel({
           </div>
         </TabsContent>
         
-        {/* Tab Histórico */}
-        <TabsContent value="historico" className="flex-1 overflow-hidden mt-0 px-6 py-4">
-          <CustomerHistoryTimeline
-            contactId={currentTask.contact_id}
-            contactName={currentTask.contact_name}
-            estabelecimentoId={estabelecimentoId}
-            isFullView={true}
-            onEventClick={(event) => {
-              // Navegar para o item correspondente
-              if (event.type === 'tarefa' || event.type === 'atendimento') {
-                // Encontrar a tarefa na lista e navegar para ela
-                const taskIndex = tasks.findIndex(t => t.id === event.originalId);
-                if (taskIndex !== -1) {
-                  avancoRef.current = false;
-                  setCurrentIndex(taskIndex);
-                  toast.success(`Navegando para: ${tasks[taskIndex].title}`);
-                } else {
-                  toast.info("Esta tarefa não está na lista atual");
-                }
-              } else if (event.type === 'orcamento' && event.originalId) {
-                if (onNavigateToItem) {
-                  onNavigateToItem('orcamento', event.originalId);
-                }
-              } else if (event.type === 'chat' && event.originalId) {
-                if (onNavigateToItem) {
-                  onNavigateToItem('chat', event.originalId);
-                }
-              } else if (event.type === 'email' && event.originalId) {
-                if (onNavigateToItem) {
-                  onNavigateToItem('email', event.originalId);
-                }
-              }
-            }}
-          />
-        </TabsContent>
       </Tabs>
 
       {/* Footer Actions - Fixo no mobile */}
