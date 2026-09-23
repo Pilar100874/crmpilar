@@ -6276,8 +6276,27 @@ ${recentMessages}
                     if (orc) setSelectedOrcamentoData(orc);
                     setOrcamentoSheetOpen(true);
                   } else if (event.type === 'email') {
-                    setActiveTab('email');
-                    setSelectedEmailId(id);
+                    const custId = historicoCliente.customerId;
+                    void (async () => {
+                      const { data: em } = await supabase.from('emails').select('*').eq('id', id).maybeSingle();
+                      const { data: cust } = custId
+                        ? await supabase.from('customers').select('id, nome, email').eq('id', custId).maybeSingle()
+                        : { data: null as any };
+                      const emailContato = cust?.email || (em as any)?.from_email || '';
+                      setContatoEmailSelecionado({ id: custId || `email-${emailContato}`, nome: cust?.nome || historicoCliente.nome || emailContato, email: emailContato });
+                      if (em?.folder) setEmailFolder(em.folder as any);
+                      setActiveTab('email');
+                      setSelectedEmailId(id);
+                      setSelectedEmailData(em || userEmails.find((e: any) => e.id === id) || null);
+                      openDetailsPanel(setShowClientDetailsEmail);
+                    })();
+                  } else if (event.type === 'atendimento' && /tel|lig|fone/i.test(event.metadata?.tipo_contato || '')) {
+                    const custId = historicoCliente.customerId;
+                    const c = contatosBase.find((x: any) => x.id === custId);
+                    setActiveTab('tel');
+                    setAgendaViewMode('default');
+                    if (c) setSelectedTelContato(c);
+                    openDetailsPanel(setShowClientDetailsFluxo);
                   } else if (event.type === 'tarefa' || event.type === 'atendimento') {
                     setActiveTab('agenda');
                     setSelectedTaskId(id);
