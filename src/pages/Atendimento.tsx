@@ -63,7 +63,7 @@ import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
-import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR } from "@/lib/atendimento/finalizarAtendimento";
+import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
