@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { User } from "lucide-react";
+import { History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
 
 interface AtendimentoClientCardProps {
   title: string;
@@ -12,7 +13,11 @@ interface AtendimentoClientCardProps {
   indicators?: ReactNode;
   children?: ReactNode;
   className?: string;
+  /** Quando informado, mostra o botão que abre o histórico do cliente na tela central. */
+  historicoClienteId?: string;
+  historicoClienteNome?: string;
 }
+
 
 /** Cartão único das listas do Atendimento, baseado no cartão da Agenda. */
 export function AtendimentoClientCard({
