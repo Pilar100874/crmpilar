@@ -3355,12 +3355,20 @@ ${recentMessages}
         email: c.email || "",
         referencia: task.title || "Tarefa agendada",
         horario: task.time || "",
+        origem: task.origem || "",
         responsavel: task.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente",
         companies: c.customer_empresas || [],
+        orcamentosAbertos: orcamentos.filter((orcamento: any) => {
+          if (orcamento.status === "cancelado" || orcamento.status === "ganho") return false;
+          const empresaIds = (c.customer_empresas || [])
+            .map((relacao: any) => relacao.empresa_id || relacao.empresas?.id)
+            .filter(Boolean);
+          return orcamento.cliente_id === c.id || orcamento.empresa_id === c.id || empresaIds.includes(orcamento.empresa_id);
+        }).length,
       });
     });
     return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  }, [usarAgenda, contatosVinculados, todayTasks]);
+  }, [usarAgenda, contatosVinculados, todayTasks, orcamentos]);
 
   // Contatos com WhatsApp que ainda não possuem conversa aberta
   const contatosSemConversa = useMemo(() => {

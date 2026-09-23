@@ -13,6 +13,10 @@ export interface ContatoAtendimento {
   referencia?: string;
   /** Horário da tarefa quando o contato veio da agenda. */
   horario?: string;
+  /** Origem da tarefa, seguindo as informações do cartão da Agenda. */
+  origem?: string;
+  /** Quantidade de orçamentos em aberto do contato e suas empresas. */
+  orcamentosAbertos?: number;
   /** Nome curto exibido na faixa lateral do cartão. */
   responsavel?: string;
   /** Empresas vinculadas ao contato para o painel unificado de detalhes. */
