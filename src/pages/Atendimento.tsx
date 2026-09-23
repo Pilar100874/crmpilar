@@ -5928,7 +5928,7 @@ ${recentMessages}
                           }`}
                         >
                           <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                            {isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
+                            {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
                           </span>
                         </div>
                       )}
