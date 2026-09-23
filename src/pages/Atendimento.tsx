@@ -4968,7 +4968,7 @@ ${recentMessages}
                 orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
                 orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
                 orcamentos={orcamentos}
-                setActiveTab={setActiveTab}
+                setActiveTab={trocarAba}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
                 agendaViewMode={agendaViewMode}
@@ -5507,7 +5507,7 @@ ${recentMessages}
             </div>
 
         {/* Tabs - Modern Design with ExpandableTabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
           <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
             <ExpandableTabs
