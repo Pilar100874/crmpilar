@@ -94,6 +94,8 @@ export default function CVVehicleEntry() {
   };
   useEffect(() => { load(); }, []);
 
+  useRascunhoVistoria(RASCUNHO_CHAVE, { step, selected, form, photos }, !!selected && step > 0);
+
   const movesFiltrados = filtrarPorGrupo(openMoves, grupoId, (m: any) => m.vehicle?.unidade_id);
 
   // Recalcula os alertas do veículo selecionado usando a KM informada na entrada
