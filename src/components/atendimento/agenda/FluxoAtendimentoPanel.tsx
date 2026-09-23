@@ -516,8 +516,6 @@ export function FluxoAtendimentoPanel({
 
       {/* Content with Tabs */}
       <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="px-6 pt-4 flex-shrink-0">
-        </div>
         
         {/* Tab Atendimento */}
         <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 px-4 py-3 space-y-3">
