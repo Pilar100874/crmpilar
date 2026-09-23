@@ -551,12 +551,13 @@ export function UnifiedDetailsPanel({
                 ) : whatsapp ? (
                   <button
                     type="button"
-                    onClick={() => abrirWhatsappPilarFone(whatsapp, nome)}
-                    title="Abrir conversa no telefone"
+                    onClick={() => abrirChatDoContato({ customerId, nome, whatsapp })}
+                    title="Abrir a conversa deste cliente no Chat"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"
                   >
                     {whatsapp}
                   </button>
+
                 ) : (
                   <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
