@@ -7371,6 +7371,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
           />
         </div>
       )}
