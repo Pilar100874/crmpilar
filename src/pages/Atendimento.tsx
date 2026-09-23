@@ -2755,7 +2755,8 @@ ${recentMessages}
             id,
             nome,
             email,
-            telefone
+            telefone,
+            tel
           )
         `);
 
@@ -2805,7 +2806,7 @@ ${recentMessages}
           // Buscar TODOS os contatos do estabelecimento
           const { data: allContactsData } = await supabase
             .from('customers')
-            .select('id, nome, email, telefone, tipo_operador')
+            .select('id, nome, email, telefone, tel, tipo_operador')
             .eq('estabelecimento_id', estabId);
 
           // Criar um mapa com telefones normalizados, priorizando tipo_operador=true
