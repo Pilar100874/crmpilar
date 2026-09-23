@@ -26,6 +26,8 @@ export function AtendimentoClientCard({
   children,
   className,
 }: AtendimentoClientCardProps) {
+  const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
+
   return (
     <div
       role={onClick ? "button" : undefined}
