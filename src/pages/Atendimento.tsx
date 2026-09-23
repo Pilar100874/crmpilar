@@ -2248,6 +2248,7 @@ export default function Atendimento() {
       pararChat();
       pararEmail();
       pararHistorico();
+      pararExtras();
     };
   }, []);
 
