@@ -579,12 +579,16 @@ export function UnifiedDetailsPanel({
                 ) : telefone ? (
                   <button
                     type="button"
-                    onClick={() => ligarPeloPabx(telefone.replace(/\D/g, ''), nome)}
-                    title="Ligar pelo PABX (toca seu ramal primeiro)"
+                    onClick={async () => {
+                      const numero = await prepararNumeroComRegras(telefone);
+                      abrirPilarSip(numero || telefone.replace(/\D/g, ''));
+                    }}
+                    title="Abrir o Pilar Fone com este número"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"
                   >
                     {telefone}
                   </button>
+
                 ) : (
                   <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
