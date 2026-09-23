@@ -157,7 +157,7 @@ export function FinalizarAtendimentoDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => { if (!salvando) onOpenChange(o); }}>
+      <Dialog open={open} onOpenChange={(o) => { if (!salvando && !obrigatorio) onOpenChange(o); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{modoInativar ? "Inativar cliente" : "Finalizar atendimento"}</DialogTitle>
