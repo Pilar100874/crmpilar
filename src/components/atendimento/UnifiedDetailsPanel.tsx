@@ -1,3 +1,4 @@
+import { marcarPendencia } from "@/lib/atendimento/finalizarAtendimento";
 import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -585,6 +586,7 @@ export function UnifiedDetailsPanel({
                     onClick={async () => {
                       const numero = await prepararNumeroComRegras(telefone);
                       abrirPilarSip(numero || telefone.replace(/\D/g, ''));
+                      marcarPendencia(customerId);
                     }}
                     title="Abrir o Pilar Fone com este número"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"

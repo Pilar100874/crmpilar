@@ -102,7 +102,8 @@ export function AtendimentoClientCard({
               </button>
               <button
                 type="button"
-                title="Finalizar atendimento (próximo contato)"
+                disabled={!pendente}
+                title={pendente ? "Finalizar atendimento (próximo contato)" : "Disponível após uma ação com o cliente (mensagem, e-mail, orçamento, ligação ou visita)"}
                 aria-label="Finalizar atendimento"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -112,7 +113,7 @@ export function AtendimentoClientCard({
                   "flex h-6 items-center gap-1 rounded-full border px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   pendente
                     ? "border-destructive/50 bg-destructive/10 text-destructive"
-                    : "border-border/70 bg-background/90 text-muted-foreground hover:border-primary/40 hover:text-primary",
+                    : "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/50",
                 )}
               >
                 <CalendarCheck className="h-3.5 w-3.5" />
