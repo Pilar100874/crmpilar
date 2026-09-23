@@ -41,3 +41,4 @@
 - [x] Exibir o calendário no painel direito ao abrir o Atendimento sem tarefa selecionada.
 - [x] Abrir o módulo Calendário completo no painel direito do Atendimento.
 - [x] Manter o botão de expandir a Agenda visível e ajustar a barra do Calendário à largura disponível.
+- [x] Padronizar os cards e detalhes de todas as abas do Atendimento e agrupar orçamentos expansíveis por empresa.
