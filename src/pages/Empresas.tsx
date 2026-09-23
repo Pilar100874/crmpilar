@@ -2383,7 +2383,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       ) : (
         <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-muted/30 via-background to-muted/20">
       {/* Header modernizado com ações */}
-      <div className="sticky top-0 z-20 hidden-embutido border-b bg-card/95 backdrop-blur-md shadow-sm">
+      <div className={`sticky top-0 z-20 border-b ${empresaIdInicial ? "hidden" : ""} bg-card/95 backdrop-blur-md shadow-sm`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Button
@@ -2432,7 +2432,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       <div className="flex-1 overflow-auto px-3 sm:px-6 py-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <div className="bg-card border border-border/60 rounded-xl shadow-sm shadow-slate-200/40 dark:shadow-none overflow-hidden">
-            <div className="px-2 sm:px-6 border-b border-border/60 bg-card">
+            <div className={`px-2 sm:px-6 border-b border-border/60 bg-card ${empresaIdInicial ? "hidden" : ""}`}>
               <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start flex-wrap">
                 <TabsTrigger
                   value="empresa"
@@ -2555,8 +2555,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </TabsContent>
 
           <TabsContent value="qualificacao" className="p-6">
-            <Card className="p-6 space-y-8">
-              <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
+            <Card className={`p-6 space-y-8 ${empresaIdInicial ? "pointer-events-none select-text" : ""}`}>
+              <div className={`rounded-md ${empresaIdInicial ? "hidden" : ""} border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
                 Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
               </div>
 
@@ -2638,7 +2638,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className={`flex justify-end gap-3 ${empresaIdInicial ? "hidden" : ""}`}>
                 <Button variant="outline" onClick={requestCloseForm}>Cancelar</Button>
                 <Button onClick={handleSaveEmpresa}>{editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}</Button>
               </div>

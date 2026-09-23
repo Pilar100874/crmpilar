@@ -14,7 +14,7 @@ interface EmpresaExtrasOverlayProps {
 /** Abre o cadastro da empresa (aba Localização ou Qualificação) na tela central. */
 export function EmpresaExtrasOverlay({ tipo, empresaId, empresaNome, onClose }: EmpresaExtrasOverlayProps) {
   return (
-    <div className="absolute inset-0 z-[120] flex flex-col bg-background">
+    <div className="absolute inset-0 z-40 flex flex-col bg-background">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-bold">{tipo === "localizacao" ? "Localização da empresa" : "Qualificação da empresa"}</p>
