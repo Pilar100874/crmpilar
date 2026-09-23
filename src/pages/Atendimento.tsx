@@ -7803,10 +7803,10 @@ function MobileListContent({
                   <div
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all border-l-4 border-l-orange-400 ${
+                      className={`relative min-h-[106px] overflow-hidden rounded-xl border pl-10 pr-4 py-3 cursor-pointer transition-all shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-8 before:bg-primary ${
                       selectedConversation === conv.id 
-                        ? "bg-primary/10 border-t border-r border-b border-primary/30" 
-                        : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card border-t border-r border-b border-transparent"
+                        ? "bg-primary/10 border-primary/40 shadow-md" 
+                        : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -7817,12 +7817,12 @@ function MobileListContent({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
+                          <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
                           <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+                        <p className="text-sm font-medium text-muted-foreground truncate">{conv.customer?.nome || "Cliente"}</p>
                       </div>
                     </div>
                   </div>
@@ -7871,10 +7871,10 @@ function MobileListContent({
                   <div
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all ${
+                    className={`relative min-h-[106px] overflow-hidden rounded-xl border pl-10 pr-4 py-3 cursor-pointer transition-all shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-8 before:bg-primary ${
                       selectedConversation === conv.id 
-                        ? "bg-primary/10 border border-primary/30" 
-                        : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card border border-transparent"
+                        ? "bg-primary/10 border-primary/40 shadow-md" 
+                        : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -7885,12 +7885,12 @@ function MobileListContent({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
+                          <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
                           <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+                        <p className="text-sm font-medium text-muted-foreground truncate">{conv.customer?.nome || "Cliente"}</p>
                       </div>
                     </div>
                   </div>
@@ -7920,18 +7920,18 @@ function MobileListContent({
               setDiscadorModo(null);
               setSelectedTaskId(task.id);
             }}
-            className={`relative rounded-xl cursor-pointer transition-all overflow-hidden ${
+            className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all overflow-hidden border ${
               selectedTaskId === task.id
-                ? "bg-orange-100 border border-orange-200"
-                : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card border border-transparent"
+                ? "bg-primary/10 border-primary/40 shadow-md"
+                : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
             }`}
           >
             {/* Tarja lateral indicando vínculo com nome do usuário */}
             {task.linkedUsers && task.linkedUsers.length > 0 ? (
               <div 
-                className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500"
+                className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary"
               >
-                <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
+                <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
                   {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                 </span>
               </div>
@@ -7947,10 +7947,10 @@ function MobileListContent({
               </div>
             )}
             
-            <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-8' : 'pl-4'}`}>
+            <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{task.contact_name}</p>
-                <p className="text-xs text-muted-foreground truncate">{task.title}</p>
+                <p className="font-bold text-base truncate">{task.title}</p>
+                <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   {task.time && (
                     <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
