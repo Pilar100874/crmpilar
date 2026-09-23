@@ -3870,7 +3870,7 @@ ${recentMessages}
     const index = filteredTasks.findIndex((task) => task.contact_id === contato.id);
     setFluxoInitialIndex(index >= 0 ? index : 0);
     setDiscadorModo(null);
-    setShowClientDetailsFluxo(false);
+    setShowClientDetailsFluxo(!isMobile);
     setAgendaViewMode('fluxo');
     setMobileView('main');
   };
