@@ -7184,7 +7184,6 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
-            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
             onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsFluxo)}
           />
         </div>
@@ -7226,7 +7225,7 @@ ${recentMessages}
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
             }}
-            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsEmail)}
           />
         </div>
       )}
