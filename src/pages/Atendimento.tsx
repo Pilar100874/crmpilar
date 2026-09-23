@@ -63,7 +63,7 @@ import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
-import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR } from "@/lib/atendimento/finalizarAtendimento";
+import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
@@ -6221,6 +6221,8 @@ ${recentMessages}
                    const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
                    const isSameSegment = task.contact_id && !isLinkedToUser && 
                      customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
+                   const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
+                   const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
                    
                    return (
                    <div 
@@ -6229,7 +6231,7 @@ ${recentMessages}
                        selectedTaskId === task.id 
                           ? "bg-primary/10 border-primary/40 shadow-md" 
                           : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                     }`}
+                     } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
                       onClick={() => {
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
@@ -7856,6 +7858,13 @@ function MobileListContent({
   onRefreshEmails,
   onShowCustomerSearch,
 }: MobileListContentProps) {
+  const pendenciasAtendimento = usePendenciasAtendimento();
+  const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
+    const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
+    if (!pendenteId) return false;
+    pedirFinalizacao({ customerId: pendenteId, nome: "Cliente" });
+    return true;
+  };
   return (
     <div className="h-full flex flex-col bg-background/80 dark:bg-card/80">
       {/* Header */}
@@ -8230,11 +8239,14 @@ function MobileListContent({
           const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
           const isSameSegment = task.contact_id && !isLinkedToUser && 
             customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
+          const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
+          const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
           
           return (
           <div
             key={task.id}
             onClick={() => {
+              if (bloquearTrocaClientePendente(task.contact_id)) return;
               setDiscadorModo(null);
               setSelectedTaskId(task.id);
             }}
@@ -8242,7 +8254,7 @@ function MobileListContent({
               selectedTaskId === task.id
                 ? "bg-primary/10 border-primary/40 shadow-md"
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-            }`}
+            } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
           >
             {/* Tarja lateral indicando vínculo com nome do usuário */}
             {task.linkedUsers && task.linkedUsers.length > 0 ? (
