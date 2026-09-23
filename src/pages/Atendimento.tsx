@@ -63,6 +63,8 @@ import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpres
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
+import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
+import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
