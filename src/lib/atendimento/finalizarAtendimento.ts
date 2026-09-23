@@ -31,6 +31,23 @@ const ORIGEM_CANAL: Record<CanalAtendimento, string> = { whatsapp: "bot", email:
 const origemValida = (o: string | null | undefined, canal: CanalAtendimento) => (o && ORIGENS_VALIDAS.includes(o) ? o : ORIGEM_CANAL[canal]);
 const hojeStr = () => format(new Date(), "yyyy-MM-dd");
 
+/**
+ * A agenda persiste o ID de public.usuarios, enquanto alguns pontos antigos da
+ * tela ainda repassam o auth.uid(). Aceita os dois formatos e normaliza antes
+ * de qualquer leitura ou gravação.
+ */
+async function resolverUsuarioId(usuarioId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("id")
+    .or(`id.eq.${usuarioId},auth_user_id.eq.${usuarioId}`)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.id) throw new Error("Usuário interno não encontrado para finalizar o atendimento");
+  return data.id;
+}
+
 export interface TarefaFutura {
   id: string;
   date: string;
@@ -39,11 +56,12 @@ export interface TarefaFutura {
 
 /** Próximo contato já agendado (data depois de hoje) para o cliente. */
 export async function buscarProximoContatoFuturo(contactId: string, usuarioId: string): Promise<TarefaFutura | null> {
+  const usuarioInternoId = await resolverUsuarioId(usuarioId);
   const { data } = await supabase
     .from("calendario_tarefas")
     .select("id, date, title")
     .eq("contact_id", contactId)
-    .eq("user_id", usuarioId)
+    .eq("user_id", usuarioInternoId)
     .in("status", STATUS_PENDENTES)
     .gt("date", hojeStr())
     .order("date", { ascending: true })
@@ -73,6 +91,7 @@ interface FinalizarParams {
 export async function finalizarAtendimento(p: FinalizarParams) {
   const hoje = hojeStr();
   const obs = p.observacao?.trim() || null;
+  const usuarioInternoId = await resolverUsuarioId(p.usuarioId);
 
   // 1) Tarefa do dia (ou atrasada) — cria uma quando o cliente não está na agenda.
   let tarefaId = p.tarefaAtualId ?? null;
@@ -84,7 +103,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
       .from("calendario_tarefas")
       .select("id, title, origem, date, data_original")
       .eq("contact_id", p.contactId)
-      .eq("user_id", p.usuarioId)
+      .eq("user_id", usuarioInternoId)
       .in("status", STATUS_PENDENTES)
       .lte("date", hoje)
       .order("date", { ascending: true })
@@ -112,7 +131,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
     const { data: nova, error } = await supabase
       .from("calendario_tarefas")
       .insert({
-        user_id: p.usuarioId,
+        user_id: usuarioInternoId,
         estabelecimento_id: p.estabelecimentoId,
         contact_id: p.contactId,
         contact_name: p.contactName,
@@ -133,7 +152,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
   const { error: regErr } = await supabase.from("atendimento_registros").insert({
     tarefa_id: tarefaId,
     estabelecimento_id: p.estabelecimentoId,
-    usuario_id: p.usuarioId,
+    usuario_id: usuarioInternoId,
     tipo_contato: p.canal,
     flag_id: p.flagId ?? null,
     observacao: obs,
@@ -154,7 +173,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
     .from("calendario_tarefas")
     .select("id, date")
     .eq("contact_id", p.contactId)
-    .eq("user_id", p.usuarioId)
+    .eq("user_id", usuarioInternoId)
     .in("status", STATUS_PENDENTES)
     .gt("date", hoje)
     .order("date", { ascending: true });
@@ -167,7 +186,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
   } else {
     if (lista.length) await supabase.from("calendario_tarefas").delete().in("id", lista.map((r) => r.id));
     const { error: novaErr } = await supabase.from("calendario_tarefas").insert({
-      user_id: p.usuarioId,
+      user_id: usuarioInternoId,
       estabelecimento_id: p.estabelecimentoId,
       contact_id: p.contactId,
       contact_name: p.contactName,
@@ -193,9 +212,10 @@ export async function inativarClienteDoFluxo(p: {
   usuarioId: string;
   estabelecimentoId: string;
 }) {
+  const usuarioInternoId = await resolverUsuarioId(p.usuarioId);
   const { error } = await supabase.from("customer_fluxo_inativacoes" as any).insert({
     customer_id: p.contactId,
-    usuario_id: p.usuarioId,
+    usuario_id: usuarioInternoId,
     estabelecimento_id: p.estabelecimentoId,
     motivo: p.motivo.trim(),
     canal: p.canal,
@@ -205,7 +225,7 @@ export async function inativarClienteDoFluxo(p: {
     .from("calendario_tarefas")
     .update({ status: "completed", updated_at: new Date().toISOString() })
     .eq("contact_id", p.contactId)
-    .eq("user_id", p.usuarioId)
+    .eq("user_id", usuarioInternoId)
     .in("status", STATUS_PENDENTES);
   limparPendencia(p.contactId);
   notificarTarefasAlteradas();
