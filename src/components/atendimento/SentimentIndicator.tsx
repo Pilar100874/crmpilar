@@ -19,7 +19,7 @@ export default function SentimentIndicator({ messageId, conversationId, compact 
     
     // Realtime subscription
     const channel = supabase
-      .channel(`sentiment-${messageId}`)
+      .channel(`sentiment-${messageId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
