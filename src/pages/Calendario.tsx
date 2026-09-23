@@ -263,7 +263,7 @@ function DraggableTaskCard({
           <div {...attributes} {...listeners} className="mt-1 hidden sm:block">
             <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
           </div>
-          <div className="flex-1 space-y-1.5 sm:space-y-2">
+          <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs sm:text-sm">
               <span className="font-medium whitespace-nowrap">
                 {format(task.date, "dd/MM", { locale: ptBR })}
