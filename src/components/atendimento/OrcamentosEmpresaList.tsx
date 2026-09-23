@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, ChevronDown, ChevronRight, Copy, MoreVertical, Receipt, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, MoreVertical, Receipt, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +83,6 @@ export function OrcamentosEmpresaList({
               customerName={grupo.nome}
               sideLabel="Empresa"
               onClick={() => alternarGrupo(grupo.id)}
-              icon={<Building2 className="h-5 w-5" />}
               indicators={<><Badge className="min-w-7 justify-center px-1.5">{grupo.orcamentos.length}</Badge>{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
             >
               <Badge variant="outline" className="bg-background/70">
