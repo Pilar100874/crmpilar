@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
+import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CalendarCheck, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -6330,7 +6330,19 @@ ${recentMessages}
                             <div className="mt-1.5 flex items-center gap-1.5">
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                               {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
-                                <span className="inline-flex items-center rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">Pendente</span>
+                                <button
+                                  type="button"
+                                  title="Finalizar atendimento (próximo contato)"
+                                  aria-label="Finalizar atendimento"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    pedirFinalizacao({ customerId: task.contact_id!, nome: task.contact_name });
+                                  }}
+                                  className="flex h-6 items-center gap-1 rounded-full border border-destructive/50 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <CalendarCheck className="h-3.5 w-3.5" />
+                                  Pendente
+                                </button>
                               )}
                             </div>
                        </div>
@@ -8328,8 +8340,20 @@ function MobileListContent({
                  </div>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                    {task.contact_id && lerPendencias().includes(task.contact_id) && (
-                      <span className="inline-flex items-center rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">Pendente</span>
+                    {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
+                      <button
+                        type="button"
+                        title="Finalizar atendimento (próximo contato)"
+                        aria-label="Finalizar atendimento"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          pedirFinalizacao({ customerId: task.contact_id!, nome: task.contact_name });
+                        }}
+                        className="flex h-6 items-center gap-1 rounded-full border border-destructive/50 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <CalendarCheck className="h-3.5 w-3.5" />
+                        Pendente
+                      </button>
                     )}
                   </div>
               </div>
