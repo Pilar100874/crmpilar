@@ -2477,6 +2477,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   <span className="hidden sm:inline">Cadastros Vinculados</span>
                   <span className="sm:hidden">Vínculos</span>
                 </TabsTrigger>
+                {variant === "vendedor" && (
+                  <TabsTrigger
+                    value="acesso"
+                    className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span className="hidden sm:inline">Acesso ao sistema</span>
+                    <span className="sm:hidden">Acesso</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -2655,6 +2665,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </div>
             </Card>
           </TabsContent>
+
+          {variant === "vendedor" && (
+            <TabsContent value="acesso" className="mt-0">
+              {editingEmpresa && estabelecimentoId ? (
+                <VendedorAcessoTab
+                  vendedorEmpresaId={editingEmpresa.id}
+                  vendedorNome={(editingEmpresa as any).nome_fantasia || (editingEmpresa as any).nome || ""}
+                  vendedorEmail={(editingEmpresa as any).email}
+                  vendedorTelefone={(editingEmpresa as any).telefone || (editingEmpresa as any).whatsapp}
+                  estabelecimentoId={estabelecimentoId}
+                />
+              ) : (
+                <p className="p-8 text-sm text-muted-foreground">Salve o representante primeiro para liberar o acesso ao sistema.</p>
+              )}
+            </TabsContent>
+          )}
 
           <TabsContent value="cadastros-vinculados" className="p-0">
             <Tabs defaultValue="contatos" className="w-full">
