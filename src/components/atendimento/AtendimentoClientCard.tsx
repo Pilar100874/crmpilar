@@ -82,25 +82,27 @@ export function AtendimentoClientCard({
             <p className="truncate text-sm font-medium text-muted-foreground">{customerName}</p>
           )}
           {children && <div className="mt-1.5 flex flex-wrap items-center gap-2">{children}</div>}
+          {historicoClienteId && (
+            <div className="mt-1.5">
+              <button
+                type="button"
+                title="Ver histórico do cliente"
+                aria-label="Ver histórico do cliente"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
+                }}
+                className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <History className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      {(indicators || historicoClienteId) && (
+      {indicators && (
         <div className="absolute right-2 top-2 flex flex-col items-center gap-1 text-[10px]">
           {indicators}
-          {historicoClienteId && (
-            <button
-              type="button"
-              title="Ver histórico do cliente"
-              aria-label="Ver histórico do cliente"
-              onClick={(event) => {
-                event.stopPropagation();
-                abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
-              }}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <History className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
       )}
 
