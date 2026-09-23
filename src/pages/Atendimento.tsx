@@ -7788,11 +7788,11 @@ function MobileListContent({
             ) : (
               <div 
                 className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
-                  isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
+                  !vinculosCarregados ? 'bg-muted' : isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
                 }`}
               >
                 <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                  {isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
+                  {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
                 </span>
               </div>
             )}
