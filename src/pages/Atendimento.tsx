@@ -2755,7 +2755,8 @@ ${recentMessages}
             id,
             nome,
             email,
-            telefone
+            telefone,
+            tel
           )
         `);
 
