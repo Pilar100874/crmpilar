@@ -5550,11 +5550,11 @@ ${recentMessages}
               ]}
               activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : null}
               onChange={(index) => {
-                if (index === 0) setActiveTab("agenda");
-                else if (index === 1) setActiveTab("chat");
-                else if (index === 2) setActiveTab("tel");
-                else if (index === 3) setActiveTab("email");
-                else if (index === 4) setActiveTab("orcamento");
+                if (index === 0) trocarAba("agenda");
+                else if (index === 1) trocarAba("chat");
+                else if (index === 2) trocarAba("tel");
+                else if (index === 3) trocarAba("email");
+                else if (index === 4) trocarAba("orcamento");
               }}
               activeColor="text-primary"
               className="w-full justify-center"
