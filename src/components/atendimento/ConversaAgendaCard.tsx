@@ -21,12 +21,9 @@ interface ConversaAgendaCardProps {
   onClick: () => void;
 }
 
-export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, onClick }: ConversaAgendaCardProps) {
+export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, onClick }: ConversaAgendaCardProps) {
   const nome = conversa.customer?.nome || "Cliente";
-  const diasAtraso = Number(dadosAgenda?.diasAtraso || 0);
-  const textoTempo = diasAtraso > 0
-    ? `${diasAtraso} ${diasAtraso === 1 ? "dia" : "dias"} atrasado`
-    : tempo;
+
 
   return (
     <AtendimentoClientCard
