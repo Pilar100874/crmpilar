@@ -14,6 +14,7 @@ interface OrcamentosEmpresaListProps {
   tarefasAgenda?: any[];
   selectedOrcamentoId: string | null;
   onSelectOrcamento: (orcamento: any) => void;
+  onSelectEmpresa?: (orcamentoReferencia: any) => void;
   onDuplicate?: (orcamentoId: string) => void;
   onDelete?: (orcamentoId: string) => void;
   emailsNaoLidosPerEmail?: Record<string, number>;
@@ -32,6 +33,7 @@ export function OrcamentosEmpresaList({
   tarefasAgenda = [],
   selectedOrcamentoId,
   onSelectOrcamento,
+  onSelectEmpresa,
   onDuplicate,
   onDelete,
   emailsNaoLidosPerEmail = {},
@@ -97,7 +99,10 @@ export function OrcamentosEmpresaList({
               title={tarefaAgenda?.title || `Orçamento - ${grupo.contato}`}
               customerName={grupo.contato}
               sideLabel={tarefaAgenda?.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
-              onClick={() => alternarGrupo(grupo.id)}
+              onClick={() => {
+                alternarGrupo(grupo.id);
+                onSelectEmpresa?.(grupo.orcamentos[0]);
+              }}
               indicators={<><AtendimentoCardIndicators diasAtraso={diasAtraso} emailsNaoLidos={emailsNaoLidosPerEmail[email] || 0} chatsPendentes={chatsNaoLidosPerPhone[telefone] || 0} orcamentosAbertos={grupo.orcamentos.length} />{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
             >
               <AtendimentoHoraBadge hora={tarefaAgenda?.time || ""} />
