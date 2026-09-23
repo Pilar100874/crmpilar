@@ -6043,12 +6043,14 @@ ${recentMessages}
                                          setOrcamentoSheetOpen(true);
                                        }
                                      }}
-                                    />
-                                  );
-                                })()}
-                                <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                               </div>
-                          </div>
+                                     />
+                                   );
+                                 })()}
+                                </div>
+                           </div>
+                           <div className="mt-1.5">
+                             <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
+                           </div>
                        </div>
                      </div>
                    </div>
@@ -7931,12 +7933,14 @@ function MobileListContent({
                               setOrcamentoSheetOpen(true);
                             }
                           }}
-                         />
-                       );
-                     })()}
-                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
-                   </div>
-                </div>
+                          />
+                        );
+                      })()}
+                    </div>
+                 </div>
+                 <div className="mt-1.5">
+                   <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
+                 </div>
               </div>
             </div>
           </div>
