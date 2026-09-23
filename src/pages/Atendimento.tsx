@@ -3801,6 +3801,60 @@ ${recentMessages}
     setMobileView('main');
   };
 
+  // Mantém o cliente selecionado ao trocar de aba (quando ele existir na aba de destino)
+  const trocarAba = (novaAba: string) => {
+    if (novaAba === activeTab) { setActiveTab(novaAba); return; }
+    let clienteId: string | null = null;
+    if (activeTab === 'agenda') clienteId = (selectedTaskData as any)?.contact_id ?? null;
+    else if (activeTab === 'chat') {
+      const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation);
+      clienteId = (conv as any)?.customer_id ?? null;
+    } else if (activeTab === 'tel') clienteId = selectedTelContato?.id ?? null;
+    else if (activeTab === 'email') clienteId = contatoEmailSelecionado?.id ?? null;
+    else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? null;
+
+    setActiveTab(novaAba);
+    if (!clienteId) return;
+
+    if (novaAba === 'agenda') {
+      const task = filteredTasks.find((t: any) => t.contact_id === clienteId);
+      if (task) {
+        setSelectedTaskId(task.id);
+        setSelectedTaskData(task);
+        openDetailsPanel(setShowClientDetailsAgenda);
+      }
+    } else if (novaAba === 'chat') {
+      const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.customer_id === clienteId);
+      if (conv) {
+        setSelectedConversation(conv.id);
+        openDetailsPanel(setShowClientDetailsChat);
+      }
+    } else if (novaAba === 'tel') {
+      const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
+      if (contato) {
+        setSelectedTelContato(contato);
+        abrirFluxoComContato(contato);
+      }
+    } else if (novaAba === 'email') {
+      const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
+      if (contato) {
+        setSelectedEmailId(null);
+        setSelectedEmailData(null);
+        setShowComposeEmail(false);
+        setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || '' });
+        setContatoEmailDetalhe(contato);
+        openDetailsPanel(setShowClientDetailsEmail);
+      }
+    } else if (novaAba === 'orcamento') {
+      const orc = orcamentos.find((o: any) => o.cliente_id === clienteId);
+      if (orc) {
+        setSelectedOrcamentoId(orc.id);
+        setSelectedOrcamentoData(orc);
+        openDetailsPanel(setShowClientDetailsOrcamento);
+      }
+    }
+  };
+
   const abrirDiscador = async () => {
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -4914,7 +4968,7 @@ ${recentMessages}
                 orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
                 orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
                 orcamentos={orcamentos}
-                setActiveTab={setActiveTab}
+                setActiveTab={trocarAba}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
                 agendaViewMode={agendaViewMode}
@@ -5453,7 +5507,7 @@ ${recentMessages}
             </div>
 
         {/* Tabs - Modern Design with ExpandableTabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={trocarAba} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
           <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
             <ExpandableTabs
