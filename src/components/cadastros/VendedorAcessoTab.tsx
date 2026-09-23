@@ -39,7 +39,7 @@ export function VendedorAcessoTab({ vendedorEmpresaId, vendedorNome, vendedorEma
     setCarregando(true);
     const [{ data: gs }, { data: u }] = await Promise.all([
       supabase.from("grupos_acesso").select("id, nome").eq("estabelecimento_id", estabelecimentoId).order("nome"),
-      supabase.from("usuarios").select("*").eq("vendedor_empresa_id" as any, vendedorEmpresaId).maybeSingle(),
+      (supabase.from("usuarios") as any).select("*").eq("vendedor_empresa_id", vendedorEmpresaId).maybeSingle(),
     ]);
     setGrupos(gs || []);
     if (u) {

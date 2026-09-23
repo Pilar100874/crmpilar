@@ -76,8 +76,8 @@ export async function carregarEquipeVisivel(estabelecimentoId: string): Promise<
   // Representantes com acesso ao sistema (usuarios.vendedor_empresa_id)
   const empresasVend = [...gerentePorVendedorEmpresa.keys()];
   if (empresasVend.length) {
-    const { data: reps } = await supabase
-      .from("usuarios").select("id, vendedor_empresa_id").in("vendedor_empresa_id" as any, empresasVend);
+    const { data: reps } = await (supabase
+      .from("usuarios") as any).select("id, vendedor_empresa_id").in("vendedor_empresa_id", empresasVend);
     (reps || []).forEach((r: any) => {
       const gerente = gerentePorVendedorEmpresa.get(r.vendedor_empresa_id);
       if (gerente && r.id !== eu.id && !idsGerentes.has(r.id)) vendedorGerente.set(r.id, gerente);
