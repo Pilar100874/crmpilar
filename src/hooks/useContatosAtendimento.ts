@@ -11,6 +11,8 @@ export interface ContatoAtendimento {
   email: string;
   /** Texto auxiliar, ex.: título da tarefa da agenda */
   referencia?: string;
+  /** Empresas vinculadas ao contato para o painel unificado de detalhes. */
+  companies?: any[];
 }
 
 /**
@@ -30,7 +32,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
     try {
       const { data, error } = await supabase
         .from("customer_vinculos")
-        .select("customer_id, customers:customer_id ( id, nome, telefone, tel, email )")
+        .select("customer_id, customers:customer_id ( id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) ) )")
         .eq("usuario_id", usuarioId);
 
       if (error) throw error;
@@ -45,6 +47,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
           telefone: c.telefone || "",
           tel: c.tel || "",
           email: c.email || "",
+          companies: c.customer_empresas || [],
         });
       });
 

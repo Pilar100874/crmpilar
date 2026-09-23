@@ -3345,6 +3345,7 @@ ${recentMessages}
         tel: c.tel || "",
         email: c.email || "",
         referencia: task.title || "Tarefa agendada",
+        companies: c.customer_empresas || [],
       });
     });
     return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -5073,7 +5074,11 @@ ${recentMessages}
                   whatsapp={selectedTelContato.telefone}
                   email={selectedTelContato.email}
                   customerId={selectedTelContato.id}
-                  companies={[]}
+                  companies={selectedTelContato.companies || []}
+                  onCompaniesUpdated={async () => {
+                    const tarefa = todayTasks.find((item) => item.contact_id === selectedTelContato.id);
+                    if (tarefa) await loadSelectedTask(tarefa.id);
+                  }}
                   onSetGlobalFilter={setGlobalFilter}
                   onEditContato={(id) => setEditingContatoId(id)}
                   onCreateEmpresa={(customerId) => {
@@ -7089,7 +7094,11 @@ ${recentMessages}
             whatsapp={selectedTelContato.telefone}
             email={selectedTelContato.email}
             customerId={selectedTelContato.id}
-            companies={[]}
+            companies={selectedTelContato.companies || []}
+            onCompaniesUpdated={async () => {
+              const tarefa = todayTasks.find((item) => item.contact_id === selectedTelContato.id);
+              if (tarefa) await loadSelectedTask(tarefa.id);
+            }}
             onSetGlobalFilter={setGlobalFilter}
             onEditContato={(id) => setEditingContatoId(id)}
             onCreateEmpresa={(customerId) => {
