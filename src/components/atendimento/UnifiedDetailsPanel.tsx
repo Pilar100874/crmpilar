@@ -613,17 +613,25 @@ export function UnifiedDetailsPanel({
                   <div className="flex items-center gap-1">
                     {email ? (
                       <>
-                        <span className="text-xs truncate max-w-[120px]">{email}</span>
+                        <button
+                          type="button"
+                          onClick={() => novoEmailParaContato({ email, nome })}
+                          className="text-xs truncate max-w-[120px] text-primary hover:underline"
+                          title="Escrever e-mail para este cliente"
+                        >
+                          {email}
+                        </button>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                          onClick={() => window.open(`mailto:${email}`, '_blank')}
-                          title="Enviar email"
+                          onClick={() => novoEmailParaContato({ email, nome })}
+                          title="Escrever e-mail para este cliente"
                         >
                           <Mail className="w-3 h-3" />
                         </Button>
                       </>
+
                     ) : (
                       <span className="text-xs text-muted-foreground">-</span>
                     )}
