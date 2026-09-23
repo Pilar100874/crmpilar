@@ -63,7 +63,7 @@ import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpres
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { BotaoHistoricoCard } from "@/components/atendimento/BotaoHistoricoCard";
-import CustomerHistoryTimeline from "@/components/atendimento/agenda/CustomerHistoryTimeline";
+import { CustomerHistoryTimeline } from "@/components/atendimento/agenda/CustomerHistoryTimeline";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
