@@ -1,8 +1,9 @@
-import { Clock, Mail, MessageSquare, Phone, Users } from "lucide-react";
+import { Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
+import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 export type CanalContato = "tel" | "whatsapp" | "email" | "todos";
 
