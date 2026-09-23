@@ -4837,6 +4837,7 @@ ${recentMessages}
                 setEmailFolder={setEmailFolder}
                 setShowComposeEmail={setShowComposeEmail}
                 customerVinculos={customerVinculos}
+                vinculosCarregados={vinculosCarregados}
                 orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
                 orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
                 orcamentos={orcamentos}
@@ -7322,6 +7323,7 @@ interface MobileListContentProps {
     userSegments: Set<string>;
     customerSegments: Record<string, string[]>;
   };
+  vinculosCarregados?: boolean;
   orcamentosAbertosPerCustomer: Record<string, number>;
   orcamentosAbertosPerEmpresa: Record<string, number>;
   orcamentos: any[];
@@ -7385,6 +7387,7 @@ function MobileListContent({
   setEmailFolder,
   setShowComposeEmail,
   customerVinculos,
+  vinculosCarregados = false,
   orcamentosAbertosPerCustomer,
   orcamentosAbertosPerEmpresa,
   orcamentos,
