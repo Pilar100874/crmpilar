@@ -285,6 +285,12 @@ export default function Atendimento() {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("atendimento_usar_agenda") !== "false";
   });
+  // Visibilidade por equipe (vendedor / gerente / admin)
+  const [equipeVisivel, setEquipeVisivel] = useState<EquipeVisivel | null>(null);
+  const [escopoEquipe, setEscopoEquipe] = useState<string>("meus");
+  const idsVisiveis = useMemo(() => resolverIdsVisiveis(equipeVisivel, escopoEquipe), [equipeVisivel, escopoEquipe]);
+  const idsVisiveisRef = useRef<string[]>([]);
+  idsVisiveisRef.current = idsVisiveis;
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
