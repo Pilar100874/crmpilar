@@ -14,6 +14,7 @@ export interface ContatoChatEvento {
 }
 
 export interface ContatoEmailEvento {
+  customerId?: string;
   email?: string;
   nome?: string;
 }

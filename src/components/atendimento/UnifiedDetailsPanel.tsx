@@ -617,7 +617,7 @@ export function UnifiedDetailsPanel({
                       <>
                         <button
                           type="button"
-                          onClick={() => novoEmailParaContato({ email, nome })}
+                          onClick={() => novoEmailParaContato({ customerId, email, nome })}
                           className="text-xs truncate max-w-[120px] text-primary hover:underline"
                           title="Escrever e-mail para este cliente"
                         >
@@ -627,7 +627,7 @@ export function UnifiedDetailsPanel({
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                          onClick={() => novoEmailParaContato({ email, nome })}
+                          onClick={() => novoEmailParaContato({ customerId, email, nome })}
                           title="Escrever e-mail para este cliente"
                         >
                           <Mail className="w-3 h-3" />
