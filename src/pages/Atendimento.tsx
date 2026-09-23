@@ -6672,68 +6672,6 @@ ${recentMessages}
               onComplete={loadTodayTasks}
             />
           </div>
-        ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
-          /* Agenda Task Content */
-          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
-            <div className="px-4 py-3 border-b bg-gradient-to-r from-orange-50 to-transparent">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                    <CalendarIcon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm">{selectedTaskData.title}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedTaskData.contact_name} • {selectedTaskData.time || "Dia todo"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setShowClientDetailsAgenda(!showClientDetailsAgenda);
-                    }}
-                    className="h-8 w-8 p-0"
-                  >
-                    {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <Card className="p-4">
-                <h4 className="font-medium text-sm mb-2">Detalhes da Tarefa</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Data:</span>
-                    <span>{format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Horário:</span>
-                    <span>{selectedTaskData.time || "Dia todo"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status:</span>
-                    <Badge variant={selectedTaskData.status === "concluido" ? "default" : "secondary"}>
-                      {selectedTaskData.status === "concluido" ? "Concluído" : "Pendente"}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Origem:</span>
-                    <span>{selectedTaskData.origem}</span>
-                  </div>
-                </div>
-              </Card>
-              {selectedTaskData.description && (
-                <Card className="p-4">
-                  <h4 className="font-medium text-sm mb-2">Descrição</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedTaskData.description}</p>
-                </Card>
-              )}
-            </div>
-          </div>
         ) : activeTab === "email" ? (
           <AtendimentoEmailPanel
             contato={contatoEmailSelecionado}
