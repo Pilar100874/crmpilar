@@ -26,6 +26,8 @@ export function AtendimentoClientCard({
   children,
   className,
 }: AtendimentoClientCardProps) {
+  const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
+
   return (
     <div
       role={onClick ? "button" : undefined}
@@ -37,7 +39,8 @@ export function AtendimentoClientCard({
         onClick();
       }}
       className={cn(
-        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card pl-10 pr-4 py-3 shadow-sm transition-all",
+        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card pr-4 py-3 shadow-sm transition-all",
+        rotuloGenerico ? "pl-7" : "pl-10",
         selected
           ? "border-primary/40 bg-primary/10 shadow-md"
           : "border-border/70 hover:border-primary/30 hover:bg-muted/40 hover:shadow-md",
@@ -45,8 +48,18 @@ export function AtendimentoClientCard({
         className,
       )}
     >
-      <div className="absolute inset-y-0 left-0 flex w-8 items-center justify-center bg-primary text-primary-foreground">
-        <span className="max-w-[88px] -rotate-90 truncate whitespace-nowrap text-[10px] font-semibold">
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0 flex items-center justify-center rounded-l-xl bg-primary text-primary-foreground",
+          rotuloGenerico ? "w-5" : "w-8",
+        )}
+      >
+        <span
+          className={cn(
+            "-rotate-90 whitespace-nowrap font-semibold",
+            rotuloGenerico ? "text-[8px]" : "text-[10px]",
+          )}
+        >
           {sideLabel}
         </span>
       </div>

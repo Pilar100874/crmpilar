@@ -21,12 +21,9 @@ interface ConversaAgendaCardProps {
   onClick: () => void;
 }
 
-export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, onClick }: ConversaAgendaCardProps) {
+export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, onClick }: ConversaAgendaCardProps) {
   const nome = conversa.customer?.nome || "Cliente";
-  const diasAtraso = Number(dadosAgenda?.diasAtraso || 0);
-  const textoTempo = diasAtraso > 0
-    ? `${diasAtraso} ${diasAtraso === 1 ? "dia" : "dias"} atrasado`
-    : tempo;
+
 
   return (
     <AtendimentoClientCard
@@ -35,14 +32,7 @@ export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, tempo, 
       sideLabel={dadosAgenda?.responsavel || conversa.customerLinkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
       selected={selecionado}
       onClick={onClick}
-      indicators={
-        <>
-          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-            {textoTempo}
-          </span>
-          <AtendimentoCardIndicators {...dadosAgenda} />
-        </>
-      }
+      indicators={<AtendimentoCardIndicators {...dadosAgenda} />}
     >
       <AtendimentoHoraBadge hora={dadosAgenda?.time || ""} />
       {dadosAgenda?.origem && <AtendimentoInfoBadge>{dadosAgenda.origem}</AtendimentoInfoBadge>}
