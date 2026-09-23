@@ -116,6 +116,8 @@ export function ExpandableTabs({
             custom={selected === index}
             onClick={() => handleSelect(index, tabItem)}
             disabled={tabItem.disabled}
+            title={tabItem.title}
+            aria-label={tabItem.title}
             transition={transition}
             className={cn(
               "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
@@ -132,7 +134,7 @@ export function ExpandableTabs({
               )}
             </div>
             <AnimatePresence initial={false}>
-              {selected === index && (
+              {!hideTitles && selected === index && (
                 <motion.span
                   variants={spanVariants}
                   initial="initial"
