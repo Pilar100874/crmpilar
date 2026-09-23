@@ -5953,20 +5953,6 @@ ${recentMessages}
                            )}
                             {/* Stacked indicators in top-right corner */}
                             <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
-                              {task.diasAtraso > 0 && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
-                                        {task.diasAtraso}
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
                               {(() => {
                                 const customerEmail = task.customers?.email?.toLowerCase();
                                 const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
@@ -7883,20 +7869,6 @@ function MobileListContent({
                   )}
                   {/* Stacked indicators in top-right corner */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
-                    {task.diasAtraso > 0 && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
-                              {task.diasAtraso}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
                     {(() => {
                       const customerEmail = task.customers?.email?.toLowerCase();
                       const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;

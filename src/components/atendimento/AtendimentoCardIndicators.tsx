@@ -14,18 +14,12 @@ interface AtendimentoCardIndicatorsProps extends AtendimentoIndicatorData {
 
 /** Indicadores numéricos compartilhados pelos cartões de todas as abas do Atendimento. */
 export function AtendimentoCardIndicators({
-  diasAtraso = 0,
   emailsNaoLidos = 0,
   chatsPendentes = 0,
   orcamentosAbertos = 0,
   className,
 }: AtendimentoCardIndicatorsProps) {
   const indicadores = [
-    {
-      valor: diasAtraso,
-      classe: "bg-destructive text-destructive-foreground",
-      texto: `${diasAtraso} ${diasAtraso === 1 ? "dia atrasado" : "dias atrasados"}`,
-    },
     {
       valor: emailsNaoLidos,
       classe: "bg-primary text-primary-foreground",
