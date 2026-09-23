@@ -284,6 +284,8 @@ export default function Atendimento() {
   const [contatoEmailDetalhe, setContatoEmailDetalhe] = useState<any>(null);
   const [contatoOrcamentoDetalhe, setContatoOrcamentoDetalhe] = useState<any>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
+  // true quando a escrita de e-mail foi aberta embutida na aba E-mail (não deve virar popup ao trocar de aba)
+  const [composeEmailInline, setComposeEmailInline] = useState(false);
   const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
   const [composeEmailDefaults, setComposeEmailDefaults] = useState<{ to: string; subject: string; body: string }>({ to: '', subject: '', body: '' });
@@ -2200,6 +2202,7 @@ export default function Atendimento() {
     const email = data.email || '';
     setComposeEmailDefaults({ to: email, subject: '', body: '' });
     setComposeEmailMode('compose');
+    setComposeEmailInline(true);
     setShowComposeEmail(true);
     if (email) {
       toast.success(`E-mail pré-preenchido para ${data.nome || data.nome_fantasia || 'contato'}`);
@@ -4442,6 +4445,7 @@ ${recentMessages}
               ...prev,
               body: texto,
             }));
+            setComposeEmailInline(true);
             setShowComposeEmail(true);
           }
         } else {
@@ -4961,15 +4965,17 @@ ${recentMessages}
                   onCompose={() => {
                     setComposeEmailMode("compose");
                     setComposeEmailDefaults({ to: contatoEmailSelecionado?.email || "", subject: "", body: "" });
+                    setComposeEmailInline(true);
                     setShowComposeEmail(true);
                   }}
-                  onComposeClose={() => setShowComposeEmail(false)}
+                  onComposeClose={() => { setShowComposeEmail(false); setComposeEmailInline(false); }}
                   onSend={handleSendEmail}
                   composeMode={composeEmailMode}
                   composeDefaults={composeEmailDefaults}
                   estabelecimentoId={estabelecimentoId}
                   onReply={(email) => {
                     setComposeEmailMode("reply");
+                    setComposeEmailInline(true);
                     setComposeEmailDefaults({
                       to: email.from_email,
                       subject: email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject || ""}`,
@@ -4979,6 +4985,7 @@ ${recentMessages}
                   }}
                   onForward={(email) => {
                     setComposeEmailMode("forward");
+                    setComposeEmailInline(true);
                     setComposeEmailDefaults({
                       to: "",
                       subject: email.subject?.startsWith("Fwd:") || email.subject?.startsWith("Enc:") ? email.subject : `Enc: ${email.subject || ""}`,
@@ -5061,6 +5068,7 @@ ${recentMessages}
                   const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
                   setComposeEmailMode('reply');
                   setComposeEmailDefaults({ to: email.from_email, subject: replySubject, body: replyBody });
+                  setComposeEmailInline(true);
                   setShowComposeEmail(true);
                 }}
                 onForward={(email) => {
@@ -5068,6 +5076,7 @@ ${recentMessages}
                   const fwdBody = `\n\n---\nMensagem encaminhada:\nDe: ${email.from_email}\nData: ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}\nAssunto: ${email.subject || ''}\n\n${email.body || ''}`;
                   setComposeEmailMode('forward');
                   setComposeEmailDefaults({ to: '', subject: fwdSubject, body: fwdBody });
+                  setComposeEmailInline(true);
                   setShowComposeEmail(true);
                 }}
                 onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
@@ -5312,7 +5321,7 @@ ${recentMessages}
             onOpenChange={setShowNovoContatoDialog}
           />
           <ComposeEmailDialog
-            open={showComposeEmail && activeTab !== "email"}
+            open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
             onOpenChange={(open) => {
               if (!open && keepComposeEmailOpen) return;
               setShowComposeEmail(open);
@@ -5325,6 +5334,7 @@ ${recentMessages}
             estabelecimentoId={estabelecimentoId}
             onOpenConsultaEstoque={() => {
               setKeepComposeEmailOpen(true);
+              setComposeEmailInline(false);
               setShowComposeEmail(true);
               setShowConsultaEstoqueDialog(true);
             }}
@@ -6812,9 +6822,10 @@ ${recentMessages}
             onCompose={() => {
               setComposeEmailMode('compose');
               setComposeEmailDefaults({ to: contatoEmailSelecionado?.email || '', subject: '', body: '' });
+              setComposeEmailInline(true);
               setShowComposeEmail(true);
             }}
-            onComposeClose={() => setShowComposeEmail(false)}
+            onComposeClose={() => { setShowComposeEmail(false); setComposeEmailInline(false); }}
             onSend={handleSendEmail}
             composeMode={composeEmailMode}
             composeDefaults={composeEmailDefaults}
@@ -6833,6 +6844,7 @@ ${recentMessages}
               const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
               setComposeEmailMode('reply');
               setComposeEmailDefaults({ to: email.from_email, subject: replySubject, body: replyBody });
+              setComposeEmailInline(true);
               setShowComposeEmail(true);
             }}
             onForward={(email) => {
@@ -6840,6 +6852,7 @@ ${recentMessages}
               const fwdBody = `\n\n---\nMensagem encaminhada:\nDe: ${email.from_email}\nData: ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}\nAssunto: ${email.subject || ''}\n\n${email.body || ''}`;
               setComposeEmailMode('forward');
               setComposeEmailDefaults({ to: '', subject: fwdSubject, body: fwdBody });
+              setComposeEmailInline(true);
               setShowComposeEmail(true);
             }}
             toolsSlot={
@@ -7324,7 +7337,7 @@ ${recentMessages}
       </AlertDialog>
 
       <ComposeEmailDialog
-        open={showComposeEmail && activeTab !== "email"}
+        open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
         onOpenChange={(open) => {
           if (!open && keepComposeEmailOpen) return;
           setShowComposeEmail(open);
@@ -7337,6 +7350,7 @@ ${recentMessages}
         estabelecimentoId={estabelecimentoId}
         onOpenConsultaEstoque={() => {
           setKeepComposeEmailOpen(true);
+          setComposeEmailInline(false);
           setShowComposeEmail(true);
           setShowConsultaEstoqueDialog(true);
         }}
