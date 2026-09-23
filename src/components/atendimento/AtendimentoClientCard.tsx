@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { CalendarCheck, History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
-import { TituloCartao } from "@/lib/atendimento/tituloCartao";
+import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
 

@@ -5875,7 +5875,7 @@ ${recentMessages}
                       >
                         {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
                         <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
-                        {contact.taskTitle && <Badge variant="secondary"><TituloCartao titulo={contact.taskTitle} /></Badge>}
+                        {contact.taskTitle && <Badge variant="secondary">{parseTituloCartao(contact.taskTitle).nome}</Badge>}
                         {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
                       </AtendimentoClientCard>
                     ))}
@@ -8190,7 +8190,7 @@ function MobileListContent({
                   >
                     {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
                     <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
-                    {contact.taskTitle && <Badge variant="secondary"><TituloCartao titulo={contact.taskTitle} /></Badge>}
+                    {contact.taskTitle && <Badge variant="secondary">{parseTituloCartao(contact.taskTitle).nome}</Badge>}
                     {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
                   </AtendimentoClientCard>
                 ))}
