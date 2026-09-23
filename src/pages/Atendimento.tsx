@@ -6244,7 +6244,7 @@ ${recentMessages}
       <div className="relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
-          <div className="absolute inset-0 z-30 flex flex-col bg-background">
+          <div className="absolute inset-0 z-[110] flex flex-col bg-background">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">Histórico do cliente</p>
