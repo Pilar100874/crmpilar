@@ -106,7 +106,7 @@ export function FinalizarAtendimentoDialog({
     if (!contato) return;
     setSalvando(true);
     try {
-      await finalizarAtendimento({
+      const res = await finalizarAtendimento({
         contactId: contato.id,
         contactName: contato.nome,
         canal,
@@ -117,7 +117,7 @@ export function FinalizarAtendimentoDialog({
         tarefaAtualId,
         escolha,
       });
-      toast.success("Atendimento finalizado");
+      toast.success(res?.ajustada ? `Atendimento finalizado — próximo contato ajustado pelas regras do calendário para ${res.dataAjustada.toLocaleDateString("pt-BR")}` : "Atendimento finalizado");
       setFutura(null);
       onOpenChange(false);
       onFinalizado?.();

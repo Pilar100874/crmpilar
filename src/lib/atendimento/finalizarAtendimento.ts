@@ -48,6 +48,29 @@ async function resolverUsuarioId(usuarioId: string): Promise<string> {
   return data.id;
 }
 
+/**
+ * Ajusta a data do próximo contato conforme as regras do calendário
+ * (Configuração do calendário): nunca no passado/hoje e, com o bloqueio de
+ * finais de semana ativo, joga para o primeiro dia útil seguinte.
+ */
+export async function ajustarDataPelasRegras(data: Date, estabelecimentoId: string): Promise<Date> {
+  const { data: regras } = await (supabase as any)
+    .from("calendario_regras")
+    .select("tipo, ativa")
+    .eq("estabelecimento_id", estabelecimentoId);
+  const mapa: Record<string, boolean> = {};
+  (regras ?? []).forEach((r: any) => (mapa[r.tipo] = r.ativa));
+  let d = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  const amanha = new Date();
+  amanha.setHours(0, 0, 0, 0);
+  amanha.setDate(amanha.getDate() + 1);
+  if ((mapa.bloquear_datas_passadas ?? true) && d < amanha) d = amanha;
+  if (mapa.bloqueio_finais_semana ?? false) {
+    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
 export interface TarefaFutura {
   id: string;
   date: string;
@@ -146,7 +169,8 @@ export async function finalizarAtendimento(p: FinalizarParams) {
     tarefaId = nova.id;
   }
 
-  const proxima = format(p.proximaData, "yyyy-MM-dd");
+  const dataAjustada = await ajustarDataPelasRegras(p.proximaData, p.estabelecimentoId);
+  const proxima = format(dataAjustada, "yyyy-MM-dd");
 
   // 2) Registro do atendimento
   const { error: regErr } = await supabase.from("atendimento_registros").insert({
@@ -202,6 +226,7 @@ export async function finalizarAtendimento(p: FinalizarParams) {
 
   limparPendencia(p.contactId);
   notificarTarefasAlteradas();
+  return { dataAjustada, ajustada: proxima !== format(p.proximaData, "yyyy-MM-dd") };
 }
 
 /** Tira o cliente do fluxo da agenda, com motivo obrigatório. */
