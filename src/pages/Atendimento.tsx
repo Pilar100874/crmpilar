@@ -62,6 +62,7 @@ import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -5453,71 +5454,17 @@ ${recentMessages}
                     
                     {/* Conversas ativas da agenda */}
                     {agendaConversations.map((conv) => (
-                      <div
+                      <ConversaAgendaCard
                         key={conv.id}
+                        conversa={conv}
+                        dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
+                        selecionado={selectedConversation === conv.id}
+                        tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                         onClick={() => {
                           setSelectedConversation(conv.id);
                           openDetailsPanel(setShowClientDetailsChat);
                         }}
-                        className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
-                          selectedConversation === conv.id 
-                            ? "bg-primary/10 border-primary/40 shadow-md" 
-                            : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                        }`}
-                      >
-                        {/* Tarja lateral com nome do usuário vinculado */}
-                        <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary">
-                          <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                            {conv.customerLinkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || 'Meu Cliente'}
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-3 p-3 pl-10">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
-                              <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
-                                {conv.lastMessage?.created_at
-                                  ? getTimeAgo(conv.lastMessage.created_at)
-                                  : getTimeAgo(conv.updated_at)}
-                              </span>
-                            </div>
-                            <p className="text-sm font-medium text-muted-foreground truncate mb-1.5">{conv.customer?.nome || "Cliente"}</p>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <Badge variant="outline" className="gap-1 bg-background/70 text-[10px]">
-                                <MessageSquare className="h-3 w-3" />
-                                WhatsApp
-                              </Badge>
-                              {/* Badge de usuários vinculados extra */}
-                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
-                                <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                                  +{conv.customerLinkedUsers.length - 1} usuário{conv.customerLinkedUsers.length > 2 ? 's' : ''}
-                                </Badge>
-                              )}
-                              {conv.bot_active !== false && (
-                                <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
-                                  <Bot className="w-2.5 h-2.5 mr-0.5" />
-                                  BOT
-                                </Badge>
-                              )}
-                              {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                                <>
-                                  {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-card/50 dark:bg-card/50">
-                                      <Building2 className="w-2.5 h-2.5" />
-                                      {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
-                                    </Badge>
-                                  ))}
-                                  {conv.customerCompanies.length > 1 && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                      +{conv.customerCompanies.length - 1}
-                                    </Badge>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      />
                     ))}
 
                     {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
@@ -5580,71 +5527,17 @@ ${recentMessages}
                       </Badge>
                     </div>
                     {otherConversations.map((conv) => (
-                      <div
+                      <ConversaAgendaCard
                         key={conv.id}
+                        conversa={conv}
+                        dadosAgenda={dadosAgendaPorContato.get(conv.customer_id)}
+                        selecionado={selectedConversation === conv.id}
+                        tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                         onClick={() => {
                           setSelectedConversation(conv.id);
                           openDetailsPanel(setShowClientDetailsChat);
                         }}
-                        className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
-                          selectedConversation === conv.id 
-                            ? "bg-primary/10 border-primary/40 shadow-md" 
-                            : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                        }`}
-                      >
-                        {/* Tarja lateral com nome do usuário vinculado */}
-                        <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary">
-                          <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                            {conv.customerLinkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || 'Meu Cliente'}
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-3 p-3 pl-10">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className="font-bold text-base truncate">Chat - {conv.customer?.nome || "Cliente"}</span>
-                              <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
-                                {conv.lastMessage?.created_at
-                                  ? getTimeAgo(conv.lastMessage.created_at)
-                                  : getTimeAgo(conv.updated_at)}
-                              </span>
-                            </div>
-                            <p className="text-sm font-medium text-muted-foreground truncate mb-1.5">{conv.customer?.nome || "Cliente"}</p>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <Badge variant="outline" className="gap-1 bg-background/70 text-[10px]">
-                                <MessageSquare className="h-3 w-3" />
-                                WhatsApp
-                              </Badge>
-                              {/* Badge de usuários vinculados extra */}
-                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
-                                <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                                  +{conv.customerLinkedUsers.length - 1} usuário{conv.customerLinkedUsers.length > 2 ? 's' : ''}
-                                </Badge>
-                              )}
-                              {conv.bot_active !== false && (
-                                <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
-                                  <Bot className="w-2.5 h-2.5 mr-0.5" />
-                                  BOT
-                                </Badge>
-                              )}
-                              {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                                <>
-                                  {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-card/50 dark:bg-card/50">
-                                      <Building2 className="w-2.5 h-2.5" />
-                                      {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
-                                    </Badge>
-                                  ))}
-                                  {conv.customerCompanies.length > 1 && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                      +{conv.customerCompanies.length - 1}
-                                    </Badge>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      />
                     ))}
                   </>
                 )}
