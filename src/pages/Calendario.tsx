@@ -2396,8 +2396,9 @@ export default function Calendario() {
                       style={{ width: colPercent(column.width) }}
 
                     >
-                      <div className="flex items-center justify-between gap-2 pr-4">
-                        <span>{column.label.toUpperCase()}</span>
+                      <div className="flex min-w-0 items-center justify-between gap-1 pr-2">
+                        <span className="truncate">{column.label.toUpperCase()}</span>
+
                         {column.id !== 'actions' && column.id !== 'status' && (
                           <Button
                             variant="ghost"
