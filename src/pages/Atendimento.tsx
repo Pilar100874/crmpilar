@@ -5875,24 +5875,6 @@ ${recentMessages}
                   </Dialog>
                 </div>
 
-                {/* Toggle Details Button */}
-                <div className="ml-auto">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const newState = !showClientDetailsAgenda;
-                      setShowClientDetailsAgenda(newState);
-                      if (isTablet && newState && showConversationsList) {
-                        setShowConversationsList(false);
-                      }
-                    }}
-                    className="h-9 w-9 p-0 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                    title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
-                  >
-                    {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4 text-orange-600" /> : <ChevronLeft className="h-4 w-4 text-orange-600" />}
-                  </Button>
-                </div>
               </div>
             </div>
 
@@ -6769,6 +6751,21 @@ ${recentMessages}
                   <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Abrindo calendário...</div>}>
                     <ModuloCalendario />
                   </Suspense>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const newState = !showClientDetailsAgenda;
+                      setShowClientDetailsAgenda(newState);
+                      if (isTablet && newState && showConversationsList) {
+                        setShowConversationsList(false);
+                      }
+                    }}
+                    className="absolute top-2 right-2 z-20 h-7 w-7 p-0 rounded-full bg-card/90 border border-border shadow-sm hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                    title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
+                  >
+                    {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4 text-orange-600" /> : <ChevronLeft className="h-4 w-4 text-orange-600" />}
+                  </Button>
                 </div>
               )}
               {/* Desktop: inline wizard */}
