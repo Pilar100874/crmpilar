@@ -1,4 +1,4 @@
-import { marcarPendencia } from "@/lib/atendimento/finalizarAtendimento";
+import { marcarPendencia, lerPendencias } from "@/lib/atendimento/finalizarAtendimento";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -421,6 +421,10 @@ export function FluxoAtendimentoPanel({
   };
 
   const handleSkip = () => {
+    if (currentTask?.contact_id && lerPendencias().includes(currentTask.contact_id)) {
+      toast.error('Finalize este atendimento (o que foi conversado e próximo contato) antes de ir para o próximo.');
+      return;
+    }
     if (isLastTask) {
       toast.info('Fluxo finalizado');
       onClose();
