@@ -674,6 +674,56 @@ export function UnifiedDetailsPanel({
             )}
           </CollapsibleContent>
         </Collapsible>
+
+        {/* PARTE 4 - Extras - Colapsável */}
+        {(() => {
+          const empresaExtra = companies.find((c: any) => c?.empresas?.id)?.empresas;
+          const extraEmpresaId = empresaExtra?.id || empresaId;
+          const extraEmpresaNome = empresaExtra?.nome_fantasia || empresaExtra?.nome || empresaExtra?.company_fantasia || empresaExtra?.company_name || nome;
+          if (!extraEmpresaId) return null;
+          return (
+            <Collapsible open={extrasOpen} onOpenChange={setExtrasOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex-1 justify-between p-0 h-auto hover:bg-transparent w-full"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <span className="font-semibold text-sm">Extras</span>
+                  </div>
+                  {extrasOpen ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => abrirExtrasDaEmpresa({ tipo: "localizacao", empresaId: extraEmpresaId, empresaNome: extraEmpresaNome })}
+                  >
+                    <MapPin className="w-3.5 h-3.5 mr-2 text-primary" />
+                    Ver localização
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => abrirExtrasDaEmpresa({ tipo: "qualificacao", empresaId: extraEmpresaId, empresaNome: extraEmpresaNome })}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 mr-2 text-primary" />
+                    Ver qualificação
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })()}
       </div>
 
       {/* Dialogs */}
