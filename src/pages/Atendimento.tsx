@@ -1441,7 +1441,7 @@ export default function Atendimento() {
 
       if (empresaVinculosData) {
         empresaVinculosData.forEach(v => {
-          if (v.usuario_id === currentUsuarioId) {
+          if (v.usuario_id && idsDono.has(v.usuario_id)) {
             linkedToUser.add(v.empresa_id);
           }
           if (v.segmento_id) {
@@ -1498,7 +1498,7 @@ export default function Atendimento() {
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
         .select('*')
-        .eq('user_id', usuarioData.id)
+        .in('user_id', idsVisiveisRef.current.length ? idsVisiveisRef.current : [usuarioData.id])
         .eq('date', dateStr);
 
       if (error) {
@@ -4950,6 +4950,7 @@ ${recentMessages}
                   aria-label="Usar agenda"
                 />
               </div>
+              {seletorEquipe && <div className="flex-shrink-0 px-3 pb-2 border-b border-border/50 bg-card">{seletorEquipe}</div>}
               <div className="flex-1 min-h-0">
               <MobileListContent
 
@@ -5601,6 +5602,7 @@ ${recentMessages}
                     aria-label="Usar agenda"
                   />
                 </div>
+                {seletorEquipe}
               </div>
             </div>
 
