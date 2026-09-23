@@ -6261,6 +6261,30 @@ ${recentMessages}
                 contactName={historicoCliente.nome}
                 estabelecimentoId={estabelecimentoId}
                 isFullView
+                onEventClick={(event: any) => {
+                  const id = event.originalId;
+                  if (!id) return;
+                  setHistoricoCliente(null);
+                  setMobileView('main');
+                  if (event.type === 'chat') {
+                    setActiveTab('chat');
+                    setSelectedConversation(id);
+                  } else if (event.type === 'orcamento') {
+                    setActiveTab('orcamento');
+                    setSelectedOrcamentoId(id);
+                    const orc = orcamentos.find((o: any) => o.id === id);
+                    if (orc) setSelectedOrcamentoData(orc);
+                    setOrcamentoSheetOpen(true);
+                  } else if (event.type === 'email') {
+                    setActiveTab('email');
+                    setSelectedEmailId(id);
+                  } else if (event.type === 'tarefa' || event.type === 'atendimento') {
+                    setActiveTab('agenda');
+                    setSelectedTaskId(id);
+                    const t = todayTasks.find((x: any) => x.id === id);
+                    if (t) setSelectedTaskData(t);
+                  }
+                }}
               />
             </div>
           </div>
