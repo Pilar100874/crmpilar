@@ -104,6 +104,8 @@ export function OrcamentosEmpresaList({
                 onSelectEmpresa?.(grupo.orcamentos[0]);
               }}
               indicators={<><AtendimentoCardIndicators diasAtraso={diasAtraso} emailsNaoLidos={emailsNaoLidosPerEmail[email] || 0} chatsPendentes={chatsNaoLidosPerPhone[telefone] || 0} orcamentosAbertos={grupo.orcamentos.length} />{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
+              historicoClienteId={clienteId}
+              historicoClienteNome={grupo.contato}
             >
               <AtendimentoHoraBadge hora={tarefaAgenda?.time || ""} />
               {tarefaAgenda?.origem && <AtendimentoInfoBadge>{tarefaAgenda.origem}</AtendimentoInfoBadge>}
