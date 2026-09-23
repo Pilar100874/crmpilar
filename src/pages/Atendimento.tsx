@@ -6315,6 +6315,15 @@ ${recentMessages}
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
       <div className="relative flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
+        {/* Extras da empresa (localização/qualificação) em tela central */}
+        {extrasEmpresa && (
+          <EmpresaExtrasOverlay
+            tipo={extrasEmpresa.tipo}
+            empresaId={extrasEmpresa.empresaId}
+            empresaNome={extrasEmpresa.empresaNome}
+            onClose={() => setExtrasEmpresa(null)}
+          />
+        )}
         {/* Histórico do cliente em tela central - ao fechar volta para a tela anterior */}
         {historicoCliente && estabelecimentoId && (
           <div className="absolute inset-0 z-[110] flex flex-col bg-background">
