@@ -5959,6 +5959,8 @@ ${recentMessages}
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
                         setShowClientDetailsAgenda(true);
+                        setAgendaViewMode('default');
+                        setDiscadorModo(null);
                       }}
                    >
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
