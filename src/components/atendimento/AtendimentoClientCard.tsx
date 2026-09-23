@@ -30,6 +30,8 @@ export function AtendimentoClientCard({
   indicators,
   children,
   className,
+  historicoClienteId,
+  historicoClienteNome,
 }: AtendimentoClientCardProps) {
   const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
 
