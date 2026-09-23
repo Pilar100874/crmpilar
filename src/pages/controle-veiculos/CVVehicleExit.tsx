@@ -28,6 +28,7 @@ import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
+const RASCUNHO_CHAVE = "cv-saida";
 
 export default function CVVehicleExit() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
