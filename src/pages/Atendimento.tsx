@@ -45,8 +45,6 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 
 const ModuloCalendario = lazy(() => import("./Calendario"));
-import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
-import { EmailPanel } from "@/components/email/EmailPanel";
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 import type { Atendente } from "@/types/atendimento";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
@@ -61,6 +59,7 @@ import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAten
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
+import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -260,7 +259,7 @@ export default function Atendimento() {
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
-  const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; email: string } | null>(null);
+  const [contatoEmailSelecionado, setContatoEmailSelecionado] = useState<{ id: string; nome: string; email: string } | null>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
@@ -4685,6 +4684,15 @@ ${recentMessages}
                 handleNextDay={handleNextDay}
                 handleToday={handleToday}
                 filteredEmails={filteredEmails}
+                contatosEmail={contatosBase}
+                contatoEmailSelecionadoId={contatoEmailSelecionado?.id ?? null}
+                onSelecionarContatoEmail={(contato) => {
+                  setSelectedEmailId(null);
+                  setSelectedEmailData(null);
+                  setShowComposeEmail(false);
+                  setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
+                  setMobileView("main");
+                }}
                 selectedEmailId={selectedEmailId}
                 setSelectedEmailId={(id) => {
                   setSelectedEmailId(id);
@@ -4760,7 +4768,61 @@ ${recentMessages}
                 mobileView === "main" ? "translate-x-0" : mobileView === "list" ? "translate-x-full" : "-translate-x-full"
               }`}
             >
-              <MobileMainContent
+              {activeTab === "email" ? (
+                <AtendimentoEmailPanel
+                  contato={contatoEmailSelecionado}
+                  emails={filteredEmails}
+                  selectedEmailId={selectedEmailId}
+                  selectedEmailData={selectedEmailData}
+                  emailFolder={emailFolder}
+                  onFolderChange={(folder) => {
+                    setEmailFolder(folder);
+                    setSelectedEmailId(null);
+                    setSelectedEmailData(null);
+                  }}
+                  onEmailSelect={(id, data) => {
+                    setSelectedEmailId(id);
+                    setSelectedEmailData(data);
+                  }}
+                  onEmailClose={() => {
+                    setSelectedEmailId(null);
+                    setSelectedEmailData(null);
+                  }}
+                  onRefresh={() => loadUserEmails()}
+                  composing={showComposeEmail}
+                  onCompose={() => {
+                    setComposeEmailMode("compose");
+                    setComposeEmailDefaults({ to: contatoEmailSelecionado?.email || "", subject: "", body: "" });
+                    setShowComposeEmail(true);
+                  }}
+                  onComposeClose={() => setShowComposeEmail(false)}
+                  onSend={handleSendEmail}
+                  composeMode={composeEmailMode}
+                  composeDefaults={composeEmailDefaults}
+                  estabelecimentoId={estabelecimentoId}
+                  onReply={(email) => {
+                    setComposeEmailMode("reply");
+                    setComposeEmailDefaults({
+                      to: email.from_email,
+                      subject: email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject || ""}`,
+                      body: `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ""}`,
+                    });
+                    setShowComposeEmail(true);
+                  }}
+                  onForward={(email) => {
+                    setComposeEmailMode("forward");
+                    setComposeEmailDefaults({
+                      to: "",
+                      subject: email.subject?.startsWith("Fwd:") || email.subject?.startsWith("Enc:") ? email.subject : `Enc: ${email.subject || ""}`,
+                      body: `\n\n---\nMensagem encaminhada:\nDe: ${email.from_email}\nData: ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}\nAssunto: ${email.subject || ""}\n\n${email.body || ""}`,
+                    });
+                    setShowComposeEmail(true);
+                  }}
+                  onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+                  pendingAppendText={pendingEmailAppendText}
+                  onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
+                />
+              ) : <MobileMainContent
                 activeTab={activeTab}
                 selectedConversation={selectedConversation}
                 selectedConv={selectedConv}
@@ -4839,7 +4901,7 @@ ${recentMessages}
                   setShowComposeEmail(true);
                 }}
                 onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
-              />
+              />}
             </div>
 
             {/* Detalhes */}
@@ -5054,7 +5116,7 @@ ${recentMessages}
             onOpenChange={setShowNovoContatoDialog}
           />
           <ComposeEmailDialog
-            open={showComposeEmail}
+            open={showComposeEmail && activeTab !== "email"}
             onOpenChange={(open) => {
               if (!open && keepComposeEmailOpen) return;
               setShowComposeEmail(open);
@@ -5233,7 +5295,9 @@ ${recentMessages}
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
               <ContatosCanalList
-                contatos={contatosBase}
+                contatos={contatosBase.filter((contato) =>
+                  !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
+                )}
                 canal="tel"
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
@@ -5241,36 +5305,22 @@ ${recentMessages}
             </div>
           </TabsContent>
           
-          {/* Email Folders - Vertical list below tabs when email is active */}
+          {/* E-mail: contatos na coluna esquerda */}
           {activeTab === "email" && (
-            <div className="flex-1 overflow-y-auto">
-              <EmailFolderSidebar
-                emails={userEmails}
-                activeFolder={emailFolder}
-                onFolderChange={(folder) => {
-                  setEmailFolder(folder);
+            <div className="flex-1 overflow-y-auto px-2 py-2">
+              <ContatosCanalList
+                contatos={contatosBase}
+                canal="email"
+                titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
+                vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
+                selecionadoId={contatoEmailSelecionado?.id ?? null}
+                onSelecionar={(contato) => {
                   setSelectedEmailId(null);
                   setSelectedEmailData(null);
+                  setShowComposeEmail(false);
+                  setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
                 }}
-                onComposeClick={() => setShowComposeEmail(true)}
-                onRefresh={() => loadUserEmails()}
               />
-              <div className="px-2 py-2 border-t border-border/30">
-                <ContatosCanalList
-                  contatos={contatosBase}
-                  canal="email"
-                  titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
-                  vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
-                  selecionadoId={contatoEmailSelecionado?.id ?? null}
-                  onSelecionar={(contato) => {
-                    setSelectedEmailId(null);
-                    setSelectedEmailData(null);
-                    setContatoEmailSelecionado((atual) =>
-                      atual?.id === contato.id ? null : { id: contato.id, email: contato.email || "" }
-                    );
-                  }}
-                />
-              </div>
             </div>
           )}
 
@@ -6848,8 +6898,8 @@ ${recentMessages}
             </div>
           </div>
         ) : activeTab === "email" ? (
-          /* Email Layout - Modern Panel */
-          <EmailPanel
+          <AtendimentoEmailPanel
+            contato={contatoEmailSelecionado}
             emails={filteredEmails}
             selectedEmailId={selectedEmailId}
             selectedEmailData={selectedEmailData}
@@ -6867,11 +6917,17 @@ ${recentMessages}
               setSelectedEmailId(null);
               setSelectedEmailData(null);
             }}
-            onComposeClick={() => {
+            composing={showComposeEmail}
+            onCompose={() => {
               setComposeEmailMode('compose');
-              setComposeEmailDefaults({ to: '', subject: '', body: '' });
+              setComposeEmailDefaults({ to: contatoEmailSelecionado?.email || '', subject: '', body: '' });
               setShowComposeEmail(true);
             }}
+            onComposeClose={() => setShowComposeEmail(false)}
+            onSend={handleSendEmail}
+            composeMode={composeEmailMode}
+            composeDefaults={composeEmailDefaults}
+            estabelecimentoId={estabelecimentoId}
             onRefresh={async () => {
               await loadUserEmails();
               // Também recarregar o email selecionado para atualizar dados de tracking
@@ -6880,7 +6936,6 @@ ${recentMessages}
               }
             }}
             onToggleDetails={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
-            showDetailsToggle={!!selectedEmailId}
             onReply={(email) => {
               const replySubject = email.subject?.startsWith('Re:') ? email.subject : `Re: ${email.subject || ''}`;
               const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
@@ -6902,6 +6957,9 @@ ${recentMessages}
                 tabType="email"
               />
             }
+            onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+            pendingAppendText={pendingEmailAppendText}
+            onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20 relative">
@@ -7275,7 +7333,7 @@ ${recentMessages}
       </AlertDialog>
 
       <ComposeEmailDialog
-        open={showComposeEmail}
+        open={showComposeEmail && activeTab !== "email"}
         onOpenChange={(open) => {
           if (!open && keepComposeEmailOpen) return;
           setShowComposeEmail(open);
@@ -7377,6 +7435,9 @@ interface MobileListContentProps {
   handleNextDay: () => void;
   handleToday: () => void;
   filteredEmails: any[];
+  contatosEmail: ContatoAtendimento[];
+  contatoEmailSelecionadoId: string | null;
+  onSelecionarContatoEmail: (contato: ContatoAtendimento) => void;
   selectedEmailId: string | null;
   setSelectedEmailId: (id: string | null) => void;
   filteredOrcamentos: any[];
@@ -7439,6 +7500,9 @@ function MobileListContent({
   handleNextDay,
   handleToday,
   filteredEmails,
+  contatosEmail,
+  contatoEmailSelecionadoId,
+  onSelecionarContatoEmail,
   selectedEmailId,
   setSelectedEmailId,
   filteredOrcamentos,
@@ -7499,7 +7563,7 @@ function MobileListContent({
                 {activeTab === "chat" && `${filteredConversations.length} conversas`}
                 {activeTab === "agenda" && format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
                 {activeTab === "tel" && `${contatosTelefone.filter((contato) => contato.tel.trim() !== "").length} contatos`}
-                {activeTab === "email" && `${filteredEmails.length} emails`}
+                {activeTab === "email" && `${contatosEmail.filter((contato) => contato.email.trim() !== "").length} contatos`}
                 {activeTab === "orcamento" && `${filteredOrcamentos.length} orçamentos`}
               </p>
             </div>
@@ -7655,64 +7719,9 @@ function MobileListContent({
         )}
 
         {activeTab === "email" && (
-          <div className="space-y-2">
-            {/* Botão Novo Email */}
-            <Button 
-              onClick={() => setShowComposeEmail(true)}
-              className="w-full h-10 gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium text-sm shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Novo E-mail
-            </Button>
-            
-            {/* Pastas Unificadas */}
-            <div className="bg-white dark:bg-muted/30 rounded-xl border border-border/40 p-1.5">
-              <div className="flex flex-wrap gap-1">
-                {[
-                  { value: 'inbox', label: 'Entrada', icon: Inbox },
-                  { value: 'starred', label: 'Favoritos', icon: Star },
-                  { value: 'sent', label: 'Enviados', icon: Send },
-                  { value: 'drafts', label: 'Rascunhos', icon: FileText },
-                  { value: 'archive', label: 'Arquivo', icon: Archive },
-                  { value: 'trash', label: 'Lixeira', icon: Trash2 },
-                ].map((folder) => (
-                  <button
-                    key={folder.value}
-                    onClick={() => setEmailFolder(folder.value)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex-1 min-w-[calc(33%-4px)] justify-center",
-                      emailFolder === folder.value
-                        ? "bg-orange-500 text-white shadow-sm"
-                        : "text-muted-foreground hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:text-orange-600"
-                    )}
-                  >
-                    <folder.icon className="w-3.5 h-3.5" />
-                    <span className="truncate">{folder.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Busca e Filtro */}
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar e-mails..."
-                  className="pl-10 h-9 rounded-lg text-sm bg-white dark:bg-muted/30 border-border/40"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onRefreshEmails}
-                className="h-9 w-9 p-0 rounded-lg border-orange-200 hover:bg-orange-50"
-              >
-                <RefreshCw className="w-4 h-4 text-orange-600" />
-              </Button>
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Buscar contatos..." className="h-10 pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         )}
 
@@ -8067,31 +8076,18 @@ function MobileListContent({
           </div>
         );})}
 
-        {activeTab === "email" && filteredEmails.map((email) => (
-          <div
-            key={email.id}
-            onClick={() => setSelectedEmailId(email.id)}
-            className={`p-3 rounded-xl cursor-pointer transition-all ${
-            selectedEmailId === email.id
-              ? "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800"
-              : "bg-white/60 dark:bg-card/60 hover:bg-white dark:hover:bg-card border border-transparent"
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-              !email.read ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 text-primary"
-            }`}>
-                {email.read ? <MailOpen className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm truncate ${!email.read ? 'font-bold' : 'font-medium text-muted-foreground'}`}>
-                  {email.from_email}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">{email.subject}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+        {activeTab === "email" && (
+          <ContatosCanalList
+            contatos={contatosEmail.filter((contato) =>
+              !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
+            )}
+            canal="email"
+            titulo="Contatos com e-mail"
+            vazioTexto="Nenhum contato com e-mail"
+            selecionadoId={contatoEmailSelecionadoId}
+            onSelecionar={onSelecionarContatoEmail}
+          />
+        )}
 
         {activeTab === "orcamento" && filteredOrcamentos
           .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')

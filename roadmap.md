@@ -1,3 +1,6 @@
+# Atendimento
+- [x] Reorganizar a aba E-mail com contatos à esquerda e mensagens/escrita à direita
+
 # Roadmap
 
 - [x] Bloquear módulos internos sem permissão Ver explícita.

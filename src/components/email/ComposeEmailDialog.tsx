@@ -34,6 +34,7 @@ interface ComposeEmailDialogProps {
   onOpenConsultaEstoque?: () => void;
   pendingAppendText?: string | null;
   onPendingAppendConsumed?: () => void;
+  embedded?: boolean;
 }
 
 export function ComposeEmailDialog({
@@ -48,6 +49,7 @@ export function ComposeEmailDialog({
   onOpenConsultaEstoque,
   pendingAppendText,
   onPendingAppendConsumed,
+  embedded = false,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
@@ -165,6 +167,59 @@ export function ComposeEmailDialog({
         return <Paperclip className="h-4 w-4 text-muted-foreground" />;
     }
   };
+
+  const composerContent = (
+    <div className={embedded ? "flex h-full min-h-0 flex-col bg-background" : undefined}>
+      {embedded && (
+        <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Send className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold text-foreground">{getTitle()}</h2>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleClose} className="h-8 w-8" title="Fechar escrita">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      <div className={embedded ? "flex-1 space-y-4 overflow-y-auto p-4" : "space-y-4 py-4"}>
+        <div className="space-y-2">
+          <Label htmlFor="to">Para</Label>
+          <Input id="to" type="email" placeholder="destinatario@email.com" value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="subject">Assunto</Label>
+          <Input id="subject" placeholder="Assunto do e-mail" value={subject} onChange={(e) => setSubject(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="body">Mensagem</Label>
+          <Textarea id="body" placeholder="Escreva sua mensagem..." value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[240px] resize-none" />
+        </div>
+        {attachments.length > 0 && (
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2"><Paperclip className="h-4 w-4" />Anexos ({attachments.length})</Label>
+            <div className="flex flex-wrap gap-2 rounded-lg border border-border/50 bg-muted/50 p-3">
+              {attachments.map((attachment) => (
+                <div key={attachment.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-1.5">
+                  {getAttachmentIcon(attachment.type)}
+                  <span className="max-w-[150px] truncate text-sm font-medium">{attachment.name}</span>
+                  <Button variant="ghost" size="icon" onClick={() => handleRemoveAttachment(attachment.id)} className="h-6 w-6" title="Remover anexo"><X className="h-3.5 w-3.5" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className={embedded ? "flex items-center justify-between border-t border-border/50 p-4" : "flex items-center justify-between"}>
+        <EmailToolsMenu estabelecimentoId={estabelecimentoId} onInsertText={handleInsertText} onAddAttachment={handleAddAttachment} onToolAction={(toolId) => toolId === "tool-stock" && onOpenConsultaEstoque?.()} disabled={sending} recipientEmail={to} />
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleClose}><X className="mr-2 h-4 w-4" />Cancelar</Button>
+          <Button onClick={handleSend} disabled={sending}>{sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Enviar</Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (embedded) return open ? composerContent : null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange} modal={false}>
