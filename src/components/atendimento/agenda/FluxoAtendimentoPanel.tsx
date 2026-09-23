@@ -637,53 +637,14 @@ export function FluxoAtendimentoPanel({
             </div>
           )}
 
-          {/* Tipo de contato - compacto inline - filtrado por dados disponíveis */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Tipo de contato</label>
-            <div className="flex gap-1.5">
-              {ALL_TIPOS_CONTATO
-                .filter(tipo => {
-                  // Sempre mostrar presencial e telefone
-                  if (tipo.requiresData === null) return true;
-                  // Mostrar apenas se o cliente tiver o dado requerido
-                  if (tipo.requiresData === 'email') return !!currentTask?.customers?.email;
-                  if (tipo.requiresData === 'telefone') return !!currentTask?.customers?.telefone;
-                  return false;
-                })
-                .map(tipo => {
-                const isSelected = tipoContato === tipo.id;
-                const IconComponent = tipo.icon;
-                const hasResource = hasContactResource(tipo.id);
-                return (
-                  <button
-                    key={tipo.id}
-                    onClick={() => {
-                      setTipoContato(tipo.id);
-                      // Abrir área de contato automaticamente se tiver recurso
-                      if (hasResource) {
-                        setShowContactArea(true);
-                      } else {
-                        setShowContactArea(false);
-                      }
-                    }}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all relative",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "bg-muted/50 border border-border/60 hover:border-primary/40 hover:bg-primary/5"
-                    )}
-                  >
-                    <IconComponent className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{tipo.label}</span>
-                    {/* Indicador de recurso disponível */}
-                    {hasResource && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-green-500" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Tipo de contato definido pela aba (Tel = Telefone, Visita = Presencial) */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium">Tipo de contato:</span>
+            <span className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+              {tipoContato === 'presencial' ? 'Visita' : 'Telefone'}
+            </span>
           </div>
+
 
           {/* Área de contato expandível - Email/WhatsApp com componentes completos */}
           {(tipoContato === 'email' || tipoContato === 'whatsapp') && (
