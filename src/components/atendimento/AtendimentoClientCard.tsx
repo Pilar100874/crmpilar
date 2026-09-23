@@ -39,8 +39,7 @@ export function AtendimentoClientCard({
         onClick();
       }}
       className={cn(
-        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card pr-4 py-3 shadow-sm transition-all",
-        rotuloGenerico ? "pl-7" : "pl-10",
+        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card p-3 shadow-sm transition-all",
         selected
           ? "border-primary/40 bg-primary/10 shadow-md"
           : "border-border/70 hover:border-primary/30 hover:bg-muted/40 hover:shadow-md",
