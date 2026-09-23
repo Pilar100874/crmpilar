@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.criar_tarefa_ao_vincular_empresa() FROM PUBLIC, anon, authenticated;
