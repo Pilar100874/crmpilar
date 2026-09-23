@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
