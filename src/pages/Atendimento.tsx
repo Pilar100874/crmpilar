@@ -4684,6 +4684,15 @@ ${recentMessages}
                 handleNextDay={handleNextDay}
                 handleToday={handleToday}
                 filteredEmails={filteredEmails}
+                contatosEmail={contatosBase}
+                contatoEmailSelecionadoId={contatoEmailSelecionado?.id ?? null}
+                onSelecionarContatoEmail={(contato) => {
+                  setSelectedEmailId(null);
+                  setSelectedEmailData(null);
+                  setShowComposeEmail(false);
+                  setContatoEmailSelecionado({ id: contato.id, nome: contato.nome, email: contato.email || "" });
+                  setMobileView("main");
+                }}
                 selectedEmailId={selectedEmailId}
                 setSelectedEmailId={(id) => {
                   setSelectedEmailId(id);
@@ -5107,7 +5116,7 @@ ${recentMessages}
             onOpenChange={setShowNovoContatoDialog}
           />
           <ComposeEmailDialog
-            open={showComposeEmail}
+            open={showComposeEmail && activeTab !== "email"}
             onOpenChange={(open) => {
               if (!open && keepComposeEmailOpen) return;
               setShowComposeEmail(open);

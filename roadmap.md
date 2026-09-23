@@ -1,5 +1,5 @@
 # Atendimento
-- [ ] Reorganizar a aba E-mail com contatos à esquerda e mensagens/escrita à direita
+- [x] Reorganizar a aba E-mail com contatos à esquerda e mensagens/escrita à direita
 
 # Roadmap
 
