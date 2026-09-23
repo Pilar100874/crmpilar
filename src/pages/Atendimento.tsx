@@ -4810,10 +4810,10 @@ ${recentMessages}
                 agendaContactsWithoutConversation={contatosSemConversa}
                 contatosTelefone={contatosComIndicadores}
                 contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
-                onSelecionarContatoTelefone={(contato) => {
-                  setSelectedTelContato(contato);
-                  openDetailsPanel(setShowClientDetailsFluxo);
-                }}
+                 onSelecionarContatoTelefone={(contato) => {
+                   setSelectedTelContato(contato);
+                   abrirFluxoComContato(contato);
+                 }}
                 onStartConversation={async (contactId, nome, telefone) => {
                   // Criar conversa para o contato da agenda
                   await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
@@ -5489,10 +5489,10 @@ ${recentMessages}
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
                 selecionadoId={selectedTelContato?.id ?? null}
-                onSelecionar={(contato) => {
-                  setSelectedTelContato(contato);
-                  openDetailsPanel(setShowClientDetailsFluxo);
-                }}
+                 onSelecionar={(contato) => {
+                   setSelectedTelContato(contato);
+                   abrirFluxoComContato(contato);
+                 }}
               />
             </div>
           </TabsContent>
