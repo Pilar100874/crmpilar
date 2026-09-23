@@ -25,6 +25,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { CVMaintenanceAlert } from "@/components/cv/CVMaintenanceAlert";
 import { CVGrupoFilter } from "@/components/cv/CVGrupoFilter";
 import { useCvGrupoFilter, filtrarPorGrupo } from "@/lib/cv/grupoFilter";
+import { lerRascunhoVistoria, limparRascunhoVistoria, useRascunhoVistoria } from "@/lib/cv/rascunhoVistoria";
 
 import { carregarAlertasManutencao, gerarOrdemAgrupada, type AlertaManutencao } from "@/lib/cv/manutencao";
 
