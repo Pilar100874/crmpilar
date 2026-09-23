@@ -2221,7 +2221,15 @@ export default function Atendimento() {
       setHistoricoCliente({ customerId: detalhe.customerId, nome: detalhe.nome });
       setMobileView('main');
     });
-    const pararEmail = ouvirNovoEmailParaContato(({ email, nome }) => {
+    const pararEmail = ouvirNovoEmailParaContato(({ customerId, email, nome }) => {
+      // Seleciona o contato na aba E-mail para abrir a escrita embutida (sem popup)
+      setContatoEmailSelecionado({
+        id: customerId || `email-${email || 'novo'}`,
+        nome: nome || email || 'Contato',
+        email: email || '',
+      });
+      setSelectedEmailId(null);
+      setSelectedEmailData(null);
       setActiveTab('email');
       setMobileView('main');
       void handleCreateEmailFromContact('customer', { email, nome });
