@@ -1446,7 +1446,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
-  const handleAdicionarUsuariosVinculo = async () => {
+  const [confirmVinculoOpen, setConfirmVinculoOpen] = useState(false);
+
+  const handleAdicionarUsuariosVinculo = () => {
+    if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
+      toast.error("Selecione pelo menos um usuário");
+      return;
+    }
+    setConfirmVinculoOpen(true);
+  };
+
+  const executarVinculoUsuarios = async () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
       toast.error("Selecione pelo menos um usuário");
       return;
