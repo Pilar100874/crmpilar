@@ -255,6 +255,7 @@ export default function CVVehicleEntry() {
 
     setBusy(false);
     toast.success("Entrada registrada com sucesso!");
+    limparRascunhoVistoria(RASCUNHO_CHAVE);
     setSelected(null);
     setStep(0);
     setPhotos([]);
