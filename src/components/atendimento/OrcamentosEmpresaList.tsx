@@ -18,6 +18,7 @@ interface OrcamentosEmpresaListProps {
 interface GrupoEmpresa {
   id: string;
   nome: string;
+  contato: string;
   orcamentos: any[];
 }
 
@@ -37,7 +38,8 @@ export function OrcamentosEmpresaList({
         || orcamento.empresas?.nome
         || orcamento.customers?.nome
         || "Sem empresa";
-      const grupo = mapa.get(empresaId) || { id: empresaId, nome, orcamentos: [] };
+      const contato = orcamento.customers?.nome || nome;
+      const grupo = mapa.get(empresaId) || { id: empresaId, nome, contato, orcamentos: [] };
       grupo.orcamentos.push(orcamento);
       mapa.set(empresaId, grupo);
     });
@@ -80,7 +82,7 @@ export function OrcamentosEmpresaList({
           <div key={grupo.id} className="space-y-1.5">
             <AtendimentoClientCard
               title={`Orçamentos - ${grupo.nome}`}
-              customerName={grupo.nome}
+              customerName={grupo.contato}
               sideLabel="Meu Cliente"
               onClick={() => alternarGrupo(grupo.id)}
               indicators={<><Badge className="min-w-7 justify-center px-1.5">{grupo.orcamentos.length}</Badge>{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
@@ -92,6 +94,11 @@ export function OrcamentosEmpresaList({
               <Badge variant="secondary">
                 {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(total)}
               </Badge>
+              {grupo.orcamentos[0]?.created_at && (
+                <Badge variant="outline" className="gap-1 bg-background/70">
+                  {format(new Date(grupo.orcamentos[0].created_at), "dd/MM/yyyy", { locale: ptBR })}
+                </Badge>
+              )}
             </AtendimentoClientCard>
 
             {aberto && (
