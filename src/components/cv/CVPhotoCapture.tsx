@@ -97,6 +97,28 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     return data?.signedUrl ?? "";
   };
 
+  // Recupera as miniaturas das fotos já enviadas (ex.: ao retornar da câmera do celular).
+  useEffect(() => {
+    const faltando = value.filter((p) => p.photo_url && !previews[p.angle_key]);
+    if (faltando.length === 0) return;
+    let cancelado = false;
+    (async () => {
+      const pares = await Promise.all(
+        faltando.map(async (p) => [p.angle_key, await getUrl(p.photo_url)] as const),
+      );
+      if (cancelado) return;
+      setPreviews((atual) => {
+        const novo = { ...atual };
+        for (const [k, url] of pares) if (url && !novo[k]) novo[k] = url;
+        return novo;
+      });
+    })();
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
   // Carrega câmeras IP ativas (para exibir nome da câmera vinculada ao ângulo)
   useEffect(() => {
     (async () => {
