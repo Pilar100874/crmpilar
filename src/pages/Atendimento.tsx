@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
+import { Search, User, MapPin, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -59,6 +59,9 @@ import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAten
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
+import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
+import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
+import { canalDaAba, marcarPendencia, EVENTO_FINALIZAR } from "@/lib/atendimento/finalizarAtendimento";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
@@ -157,6 +160,8 @@ export default function Atendimento() {
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
+  const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
+  const pendenciasAtendimento = usePendenciasAtendimento();
 
   const openDetailsPanel = (setVisible: (visible: boolean) => void) => {
     setVisible(true);
@@ -1865,6 +1870,7 @@ export default function Atendimento() {
 
   // Send email function
   const handleSendEmail = async (emailData: { to: string; subject: string; body: string; attachments?: any[] }) => {
+    marcarPendencia(contatoEmailSelecionado?.id || contatosBase.find((c) => c.email && emailData.to?.includes(c.email))?.id);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
@@ -3125,6 +3131,7 @@ ${recentMessages}
     fileName?: string
   ) => {
     if (!selectedConversation) return;
+    marcarPendencia([...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation)?.customer_id);
 
     console.log("💬 Atendimento - Enviando mensagem:", { content, contentType, fileUrl, fileName });
 
@@ -3273,7 +3280,7 @@ ${recentMessages}
   // Quando a flag "Usar agenda" está ligada, todas as abas mostram apenas os contatos da agenda do dia
   const agendaContactIds = useMemo(() => {
     const ids = new Set<string>();
-    todayTasks.forEach((task: any) => {
+    todayTasks.filter((t: any) => t.status !== "concluido" && t.status !== "cancelado").forEach((task: any) => {
       const id = task.customers?.id || task.contact_id;
       if (id) ids.add(id);
     });
@@ -3409,6 +3416,20 @@ ${recentMessages}
     localStorage.setItem("atendimento_usar_agenda", usarAgenda ? "true" : "false");
   }, [usarAgenda]);
 
+  // Pedido de finalização vindo do botão "Finalizar" do cartão
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent).detail as { customerId: string; nome?: string };
+      if (!d?.customerId) return;
+      const aba = activeTabRef.current;
+      setFinalizarCtx({ id: d.customerId, nome: d.nome || "Cliente", canal: canalDaAba(aba) || "telefone" });
+    };
+    window.addEventListener(EVENTO_FINALIZAR, h);
+    return () => window.removeEventListener(EVENTO_FINALIZAR, h);
+  }, []);
+
   // Contatos vinculados ao usuário (usados quando a flag está desligada)
   const { contatos: contatosVinculados } = useContatosVinculados(usuarioId || null, !usarAgenda);
 
@@ -3416,7 +3437,7 @@ ${recentMessages}
   const contatosBase = useMemo<ContatoAtendimento[]>(() => {
     if (!usarAgenda) return contatosVinculados;
     const mapa = new Map<string, ContatoAtendimento>();
-    todayTasks.forEach((task: any) => {
+    todayTasks.filter((t: any) => t.status !== "concluido" && t.status !== "cancelado").forEach((task: any) => {
       const c = task.customers;
       if (!c?.id || mapa.has(c.id)) return;
       mapa.set(c.id, {
@@ -3790,7 +3811,7 @@ ${recentMessages}
     if (!clienteId) return;
     const novaAba = activeTab;
     setMobileView('main');
-    if (novaAba !== 'tel') { setAgendaViewMode('default'); setDiscadorModo(null); }
+    if (novaAba !== 'tel' && novaAba !== 'visita') { setAgendaViewMode('default'); setDiscadorModo(null); }
 
     if (novaAba === 'agenda') {
       const task = filteredTasks.find((t: any) => t.contact_id === clienteId);
@@ -3811,7 +3832,7 @@ ${recentMessages}
           void handleCreateConversationFromContact('customer', { id: contato.id, nome: contato.nome, telefone: contato.whatsapp || contato.telefone });
         }
       }
-    } else if (novaAba === 'tel') {
+    } else if (novaAba === 'tel' || novaAba === 'visita') {
       const contato = contatosComIndicadores.find((c: any) => c.id === clienteId);
       if (contato) {
         setSelectedTelContato(contato);
@@ -3884,9 +3905,14 @@ ${recentMessages}
     else if (activeTab === 'chat') {
       const conv = [...agendaConversations, ...otherConversations].find((c: any) => c.id === selectedConversation);
       clienteId = (conv as any)?.customer_id ?? null;
-    } else if (activeTab === 'tel') clienteId = selectedTelContato?.id ?? (fluxoCurrentTask as any)?.contact_id ?? null;
+    } else if (activeTab === 'tel' || activeTab === 'visita') clienteId = selectedTelContato?.id ?? (fluxoCurrentTask as any)?.contact_id ?? null;
     else if (activeTab === 'email') clienteId = contatoEmailSelecionado?.id ?? null;
     else if (activeTab === 'orcamento') clienteId = (selectedOrcamentoData as any)?.cliente_id ?? (contatoOrcamentoDetalhe as any)?.cliente_id ?? null;
+    if (clienteId && pendenciasAtendimento.includes(clienteId)) {
+      const nome = contatosBase.find((c) => c.id === clienteId)?.nome || "Cliente";
+      setFinalizarCtx({ id: clienteId, nome, canal: canalDaAba(activeTab) || "telefone", obrigatorio: true, depois: () => { clientePendenteTrocaAbaRef.current = clienteId; setActiveTab(novaAba); } });
+      return;
+    }
     clientePendenteTrocaAbaRef.current = clienteId;
     setActiveTab(novaAba);
   };
@@ -4755,7 +4781,7 @@ ${recentMessages}
           {/* Mobile Content Area */}
           <div className="flex-1 overflow-hidden relative">
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
-            {activeTab === "tel" && agendaViewMode === 'fluxo' && (
+            {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && (
               <div className="absolute inset-0 z-20 bg-background overflow-hidden">
                 {/* Fluxo Panel */}
                 <div 
@@ -4768,7 +4794,8 @@ ${recentMessages}
                     estabelecimentoId={estabelecimentoId}
                     usuarioId={usuarioId}
                     onTaskCompleted={loadTodayTasks}
-                    discadorModo={discadorModo}
+                    discadorModo={activeTab === "visita" ? null : discadorModo}
+                    tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
                     onClose={() => {
                       setAgendaViewMode('default');
                       setFluxoCurrentTask(null);
@@ -5306,7 +5333,7 @@ ${recentMessages}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsOrcamento)}
                 />
               )}
-              {activeTab === "tel" && agendaViewMode === "default" && selectedTelContato && (
+              {(activeTab === "tel" || activeTab === "visita") && agendaViewMode === "default" && selectedTelContato && (
                 <UnifiedDetailsPanel
                   type="agenda"
                   nome={selectedTelContato.nome}
@@ -5332,7 +5359,7 @@ ${recentMessages}
           </div>
 
           {/* Bottom Navigation - Apenas na lista e não em modos especiais da agenda */}
-          {mobileView === "list" && !(activeTab === "tel" && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
+          {mobileView === "list" && !((activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo') && !(activeTab === "agenda" && (agendaViewMode === 'massa' || selectedTaskId)) && (
             <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
@@ -5341,6 +5368,7 @@ ${recentMessages}
                   { id: "tel", label: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
                   { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
                   { id: "orcamento", label: "Orç.", icon: FileText, badge: orcamentosEmAndamentoCount },
+                  { id: "visita", label: "Visita", icon: MapPin, badge: contatosBase.length },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -5557,14 +5585,16 @@ ${recentMessages}
                 { title: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
                 { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
                 { title: "Orç.", icon: FileText, badge: orcamentosEmAndamentoCount },
+                { title: "Visita", icon: MapPin, badge: contatosBase.length },
               ]}
-              activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : null}
+              activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : activeTab === "visita" ? 5 : null}
               onChange={(index) => {
                 if (index === 0) trocarAba("agenda");
                 else if (index === 1) trocarAba("chat");
                 else if (index === 2) trocarAba("tel");
                 else if (index === 3) trocarAba("email");
                 else if (index === 4) trocarAba("orcamento");
+                else if (index === 5) trocarAba("visita");
               }}
               activeColor="text-primary"
               className="w-full justify-center"
@@ -5596,6 +5626,25 @@ ${recentMessages}
             </div>
           </TabsContent>
           
+          {/* Visita presencial: mesma lista da aba Tel, sem discador */}
+          <TabsContent value="visita" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-muted/30 to-background dark:to-card">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
+              <ContatosCanalList
+                contatos={contatosComIndicadores.filter((contato) =>
+                  !searchTerm || contato.nome.toLowerCase().includes(searchTerm.toLowerCase()) || contato.email.toLowerCase().includes(searchTerm.toLowerCase())
+                )}
+                canal="todos"
+                titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
+                vazioTexto={usarAgenda ? "Nenhum contato na agenda" : "Nenhum contato vinculado"}
+                selecionadoId={selectedTelContato?.id ?? null}
+                onSelecionar={(contato) => {
+                  setSelectedTelContato(contato);
+                  abrirFluxoComContato(contato);
+                }}
+              />
+            </div>
+          </TabsContent>
+
           {/* E-mail: contatos na coluna esquerda */}
           {activeTab === "email" && (
             <div className="flex-1 overflow-y-auto px-2 py-2">
@@ -6818,14 +6867,15 @@ ${recentMessages}
               </div>
             </div>
           </>
-        ) : activeTab === "tel" && agendaViewMode === 'fluxo' ? (
+        ) : (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' ? (
           /* Fluxo de Atendimento Panel */
           <FluxoAtendimentoPanel
             tasks={filteredTasks}
             estabelecimentoId={estabelecimentoId}
             usuarioId={usuarioId}
             onTaskCompleted={loadTodayTasks}
-            discadorModo={discadorModo}
+            discadorModo={activeTab === "visita" ? null : discadorModo}
+            tipoContatoFixo={activeTab === "visita" ? "presencial" : "telefone"}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
@@ -6861,7 +6911,7 @@ ${recentMessages}
               }
             }}
           />
-        ) : activeTab === "tel" && selectedTelContato ? (
+        ) : (activeTab === "tel" || activeTab === "visita") && selectedTelContato ? (
           <div className="flex flex-1 flex-col bg-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div className="min-w-0">
@@ -7084,7 +7134,7 @@ ${recentMessages}
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
-      {!orcamentoSheetOpen && activeTab === "tel" && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
+      {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
@@ -7114,7 +7164,7 @@ ${recentMessages}
         </div>
       )}
 
-      {!orcamentoSheetOpen && activeTab === "tel" && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
+      {!orcamentoSheetOpen && (activeTab === "tel" || activeTab === "visita") && agendaViewMode === 'default' && selectedTelContato && showClientDetailsFluxo && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
