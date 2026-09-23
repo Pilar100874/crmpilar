@@ -1446,7 +1446,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
-  const handleAdicionarUsuariosVinculo = async () => {
+  const [confirmVinculoOpen, setConfirmVinculoOpen] = useState(false);
+
+  const handleAdicionarUsuariosVinculo = () => {
+    if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
+      toast.error("Selecione pelo menos um usuário");
+      return;
+    }
+    setConfirmVinculoOpen(true);
+  };
+
+  const executarVinculoUsuarios = async () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
       toast.error("Selecione pelo menos um usuário");
       return;
@@ -1476,8 +1486,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }));
       const { error } = await supabase.from("empresa_vinculos").insert(rows);
       if (error) throw error;
-      toast.success("Usuários vinculados!");
+      toast.success("Usuários vinculados! Uma tarefa foi criada na agenda de hoje de cada usuário.");
       setNovosUsuariosVinculo([]);
+      setConfirmVinculoOpen(false);
       await fetchEmpresas(estabelecimentoId);
     } catch (error: any) {
       toast.error("Erro ao vincular usuários: " + error.message);
@@ -3588,6 +3599,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         />
       )}
       
+      {/* Confirmação de vínculo de usuário: avisa que uma tarefa será criada na agenda */}
+      <AlertDialog open={confirmVinculoOpen} onOpenChange={setConfirmVinculoOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar vínculo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao vincular {novosUsuariosVinculo.length === 1 ? "este usuário" : "estes usuários"} a esta empresa, será criada automaticamente uma tarefa na agenda de hoje de cada usuário vinculado. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={executarVinculoUsuarios}>
+              Confirmar vínculo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Dialog de confirmação para descartar alterações */}
       <AlertDialog
         open={discardDialogOpen}
