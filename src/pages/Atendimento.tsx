@@ -3003,7 +3003,7 @@ ${recentMessages}
 
   const subscribeToMessages = (conversationId: string) => {
     const channel = supabase
-      .channel(`messages-${conversationId}`)
+      .channel(`messages-${conversationId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {
