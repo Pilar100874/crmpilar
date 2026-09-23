@@ -4739,11 +4739,25 @@ ${recentMessages}
             
             {/* Lista */}
             <div
-              className={`absolute inset-0 transition-transform duration-300 ease-out ${
+              className={`absolute inset-0 flex flex-col transition-transform duration-300 ease-out ${
                 mobileView === "list" ? "translate-x-0" : "-translate-x-full"
               }`}
             >
+              {/* Flag: usar agenda como origem dos contatos (mobile/tablet) */}
+              <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-card">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-xs font-medium text-foreground">Usar agenda</span>
+                </div>
+                <Switch
+                  checked={usarAgenda}
+                  onCheckedChange={setUsarAgenda}
+                  aria-label="Usar agenda"
+                />
+              </div>
+              <div className="flex-1 min-h-0">
               <MobileListContent
+
                 activeTab={activeTab}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
@@ -4862,7 +4876,9 @@ ${recentMessages}
                   else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
                 }}
               />
+              </div>
             </div>
+
 
             {/* Conteúdo Principal */}
             <div

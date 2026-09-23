@@ -150,6 +150,10 @@ export function validarNumeroDiscagem(valor: string, ddiLocal = "55"): Resultado
   // Ramal interno
   if (numero.length <= 7) return { valido: true };
 
+  // Números especiais/serviço (0800, 0300, 0500, 4004, 3003, 0xx...) são discados como estão.
+  if (/^0/.test(numero) || /^(4004|3003|4020)/.test(numero)) return { valido: true };
+
+
   const assinante = numero.length === 10 || numero.length === 11 ? numero.slice(2) : numero;
   if (assinanteValido(normalizarAssinante(assinante))) return { valido: true };
 

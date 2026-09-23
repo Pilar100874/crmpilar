@@ -2,7 +2,7 @@
 //  - default: lista câmeras ativas (bypass RLS via service role)
 //  - action "upload_snapshot": recebe imagem capturada na LAN e grava no storage
 //    para o CRM exibir (câmeras internas que o servidor não alcança).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
