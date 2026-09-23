@@ -5375,7 +5375,7 @@ ${recentMessages}
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => trocarAba(tab.id)}
                         className={`flex flex-col items-center justify-center py-1.5 px-4 transition-all relative ${
                           isActive
                             ? "text-primary"
@@ -7493,6 +7493,21 @@ ${recentMessages}
         </AlertDialogContent>
       </AlertDialog>
 
+      <FinalizarAtendimentoDialog
+        open={!!finalizarCtx}
+        onOpenChange={(o) => { if (!o) setFinalizarCtx(null); }}
+        contato={finalizarCtx ? { id: finalizarCtx.id, nome: finalizarCtx.nome } : null}
+        canal={(finalizarCtx?.canal as any) || "telefone"}
+        usuarioId={usuarioId}
+        estabelecimentoId={estabelecimentoId}
+        obrigatorio={finalizarCtx?.obrigatorio}
+        onFinalizado={() => {
+          const depois = finalizarCtx?.depois;
+          setFinalizarCtx(null);
+          void loadTodayTasks();
+          depois?.();
+        }}
+      />
       <ComposeEmailDialog
         open={showComposeEmail && activeTab !== "email" && !composeEmailInline}
         onOpenChange={(open) => {
@@ -7943,6 +7958,16 @@ function MobileListContent({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
+        {activeTab === "visita" && (
+          <ContatosCanalList
+            contatos={contatosTelefone}
+            canal="todos"
+            titulo="Contatos para visita"
+            vazioTexto="Nenhum contato"
+            selecionadoId={contatoTelefoneSelecionadoId}
+            onSelecionar={onSelecionarContatoTelefone}
+          />
+        )}
         {activeTab === "tel" && (
           <ContatosCanalList
             contatos={contatosTelefone}
