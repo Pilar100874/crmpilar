@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { abrirWhatsappPilarFone } from "@/components/portaria/PilarFoneWeb";
-import { ligarPeloPabx } from "@/lib/telefonia/clickToCall";
+import { abrirPilarSip } from "@/components/portaria/PilarFoneWeb";
+import { prepararNumeroComRegras } from "@/lib/telefonia/regrasDiscagem";
+import { abrirChatDoContato, novoEmailParaContato } from "@/lib/atendimento/navegacaoContato";
+
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
@@ -551,12 +553,13 @@ export function UnifiedDetailsPanel({
                 ) : whatsapp ? (
                   <button
                     type="button"
-                    onClick={() => abrirWhatsappPilarFone(whatsapp, nome)}
-                    title="Abrir conversa no telefone"
+                    onClick={() => abrirChatDoContato({ customerId, nome, whatsapp })}
+                    title="Abrir a conversa deste cliente no Chat"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"
                   >
                     {whatsapp}
                   </button>
+
                 ) : (
                   <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
@@ -578,12 +581,16 @@ export function UnifiedDetailsPanel({
                 ) : telefone ? (
                   <button
                     type="button"
-                    onClick={() => ligarPeloPabx(telefone.replace(/\D/g, ''), nome)}
-                    title="Ligar pelo PABX (toca seu ramal primeiro)"
+                    onClick={async () => {
+                      const numero = await prepararNumeroComRegras(telefone);
+                      abrirPilarSip(numero || telefone.replace(/\D/g, ''));
+                    }}
+                    title="Abrir o Pilar Fone com este número"
                     className="text-xs truncate max-w-[140px] text-primary hover:underline"
                   >
                     {telefone}
                   </button>
+
                 ) : (
                   <span className="text-xs truncate max-w-[140px]">-</span>
                 )}
@@ -608,17 +615,25 @@ export function UnifiedDetailsPanel({
                   <div className="flex items-center gap-1">
                     {email ? (
                       <>
-                        <span className="text-xs truncate max-w-[120px]">{email}</span>
+                        <button
+                          type="button"
+                          onClick={() => novoEmailParaContato({ email, nome })}
+                          className="text-xs truncate max-w-[120px] text-primary hover:underline"
+                          title="Escrever e-mail para este cliente"
+                        >
+                          {email}
+                        </button>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                          onClick={() => window.open(`mailto:${email}`, '_blank')}
-                          title="Enviar email"
+                          onClick={() => novoEmailParaContato({ email, nome })}
+                          title="Escrever e-mail para este cliente"
                         >
                           <Mail className="w-3 h-3" />
                         </Button>
                       </>
+
                     ) : (
                       <span className="text-xs text-muted-foreground">-</span>
                     )}

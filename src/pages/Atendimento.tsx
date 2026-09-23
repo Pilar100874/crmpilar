@@ -67,6 +67,8 @@ import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoC
 import { AtendimentoHoraBadge } from "@/components/atendimento/AtendimentoCardBadges";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
+import { ouvirAbrirChatDoContato, ouvirNovoEmailParaContato } from "@/lib/atendimento/navegacaoContato";
+
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
@@ -2200,6 +2202,29 @@ export default function Atendimento() {
       toast.success(`E-mail pré-preenchido para ${data.nome || data.nome_fantasia || 'contato'}`);
     }
   };
+
+  // Atalhos do painel de detalhes: WhatsApp abre o Chat do cliente e o e-mail abre a aba E-mail já escrevendo.
+  useEffect(() => {
+    const pararChat = ouvirAbrirChatDoContato(({ customerId, nome, whatsapp }) => {
+      if (!customerId) {
+        toast.error("Contato sem cadastro para abrir a conversa");
+        return;
+      }
+      setActiveTab('chat');
+      setMobileView('main');
+      void handleCreateConversationFromContact('customer', { id: customerId, nome, telefone: whatsapp });
+    });
+    const pararEmail = ouvirNovoEmailParaContato(({ email, nome }) => {
+      setActiveTab('email');
+      setMobileView('main');
+      void handleCreateEmailFromContact('customer', { email, nome });
+    });
+    return () => {
+      pararChat();
+      pararEmail();
+    };
+  }, []);
+
 
   // Criar orçamento a partir de um contato selecionado
   const handleCreateOrcamentoFromContact = async (type: 'customer' | 'empresa', data: any) => {
