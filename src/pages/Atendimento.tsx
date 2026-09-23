@@ -61,6 +61,7 @@ import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAtendimentoDialog";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
+import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR } from "@/lib/atendimento/finalizarAtendimento";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
@@ -3436,7 +3437,8 @@ ${recentMessages}
   const { contatos: contatosVinculados } = useContatosVinculados(usuarioId || null, !usarAgenda);
 
   // Base de contatos das abas Tel / Chats / E-mails
-  const contatosBase = useMemo<ContatoAtendimento[]>(() => {
+  const contatosPendentes = useContatosPendentes(pendenciasAtendimento);
+  const contatosBaseSemPendentes = useMemo<ContatoAtendimento[]>(() => {
     if (!usarAgenda) return contatosVinculados;
     const mapa = new Map<string, ContatoAtendimento>();
     todayTasks.filter((t: any) => t.status !== "concluido" && t.status !== "cancelado").forEach((task: any) => {
@@ -3472,6 +3474,13 @@ ${recentMessages}
     });
     return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   }, [usarAgenda, contatosVinculados, todayTasks, orcamentos]);
+
+  // Clientes pendentes de finalização sempre aparecem (mesmo fora da data ou sem agenda)
+  const contatosBase = useMemo<ContatoAtendimento[]>(() => {
+    const ids = new Set(contatosBaseSemPendentes.map((c) => c.id));
+    const extras = contatosPendentes.filter((c) => !ids.has(c.id));
+    return ordenarPendentesPrimeiro([...extras, ...contatosBaseSemPendentes], (c) => c.id, pendenciasAtendimento);
+  }, [contatosBaseSemPendentes, contatosPendentes, pendenciasAtendimento]);
 
   // Contatos com WhatsApp que ainda não possuem conversa aberta
   const contatosSemConversa = useMemo(() => {
