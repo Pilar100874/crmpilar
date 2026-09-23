@@ -81,12 +81,13 @@ export function OrcamentosEmpresaList({
             <AtendimentoClientCard
               title={`Orçamentos - ${grupo.nome}`}
               customerName={grupo.nome}
-              sideLabel="Empresa"
+              sideLabel="Meu Cliente"
               onClick={() => alternarGrupo(grupo.id)}
               indicators={<><Badge className="min-w-7 justify-center px-1.5">{grupo.orcamentos.length}</Badge>{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
             >
               <Badge variant="outline" className="bg-background/70">
-                {grupo.orcamentos.length} orçamento{grupo.orcamentos.length === 1 ? "" : "s"}
+                <Receipt className="mr-1 h-3.5 w-3.5" />
+                Orçamento
               </Badge>
               <Badge variant="secondary">
                 {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(total)}

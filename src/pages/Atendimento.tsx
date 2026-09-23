@@ -3345,6 +3345,8 @@ ${recentMessages}
         tel: c.tel || "",
         email: c.email || "",
         referencia: task.title || "Tarefa agendada",
+        horario: task.time || "",
+        responsavel: task.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente",
         companies: c.customer_empresas || [],
       });
     });

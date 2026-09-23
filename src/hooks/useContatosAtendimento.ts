@@ -11,6 +11,10 @@ export interface ContatoAtendimento {
   email: string;
   /** Texto auxiliar, ex.: título da tarefa da agenda */
   referencia?: string;
+  /** Horário da tarefa quando o contato veio da agenda. */
+  horario?: string;
+  /** Nome curto exibido na faixa lateral do cartão. */
+  responsavel?: string;
   /** Empresas vinculadas ao contato para o painel unificado de detalhes. */
   companies?: any[];
 }
@@ -47,6 +51,7 @@ export function useContatosVinculados(usuarioId: string | null, ativo: boolean) 
           telefone: c.telefone || "",
           tel: c.tel || "",
           email: c.email || "",
+          responsavel: "Meu Cliente",
           companies: c.customer_empresas || [],
         });
       });
