@@ -69,7 +69,10 @@ export function abrirExtrasDaEmpresa(detalhe: EmpresaExtrasEvento) {
 }
 
 export function ouvirAbrirExtrasDaEmpresa(handler: (detalhe: EmpresaExtrasEvento) => void) {
-  const ouvinte = (evento: Event) => handler((evento as CustomEvent<EmpresaExtrasEvento>).detail || {});
+  const ouvinte = (evento: Event) => {
+    const detalhe = (evento as CustomEvent<EmpresaExtrasEvento>).detail;
+    if (detalhe?.empresaId) handler(detalhe);
+  };
   window.addEventListener(EVENTO_EXTRAS, ouvinte);
   return () => window.removeEventListener(EVENTO_EXTRAS, ouvinte);
 }
