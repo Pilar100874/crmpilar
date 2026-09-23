@@ -7858,6 +7858,13 @@ function MobileListContent({
   onRefreshEmails,
   onShowCustomerSearch,
 }: MobileListContentProps) {
+  const pendenciasAtendimento = usePendenciasAtendimento();
+  const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
+    const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
+    if (!pendenteId) return false;
+    pedirFinalizacao({ customerId: pendenteId, nome: "Cliente" });
+    return true;
+  };
   return (
     <div className="h-full flex flex-col bg-background/80 dark:bg-card/80">
       {/* Header */}
