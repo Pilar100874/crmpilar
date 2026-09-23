@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Loader2, UserX } from "lucide-react";
+import { CalendarIcon, Loader2, UserX, Undo2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ import {
   ROTULO_CANAL,
   type CanalAtendimento,
   type TarefaFutura,
+  limparPendencia,
 } from "@/lib/atendimento/finalizarAtendimento";
 
 /** Pergunta qual data manter quando já existe um próximo contato agendado. */
@@ -214,7 +215,22 @@ export function FinalizarAtendimentoDialog({
             <Button variant="link" size="sm" className="px-0 text-destructive" onClick={() => setModoInativar((v) => !v)}>
               {modoInativar ? "Voltar" : (<><UserX className="mr-1 h-3.5 w-3.5" />Inativar cliente</>)}
             </Button>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              {!modoInativar && (
+                <Button
+                  variant="ghost"
+                  disabled={salvando}
+                  title="Desconsidera a ação feita (ex.: mensagem ou ligação para a pessoa errada) e volta o cartão ao estado anterior"
+                  onClick={() => {
+                    if (!contato) return;
+                    limparPendencia(contato.id);
+                    toast.success("Movimentação ignorada — cartão voltou ao estado anterior");
+                    onOpenChange(false);
+                  }}
+                >
+                  <Undo2 className="mr-1 h-3.5 w-3.5" />Ignorar movimentação
+                </Button>
+              )}
               {(
                 <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>Cancelar</Button>
               )}
