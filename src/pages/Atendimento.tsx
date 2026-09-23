@@ -61,6 +61,7 @@ import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
+import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
@@ -3257,11 +3258,13 @@ ${recentMessages}
       telefone: string;
       email: string;
       taskTitle?: string;
+      horario?: string;
+      companies?: any[];
       linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
     }>;
   } => {
     // Obter contact_ids da agenda do dia com dados do contato
-    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string; linkedUsers: any[] }>();
+    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string; horario: string; companies: any[]; linkedUsers: any[] }>();
     todayTasks
       .filter(task => task.contact_id && task.customers)
       .forEach(task => {
@@ -3271,6 +3274,8 @@ ${recentMessages}
             telefone: task.customers?.telefone || '',
             email: task.customers?.email || '',
             taskTitle: task.title || '',
+            horario: task.time || '',
+            companies: task.customers?.customer_empresas || [],
             linkedUsers: task.linkedUsers || []
           });
         }
@@ -3299,6 +3304,8 @@ ${recentMessages}
       telefone: string;
       email: string;
       taskTitle?: string;
+      horario?: string;
+      companies?: any[];
       linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
     }> = [];
 
@@ -3311,6 +3318,8 @@ ${recentMessages}
           telefone: data.telefone,
           email: data.email,
           taskTitle: data.taskTitle,
+          horario: data.horario,
+          companies: data.companies,
           linkedUsers: data.linkedUsers
         });
       }
@@ -3345,6 +3354,8 @@ ${recentMessages}
         tel: c.tel || "",
         email: c.email || "",
         referencia: task.title || "Tarefa agendada",
+        horario: task.time || "",
+        responsavel: task.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente",
         companies: c.customer_empresas || [],
       });
     });
@@ -3362,6 +3373,8 @@ ${recentMessages}
         telefone: c.telefone,
         email: c.email,
         taskTitle: c.referencia,
+        horario: c.horario,
+        companies: c.companies,
         linkedUsers: [] as Array<{ usuarios: { id: string; nome: string } }>,
       }));
   }, [contatosBase, filteredConversations]);
@@ -5441,6 +5454,10 @@ ${recentMessages}
                             </div>
                             <p className="text-sm font-medium text-muted-foreground truncate mb-1.5">{conv.customer?.nome || "Cliente"}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="outline" className="gap-1 bg-background/70 text-[10px]">
+                                <MessageSquare className="h-3 w-3" />
+                                WhatsApp
+                              </Badge>
                               {/* Badge de usuários vinculados extra */}
                               {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
@@ -5476,8 +5493,11 @@ ${recentMessages}
 
                     {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
                     {contatosSemConversa.map((contact) => (
-                      <div
+                      <AtendimentoClientCard
                         key={`contact-${contact.contactId}`}
+                        title={`Chat - ${contact.nome}`}
+                        customerName={contact.nome}
+                        sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                         onClick={async () => {
                           // Criar conversa para o contato da agenda
                           try {
@@ -5509,48 +5529,13 @@ ${recentMessages}
                             toast.error('Erro ao iniciar conversa');
                           }
                         }}
-                        className="relative px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent overflow-hidden"
+                        indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                       >
-                        <div className="flex items-start gap-3">
-                          {/* Tarja lateral com nome do usuário vinculado */}
-                          {contact.linkedUsers && contact.linkedUsers.length > 0 && (
-                            <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500">
-                              <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[50px] truncate">
-                                {contact.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                              </span>
-                            </div>
-                          )}
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100 ${contact.linkedUsers && contact.linkedUsers.length > 0 ? 'ml-4' : ''}`}>
-                            <User className="w-5 h-5 text-orange-400" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className="font-semibold text-sm truncate text-orange-700">{contact.nome}</span>
-                              <Badge className="text-[9px] bg-orange-100 text-orange-600 border-0 px-1.5">
-                                Iniciar chat
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-orange-500 truncate flex items-center gap-1">
-                              <CalendarIcon className="w-3 h-3" />
-                              {contact.taskTitle || "Tarefa agendada"}
-                            </p>
-                            {/* Badge de usuários vinculados */}
-                            {contact.linkedUsers && contact.linkedUsers.length > 0 && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Badge className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-orange-100 text-orange-700 border-0">
-                                  <User className="w-2.5 h-2.5" />
-                                  {contact.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || "Usuário"}
-                                </Badge>
-                                {contact.linkedUsers.length > 1 && (
-                                  <Badge className="text-[10px] px-1.5 py-0 bg-orange-50 text-orange-600 border-0">
-                                    +{contact.linkedUsers.length - 1}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                        {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
+                        <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
+                        {contact.taskTitle && <Badge variant="secondary">{contact.taskTitle}</Badge>}
+                        {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
+                      </AtendimentoClientCard>
                     ))}
                   </>
                 )}
@@ -5596,6 +5581,10 @@ ${recentMessages}
                             </div>
                             <p className="text-sm font-medium text-muted-foreground truncate mb-1.5">{conv.customer?.nome || "Cliente"}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="outline" className="gap-1 bg-background/70 text-[10px]">
+                                <MessageSquare className="h-3 w-3" />
+                                WhatsApp
+                              </Badge>
                               {/* Badge de usuários vinculados extra */}
                               {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
@@ -7416,6 +7405,9 @@ interface MobileListContentProps {
     telefone: string;
     email: string;
     taskTitle?: string;
+    horario?: string;
+    companies?: any[];
+    linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
   }>;
   contatosTelefone: ContatoAtendimento[];
   contatoTelefoneSelecionadoId: string | null;
@@ -7826,29 +7818,19 @@ function MobileListContent({
 
                 {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
                 {agendaContactsWithoutConversation.map((contact) => (
-                  <div
+                  <AtendimentoClientCard
                     key={`contact-${contact.contactId}`}
+                    title={`Chat - ${contact.nome}`}
+                    customerName={contact.nome}
+                    sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
-                    className="px-3 py-3 rounded-xl cursor-pointer transition-all border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent"
+                    indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100">
-                        <User className="w-5 h-5 text-orange-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-semibold text-sm truncate text-orange-700">{contact.nome}</span>
-                          <Badge className="text-[9px] bg-orange-100 text-orange-600 border-0 px-1.5">
-                            Iniciar chat
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-orange-500 truncate flex items-center gap-1">
-                          <CalendarIcon className="w-3 h-3" />
-                          {contact.taskTitle || "Tarefa agendada"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    {contact.horario && <Badge variant="outline" className="gap-1 bg-background/70"><Clock className="h-3.5 w-3.5" />{contact.horario}</Badge>}
+                    <Badge variant="outline" className="gap-1 bg-background/70"><MessageSquare className="h-3.5 w-3.5" />WhatsApp</Badge>
+                    {contact.taskTitle && <Badge variant="secondary">{contact.taskTitle}</Badge>}
+                    {contact.companies?.[0] && <Badge variant="outline" className="gap-1 bg-background/70"><Building2 className="h-3.5 w-3.5" />{contact.companies[0]?.empresas?.nome_fantasia || contact.companies[0]?.empresas?.nome || "Empresa"}</Badge>}
+                  </AtendimentoClientCard>
                 ))}
               </>
             )}

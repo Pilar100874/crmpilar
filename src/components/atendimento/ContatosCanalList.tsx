@@ -1,4 +1,4 @@
-import { Mail, MessageSquare, Phone, Users } from "lucide-react";
+import { Building2, Clock, Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
@@ -66,16 +66,31 @@ export default function ContatosCanalList({
           key={`${canal}-${contato.id}`}
           title={`${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
           customerName={contato.nome}
+          sideLabel={contato.responsavel || "Meu Cliente"}
           selected={selecionadoId === contato.id}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
           indicators={acaoLabel ? <Badge className="min-w-6 justify-center px-1.5">{acaoLabel}</Badge> : undefined}
         >
+          {contato.horario && (
+            <Badge variant="outline" className="gap-1 bg-background/70 text-xs font-medium">
+              <Clock className="h-3.5 w-3.5" />
+              {contato.horario}
+            </Badge>
+          )}
           <Badge variant="outline" className="gap-1 bg-background/70 text-xs font-medium">
             <Icone className="h-3.5 w-3.5" />
             <span className="max-w-[190px] truncate">{valorDoCanal(contato, canal)}</span>
           </Badge>
           {contato.referencia && (
             <Badge variant="secondary" className="max-w-full truncate text-xs">{contato.referencia}</Badge>
+          )}
+          {contato.companies?.[0] && (
+            <Badge variant="outline" className="max-w-full gap-1 bg-background/70 text-xs">
+              <Building2 className="h-3.5 w-3.5" />
+              <span className="max-w-[150px] truncate">
+                {contato.companies[0]?.empresas?.nome_fantasia || contato.companies[0]?.empresas?.nome || "Empresa"}
+              </span>
+            </Badge>
           )}
         </AtendimentoClientCard>
       ))}
