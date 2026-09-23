@@ -59,6 +59,7 @@ import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAten
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import ContatosCanalList from "@/components/atendimento/ContatosCanalList";
+import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { useContatosVinculados, type ContatoAtendimento } from "@/hooks/useContatosAtendimento";
 import { ouvirTarefasAlteradas } from "@/lib/calendario/eventos";
@@ -3540,6 +3541,17 @@ ${recentMessages}
     return result;
   }, [orcamentos, globalFilter, showOnlyMyOrcamentos, currentUsuarioTableId, usarAgenda, agendaContactIds]);
 
+  const orcamentosVisiveis = useMemo(() => filteredOrcamentos
+    .filter((orcamento) => orcamento.status !== 'cancelado' && orcamento.status !== 'ganho')
+    .filter((orcamento) => !orcamentosStatusFilter || orcamento.etapa === orcamentosStatusFilter)
+    .filter((orcamento) => {
+      if (!orcamentosDateRange.from) return true;
+      const dataOrcamento = new Date(orcamento.created_at);
+      const dataInicial = startOfDay(orcamentosDateRange.from);
+      const dataFinal = orcamentosDateRange.to ? endOfDay(orcamentosDateRange.to) : endOfDay(orcamentosDateRange.from);
+      return dataOrcamento >= dataInicial && dataOrcamento <= dataFinal;
+    }), [filteredOrcamentos, orcamentosStatusFilter, orcamentosDateRange]);
+
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
   // Update counters based on filtered data
@@ -6290,17 +6302,7 @@ ${recentMessages}
             </AlertDialog>
 
             <div className="px-2 py-2 space-y-1.5">
-            {filteredOrcamentos
-              .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
-              .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
-              .filter(o => {
-                if (!orcamentosDateRange.from) return true;
-                const orcDate = new Date(o.created_at);
-                const fromDate = startOfDay(orcamentosDateRange.from);
-                const toDate = orcamentosDateRange.to ? endOfDay(orcamentosDateRange.to) : endOfDay(orcamentosDateRange.from);
-                return orcDate >= fromDate && orcDate <= toDate;
-              })
-              .length === 0 ? (
+            {orcamentosVisiveis.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                   <Receipt className="w-8 h-8 text-orange-300" />
@@ -6309,108 +6311,18 @@ ${recentMessages}
                 <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'Nenhum orçamento para este filtro' : 'Nenhum orçamento em andamento'}</p>
               </div>
             ) : (
-              filteredOrcamentos
-                .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
-                .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
-                .filter(o => {
-                  if (!orcamentosDateRange.from) return true;
-                  const orcDate = new Date(o.created_at);
-                  const fromDate = startOfDay(orcamentosDateRange.from);
-                  const toDate = orcamentosDateRange.to ? endOfDay(orcamentosDateRange.to) : endOfDay(orcamentosDateRange.from);
-                  return orcDate >= fromDate && orcDate <= toDate;
-                })
-                .map((orc) => {
-                  // Buscar usuários vinculados do cliente ou empresa do orçamento
-                  const orcLinkedUsers = orc.customers?.customer_vinculos || [];
-                  
-                  return (
-                  <div 
-                    key={orc.id} 
-                    className={`relative rounded-xl cursor-pointer transition-all duration-200 group overflow-hidden ${
-                      selectedOrcamentoId === orc.id
-                        ? "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 shadow-sm"
-                        : "bg-white/60 dark:bg-background/60 hover:bg-white dark:hover:bg-background hover:shadow-sm border border-transparent"
-                    }`}
-                    onClick={() => {
-                      setSelectedOrcamentoId(orc.id);
-                      setOrcamentoSheetOpen(true);
-                      openDetailsPanel(setShowClientDetailsOrcamento);
-                    }}
-                  >
-                    {/* Tarja lateral com nome do usuário vinculado */}
-                    {orcLinkedUsers.length > 0 && (
-                      <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500">
-                        <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
-                          {orcLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                        </span>
-                      </div>
-                    )}
-                    <div className={`flex items-start gap-3 p-3 ${orcLinkedUsers.length > 0 ? 'pl-8' : 'pl-3'}`}>
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedOrcamentoId === orc.id
-                          ? "bg-orange-500 text-white"
-                          : "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 text-orange-600 dark:text-orange-400"
-                      }`}>
-                        <Receipt className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <p className="font-semibold text-sm truncate">
-                            {orc.empresas?.nome_fantasia || orc.empresas?.nome || orc.customers?.nome || 'Sem empresa'}
-                          </p>
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-muted dark:bg-foreground/80 px-1.5 py-0.5 rounded-full">
-                              {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
-                            </span>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  setConfirmDuplicateOrcamento(orc.id);
-                                }}>
-                                  <Copy className="h-4 w-4 mr-2" />
-                                  Duplicar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className="text-destructive focus:text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setConfirmDeleteOrcamento(orc.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                            {new Intl.NumberFormat('pt-BR', { 
-                              style: 'currency', 
-                              currency: 'BRL' 
-                            }).format(orc.valor_total || 0)}
-                          </p>
-                          <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-0">
-                            {orc.etapa || orc.status}
-                          </Badge>
-                          {/* Badge de usuários vinculados extra */}
-                          {orcLinkedUsers.length > 1 && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                              +{orcLinkedUsers.length - 1} usuário{orcLinkedUsers.length > 2 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )})
+              <OrcamentosEmpresaList
+                orcamentos={orcamentosVisiveis}
+                selectedOrcamentoId={selectedOrcamentoId}
+                onSelectOrcamento={(orcamento) => {
+                  setSelectedOrcamentoId(orcamento.id);
+                  setSelectedOrcamentoData(orcamento);
+                  setOrcamentoSheetOpen(true);
+                  openDetailsPanel(setShowClientDetailsOrcamento);
+                }}
+                onDuplicate={setConfirmDuplicateOrcamento}
+                onDelete={setConfirmDeleteOrcamento}
+              />
             )}
             </div>
           </TabsContent>
@@ -8194,36 +8106,15 @@ function MobileListContent({
           />
         )}
 
-        {activeTab === "orcamento" && filteredOrcamentos
-          .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
-          .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
-          .map((orc) => (
-            <div
-              key={orc.id}
-              onClick={() => setSelectedOrcamentoId(orc.id)}
-              className={`p-3 rounded-xl cursor-pointer transition-all ${
-                selectedOrcamentoId === orc.id
-                  ? "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800"
-                  : "bg-white/60 dark:bg-background/60 hover:bg-white dark:hover:bg-background border border-transparent"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  selectedOrcamentoId === orc.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 text-orange-600 dark:text-orange-400"
-                }`}>
-                  <Receipt className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">
-                    {orc.empresas?.nome_fantasia || orc.empresas?.nome || orc.customers?.nome || 'Sem empresa'}
-                  </p>
-                  <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orc.valor_total || 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
+        {activeTab === "orcamento" && (
+          <OrcamentosEmpresaList
+            orcamentos={filteredOrcamentos
+              .filter((orcamento) => orcamento.status !== 'cancelado' && orcamento.status !== 'ganho')
+              .filter((orcamento) => !orcamentosStatusFilter || orcamento.etapa === orcamentosStatusFilter)}
+            selectedOrcamentoId={selectedOrcamentoId}
+            onSelectOrcamento={(orcamento) => setSelectedOrcamentoId(orcamento.id)}
+          />
+        )}
       </div>
 
       {/* Footer - Status do Atendente - Apenas no Chat */}

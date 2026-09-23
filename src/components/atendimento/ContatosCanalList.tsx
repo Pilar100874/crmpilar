@@ -64,11 +64,11 @@ export default function ContatosCanalList({
         <div
           key={`${canal}-${contato.id}`}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
-          className={`relative px-3 py-3 rounded-xl transition-all duration-200 border ${
+          className={`relative overflow-hidden px-3 py-3 rounded-xl transition-all duration-200 border ${
             selecionadoId === contato.id
               ? "bg-primary/10 border-primary/30 shadow-sm"
-              : "bg-card/60 border-transparent"
-          } ${onSelecionar ? "cursor-pointer hover:bg-card hover:shadow-sm" : "cursor-default"}`}
+              : "bg-card border-border/60 shadow-sm"
+          } ${onSelecionar ? "cursor-pointer hover:bg-muted/60 hover:shadow-md" : "cursor-default"}`}
         >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10">
