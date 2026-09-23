@@ -3615,6 +3615,27 @@ ${recentMessages}
     return { orcamentosAbertosPerCustomer: customerMap, orcamentosAbertosPerEmpresa: empresaMap };
   }, [orcamentos]);
 
+  const dadosAgendaPorContato = useMemo(() => {
+    const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number }>();
+    todayTasks.forEach((task: any) => {
+      if (!task.contact_id || mapa.has(task.contact_id)) return;
+      const empresaIds = task.customers?.customer_empresas
+        ?.map((relacao: any) => relacao.empresa_id || relacao.empresas?.id)
+        .filter(Boolean) || [];
+      const orcamentosAbertos = (orcamentosAbertosPerCustomer[task.contact_id] || 0)
+        + (orcamentosAbertosPerEmpresa[task.contact_id] || 0)
+        + empresaIds.reduce((total: number, empresaId: string) => total + (orcamentosAbertosPerEmpresa[empresaId] || 0), 0);
+      mapa.set(task.contact_id, {
+        title: task.title || `Contato - ${task.contact_name || "Cliente"}`,
+        time: task.time || "",
+        origem: task.origem || "",
+        responsavel: task.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente",
+        orcamentosAbertos,
+      });
+    });
+    return mapa;
+  }, [todayTasks, orcamentosAbertosPerCustomer, orcamentosAbertosPerEmpresa]);
+
   // Count unread emails per contact email
   const emailsNaoLidosPerEmail = useMemo(() => {
     const emailMap: Record<string, number> = {};
@@ -6289,6 +6310,7 @@ ${recentMessages}
             ) : (
               <OrcamentosEmpresaList
                 orcamentos={orcamentosVisiveis}
+                tarefasAgenda={todayTasks}
                 selectedOrcamentoId={selectedOrcamentoId}
                 onSelectOrcamento={(orcamento) => {
                   setSelectedOrcamentoId(orcamento.id);
@@ -8084,6 +8106,7 @@ function MobileListContent({
             orcamentos={filteredOrcamentos
               .filter((orcamento) => orcamento.status !== 'cancelado' && orcamento.status !== 'ganho')
               .filter((orcamento) => !orcamentosStatusFilter || orcamento.etapa === orcamentosStatusFilter)}
+            tarefasAgenda={filteredTasks}
             selectedOrcamentoId={selectedOrcamentoId}
             onSelectOrcamento={(orcamento) => setSelectedOrcamentoId(orcamento.id)}
           />

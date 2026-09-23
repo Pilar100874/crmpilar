@@ -64,7 +64,7 @@ export default function ContatosCanalList({
       {lista.map((contato) => (
         <AtendimentoClientCard
           key={`${canal}-${contato.id}`}
-          title={`${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
+          title={contato.referencia || `${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
           customerName={contato.nome}
           sideLabel={contato.responsavel || "Meu Cliente"}
           selected={selecionadoId === contato.id}
