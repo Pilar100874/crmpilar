@@ -4745,7 +4745,7 @@ ${recentMessages}
                 agendaConversations={agendaConversations}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
-                contatosTelefone={contatosBase}
+                contatosTelefone={contatosComIndicadores}
                 contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
                 onSelecionarContatoTelefone={(contato) => {
                   setSelectedTelContato(contato);
@@ -4776,7 +4776,7 @@ ${recentMessages}
                 handleNextDay={handleNextDay}
                 handleToday={handleToday}
                 filteredEmails={filteredEmails}
-                contatosEmail={contatosBase}
+                contatosEmail={contatosComIndicadores}
                 contatoEmailSelecionadoId={contatoEmailSelecionado?.id ?? null}
                 onSelecionarContatoEmail={(contato) => {
                   setSelectedEmailId(null);
@@ -6028,7 +6028,6 @@ ${recentMessages}
                                 }
                                 return null;
                               })()}
-                            </div>
                            {(() => {
                               // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                               const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
@@ -6055,21 +6054,16 @@ ${recentMessages}
                                        setOrcamentoSheetOpen(true);
                                      }
                                    }}
-                                   className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                                   className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
                                    title="Ver orçamentos em aberto"
                                  >
-                                   <FileText className="w-3 h-3 mr-1" />
-                                   Orçamento
-                                   {totalBudgetCount > 1 && (
-                                     <span className="ml-1 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
-                                       {totalBudgetCount}
-                                     </span>
-                                   )}
+                                   {totalBudgetCount}
                                  </button>
                                );
                               }
                               return null;
                             })()}
+                             </div>
                           </div>
                        </div>
                      </div>
@@ -7957,7 +7951,6 @@ function MobileListContent({
                       }
                       return null;
                     })()}
-                  </div>
                   {(() => {
                     // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                     const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
@@ -7983,20 +7976,16 @@ function MobileListContent({
                               setOrcamentoSheetOpen(true);
                             }
                           }}
-                          className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-[10px] font-bold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
+                          title="Ver orçamentos em aberto"
                         >
-                          <FileText className="w-2.5 h-2.5 mr-0.5" />
-                          Orç.
-                          {totalBudgetCount > 1 && (
-                            <span className="ml-0.5 bg-emerald-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
-                              {totalBudgetCount}
-                            </span>
-                          )}
+                          {totalBudgetCount}
                         </button>
                       );
                     }
                     return null;
                   })()}
+                  </div>
                 </div>
               </div>
             </div>
