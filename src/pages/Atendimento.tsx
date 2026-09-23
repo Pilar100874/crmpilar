@@ -7281,7 +7281,15 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId ? (
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
+        <div className="relative flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
+          {extrasEmpresa && (
+            <EmpresaExtrasOverlay
+              tipo={extrasEmpresa.tipo}
+              empresaId={extrasEmpresa.empresaId}
+              empresaNome={extrasEmpresa.empresaNome}
+              onClose={() => setExtrasEmpresa(null)}
+            />
+          )}
           <POSView
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId || undefined}
