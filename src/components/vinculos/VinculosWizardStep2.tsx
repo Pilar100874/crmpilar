@@ -86,24 +86,24 @@ export function VinculosWizardStep2({
                   htmlFor="alterar-usuario"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                 >
-                  Alterar Usuário
+                  Alterar Gerente
                 </label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Vincular as empresas selecionadas a um usuário
+                  Vincular as empresas selecionadas a um gerente
                 </p>
               </div>
             </div>
 
             {alterarUsuario && (
               <div className="ml-8 space-y-3">
-                <Label>Selecione os Usuários</Label>
+                <Label>Selecione os Gerentes</Label>
                 <FilteredCheckboxList
                   idPrefix="usuario"
                   items={usuarios.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
                   selected={novosUsuariosIds}
                   onToggle={(id) => handleUsuarioToggle(id)}
-                  searchPlaceholder="Buscar usuário..."
-                  emptyText="Nenhum usuário disponível."
+                  searchPlaceholder="Buscar gerente..."
+                  emptyText="Nenhum gerente disponível."
                 />
                 {novosUsuariosIds.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">

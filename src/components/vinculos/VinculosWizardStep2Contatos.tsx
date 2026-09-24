@@ -38,26 +38,26 @@ export function VinculosWizardStep2Contatos({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-primary" />
-            Passo 2: Selecionar Usuários
+            Passo 2: Selecionar Gerentes
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="p-4 bg-secondary/20 rounded-lg">
             <p className="text-sm text-muted-foreground">
               Você selecionou <strong>{selectedCount} contato(s)</strong>. 
-              Selecione abaixo os usuários que serão responsáveis por estes contatos.
+              Selecione abaixo os gerentes que serão responsáveis por estes contatos.
             </p>
           </div>
 
           <div className="space-y-4">
-            <Label>Selecione os Usuários</Label>
+            <Label>Selecione os Gerentes</Label>
             <FilteredCheckboxList
               idPrefix="usuario"
               items={usuarios.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
               selected={novosUsuariosIds}
               onToggle={(id) => handleUsuarioToggle(id)}
-              searchPlaceholder="Buscar usuário..."
-              emptyText="Nenhum usuário disponível."
+              searchPlaceholder="Buscar gerente..."
+              emptyText="Nenhum gerente disponível."
               maxHeightClass="max-h-[300px]"
             />
             {novosUsuariosIds.length > 0 && (
@@ -77,7 +77,7 @@ export function VinculosWizardStep2Contatos({
           {novosUsuariosIds.length === 0 && (
             <div className="p-4 bg-muted/50 border border-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Selecione pelo menos um usuário para continuar
+                Selecione pelo menos um gerente para continuar
               </p>
             </div>
           )}
