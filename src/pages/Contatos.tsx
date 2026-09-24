@@ -706,10 +706,16 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     saveCompanyFieldsConfig();
   }, [companyFields, estabelecimentoId]);
 
-  // Filtrar empresas conforme busca (lista todas quando busca vazia)
+  // Filtrar empresas conforme busca e aba do vínculo (empresa/transportadora/vendedor)
   useEffect(() => {
     const termo = buscaEmpresa.trim().toLowerCase();
-    const base = empresas.filter(e => !empresasVinculadas.some(ev => ev.id === e.id));
+    const base = empresas.filter(e => {
+      const tipo = String((e as any).tipo_cliente || '').toLowerCase();
+      const doGrupo = vinculoTab === 'empresa'
+        ? !['vendedor', 'transportadora'].includes(tipo)
+        : tipo === vinculoTab;
+      return doGrupo && !empresasVinculadas.some(ev => ev.id === e.id);
+    });
     if (!termo) {
       setEmpresasFiltradas(base);
     } else {
