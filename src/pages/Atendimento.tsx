@@ -163,6 +163,7 @@ export default function Atendimento() {
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
   const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
   const [selectedTelContato, setSelectedTelContato] = useState<ContatoAtendimento | null>(null);
+  const [selectedAgendaContato, setSelectedAgendaContato] = useState<ContatoAtendimento | null>(null);
   const [finalizarCtx, setFinalizarCtx] = useState<{ id: string; nome: string; canal: string; obrigatorio?: boolean; depois?: () => void } | null>(null);
   const pendenciasAtendimento = usePendenciasAtendimento();
 
@@ -5387,6 +5388,25 @@ ${recentMessages}
                   onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
                 />
               )}
+              {activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && (
+                <UnifiedDetailsPanel
+                  type="agenda"
+                  nome={selectedAgendaContato.nome}
+                  telefone={selectedAgendaContato.tel}
+                  whatsapp={selectedAgendaContato.telefone}
+                  email={selectedAgendaContato.email}
+                  customerId={selectedAgendaContato.id}
+                  status="Contato"
+                  companies={selectedAgendaContato.companies || []}
+                  onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
+                  }}
+                  onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
+                />
+              )}
               {activeTab === "email" && selectedEmailData && (
                 <UnifiedDetailsPanel
                   type="email"
@@ -6218,7 +6238,14 @@ ${recentMessages}
                   vazioTexto="Nenhum contato vinculado a você"
                   colorirPorEmpresa
                   onSelecionar={(contato) => {
+                    if (bloquearTrocaClientePendente(contato.id)) return;
                     setGlobalFilter({ type: 'customer', id: contato.id, nome: contato.nome });
+                    setSelectedTaskId(null);
+                    setSelectedTaskData(null);
+                    setSelectedAgendaContato(contato);
+                    setAgendaViewMode('default');
+                    setDiscadorModo(null);
+                    openDetailsPanel(setShowClientDetailsAgenda);
                   }}
                 />
               ) : filteredTasks.length === 0 ? (
@@ -6255,6 +6282,7 @@ ${recentMessages}
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
+                        setSelectedAgendaContato(null);
                         openDetailsPanel(setShowClientDetailsAgenda);
                         setAgendaViewMode('default');
                         setDiscadorModo(null);
@@ -7298,6 +7326,28 @@ ${recentMessages}
               setEditingCustomerEmpresaId(customerEmpresaId || null);
             }}
             onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
+            }}
+            onCompanyCardClick={() => openDetailsPanel(setShowClientDetailsAgenda)}
+          />
+        </div>
+      )}
+
+      {!orcamentoSheetOpen && activeTab === "agenda" && !selectedTaskData && selectedAgendaContato && showClientDetailsAgenda && agendaViewMode === 'default' && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="agenda"
+            nome={selectedAgendaContato.nome}
+            telefone={selectedAgendaContato.tel}
+            whatsapp={selectedAgendaContato.telefone}
+            email={selectedAgendaContato.email}
+            customerId={selectedAgendaContato.id}
+            status="Contato"
+            companies={selectedAgendaContato.companies || []}
+            onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
             onCreateEmpresa={(customerId) => {
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);
