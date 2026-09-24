@@ -267,6 +267,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [buscaEmpresa, setBuscaEmpresa] = useState<string>("");
   const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
   const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
+  const [vinculosCheckboxSelecionados, setVinculosCheckboxSelecionados] = useState<string[]>([]);
   const [viewingVinculo, setViewingVinculo] = useState<{ title: string; subtitle?: string; fields: VinculoField[] } | null>(null);
   
   // Sensores para drag and drop
@@ -2954,7 +2955,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </TabsContent>
 
           <TabsContent value="cadastros-vinculados" className="p-0">
-            <Tabs value={vinculoTab} onValueChange={(v) => { setVinculoTab(v as any); setCriarNovaEmpresa(false); setEmpresasFiltradas([]); setBuscaEmpresa(""); }} className="w-full">
+            <Tabs value={vinculoTab} onValueChange={(v) => { setVinculoTab(v as any); setCriarNovaEmpresa(false); setEmpresasFiltradas([]); setBuscaEmpresa(""); setVinculosCheckboxSelecionados([]); }} className="w-full">
               <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
                 <TabsTrigger value="empresa" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
                   <span className="inline-flex items-center gap-1.5">
@@ -2980,43 +2981,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
               <Card className="p-4 mb-4">
-                <Label className="text-xs">{vinculoTab === 'empresa' ? 'Vincular Empresa' : vinculoTab === 'transportadora' ? 'Vincular Transportadora' : 'Vincular Vendedor'}</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="Buscar por nome, CNPJ..."
-                    value={buscaEmpresa}
-                    className="h-9 text-sm"
-                    onChange={(e) => {
-                      const valor = e.target.value;
-                      setBuscaEmpresa(valor);
-                      const termo = valor.trim().toLowerCase();
-                      const base = empresas.filter(emp =>
-                        (vinculoTab === 'empresa'
-                          ? !['vendedor', 'transportadora'].includes((emp as any).tipo_cliente)
-                          : (emp as any).tipo_cliente === vinculoTab) &&
-                        !empresasVinculadas.some(ev => ev.id === emp.id)
-                      );
-                      if (!termo) {
-                        setEmpresasFiltradas(base);
-                      } else {
-                        const filtradas = base.filter(emp =>
-                          emp.nome_fantasia?.toLowerCase().includes(termo) ||
-                          emp.nome?.toLowerCase().includes(termo) ||
-                          emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
-                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
-                        );
-                        setEmpresasFiltradas(filtradas);
-                      }
-                    }}
-                    onBlur={async () => {
-                      const clean = buscaEmpresa.replace(/\D/g, '');
-                      if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
-                        if (clean.length === 14) {
-                          await handleCNPJLookup(buscaEmpresa);
-                        }
-                      }
-                    }}
-                  />
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs">{vinculoTab === 'empresa' ? 'Vincular Empresas' : vinculoTab === 'transportadora' ? 'Vincular Transportadoras' : 'Vincular Vendedores'}</Label>
                   <Button
                     variant="outline"
                     size="sm"
@@ -3027,28 +2993,43 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     {vinculoTab === 'vendedor' ? '+ Novo' : '+ Nova'}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">Marque um ou mais itens e clique em adicionar para vincular todos de uma vez.</p>
 
-                {/* Lista de empresas filtradas */}
-                {empresasFiltradas.length > 0 && (
-                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
-                    {empresasFiltradas.map((empresa) => (
-                      <button
-                        key={empresa.id}
-                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                        onClick={() => {
-                          handleAddEmpresaVinculada(empresa.id);
-                          setEmpresasFiltradas([]);
-                          setBuscaEmpresa("");
-                        }}
-                      >
-                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* Lista com checkboxes para vincular vários de uma vez */}
+                <div className="mt-3">
+                  <FilteredCheckboxList
+                    items={empresasFiltradas.map((emp) => ({
+                      id: emp.id,
+                      label: emp.nome_fantasia || emp.nome || 'Sem nome',
+                      extra: emp.cnpj || emp.custom_fields?.cpf_cnpj || 'Sem documento',
+                    }))}
+                    selected={vinculosCheckboxSelecionados}
+                    onToggle={(id, checked) =>
+                      setVinculosCheckboxSelecionados((prev) =>
+                        checked ? [...prev, id] : prev.filter((x) => x !== id)
+                      )
+                    }
+                    idPrefix={`vinculo-${vinculoTab}`}
+                    emptyText={vinculoTab === 'empresa' ? 'Nenhuma empresa disponível para vincular.' : vinculoTab === 'transportadora' ? 'Nenhuma transportadora disponível para vincular.' : 'Nenhum vendedor disponível para vincular.'}
+                    searchPlaceholder="Buscar por nome, CNPJ..."
+                  />
+                </div>
+
+                <div className="flex justify-end mt-3">
+                  <Button
+                    size="sm"
+                    disabled={vinculosCheckboxSelecionados.length === 0}
+                    onClick={async () => {
+                      const ids = [...vinculosCheckboxSelecionados];
+                      setVinculosCheckboxSelecionados([]);
+                      for (const id of ids) {
+                        await handleAddEmpresaVinculada(id);
+                      }
+                    }}
+                  >
+                    Adicionar Selecionados ({vinculosCheckboxSelecionados.length})
+                  </Button>
+                </div>
               </Card>
             )}
 
