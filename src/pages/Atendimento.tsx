@@ -6226,6 +6226,7 @@ ${recentMessages}
                     const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
                     const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
                     const semEmpresa = !(task.customers?.customer_empresas || []).some((c: any) => c?.empresas?.id || c?.empresa_id);
+                    const semContato = !semEmpresa && !task.contact_id;
 
                     return (
                     <div
@@ -6233,9 +6234,11 @@ ${recentMessages}
                       className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
                         selectedTaskId === task.id
                           ? "bg-primary/10 border-primary/40 shadow-md"
-                          : semEmpresa
-                            ? "bg-card border-amber-500/70 hover:bg-muted/40 hover:border-amber-500 hover:shadow-md"
-                            : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
+                          : semContato
+                            ? "bg-card border-purple-500/70 hover:bg-muted/40 hover:border-purple-500 hover:shadow-md"
+                            : semEmpresa
+                              ? "bg-card border-blue-500/70 hover:bg-muted/40 hover:border-blue-500 hover:shadow-md"
+                              : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
                       } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
                       onClick={() => {
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
