@@ -5048,6 +5048,7 @@ ${recentMessages}
                 otherConversations={otherConversations}
                 agendaContactsWithoutConversation={contatosSemConversa}
                 contatosTelefone={contatosComIndicadores}
+                usarAgenda={usarAgenda}
                 contatoTelefoneSelecionadoId={selectedTelContato?.id ?? null}
                  onSelecionarContatoTelefone={(contato) => {
                    if (bloquearTrocaClientePendente(contato.id)) return;
@@ -5739,6 +5740,7 @@ ${recentMessages}
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com telefone na agenda" : "Nenhum contato com telefone vinculado"}
                 selecionadoId={selectedTelContato?.id ?? null}
+                 colorirPorEmpresa={!usarAgenda}
                  onSelecionar={(contato) => {
                    if (bloquearTrocaClientePendente(contato.id)) return;
                    setSelectedTelContato(contato);
@@ -5759,6 +5761,7 @@ ${recentMessages}
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato na agenda" : "Nenhum contato vinculado"}
                 selecionadoId={selectedTelContato?.id ?? null}
+                colorirPorEmpresa={!usarAgenda}
                 onSelecionar={(contato) => {
                   if (bloquearTrocaClientePendente(contato.id)) return;
                   setSelectedTelContato(contato);
@@ -5777,6 +5780,7 @@ ${recentMessages}
                 titulo={usarAgenda ? "Agenda do Dia" : "Meus contatos"}
                 vazioTexto={usarAgenda ? "Nenhum contato com e-mail na agenda" : "Nenhum contato com e-mail vinculado"}
                 selecionadoId={contatoEmailSelecionado?.id ?? null}
+                colorirPorEmpresa={!usarAgenda}
                 onSelecionar={(contato) => {
                   if (bloquearTrocaClientePendente(contato.id)) return;
                   setSelectedEmailId(null);
@@ -6206,6 +6210,7 @@ ${recentMessages}
                   titulo="Meus contatos"
                   acaoLabel="Abrir"
                   vazioTexto="Nenhum contato vinculado a você"
+                  colorirPorEmpresa
                   onSelecionar={(contato) => {
                     setGlobalFilter({ type: 'customer', id: contato.id, nome: contato.nome });
                   }}
@@ -7781,6 +7786,7 @@ interface MobileListContentProps {
     linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
   }>;
   contatosTelefone: ContatoAtendimento[];
+  usarAgenda: boolean;
   contatoTelefoneSelecionadoId: string | null;
   onSelecionarContatoTelefone: (contato: ContatoAtendimento) => void;
   onStartConversation: (contactId: string, nome: string, telefone: string) => void;
@@ -7849,6 +7855,7 @@ function MobileListContent({
   otherConversations,
   agendaContactsWithoutConversation,
   contatosTelefone,
+  usarAgenda,
   contatoTelefoneSelecionadoId,
   onSelecionarContatoTelefone,
   onStartConversation,
@@ -8149,6 +8156,7 @@ function MobileListContent({
             titulo="Contatos para visita"
             vazioTexto="Nenhum contato"
             selecionadoId={contatoTelefoneSelecionadoId}
+            colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoTelefone}
           />
         )}
@@ -8159,6 +8167,7 @@ function MobileListContent({
             titulo="Contatos com telefone"
             vazioTexto="Nenhum contato com telefone"
             selecionadoId={contatoTelefoneSelecionadoId}
+            colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoTelefone}
           />
         )}
@@ -8414,6 +8423,7 @@ function MobileListContent({
             titulo="Contatos com e-mail"
             vazioTexto="Nenhum contato com e-mail"
             selecionadoId={contatoEmailSelecionadoId}
+            colorirPorEmpresa={!usarAgenda}
             onSelecionar={onSelecionarContatoEmail}
           />
         )}
