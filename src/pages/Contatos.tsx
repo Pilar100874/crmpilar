@@ -2944,21 +2944,29 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </TabsContent>
 
           <TabsContent value="cadastros-vinculados" className="p-0">
-            <Tabs defaultValue="empresa" className="w-full">
+            <Tabs value={vinculoTab} onValueChange={(v) => { setVinculoTab(v as any); setCriarNovaEmpresa(false); setEmpresasFiltradas([]); setBuscaEmpresa(""); }} className="w-full">
               <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
-                <TabsTrigger value="empresa" onClick={() => setCriarNovaEmpresa(false)} className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                <TabsTrigger value="empresa" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
                   <span className="inline-flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5" />
-                    <span>/</span>
+                    <span>Empresa</span>
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="transportadora" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5" />
-                    <span>/</span>
+                    <span>Transportadora</span>
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="vendedor" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5" />
-                    <span className="ml-1">Empresa / Transportadora / Vendedor</span>
+                    <span>Vendedor</span>
                   </span>
                 </TabsTrigger>
               </TabsList>
 
-          <TabsContent value="empresa" className="p-6">
+          <TabsContent value={vinculoTab} className="p-6">
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
               <Card className="p-4 mb-4">
