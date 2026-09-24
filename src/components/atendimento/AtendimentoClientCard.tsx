@@ -12,6 +12,7 @@ interface AtendimentoClientCardProps {
   customerName?: string;
   sideLabel?: string;
   selected?: boolean;
+  selectionTone?: "primary" | "info";
   onClick?: () => void;
   icon?: ReactNode;
   indicators?: ReactNode;
@@ -30,6 +31,7 @@ export function AtendimentoClientCard({
   customerName,
   sideLabel = "Meu Cliente",
   selected = false,
+  selectionTone = "primary",
   onClick,
   icon,
   indicators,
@@ -66,7 +68,9 @@ export function AtendimentoClientCard({
       className={cn(
         "group relative min-h-[116px] overflow-hidden rounded-lg border bg-card p-3.5 font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200",
         selected
-          ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/50"
+          ? selectionTone === "info"
+            ? "border-info bg-info/15 shadow-md ring-2 ring-info/60"
+            : "border-primary bg-primary/15 shadow-md ring-2 ring-primary/60"
           : "border-border/80 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:-translate-y-0.5",
         onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         bloqueado && "opacity-50 grayscale",

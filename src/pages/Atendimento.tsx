@@ -6273,7 +6273,9 @@ ${recentMessages}
                       key={task.id}
                       className={`group relative min-h-[116px] rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${
                         selectedTaskId === task.id
-                          ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/50"
+                          ? semEmpresa
+                            ? "bg-info/15 border-info shadow-md ring-2 ring-info/60"
+                            : "bg-primary/15 border-primary shadow-md ring-2 ring-primary/60"
                           : semContato
                             ? "bg-card border-purple-500/70 hover:bg-muted/40 hover:border-purple-500 hover:shadow-md"
                             : semEmpresa
