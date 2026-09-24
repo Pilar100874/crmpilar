@@ -57,7 +57,7 @@ export const useMapLayers = () => {
         supabase.from('usuarios').select('id, nome'),
         supabase.from('empresa_vinculos').select('empresa_id, usuario_id, vendedor_id'),
         supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude'),
-        supabase.from('empresas').select('id, nome_fantasia, nome').eq('tipo_cliente', 'vendedor').order('nome_fantasia')
+        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude').eq('tipo_cliente', 'vendedor').order('nome_fantasia')
       ]);
 
       if (vendedoresRes.data) setVendedores(vendedoresRes.data);
