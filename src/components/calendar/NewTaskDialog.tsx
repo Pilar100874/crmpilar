@@ -800,7 +800,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           )}
 
           {/* Grid de data e hora */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+          <div className={cn("space-y-3 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Data e Horário</Label>
               {editingTask?.dataOriginal && (
@@ -1009,7 +1009,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Origem da tarefa */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+          <div className={cn("space-y-3 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Origem da Tarefa</Label>
             <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
               <div className="flex items-center space-x-2">
@@ -1207,7 +1207,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Observação */}
-          <div className="space-y-2 p-4 bg-muted/30 rounded-lg border">
+          <div className={cn("space-y-2 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Observação (opcional)</Label>
             <Textarea
               placeholder="Adicione detalhes ou observações sobre a tarefa..."
@@ -1222,7 +1222,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             <Button variant="outline" onClick={() => onOpenChange(false)} size="default">
               Cancelar
             </Button>
-            <Button onClick={handleSave} size="default" className="min-w-[120px]">
+            <Button onClick={handleSave} disabled={!selectedContact} size="default" className="min-w-[120px]">
               {editingTaskId ? 'Atualizar' : 'Salvar Tarefa'}
             </Button>
           </div>

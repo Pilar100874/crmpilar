@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { CalendarCheck, History, User } from "lucide-react";
+import { CalendarCheck, History, Rows3, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
 import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
@@ -23,18 +24,36 @@ interface AtendimentoClientCardProps {
   historicoClienteNome?: string;
 }
 
-const AtendimentoCardsDensityContext = createContext(false);
+const AtendimentoCardsDensityContext = createContext({ compact: false, onToggle: () => undefined });
 
-export function AtendimentoCardsDensityProvider({ compact, children }: { compact: boolean; children: ReactNode }) {
+export function AtendimentoCardsDensityProvider({ compact, onToggle, children }: { compact: boolean; onToggle: () => void; children: ReactNode }) {
   return (
-    <AtendimentoCardsDensityContext.Provider value={compact}>
+    <AtendimentoCardsDensityContext.Provider value={{ compact, onToggle }}>
       {children}
     </AtendimentoCardsDensityContext.Provider>
   );
 }
 
 export function useAtendimentoCardsCompactos() {
-  return useContext(AtendimentoCardsDensityContext);
+  return useContext(AtendimentoCardsDensityContext).compact;
+}
+
+export function AtendimentoCardsDensityButton() {
+  const { compact, onToggle } = useContext(AtendimentoCardsDensityContext);
+  return (
+    <Button
+      type="button"
+      size="icon"
+      variant={compact ? "secondary" : "ghost"}
+      onClick={onToggle}
+      className="h-6 w-6 shrink-0"
+      title={compact ? "Usar cartões normais" : "Exibir cartões em duas linhas"}
+      aria-label={compact ? "Usar cartões normais" : "Exibir cartões em duas linhas"}
+      aria-pressed={compact}
+    >
+      <Rows3 className="h-3.5 w-3.5" />
+    </Button>
+  );
 }
 
 
@@ -82,7 +101,7 @@ export function AtendimentoClientCard({
       }}
       className={cn(
         "group relative overflow-hidden rounded-lg border bg-card font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200",
-        compacto ? "min-h-[82px] p-2.5" : "min-h-[116px] p-3.5",
+        compacto ? "min-h-[58px] px-2 py-1.5" : "min-h-[116px] p-3.5",
         selected
           ? selectionTone === "info"
             ? "border-info bg-info/15 shadow-md ring-2 ring-info/60"
@@ -94,16 +113,18 @@ export function AtendimentoClientCard({
         className,
       )}
     >
-      <div className={cn("flex min-w-0 items-start pr-7", compacto ? "gap-2" : "gap-3")}>
+      <div className={cn("flex min-w-0 pr-7", compacto ? "items-center gap-1.5" : "items-start gap-3")}>
         <div className={cn("relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm", compacto ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm")}>
           {icon || iniciais || <User className="h-5 w-5" />}
           <span className={cn("absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card", pendente ? "bg-destructive" : "bg-success")} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className={cn("truncate font-cardTitle font-bold leading-tight text-foreground", compacto ? "text-[13px]" : "text-[15px]")} title={tituloPrincipal}>{tituloPrincipal}</p>
+          <div className={cn(compacto && "flex min-w-0 items-baseline gap-1.5")}>
+          <p className={cn("truncate font-cardTitle font-bold leading-tight text-foreground", compacto ? "text-xs" : "text-[15px]")} title={tituloPrincipal}>{tituloPrincipal}</p>
           {customerName && !nomeDuplicado && (
-            <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground" title={customerName}>{customerName}</p>
+            <p className={cn("truncate font-medium text-muted-foreground", compacto ? "text-[10px]" : "mt-0.5 text-xs")} title={customerName}>{customerName}</p>
           )}
+          </div>
           <div className={cn("flex min-w-0 items-center gap-1.5", compacto ? "mt-1" : "mt-1.5")}>
             <span className={cn(
               "max-w-[110px] truncate rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase text-muted-foreground",
@@ -116,7 +137,7 @@ export function AtendimentoClientCard({
         </div>
       </div>
       {historicoClienteId && (
-        <div className={cn("flex items-center gap-1.5 border-t border-border/60", compacto ? "mt-1.5 pt-1.5" : "mt-3 pt-2.5")}>
+        <div className={cn("flex items-center gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
           <button
             type="button"
             title="Ver histórico do cliente"
@@ -140,14 +161,14 @@ export function AtendimentoClientCard({
             }}
             className={cn(
               "flex items-center gap-1 rounded-md border text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              compacto ? "h-6 px-1.5" : "h-7 px-2",
+              compacto ? "h-6 w-6 justify-center p-0" : "h-7 px-2",
               pendente
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
                 : "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/50",
             )}
           >
             <CalendarCheck className="h-3.5 w-3.5" />
-            {pendente ? "Pendente" : "Finalizar"}
+            {!compacto && (pendente ? "Pendente" : "Finalizar")}
           </button>
           {(() => {
             const { canal } = parseTituloCartao(title);

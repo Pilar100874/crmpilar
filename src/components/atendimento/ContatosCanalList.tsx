@@ -2,7 +2,7 @@ import { Mail, MessageSquare, Phone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import type { ContatoAtendimento } from "@/hooks/useContatosAtendimento";
-import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { AtendimentoCardsDensityButton, AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
 import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
 import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
@@ -67,6 +67,7 @@ export default function ContatosCanalList({
     <div className="space-y-1.5">
       <div className="flex items-center gap-2 px-2 py-1.5">
         <Icone className="w-3.5 h-3.5 text-primary" />
+        {titulo === "Meus contatos" && <AtendimentoCardsDensityButton />}
         <span className="text-xs font-medium text-primary">{titulo}</span>
         <Badge className="text-[10px] bg-primary/10 text-primary border-0 px-1.5">{lista.length}</Badge>
       </div>
