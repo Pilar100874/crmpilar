@@ -1,0 +1,1 @@
+ALTER TABLE public.usuario_segmentos ALTER COLUMN usuario_id DROP NOT NULL; ALTER TABLE public.usuario_segmentos ADD COLUMN IF NOT EXISTS vendedor_id uuid REFERENCES public.empresas(id) ON DELETE CASCADE; CREATE INDEX IF NOT EXISTS idx_usuario_segmentos_vendedor ON public.usuario_segmentos(vendedor_id);
