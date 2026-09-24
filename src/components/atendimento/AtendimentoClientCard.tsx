@@ -136,7 +136,7 @@ export function AtendimentoClientCard({
         </div>
       </div>
       {historicoClienteId && (
-        <div className={cn("flex items-center justify-end gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
+        <div className={cn("flex items-center gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
           <button
             type="button"
             title="Ver histórico do cliente"
