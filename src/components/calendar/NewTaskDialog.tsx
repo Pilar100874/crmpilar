@@ -93,7 +93,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [noTimeSet, setNoTimeSet] = useState(false);
-  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido" | "chat" | "manual" | "novo_contato">("bot");
+  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido" | "chat" | "manual" | "novo_contato">("manual");
   const [emailTipo, setEmailTipo] = useState<"enviado" | "recebido">("enviado");
   const [pedidoTipo, setPedidoTipo] = useState<"orcamento" | "negociacao" | "aprovacao">("orcamento");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
@@ -203,7 +203,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         setMinutes("");
         setIsAllDay(false);
         setNoTimeSet(false);
-        setTaskOrigem("bot");
+        setTaskOrigem("manual");
         setEmailTipo("enviado");
         setPedidoTipo("orcamento");
         setChatChannel("whatsapp");
@@ -341,7 +341,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setHours("");
       setMinutes("");
       setIsAllDay(false);
-      setTaskOrigem("bot");
+      setTaskOrigem("manual");
       setEmailTipo("enviado");
       setPedidoTipo("orcamento");
       setSelectedCampaignId("");
