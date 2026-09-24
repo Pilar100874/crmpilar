@@ -1295,6 +1295,27 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         toast.success("Empresa criada!");
       }
 
+      // Vendedor: sincronizar vínculo obrigatório com o gerente responsável
+      if (variant === "vendedor" && formData.gerente_usuario_id) {
+        await supabase
+          .from('empresa_vinculos')
+          .delete()
+          .eq('empresa_id', empresaId)
+          .not('usuario_id', 'is', null)
+          .is('auto_via_vendedor_id', null);
+        const { error: vincErr } = await supabase
+          .from('empresa_vinculos')
+          .insert([{
+            empresa_id: empresaId,
+            usuario_id: formData.gerente_usuario_id,
+            estabelecimento_id: estabId,
+          }]);
+        if (vincErr) {
+          console.error('Erro ao vincular gerente:', vincErr);
+          toast.error('Vendedor salvo, mas não foi possível vincular o gerente');
+        }
+      }
+
       // Criar novo contato se necessário
       if (criarNovoContato) {
         // Preparar custom_fields com todos os campos de contato (exceto name, phone, email)
