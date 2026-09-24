@@ -30,7 +30,6 @@ import { cn } from '@/lib/utils';
 import Contatos from './Contatos';
 import Empresas from './Empresas';
 import Todos from './Todos';
-import VinculosEmpresaVendedor from './VinculosEmpresaVendedor';
 import VinculosVendedorUsuario from './VinculosVendedorUsuario';
 import MapaClientesView from '@/components/listas/MapaClientesView';
 import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
@@ -72,7 +71,6 @@ const sections: TabSection[] = [
     id: 'vinculos',
     title: 'Vínculos',
     items: [
-      { id: 'vinculos-empresa-vendedor', label: 'Vínculo Emp. x Vendedor', shortLabel: 'Emp. x Vendedor', icon: Link2, description: 'Vínculo Empresas X Vendedor' },
       { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Gerente', shortLabel: 'Vend. x Gerente', icon: Link2, description: 'Vínculo Vendedores X Gerente' },
       { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Gerente/Vendedor', shortLabel: 'Segm. Prospect x Resp.', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a gerentes e vendedores' },
     ],
@@ -137,7 +135,6 @@ const ListasHub: React.FC = () => {
       case 'transportadoras': return <Empresas variant="transportadora" />;
       case 'gerentes': return <Gerentes />;
       case 'todos': return <Todos />;
-      case 'vinculos-empresa-vendedor': return <VinculosEmpresaVendedor />;
       case 'vinculos-vendedor-usuario': return <VinculosVendedorUsuario />;
       case 'vinculos-segmento-prospect-usuario': return <VinculosSegmentoProspectUsuario />;
       case 'mapa-clientes': return <MapaClientesView />;

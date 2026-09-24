@@ -294,10 +294,6 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
       "label": "Todos"
     },
     {
-      "id": "vinculos-empresa-vendedor",
-      "label": "Vínculo Emp. x Vendedor"
-    },
-    {
       "id": "vinculos-vendedor-usuario",
       "label": "Vínculo Vend. x Gerente"
     },
