@@ -47,12 +47,23 @@ export function useContatosVinculados(usuarioIds: string[], ativo: boolean) {
     }
     setCarregando(true);
     try {
-      const { data, error } = await supabase
+      const { data: vinculosDiretos, error } = await supabase
         .from("customer_vinculos")
-        .select("customer_id, customers:customer_id ( id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) ) )")
+        .select("customer_id")
         .in("usuario_id", ids);
 
       if (error) throw error;
+
+      const customerIds = [...new Set(((vinculosDiretos ?? []) as any[]).map((v) => v.customer_id).filter(Boolean))];
+      let vinculadosDiretos: any[] = [];
+      if (customerIds.length) {
+        const { data: customers, error: customersError } = await supabase
+          .from("customers")
+          .select("id, nome, telefone, tel, email, customer_empresas ( id, empresa_id, is_primary, cargo, empresas:empresa_id ( id, nome, nome_fantasia, cnpj ) )")
+          .in("id", customerIds.slice(0, 500));
+        if (customersError) throw customersError;
+        vinculadosDiretos = (customers ?? []).map((customer) => ({ customers: customer }));
+      }
 
       // Contatos das empresas vinculadas aos usuários visíveis
       const { data: empVinc } = await supabase
@@ -79,7 +90,7 @@ export function useContatosVinculados(usuarioIds: string[], ativo: boolean) {
       const ocultos = new Set<string>(((inativos ?? []) as any[]).map((t) => t.customer_id));
 
       const mapa = new Map<string, ContatoAtendimento>();
-      [...(data ?? []), ...viaEmpresa].forEach((vinculo: any) => {
+      [...vinculadosDiretos, ...viaEmpresa].forEach((vinculo: any) => {
         const c = vinculo.customers;
         if (!c?.id || mapa.has(c.id) || ocultos.has(c.id)) return;
         mapa.set(c.id, {
