@@ -39,6 +39,7 @@ const MapaClientesView: React.FC = () => {
   const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
   const { toast } = useToast();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewMode, setViewMode] = useState<'empresas' | 'vendedores' | 'tudo'>('tudo');
   const [geocodingInProgress, setGeocodingInProgress] = useState(false);
   const [mapReady, setMapReady] = useState(false);
 
