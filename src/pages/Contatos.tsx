@@ -3126,7 +3126,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               <Card className="p-4 mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Cadastrar Empresa
+                    {vinculoTab === 'empresa' ? 'Cadastrar Empresa' : vinculoTab === 'transportadora' ? 'Cadastrar Transportadora' : 'Cadastrar Vendedor'}
                   </h3>
                   <Button
                     variant="ghost"
