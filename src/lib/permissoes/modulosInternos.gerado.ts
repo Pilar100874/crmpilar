@@ -299,7 +299,7 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     },
     {
       "id": "mapa-clientes",
-      "label": "Mapa Clientes"
+      "label": "Mapa"
     },
     {
       "id": "prospeccao-b2b",
