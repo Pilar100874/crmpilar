@@ -2643,7 +2643,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   ) : contactDeps && Object.keys(contactDeps).length > 0 ? (
                     <>
                       <div>
-                        O contato <strong>{contactToDelete?.name}</strong> está sendo utilizado no sistema. Remova os vínculos abaixo para liberar a exclusão. Vínculos de <strong>orçamentos</strong> são protegidos — nesse caso use <strong>Inativar</strong>.
+                        O contato <strong>{contactToDelete?.name}</strong> tem movimentação no sistema e <strong>não pode ser excluído</strong>. Veja abaixo onde ele está sendo usado. Para retirá-lo das listas, use <strong>Inativar</strong>.
                       </div>
                       <div className="rounded-md border bg-muted/40 divide-y max-h-72 overflow-y-auto">
                         {Object.entries(contactDeps).map(([k, v]) => {
@@ -2660,29 +2660,10 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                             respostas_pesquisa: 'Respostas de pesquisa',
                             carrinhos_ativos: 'Carrinhos ativos',
                           };
-                          const isProtected = /or[çc]amento/i.test(k);
                           return (
                             <div key={k} className="flex items-center justify-between gap-2 p-2 text-sm">
                               <span className="flex-1 truncate">{labels[k] || k}</span>
                               <span className="font-mono font-semibold min-w-[2rem] text-right">{v as number}</span>
-                              {isProtected ? (
-                                <span className="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400 font-semibold px-2">Protegido</span>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 text-destructive hover:bg-destructive/10"
-                                  disabled={!!clearingDepKey}
-                                  onClick={() => handleClearContactDep(k)}
-                                >
-                                  {clearingDepKey === k ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-3 w-3 mr-1" />
-                                  )}
-                                  Excluir vínculos
-                                </Button>
-                              )}
                             </div>
                           );
                         })}
