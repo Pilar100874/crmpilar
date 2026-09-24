@@ -8327,12 +8327,22 @@ function MobileListContent({
           >
             <div className={`flex items-start pr-10 ${cardsCompactos ? 'gap-2 p-2.5' : 'gap-3 p-3.5'}`}>
               <div className={`relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm ${cardsCompactos ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'}`}>
-                {(task.contact_name || parseTituloCartao(task.title).nome || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
+                {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || parseTituloCartao(task.title).nome || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
                 <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-[13px]' : 'text-[15px]'}`}>{parseTituloCartao(task.title).nome}</p>
-                <p className="mt-0.5 text-xs font-medium text-muted-foreground truncate">{task.contact_name}</p>
+                {(() => {
+                  const ce = task.customers?.customer_empresas || [];
+                  const principal = ce.find((c: any) => c.is_primary) || ce[0];
+                  const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome;
+                  const contatoNome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title).nome.replace(/^contato\s*[:\-]?\s*/i, '');
+                  return (
+                    <>
+                      <p className={`font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-[13px]' : 'text-[15px]'}`}>{empresaNome || contatoNome}</p>
+                      {empresaNome && <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">{contatoNome}</p>}
+                    </>
+                  );
+                })()}
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   {taskPendente && (
                     <Badge variant="outline" className="max-w-[110px] truncate border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[9px] font-semibold uppercase text-destructive">
