@@ -18,6 +18,7 @@ import { CpfField } from "@/components/cadastros/CpfField";
 import { CepField } from "@/components/cadastros/CepField";
 import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface CustomField {
   id: string;
