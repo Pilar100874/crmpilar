@@ -5868,17 +5868,17 @@ ${recentMessages}
               </div>
             ) : (
               <div className="space-y-1.5">
-                {/* Grupo: Agenda do Dia - Conversas ativas + Contatos sem conversa */}
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                  {!usarAgenda && <AtendimentoCardsDensityButton />}
+                  <span className="text-xs font-medium text-muted-foreground">Conversas</span>
+                  <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
+                    {agendaConversations.length + contatosSemConversa.length + otherConversations.length}
+                  </Badge>
+                </div>
+
                 {(agendaConversations.length > 0 || contatosSemConversa.length > 0) && (
                   <>
-                    <div className="flex items-center gap-2 px-2 py-1.5">
-                      <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
-                      {!usarAgenda && <AtendimentoCardsDensityButton />}
-                      <span className="text-xs font-medium text-orange-600">{usarAgenda ? "Agenda do Dia" : "Meus contatos"}</span>
-                      <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
-                        {agendaConversations.length + contatosSemConversa.length}
-                      </Badge>
-                    </div>
                     
                     {/* Conversas ativas da agenda */}
                     {agendaConversations.map((conv) => (
@@ -5946,16 +5946,8 @@ ${recentMessages}
                   </>
                 )}
 
-                {/* Grupo: Outras Conversas */}
                 {otherConversations.length > 0 && (
                   <>
-                    <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
-                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
-                      <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
-                        {otherConversations.length}
-                      </Badge>
-                    </div>
                     {otherConversations.map((conv) => (
                       <ConversaAgendaCard
                         key={conv.id}
@@ -8237,17 +8229,18 @@ function MobileListContent({
 
         {activeTab === "chat" && (
           <>
-            {/* Grupo: Agenda do Dia - Conversas ativas + Contatos sem conversa */}
+            {(agendaConversations.length > 0 || agendaContactsWithoutConversation.length > 0 || otherConversations.length > 0) && (
+              <div className="flex items-center gap-2 px-2 py-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Conversas</span>
+                <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
+                  {agendaConversations.length + agendaContactsWithoutConversation.length + otherConversations.length}
+                </Badge>
+              </div>
+            )}
+
             {(agendaConversations.length > 0 || agendaContactsWithoutConversation.length > 0) && (
               <>
-                <div className="flex items-center gap-2 px-2 py-1.5">
-                  <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
-                  <span className="text-xs font-medium text-orange-600">Agenda do Dia</span>
-                  <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
-                    {agendaConversations.length + agendaContactsWithoutConversation.length}
-                  </Badge>
-                </div>
-                
                 {/* Conversas ativas da agenda */}
                 {agendaConversations.map((conv) => (
                   <ConversaAgendaCard
@@ -8281,16 +8274,8 @@ function MobileListContent({
               </>
             )}
 
-            {/* Grupo: Outras Conversas */}
             {otherConversations.length > 0 && (
               <>
-                <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
-                  <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
-                  <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
-                    {otherConversations.length}
-                  </Badge>
-                </div>
                 {otherConversations.map((conv) => (
                   <ConversaAgendaCard
                     key={conv.id}
