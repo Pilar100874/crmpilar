@@ -41,6 +41,7 @@ import { ImportContatosWizard } from "@/components/contatos/ImportContatosWizard
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SubstituirContatoInativadoDialog, carregarSubstituicaoContato, type EmpresaSubstituicao } from "@/components/contatos/SubstituirContatoInativadoDialog";
 
 import {
   DndContext,
@@ -116,6 +117,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [substituicao, setSubstituicao] = useState<{ contato: { id: string; name: string }; empresas: EmpresaSubstituicao[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -1789,20 +1791,37 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     setContactDeps(null);
   };
 
-  const confirmInactivate = async () => {
-    if (!contactToDelete) return;
+  const executarInativacao = async (contato: { id: string; name: string }, novo: { id: string; name: string } | null) => {
     try {
-      const { error } = await supabase.rpc('inactivate_customer', { p_customer_id: contactToDelete.id });
+      if (novo) {
+        const { error: errT } = await (supabase as any)
+          .from('calendario_tarefas')
+          .update({ contact_id: novo.id, contact_name: novo.name })
+          .eq('contact_id', contato.id);
+        if (errT) throw errT;
+      }
+      const { error } = await supabase.rpc('inactivate_customer', { p_customer_id: contato.id });
       if (error) throw error;
       await loadContacts();
-      toast.success("Contato inativado");
+      toast.success(novo ? `Contato inativado e tarefas transferidas para ${novo.name}` : "Contato inativado");
     } catch (e: any) {
       console.error('Erro ao inativar contato:', e);
       toast.error(e?.message || "Erro ao inativar contato");
     }
+  };
+
+  const confirmInactivate = async () => {
+    if (!contactToDelete) return;
+    const contato = { id: contactToDelete.id, name: contactToDelete.name };
     setDeleteDialogOpen(false);
     setContactToDelete(null);
     setContactDeps(null);
+    const empresas = await carregarSubstituicaoContato(contato.id, estabelecimentoId);
+    if (empresas && empresas.length) {
+      setSubstituicao({ contato, empresas });
+      return;
+    }
+    await executarInativacao(contato, null);
   };
 
 
@@ -3331,6 +3350,13 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       )}
 
 
+      <SubstituirContatoInativadoDialog
+        open={!!substituicao}
+        contato={substituicao?.contato || null}
+        empresas={substituicao?.empresas || []}
+        onCancel={() => setSubstituicao(null)}
+        onConfirm={async (novo) => { if (substituicao) await executarInativacao(substituicao.contato, novo); setSubstituicao(null); }}
+      />
     </div>
   );
 }
