@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export interface EmpresaSubstituicao {
   empresaId: string;
@@ -41,25 +43,61 @@ interface Props {
   open: boolean;
   contato: { id: string; name: string } | null;
   empresas: EmpresaSubstituicao[];
+  estabelecimentoId: string | null;
   modo?: 'inativar' | 'excluir';
   onCancel: () => void;
   onConfirm: (novoContato: { id: string; name: string } | null) => Promise<void>;
 }
 
-export function SubstituirContatoInativadoDialog({ open, contato, empresas, modo = 'inativar', onCancel, onConfirm }: Props) {
+export function SubstituirContatoInativadoDialog({ open, contato, empresas, estabelecimentoId, modo = 'inativar', onCancel, onConfirm }: Props) {
   const [escolhas, setEscolhas] = useState<Record<string, string>>({});
+  const [novos, setNovos] = useState<Record<string, { nome: string; telefone: string }>>({});
+  const [criados, setCriados] = useState<Record<string, { id: string; name: string }>>({});
   const [salvando, setSalvando] = useState(false);
-  useEffect(() => { setEscolhas({}); }, [open]);
+  useEffect(() => { setEscolhas({}); setNovos({}); setCriados({}); }, [open]);
 
-  const comCandidatos = empresas.filter(e => e.candidatos.length > 0);
-  const completo = comCandidatos.every(e => escolhas[e.empresaId]);
+  // Toda empresa precisa ter um substituto: ou um contato existente escolhido, ou um novo cadastrado.
+  const completo = empresas.every(e =>
+    e.candidatos.length > 0 ? !!escolhas[e.empresaId] : !!criados[e.empresaId]
+  );
+
+  const cadastrarNovo = async (empresaId: string) => {
+    const dados = novos[empresaId];
+    if (!dados?.nome.trim()) { toast.error("Informe o nome do novo contato"); return; }
+    if (!estabelecimentoId) { toast.error("Estabelecimento não identificado"); return; }
+    setSalvando(true);
+    try {
+      const { data: novo, error: errC } = await (supabase as any)
+        .from("customers")
+        .insert({ name: dados.nome.trim(), telefone: dados.telefone.trim() || null, estabelecimento_id: estabelecimentoId, ativo: true })
+        .select("id, name").single();
+      if (errC) throw errC;
+      const { error: errV } = await (supabase as any)
+        .from("customer_empresas")
+        .insert({ customer_id: novo.id, empresa_id: empresaId });
+      if (errV) throw errV;
+      setCriados(s => ({ ...s, [empresaId]: { id: novo.id, name: novo.name } }));
+      toast.success(`Contato ${novo.name} cadastrado e vinculado à empresa`);
+    } catch (e: any) {
+      console.error('Erro ao cadastrar novo contato:', e);
+      toast.error(e?.message || "Erro ao cadastrar novo contato");
+    } finally { setSalvando(false); }
+  };
 
   const confirmar = async () => {
     setSalvando(true);
     try {
-      const primeira = comCandidatos[0];
-      const id = primeira ? escolhas[primeira.empresaId] : undefined;
-      const novo = id ? primeira.candidatos.find(c => c.id === id) || null : null;
+      // As tarefas vão para o substituto da primeira empresa da lista.
+      const primeira = empresas[0];
+      let novo: { id: string; name: string } | null = null;
+      if (primeira) {
+        if (primeira.candidatos.length > 0) {
+          const id = escolhas[primeira.empresaId];
+          novo = primeira.candidatos.find(c => c.id === id) || null;
+        } else {
+          novo = criados[primeira.empresaId] || null;
+        }
+      }
       await onConfirm(novo);
     } finally { setSalvando(false); }
   };
@@ -75,17 +113,36 @@ export function SubstituirContatoInativadoDialog({ open, contato, empresas, modo
         </DialogHeader>
         <div className="space-y-4">
           {empresas.map(e => (
-            <div key={e.empresaId} className="space-y-1">
+            <div key={e.empresaId} className="space-y-2">
               <Label>{e.empresaNome}</Label>
-              {e.candidatos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum outro contato ativo nesta empresa. Cadastre um novo contato antes, ou continue sem substituto (as tarefas não serão transferidas).</p>
-              ) : (
+              {e.candidatos.length > 0 ? (
                 <Select value={escolhas[e.empresaId] || ""} onValueChange={(v) => setEscolhas(s => ({ ...s, [e.empresaId]: v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione o novo contato" /></SelectTrigger>
                   <SelectContent>
                     {e.candidatos.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              ) : criados[e.empresaId] ? (
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  Novo contato cadastrado: <strong>{criados[e.empresaId].name}</strong>
+                </p>
+              ) : (
+                <div className="space-y-2 rounded-md border p-3">
+                  <p className="text-sm text-muted-foreground">Nenhum outro contato ativo nesta empresa. Cadastre o novo contato para continuar:</p>
+                  <Input
+                    placeholder="Nome do novo contato *"
+                    value={novos[e.empresaId]?.nome || ""}
+                    onChange={(ev) => setNovos(s => ({ ...s, [e.empresaId]: { nome: ev.target.value, telefone: s[e.empresaId]?.telefone || "" } }))}
+                  />
+                  <Input
+                    placeholder="Telefone (opcional)"
+                    value={novos[e.empresaId]?.telefone || ""}
+                    onChange={(ev) => setNovos(s => ({ ...s, [e.empresaId]: { nome: s[e.empresaId]?.nome || "", telefone: ev.target.value } }))}
+                  />
+                  <Button size="sm" variant="secondary" onClick={() => cadastrarNovo(e.empresaId)} disabled={salvando || !novos[e.empresaId]?.nome.trim()}>
+                    Cadastrar e vincular
+                  </Button>
+                </div>
               )}
             </div>
           ))}
