@@ -331,15 +331,14 @@ function SimpleListaArvore({ titulo, icone, itens, tipo, getNome, getSub, getFil
           <tr>
             <th className="px-4 py-3.5 w-[30px]"></th>
             <th className="px-4 py-3.5 w-[40px]"></th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Detalhe</th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Vínculos</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome / CNPJ-CPF</th>
           </tr>
         </thead>
         <tbody>
           {itens.map((item: any) => {
             const filhos = getFilhos(tipo, item.id);
             const isExpanded = expandedRows.has(item.id);
+            const sub = getSub(item);
             return (
               <React.Fragment key={item.id}>
                 <tr className="border-b border-border/30 hover:bg-muted/40 transition-colors">
@@ -351,13 +350,14 @@ function SimpleListaArvore({ titulo, icone, itens, tipo, getNome, getSub, getFil
                     )}
                   </td>
                   <td className="p-3">{icone}</td>
-                  <td className="p-3 font-medium">{getNome(item)}</td>
-                  <td className="p-3 text-sm text-muted-foreground">{getSub(item) || "-"}</td>
-                  <td className="p-3 text-sm text-muted-foreground">{filhos.length}</td>
+                  <td className="p-3">
+                    <span className="font-medium">{getNome(item)}</span>
+                    {sub && <span className="text-sm text-muted-foreground ml-2">({sub})</span>}
+                  </td>
                 </tr>
                 {isExpanded && filhos.length > 0 && (
                   <tr>
-                    <td colSpan={5} className="bg-muted/20 px-4 py-3 border-l-4 border-l-primary/40">
+                    <td colSpan={3} className="bg-muted/20 px-4 py-3 border-l-4 border-l-primary/40">
                       <ArvoreFilhos nos={filhos} getFilhos={getFilhos} caminho={new Set([item.id])} />
                     </td>
                   </tr>
@@ -752,7 +752,7 @@ export default function Todos() {
     }
     if (tipo === 'vendedor') return unicos((vendedorEmpresas[id] || []).map(noEmpresa));
     if (tipo === 'empresa' || tipo === 'transportadora') {
-      return unicos((empresaContatos[id] || []).map((c: any) => ({ tipo: 'contato' as TipoNo, id: c.id, nome: c.nome || '-', sub: c.email || null })));
+      return unicos((empresaContatos[id] || []).map((c: any) => ({ tipo: 'contato' as TipoNo, id: c.id, nome: c.nome || '-', sub: c.custom_fields?.cpf || c.custom_fields?.cpf_cnpj || null })));
     }
     if (tipo === 'contato') return unicos((contatoEmpresas[id] || []).map(noEmpresa));
     return [];
