@@ -3350,6 +3350,13 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       )}
 
 
+      <SubstituirContatoInativadoDialog
+        open={!!substituicao}
+        contato={substituicao?.contato || null}
+        empresas={substituicao?.empresas || []}
+        onCancel={() => setSubstituicao(null)}
+        onConfirm={async (novo) => { if (substituicao) await executarInativacao(substituicao.contato, novo); setSubstituicao(null); }}
+      />
     </div>
   );
 }
