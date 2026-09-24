@@ -288,6 +288,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     tags: "",
   });
   const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
+  const [vinculoFilter, setVinculoFilter] = useState<'all' | 'empresa' | 'vendedor' | 'transportadora' | 'sem'>('all');
 
 
   // Campos base obrigatórios de contato (sempre devem existir)
@@ -548,6 +549,40 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       if (tipoContatoFilter === 'clientes') query = query.eq('tipo_operador', true);
       if (tipoContatoFilter === 'prospects') query = query.or('tipo_operador.eq.false,tipo_operador.is.null');
 
+      // Filtro por vínculo (empresa, vendedor, transportadora ou sem vínculo)
+      if (vinculoFilter !== 'all') {
+        const buscarIds = async (): Promise<string[]> => {
+          if (vinculoFilter === 'empresa') {
+            const { data } = await supabase.from('customer_empresas').select('customer_id').not('empresa_id', 'is', null);
+            return [...new Set((data || []).map((r: any) => r.customer_id))];
+          }
+          if (vinculoFilter === 'vendedor') {
+            const { data } = await supabase.from('customer_vinculos').select('customer_id').not('usuario_id', 'is', null);
+            return [...new Set((data || []).map((r: any) => r.customer_id))];
+          }
+          if (vinculoFilter === 'transportadora') {
+            const { data: vincs } = await supabase.from('empresa_vinculos').select('transportadora_id').not('transportadora_id', 'is', null);
+            const transpIds = [...new Set((vincs || []).map((r: any) => r.transportadora_id))];
+            if (transpIds.length === 0) return [];
+            const { data } = await supabase.from('customer_empresas').select('customer_id').in('empresa_id', transpIds);
+            return [...new Set((data || []).map((r: any) => r.customer_id))];
+          }
+          // sem vínculo: sem empresa e sem vendedor
+          const [{ data: ce }, { data: cv }] = await Promise.all([
+            supabase.from('customer_empresas').select('customer_id').not('empresa_id', 'is', null),
+            supabase.from('customer_vinculos').select('customer_id').not('usuario_id', 'is', null),
+          ]);
+          return [...new Set([...(ce || []), ...(cv || [])].map((r: any) => r.customer_id))];
+        };
+        const ids = await buscarIds();
+        if (vinculoFilter === 'sem') {
+          if (ids.length > 0) query = query.not('id', 'in', `(${ids.join(',')})`);
+        } else {
+          if (ids.length === 0) { setContacts([]); setTotalCount(0); setLoading(false); return; }
+          query = query.in('id', ids);
+        }
+      }
+
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
@@ -626,9 +661,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   useEffect(() => {
     loadContacts();
-  }, [page, sortConfig, searchFilters.unifiedSearch, tipoContatoFilter]);
+  }, [page, sortConfig, searchFilters.unifiedSearch, tipoContatoFilter, vinculoFilter]);
 
-  useEffect(() => { setPage(1); }, [searchFilters.unifiedSearch, tipoContatoFilter]);
+  useEffect(() => { setPage(1); }, [searchFilters.unifiedSearch, tipoContatoFilter, vinculoFilter]);
 
   // Salvar configuração de campos de empresa no Supabase
   useEffect(() => {
@@ -2282,6 +2317,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     <SelectItem value="all">Todos os contatos</SelectItem>
                     <SelectItem value="clientes">Somente clientes</SelectItem>
                     <SelectItem value="prospects">Somente prospects</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={vinculoFilter} onValueChange={(v: any) => setVinculoFilter(v)}>
+                  <SelectTrigger className="w-full md:w-[200px] h-9 sm:h-10 rounded-xl text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os vínculos</SelectItem>
+                    <SelectItem value="empresa">Com empresa</SelectItem>
+                    <SelectItem value="vendedor">Com vendedor</SelectItem>
+                    <SelectItem value="transportadora">Com transportadora</SelectItem>
+                    <SelectItem value="sem">Sem vínculo</SelectItem>
                   </SelectContent>
                 </Select>
 
