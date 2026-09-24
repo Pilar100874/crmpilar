@@ -2955,7 +2955,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </TabsContent>
 
           <TabsContent value="cadastros-vinculados" className="p-0">
-            <Tabs value={vinculoTab} onValueChange={(v) => { setVinculoTab(v as any); setCriarNovaEmpresa(false); setEmpresasFiltradas([]); setBuscaEmpresa(""); }} className="w-full">
+            <Tabs value={vinculoTab} onValueChange={(v) => { setVinculoTab(v as any); setCriarNovaEmpresa(false); setEmpresasFiltradas([]); setBuscaEmpresa(""); setVinculosCheckboxSelecionados([]); }} className="w-full">
               <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
                 <TabsTrigger value="empresa" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
                   <span className="inline-flex items-center gap-1.5">
