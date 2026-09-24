@@ -27,8 +27,7 @@ interface Contact {
   phone: string;
   email: string;
   customFields?: Record<string, any>;
-  cnpj?: string;
-  razaoSocial?: string;
+  empresaNomes?: string[];
 }
 
 interface NewTaskDialogProps {
