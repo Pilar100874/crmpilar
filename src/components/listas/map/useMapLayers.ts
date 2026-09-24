@@ -26,6 +26,13 @@ interface Usuario {
 interface EmpresaVinculo {
   empresa_id: string;
   usuario_id: string | null;
+  vendedor_id: string | null;
+}
+
+interface Vendedor {
+  id: string;
+  nome_fantasia: string | null;
+  nome: string | null;
 }
 
 export const useMapLayers = () => {
@@ -38,6 +45,9 @@ export const useMapLayers = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<string>('all');
   const [selectedCnaes, setSelectedCnaes] = useState<string[]>([]);
+  const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>('all');
+  const [selectedVendedorId, setSelectedVendedorId] = useState<string>('all');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
