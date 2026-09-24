@@ -2923,58 +2923,59 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </TabsList>
 
           <TabsContent value="contatos" className="p-6">
-            {/* Busca e Seleção de Contato (topo) */}
             {!criarNovoContato && (
-              <Card className="p-4 mb-4">
-                <Label className="text-xs">Vincular Contato</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="Buscar por nome, e-mail ou WhatsApp..."
-                    value={buscaContato}
-                    className="h-9 text-sm"
-                    onChange={(e) => setBuscaContato(e.target.value)}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCriarNovoContato(true);
-                    }}
-                  >
-                    + Novo
-                  </Button>
-                </div>
-
-                {/* Lista de contatos filtrados */}
-                {contatosFiltrados.length > 0 && (
-                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
-                    {contatosFiltrados.map((contato) => (
-                      <button
-                        key={contato.id}
-                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                        onClick={() => {
-                          handleAddContatoVinculado(contato.id);
-                          setContatosFiltrados([]);
-                          setBuscaContato("");
-                        }}
-                      >
-                        <div className="font-medium text-sm">{contato.nome}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {contato.email} {contato.telefone && `• ${contato.telefone}`}
-                        </div>
-                      </button>
-                    ))}
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Contatos Vinculados</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Vincule os contatos / decisores {variant === "vendedor" ? "deste vendedor" : variant === "transportadora" ? "desta transportadora" : "desta empresa"}.
+                    </p>
                   </div>
-                )}
-              </Card>
-            )}
-
-            {/* Lista de Contatos Vinculados (abaixo) */}
-            {contatosVinculados.length > 0 && (
-              <Card className="p-4 mb-4">
-                <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-                  Contatos Vinculados
-                </h3>
+                  <div className="space-y-4">
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardContent className="p-4 space-y-4">
+                        <h4 className="text-sm font-semibold">Adicionar Contatos</h4>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Buscar por nome, e-mail ou WhatsApp..."
+                            value={buscaContato}
+                            className="h-9 text-sm bg-background"
+                            onChange={(e) => setBuscaContato(e.target.value)}
+                          />
+                          <Button variant="outline" size="sm" onClick={() => setCriarNovoContato(true)}>
+                            <Plus className="w-4 h-4 mr-1" /> Novo
+                          </Button>
+                        </div>
+                        {contatosFiltrados.length > 0 && (
+                          <div className="border rounded-md max-h-[240px] overflow-y-auto bg-background">
+                            {contatosFiltrados.map((contato) => (
+                              <button
+                                key={contato.id}
+                                className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
+                                onClick={() => {
+                                  handleAddContatoVinculado(contato.id);
+                                  setContatosFiltrados([]);
+                                  setBuscaContato("");
+                                }}
+                              >
+                                <div className="font-medium text-sm">{contato.nome}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {contato.email} {contato.telefone && `• ${contato.telefone}`}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3">Contatos Vinculados ({contatosVinculados.length})</h4>
+                      {contatosVinculados.length === 0 && (
+                        <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                          <p className="text-sm text-muted-foreground">Nenhum contato vinculado</p>
+                        </div>
+                      )}
                 <div className="space-y-2">
                   {contatosVinculados.map((vinculo, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50 cursor-pointer" onClick={() => {
