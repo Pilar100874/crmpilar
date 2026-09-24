@@ -257,7 +257,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     } catch {
       try { localStorage.removeItem(key); } catch {}
     }
-  }, [page, sortConfig, searchTerm, statusFilter]);
+  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor]);
 
   useEffect(() => { setPage(1); }, [searchTerm, statusFilter, variant, filtroGerenteVendedor]);
 
@@ -519,7 +519,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     };
     fetchEstabelecimento();
-  }, [page, sortConfig, searchTerm, statusFilter]);
+  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor]);
 
   // Detectar se há um ID de empresa para editar vindo da navegação (via state ou URL params)
   useEffect(() => {
