@@ -5839,6 +5839,7 @@ ${recentMessages}
                       <AtendimentoClientCard
                         key={`contact-${contact.contactId}`}
                         title={`Chat - ${contact.nome}`}
+                        companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                         customerName={contact.nome}
                         sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                         onClick={async () => {
@@ -8188,6 +8189,7 @@ function MobileListContent({
                   <AtendimentoClientCard
                     key={`contact-${contact.contactId}`}
                     title={`Chat - ${contact.nome}`}
+                      companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                     customerName={contact.nome}
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}

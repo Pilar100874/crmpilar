@@ -99,6 +99,7 @@ export function OrcamentosEmpresaList({
           <div key={grupo.id} className="space-y-1.5">
             <AtendimentoClientCard
               title={tarefaAgenda?.title || `Orçamento - ${grupo.contato}`}
+              companyName={grupo.nome !== grupo.contato ? grupo.nome : undefined}
               customerName={grupo.contato}
               sideLabel={tarefaAgenda?.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
               onClick={() => {
