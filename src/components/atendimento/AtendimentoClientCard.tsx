@@ -74,7 +74,6 @@ export function AtendimentoClientCard({
   historicoClienteNome,
 }: AtendimentoClientCardProps) {
   const compacto = useAtendimentoCardsCompactos();
-  const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
   const nomeCartao = parseTituloCartao(title).nome;
   const tituloPrincipal = companyName || nomeCartao;
   const nomeDuplicado = !!customerName && customerName.trim().toLowerCase() === tituloPrincipal.trim().toLowerCase();
@@ -113,7 +112,7 @@ export function AtendimentoClientCard({
         className,
       )}
     >
-      <div className={cn("flex min-w-0 pr-7", compacto ? "items-center gap-1.5" : "items-start gap-3")}>
+      <div className={cn("flex min-w-0", compacto ? "items-center gap-1.5" : "items-start gap-3")}>
         <div className={cn("relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm", compacto ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm")}>
           {icon || iniciais || <User className="h-5 w-5" />}
           <span className={cn("absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card", pendente ? "bg-destructive" : "bg-success")} />
@@ -126,15 +125,15 @@ export function AtendimentoClientCard({
           )}
           </div>
           <div className={cn("flex min-w-0 items-center gap-1.5", compacto ? "mt-1" : "mt-1.5")}>
-            <span className={cn(
-              "max-w-[110px] truncate rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase text-muted-foreground",
-              pendente ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-muted/60",
-            )} title={rotuloGenerico ? sideLabel : `Cliente de ${sideLabel}`}>
-              {pendente ? "Pendente" : rotuloGenerico ? sideLabel : sideLabel}
-            </span>
+            {pendente && (
+              <span className="max-w-[110px] truncate rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-destructive">
+                Pendente
+              </span>
+            )}
             {children && <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>}
           </div>
         </div>
+        {indicators && <div className="shrink-0 pr-7">{indicators}</div>}
       </div>
       {historicoClienteId && (
         <div className={cn("flex items-center gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
@@ -185,12 +184,6 @@ export function AtendimentoClientCard({
           })()}
         </div>
       )}
-      {indicators && (
-        <div className="absolute right-2.5 top-2.5 flex flex-col items-center gap-1 text-[10px]">
-          {indicators}
-        </div>
-      )}
-
     </div>
   );
 }
