@@ -288,6 +288,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     tags: "",
   });
   const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
+  const [vinculoFilter, setVinculoFilter] = useState<'all' | 'empresa' | 'vendedor' | 'transportadora' | 'sem'>('all');
 
 
   // Campos base obrigatórios de contato (sempre devem existir)
