@@ -6250,7 +6250,7 @@ ${recentMessages}
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
                         setSelectedTaskData(task);
-                        setShowClientDetailsAgenda(true);
+                        openDetailsPanel(setShowClientDetailsAgenda);
                         setAgendaViewMode('default');
                         setDiscadorModo(null);
                       }}
