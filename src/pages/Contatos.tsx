@@ -2970,7 +2970,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
               <Card className="p-4 mb-4">
-                <Label className="text-xs">Vincular Empresa</Label>
+                <Label className="text-xs">{vinculoTab === 'empresa' ? 'Vincular Empresa' : vinculoTab === 'transportadora' ? 'Vincular Transportadora' : 'Vincular Vendedor'}</Label>
                 <div className="flex gap-2 mt-2">
                   <Input
                     placeholder="Buscar por nome, CNPJ..."
@@ -2980,7 +2980,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       const valor = e.target.value;
                       setBuscaEmpresa(valor);
                       const termo = valor.trim().toLowerCase();
-                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
+                      const base = empresas.filter(emp =>
+                        (vinculoTab === 'empresa'
+                          ? !['vendedor', 'transportadora'].includes((emp as any).tipo_cliente)
+                          : (emp as any).tipo_cliente === vinculoTab) &&
+                        !empresasVinculadas.some(ev => ev.id === emp.id)
+                      );
                       if (!termo) {
                         setEmpresasFiltradas(base);
                       } else {
