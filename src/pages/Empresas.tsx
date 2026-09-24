@@ -494,6 +494,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Estados para vincular contatos
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [contatosVinculados, setContatosVinculados] = useState<any[]>([]);
+  const [novosContatosVinculo, setNovosContatosVinculo] = useState<string[]>([]);
   const [viewingVinculo, setViewingVinculo] = useState<{ title: string; subtitle?: string; fields: VinculoField[] } | null>(null);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
@@ -1082,6 +1083,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setContatosVinculados(prev => [...prev, { contato, cargo: "", departamento: "", is_primary: prev.length === 0 }]);
     setBuscaContato("");
     toast.success("Contato vinculado! O vínculo também aparecerá no cadastro do contato.");
+  };
+
+  const handleAddContatosSelecionados = async () => {
+    const ids = novosContatosVinculo.filter(id => !contatosVinculados.some(v => v.contato?.id === id));
+    if (ids.length === 0) { toast.error("Selecione pelo menos um contato"); return; }
+    const novos = ids.map(id => contatos.find(c => c.id === id)).filter(Boolean) as any[];
+    if (editingEmpresa) {
+      const base = contatosVinculados.length;
+      const { error } = await supabase.from('customer_empresas').insert(
+        novos.map((c, i) => ({ customer_id: c.id, empresa_id: editingEmpresa.id, is_primary: base === 0 && i === 0 }))
+      );
+      if (error) { toast.error("Erro ao vincular contatos"); return; }
+      await supabase.from('customers').update({ tipo_operador: true }).in('id', novos.map(c => c.id));
+      if (estabelecimentoId) await fetchEmpresas(estabelecimentoId);
+    }
+    setContatosVinculados(prev => [...prev, ...novos.map((contato, i) => ({ contato, cargo: "", departamento: "", is_primary: prev.length === 0 && i === 0 }))]);
+    setNovosContatosVinculo([]);
+    toast.success(`${novos.length} contato(s) vinculado(s)!`);
   };
 
   const handleRemoveContatoVinculado = async (index: number) => {
