@@ -3344,7 +3344,7 @@ ${recentMessages}
       return true;
     });
     return ordenarPendentesPrimeiro(filtradas, (c: any) => c.customer_id, pendenciasAtendimento);
-  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds, pendenciasAtendimento]);
+  }, [conversations, searchTerm, globalFilter, usarAgenda, agendaContactIds, pendenciasAtendimento, idsContatosVinculados]);
 
   // Separar conversas: contatos da agenda do dia vs outras conversas abertas
   // Também incluir contatos da agenda que NÃO têm conversa ativa para permitir iniciar chat
