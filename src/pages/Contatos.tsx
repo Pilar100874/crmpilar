@@ -1,3 +1,4 @@
+import { GerenteContatoVinculo } from "@/components/contatos/GerenteContatoVinculo";
 import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useState, useEffect, useRef } from "react";
 import * as React from "react";
@@ -292,7 +293,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   });
   const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
   const [vinculoFilter, setVinculoFilter] = useState<'all' | 'empresa' | 'vendedor' | 'transportadora' | 'sem'>('all');
-  const [vinculoTab, setVinculoTab] = useState<'empresa' | 'transportadora' | 'vendedor'>('empresa');
+  const [vinculoTab, setVinculoTab] = useState<'empresa' | 'transportadora' | 'vendedor' | 'gerente'>('empresa');
 
 
   // Campos base obrigatórios de contato (sempre devem existir)
@@ -3011,9 +3012,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     <span>Vendedor</span>
                   </span>
                 </TabsTrigger>
+                <TabsTrigger value="gerente" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>Gerente</span>
+                  </span>
+                </TabsTrigger>
               </TabsList>
 
-          <TabsContent value={vinculoTab} className="p-6">
+          <TabsContent value="gerente" className="p-6">
+            <GerenteContatoVinculo contatoId={editingContact?.id} estabelecimentoId={estabelecimentoId} />
+          </TabsContent>
+
+          <TabsContent value={vinculoTab === 'gerente' ? '__nenhum__' : vinculoTab} className="p-6">
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
               <Card className="p-4 mb-4">
