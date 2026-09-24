@@ -2895,7 +2895,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <TabsTrigger value="contatos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
                   Contatos
                 </TabsTrigger>
-                {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
+                {(variant === "empresa" || variant === "vendedor") && (
                   <TabsTrigger value="usuarios" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
                     {variant === "empresa" ? "Gerentes e Vendedores" : "Gerentes"}
                   </TabsTrigger>
@@ -3327,7 +3327,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </TabsContent>
 
-          {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
+          {(variant === "empresa" || variant === "vendedor") && (
             <TabsContent value="usuarios" className="p-6">
               <Card className="p-6">
                 <div className="space-y-6">
