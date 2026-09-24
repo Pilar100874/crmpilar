@@ -241,6 +241,39 @@ const MapaClientesView: React.FC = () => {
     <div className="space-y-3">
       {/* Header responsivo */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        {/* Visão */}
+        <div className="flex gap-1 p-1 bg-muted rounded-lg w-full sm:w-auto">
+          <Button
+            variant={viewMode === 'empresas' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 flex-1 sm:flex-none"
+            onClick={() => setViewMode('empresas')}
+          >
+            <Building2 className="h-3.5 w-3.5 mr-1.5" />
+            Empresas
+          </Button>
+          <Button
+            variant={viewMode === 'vendedores' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 flex-1 sm:flex-none"
+            onClick={() => setViewMode('vendedores')}
+          >
+            <User className="h-3.5 w-3.5 mr-1.5" />
+            Vendedores
+          </Button>
+          <Button
+            variant={viewMode === 'tudo' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 flex-1 sm:flex-none"
+            onClick={() => setViewMode('tudo')}
+          >
+            <Layers className="h-3.5 w-3.5 mr-1.5" />
+            Tudo
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         {/* Filtros */}
         <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
           <Select value={selectedUsuarioId} onValueChange={setSelectedUsuarioId}>
