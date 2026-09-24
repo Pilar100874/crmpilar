@@ -3180,7 +3180,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
                       {/* Lista de segmentos vinculados */}
                       <div>
-                        <h4 className="text-sm font-semibold mb-3">Segmentos Vinculados</h4>
+                        <h4 className="text-sm font-semibold mb-3">Segmentos Vinculados ({vinculosSegmentos.length})</h4>
                         {vinculosSegmentos.length > 0 ? (
                           <div className="space-y-2">
                             {vinculosSegmentos.map((vinculo) => {
@@ -3284,7 +3284,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       </Card>
 
                       <div>
-                        <h4 className="text-sm font-semibold mb-3">Segmentos de Prospect Vinculados</h4>
+                        <h4 className="text-sm font-semibold mb-3">Segmentos de Prospect Vinculados ({vinculosSegmentos.length})</h4>
                         {vinculosSegmentos.length > 0 ? (
                           <div className="space-y-2">
                             {vinculosSegmentos.map((vinculo) => {
