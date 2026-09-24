@@ -1,3 +1,5 @@
+import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronDown as ChevronDownAssumir } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -294,7 +296,7 @@ export default function Atendimento() {
   });
   // Visibilidade por equipe (vendedor / gerente / admin)
   const [equipeVisivel, setEquipeVisivel] = useState<EquipeVisivel | null>(null);
-  const [escopoEquipe, setEscopoEquipe] = useState<string>("meus");
+  const [escopoEquipe, setEscopoEquipe] = useState<string>("");
   const idsVisiveis = useMemo(() => resolverIdsVisiveis(equipeVisivel, escopoEquipe), [equipeVisivel, escopoEquipe]);
   const idsVisiveisRef = useRef<string[]>([]);
   idsVisiveisRef.current = idsVisiveis;
@@ -3500,7 +3502,7 @@ ${recentMessages}
                   ? `Assumindo: ${membrosEquipe.find((m) => m.id === assumidos[0])?.nome}`
                   : `Assumindo ${assumidos.length} pessoas`}
             </span>
-            <ChevronDown className="w-3.5 h-3.5 opacity-60 shrink-0" />
+            <ChevronDownAssumir className="w-3.5 h-3.5 opacity-60 shrink-0" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-72 p-2">
