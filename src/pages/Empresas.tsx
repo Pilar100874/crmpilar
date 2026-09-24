@@ -2978,7 +2978,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       )}
                 <div className="space-y-2">
                   {contatosVinculados.map((vinculo, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50 cursor-pointer" onClick={() => {
+                    <div key={idx} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer" onClick={() => {
                       const c = contatos.find(x => x.id === vinculo.contato?.id) || vinculo.contato;
                       setViewingVinculo({
                         title: c?.nome || "Contato",
@@ -3044,14 +3044,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2"
+                          className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => handleRemoveContatoVinculado(idx)}
                         >
-                          <X className="w-3 h-3" />
+                          <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
                     </div>
                   ))}
+                </div>
+                    </div>
+                  </div>
                 </div>
               </Card>
             )}
