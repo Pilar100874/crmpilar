@@ -1,3 +1,4 @@
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useState, useEffect, useRef } from "react";
 import { KeyRound } from "lucide-react";
 import { VendedorAcessoTab } from "@/components/cadastros/VendedorAcessoTab";
@@ -572,16 +573,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       setTotalCount(count || 0);
 
     // Carregar usuários
-    const { data: usuariosData, error: usuariosError } = await supabase
-      .from('usuarios')
-      .select('id, nome, tipo')
-      .eq('estabelecimento_id', estabId)
-      .eq('tipo', 'gerente')
-      .order('nome');
-
-    if (!usuariosError) {
-      setUsuarios(usuariosData || []);
-    }
+    try {
+      setUsuarios((await carregarGerentesEAdministradores(estabId)) as any);
+    } catch (e) { console.error(e); }
 
     // Carregar vendedores (empresas com tipo_cliente = vendedor)
     const { data: vendedoresData } = await supabase

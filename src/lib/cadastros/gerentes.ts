@@ -5,6 +5,7 @@ export interface UsuarioGerente {
   nome: string;
   email: string | null;
   whatsapp: string | null;
+  tipo?: string;
 }
 
 /**
@@ -16,13 +17,13 @@ export async function carregarGerentesEAdministradores(
 ): Promise<UsuarioGerente[]> {
   const { data: usuarios, error } = await supabase
     .from("usuarios")
-    .select("id, nome, email, whatsapp, tipo, grupos_acesso(perfil)")
+    .select("id, nome, email, whatsapp, tipo, auth_user_id, grupos_acesso(perfil)")
     .eq("estabelecimento_id", estabelecimentoId)
     .order("nome");
 
   if (error) throw error;
 
-  const ids = (usuarios || []).map((usuario) => usuario.id);
+  const ids = (usuarios || []).flatMap((usuario: any) => [usuario.id, usuario.auth_user_id].filter(Boolean));
   const administradoresPorFuncao = new Set<string>();
 
   if (ids.length > 0) {
@@ -45,7 +46,8 @@ export async function carregarGerentesEAdministradores(
       return usuario.tipo === "gerente"
         || perfil === "gerente"
         || perfil === "admin"
-        || administradoresPorFuncao.has(usuario.id);
+        || administradoresPorFuncao.has(usuario.id)
+        || (!!(usuario as any).auth_user_id && administradoresPorFuncao.has((usuario as any).auth_user_id));
     })
-    .map(({ id, nome, email, whatsapp }) => ({ id, nome, email, whatsapp }));
+    .map(({ id, nome, email, whatsapp }) => ({ id, nome, email, whatsapp, tipo: "gerente" }));
 }

@@ -1,3 +1,4 @@
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
@@ -100,13 +101,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         .order("nome");
       setSegmentos((segs as any) || []);
 
-      const { data: us } = await supabase
-        .from("usuarios")
-        .select("id, nome, tipo")
-        .eq("estabelecimento_id", eid)
-        .eq("tipo", "gerente")
-        .order("nome");
-      setGerentes(((us as any) || []).map((u: any) => ({ id: u.id, nome: u.nome || u.email || u.id })));
+      const us = await carregarGerentesEAdministradores(eid).catch(() => []);
+      setGerentes(us.map((u) => ({ id: u.id, nome: u.nome || u.email || u.id })));
 
       setLoadingSessoes(true);
       try {
@@ -123,13 +119,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       setAlvosLoading(true);
       try {
         if (especificoTipo === "gerente") {
-          const { data, error } = await supabase
-            .from("usuarios")
-            .select("id, nome, email, whatsapp")
-            .eq("estabelecimento_id", estabId)
-            .eq("tipo", "gerente")
-            .order("nome");
-          if (error) console.error("Erro ao carregar gerentes:", error);
+          const data = await carregarGerentesEAdministradores(estabId).catch((error) => { console.error("Erro ao carregar gerentes:", error); return []; });
           setAlvos(((data as any) || []).map((u: any) => ({
             id: u.id, nome: u.nome || u.email || u.id, contato: u.whatsapp || "",
           })));

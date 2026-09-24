@@ -1,3 +1,4 @@
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useState, useEffect, useRef } from "react";
 import * as React from "react";
 import * as XLSX from 'xlsx';
@@ -573,13 +574,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       setTotalCount(count || 0);
 
       // Carregar usuários
-      const { data: usuariosData } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .eq('estabelecimento_id', estabId)
-        .eq('tipo', 'gerente')
-        .order('nome');
-      if (usuariosData) setUsuarios(usuariosData);
+      try { setUsuarios((await carregarGerentesEAdministradores(estabId)) as any); } catch (e) { console.error(e); }
 
       // Carregar segmentos vinculados dos contatos da página
       const contatoIds = (rows || []).map((r: any) => r.id);
