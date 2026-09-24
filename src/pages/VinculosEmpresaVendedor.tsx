@@ -62,18 +62,31 @@ export default function VinculosEmpresaVendedor() {
     setVendedores([]);
     if (!selectedGerente) return;
     (async () => {
+      // Fonte 1: tabela gerente_vendedores
       const { data: vinc } = await supabase
         .from("gerente_vendedores")
         .select("vendedor_empresa_id")
         .eq("gerente_usuario_id", selectedGerente);
-      const ids = (vinc || []).map((v: any) => v.vendedor_empresa_id).filter(Boolean);
-      if (ids.length === 0) return;
+      // Fonte 2: vínculo do gerente no cadastro do vendedor (empresa_vinculos)
+      const { data: vincEmp } = await supabase
+        .from("empresa_vinculos")
+        .select("empresa_id")
+        .eq("usuario_id", selectedGerente)
+        .is("vendedor_id", null)
+        .is("auto_via_vendedor_id", null);
+      const candidatos = new Set<string>([
+        ...(vinc || []).map((v: any) => v.vendedor_empresa_id),
+        ...(vincEmp || []).map((v: any) => v.empresa_id),
+      ].filter(Boolean));
+      if (candidatos.size === 0) return;
       const { data: vendData } = await supabase
         .from("empresas")
-        .select("id, nome_fantasia, nome")
-        .in("id", ids)
+        .select("id, nome_fantasia, nome, tipo_vendedor")
+        .in("id", Array.from(candidatos))
         .order("nome_fantasia");
-      setVendedores(vendData || []);
+      // Somente cadastros de vendedor (tipo_vendedor preenchido) ou vindos de gerente_vendedores
+      const diretos = new Set((vinc || []).map((v: any) => v.vendedor_empresa_id));
+      setVendedores(((vendData || []) as any[]).filter((e) => diretos.has(e.id) || e.tipo_vendedor));
     })();
   }, [selectedGerente]);
 
