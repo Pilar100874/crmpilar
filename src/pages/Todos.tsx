@@ -357,7 +357,7 @@ export default function Todos() {
   });
 
   useEffect(() => {
-    localStorage.setItem("todosAllTableColumns", JSON.stringify(todosTableColumns));
+    localStorage.setItem("todosAllTableColumnsV2", JSON.stringify(todosTableColumns));
   }, [todosTableColumns]);
 
   useEffect(() => {
@@ -916,44 +916,19 @@ export default function Todos() {
                               );
                             }
                             
-                            if (col.id === "email") {
+                            if (col.id === "documento") {
+                              const doc = item.type === 'contato'
+                                ? (item.custom_fields?.cpf || item.custom_fields?.cpf_cnpj)
+                                : item.type === 'usuario'
+                                  ? null
+                                  : (item.cnpj || item.custom_fields?.cpf_cnpj);
                               return (
                                 <td key={col.id} className="p-3 text-muted-foreground">
-                                  {item.email || "-"}
+                                  {doc || "-"}
                                 </td>
                               );
                             }
-                            
-                            if (col.id === "telefone") {
-                              return (
-                                <td key={col.id} className="p-3 text-muted-foreground">
-                                  {item.telefone || "-"}
-                                </td>
-                              );
-                            }
-                            
-                            if (col.id === "status") {
-                              const badgeMap: Record<string, { label: string; variant: any }> = {
-                                empresa: { label: 'Empresa', variant: 'outline' },
-                                vendedor: { label: 'Vendedor', variant: 'default' },
-                                transportadora: { label: 'Transportadora', variant: 'secondary' },
-                                usuario: { label: 'Gerente', variant: 'outline' },
-                              };
-                              return (
-                                <td key={col.id} className="p-3">
-                                  {item.type === 'contato' ? (
-                                    <Badge variant={item.tipo_operador ? "default" : "secondary"} className="rounded-full">
-                                      {item.tipo_operador ? "Cliente" : "Prospect"}
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant={badgeMap[item.type]?.variant || 'outline'} className="rounded-full">
-                                      {badgeMap[item.type]?.label || '-'}
-                                    </Badge>
-                                  )}
-                                </td>
-                              );
-                            }
-                            
+
                             return <td key={col.id} className="p-3">-</td>;
                           })}
                         </tr>
