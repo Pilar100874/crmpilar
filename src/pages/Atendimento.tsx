@@ -8249,7 +8249,7 @@ function MobileListContent({
                       companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                     customerName={contact.nome}
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
-                    selected={conversations.find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
+                    selected={[...agendaConversations, ...otherConversations].find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
                     indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                     historicoClienteId={contact.contactId}
