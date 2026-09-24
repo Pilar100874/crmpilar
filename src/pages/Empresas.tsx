@@ -1144,6 +1144,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
 
     // Vendedor: vínculo com um gerente é obrigatório
+    if (variant === "vendedor" && !String(formData.tipo_vendedor || "").trim()) {
+      errors.tipo_vendedor = "Selecione o tipo de vendedor";
+    }
     if (variant === "vendedor" && !String(formData.gerente_usuario_id || "").trim()) {
       errors.gerente_usuario_id = "Selecione o gerente responsável";
     }
@@ -2617,17 +2620,25 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 {variant === "vendedor" && (
                   <div className="mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Tipo de vendedor</Label>
+                      <Label className="text-xs">Tipo de vendedor <span className="text-destructive">*</span></Label>
                       <Select
-                        value={formData.tipo_vendedor || "representante"}
-                        onValueChange={(v) => setFormData((prev) => ({ ...prev, tipo_vendedor: v }))}
+                        value={formData.tipo_vendedor || ""}
+                        onValueChange={(v) => {
+                          setFormData((prev) => ({ ...prev, tipo_vendedor: v }));
+                          setFieldErrors((prev) => ({ ...prev, tipo_vendedor: "" }));
+                        }}
                       >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger className={fieldErrors.tipo_vendedor ? "border-destructive" : ""}>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="funcionario">Funcionário</SelectItem>
                           <SelectItem value="representante">Representante</SelectItem>
                         </SelectContent>
                       </Select>
+                      {fieldErrors.tipo_vendedor && (
+                        <p className="text-xs text-destructive">{fieldErrors.tipo_vendedor}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Gerente responsável <span className="text-destructive">*</span></Label>
