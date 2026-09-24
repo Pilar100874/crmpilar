@@ -75,7 +75,7 @@ export function AtendimentoClientCard({
 }: AtendimentoClientCardProps) {
   const compacto = useAtendimentoCardsCompactos();
   const nomeCartao = parseTituloCartao(title).nome;
-  const tituloPrincipal = companyName || nomeCartao;
+  const tituloPrincipal = companyName || customerName || nomeCartao;
   const nomeDuplicado = !!customerName && customerName.trim().toLowerCase() === tituloPrincipal.trim().toLowerCase();
   const iniciais = tituloPrincipal
     .split(/\s+/)
