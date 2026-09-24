@@ -6223,17 +6223,20 @@ ${recentMessages}
                    const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
                    const isSameSegment = task.contact_id && !isLinkedToUser && 
                      customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
-                   const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
-                   const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
-                   
-                   return (
-                   <div 
-                     key={task.id} 
-                     className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
-                       selectedTaskId === task.id 
-                          ? "bg-primary/10 border-primary/40 shadow-md" 
-                          : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                     } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
+                    const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
+                    const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
+                    const semEmpresa = !(task.customers?.customer_empresas || []).some((c: any) => c?.empresas?.id || c?.empresa_id);
+
+                    return (
+                    <div
+                      key={task.id}
+                      className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
+                        selectedTaskId === task.id
+                          ? "bg-primary/10 border-primary/40 shadow-md"
+                          : semEmpresa
+                            ? "bg-card border-amber-500/70 hover:bg-muted/40 hover:border-amber-500 hover:shadow-md"
+                            : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
+                      } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
                       onClick={() => {
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
