@@ -47,7 +47,7 @@ const ROTULO_NO: Record<TipoNo, string> = {
 };
 
 function ArvoreFilhos({ nos, getFilhos, caminho }: {
-  nos: NoArvore[]; getFilhos: (tipo: TipoNo, id: string) => NoArvore[]; caminho: Set<string>;
+  nos: NoArvore[]; getFilhos: (tipo: TipoNo, id: string, caminho: Set<string>) => NoArvore[]; caminho: Set<string>;
 }) {
   if (nos.length === 0) return null;
   return (
@@ -58,13 +58,13 @@ function ArvoreFilhos({ nos, getFilhos, caminho }: {
 }
 
 function NoItem({ no, getFilhos, caminho }: {
-  no: NoArvore; getFilhos: (tipo: TipoNo, id: string) => NoArvore[]; caminho: Set<string>;
+  no: NoArvore; getFilhos: (tipo: TipoNo, id: string, caminho: Set<string>) => NoArvore[]; caminho: Set<string>;
 }) {
   const [aberto, setAberto] = useState(true);
   // Evita repetir tipos já presentes no caminho (cascata sem ciclos, até o último nível)
   const tiposNoCaminho = new Set<string>([...caminho].map((k) => k.split('-')[0]));
   tiposNoCaminho.add(no.tipo);
-  const filhos = getFilhos(no.tipo, no.id).filter((f) => !tiposNoCaminho.has(f.tipo));
+  const filhos = getFilhos(no.tipo, no.id, caminho).filter((f) => !tiposNoCaminho.has(f.tipo));
   const temFilhos = filhos.length > 0;
   const novoCaminho = new Set(caminho); novoCaminho.add(`${no.tipo}-${no.id}`);
   return (
@@ -89,7 +89,7 @@ function NoItem({ no, getFilhos, caminho }: {
 function ListaArvore({ titulo, nos, getFilhos }: {
   titulo: string;
   nos: NoArvore[];
-  getFilhos: (tipo: TipoNo, id: string) => NoArvore[];
+  getFilhos: (tipo: TipoNo, id: string, caminho: Set<string>) => NoArvore[];
 }) {
   if (nos.length === 0) {
     return (
@@ -261,8 +261,16 @@ export default function Todos() {
     if (u) (emps as any[]).forEach((e: any) => (empresaGerentes[e.id] ||= []).push(u));
   });
 
-  const getFilhos = (tipo: TipoNo, id: string): NoArvore[] => {
+  const getFilhos = (tipo: TipoNo, id: string, caminho: Set<string>): NoArvore[] => {
+    const tiposDoCaminho = [...caminho].map((chave) => chave.split('-')[0] as TipoNo);
+    const origem = tiposDoCaminho[0];
+    const pai = tiposDoCaminho[tiposDoCaminho.length - 1];
+    const raiz = tiposDoCaminho.length === 0;
+
     if (tipo === 'usuario') {
+      // Um gerente só abre sua carteira quando ele é a origem da árvore.
+      // Quando aparece vinculado a uma empresa ou vendedor, permanece como folha.
+      if (!raiz) return [];
       const links = usuarioEmpresas[id] || [];
       const vends = links.filter((e: any) => vendIdSet.has(e.id));
       const atendidas = new Set<string>();
@@ -270,19 +278,42 @@ export default function Todos() {
       const diretas = links.filter((e: any) => !vendIdSet.has(e.id) && !atendidas.has(e.id));
       return unicos([...vends.map(noEmpresa), ...diretas.map(noEmpresa)]);
     }
-    if (tipo === 'vendedor') return unicos([
-      ...(empresaGerentes[id] || []).map(noUsuario),
-      ...(vendedorEmpresas[id] || []).map(noEmpresa),
-      ...(empresaContatos[id] || []).map(noContato),
-    ]);
-    if (tipo === 'empresa' || tipo === 'transportadora') {
-      return unicos([
+    if (tipo === 'vendedor') {
+      if (raiz) return unicos([
+        ...(empresaGerentes[id] || []).map(noUsuario),
+        ...(vendedorEmpresas[id] || []).map(noEmpresa),
+      ]);
+      // Na árvore de um gerente, o vendedor abre somente as próprias empresas.
+      if (origem === 'usuario' && pai === 'usuario') {
+        return unicos((vendedorEmpresas[id] || []).map(noEmpresa));
+      }
+      return [];
+    }
+    if (tipo === 'empresa') {
+      if (raiz) return unicos([
         ...(empresaGerentes[id] || []).map(noUsuario),
         ...(empresaVendedores[id] || []).map((v: any) => ({ ...noEmpresa(v), tipo: 'vendedor' as TipoNo })),
         ...(empresaContatos[id] || []).map(noContato),
       ]);
+      // Empresas abaixo de gerente ou vendedor continuam somente até seus contatos.
+      if (pai === 'usuario' || pai === 'vendedor') {
+        return unicos((empresaContatos[id] || []).map(noContato));
+      }
+      // Ao partir de um contato, mostra apenas gerente e vendedor da empresa vinculada.
+      if (origem === 'contato' && pai === 'contato') return unicos([
+        ...(empresaGerentes[id] || []).map(noUsuario),
+        ...(empresaVendedores[id] || []).map((v: any) => ({ ...noEmpresa(v), tipo: 'vendedor' as TipoNo })),
+      ]);
+      return [];
     }
-    if (tipo === 'contato') return unicos((contatoEmpresas[id] || []).map(noEmpresa));
+    if (tipo === 'transportadora') {
+      if (!raiz) return [];
+      return unicos((empresaContatos[id] || []).map(noContato));
+    }
+    if (tipo === 'contato') {
+      if (!raiz) return [];
+      return unicos((contatoEmpresas[id] || []).map(noEmpresa));
+    }
     return [];
   };
 
