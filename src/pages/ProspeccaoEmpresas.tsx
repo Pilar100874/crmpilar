@@ -20,6 +20,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { validateCNPJ, validateEmail } from '@/lib/validators';
 import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { carregarGerentesEAdministradores, type UsuarioGerente } from '@/lib/cadastros/gerentes';
 import { buscarCNPJ } from '@/lib/cadastros/cnpjService';
 import { buscarCEP } from '@/lib/cadastros/cepService';
 
@@ -171,6 +174,10 @@ export default function ProspeccaoEmpresas() {
   const [importando, setImportando] = useState(false);
   const [preparandoPreview, setPreparandoPreview] = useState(false);
   const [previewImport, setPreviewImport] = useState<PreviewImportItem[] | null>(null);
+  const [gerentesImport, setGerentesImport] = useState<UsuarioGerente[]>([]);
+  const [vendedoresImport, setVendedoresImport] = useState<{ id: string; nome: string }[]>([]);
+  const [gerenteImportId, setGerenteImportId] = useState<string>('');
+  const [vendedorImportId, setVendedorImportId] = useState<string>('');
   const [metodo, setMetodo] = useState<'wizard' | 'mcp' | null>(null);
 
   const limparTudo = async () => {
@@ -389,9 +396,48 @@ export default function ProspeccaoEmpresas() {
     setPreviewImport(previews);
   };
 
+  // Carrega gerentes ao abrir a prévia de importação
+  useEffect(() => {
+    if (!previewImport) return;
+    (async () => {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+      try {
+        const lista = await carregarGerentesEAdministradores(estabId);
+        setGerentesImport(lista);
+      } catch (e) {
+        console.warn('Falha ao carregar gerentes', e);
+      }
+    })();
+  }, [previewImport]);
+
+  // Carrega vendedores vinculados ao gerente escolhido
+  useEffect(() => {
+    setVendedorImportId('');
+    setVendedoresImport([]);
+    if (!gerenteImportId) return;
+    (async () => {
+      const { data: vinculos } = await supabase
+        .from('gerente_vendedores')
+        .select('vendedor_empresa_id')
+        .eq('gerente_usuario_id', gerenteImportId);
+      const ids = (vinculos || []).map((v: any) => v.vendedor_empresa_id).filter(Boolean);
+      if (ids.length === 0) return;
+      const { data: emps } = await supabase
+        .from('empresas')
+        .select('id, nome, nome_fantasia')
+        .in('id', ids)
+        .order('nome');
+      setVendedoresImport(
+        (emps || []).map((e: any) => ({ id: e.id, nome: e.nome_fantasia || e.nome })),
+      );
+    })();
+  }, [gerenteImportId]);
+
   // Etapa 2: efetivamente grava usando o payload já revisado
   const confirmarImportacao = async () => {
     if (!previewImport) return;
+    if (!gerenteImportId) return toast.error('Selecione o gerente responsável para vincular as empresas');
     const estabId = await getEstabelecimentoId();
     if (!estabId) return toast.error('Estabelecimento não encontrado para o usuário atual');
     setImportando(true);
@@ -452,6 +498,22 @@ export default function ProspeccaoEmpresas() {
         .select('id')
         .single();
       if (error || !emp) { fail++; errosDetalhe.push(`${p.nome}: ${error?.message || 'erro'}`); continue; }
+
+      // Vínculo com gerente (obrigatório) e vendedor (opcional, do gerente)
+      try {
+        await supabase.from('empresa_vinculos').insert({
+          empresa_id: emp.id,
+          usuario_id: gerenteImportId,
+          estabelecimento_id: estabId,
+        } as any);
+        if (vendedorImportId) {
+          await supabase.from('empresa_vinculos').insert({
+            empresa_id: emp.id,
+            vendedor_id: vendedorImportId,
+            estabelecimento_id: estabId,
+          } as any);
+        }
+      } catch (e) { console.warn('Falha ao vincular gerente/vendedor', e); }
 
       // Segmento prospect (find-or-create) — mantém comportamento anterior
       const segNome = (r.segmento_nome || '').trim();
@@ -1096,11 +1158,40 @@ export default function ProspeccaoEmpresas() {
             })}
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t">
+            <div className="space-y-1">
+              <Label>Gerente responsável *</Label>
+              <Select value={gerenteImportId} onValueChange={setGerenteImportId}>
+                <SelectTrigger className={!gerenteImportId ? 'border-destructive' : ''}>
+                  <SelectValue placeholder="Selecione o gerente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gerentesImport.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Vendedor (opcional)</Label>
+              <Select value={vendedorImportId} onValueChange={setVendedorImportId} disabled={!gerenteImportId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={gerenteImportId ? (vendedoresImport.length ? 'Selecione o vendedor' : 'Gerente sem vendedores vinculados') : 'Escolha o gerente primeiro'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendedoresImport.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-3 border-t">
             <Button variant="outline" onClick={() => setPreviewImport(null)} disabled={importando}>
               Cancelar
             </Button>
-            <Button onClick={confirmarImportacao} disabled={importando}>
+            <Button onClick={confirmarImportacao} disabled={importando || !gerenteImportId}>
               <Download className="h-4 w-4 mr-2" />
               {importando ? 'Gravando…' : `Confirmar e importar (${(previewImport || []).length})`}
             </Button>
