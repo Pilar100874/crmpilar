@@ -119,6 +119,7 @@ function ListaArvore({ titulo, nos, getFilhos, legenda }: {
   }
   return (
     <div className="bg-card rounded-2xl border border-border/40 shadow-lg p-4 overflow-auto">
+      <Legenda tipos={legenda} />
       <ArvoreFilhos nos={nos} getFilhos={getFilhos} caminho={new Set()} />
     </div>
   );
