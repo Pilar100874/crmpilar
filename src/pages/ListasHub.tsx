@@ -78,7 +78,7 @@ const sections: TabSection[] = [
       { id: 'vinculos-contatos', label: 'Vínculo Contatos', shortLabel: 'Contatos x Gerente', icon: Link2, description: 'Vínculo Contatos X Gerente' },
       { id: 'vinculos-empresa-vendedor', label: 'Vínculo Emp. x Vendedor', shortLabel: 'Emp. x Vendedor', icon: Link2, description: 'Vínculo Empresas X Vendedor' },
       { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Gerente', shortLabel: 'Vend. x Gerente', icon: Link2, description: 'Vínculo Vendedores X Gerente' },
-      { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Gerente', shortLabel: 'Segm. Prospect x Gerente', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a gerentes' },
+      { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Gerente/Vendedor', shortLabel: 'Segm. Prospect x Resp.', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a gerentes e vendedores' },
     ],
   },
   {
