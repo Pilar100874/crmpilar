@@ -85,6 +85,7 @@ export default function ContatosCanalList({
           customerName={contato.nome}
           sideLabel={contato.responsavel || "Meu Cliente"}
           selected={selecionadoId === contato.id}
+          selectionTone={colorirPorEmpresa && !temEmpresa ? "info" : "primary"}
           onClick={onSelecionar ? () => onSelecionar(contato) : undefined}
           indicators={<AtendimentoCardIndicators {...contato} />}
           historicoClienteId={contato.id}
