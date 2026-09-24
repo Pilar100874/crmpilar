@@ -499,6 +499,22 @@ export default function ProspeccaoEmpresas() {
         .single();
       if (error || !emp) { fail++; errosDetalhe.push(`${p.nome}: ${error?.message || 'erro'}`); continue; }
 
+      // Vínculo com gerente (obrigatório) e vendedor (opcional, do gerente)
+      try {
+        await supabase.from('empresa_vinculos').insert({
+          empresa_id: emp.id,
+          usuario_id: gerenteImportId,
+          estabelecimento_id: estabId,
+        } as any);
+        if (vendedorImportId) {
+          await supabase.from('empresa_vinculos').insert({
+            empresa_id: emp.id,
+            vendedor_id: vendedorImportId,
+            estabelecimento_id: estabId,
+          } as any);
+        }
+      } catch (e) { console.warn('Falha ao vincular gerente/vendedor', e); }
+
       // Segmento prospect (find-or-create) — mantém comportamento anterior
       const segNome = (r.segmento_nome || '').trim();
       if (segNome) {
@@ -1142,11 +1158,40 @@ export default function ProspeccaoEmpresas() {
             })}
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t">
+            <div className="space-y-1">
+              <Label>Gerente responsável *</Label>
+              <Select value={gerenteImportId} onValueChange={setGerenteImportId}>
+                <SelectTrigger className={!gerenteImportId ? 'border-destructive' : ''}>
+                  <SelectValue placeholder="Selecione o gerente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gerentesImport.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Vendedor (opcional)</Label>
+              <Select value={vendedorImportId} onValueChange={setVendedorImportId} disabled={!gerenteImportId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={gerenteImportId ? (vendedoresImport.length ? 'Selecione o vendedor' : 'Gerente sem vendedores vinculados') : 'Escolha o gerente primeiro'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendedoresImport.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-3 border-t">
             <Button variant="outline" onClick={() => setPreviewImport(null)} disabled={importando}>
               Cancelar
             </Button>
-            <Button onClick={confirmarImportacao} disabled={importando}>
+            <Button onClick={confirmarImportacao} disabled={importando || !gerenteImportId}>
               <Download className="h-4 w-4 mr-2" />
               {importando ? 'Gravando…' : `Confirmar e importar (${(previewImport || []).length})`}
             </Button>
