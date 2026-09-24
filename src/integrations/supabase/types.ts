@@ -9005,6 +9005,7 @@ export type Database = {
           tags: string[] | null
           telefone: string | null
           tipo_cliente: string
+          tipo_vendedor: string | null
           ultima_resposta_bot_em: string | null
           ultima_resposta_bot_nome: string | null
           updated_at: string | null
@@ -9065,6 +9066,7 @@ export type Database = {
           tags?: string[] | null
           telefone?: string | null
           tipo_cliente?: string
+          tipo_vendedor?: string | null
           ultima_resposta_bot_em?: string | null
           ultima_resposta_bot_nome?: string | null
           updated_at?: string | null
@@ -9125,6 +9127,7 @@ export type Database = {
           tags?: string[] | null
           telefone?: string | null
           tipo_cliente?: string
+          tipo_vendedor?: string | null
           ultima_resposta_bot_em?: string | null
           ultima_resposta_bot_nome?: string | null
           updated_at?: string | null
