@@ -259,6 +259,118 @@ function SimpleListaComVinculos({
 }
 
 
+type TipoNo = 'usuario' | 'vendedor' | 'empresa' | 'transportadora' | 'contato';
+interface NoArvore { tipo: TipoNo; id: string; nome: string; sub?: string | null; }
+
+const ICONE_NO: Record<TipoNo, React.ReactNode> = {
+  usuario: <Users className="w-4 h-4 text-primary" />,
+  vendedor: <UserCog className="w-4 h-4 text-primary" />,
+  empresa: <Building2 className="w-4 h-4 text-primary" />,
+  transportadora: <Truck className="w-4 h-4 text-primary" />,
+  contato: <User className="w-4 h-4 text-primary" />,
+};
+const ROTULO_NO: Record<TipoNo, string> = {
+  usuario: 'Gerente', vendedor: 'Vendedor', empresa: 'Empresa', transportadora: 'Transportadora', contato: 'Contato',
+};
+
+function ArvoreFilhos({ nos, getFilhos, caminho }: {
+  nos: NoArvore[]; getFilhos: (tipo: TipoNo, id: string) => NoArvore[]; caminho: Set<string>;
+}) {
+  if (nos.length === 0) return null;
+  return (
+    <ul className="space-y-0.5 border-l border-border/60 ml-3 pl-3">
+      {nos.map((no) => <NoItem key={`${no.tipo}-${no.id}`} no={no} getFilhos={getFilhos} caminho={caminho} />)}
+    </ul>
+  );
+}
+
+function NoItem({ no, getFilhos, caminho }: {
+  no: NoArvore; getFilhos: (tipo: TipoNo, id: string) => NoArvore[]; caminho: Set<string>;
+}) {
+  const [aberto, setAberto] = useState(true);
+  const filhos = getFilhos(no.tipo, no.id).filter((f) => !caminho.has(f.id) && f.id !== no.id);
+  const temFilhos = filhos.length > 0;
+  const novoCaminho = new Set(caminho); novoCaminho.add(no.id);
+  return (
+    <li>
+      <div className="flex items-center gap-2 text-sm rounded-md px-2 py-1.5 hover:bg-muted/60 transition-colors">
+        <button type="button"
+          className={`h-5 w-5 flex items-center justify-center rounded ${temFilhos ? 'hover:bg-muted' : 'invisible'}`}
+          onClick={() => setAberto((a) => !a)}>
+          {aberto ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+        </button>
+        {ICONE_NO[no.tipo]}
+        <span className="font-medium text-foreground">{no.nome}</span>
+        {no.sub && <span className="text-muted-foreground text-xs">({no.sub})</span>}
+        <Badge variant="outline" className="rounded-full text-[10px] px-2 py-0 h-5">{ROTULO_NO[no.tipo]}</Badge>
+        {temFilhos && <span className="text-xs text-muted-foreground">· {filhos.length}</span>}
+      </div>
+      {aberto && temFilhos && <ArvoreFilhos nos={filhos} getFilhos={getFilhos} caminho={novoCaminho} />}
+    </li>
+  );
+}
+
+function SimpleListaArvore({ titulo, icone, itens, tipo, getNome, getSub, getFilhos, expandedRows, toggleRow }: {
+  titulo: string; icone: React.ReactNode; itens: any[]; tipo: TipoNo;
+  getNome: (i: any) => string; getSub: (i: any) => string | null | undefined;
+  getFilhos: (tipo: TipoNo, id: string) => NoArvore[];
+  expandedRows: Set<string>; toggleRow: (id: string) => void;
+}) {
+  if (itens.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">{icone}</div>
+        <p className="text-lg font-medium text-muted-foreground mb-1">Nenhum(a) {titulo} encontrado(a)</p>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
+      <table className="w-full">
+        <thead className="border-b border-border/40 bg-muted/40">
+          <tr>
+            <th className="px-4 py-3.5 w-[30px]"></th>
+            <th className="px-4 py-3.5 w-[40px]"></th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Detalhe</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Vínculos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {itens.map((item: any) => {
+            const filhos = getFilhos(tipo, item.id);
+            const isExpanded = expandedRows.has(item.id);
+            return (
+              <React.Fragment key={item.id}>
+                <tr className="border-b border-border/30 hover:bg-muted/40 transition-colors">
+                  <td className="p-3">
+                    {filhos.length > 0 && (
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => toggleRow(item.id)}>
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </Button>
+                    )}
+                  </td>
+                  <td className="p-3">{icone}</td>
+                  <td className="p-3 font-medium">{getNome(item)}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{getSub(item) || "-"}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{filhos.length}</td>
+                </tr>
+                {isExpanded && filhos.length > 0 && (
+                  <tr>
+                    <td colSpan={5} className="bg-muted/20 px-4 py-3 border-l-4 border-l-primary/40">
+                      <ArvoreFilhos nos={filhos} getFilhos={getFilhos} caminho={new Set([item.id])} />
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function Todos() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -621,8 +733,32 @@ export default function Todos() {
   };
 
   const visibleTodosColumns = todosTableColumns.filter(col => col.visible);
-  const visibleContatosColumns = contatosTableColumns.filter(col => col.visible);
-  const visibleEmpresasColumns = empresasTableColumns.filter(col => col.visible);
+
+  const vendIdSet = new Set(vendedores.map(v => v.id));
+  const transpIdSet = new Set(transportadoras.map(t => t.id));
+  const noEmpresa = (e: any): NoArvore => ({
+    tipo: vendIdSet.has(e.id) ? 'vendedor' : transpIdSet.has(e.id) ? 'transportadora' : 'empresa',
+    id: e.id, nome: e.nome_fantasia || e.nome || '-', sub: e.cnpj || null,
+  });
+  const unicos = (arr: NoArvore[]) => { const s = new Set<string>(); return arr.filter(n => (s.has(n.id) ? false : (s.add(n.id), true))); };
+  const getFilhos = (tipo: TipoNo, id: string): NoArvore[] => {
+    if (tipo === 'usuario') {
+      const links = usuarioEmpresas[id] || [];
+      const vends = links.filter((e: any) => vendIdSet.has(e.id));
+      const atendidas = new Set<string>();
+      vends.forEach((v: any) => (vendedorEmpresas[v.id] || []).forEach((e: any) => atendidas.add(e.id)));
+      const diretas = links.filter((e: any) => !vendIdSet.has(e.id) && !atendidas.has(e.id));
+      return unicos([...vends.map(noEmpresa), ...diretas.map(noEmpresa)]);
+    }
+    if (tipo === 'vendedor') return unicos((vendedorEmpresas[id] || []).map(noEmpresa));
+    if (tipo === 'empresa' || tipo === 'transportadora') {
+      return unicos((empresaContatos[id] || []).map((c: any) => ({ tipo: 'contato' as TipoNo, id: c.id, nome: c.nome || '-', sub: c.email || null })));
+    }
+    if (tipo === 'contato') return unicos((contatoEmpresas[id] || []).map(noEmpresa));
+    return [];
+  };
+  const visibleContatosColumns = contatosTableColumns.filter(col => col.visible && col.id !== 'actions');
+  const visibleEmpresasColumns = empresasTableColumns.filter(col => col.visible && col.id !== 'actions');
 
   // Funções de ordenação
   const handleTodosSort = (columnId: string) => {
@@ -822,20 +958,8 @@ export default function Todos() {
                 <tbody>
                   {todosItens.map(item => {
                     const isExpanded = expandedRows.has(item.id);
-                    const vinculosLista: any[] =
-                      item.type === 'contato' ? (contatoEmpresas[item.id] || [])
-                      : item.type === 'empresa' ? (empresaContatos[item.id] || [])
-                      : item.type === 'vendedor' ? (vendedorEmpresas[item.id] || [])
-                      : item.type === 'usuario' ? (usuarioEmpresas[item.id] || [])
-                      : [];
-                    const hasVinculos = vinculosLista.length > 0;
-                    const vinculosLabel =
-                      item.type === 'contato' ? 'Empresas Vinculadas:'
-                      : item.type === 'empresa' ? 'Contatos Vinculados:'
-                      : item.type === 'vendedor' ? 'Empresas atendidas por este vendedor:'
-                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste gerente:'
-                      : 'Vínculos:';
-
+                    const filhosNo = getFilhos(item.type as TipoNo, item.id);
+                    const hasVinculos = filhosNo.length > 0;
                     return (
                       <>
                         <tr key={`${item.type}-${item.id}`} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
@@ -920,25 +1044,7 @@ export default function Todos() {
                         {isExpanded && hasVinculos && (
                           <tr>
                             <td colSpan={visibleTodosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
-                              <div className="ml-8">
-                                <p className="text-sm font-semibold text-foreground mb-3">
-                                  {vinculosLabel}
-                                </p>
-                                <div className="space-y-2">
-                                  {vinculosLista.map((v: any) => {
-                                    const isContato = item.type === 'empresa';
-                                    return (
-                                      <div key={v.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                        {isContato ? <User className="w-4 h-4 text-blue-500" /> : <Building2 className="w-4 h-4 text-purple-500" />}
-                                        <span className="font-medium">{isContato ? v.nome : v.nome_fantasia}</span>
-                                        {(v.cnpj || v.email) && (
-                                          <span className="text-muted-foreground text-xs">({v.cnpj || v.email})</span>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
+                              <ArvoreFilhos nos={filhosNo} getFilhos={getFilhos} caminho={new Set([item.id])} />
                             </td>
                           </tr>
                         )}
@@ -1027,7 +1133,8 @@ export default function Todos() {
                  <tbody>
                   {sortedContatos.map(contato => {
                     const isExpanded = expandedRows.has(contato.id);
-                    const hasEmpresas = (contatoEmpresas[contato.id]?.length || 0) > 0;
+                    const filhosNo = getFilhos('contato', contato.id);
+                    const hasEmpresas = filhosNo.length > 0;
 
                     return (
                       <>
@@ -1089,22 +1196,7 @@ export default function Todos() {
                         {isExpanded && hasEmpresas && (
                           <tr>
                             <td colSpan={visibleContatosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
-                              <div className="ml-8">
-                                <p className="text-sm font-semibold text-foreground mb-3">
-                                  Empresas Vinculadas:
-                                </p>
-                                <div className="space-y-2">
-                                  {contatoEmpresas[contato.id]?.map((emp: any) => (
-                                    <div key={emp.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                      <Building2 className="w-4 h-4 text-purple-500" />
-                                      <span className="font-medium">{emp.nome_fantasia}</span>
-                                      {emp.cnpj && (
-                                        <span className="text-muted-foreground text-xs">({emp.cnpj})</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                              <ArvoreFilhos nos={filhosNo} getFilhos={getFilhos} caminho={new Set([contato.id])} />
                             </td>
                           </tr>
                         )}
@@ -1193,7 +1285,8 @@ export default function Todos() {
                  <tbody>
                   {sortedEmpresas.map(empresa => {
                     const isExpanded = expandedRows.has(empresa.id);
-                    const hasContatos = (empresaContatos[empresa.id]?.length || 0) > 0;
+                    const filhosNo = getFilhos('empresa', empresa.id);
+                    const hasContatos = filhosNo.length > 0;
 
                     return (
                       <>
@@ -1276,22 +1369,7 @@ export default function Todos() {
                         {isExpanded && hasContatos && (
                           <tr>
                             <td colSpan={visibleEmpresasColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
-                              <div className="ml-8">
-                                <p className="text-sm font-semibold text-foreground mb-3">
-                                  Contatos Vinculados:
-                                </p>
-                                <div className="space-y-2">
-                                  {empresaContatos[empresa.id]?.map((cont: any) => (
-                                    <div key={cont.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                      <User className="w-4 h-4 text-blue-500" />
-                                      <span className="font-medium">{cont.nome}</span>
-                                      {cont.email && (
-                                        <span className="text-muted-foreground text-xs">({cont.email})</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                              <ArvoreFilhos nos={filhosNo} getFilhos={getFilhos} caminho={new Set([empresa.id])} />
                             </td>
                           </tr>
                         )}
@@ -1305,59 +1383,44 @@ export default function Todos() {
         </TabsContent>
 
         <TabsContent value="vendedores" className="flex-1 p-8 overflow-auto">
-          <SimpleListaComVinculos
+          <SimpleListaArvore
             titulo="vendedor"
             icone={<UserCog className="w-4 h-4 text-emerald-500" />}
             itens={filteredVendedores}
+            tipo="vendedor"
             getNome={(v: any) => v.nome_fantasia || v.nome}
             getSub={(v: any) => v.cnpj || v.email}
-            vinculos={vendedorEmpresas}
-            vinculoLabel="Empresas atendidas por este vendedor"
+            getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
-            renderVinculo={(emp: any) => (
-              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
-                <Building2 className="w-4 h-4 text-purple-500" />
-                <span className="font-medium">{emp.nome_fantasia}</span>
-                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
-              </div>
-            )}
           />
         </TabsContent>
 
         <TabsContent value="transportadoras" className="flex-1 p-8 overflow-auto">
-          <SimpleListaComVinculos
+          <SimpleListaArvore
             titulo="transportadora"
             icone={<Truck className="w-4 h-4 text-orange-500" />}
             itens={filteredTransportadoras}
+            tipo="transportadora"
             getNome={(v: any) => v.nome_fantasia || v.nome}
             getSub={(v: any) => v.cnpj || v.email}
-            vinculos={{}}
-            vinculoLabel=""
+            getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
-            renderVinculo={() => null}
           />
         </TabsContent>
 
         <TabsContent value="usuarios" className="flex-1 p-8 overflow-auto">
-          <SimpleListaComVinculos
-            titulo="usuário"
+          <SimpleListaArvore
+            titulo="gerente"
             icone={<Users className="w-4 h-4 text-indigo-500" />}
             itens={filteredUsuarios}
+            tipo="usuario"
             getNome={(u: any) => u.nome}
             getSub={(u: any) => u.email}
-            vinculos={usuarioEmpresas}
-            vinculoLabel="Empresas sob responsabilidade deste usuário"
+            getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
-            renderVinculo={(emp: any) => (
-              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
-                <Building2 className="w-4 h-4 text-purple-500" />
-                <span className="font-medium">{emp.nome_fantasia}</span>
-                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
-              </div>
-            )}
           />
         </TabsContent>
       </Tabs>
