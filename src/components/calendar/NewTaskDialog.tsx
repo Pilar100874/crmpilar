@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { X, CalendarIcon, Clock, Pencil, Trash2, Building2, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare } from "lucide-react";
+import { X, CalendarIcon, Clock, Pencil, Trash2, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare } from "lucide-react";
 import { format, addDays, addMinutes, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 interface Contact {
   id: string;
   name: string;
-  type: 'contato' | 'empresa';
+  type: 'contato';
   company?: string;
   phone: string;
   email: string;
@@ -309,27 +309,6 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       });
     }
 
-    // Buscar empresas
-    const { data: empresasData } = await supabase
-      .from('empresas')
-      .select('*')
-      .eq('estabelecimento_id', estabId);
-
-    if (empresasData) {
-      empresasData.forEach(empresa => {
-        allContacts.push({
-          id: empresa.id,
-          name: empresa.nome_fantasia,
-          type: 'empresa',
-          phone: empresa.telefone || '',
-          email: empresa.email || '',
-          cnpj: empresa.cnpj || '',
-          razaoSocial: empresa.nome || '',
-          customFields: (empresa.custom_fields as Record<string, any>) || {},
-        });
-      });
-    }
-
     setContacts(allContacts);
   };
 
@@ -362,24 +341,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     if (!searchQuery) return true;
     
     const searchTerm = searchQuery.toLowerCase();
-    
-    // Para empresas
-    if (contact.type === 'empresa') {
-      const nomeFantasia = (contact.name || '').toLowerCase();
-      const razaoSocial = (contact.razaoSocial || '').toLowerCase();
-      const cnpj = (contact.cnpj || '').toLowerCase();
-      const telefone = (contact.phone || '').toLowerCase();
-      const email = (contact.email || '').toLowerCase();
-      
-      return (
-        nomeFantasia.includes(searchTerm) ||
-        razaoSocial.includes(searchTerm) ||
-        cnpj.includes(searchTerm) ||
-        telefone.includes(searchTerm) ||
-        email.includes(searchTerm)
-      );
-    }
-    
+
     // Para contatos
     const nome = (contact.name || '').toLowerCase();
     const telefone = (contact.phone || '').toLowerCase();
@@ -710,9 +672,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         <div className="space-y-5 mt-6">
           {/* Campo de busca de contato */}
           <div className="relative">
-            <Label className="text-sm font-semibold mb-2 block">Vincular Contato ou Empresa</Label>
+            <Label className="text-sm font-semibold mb-2 block">Vincular Contato</Label>
             <Input
-              placeholder="Pesquisar contato ou empresa..."
+              placeholder="Pesquisar contato..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -746,21 +708,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                     onClick={() => handleSelectContact(contact)}
                   >
                     <div className="flex items-center gap-2">
-                      {contact.type === 'empresa' ? (
-                        <Building2 className="w-4 h-4 text-primary" />
-                      ) : (
-                        <User className="w-4 h-4 text-blue-500" />
-                      )}
+                      <User className="w-4 h-4 text-blue-500" />
                       <div className="font-medium text-sm">{contact.name}</div>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5 mt-1 ml-6">
-                      {contact.type === 'empresa' && contact.razaoSocial && contact.razaoSocial !== contact.name && (
-                        <div>Razão Social: {contact.razaoSocial}</div>
-                      )}
-                      {contact.type === 'empresa' && contact.cnpj && (
-                        <div>CNPJ: {contact.cnpj}</div>
-                      )}
-                      {contact.type === 'contato' && contact.customFields?.cpf_cnpj && (
+                      {contact.customFields?.cpf_cnpj && (
                         <div>CPF/CNPJ: {contact.customFields.cpf_cnpj}</div>
                       )}
                       {contact.phone && (
