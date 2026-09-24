@@ -116,6 +116,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("nao_prospect");
+  const [filtroGerenteVendedor, setFiltroGerenteVendedor] = useState<string>("all");
   
   // Estados para confirmação de exclusão
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -256,9 +257,9 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     } catch {
       try { localStorage.removeItem(key); } catch {}
     }
-  }, [page, sortConfig, searchTerm, statusFilter]);
+  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor]);
 
-  useEffect(() => { setPage(1); }, [searchTerm, statusFilter, variant]);
+  useEffect(() => { setPage(1); }, [searchTerm, statusFilter, variant, filtroGerenteVendedor]);
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
@@ -518,7 +519,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
     };
     fetchEstabelecimento();
-  }, [page, sortConfig, searchTerm, statusFilter]);
+  }, [page, sortConfig, searchTerm, statusFilter, filtroGerenteVendedor]);
 
   // Detectar se há um ID de empresa para editar vindo da navegação (via state ou URL params)
   useEffect(() => {
@@ -553,6 +554,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       if (searchTerm) {
         const search = `%${searchTerm}%`;
         query = query.or(`nome_fantasia.ilike.${search},nome.ilike.${search},cnpj.ilike.${search}`);
+      }
+
+      if (variant === "vendedor" && filtroGerenteVendedor !== "all") {
+        const { data: vincGer } = await supabase
+          .from('empresa_vinculos')
+          .select('empresa_id')
+          .eq('estabelecimento_id', estabId)
+          .eq('usuario_id', filtroGerenteVendedor)
+          .is('auto_via_vendedor_id', null);
+        const idsVend = Array.from(new Set((vincGer || []).map((v: any) => v.empresa_id).filter(Boolean)));
+        query = query.in('id', idsVend.length ? idsVend : ['00000000-0000-0000-0000-000000000000']);
       }
 
       if (statusFilter !== "all" && variant === "empresa") {
@@ -1135,6 +1147,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       errors.gerente_usuario_id = "Selecione o gerente responsável";
     }
 
+    // Empresa nova: vínculo com gerente e vendedor é obrigatório
+    if (variant === "empresa" && !editingEmpresa) {
+      if (!String(formData.gerente_usuario_id || "").trim()) errors.gerente_usuario_id = "Selecione o gerente responsável";
+      if (!String(formData.vendedor_vinculo_id || "").trim()) errors.vendedor_vinculo_id = "Selecione o vendedor";
+    }
+
     if (formData.email && !validateEmail(formData.email)) {
       errors.email = "E-mail inválido";
     }
@@ -1297,6 +1315,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 .eq('id', v.contato.id)
             )
           );
+        }
+
+        if (variant === "empresa" && formData.gerente_usuario_id && formData.vendedor_vinculo_id) {
+          const { error: vErr } = await supabase.from('empresa_vinculos').insert([
+            { empresa_id: empresaId, usuario_id: formData.gerente_usuario_id, vendedor_id: null, segmento_id: null, estabelecimento_id: estabId },
+            { empresa_id: empresaId, usuario_id: null, vendedor_id: formData.vendedor_vinculo_id, segmento_id: null, estabelecimento_id: estabId },
+          ] as any);
+          if (vErr) {
+            console.error('Erro ao vincular gerente/vendedor:', vErr);
+            toast.error('Empresa criada, mas não foi possível vincular gerente e vendedor');
+          }
         }
 
         toast.success("Empresa criada!");
@@ -2118,6 +2147,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </Select>
               )}
 
+              {variant === "vendedor" && (
+                <Select value={filtroGerenteVendedor} onValueChange={setFiltroGerenteVendedor}>
+                  <SelectTrigger className="w-full md:w-[220px] h-9 sm:h-10 rounded-xl text-sm">
+                    <SelectValue placeholder="Gerente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os gerentes</SelectItem>
+                    {usuarios.map((u: any) => (
+                      <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               {searchTerm && (
                 <Button
                   variant="ghost"
@@ -2576,6 +2619,50 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       {fieldErrors.gerente_usuario_id && (
                         <p className="text-xs text-destructive">{fieldErrors.gerente_usuario_id}</p>
                       )}
+                    </div>
+                  </div>
+                )}
+                {variant === "empresa" && !editingEmpresa && (
+                  <div className="mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Gerente responsável <span className="text-destructive">*</span></Label>
+                      <Select
+                        value={formData.gerente_usuario_id || ""}
+                        onValueChange={(v) => {
+                          setFormData((prev) => ({ ...prev, gerente_usuario_id: v }));
+                          setFieldErrors((prev) => ({ ...prev, gerente_usuario_id: "" }));
+                        }}
+                      >
+                        <SelectTrigger className={fieldErrors.gerente_usuario_id ? "border-destructive" : ""}>
+                          <SelectValue placeholder="Selecione o gerente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {usuarios.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldErrors.gerente_usuario_id && <p className="text-xs text-destructive">{fieldErrors.gerente_usuario_id}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Vendedor <span className="text-destructive">*</span></Label>
+                      <Select
+                        value={formData.vendedor_vinculo_id || ""}
+                        onValueChange={(v) => {
+                          setFormData((prev) => ({ ...prev, vendedor_vinculo_id: v }));
+                          setFieldErrors((prev) => ({ ...prev, vendedor_vinculo_id: "" }));
+                        }}
+                      >
+                        <SelectTrigger className={fieldErrors.vendedor_vinculo_id ? "border-destructive" : ""}>
+                          <SelectValue placeholder="Selecione o vendedor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vendedoresLista.map((v: any) => (
+                            <SelectItem key={v.id} value={v.id}>{v.nome_fantasia || v.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldErrors.vendedor_vinculo_id && <p className="text-xs text-destructive">{fieldErrors.vendedor_vinculo_id}</p>}
                     </div>
                   </div>
                 )}
