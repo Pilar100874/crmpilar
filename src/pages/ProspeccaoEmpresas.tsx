@@ -396,9 +396,48 @@ export default function ProspeccaoEmpresas() {
     setPreviewImport(previews);
   };
 
+  // Carrega gerentes ao abrir a prévia de importação
+  useEffect(() => {
+    if (!previewImport) return;
+    (async () => {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+      try {
+        const lista = await carregarGerentesEAdministradores(estabId);
+        setGerentesImport(lista);
+      } catch (e) {
+        console.warn('Falha ao carregar gerentes', e);
+      }
+    })();
+  }, [previewImport]);
+
+  // Carrega vendedores vinculados ao gerente escolhido
+  useEffect(() => {
+    setVendedorImportId('');
+    setVendedoresImport([]);
+    if (!gerenteImportId) return;
+    (async () => {
+      const { data: vinculos } = await supabase
+        .from('gerente_vendedores')
+        .select('vendedor_empresa_id')
+        .eq('gerente_usuario_id', gerenteImportId);
+      const ids = (vinculos || []).map((v: any) => v.vendedor_empresa_id).filter(Boolean);
+      if (ids.length === 0) return;
+      const { data: emps } = await supabase
+        .from('empresas')
+        .select('id, nome, nome_fantasia')
+        .in('id', ids)
+        .order('nome');
+      setVendedoresImport(
+        (emps || []).map((e: any) => ({ id: e.id, nome: e.nome_fantasia || e.nome })),
+      );
+    })();
+  }, [gerenteImportId]);
+
   // Etapa 2: efetivamente grava usando o payload já revisado
   const confirmarImportacao = async () => {
     if (!previewImport) return;
+    if (!gerenteImportId) return toast.error('Selecione o gerente responsável para vincular as empresas');
     const estabId = await getEstabelecimentoId();
     if (!estabId) return toast.error('Estabelecimento não encontrado para o usuário atual');
     setImportando(true);
