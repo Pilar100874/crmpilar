@@ -3011,8 +3011,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     <span>Vendedor</span>
                   </span>
                 </TabsTrigger>
+                <TabsTrigger value="gerente" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>Gerente</span>
+                  </span>
+                </TabsTrigger>
               </TabsList>
 
+          <TabsContent value="gerente" className="p-6">
+            <GerenteContatoVinculo contatoId={editingContact?.id} estabelecimentoId={estabelecimentoId} />
+          </TabsContent>
+
+          {vinculoTab !== ('gerente' as any) && (
           <TabsContent value={vinculoTab} className="p-6">
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
