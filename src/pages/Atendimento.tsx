@@ -6226,6 +6226,7 @@ ${recentMessages}
                     const taskPendente = !!task.contact_id && pendenciasAtendimento.includes(task.contact_id);
                     const taskBloqueada = pendenciasAtendimento.length > 0 && !taskPendente;
                     const semEmpresa = !(task.customers?.customer_empresas || []).some((c: any) => c?.empresas?.id || c?.empresa_id);
+                    const semContato = !semEmpresa && !task.contact_id;
 
                     return (
                     <div
