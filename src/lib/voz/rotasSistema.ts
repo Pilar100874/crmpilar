@@ -206,8 +206,6 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/notas", titulo: "Notas", aliases: ["notas", "minhas notas", "bloco de notas", "notas interligadas"] },
   { path: "/base-conhecimento", titulo: "Base de Conhecimento", aliases: ["base de conhecimento", "artigos", "conhecimento"] },
   { path: "/contatos", titulo: "Contatos", aliases: ["cadastro de contatos"] },
-  { path: "/vinculos-empresas", titulo: "Vínculos de Empresas", aliases: ["vinculo empresas", "vinculo de empresas", "vinculos empresa gerente", "vinculo empresa gerente"] },
-  { path: "/vinculos-contatos", titulo: "Vínculos de Contatos", aliases: ["vinculo contatos", "vinculo de contatos", "vinculo contato gerente"] },
 
   // ============ Sub-telas: Listas (Hub com tabs) ============
   { path: "/listas?tab=contatos", titulo: "Contatos", aliases: ["contatos listas", "contatos (listas)"] },
@@ -216,8 +214,6 @@ export const ROTAS_SISTEMA: RotaSistema[] = [
   { path: "/listas?tab=transportadoras", titulo: "Transportadoras", aliases: ["cadastro de transportadoras", "lista de transportadoras", "abrir transportadoras", "transportadora"] },
   { path: "/listas?tab=gerentes", titulo: "Gerentes", aliases: ["cadastro de gerentes", "lista de gerentes", "abrir gerentes"] },
   { path: "/listas?tab=todos", titulo: "Todos os Cadastros", aliases: ["todos cadastros"] },
-  { path: "/listas?tab=vinculos-empresas", titulo: "Vínculo Empresas x Gerente", aliases: ["vinculo empresa gerente listas"] },
-  { path: "/listas?tab=vinculos-contatos", titulo: "Vínculo Contatos x Gerente", aliases: ["vinculo contato gerente listas"] },
   { path: "/listas?tab=vinculos-empresa-vendedor", titulo: "Vínculo Empresa x Vendedor", aliases: ["vinculo empresa vendedor", "vinculo empresas vendedor", "empresa x vendedor"] },
   { path: "/listas?tab=vinculos-vendedor-usuario", titulo: "Vínculo Vendedor x Gerente", aliases: ["vinculo vendedor gerente", "vendedor x gerente"] },
   { path: "/listas?tab=vinculos-segmento-prospect-usuario", titulo: "Vínculo Segmento Prospect x Gerente", aliases: ["vinculo segmento prospect", "segmento prospect gerente"] },
