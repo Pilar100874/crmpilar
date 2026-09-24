@@ -3558,7 +3558,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         </Card>
 
                         <div>
-                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
+                          <h4 className="text-sm font-semibold mb-3">Gerentes Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
                               {vinculosUsuarios.map((v) => {
@@ -3567,7 +3567,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 return (
                                   <div key={v.id} className={`p-3 border rounded-lg flex items-center justify-between group transition-colors ${isAuto ? "bg-blue-500/5 border-blue-500/30" : "bg-muted/30 hover:border-primary/30"}`}>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
+                                      <p className="text-sm font-medium">{u?.nome || "Gerente não encontrado"}</p>
                                       {isAuto && (
                                         <Badge variant="outline" className="text-[10px] border-blue-500/50 text-blue-600 dark:text-blue-400" title={`Vinculado automaticamente por estar no vendedor ${nomeVendedorPorId(v.auto_via_vendedor_id)}`}>
                                           Auto · via {nomeVendedorPorId(v.auto_via_vendedor_id)}
@@ -3587,7 +3587,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             </div>
                           ) : (
                             <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
+                              <p className="text-sm text-muted-foreground">Nenhum gerente vinculado</p>
                             </div>
                           )}
                         </div>
@@ -3915,7 +3915,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar vínculo</AlertDialogTitle>
             <AlertDialogDescription>
-              Ao vincular {novosUsuariosVinculo.length === 1 ? "este usuário" : "estes usuários"} a esta empresa, será criada automaticamente uma tarefa na agenda de hoje de cada usuário vinculado. Deseja continuar?
+              Ao vincular {novosUsuariosVinculo.length === 1 ? "este gerente" : "estes gerentes"} a esta empresa, será criada automaticamente uma tarefa na agenda de hoje de cada gerente vinculado. Deseja continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
