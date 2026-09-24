@@ -66,8 +66,6 @@ import { ROLES_MONITOR } from "./lib/aip/rbac";
 
 const BaseConhecimento = React.lazy(() => import("./pages/BaseConhecimento"));
 const Todos = React.lazy(() => import("./pages/Todos"));
-const VinculosEmpresas = React.lazy(() => import("./pages/VinculosEmpresas"));
-const VinculosContatos = React.lazy(() => import("./pages/VinculosContatos"));
 const ListasHub = React.lazy(() => import("./pages/ListasHub"));
 const Config = React.lazy(() => import("./pages/Config"));
 const SystemVisualConfig = React.lazy(() => import("./pages/SystemVisualConfig"));
@@ -589,8 +587,6 @@ const App = () => (
               </Route>
               <Route path="/base-conhecimento" element={<BaseConhecimento />} />
               <Route path="/todos" element={<Todos />} />
-              <Route path="/vinculos-empresas" element={<VinculosEmpresas />} />
-              <Route path="/vinculos-contatos" element={<VinculosContatos />} />
               <Route path="/config" element={<Config />} />
               <Route path="/config/webhooks" element={<ChatWebhook />} />
               <Route path="/config/variaveis" element={<GlobalVariables />} />
