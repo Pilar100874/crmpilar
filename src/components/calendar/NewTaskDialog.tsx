@@ -309,27 +309,6 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       });
     }
 
-    // Buscar empresas
-    const { data: empresasData } = await supabase
-      .from('empresas')
-      .select('*')
-      .eq('estabelecimento_id', estabId);
-
-    if (empresasData) {
-      empresasData.forEach(empresa => {
-        allContacts.push({
-          id: empresa.id,
-          name: empresa.nome_fantasia,
-          type: 'empresa',
-          phone: empresa.telefone || '',
-          email: empresa.email || '',
-          cnpj: empresa.cnpj || '',
-          razaoSocial: empresa.nome || '',
-          customFields: (empresa.custom_fields as Record<string, any>) || {},
-        });
-      });
-    }
-
     setContacts(allContacts);
   };
 
@@ -362,24 +341,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     if (!searchQuery) return true;
     
     const searchTerm = searchQuery.toLowerCase();
-    
-    // Para empresas
-    if (contact.type === 'empresa') {
-      const nomeFantasia = (contact.name || '').toLowerCase();
-      const razaoSocial = (contact.razaoSocial || '').toLowerCase();
-      const cnpj = (contact.cnpj || '').toLowerCase();
-      const telefone = (contact.phone || '').toLowerCase();
-      const email = (contact.email || '').toLowerCase();
-      
-      return (
-        nomeFantasia.includes(searchTerm) ||
-        razaoSocial.includes(searchTerm) ||
-        cnpj.includes(searchTerm) ||
-        telefone.includes(searchTerm) ||
-        email.includes(searchTerm)
-      );
-    }
-    
+
     // Para contatos
     const nome = (contact.name || '').toLowerCase();
     const telefone = (contact.phone || '').toLowerCase();
