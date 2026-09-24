@@ -20,7 +20,7 @@ interface AtendimentoCardIndicatorsProps extends AtendimentoIndicatorData {
 
 /**
  * Indicadores numéricos compartilhados pelos cartões de todas as abas do Atendimento.
- * Exibe somente indicadores ativos como ícones; a quantidade fica disponível na dica.
+ * Exibe somente indicadores ativos como ícones com contador, sem rótulos de texto.
  */
 export function AtendimentoCardIndicators({
   diasAtraso = 0,
@@ -87,12 +87,15 @@ export function AtendimentoCardIndicators({
                     indicador.onClick?.();
                   }}
                   className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-md border transition-opacity",
+                    "relative flex h-5 w-5 items-center justify-center rounded-md border transition-opacity",
                     indicador.classe,
                     clicavel ? "cursor-pointer hover:opacity-90" : "cursor-default",
                   )}
                 >
                   <Icone className="h-3 w-3" aria-label={indicador.texto} />
+                  <span className="absolute -right-1.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-foreground px-0.5 text-[8px] font-bold leading-none text-background">
+                    {indicador.valor > 99 ? "99+" : indicador.valor}
+                  </span>
                 </span>
               </TooltipTrigger>
               <TooltipContent><p>{indicador.texto}</p></TooltipContent>
