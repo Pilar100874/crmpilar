@@ -3898,6 +3898,22 @@ ${recentMessages}
     ...indicadoresPorContato.get(contato.id),
   })), [contatosBase, indicadoresPorContato]);
 
+  // As bolinhas das abas representam os cartões exibidos, não apenas pendências.
+  const contatosFiltradosNaLista = useMemo(() => {
+    if (isMobile || isTablet || !searchTerm) return contatosComIndicadores;
+    const termo = searchTerm.toLowerCase();
+    return contatosComIndicadores.filter((contato) =>
+      contato.nome.toLowerCase().includes(termo) || contato.email.toLowerCase().includes(termo),
+    );
+  }, [contatosComIndicadores, isMobile, isTablet, searchTerm]);
+  const quantidadeCardsChat = agendaConversations.length + contatosSemConversa.length + otherConversations.length;
+  const quantidadeCardsTelefone = contatosFiltradosNaLista.filter((contato) => contato.tel.trim() !== "").length;
+  const quantidadeCardsEmail = contatosComIndicadores.filter((contato) => contato.email.trim() !== "").length;
+  const quantidadeCardsVisita = contatosFiltradosNaLista.length;
+  const quantidadeCardsOrcamento = new Set(
+    orcamentosVisiveis.map((orcamento) => orcamento.empresa_id || `sem-empresa-${orcamento.cliente_id || "geral"}`),
+  ).size;
+
   const dadosAgendaPorContato = useMemo(() => {
     const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
     todayTasks.forEach((task: any) => {
@@ -4012,10 +4028,10 @@ ${recentMessages}
   }
 
   const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
-    { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
-    { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: todayTasksCount },
-    { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
-    { id: "orcamento", icon: Receipt, label: "Orç.", badge: orcamentosEmAndamentoCount },
+    { id: "chat", icon: MessageSquare, label: "Conversas", badge: quantidadeCardsChat },
+    { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: filteredTasks.length },
+    { id: "email", icon: Mail, label: "E-mails", badge: quantidadeCardsEmail },
+    { id: "orcamento", icon: Receipt, label: "Orç.", badge: quantidadeCardsOrcamento },
     { id: "dialer", icon: PhoneCall, label: "Discador" },
     ...(dynamicRadialTools.length > 0 ? [{ 
       id: "tools", 
@@ -5542,12 +5558,12 @@ ${recentMessages}
             <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
-                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: todayTasksCount },
-                  { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
-                  { id: "tel", label: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
-                  { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
-                  { id: "orcamento", label: "Orç.", icon: FileText, badge: orcamentosEmAndamentoCount },
-                  { id: "visita", label: "Visita", icon: MapPin, badge: contatosBase.length },
+                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: filteredTasks.length },
+                  { id: "chat", label: "Chats", icon: MessageSquare, badge: quantidadeCardsChat },
+                  { id: "tel", label: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
+                  { id: "email", label: "E-mails", icon: Mail, badge: quantidadeCardsEmail },
+                  { id: "orcamento", label: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
+                  { id: "visita", label: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -5758,16 +5774,16 @@ ${recentMessages}
           <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
             <ExpandableTabs
               tabs={[
-                { title: "Agenda", icon: CalendarDays, badge: todayTasksCount },
+                { title: "Agenda", icon: CalendarDays, badge: filteredTasks.length },
                 { 
                   title: "Chats", 
                   icon: MessageSquare, 
-                  badge: activeConversationsCount
+                  badge: quantidadeCardsChat
                 },
-                { title: "Tel", icon: Phone, badge: contatosBase.filter((c) => c.tel.trim() !== "").length },
-                { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
-                { title: "Orç.", icon: FileText, badge: orcamentosEmAndamentoCount },
-                { title: "Visita", icon: MapPin, badge: contatosBase.length },
+                { title: "Tel", icon: Phone, badge: quantidadeCardsTelefone },
+                { title: "E-mails", icon: Inbox, badge: quantidadeCardsEmail },
+                { title: "Orç.", icon: FileText, badge: quantidadeCardsOrcamento },
+                { title: "Visita", icon: MapPin, badge: quantidadeCardsVisita },
               ]}
               activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "tel" ? 2 : activeTab === "email" ? 3 : activeTab === "orcamento" ? 4 : activeTab === "visita" ? 5 : null}
               onChange={(index) => {
