@@ -17,6 +17,7 @@ import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
@@ -78,6 +79,22 @@ export function UnifiedDetailsPanel({
   onCompanyCardClick
 }: UnifiedDetailsPanelProps) {
   const [empresasOpen, setEmpresasOpen] = useState(true);
+  const [extrasPicker, setExtrasPicker] = useState<{ tipo: "localizacao" | "qualificacao"; empresas: any[] } | null>(null);
+
+  const handleExtrasClick = (tipo: "localizacao" | "qualificacao") => {
+    const empresasList = (companies || [])
+      .map((c: any) => c?.empresas || c)
+      .filter((e: any) => e?.id);
+    if (empresasList.length > 1) {
+      setExtrasPicker({ tipo, empresas: empresasList });
+      return;
+    }
+    const empresa = empresasList[0];
+    const id = empresa?.id || empresaId;
+    if (!id) return;
+    const nomeEmpresa = empresa?.nome_fantasia || empresa?.nome || empresa?.company_fantasia || empresa?.company_name || nome;
+    abrirExtrasDaEmpresa({ tipo, empresaId: id, empresaNome: nomeEmpresa });
+  };
   const [contatoOpen, setContatoOpen] = useState(true);
   const [extrasOpen, setExtrasOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
@@ -708,7 +725,7 @@ export function UnifiedDetailsPanel({
                     variant="outline"
                     size="sm"
                     className="w-full justify-start text-xs"
-                    onClick={() => abrirExtrasDaEmpresa({ tipo: "localizacao", empresaId: extraEmpresaId, empresaNome: extraEmpresaNome })}
+                    onClick={() => handleExtrasClick("localizacao")}
                   >
                     <MapPin className="w-3.5 h-3.5 mr-2 text-primary" />
                     Ver localização
@@ -717,7 +734,7 @@ export function UnifiedDetailsPanel({
                     variant="outline"
                     size="sm"
                     className="w-full justify-start text-xs"
-                    onClick={() => abrirExtrasDaEmpresa({ tipo: "qualificacao", empresaId: extraEmpresaId, empresaNome: extraEmpresaNome })}
+                    onClick={() => handleExtrasClick("qualificacao")}
                   >
                     <ShieldCheck className="w-3.5 h-3.5 mr-2 text-primary" />
                     Ver qualificação
@@ -765,6 +782,34 @@ export function UnifiedDetailsPanel({
         description={`Tem certeza que deseja desvincular "${nome}" de todas as empresas vinculadas?`}
         isLoading={isDesvinculatingContato}
       />
+
+      {/* Dialog para escolher a empresa dos Extras quando há mais de uma */}
+      <Dialog open={!!extrasPicker} onOpenChange={(open) => !open && setExtrasPicker(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {extrasPicker?.tipo === "localizacao" ? "Ver localização de qual empresa?" : "Ver qualificação de qual empresa?"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            {extrasPicker?.empresas.map((emp: any) => (
+              <Button
+                key={emp.id}
+                variant="outline"
+                className="w-full justify-start text-xs"
+                onClick={() => {
+                  const nomeEmpresa = emp?.nome_fantasia || emp?.nome || emp?.company_fantasia || emp?.company_name || "empresa";
+                  abrirExtrasDaEmpresa({ tipo: extrasPicker.tipo, empresaId: emp.id, empresaNome: nomeEmpresa });
+                  setExtrasPicker(null);
+                }}
+              >
+                <Building2 className="w-3.5 h-3.5 mr-2 text-primary" />
+                {emp?.nome_fantasia || emp?.nome || emp?.company_fantasia || emp?.company_name || "Empresa"}
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog para vincular contato a empresa */}
       {companies.length > 0 && companies[0]?.empresas?.id && (
