@@ -64,7 +64,7 @@ import { FinalizarAtendimentoDialog } from "@/components/atendimento/FinalizarAt
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { useContatosPendentes } from "@/hooks/useContatosPendentes";
 import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
-import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
+import { parseTituloCartao } from "@/lib/atendimento/tituloCartao";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
 import { AtendimentoCardsDensityButton, AtendimentoCardsDensityProvider, AtendimentoClientCard, useAtendimentoCardsCompactos } from "@/components/atendimento/AtendimentoClientCard";
@@ -3858,42 +3858,64 @@ ${recentMessages}
     return phoneMap;
   }, [conversations]);
 
+  const indicadoresPorContato = useMemo(() => {
+    const mapa = new Map<string, { diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>();
+    const contatos = new Map<string, any>();
+    contatosBase.forEach((contato) => contatos.set(contato.id, contato));
+    todayTasks.forEach((task: any) => {
+      if (task.contact_id) contatos.set(task.contact_id, task.customers || contatos.get(task.contact_id));
+    });
+    conversations.forEach((conversa: any) => {
+      if (conversa.customer_id) contatos.set(conversa.customer_id, conversa.customer || contatos.get(conversa.customer_id));
+    });
+
+    contatos.forEach((contato, contatoId) => {
+      const empresas = contato?.customer_empresas || contato?.companies || [];
+      const empresaIds = empresas.map((relacao: any) => relacao.empresa_id || relacao.empresas?.id).filter(Boolean);
+      const tarefas = todayTasks.filter((task: any) => task.contact_id === contatoId && !["concluido", "cancelado", "completed"].includes(task.status));
+      const diasAtraso = tarefas.reduce((maior: number, task: any) => {
+        if (!task.data_original) return maior;
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const original = new Date(task.data_original);
+        original.setHours(0, 0, 0, 0);
+        return Math.max(maior, Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000)));
+      }, 0);
+      mapa.set(contatoId, {
+        diasAtraso,
+        emailsNaoLidos: emailsNaoLidosPerEmail[String(contato?.email || "").toLowerCase()] || 0,
+        chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(contato?.telefone)] || 0,
+        orcamentosAbertos: (orcamentosAbertosPerCustomer[contatoId] || 0)
+          + (orcamentosAbertosPerEmpresa[contatoId] || 0)
+          + empresaIds.reduce((total: number, empresaId: string) => total + (orcamentosAbertosPerEmpresa[empresaId] || 0), 0),
+      });
+    });
+    return mapa;
+  }, [contatosBase, todayTasks, conversations, emailsNaoLidosPerEmail, chatsNaoLidosPerPhone, orcamentosAbertosPerCustomer, orcamentosAbertosPerEmpresa]);
+
   const contatosComIndicadores = useMemo(() => contatosBase.map((contato) => ({
     ...contato,
-    emailsNaoLidos: emailsNaoLidosPerEmail[contato.email.toLowerCase()] || 0,
-    chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(contato.telefone)] || 0,
-  })), [contatosBase, emailsNaoLidosPerEmail, chatsNaoLidosPerPhone]);
+    ...indicadoresPorContato.get(contato.id),
+  })), [contatosBase, indicadoresPorContato]);
 
   const dadosAgendaPorContato = useMemo(() => {
     const mapa = new Map<string, { title: string; time: string; origem: string; responsavel: string; orcamentosAbertos: number; diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number }>();
     todayTasks.forEach((task: any) => {
       if (!task.contact_id || mapa.has(task.contact_id)) return;
-      const empresaIds = task.customers?.customer_empresas
-        ?.map((relacao: any) => relacao.empresa_id || relacao.empresas?.id)
-        .filter(Boolean) || [];
-      const orcamentosAbertos = (orcamentosAbertosPerCustomer[task.contact_id] || 0)
-        + (orcamentosAbertosPerEmpresa[task.contact_id] || 0)
-        + empresaIds.reduce((total: number, empresaId: string) => total + (orcamentosAbertosPerEmpresa[empresaId] || 0), 0);
+      const indicadores = indicadoresPorContato.get(task.contact_id);
       mapa.set(task.contact_id, {
         title: task.title || `Contato - ${task.contact_name || "Cliente"}`,
         time: task.time || "",
         origem: task.origem || "",
         responsavel: task.linkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente",
-        orcamentosAbertos,
-        diasAtraso: (() => {
-          if (!task.data_original) return 0;
-          const hoje = new Date();
-          hoje.setHours(0, 0, 0, 0);
-          const original = new Date(task.data_original);
-          original.setHours(0, 0, 0, 0);
-          return Math.max(0, Math.floor((hoje.getTime() - original.getTime()) / 86_400_000));
-        })(),
-        emailsNaoLidos: emailsNaoLidosPerEmail[String(task.customers?.email || "").toLowerCase()] || 0,
-        chatsPendentes: chatsNaoLidosPerPhone[normalizePhone(task.customers?.telefone)] || 0,
+        orcamentosAbertos: indicadores?.orcamentosAbertos || 0,
+        diasAtraso: indicadores?.diasAtraso || 0,
+        emailsNaoLidos: indicadores?.emailsNaoLidos || 0,
+        chatsPendentes: indicadores?.chatsPendentes || 0,
       });
     });
     return mapa;
-  }, [todayTasks, orcamentosAbertosPerCustomer, orcamentosAbertosPerEmpresa, emailsNaoLidosPerEmail, chatsNaoLidosPerPhone]);
+  }, [todayTasks, indicadoresPorContato]);
 
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
   const currentTabType = activeTab as TabType;
@@ -6240,7 +6262,7 @@ ${recentMessages}
             <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
               {!usarAgenda ? (
                 <ContatosCanalList
-                  contatos={contatosVinculados}
+                  contatos={contatosComIndicadores}
                   canal="todos"
                   titulo="Meus contatos"
                   acaoLabel="Abrir"
@@ -6320,28 +6342,21 @@ ${recentMessages}
                            );
                          })()}
                           <div className="mt-1 flex min-h-5 items-center">
-                            {(() => {
-                              const customerEmail = task.customers?.email?.toLowerCase();
-                              const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                              const customerPhone = normalizePhone(task.customers?.telefone);
-                              const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                              const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                              const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
-                              const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                              const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                              {(() => {
+                                const indicadores = task.contact_id ? indicadoresPorContato.get(task.contact_id) : undefined;
+                                const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
                               return (
                                 <AtendimentoCardIndicators
-                                  diasAtraso={task.diasAtraso || 0}
-                                  emailsNaoLidos={unreadEmailCount}
-                                  chatsPendentes={unreadChatsCount}
-                                  orcamentosAbertos={customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount}
+                                  {...indicadores}
                                   onEmailClick={() => {
-                                    const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
+                                     const customerEmail = task.customers?.email?.toLowerCase();
+                                     const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
                                     setActiveTab('email');
                                     if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
                                   }}
                                   onChatClick={() => {
-                                    const firstUnreadChat = conversations.find(c =>
+                                     const customerPhone = normalizePhone(task.customers?.telefone);
+                                     const firstUnreadChat = conversations.find(c =>
                                       (c.chat_status === 'em_fila' || c.chat_status === 'novo') &&
                                       normalizePhone(c.customer?.telefone) === customerPhone
                                     );
@@ -6399,19 +6414,6 @@ ${recentMessages}
                                   Pendente
                                 </button>
                               )}
-                              {(() => {
-                                const { canal } = parseTituloCartao(task.title);
-                                if (!canal) return null;
-                                const IconeCanal = ICONES_CANAL[canal];
-                                return (
-                                  <span
-                                    title={ROTULOS_CANAL[canal]}
-                                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
-                                  >
-                                    <IconeCanal className="h-3.5 w-3.5" />
-                                  </span>
-                                );
-                              })()}
                             </div>
                        </div>
                      </div>
@@ -6568,6 +6570,7 @@ ${recentMessages}
                 tarefasAgenda={filteredTasks}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
+                indicadoresPorContato={indicadoresPorContato}
                 selectedOrcamentoId={selectedOrcamentoId}
                 onSelectOrcamento={(orcamento) => {
                   if (bloquearTrocaClientePendente((orcamento as any)?.cliente_id)) return;
@@ -8342,20 +8345,11 @@ function MobileListContent({
                 })()}
                 <div className="mt-1 flex min-h-5 items-center">
                   {(() => {
-                    const customerEmail = task.customers?.email?.toLowerCase();
-                    const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                    const customerPhone = normalizePhone(task.customers?.telefone);
-                    const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                    const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                    const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                    const indicadores = task.contact_id ? indicadoresPorContato.get(task.contact_id) : undefined;
                     const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                    const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
                     return (
                       <AtendimentoCardIndicators
-                        diasAtraso={task.diasAtraso || 0}
-                        emailsNaoLidos={unreadEmailCount}
-                        chatsPendentes={unreadChatsCount}
-                        orcamentosAbertos={customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount}
+                        {...indicadores}
                         onEmailClick={() => setActiveTab('email')}
                         onChatClick={() => setActiveTab('chat')}
                         onOrcamentoClick={() => {
@@ -8404,19 +8398,6 @@ function MobileListContent({
                         Pendente
                       </button>
                     )}
-                    {(() => {
-                      const { canal } = parseTituloCartao(task.title);
-                      if (!canal) return null;
-                      const IconeCanal = ICONES_CANAL[canal];
-                      return (
-                        <span
-                          title={ROTULOS_CANAL[canal]}
-                          className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
-                        >
-                          <IconeCanal className="h-3.5 w-3.5" />
-                        </span>
-                      );
-                    })()}
                   </div>
               </div>
             </div>
@@ -8445,6 +8426,7 @@ function MobileListContent({
             tarefasAgenda={filteredTasks}
             emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
             chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
+            indicadoresPorContato={indicadoresPorContato}
             selectedOrcamentoId={selectedOrcamentoId}
             onSelectOrcamento={(orcamento) => setSelectedOrcamentoId(orcamento.id)}
           />

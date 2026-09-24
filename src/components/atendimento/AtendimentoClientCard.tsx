@@ -3,7 +3,7 @@ import { CalendarCheck, History, Rows3, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { abrirHistoricoDoContato } from "@/lib/atendimento/navegacaoContato";
-import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
+import { parseTituloCartao } from "@/lib/atendimento/tituloCartao";
 import { pedirFinalizacao } from "@/lib/atendimento/finalizarAtendimento";
 import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
 
@@ -169,19 +169,6 @@ export function AtendimentoClientCard({
             <CalendarCheck className="h-3.5 w-3.5" />
             {!compacto && (pendente ? "Pendente" : "Finalizar")}
           </button>
-          {(() => {
-            const { canal } = parseTituloCartao(title);
-            if (!canal) return null;
-            const IconeCanal = ICONES_CANAL[canal];
-            return (
-              <span
-                title={ROTULOS_CANAL[canal]}
-                className={cn("ml-auto flex items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground", compacto ? "h-6 w-6" : "h-7 w-7")}
-              >
-                <IconeCanal className="h-3.5 w-3.5" />
-              </span>
-            );
-          })()}
         </div>
       )}
     </div>
