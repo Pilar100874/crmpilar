@@ -1906,6 +1906,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           nome_fantasia,
           nome,
           cnpj,
+          tipo_cliente,
           custom_fields
         )
       `)
@@ -1917,6 +1918,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         nome_fantasia: v.empresas.nome_fantasia,
         nome: v.empresas.nome,
         cnpj: v.empresas.cnpj,
+        tipo_cliente: (v.empresas as any).tipo_cliente,
         custom_fields: v.empresas.custom_fields,
         is_primary: v.is_primary,
         vinculo_id: v.id
@@ -2808,6 +2810,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       nome_fantasia,
                       nome,
                       cnpj,
+                      tipo_cliente,
                       custom_fields
                     )
                   `)
@@ -2819,6 +2822,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     nome_fantasia: v.empresas.nome_fantasia,
                     nome: v.empresas.nome,
                     cnpj: v.empresas.cnpj,
+                    tipo_cliente: (v.empresas as any).tipo_cliente,
                     custom_fields: v.empresas.custom_fields,
                     is_primary: v.is_primary,
                     vinculo_id: v.id
