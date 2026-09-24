@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { X, CalendarIcon, Clock, Pencil, Trash2, Building2, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare } from "lucide-react";
+import { X, CalendarIcon, Clock, Pencil, Trash2, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare } from "lucide-react";
 import { format, addDays, addMinutes, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 interface Contact {
   id: string;
   name: string;
-  type: 'contato' | 'empresa';
+  type: 'contato';
   company?: string;
   phone: string;
   email: string;
