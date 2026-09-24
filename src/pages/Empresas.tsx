@@ -760,8 +760,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     
     // Qualquer valor que venha do banco é exibido em CAIXA ALTA
     Object.assign(data, upperObject(data));
-    // Campos de seleção com valores em minúsculas não podem ser convertidos
-    data.tipo_vendedor = String((empresa as any).tipo_vendedor || "representante").toLowerCase();
     if (!String(data.company_fantasia || "").trim()) {
       data.company_fantasia = String(data.company_name || "");
     }

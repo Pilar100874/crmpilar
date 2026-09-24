@@ -14,6 +14,7 @@ const KEEP_AS_IS = new Set([
   "status_comercial",
   "regime_tributario",
   "tipo",
+  "tipo_vendedor",
   "status",
 ]);
 
