@@ -7892,6 +7892,7 @@ interface MobileListContentProps {
   setActiveTab: (tab: string) => void;
   emailsNaoLidosPerEmail: Record<string, number>;
   chatsNaoLidosPerPhone: Record<string, number>;
+  indicadoresPorContato: Map<string, { diasAtraso: number; emailsNaoLidos: number; chatsPendentes: number; orcamentosAbertos: number }>;
   agendaViewMode: 'default' | 'fluxo' | 'massa';
   setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
   setDiscadorModo: (modo: 'previa' | 'sequencial' | null) => void;
@@ -7957,6 +7958,7 @@ function MobileListContent({
   setActiveTab,
   emailsNaoLidosPerEmail,
   chatsNaoLidosPerPhone,
+  indicadoresPorContato,
   agendaViewMode,
   setAgendaViewMode,
   setDiscadorModo,
@@ -8249,6 +8251,10 @@ function MobileListContent({
                   <ConversaAgendaCard
                     key={conv.id}
                     conversa={conv}
+                    dadosAgenda={(() => {
+                      const indicadores = indicadoresPorContato.get(conv.customer_id);
+                      return indicadores ? { title: `Chat - ${conv.customer?.nome || "Cliente"}`, time: "", origem: "", responsavel: "", ...indicadores } : undefined;
+                    })()}
                     selecionado={selectedConversation === conv.id}
                     tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
@@ -8264,6 +8270,7 @@ function MobileListContent({
                     customerName={contact.nome}
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                     selected={[...agendaConversations, ...otherConversations].find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
+                    indicators={<AtendimentoCardIndicators {...indicadoresPorContato.get(contact.contactId)} />}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
                     historicoClienteId={contact.contactId}
                     historicoClienteNome={contact.nome}
@@ -8286,6 +8293,10 @@ function MobileListContent({
                   <ConversaAgendaCard
                     key={conv.id}
                     conversa={conv}
+                    dadosAgenda={(() => {
+                      const indicadores = indicadoresPorContato.get(conv.customer_id);
+                      return indicadores ? { title: `Chat - ${conv.customer?.nome || "Cliente"}`, time: "", origem: "", responsavel: "", ...indicadores } : undefined;
+                    })()}
                     selecionado={selectedConversation === conv.id}
                     tempo={conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                     onClick={() => setSelectedConversation(conv.id)}
