@@ -69,7 +69,7 @@ export function AtendimentoClientCard({
           ? "border-primary/60 bg-primary/5 shadow-md"
           : "border-border/80 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:-translate-y-0.5",
         onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        bloqueado && "opacity-50 grayscale pointer-events-none",
+        bloqueado && "opacity-50 grayscale",
         pendente && "ring-2 ring-destructive/60",
         className,
       )}

@@ -6245,7 +6245,7 @@ ${recentMessages}
                             : semEmpresa
                               ? "bg-card border-blue-500/70 hover:bg-muted/40 hover:border-blue-500 hover:shadow-md"
                               : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-                      } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
+                      } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
                       onClick={() => {
                         if (bloquearTrocaClientePendente(task.contact_id)) return;
                         setSelectedTaskId(task.id);
@@ -8257,7 +8257,7 @@ function MobileListContent({
               selectedTaskId === task.id
                 ? "bg-primary/10 border-primary/40 shadow-md"
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
-            } ${taskBloqueada ? "opacity-50 grayscale pointer-events-none" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
+            } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
           >
             <div className="flex items-start gap-3 p-3.5 pr-10">
               <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
