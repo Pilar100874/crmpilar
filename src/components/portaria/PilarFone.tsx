@@ -165,9 +165,13 @@ export default function PilarFone({
     pararGravacao,
   } = useSipConnection();
 
+  // Guarda o callback em ref para não disparar de novo a cada render do container
+  // (callback inline recriado a cada render causava laço infinito de atualização).
+  const onStatusRamalChangeRef = useRef(onStatusRamalChange);
+  onStatusRamalChangeRef.current = onStatusRamalChange;
   useEffect(() => {
-    onStatusRamalChange?.({ registrado: isRegistered, conectando: isConnecting });
-  }, [isRegistered, isConnecting, onStatusRamalChange]);
+    onStatusRamalChangeRef.current?.({ registrado: isRegistered, conectando: isConnecting });
+  }, [isRegistered, isConnecting]);
 
   const [config, setConfig] = useState<PortariaSipConfig>(() => lerConfigSip());
   const [configSincronizada, setConfigSincronizada] = useState(false);
