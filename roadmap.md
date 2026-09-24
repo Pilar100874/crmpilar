@@ -7,3 +7,4 @@
 - [x] Corrigir o formato dos cartões do Chat e remover textos centrais redundantes.
 - [x] Reorganizar atraso, e-mails, chats e orçamentos como indicadores compactos com ícones.
 - [x] Conferir os cartões do Chat e validar a compilação.
+- [x] Padronizar os indicadores da Agenda abaixo do nome e exibi-los somente como ícones.

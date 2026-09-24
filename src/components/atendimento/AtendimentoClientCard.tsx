@@ -124,6 +124,7 @@ export function AtendimentoClientCard({
             <p className={cn("truncate font-medium text-muted-foreground", compacto ? "text-[10px]" : "mt-0.5 text-xs")} title={customerName}>{customerName}</p>
           )}
           </div>
+           {indicators && <div className="mt-1 flex min-h-5 items-center">{indicators}</div>}
           <div className={cn("flex min-w-0 items-center gap-1.5", compacto ? "mt-1" : "mt-1.5")}>
             {pendente && (
               <span className="max-w-[110px] truncate rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-destructive">
@@ -133,7 +134,6 @@ export function AtendimentoClientCard({
             {children && <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>}
           </div>
         </div>
-        {indicators && <div className="shrink-0 pr-7">{indicators}</div>}
       </div>
       {historicoClienteId && (
         <div className={cn("flex items-center gap-1.5", compacto ? "absolute bottom-1.5 right-2" : "mt-3 border-t border-border/60 pt-2.5")}>
