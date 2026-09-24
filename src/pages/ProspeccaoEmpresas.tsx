@@ -20,6 +20,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { validateCNPJ, validateEmail } from '@/lib/validators';
 import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { carregarGerentesEAdministradores, type UsuarioGerente } from '@/lib/cadastros/gerentes';
 import { buscarCNPJ } from '@/lib/cadastros/cnpjService';
 import { buscarCEP } from '@/lib/cadastros/cepService';
 
@@ -171,6 +174,10 @@ export default function ProspeccaoEmpresas() {
   const [importando, setImportando] = useState(false);
   const [preparandoPreview, setPreparandoPreview] = useState(false);
   const [previewImport, setPreviewImport] = useState<PreviewImportItem[] | null>(null);
+  const [gerentesImport, setGerentesImport] = useState<UsuarioGerente[]>([]);
+  const [vendedoresImport, setVendedoresImport] = useState<{ id: string; nome: string }[]>([]);
+  const [gerenteImportId, setGerenteImportId] = useState<string>('');
+  const [vendedorImportId, setVendedorImportId] = useState<string>('');
   const [metodo, setMetodo] = useState<'wizard' | 'mcp' | null>(null);
 
   const limparTudo = async () => {
