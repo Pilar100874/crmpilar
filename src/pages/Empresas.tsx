@@ -2954,38 +2954,33 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   <div className="space-y-4">
                     <Card className="border-primary/20 bg-primary/5">
                       <CardContent className="p-4 space-y-4">
-                        <h4 className="text-sm font-semibold">Adicionar Contatos</h4>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Buscar por nome, e-mail ou WhatsApp..."
-                            value={buscaContato}
-                            className="h-9 text-sm bg-background"
-                            onChange={(e) => setBuscaContato(e.target.value)}
-                          />
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold">Adicionar Contatos</h4>
                           <Button variant="outline" size="sm" onClick={() => setCriarNovoContato(true)}>
                             <Plus className="w-4 h-4 mr-1" /> Novo
                           </Button>
                         </div>
-                        {contatosFiltrados.length > 0 && (
-                          <div className="border rounded-md max-h-[240px] overflow-y-auto bg-background">
-                            {contatosFiltrados.map((contato) => (
-                              <button
-                                key={contato.id}
-                                className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                                onClick={() => {
-                                  handleAddContatoVinculado(contato.id);
-                                  setContatosFiltrados([]);
-                                  setBuscaContato("");
-                                }}
-                              >
-                                <div className="font-medium text-sm">{contato.nome}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {contato.email} {contato.telefone && `• ${contato.telefone}`}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {(() => {
+                          const ja = new Set(contatosVinculados.map((v: any) => v?.contato?.id).filter(Boolean));
+                          const disp = contatos.filter(c => !ja.has(c.id));
+                          return (
+                            <FilteredCheckboxList
+                              idPrefix="new-cont"
+                              items={disp.map((c) => ({ id: c.id, label: c.nome, extra: [c.email, c.telefone].filter(Boolean).join(" • ") || undefined }))}
+                              selected={novosContatosVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosContatosVinculo(checked ? [...novosContatosVinculo, id] : novosContatosVinculo.filter((x) => x !== id))
+                              }
+                              searchPlaceholder="Buscar por nome, e-mail ou WhatsApp..."
+                              emptyText="Nenhum contato disponível."
+                              maxHeightClass="max-h-[240px]"
+                            />
+                          );
+                        })()}
+                        <Button onClick={handleAddContatosSelecionados} className="w-full" size="sm">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Contatos Selecionados
+                        </Button>
                       </CardContent>
                     </Card>
                     <div>
