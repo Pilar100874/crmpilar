@@ -26,6 +26,13 @@ interface Usuario {
 interface EmpresaVinculo {
   empresa_id: string;
   usuario_id: string | null;
+  vendedor_id: string | null;
+}
+
+interface Vendedor {
+  id: string;
+  nome_fantasia: string | null;
+  nome: string | null;
 }
 
 export const useMapLayers = () => {
@@ -38,16 +45,22 @@ export const useMapLayers = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<string>('all');
   const [selectedCnaes, setSelectedCnaes] = useState<string[]>([]);
+  const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>('all');
+  const [selectedVendedorId, setSelectedVendedorId] = useState<string>('all');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes] = await Promise.all([
-        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao'),
+      const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes, vendedoresRes] = await Promise.all([
+        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao, tipo_cliente'),
         supabase.from('usuarios').select('id, nome'),
-        supabase.from('empresa_vinculos').select('empresa_id, usuario_id'),
-        supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude')
+        supabase.from('empresa_vinculos').select('empresa_id, usuario_id, vendedor_id'),
+        supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude'),
+        supabase.from('empresas').select('id, nome_fantasia, nome').eq('tipo_cliente', 'vendedor').order('nome_fantasia')
       ]);
+
+      if (vendedoresRes.data) setVendedores(vendedoresRes.data);
 
       if (empresasRes.data) setEmpresas(empresasRes.data);
       if (usuariosRes.data) setUsuarios(usuariosRes.data);
@@ -103,7 +116,8 @@ export const useMapLayers = () => {
       if (empresaVinculosRes.data) {
         setVinculos(empresaVinculosRes.data.map(v => ({
           empresa_id: v.empresa_id,
-          usuario_id: v.usuario_id
+          usuario_id: v.usuario_id,
+          vendedor_id: (v as any).vendedor_id ?? null
         })));
       }
 
@@ -184,7 +198,21 @@ export const useMapLayers = () => {
         .map(v => v.empresa_id);
       filtered = filtered.filter(e => empresasDoUsuario.includes(e.id));
     }
-    
+
+    if (selectedVendedorId === 'none') {
+      const comVendedor = new Set(vinculos.filter(v => v.vendedor_id).map(v => v.empresa_id));
+      filtered = filtered.filter(e => !comVendedor.has(e.id));
+    } else if (selectedVendedorId !== 'all') {
+      const empresasDoVendedor = vinculos
+        .filter(v => v.vendedor_id === selectedVendedorId)
+        .map(v => v.empresa_id);
+      filtered = filtered.filter(e => empresasDoVendedor.includes(e.id));
+    }
+
+    if (selectedEmpresaId !== 'all') {
+      filtered = filtered.filter(e => e.id === selectedEmpresaId);
+    }
+
     return filtered;
   })();
 
@@ -240,6 +268,11 @@ export const useMapLayers = () => {
     setSelectedUsuarioId,
     selectedCnaes,
     setSelectedCnaes,
+    vendedores,
+    selectedEmpresaId,
+    setSelectedEmpresaId,
+    selectedVendedorId,
+    setSelectedVendedorId,
     getDemographicsData
   };
 };

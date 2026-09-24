@@ -177,88 +177,6 @@ function ColumnConfigPanel({ columns, onColumnsChange }: ColumnConfigPanelProps)
   );
 }
 
-function SimpleListaComVinculos({
-  titulo, icone, itens, getNome, getSub, vinculos, vinculoLabel, expandedRows, toggleRow, renderVinculo,
-}: {
-  titulo: string;
-  icone: React.ReactNode;
-  itens: any[];
-  getNome: (item: any) => string;
-  getSub: (item: any) => string | null | undefined;
-  vinculos: Record<string, any[]>;
-  vinculoLabel: string;
-  expandedRows: Set<string>;
-  toggleRow: (id: string) => void;
-  renderVinculo: (v: any) => React.ReactNode;
-}) {
-  if (itens.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-          {icone}
-        </div>
-        <p className="text-lg font-medium text-muted-foreground mb-1">
-          Nenhum(a) {titulo} encontrado(a)
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
-      <table className="w-full">
-        <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20">
-          <tr>
-            <th className="px-4 py-3.5 w-[30px]"></th>
-            <th className="px-4 py-3.5 w-[40px]"></th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Detalhe</th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Vínculos</th>
-          </tr>
-        </thead>
-        <tbody>
-          {itens.map((item: any) => {
-            const links = vinculos[item.id] || [];
-            const hasLinks = links.length > 0;
-            const isExpanded = expandedRows.has(item.id);
-            return (
-              <React.Fragment key={item.id}>
-                <tr className="border-b border-border/30 hover:bg-muted/40 transition-colors">
-                  <td className="p-3">
-                    {hasLinks && (
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => toggleRow(item.id)}>
-                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                      </Button>
-                    )}
-                  </td>
-                  <td className="p-3">{icone}</td>
-                  <td className="p-3 font-medium">{getNome(item)}</td>
-                  <td className="p-3 text-sm text-muted-foreground">{getSub(item) || "-"}</td>
-                  <td className="p-3 text-sm text-muted-foreground">{links.length}</td>
-                </tr>
-                {isExpanded && hasLinks && (
-                  <tr>
-                    <td colSpan={5} className="bg-muted/20 p-4 border-l-4 border-l-primary/40">
-                      <div className="ml-8">
-                        <p className="text-sm font-semibold mb-3">{vinculoLabel}:</p>
-                        <div className="space-y-2">
-                          {links.map((v: any) => (
-                            <React.Fragment key={v.id}>{renderVinculo(v)}</React.Fragment>
-                          ))}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-
 type TipoNo = 'usuario' | 'vendedor' | 'empresa' | 'transportadora' | 'contato';
 interface NoArvore { tipo: TipoNo; id: string; nome: string; sub?: string | null; }
 
@@ -331,15 +249,14 @@ function SimpleListaArvore({ titulo, icone, itens, tipo, getNome, getSub, getFil
           <tr>
             <th className="px-4 py-3.5 w-[30px]"></th>
             <th className="px-4 py-3.5 w-[40px]"></th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Detalhe</th>
-            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Vínculos</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome / CNPJ-CPF</th>
           </tr>
         </thead>
         <tbody>
           {itens.map((item: any) => {
             const filhos = getFilhos(tipo, item.id);
             const isExpanded = expandedRows.has(item.id);
+            const sub = getSub(item);
             return (
               <React.Fragment key={item.id}>
                 <tr className="border-b border-border/30 hover:bg-muted/40 transition-colors">
@@ -351,13 +268,14 @@ function SimpleListaArvore({ titulo, icone, itens, tipo, getNome, getSub, getFil
                     )}
                   </td>
                   <td className="p-3">{icone}</td>
-                  <td className="p-3 font-medium">{getNome(item)}</td>
-                  <td className="p-3 text-sm text-muted-foreground">{getSub(item) || "-"}</td>
-                  <td className="p-3 text-sm text-muted-foreground">{filhos.length}</td>
+                  <td className="p-3">
+                    <span className="font-medium">{getNome(item)}</span>
+                    {sub && <span className="text-sm text-muted-foreground ml-2">({sub})</span>}
+                  </td>
                 </tr>
                 {isExpanded && filhos.length > 0 && (
                   <tr>
-                    <td colSpan={5} className="bg-muted/20 px-4 py-3 border-l-4 border-l-primary/40">
+                    <td colSpan={3} className="bg-muted/20 px-4 py-3 border-l-4 border-l-primary/40">
                       <ArvoreFilhos nos={filhos} getFilhos={getFilhos} caminho={new Set([item.id])} />
                     </td>
                   </tr>
@@ -398,7 +316,7 @@ export default function Todos() {
 
   // Gerenciamento de colunas da tabela - Todos (aba combinada)
   const [todosTableColumns, setTodosTableColumns] = useState<TableColumn[]>(() => {
-    const saved = localStorage.getItem("todosAllTableColumns");
+    const saved = localStorage.getItem("todosAllTableColumnsV2");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -407,9 +325,7 @@ export default function Todos() {
     return [
       { id: "tipo", label: "Tipo", visible: true, width: 80, locked: true },
       { id: "nome", label: "Nome", visible: true, width: 250, locked: true },
-      { id: "email", label: "E-mail", visible: true, width: 250 },
-      { id: "telefone", label: "Telefone", visible: true, width: 150 },
-      { id: "status", label: "Status", visible: true, width: 120 },
+      { id: "documento", label: "CNPJ/CPF", visible: true, width: 180 },
     ];
   });
 
@@ -441,7 +357,7 @@ export default function Todos() {
   });
 
   useEffect(() => {
-    localStorage.setItem("todosAllTableColumns", JSON.stringify(todosTableColumns));
+    localStorage.setItem("todosAllTableColumnsV2", JSON.stringify(todosTableColumns));
   }, [todosTableColumns]);
 
   useEffect(() => {
@@ -752,7 +668,7 @@ export default function Todos() {
     }
     if (tipo === 'vendedor') return unicos((vendedorEmpresas[id] || []).map(noEmpresa));
     if (tipo === 'empresa' || tipo === 'transportadora') {
-      return unicos((empresaContatos[id] || []).map((c: any) => ({ tipo: 'contato' as TipoNo, id: c.id, nome: c.nome || '-', sub: c.email || null })));
+      return unicos((empresaContatos[id] || []).map((c: any) => ({ tipo: 'contato' as TipoNo, id: c.id, nome: c.nome || '-', sub: c.custom_fields?.cpf || c.custom_fields?.cpf_cnpj || null })));
     }
     if (tipo === 'contato') return unicos((contatoEmpresas[id] || []).map(noEmpresa));
     return [];
@@ -1000,44 +916,19 @@ export default function Todos() {
                               );
                             }
                             
-                            if (col.id === "email") {
+                            if (col.id === "documento") {
+                              const doc = item.type === 'contato'
+                                ? (item.custom_fields?.cpf || item.custom_fields?.cpf_cnpj)
+                                : item.type === 'usuario'
+                                  ? null
+                                  : (item.cnpj || item.custom_fields?.cpf_cnpj);
                               return (
                                 <td key={col.id} className="p-3 text-muted-foreground">
-                                  {item.email || "-"}
+                                  {doc || "-"}
                                 </td>
                               );
                             }
-                            
-                            if (col.id === "telefone") {
-                              return (
-                                <td key={col.id} className="p-3 text-muted-foreground">
-                                  {item.telefone || "-"}
-                                </td>
-                              );
-                            }
-                            
-                            if (col.id === "status") {
-                              const badgeMap: Record<string, { label: string; variant: any }> = {
-                                empresa: { label: 'Empresa', variant: 'outline' },
-                                vendedor: { label: 'Vendedor', variant: 'default' },
-                                transportadora: { label: 'Transportadora', variant: 'secondary' },
-                                usuario: { label: 'Gerente', variant: 'outline' },
-                              };
-                              return (
-                                <td key={col.id} className="p-3">
-                                  {item.type === 'contato' ? (
-                                    <Badge variant={item.tipo_operador ? "default" : "secondary"} className="rounded-full">
-                                      {item.tipo_operador ? "Cliente" : "Prospect"}
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant={badgeMap[item.type]?.variant || 'outline'} className="rounded-full">
-                                      {badgeMap[item.type]?.label || '-'}
-                                    </Badge>
-                                  )}
-                                </td>
-                              );
-                            }
-                            
+
                             return <td key={col.id} className="p-3">-</td>;
                           })}
                         </tr>
@@ -1389,7 +1280,7 @@ export default function Todos() {
             itens={filteredVendedores}
             tipo="vendedor"
             getNome={(v: any) => v.nome_fantasia || v.nome}
-            getSub={(v: any) => v.cnpj || v.email}
+            getSub={(v: any) => v.cnpj}
             getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
@@ -1403,7 +1294,7 @@ export default function Todos() {
             itens={filteredTransportadoras}
             tipo="transportadora"
             getNome={(v: any) => v.nome_fantasia || v.nome}
-            getSub={(v: any) => v.cnpj || v.email}
+            getSub={(v: any) => v.cnpj}
             getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
@@ -1417,7 +1308,7 @@ export default function Todos() {
             itens={filteredUsuarios}
             tipo="usuario"
             getNome={(u: any) => u.nome}
-            getSub={(u: any) => u.email}
+            getSub={() => null}
             getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
