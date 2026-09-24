@@ -1391,8 +1391,55 @@ export default function Calendario() {
       console.log("targetUserId (usuarios.id final):", targetUserId);
       console.log("========================");
 
-      // Se for dia todo, atualizar a tarefa se estiver editando; caso contrário, criar baseado na jornada
+      // Regra: só 1 tarefa em aberto por contato e usuário agendado (qualquer data/horário)
+      if (taskData.contactId) {
+        let q = (supabase as any)
+          .from('calendario_tarefas')
+          .select('id, date, time')
+          .eq('contact_id', taskData.contactId)
+          .eq('user_id', targetUserId)
+          .eq('status', 'pending')
+          .limit(1);
+        if (taskData.id) q = q.neq('id', taskData.id);
+        const { data: existente } = await q;
+        if (existente && existente.length > 0) {
+          const t = existente[0];
+          const dataFmt = t.date ? format(new Date(`${t.date}T00:00:00`), 'dd/MM/yyyy') : '';
+          toast.error(`Este contato já tem uma tarefa na agenda deste usuário${dataFmt ? ` (${dataFmt}${t.time ? ` às ${String(t.time).substring(0, 5)}` : ''})` : ''}. Altere a tarefa existente.`);
+          return;
+        }
+      }
+
+      // Dia todo: sempre uma única tarefa, sem repetições por horário
       if (taskData.isAllDay) {
+        const { error } = await (supabase as any)
+          .from('calendario_tarefas')
+          .upsert({
+            ...(taskData.id ? { id: taskData.id } : {}),
+            user_id: targetUserId,
+            estabelecimento_id: estabelecimentoId,
+            contact_id: taskData.contactId,
+            contact_name: taskData.contactName,
+            title: `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`,
+            description: taskData.observation,
+            date: format(taskData.date, 'yyyy-MM-dd'),
+            time: null,
+            origem: taskData.origem,
+            campaign_id: taskData.campaignId,
+            status: 'pending',
+            is_all_day: true,
+          });
+        if (error) {
+          toast.error(`Erro ao salvar tarefa: ${error.message}`);
+          return;
+        }
+        toast.success(taskData.id ? 'Tarefa atualizada para dia todo' : 'Tarefa de dia todo adicionada');
+        await loadTasks();
+        setShowTaskDialog(false);
+        return;
+      }
+
+      if (false as boolean) {
         // Atualização de tarefa existente para "dia todo"
         if (taskData.id) {
           const titleComputed = `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`;
