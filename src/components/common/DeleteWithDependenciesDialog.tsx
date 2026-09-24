@@ -204,7 +204,7 @@ export function DeleteWithDependenciesDialog({
                 <>
                   <p className="text-sm">
                     Este {label} está sendo usado no sistema e <strong>não pode ser excluído</strong>.
-                    Você pode <strong>inativá-lo</strong> para preservar o histórico.
+                    {permitirLimparVinculos ? <>Você pode <strong>inativá-lo</strong> para preservar o histórico.</> : <>Veja abaixo onde ele está sendo usado. Use <strong>Inativar</strong> para retirá-lo das listas.</>}
                   </p>
                   <div className="rounded-md border bg-muted/40 divide-y max-h-72 overflow-y-auto">
                     {Object.entries(deps!).map(([k, v]) => {
