@@ -6320,9 +6320,11 @@ ${recentMessages}
                            );
                          })()}
                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                           <Badge variant="outline" className={`max-w-[110px] truncate px-1.5 py-0 text-[9px] font-semibold uppercase ${taskPendente ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-muted/60 text-muted-foreground'}`}>
-                             {taskPendente ? 'Pendente' : task.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || (!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente')}
-                           </Badge>
+                            {taskPendente && (
+                              <Badge variant="outline" className="max-w-[110px] truncate border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[9px] font-semibold uppercase text-destructive">
+                                Pendente
+                              </Badge>
+                            )}
                            <AtendimentoHoraBadge hora={task.time || ""} />
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
@@ -6336,7 +6338,7 @@ ${recentMessages}
                              </Badge>
                            )}
                              {/* Stacked indicators in top-right corner */}
-                             <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
+                              <div className="absolute right-2 top-2 flex items-center gap-1">
                                {(() => {
                                  const customerEmail = task.customers?.email?.toLowerCase();
                                  const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
@@ -8332,9 +8334,11 @@ function MobileListContent({
                 <p className={`font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-[13px]' : 'text-[15px]'}`}>{parseTituloCartao(task.title).nome}</p>
                 <p className="mt-0.5 text-xs font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <Badge variant="outline" className={`max-w-[110px] truncate px-1.5 py-0 text-[9px] font-semibold uppercase ${taskPendente ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-muted/60 text-muted-foreground'}`}>
-                    {taskPendente ? 'Pendente' : task.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || (!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente')}
-                  </Badge>
+                  {taskPendente && (
+                    <Badge variant="outline" className="max-w-[110px] truncate border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[9px] font-semibold uppercase text-destructive">
+                      Pendente
+                    </Badge>
+                  )}
                   <AtendimentoHoraBadge hora={task.time || ""} />
                   {/* Badge de usuários vinculados adicional */}
                   {task.linkedUsers && task.linkedUsers.length > 1 && (
@@ -8343,7 +8347,7 @@ function MobileListContent({
                     </Badge>
                   )}
                   {/* Stacked indicators in top-right corner */}
-                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
+                   <div className="absolute right-2 top-2 flex items-center gap-1">
                     {(() => {
                       const customerEmail = task.customers?.email?.toLowerCase();
                       const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
