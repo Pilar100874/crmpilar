@@ -49,7 +49,7 @@ export function VinculosWizardStep3Contatos({
             {alterarUsuario && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Alteração de Usuários</CardTitle>
+                  <CardTitle className="text-base">Alteração de Gerentes</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
@@ -60,7 +60,7 @@ export function VinculosWizardStep3Contatos({
                         </Badge>
                       ))
                     ) : (
-                      <span className="text-muted-foreground text-sm">Nenhum usuário</span>
+                      <span className="text-muted-foreground text-sm">Nenhum gerente</span>
                     )}
                   </div>
                 </CardContent>

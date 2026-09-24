@@ -140,14 +140,14 @@ export function VinculosWizardStep1Contatos({
             </div>
 
             <div className="space-y-2">
-              <Label>Filtrar por Usuário</Label>
+              <Label>Filtrar por Gerente</Label>
               <Select value={filterUsuario} onValueChange={setFilterUsuario}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="none">Sem usuário</SelectItem>
+                  <SelectItem value="none">Sem gerente</SelectItem>
                   {usuarios.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.nome}
