@@ -672,9 +672,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         <div className="space-y-5 mt-6">
           {/* Campo de busca de contato */}
           <div className="relative">
-            <Label className="text-sm font-semibold mb-2 block">Vincular Contato ou Empresa</Label>
+            <Label className="text-sm font-semibold mb-2 block">Vincular Contato</Label>
             <Input
-              placeholder="Pesquisar contato ou empresa..."
+              placeholder="Pesquisar contato..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -708,11 +708,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                     onClick={() => handleSelectContact(contact)}
                   >
                     <div className="flex items-center gap-2">
-                      {contact.type === 'empresa' ? (
-                        <Building2 className="w-4 h-4 text-primary" />
-                      ) : (
-                        <User className="w-4 h-4 text-blue-500" />
-                      )}
+                      <User className="w-4 h-4 text-blue-500" />
                       <div className="font-medium text-sm">{contact.name}</div>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5 mt-1 ml-6">
