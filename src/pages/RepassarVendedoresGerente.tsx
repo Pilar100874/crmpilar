@@ -267,8 +267,8 @@ export default function RepassarVendedoresGerente() {
                   <li><b>{selecionados.size}</b> vendedor(es) serão repassados (o gerente responsável no cadastro de cada um será alterado).</li>
                   <li><b>{empresasSel.size}</b> empresa(s) vinculada(s) diretamente ao gerente serão transferidas.</li>
                 </ul>
-                {empresas.size - empresasSel.size > 0 && (
-                  <p>{empresas.size - empresasSel.size} empresa(s) desmarcada(s) continuarão com {nomeGerente(origem)}.</p>
+                {empresas.length - empresasSel.size > 0 && (
+                  <p>{empresas.length - empresasSel.size} empresa(s) desmarcada(s) continuarão com {nomeGerente(origem)}.</p>
                 )}
               </div>
             </AlertDialogDescription>
