@@ -61,7 +61,10 @@ function NoItem({ no, getFilhos, caminho }: {
   no: NoArvore; getFilhos: (tipo: TipoNo, id: string) => NoArvore[]; caminho: Set<string>;
 }) {
   const [aberto, setAberto] = useState(true);
-  const filhos = getFilhos(no.tipo, no.id).filter((f) => !caminho.has(`${f.tipo}-${f.id}`) && !(f.id === no.id && f.tipo === no.tipo));
+  // Evita repetir tipos já presentes no caminho (cascata sem ciclos, até o último nível)
+  const tiposNoCaminho = new Set<string>([...caminho].map((k) => k.split('-')[0]));
+  tiposNoCaminho.add(no.tipo);
+  const filhos = getFilhos(no.tipo, no.id).filter((f) => !tiposNoCaminho.has(f.tipo));
   const temFilhos = filhos.length > 0;
   const novoCaminho = new Set(caminho); novoCaminho.add(`${no.tipo}-${no.id}`);
   return (
@@ -246,6 +249,18 @@ export default function Todos() {
 
   const unicos = (arr: NoArvore[]) => { const s = new Set<string>(); return arr.filter(n => (s.has(`${n.tipo}-${n.id}`) ? false : (s.add(`${n.tipo}-${n.id}`), true))); };
 
+  // Mapas inversos: empresa → vendedores / gerentes
+  const empresaVendedores: Record<string, any[]> = {};
+  Object.entries(vendedorEmpresas).forEach(([vid, emps]) => {
+    const vend = vendedores.find(v => v.id === vid);
+    if (vend) (emps as any[]).forEach((e: any) => (empresaVendedores[e.id] ||= []).push(vend));
+  });
+  const empresaGerentes: Record<string, any[]> = {};
+  Object.entries(usuarioEmpresas).forEach(([uid, emps]) => {
+    const u = usuarios.find((x: any) => x.id === uid);
+    if (u) (emps as any[]).forEach((e: any) => (empresaGerentes[e.id] ||= []).push(u));
+  });
+
   const getFilhos = (tipo: TipoNo, id: string): NoArvore[] => {
     if (tipo === 'usuario') {
       const links = usuarioEmpresas[id] || [];
@@ -255,9 +270,17 @@ export default function Todos() {
       const diretas = links.filter((e: any) => !vendIdSet.has(e.id) && !atendidas.has(e.id));
       return unicos([...vends.map(noEmpresa), ...diretas.map(noEmpresa)]);
     }
-    if (tipo === 'vendedor') return unicos((vendedorEmpresas[id] || []).map(noEmpresa));
+    if (tipo === 'vendedor') return unicos([
+      ...(empresaGerentes[id] || []).map(noUsuario),
+      ...(vendedorEmpresas[id] || []).map(noEmpresa),
+      ...(empresaContatos[id] || []).map(noContato),
+    ]);
     if (tipo === 'empresa' || tipo === 'transportadora') {
-      return unicos((empresaContatos[id] || []).map(noContato));
+      return unicos([
+        ...(empresaGerentes[id] || []).map(noUsuario),
+        ...(empresaVendedores[id] || []).map((v: any) => ({ ...noEmpresa(v), tipo: 'vendedor' as TipoNo })),
+        ...(empresaContatos[id] || []).map(noContato),
+      ]);
     }
     if (tipo === 'contato') return unicos((contatoEmpresas[id] || []).map(noEmpresa));
     return [];
