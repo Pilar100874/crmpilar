@@ -137,6 +137,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   // Estados para gerenciar vínculos na aba
   const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
   const [novosVendedoresVinculo, setNovosVendedoresVinculo] = useState<string[]>([]);
+  const [vendedorDoGerenteVinculo, setVendedorDoGerenteVinculo] = useState<string>("");
   const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
   const [novasEmpresasVinculo, setNovasEmpresasVinculo] = useState<string[]>([]);
   const [novasTransportadorasVinculo, setNovasTransportadorasVinculo] = useState<string[]>([]);
@@ -1150,7 +1151,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     // Empresa nova: vínculo com gerente e vendedor é obrigatório
     if (variant === "empresa" && !editingEmpresa) {
       if (!String(formData.gerente_usuario_id || "").trim()) errors.gerente_usuario_id = "Selecione o gerente responsável";
-      if (!String(formData.vendedor_vinculo_id || "").trim()) errors.vendedor_vinculo_id = "Selecione o vendedor";
     }
 
     if (formData.email && !validateEmail(formData.email)) {
@@ -1317,11 +1317,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           );
         }
 
-        if (variant === "empresa" && formData.gerente_usuario_id && formData.vendedor_vinculo_id) {
-          const { error: vErr } = await supabase.from('empresa_vinculos').insert([
-            { empresa_id: empresaId, usuario_id: formData.gerente_usuario_id, vendedor_id: null, segmento_id: null, estabelecimento_id: estabId },
-            { empresa_id: empresaId, usuario_id: null, vendedor_id: formData.vendedor_vinculo_id, segmento_id: null, estabelecimento_id: estabId },
-          ] as any);
+        if (variant === "empresa" && formData.gerente_usuario_id) {
+          const rowsV: any[] = [{ empresa_id: empresaId, usuario_id: formData.gerente_usuario_id, vendedor_id: null, segmento_id: null, estabelecimento_id: estabId }];
+          if (formData.vendedor_vinculo_id) rowsV.push({ empresa_id: empresaId, usuario_id: null, vendedor_id: formData.vendedor_vinculo_id, segmento_id: null, estabelecimento_id: estabId });
+          const { error: vErr } = await supabase.from('empresa_vinculos').insert(rowsV);
           if (vErr) {
             console.error('Erro ao vincular gerente/vendedor:', vErr);
             toast.error('Empresa criada, mas não foi possível vincular gerente e vendedor');
@@ -1514,6 +1513,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   const [confirmVinculoOpen, setConfirmVinculoOpen] = useState(false);
 
+  // Vendedores vinculados a um gerente (vínculo direto no cadastro do vendedor)
+  const vendedoresDoGerente = (gerenteId: string) => {
+    if (!gerenteId) return [] as any[];
+    const ids = new Set(
+      vinculos
+        .filter((v: any) => v.usuario_id === gerenteId && !v.auto_via_vendedor_id)
+        .map((v: any) => v.empresa_id)
+    );
+    return vendedoresLista.filter((v: any) => ids.has(v.id));
+  };
+
   const handleAdicionarUsuariosVinculo = () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
       toast.error("Selecione pelo menos um usuário");
@@ -1540,6 +1550,27 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         toast.error("Selecione apenas 1 gerente para este vendedor.");
         return;
       }
+    }
+    if (variant === "empresa") {
+      try {
+        const gerenteId = novosUsuariosVinculo[0];
+        const jaTemGerente = vinculos.some((v: any) => v.empresa_id === editingEmpresa.id && v.usuario_id === gerenteId);
+        const rows: any[] = [];
+        if (!jaTemGerente) rows.push({ empresa_id: editingEmpresa.id, usuario_id: gerenteId, segmento_id: null, vendedor_id: null, transportadora_id: null, estabelecimento_id: estabelecimentoId });
+        const jaTemVend = vendedorDoGerenteVinculo && vinculos.some((v: any) => v.empresa_id === editingEmpresa.id && v.vendedor_id === vendedorDoGerenteVinculo && !v.usuario_id);
+        if (vendedorDoGerenteVinculo && !jaTemVend) rows.push({ empresa_id: editingEmpresa.id, usuario_id: null, segmento_id: null, vendedor_id: vendedorDoGerenteVinculo, transportadora_id: null, estabelecimento_id: estabelecimentoId });
+        if (rows.length === 0) { toast.info("Esse gerente e vendedor já estão vinculados."); setConfirmVinculoOpen(false); return; }
+        const { error } = await supabase.from("empresa_vinculos").insert(rows);
+        if (error) throw error;
+        toast.success(jaTemGerente ? "Vendedor vinculado!" : "Gerente vinculado! Uma tarefa foi criada na agenda de hoje dele.");
+        setNovosUsuariosVinculo([]);
+        setVendedorDoGerenteVinculo("");
+        setConfirmVinculoOpen(false);
+        await fetchEmpresas(estabelecimentoId);
+      } catch (error: any) {
+        toast.error("Erro ao vincular: " + error.message);
+      }
+      return;
     }
     try {
       const rows = novosUsuariosVinculo.map((uid) => ({
@@ -2629,7 +2660,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       <Select
                         value={formData.gerente_usuario_id || ""}
                         onValueChange={(v) => {
-                          setFormData((prev) => ({ ...prev, gerente_usuario_id: v }));
+                          setFormData((prev) => ({ ...prev, gerente_usuario_id: v, vendedor_vinculo_id: "" }));
                           setFieldErrors((prev) => ({ ...prev, gerente_usuario_id: "" }));
                         }}
                       >
@@ -2645,19 +2676,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       {fieldErrors.gerente_usuario_id && <p className="text-xs text-destructive">{fieldErrors.gerente_usuario_id}</p>}
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Vendedor <span className="text-destructive">*</span></Label>
+                      <Label className="text-xs">Vendedor (opcional)</Label>
                       <Select
-                        value={formData.vendedor_vinculo_id || ""}
+                        disabled={!formData.gerente_usuario_id}
+                        value={formData.vendedor_vinculo_id || "__none__"}
                         onValueChange={(v) => {
-                          setFormData((prev) => ({ ...prev, vendedor_vinculo_id: v }));
+                          setFormData((prev) => ({ ...prev, vendedor_vinculo_id: v === "__none__" ? "" : v }));
                           setFieldErrors((prev) => ({ ...prev, vendedor_vinculo_id: "" }));
                         }}
                       >
                         <SelectTrigger className={fieldErrors.vendedor_vinculo_id ? "border-destructive" : ""}>
-                          <SelectValue placeholder="Selecione o vendedor" />
+                          <SelectValue placeholder={formData.gerente_usuario_id ? "Sem vendedor" : "Escolha o gerente primeiro"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {vendedoresLista.map((v: any) => (
+                          <SelectItem value="__none__">— Sem vendedor —</SelectItem>
+                          {vendedoresDoGerente(formData.gerente_usuario_id).map((v: any) => (
                             <SelectItem key={v.id} value={v.id}>{v.nome_fantasia || v.nome}</SelectItem>
                           ))}
                         </SelectContent>
@@ -2853,12 +2886,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </TabsTrigger>
                 {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
                   <TabsTrigger value="usuarios" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
-                    Gerentes
-                  </TabsTrigger>
-                )}
-                {variant === "empresa" && (
-                  <TabsTrigger value="vendedores" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
-                    Vendedores
+                    {variant === "empresa" ? "Gerentes e Vendedores" : "Gerentes"}
                   </TabsTrigger>
                 )}
                 {variant === "empresa" && (
@@ -3407,6 +3435,86 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                               </div>
                             </div>
                           )}
+                        </div>
+                      );
+                    }
+
+                    // ===== EMPRESA: gerente obrigatório + vendedor do gerente =====
+                    if (variant === "empresa") {
+                      const gerenteSel = novosUsuariosVinculo[0] || "";
+                      const vendsGerente = vendedoresDoGerente(gerenteSel);
+                      const gerentesDiretos = vinculosUsuarios.filter(v => !v.auto_via_vendedor_id);
+                      const vinculosVend = vinculosDaEmpresa.filter(v => v.vendedor_id && !v.usuario_id);
+                      const nomeVend = (id: string) => { const x: any = vendedoresLista.find((y: any) => y.id === id); return x?.nome_fantasia || x?.nome || "Vendedor"; };
+                      const vendAtribuidos = new Set<string>();
+                      return (
+                        <div className="space-y-4">
+                          <Card className="border-primary/20 bg-primary/5">
+                            <CardContent className="p-4 space-y-3">
+                              <h4 className="text-sm font-semibold">Adicionar gerente e vendedor</h4>
+                              <p className="text-xs text-muted-foreground">A empresa pode ter mais de um gerente. O vendedor é opcional e só mostra os vendedores do gerente escolhido.</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Gerente <span className="text-destructive">*</span></Label>
+                                  <Select value={gerenteSel} onValueChange={(v) => { setNovosUsuariosVinculo([v]); setVendedorDoGerenteVinculo(""); }}>
+                                    <SelectTrigger><SelectValue placeholder="Selecione o gerente" /></SelectTrigger>
+                                    <SelectContent>
+                                      {usuarios.map((u) => (<SelectItem key={u.id} value={u.id}>{u.nome}{idsJaVinculados.has(u.id) ? " (já vinculado)" : ""}</SelectItem>))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Vendedor (opcional)</Label>
+                                  <Select value={vendedorDoGerenteVinculo || "__none__"} onValueChange={(v) => setVendedorDoGerenteVinculo(v === "__none__" ? "" : v)} disabled={!gerenteSel}>
+                                    <SelectTrigger><SelectValue placeholder={gerenteSel ? "Sem vendedor" : "Escolha o gerente primeiro"} /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__none__">— Sem vendedor —</SelectItem>
+                                      {vendsGerente.map((v: any) => (<SelectItem key={v.id} value={v.id}>{v.nome_fantasia || v.nome}</SelectItem>))}
+                                    </SelectContent>
+                                  </Select>
+                                  {gerenteSel && vendsGerente.length === 0 && <p className="text-[11px] text-muted-foreground">Esse gerente não tem vendedores vinculados.</p>}
+                                </div>
+                              </div>
+                              <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm" disabled={!gerenteSel}>
+                                <Plus className="w-4 h-4 mr-2" /> Vincular
+                              </Button>
+                            </CardContent>
+                          </Card>
+                          <div>
+                            <h4 className="text-sm font-semibold mb-3">Vinculados</h4>
+                            {gerentesDiretos.length === 0 && vinculosVend.length === 0 ? (
+                              <div className="p-4 border rounded-lg bg-muted/30 text-center"><p className="text-sm text-muted-foreground">Nenhum gerente vinculado</p></div>
+                            ) : (
+                              <div className="space-y-2">
+                                {gerentesDiretos.map((g) => {
+                                  const u = usuarios.find(x => x.id === g.usuario_id);
+                                  const idsDoGer = new Set(vendedoresDoGerente(g.usuario_id).map((v: any) => v.id));
+                                  const seus = vinculosVend.filter(v => idsDoGer.has(v.vendedor_id));
+                                  seus.forEach(v => vendAtribuidos.add(v.id));
+                                  return (
+                                    <div key={g.id} className="p-3 border rounded-lg bg-muted/30 space-y-2">
+                                      <div className="flex items-center justify-between group">
+                                        <p className="text-sm font-medium">{u?.nome || "Usuário"} <Badge variant="outline" className="ml-2 text-[10px]">Gerente</Badge></p>
+                                        <Button variant="ghost" size="sm" onClick={() => handleRemoverVinculoSimples(g.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                                      </div>
+                                      {seus.map(v => (
+                                        <div key={v.id} className="ml-4 pl-3 border-l flex items-center justify-between">
+                                          <p className="text-sm">{nomeVend(v.vendedor_id)} <Badge variant="secondary" className="ml-2 text-[10px]">Vendedor</Badge></p>
+                                          <Button variant="ghost" size="sm" onClick={() => handleRemoverVinculoSimples(v.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                                {vinculosVend.filter(v => !vendAtribuidos.has(v.id)).map(v => (
+                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between">
+                                    <p className="text-sm">{nomeVend(v.vendedor_id)} <Badge variant="secondary" className="ml-2 text-[10px]">Vendedor sem gerente vinculado</Badge></p>
+                                    <Button variant="ghost" size="sm" onClick={() => handleRemoverVinculoSimples(v.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     }
