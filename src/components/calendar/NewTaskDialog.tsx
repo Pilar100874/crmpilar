@@ -298,8 +298,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     // Buscar vínculos contato -> empresas (para permitir buscar o contato pela empresa)
     const { data: vinculosData } = await supabase
       .from('customer_empresas')
-      .select('customer_id, empresas(nome_fantasia, nome, cnpj)')
-      .eq('estabelecimento_id', estabId);
+      .select('customer_id, empresas(nome_fantasia, nome, cnpj)');
 
     const empresasPorContato: Record<string, string[]> = {};
     if (vinculosData) {
