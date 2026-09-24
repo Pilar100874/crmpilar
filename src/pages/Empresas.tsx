@@ -706,6 +706,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     const data: Record<string, any> = {
       company_type: empresa.custom_fields?.company_type || "Pessoa Jurídica",
       tipo_cliente: (empresa as any).tipo_cliente || "B2B",
+      tipo_vendedor: (empresa as any).tipo_vendedor || "representante",
       cpf_cnpj: empresa.cnpj || "",
       company_name: empresa.nome || "",
       company_fantasia: empresa.nome_fantasia || "",
@@ -1192,6 +1193,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         cep: formData.cep,
         bairro: formData.neighborhood || null,
         tipo_cliente: variant !== "empresa" ? entityConfig.tipo_cliente : (formData.tipo_cliente || "B2B"),
+        ...(variant === "vendedor" ? { tipo_vendedor: formData.tipo_vendedor || "representante" } : {}),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
         whatsapps_vinculados: whatsappsVinculados,
@@ -2505,6 +2507,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     <p className="text-xs text-muted-foreground">Dados essenciais de identificação e contato</p>
                   </div>
                 </div>
+                {variant === "vendedor" && (
+                  <div className="mb-4 sm:mb-6 max-w-xs space-y-1.5">
+                    <Label className="text-xs">Tipo de vendedor</Label>
+                    <Select
+                      value={formData.tipo_vendedor || "representante"}
+                      onValueChange={(v) => setFormData((prev) => ({ ...prev, tipo_vendedor: v }))}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="funcionario">Funcionário</SelectItem>
+                        <SelectItem value="representante">Representante</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
 
                 {formFieldsToRender.map((field) => {
