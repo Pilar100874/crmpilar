@@ -15,6 +15,8 @@ export default {
       extend: {
         fontFamily: {
           sans: ['Tahoma', 'Verdana', 'Geneva', 'sans-serif'],
+          cardTitle: ['Urbanist', 'Tahoma', 'sans-serif'],
+          cardBody: ['Epilogue', 'Tahoma', 'sans-serif'],
         },
         colors: {
           border: "hsl(var(--border))",

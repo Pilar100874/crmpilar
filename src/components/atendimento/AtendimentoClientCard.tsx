@@ -8,6 +8,7 @@ import { usePendenciasAtendimento } from "@/hooks/usePendenciasAtendimento";
 
 interface AtendimentoClientCardProps {
   title: string;
+  companyName?: string;
   customerName?: string;
   sideLabel?: string;
   selected?: boolean;
@@ -25,6 +26,7 @@ interface AtendimentoClientCardProps {
 /** Cartão único das listas do Atendimento, baseado no cartão da Agenda. */
 export function AtendimentoClientCard({
   title,
+  companyName,
   customerName,
   sideLabel = "Meu Cliente",
   selected = false,
@@ -38,7 +40,15 @@ export function AtendimentoClientCard({
 }: AtendimentoClientCardProps) {
   const rotuloGenerico = ["Meu Cliente", "Mesmo Seg.", "Cliente"].includes(sideLabel);
   const nomeCartao = parseTituloCartao(title).nome;
-  const nomeDuplicado = !!customerName && customerName.trim().toLowerCase() === nomeCartao.trim().toLowerCase();
+  const tituloPrincipal = companyName || nomeCartao;
+  const nomeDuplicado = !!customerName && customerName.trim().toLowerCase() === tituloPrincipal.trim().toLowerCase();
+  const iniciais = tituloPrincipal
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parte) => parte.charAt(0))
+    .join("")
+    .toUpperCase();
   const pendencias = usePendenciasAtendimento();
   const pendente = !!historicoClienteId && pendencias.includes(historicoClienteId);
   const bloqueado = pendencias.length > 0 && !pendente;
@@ -54,39 +64,40 @@ export function AtendimentoClientCard({
         onClick();
       }}
       className={cn(
-        "relative min-h-[106px] overflow-hidden rounded-xl border bg-card p-3 shadow-sm transition-all",
+        "group relative min-h-[116px] overflow-hidden rounded-lg border bg-card p-3.5 font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200",
         selected
-          ? "border-primary/40 bg-primary/10 shadow-md"
-          : "border-border/70 hover:border-primary/30 hover:bg-muted/40 hover:shadow-md",
+          ? "border-primary/60 bg-primary/5 shadow-md"
+          : "border-border/80 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:-translate-y-0.5",
         onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         bloqueado && "opacity-50 grayscale pointer-events-none",
         pendente && "ring-2 ring-destructive/60",
         className,
       )}
     >
-      <div className="absolute inset-y-0 left-0 flex w-5 items-center justify-center overflow-hidden rounded-l-xl bg-primary text-primary-foreground">
-        <span
-          className="-rotate-90 max-w-[88px] truncate whitespace-nowrap text-[8px] font-semibold leading-none"
-          title={rotuloGenerico ? sideLabel : `Cliente de ${sideLabel}`}
-        >
-          {rotuloGenerico ? sideLabel : sideLabel.slice(0, 10)}
-        </span>
-      </div>
-
-      <div className="flex min-w-0 items-start gap-3 pl-4">
-        {icon && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            {icon || <User className="h-5 w-5" />}
-          </div>
-        )}
-        <div className="min-w-0 flex-1 pr-14">
-          <p className="truncate text-base font-bold text-foreground" title={nomeCartao}>{nomeCartao}</p>
+      <div className="flex min-w-0 items-start gap-3 pr-7">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
+          {icon || iniciais || <User className="h-5 w-5" />}
+          <span className={cn("absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card", pendente ? "bg-destructive" : "bg-success")} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-cardTitle text-[15px] font-bold leading-tight text-foreground" title={tituloPrincipal}>{tituloPrincipal}</p>
           {customerName && !nomeDuplicado && (
-            <p className="truncate text-sm font-medium text-muted-foreground" title={customerName}>{customerName}</p>
+            <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground" title={customerName}>{customerName}</p>
           )}
-          {children && <div className="mt-1.5 flex flex-wrap items-center gap-2">{children}</div>}
+          <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+            <span className={cn(
+              "max-w-[110px] truncate rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase text-muted-foreground",
+              pendente ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-muted/60",
+            )} title={rotuloGenerico ? sideLabel : `Cliente de ${sideLabel}`}>
+              {pendente ? "Pendente" : rotuloGenerico ? sideLabel : sideLabel}
+            </span>
+            {children && <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>}
+          </div>
+        </div>
+      </div>
+      {historicoClienteId && (
+        <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
           {historicoClienteId && (
-            <div className="mt-1.5 flex items-center gap-1.5">
               <button
                 type="button"
                 title="Ver histórico do cliente"
@@ -95,7 +106,7 @@ export function AtendimentoClientCard({
                   event.stopPropagation();
                   abrirHistoricoDoContato({ customerId: historicoClienteId, nome: historicoClienteNome });
                 }}
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <History className="h-3.5 w-3.5" />
               </button>
@@ -109,7 +120,7 @@ export function AtendimentoClientCard({
                   pedirFinalizacao({ customerId: historicoClienteId, nome: historicoClienteNome });
                 }}
                 className={cn(
-                  "flex h-6 items-center gap-1 rounded-full border px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   pendente
                     ? "border-destructive/50 bg-destructive/10 text-destructive"
                     : "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/50",
@@ -125,18 +136,17 @@ export function AtendimentoClientCard({
                 return (
                   <span
                     title={ROTULOS_CANAL[canal]}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/90 text-muted-foreground"
+                    className="ml-auto flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground"
                   >
                     <IconeCanal className="h-3.5 w-3.5" />
                   </span>
                 );
               })()}
-            </div>
           )}
         </div>
-      </div>
+      )}
       {indicators && (
-        <div className="absolute right-2 top-2 flex flex-col items-center gap-1 text-[10px]">
+        <div className="absolute right-2.5 top-2.5 flex flex-col items-center gap-1 text-[10px]">
           {indicators}
         </div>
       )}

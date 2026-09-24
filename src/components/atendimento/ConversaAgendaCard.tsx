@@ -23,11 +23,14 @@ interface ConversaAgendaCardProps {
 
 export function ConversaAgendaCard({ conversa, dadosAgenda, selecionado, onClick }: ConversaAgendaCardProps) {
   const nome = conversa.customer?.nome || "Cliente";
+  const empresaPrincipal = conversa.customer?.customer_empresas?.find((vinculo: any) => vinculo?.is_primary) || conversa.customer?.customer_empresas?.[0];
+  const nomeEmpresa = empresaPrincipal?.empresas?.nome_fantasia || empresaPrincipal?.empresas?.nome;
 
 
   return (
     <AtendimentoClientCard
       title={dadosAgenda?.title || `Chat - ${nome}`}
+      companyName={nomeEmpresa}
       customerName={nome}
       sideLabel={dadosAgenda?.responsavel || conversa.customerLinkedUsers?.[0]?.usuarios?.nome?.split(" ")[0] || "Meu Cliente"}
       selected={selecionado}
