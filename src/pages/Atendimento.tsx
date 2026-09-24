@@ -5904,6 +5904,7 @@ ${recentMessages}
                         customerName={contact.nome}
                         sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
                         selected={conversations.find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
+                        indicators={<AtendimentoCardIndicators {...indicadoresPorContato.get(contact.contactId)} />}
                         onClick={async () => {
                           if (bloquearTrocaClientePendente(contact.contactId)) return;
                           // Criar conversa para o contato da agenda
