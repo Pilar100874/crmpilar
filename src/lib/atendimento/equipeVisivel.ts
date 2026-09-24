@@ -37,7 +37,7 @@ export async function carregarEquipeVisivel(estabelecimentoId: string): Promise<
 
   const grupo: any = Array.isArray((eu as any).grupos_acesso) ? (eu as any).grupos_acesso[0] : (eu as any).grupos_acesso;
   const { data: roleAdmin } = await supabase
-    .from("user_roles").select("user_id").eq("user_id", eu.id).eq("role", "admin").maybeSingle();
+    .from("user_roles").select("user_id").in("user_id", [eu.id, auth.user.id]).eq("role", "admin").limit(1).maybeSingle();
 
   const isAdmin = !!roleAdmin || grupo?.perfil === "admin";
   const isGerente = !isAdmin && (eu.tipo === "gerente" || grupo?.perfil === "gerente");

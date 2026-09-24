@@ -1,3 +1,4 @@
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -419,13 +420,7 @@ export default function Todos() {
         }
 
         // Buscar usuários do sistema
-        const { data: usuariosData } = await supabase
-          .from('usuarios')
-          .select('id, nome, email, telefone')
-          .eq('estabelecimento_id', estabId)
-          .eq('tipo', 'gerente')
-          .order('nome');
-        if (usuariosData) setUsuarios(usuariosData);
+        try { setUsuarios((await carregarGerentesEAdministradores(estabId)) as any); } catch (e) { console.error(e); }
 
         // Vínculos vendedor/usuário -> empresas
         const { data: vinculosEmp } = await supabase
