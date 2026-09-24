@@ -57,8 +57,15 @@ const MapaClientesView: React.FC = () => {
     selectedCnaes,
     setSelectedCnaes,
     empresasByCnae,
-    concorrenciaPorUF
+    concorrenciaPorUF,
+    vendedores,
+    selectedEmpresaId,
+    setSelectedEmpresaId,
+    selectedVendedorId,
+    setSelectedVendedorId
   } = useMapLayers();
+
+  const empresasClientes = allEmpresas.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente));
 
   const geocodeEmpresas = async () => {
     const empresasSemCoordenadas = allEmpresas.filter(e => 
