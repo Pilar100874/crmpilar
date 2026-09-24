@@ -751,6 +751,14 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             )}
           </div>
 
+          {!selectedContact && !editingTaskId ? (
+            <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 px-4 py-8 text-center">
+              <User className="mx-auto mb-2 h-6 w-6 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Selecione primeiro o contato da tarefa</p>
+              <p className="mt-1 text-xs text-muted-foreground">A data e as demais opções serão liberadas após a seleção.</p>
+            </div>
+          ) : (
+          <>
           {/* Lista de tarefas existentes do contato */}
           {selectedContact && contactExistingTasks.length > 0 && (
             <div className="space-y-2">
@@ -1216,6 +1224,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               className="min-h-[100px] resize-y"
             />
           </div>
+          </>
+          )}
 
           {/* Botões de ação */}
           <div className="flex justify-end gap-3 pt-4 border-t">
