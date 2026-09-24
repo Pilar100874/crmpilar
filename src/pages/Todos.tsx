@@ -264,7 +264,7 @@ export default function Todos() {
   const getFilhos = (tipo: TipoNo, id: string, caminho: Set<string>): NoArvore[] => {
     const tiposDoCaminho = [...caminho].map((chave) => chave.split('-')[0] as TipoNo);
     const origem = tiposDoCaminho[0];
-    const pai = tiposDoCaminho.at(-1);
+    const pai = tiposDoCaminho[tiposDoCaminho.length - 1];
     const raiz = tiposDoCaminho.length === 0;
 
     if (tipo === 'usuario') {
