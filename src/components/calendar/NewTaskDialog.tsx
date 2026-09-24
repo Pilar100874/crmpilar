@@ -712,13 +712,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                       <div className="font-medium text-sm">{contact.name}</div>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5 mt-1 ml-6">
-                      {contact.type === 'empresa' && contact.razaoSocial && contact.razaoSocial !== contact.name && (
-                        <div>Razão Social: {contact.razaoSocial}</div>
-                      )}
-                      {contact.type === 'empresa' && contact.cnpj && (
-                        <div>CNPJ: {contact.cnpj}</div>
-                      )}
-                      {contact.type === 'contato' && contact.customFields?.cpf_cnpj && (
+                      {contact.customFields?.cpf_cnpj && (
                         <div>CPF/CNPJ: {contact.customFields.cpf_cnpj}</div>
                       )}
                       {contact.phone && (
