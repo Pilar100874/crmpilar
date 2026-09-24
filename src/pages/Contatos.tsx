@@ -289,6 +289,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   });
   const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
   const [vinculoFilter, setVinculoFilter] = useState<'all' | 'empresa' | 'vendedor' | 'transportadora' | 'sem'>('all');
+  const [vinculoTab, setVinculoTab] = useState<'empresa' | 'transportadora' | 'vendedor'>('empresa');
 
 
   // Campos base obrigatórios de contato (sempre devem existir)
@@ -1476,6 +1477,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           estado: formData.state,
           cep: formData.cep,
           bairro: formData.neighborhood,
+          tipo_cliente: vinculoTab === 'empresa' ? 'B2B' : vinculoTab,
           custom_fields: {}
         };
 
@@ -1684,6 +1686,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           nome_fantasia,
           nome,
           cnpj,
+          tipo_cliente,
           custom_fields
         )
       `)
