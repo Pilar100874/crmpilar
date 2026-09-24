@@ -3,25 +3,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Users, Tag, Trash2, Plus, Search } from "lucide-react";
+import { Users, Tag, Trash2, Plus, Search, Briefcase } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface Segmento { id: string; nome: string; }
 interface Usuario { id: string; nome: string; email: string | null; }
-interface Vinculo { id: string; usuario_id: string; segmento_id: string; }
+interface Vendedor { id: string; nome: string; }
+interface Vinculo { id: string; usuario_id: string | null; segmento_id: string; vendedor_id: string | null; }
 
 export default function VinculosSegmentoProspectUsuario() {
   const [estabId, setEstabId] = useState<string>("");
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [vinculos, setVinculos] = useState<Vinculo[]>([]);
   const [selectedSegmento, setSelectedSegmento] = useState<string | null>(null);
   const [novoUsuarioIds, setNovoUsuarioIds] = useState<string[]>([]);
+  const [novoVendedorIds, setNovoVendedorIds] = useState<string[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -36,35 +38,47 @@ export default function VinculosSegmentoProspectUsuario() {
 
   const carregar = async () => {
     setLoading(true);
-    const [segRes, usuariosGerentes, vincRes] = await Promise.all([
+    const [segRes, usuariosGerentes, vendRes, vincRes] = await Promise.all([
       supabase.from("segmentos").select("id, nome").eq("estabelecimento_id", estabId).eq("is_prospect", true).order("nome"),
       carregarGerentesEAdministradores(estabId),
-      supabase.from("usuario_segmentos").select("id, usuario_id, segmento_id"),
+      supabase.from("empresas").select("id, nome, nome_fantasia").eq("estabelecimento_id", estabId).eq("tipo_cliente", "vendedor").order("nome_fantasia"),
+      supabase.from("usuario_segmentos").select("id, usuario_id, segmento_id, vendedor_id"),
     ]);
     setSegmentos((segRes.data as any) || []);
     setUsuarios(usuariosGerentes);
+    setVendedores(((vendRes.data as any) || []).map((v: any) => ({ id: v.id, nome: v.nome_fantasia || v.nome })));
     setVinculos((vincRes.data as any) || []);
     setLoading(false);
   };
 
-  const usuariosDoSegmento = (segId: string) =>
-    vinculos.filter(v => v.segmento_id === segId).map(v => ({
+  const gerentesDoSegmento = (segId: string) =>
+    vinculos.filter(v => v.segmento_id === segId && v.usuario_id).map(v => ({
       vinculoId: v.id,
       user: usuarios.find(u => u.id === v.usuario_id),
     })).filter(x => x.user);
 
+  const vendedoresDoSegmento = (segId: string) =>
+    vinculos.filter(v => v.segmento_id === segId && v.vendedor_id).map(v => ({
+      vinculoId: v.id,
+      vendedor: vendedores.find(x => x.id === v.vendedor_id),
+    })).filter(x => x.vendedor);
+
   const adicionar = async () => {
-    if (!selectedSegmento || novoUsuarioIds.length === 0) {
-      return toast.error("Selecione um segmento e ao menos um gerente");
+    if (!selectedSegmento || (novoUsuarioIds.length === 0 && novoVendedorIds.length === 0)) {
+      return toast.error("Selecione um segmento e ao menos um gerente ou vendedor");
     }
-    const jaVinculados = new Set(usuariosDoSegmento(selectedSegmento).map(x => x.user!.id));
-    const paraInserir = novoUsuarioIds.filter(uid => !jaVinculados.has(uid));
-    if (paraInserir.length === 0) return toast.info("Gerentes já estão vinculados");
-    const payload = paraInserir.map(uid => ({ segmento_id: selectedSegmento, usuario_id: uid }));
-    const { error } = await supabase.from("usuario_segmentos").insert(payload as any);
+    const jaGerentes = new Set(gerentesDoSegmento(selectedSegmento).map(x => x.user!.id));
+    const jaVendedores = new Set(vendedoresDoSegmento(selectedSegmento).map(x => x.vendedor!.id));
+    const paraInserir = [
+      ...novoUsuarioIds.filter(uid => !jaGerentes.has(uid)).map(uid => ({ segmento_id: selectedSegmento, usuario_id: uid, vendedor_id: null })),
+      ...novoVendedorIds.filter(vid => !jaVendedores.has(vid)).map(vid => ({ segmento_id: selectedSegmento, usuario_id: null, vendedor_id: vid })),
+    ];
+    if (paraInserir.length === 0) return toast.info("Gerentes e vendedores já estão vinculados");
+    const { error } = await supabase.from("usuario_segmentos").insert(paraInserir as any);
     if (error) return toast.error(error.message);
-    toast.success(`${paraInserir.length} gerente(s) vinculado(s)`);
+    toast.success(`${paraInserir.length} vínculo(s) criado(s)`);
     setNovoUsuarioIds([]);
+    setNovoVendedorIds([]);
     carregar();
   };
 
@@ -82,9 +96,9 @@ export default function VinculosSegmentoProspectUsuario() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculo Segmento Prospect x Gerente</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo Segmento Prospect x Gerente/Vendedor</h1>
         <p className="text-muted-foreground mt-2">
-          Direcione o atendimento de novos prospects para gerentes com base no segmento retornado pela IA (Cloud Code / Cursor / ChatGPT).
+          Direcione o atendimento de novos prospects para gerentes e vendedores com base no segmento retornado pela IA (Cloud Code / Cursor / ChatGPT).
         </p>
       </div>
 
@@ -111,17 +125,21 @@ export default function VinculosSegmentoProspectUsuario() {
                 </p>
               )}
               {segmentosFiltrados.map(s => {
-                const qtd = usuariosDoSegmento(s.id).length;
+                const qtdG = gerentesDoSegmento(s.id).length;
+                const qtdV = vendedoresDoSegmento(s.id).length;
                 return (
                   <button
                     key={s.id}
-                    onClick={() => { setSelectedSegmento(s.id); setNovoUsuarioIds([]); }}
+                    onClick={() => { setSelectedSegmento(s.id); setNovoUsuarioIds([]); setNovoVendedorIds([]); }}
                     className={`w-full text-left p-3 rounded-lg border transition-colors flex items-center justify-between ${
                       selectedSegmento === s.id ? "bg-primary/10 border-primary" : "hover:bg-accent/50 border-border"
                     }`}
                   >
                     <span className="text-sm font-medium">{s.nome}</span>
-                    <Badge variant="secondary">{qtd} gerente(s)</Badge>
+                    <div className="flex gap-1">
+                      <Badge variant="secondary">{qtdG} gerente(s)</Badge>
+                      <Badge variant="outline">{qtdV} vendedor(es)</Badge>
+                    </div>
                   </button>
                 );
               })}
@@ -132,11 +150,11 @@ export default function VinculosSegmentoProspectUsuario() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4" /> Gerentes Responsáveis
+              <Users className="h-4 w-4" /> Responsáveis
             </CardTitle>
             <CardDescription>
               {selectedSegmento
-                ? `Gerencie os gerentes vinculados ao segmento selecionado.`
+                ? `Gerencie os gerentes e vendedores vinculados ao segmento selecionado.`
                 : "Selecione um segmento à esquerda."}
             </CardDescription>
           </CardHeader>
@@ -144,14 +162,14 @@ export default function VinculosSegmentoProspectUsuario() {
             {selectedSegmento ? (
               <>
                 <div>
-                  <h4 className="text-sm font-semibold mb-2">Já vinculados</h4>
-                  {usuariosDoSegmento(selectedSegmento).length === 0 ? (
+                  <h4 className="text-sm font-semibold mb-2">Gerentes vinculados</h4>
+                  {gerentesDoSegmento(selectedSegmento).length === 0 ? (
                     <p className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/30 text-center">
                       Nenhum gerente vinculado
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {usuariosDoSegmento(selectedSegmento).map(({ vinculoId, user }) => (
+                      {gerentesDoSegmento(selectedSegmento).map(({ vinculoId, user }) => (
                         <div key={vinculoId} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
                           <div>
                             <p className="text-sm font-medium">{user!.nome}</p>
@@ -166,33 +184,85 @@ export default function VinculosSegmentoProspectUsuario() {
                   )}
                 </div>
 
+                <div>
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" /> Vendedores vinculados
+                  </h4>
+                  {vendedoresDoSegmento(selectedSegmento).length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/30 text-center">
+                      Nenhum vendedor vinculado
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {vendedoresDoSegmento(selectedSegmento).map(({ vinculoId, vendedor }) => (
+                        <div key={vinculoId} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
+                          <p className="text-sm font-medium">{vendedor!.nome}</p>
+                          <Button variant="ghost" size="sm" onClick={() => remover(vinculoId)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-4 space-y-3">
-                    <h4 className="text-sm font-semibold">Adicionar gerentes</h4>
-                    {(() => {
-                      const jaVincIds = new Set(
-                        usuariosDoSegmento(selectedSegmento).map((x) => x.user!.id)
-                      );
-                      const disponiveis = usuarios.filter((u) => !jaVincIds.has(u.id));
-                      return (
-                        <FilteredCheckboxList
-                          idPrefix="u"
-                          items={disponiveis.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
-                          selected={novoUsuarioIds}
-                          onToggle={(id, checked) =>
-                            setNovoUsuarioIds(
-                              checked
-                                ? [...novoUsuarioIds, id]
-                                : novoUsuarioIds.filter((x) => x !== id)
-                            )
-                          }
-                          searchPlaceholder="Buscar gerente..."
-                          emptyText="Todos os gerentes já foram vinculados."
-                          maxHeightClass="max-h-[240px]"
-                        />
-                      );
-                    })()}
-                    <Button onClick={adicionar} className="w-full" size="sm" disabled={novoUsuarioIds.length === 0}>
+                  <CardContent className="p-4 space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">Adicionar gerentes</h4>
+                      {(() => {
+                        const jaVincIds = new Set(
+                          gerentesDoSegmento(selectedSegmento).map((x) => x.user!.id)
+                        );
+                        const disponiveis = usuarios.filter((u) => !jaVincIds.has(u.id));
+                        return (
+                          <FilteredCheckboxList
+                            idPrefix="u"
+                            items={disponiveis.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
+                            selected={novoUsuarioIds}
+                            onToggle={(id, checked) =>
+                              setNovoUsuarioIds(
+                                checked
+                                  ? [...novoUsuarioIds, id]
+                                  : novoUsuarioIds.filter((x) => x !== id)
+                              )
+                            }
+                            searchPlaceholder="Buscar gerente..."
+                            emptyText="Todos os gerentes já foram vinculados."
+                            maxHeightClass="max-h-[200px]"
+                          />
+                        );
+                      })()}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">Adicionar vendedores</h4>
+                      {(() => {
+                        const jaVincIds = new Set(
+                          vendedoresDoSegmento(selectedSegmento).map((x) => x.vendedor!.id)
+                        );
+                        const disponiveis = vendedores.filter((v) => !jaVincIds.has(v.id));
+                        return (
+                          <FilteredCheckboxList
+                            idPrefix="v"
+                            items={disponiveis.map((v) => ({ id: v.id, label: v.nome }))}
+                            selected={novoVendedorIds}
+                            onToggle={(id, checked) =>
+                              setNovoVendedorIds(
+                                checked
+                                  ? [...novoVendedorIds, id]
+                                  : novoVendedorIds.filter((x) => x !== id)
+                              )
+                            }
+                            searchPlaceholder="Buscar vendedor..."
+                            emptyText="Todos os vendedores já foram vinculados."
+                            maxHeightClass="max-h-[200px]"
+                          />
+                        );
+                      })()}
+                    </div>
+
+                    <Button onClick={adicionar} className="w-full" size="sm" disabled={novoUsuarioIds.length === 0 && novoVendedorIds.length === 0}>
                       <Plus className="w-4 h-4 mr-2" />
                       Vincular Selecionados
                     </Button>
@@ -201,7 +271,7 @@ export default function VinculosSegmentoProspectUsuario() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Selecione um segmento à esquerda para gerenciar os gerentes.
+                Selecione um segmento à esquerda para gerenciar os responsáveis.
               </p>
             )}
           </CardContent>
