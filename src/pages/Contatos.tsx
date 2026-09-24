@@ -1,3 +1,4 @@
+import { GerenteContatoVinculo } from "@/components/contatos/GerenteContatoVinculo";
 import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 import { useState, useEffect, useRef } from "react";
 import * as React from "react";
@@ -292,7 +293,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   });
   const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
   const [vinculoFilter, setVinculoFilter] = useState<'all' | 'empresa' | 'vendedor' | 'transportadora' | 'sem'>('all');
-  const [vinculoTab, setVinculoTab] = useState<'empresa' | 'transportadora' | 'vendedor'>('empresa');
+  const [vinculoTab, setVinculoTab] = useState<'empresa' | 'transportadora' | 'vendedor' | 'gerente'>('empresa');
 
 
   // Campos base obrigatórios de contato (sempre devem existir)
