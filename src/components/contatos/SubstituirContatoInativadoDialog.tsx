@@ -41,11 +41,12 @@ interface Props {
   open: boolean;
   contato: { id: string; name: string } | null;
   empresas: EmpresaSubstituicao[];
+  modo?: 'inativar' | 'excluir';
   onCancel: () => void;
   onConfirm: (novoContato: { id: string; name: string } | null) => Promise<void>;
 }
 
-export function SubstituirContatoInativadoDialog({ open, contato, empresas, onCancel, onConfirm }: Props) {
+export function SubstituirContatoInativadoDialog({ open, contato, empresas, modo = 'inativar', onCancel, onConfirm }: Props) {
   const [escolhas, setEscolhas] = useState<Record<string, string>>({});
   const [salvando, setSalvando] = useState(false);
   useEffect(() => { setEscolhas({}); }, [open]);
@@ -77,7 +78,7 @@ export function SubstituirContatoInativadoDialog({ open, contato, empresas, onCa
             <div key={e.empresaId} className="space-y-1">
               <Label>{e.empresaNome}</Label>
               {e.candidatos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum outro contato ativo nesta empresa. Cadastre um novo contato antes, ou continue sem substituto.</p>
+                <p className="text-sm text-muted-foreground">Nenhum outro contato ativo nesta empresa. Cadastre um novo contato antes, ou continue sem substituto (as tarefas não serão transferidas).</p>
               ) : (
                 <Select value={escolhas[e.empresaId] || ""} onValueChange={(v) => setEscolhas(s => ({ ...s, [e.empresaId]: v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione o novo contato" /></SelectTrigger>
@@ -91,7 +92,7 @@ export function SubstituirContatoInativadoDialog({ open, contato, empresas, onCa
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>Cancelar</Button>
-          <Button onClick={confirmar} disabled={!completo || salvando}>Inativar e transferir tarefas</Button>
+          <Button onClick={confirmar} disabled={!completo || salvando}>{modo === 'excluir' ? 'Excluir' : 'Inativar'} e transferir tarefas</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
