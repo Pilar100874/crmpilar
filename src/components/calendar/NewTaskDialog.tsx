@@ -296,6 +296,23 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       .select('*')
       .eq('estabelecimento_id', estabId);
 
+    // Buscar vínculos contato -> empresas (para permitir buscar o contato pela empresa)
+    const { data: vinculosData } = await supabase
+      .from('customer_empresas')
+      .select('customer_id, empresas(nome_fantasia, nome, cnpj)')
+      .eq('estabelecimento_id', estabId);
+
+    const empresasPorContato: Record<string, string[]> = {};
+    if (vinculosData) {
+      vinculosData.forEach((v: any) => {
+        const emp = v.empresas;
+        if (!emp) return;
+        const nomes = [emp.nome_fantasia, emp.nome, emp.cnpj].filter(Boolean) as string[];
+        if (!empresasPorContato[v.customer_id]) empresasPorContato[v.customer_id] = [];
+        empresasPorContato[v.customer_id].push(...nomes);
+      });
+    }
+
     if (contatosData) {
       contatosData.forEach(contato => {
         allContacts.push({
@@ -305,6 +322,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           phone: contato.telefone || '',
           email: contato.email || '',
           customFields: (contato.custom_fields as Record<string, any>) || {},
+          empresaNomes: empresasPorContato[contato.id] || [],
         });
       });
     }
