@@ -756,6 +756,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     if (!String(data.company_fantasia || "").trim()) {
       data.company_fantasia = String(data.company_name || "");
     }
+    // Vendedor: carregar gerente responsável vinculado
+    if (variant === "vendedor") {
+      const { data: vincGerente } = await supabase
+        .from('empresa_vinculos')
+        .select('usuario_id')
+        .eq('empresa_id', empresa.id)
+        .not('usuario_id', 'is', null)
+        .is('auto_via_vendedor_id', null)
+        .limit(1)
+        .maybeSingle();
+      data.gerente_usuario_id = vincGerente?.usuario_id || "";
+    }
+
     setFormData(data);
     setFormSnapshot(JSON.stringify(data));
 
@@ -2534,18 +2547,42 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   </div>
                 </div>
                 {variant === "vendedor" && (
-                  <div className="mb-4 sm:mb-6 max-w-xs space-y-1.5">
-                    <Label className="text-xs">Tipo de vendedor</Label>
-                    <Select
-                      value={formData.tipo_vendedor || "representante"}
-                      onValueChange={(v) => setFormData((prev) => ({ ...prev, tipo_vendedor: v }))}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="funcionario">Funcionário</SelectItem>
-                        <SelectItem value="representante">Representante</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Tipo de vendedor</Label>
+                      <Select
+                        value={formData.tipo_vendedor || "representante"}
+                        onValueChange={(v) => setFormData((prev) => ({ ...prev, tipo_vendedor: v }))}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="funcionario">Funcionário</SelectItem>
+                          <SelectItem value="representante">Representante</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Gerente responsável <span className="text-destructive">*</span></Label>
+                      <Select
+                        value={formData.gerente_usuario_id || ""}
+                        onValueChange={(v) => {
+                          setFormData((prev) => ({ ...prev, gerente_usuario_id: v }));
+                          setFieldErrors((prev) => ({ ...prev, gerente_usuario_id: "" }));
+                        }}
+                      >
+                        <SelectTrigger className={fieldErrors.gerente_usuario_id ? "border-destructive" : ""}>
+                          <SelectValue placeholder="Selecione o gerente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {usuarios.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldErrors.gerente_usuario_id && (
+                        <p className="text-xs text-destructive">{fieldErrors.gerente_usuario_id}</p>
+                      )}
+                    </div>
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
