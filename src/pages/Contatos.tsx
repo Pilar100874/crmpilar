@@ -727,7 +727,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       );
       setEmpresasFiltradas(filtradas);
     }
-  }, [buscaEmpresa, empresas, empresasVinculadas]);
+  }, [buscaEmpresa, empresas, empresasVinculadas, vinculoTab]);
 
   // Autosave rascunho (debounced) enquanto o formulário está aberto e sujo
   useEffect(() => {
