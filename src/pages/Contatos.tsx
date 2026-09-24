@@ -2941,11 +2941,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </TabsContent>
 
           <TabsContent value="cadastros-vinculados" className="p-0">
-            <Tabs defaultValue="vinculos" className="w-full">
+            <Tabs defaultValue="empresa" className="w-full">
               <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
-                <TabsTrigger value="vinculos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
-                  Gerentes
-                </TabsTrigger>
                 <TabsTrigger value="empresa" onClick={() => setCriarNovaEmpresa(false)} className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
                   <span className="inline-flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5" />
@@ -3175,108 +3172,6 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </div>
           </TabsContent>
           
-          <TabsContent value="vinculos" className="p-6">
-            <Card className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Vínculos do Contato</h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Gerencie os usuários responsáveis por este contato.
-                  </p>
-                </div>
-
-                {editingContact ? (() => {
-                  const vinculosDoContato = vinculos.filter(v => v.customer_id === editingContact.id);
-                  const vinculosUsuarios = vinculosDoContato.filter(v => v.usuario_id !== null);
-
-                  return (
-                    <div className="space-y-4">
-                      {/* Adicionar novos usuários */}
-                      <Card className="border-primary/20 bg-primary/5">
-                          <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
-                            
-                            <FilteredCheckboxList
-                              idPrefix="new-user"
-                              items={usuarios.map((u) => ({ id: u.id, label: u.nome }))}
-                              selected={novosUsuariosVinculo}
-                              onToggle={(id, checked) =>
-                                setNovosUsuariosVinculo(
-                                  checked
-                                    ? [...novosUsuariosVinculo, id]
-                                    : novosUsuariosVinculo.filter((x) => x !== id)
-                                )
-                              }
-                              searchPlaceholder="Buscar gerente..."
-                              emptyText="Nenhum gerente disponível."
-                            />
-
-                            <Button 
-                              onClick={async () => {
-                                if (novosUsuariosVinculo.length === 0) {
-                                  toast.error("Selecione pelo menos um gerente");
-                                  return;
-                                }
-                                await handleAdicionarVinculo();
-                              }} 
-                              className="w-full" 
-                              size="sm"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Gerentes Selecionados
-                            </Button>
-                          </CardContent>
-                        </Card>
-
-                        {/* Lista de usuários vinculados */}
-                        <div>
-                          <h4 className="text-sm font-semibold mb-3">Gerentes Vinculados</h4>
-                          {vinculosUsuarios.length > 0 ? (
-                            <div className="space-y-2">
-                              {vinculosUsuarios.map((vinculo) => {
-                                const usuario = usuarios.find(u => u.id === vinculo.usuario_id);
-
-                                return (
-                                  <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                    <div className="flex-1">
-                                      <p className="text-sm font-medium">
-                                        {usuario?.nome || <span className="text-muted-foreground">Gerente não encontrado</span>}
-                                      </p>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={() => handleRemoverVinculo(vinculo.id)}
-                                    >
-                                      <Trash2 className="w-4 h-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum gerente vinculado</p>
-                            </div>
-                          )}
-                        </div>
-                    </div>
-                  );
-                })() : (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Salve o contato primeiro para gerenciar os vínculos.
-                  </p>
-                )}
-              </div>
-            </Card>
-            
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
-                Fechar
-              </Button>
-            </div>
-          </TabsContent>
             </Tabs>
           </TabsContent>
         </Tabs>
