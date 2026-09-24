@@ -18,6 +18,7 @@ import { CpfField } from "@/components/cadastros/CpfField";
 import { CepField } from "@/components/cadastros/CepField";
 import { UfCidadeIbge } from "@/components/common/UfCidadeIbge";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
+import { carregarGerentesEAdministradores } from "@/lib/cadastros/gerentes";
 
 interface CustomField {
   id: string;
@@ -76,6 +77,8 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
   // Usuarios (vínculos)
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [usuariosVinculados, setUsuariosVinculados] = useState<string[]>([]);
+  const [gerentes, setGerentes] = useState<any[]>([]);
+  const [gerenteSelecionado, setGerenteSelecionado] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Função auxiliar para buscar usuário logado
@@ -108,6 +111,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         loadCustomFields(estabId);
         loadSegmentos(estabId);
         loadUsuarios(estabId);
+        loadGerentes(estabId);
         loadCurrentUser();
       }
     };
@@ -137,6 +141,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       });
       setEmpresasVinculadas([]);
       setSegmentosSelecionados([]);
+      setGerenteSelecionado(null);
       // Auto-vincular usuário logado se disponível
       if (currentUserId) {
         setUsuariosVinculados([currentUserId]);
@@ -184,6 +189,16 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       .eq("estabelecimento_id", estabId)
       .order("nome");
     setUsuarios(data || []);
+  };
+
+  const loadGerentes = async (estabId: string) => {
+    try {
+      const lista = await carregarGerentesEAdministradores(estabId);
+      setGerentes(lista);
+    } catch (error) {
+      console.error("Erro ao carregar gerentes:", error);
+      setGerentes([]);
+    }
   };
   
   const handleAddEmpresa = (empresa: any) => {
@@ -313,9 +328,13 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         await supabase.from("customer_segmentos").insert(segVinculos);
       }
 
-      // Vincular usuários
-      if (usuariosVinculados.length > 0) {
-        const usrVinculos = usuariosVinculados.map(usrId => ({
+      // Vincular usuários e gerente
+      const usuariosParaVincular = Array.from(new Set([
+        ...usuariosVinculados,
+        ...(gerenteSelecionado ? [gerenteSelecionado] : []),
+      ]));
+      if (usuariosParaVincular.length > 0) {
+        const usrVinculos = usuariosParaVincular.map(usrId => ({
           customer_id: newCustomer.id,
           usuario_id: usrId,
           estabelecimento_id: estabelecimentoId,
@@ -626,6 +645,28 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                   ))}
                   {segmentos.length === 0 && (
                     <p className="text-sm text-muted-foreground">Nenhum segmento cadastrado</p>
+                  )}
+                </div>
+              </Card>
+
+              {/* Gerente responsável */}
+              <Card className="p-4">
+                <Label className="text-xs mb-2 block">Gerente Responsável</Label>
+                <div className="flex flex-wrap gap-2">
+                  {gerentes.map((ger) => (
+                    <Badge
+                      key={ger.id}
+                      variant={gerenteSelecionado === ger.id ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setGerenteSelecionado(gerenteSelecionado === ger.id ? null : ger.id);
+                      }}
+                    >
+                      {ger.nome}
+                    </Badge>
+                  ))}
+                  {gerentes.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhum gerente cadastrado</p>
                   )}
                 </div>
               </Card>
