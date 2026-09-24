@@ -1529,7 +1529,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   const handleAdicionarUsuariosVinculo = () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
-      toast.error("Selecione pelo menos um usuário");
+      toast.error("Selecione pelo menos um gerente");
       return;
     }
     setConfirmVinculoOpen(true);
@@ -1537,7 +1537,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   const executarVinculoUsuarios = async () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
-      toast.error("Selecione pelo menos um usuário");
+      toast.error("Selecione pelo menos um gerente");
       return;
     }
     // Regra: vendedor só pode ter 1 gerente vinculado
@@ -1586,12 +1586,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }));
       const { error } = await supabase.from("empresa_vinculos").insert(rows);
       if (error) throw error;
-      toast.success("Usuários vinculados! Uma tarefa foi criada na agenda de hoje de cada usuário.");
+      toast.success("Gerentes vinculados! Uma tarefa foi criada na agenda de hoje de cada um.");
       setNovosUsuariosVinculo([]);
       setConfirmVinculoOpen(false);
       await fetchEmpresas(estabelecimentoId);
     } catch (error: any) {
-      toast.error("Erro ao vincular usuários: " + error.message);
+      toast.error("Erro ao vincular gerentes: " + error.message);
     }
   };
 
@@ -3230,7 +3230,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Segmentos de Prospect</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Segmentos usados especificamente para classificar prospects. Novos prospects trazidos via Cloud Code / Cursor / ChatGPT são automaticamente vinculados aqui pelo nome de segmento retornado pela IA. Use a tela <strong>Vínculo Segmento Prospect x Usuário</strong> para direcionar o atendimento desses segmentos a usuários.
+                    Segmentos usados especificamente para classificar prospects. Novos prospects trazidos via Cloud Code / Cursor / ChatGPT são automaticamente vinculados aqui pelo nome de segmento retornado pela IA. Use a tela <strong>Vínculo Segmento Prospect x Gerente/Vendedor</strong> para direcionar o atendimento desses segmentos a gerentes e vendedores.
                   </p>
                 </div>
 
@@ -3332,9 +3332,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               <Card className="p-6">
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Usuários do Sistema Vinculados</h3>
+                    <h3 className="text-lg font-semibold mb-2">Gerentes Vinculados</h3>
                     <p className="text-sm text-muted-foreground mb-6">
-                      Vincule usuários do sistema responsáveis por esta empresa.
+                      Vincule os gerentes responsáveis por esta empresa.
                     </p>
                   </div>
                   {editingEmpresa ? (() => {
