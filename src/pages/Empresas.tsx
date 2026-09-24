@@ -3535,7 +3535,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       <div className="space-y-4">
                         <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
                             <FilteredCheckboxList
                               idPrefix="new-user"
                               items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
@@ -3547,12 +3547,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                     : novosUsuariosVinculo.filter((x) => x !== id)
                                 )
                               }
-                              searchPlaceholder="Buscar usuário..."
-                              emptyText="Nenhum usuário disponível."
+                              searchPlaceholder="Buscar gerente..."
+                              emptyText="Nenhum gerente disponível."
                             />
                             <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
                               <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Usuários Selecionados
+                              Adicionar Gerentes Selecionados
                             </Button>
                           </CardContent>
                         </Card>
