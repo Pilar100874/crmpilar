@@ -70,21 +70,13 @@ export function useContatosVinculados(usuarioIds: string[], ativo: boolean) {
         viaEmpresa = ce ?? [];
       }
 
-      // Fora da lista: quem já tem próximo contato no futuro ou foi inativado do fluxo.
-      const hoje = new Date().toISOString().slice(0, 10);
-      const [{ data: futuras }, { data: inativos }] = await Promise.all([
-        supabase
-          .from("calendario_tarefas")
-          .select("contact_id")
-          .in("user_id", ids)
-          .in("status", ["pendente", "pending"])
-          .gt("date", hoje),
-        supabase.from("customer_fluxo_inativacoes" as any).select("customer_id").eq("ativo", true),
-      ]);
-      const ocultos = new Set<string>([
-        ...((futuras ?? []) as any[]).map((t) => t.contact_id).filter(Boolean),
-        ...((inativos ?? []) as any[]).map((t) => t.customer_id),
-      ]);
+      // Com a agenda desligada, tarefas futuras não escondem contatos.
+      // Permanecem fora apenas os contatos explicitamente inativados do fluxo.
+      const { data: inativos } = await supabase
+        .from("customer_fluxo_inativacoes" as any)
+        .select("customer_id")
+        .eq("ativo", true);
+      const ocultos = new Set<string>(((inativos ?? []) as any[]).map((t) => t.customer_id));
 
       const mapa = new Map<string, ContatoAtendimento>();
       [...(data ?? []), ...viaEmpresa].forEach((vinculo: any) => {
