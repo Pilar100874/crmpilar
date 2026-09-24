@@ -3023,8 +3023,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             <GerenteContatoVinculo contatoId={editingContact?.id} estabelecimentoId={estabelecimentoId} />
           </TabsContent>
 
-          {vinculoTab !== ('gerente' as any) && (
-          <TabsContent value={vinculoTab} className="p-6">
+          <TabsContent value={vinculoTab === 'gerente' ? '__nenhum__' : vinculoTab} className="p-6">
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
               <Card className="p-4 mb-4">
@@ -3225,7 +3224,6 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Button>
             </div>
           </TabsContent>
-          )}
           
             </Tabs>
           </TabsContent>
