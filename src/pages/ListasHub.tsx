@@ -34,7 +34,6 @@ import MapaClientesView from '@/components/listas/MapaClientesView';
 import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 import ProspeccaoClaudeCode from './ProspeccaoClaudeCode';
 import ProspeccaoEmpresas from './ProspeccaoEmpresas';
-import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
 import RepassarVendedoresGerente from './RepassarVendedoresGerente';
 import ConfigIAProspec from './ConfigIAProspec';
 import ProspeccaoVendedores from './ProspeccaoVendedores';
@@ -71,7 +70,6 @@ const sections: TabSection[] = [
     id: 'vinculos',
     title: 'Vínculos',
     items: [
-      { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Gerente/Vendedor', shortLabel: 'Segm. Prospect x Resp.', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a gerentes e vendedores' },
       { id: 'repassar-vendedores-gerente', label: 'Repassar Vendedores entre Gerentes', shortLabel: 'Repassar Vendedores', icon: Link2, description: 'Transfira os vendedores de um gerente para outro gerente' },
     ],
   },
@@ -135,7 +133,6 @@ const ListasHub: React.FC = () => {
       case 'transportadoras': return <Empresas variant="transportadora" />;
       case 'gerentes': return <Gerentes />;
       case 'todos': return <Todos />;
-      case 'vinculos-segmento-prospect-usuario': return <VinculosSegmentoProspectUsuario />;
       case 'repassar-vendedores-gerente': return <RepassarVendedoresGerente />;
       case 'mapa-clientes': return <MapaClientesView />;
       case 'prospeccao-b2b': return <ProspeccaoB2BView />;
