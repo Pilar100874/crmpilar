@@ -5867,6 +5867,7 @@ ${recentMessages}
                         companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                         customerName={contact.nome}
                         sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
+                        selected={conversations.find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
                         onClick={async () => {
                           if (bloquearTrocaClientePendente(contact.contactId)) return;
                           // Criar conversa para o contato da agenda
@@ -6237,6 +6238,7 @@ ${recentMessages}
                   acaoLabel="Abrir"
                   vazioTexto="Nenhum contato vinculado a você"
                   colorirPorEmpresa
+                  selecionadoId={selectedAgendaContato?.id ?? null}
                   onSelecionar={(contato) => {
                     if (bloquearTrocaClientePendente(contato.id)) return;
                     setGlobalFilter({ type: 'customer', id: contato.id, nome: contato.nome });
@@ -6271,7 +6273,7 @@ ${recentMessages}
                       key={task.id}
                       className={`group relative min-h-[116px] rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${
                         selectedTaskId === task.id
-                          ? "bg-primary/10 border-primary/40 shadow-md"
+                          ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/50"
                           : semContato
                             ? "bg-card border-purple-500/70 hover:bg-muted/40 hover:border-purple-500 hover:shadow-md"
                             : semEmpresa
@@ -8247,6 +8249,7 @@ function MobileListContent({
                       companyName={contact.companies?.[0]?.empresas?.nome_fantasia || contact.companies?.[0]?.empresas?.nome}
                     customerName={contact.nome}
                     sideLabel={contact.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || "Meu Cliente"}
+                    selected={[...agendaConversations, ...otherConversations].find((c) => c.id === selectedConversation)?.customer_id === contact.contactId}
                     onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
                     indicators={<Badge variant="secondary" className="text-[10px]">Iniciar</Badge>}
                     historicoClienteId={contact.contactId}
@@ -8310,7 +8313,7 @@ function MobileListContent({
             }}
             className={`group relative min-h-[116px] rounded-lg cursor-pointer overflow-hidden border font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200 hover:-translate-y-0.5 ${
               selectedTaskId === task.id
-                ? "bg-primary/10 border-primary/40 shadow-md"
+                ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/50"
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
             } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
           >
