@@ -16,6 +16,7 @@ interface ContatosCanalListProps {
   vazioTexto?: string;
   onSelecionar?: (contato: ContatoAtendimento) => void;
   selecionadoId?: string | null;
+  colorirPorEmpresa?: boolean;
 }
 
 const icones = {
@@ -41,10 +42,15 @@ export default function ContatosCanalList({
   vazioTexto = "Nenhum contato",
   onSelecionar,
   selecionadoId = null,
+  colorirPorEmpresa = false,
 }: ContatosCanalListProps) {
   const Icone = icones[canal];
   const pendencias = usePendenciasAtendimento();
-  const lista = ordenarPendentesPrimeiro(contatos.filter((c) => valorDoCanal(c, canal).trim() !== ""), (c) => c.id, pendencias);
+  const lista = ordenarPendentesPrimeiro(
+    contatos.filter((c) => canal === "todos" || valorDoCanal(c, canal).trim() !== ""),
+    (c) => c.id,
+    pendencias,
+  );
 
   if (lista.length === 0) {
     return (
@@ -65,8 +71,12 @@ export default function ContatosCanalList({
         <Badge className="text-[10px] bg-primary/10 text-primary border-0 px-1.5">{lista.length}</Badge>
       </div>
 
-      {lista.map((contato) => (
-        <AtendimentoClientCard
+      {lista.map((contato) => {
+        const temEmpresa = (contato.companies || []).some(
+          (vinculo: any) => vinculo?.empresas?.id || vinculo?.empresa_id,
+        );
+        return (
+          <AtendimentoClientCard
           key={`${canal}-${contato.id}`}
           title={contato.referencia || `${canal === "tel" ? "Ligação" : canal === "whatsapp" ? "Chat" : canal === "email" ? "E-mail" : "Contato"} - ${contato.nome}`}
           customerName={contato.nome}
@@ -76,12 +86,18 @@ export default function ContatosCanalList({
           indicators={<AtendimentoCardIndicators {...contato} />}
           historicoClienteId={contato.id}
           historicoClienteNome={contato.nome}
+          className={colorirPorEmpresa
+            ? temEmpresa
+              ? "border-primary/80 hover:border-primary"
+              : "border-info/80 hover:border-info"
+            : undefined}
         >
           <AtendimentoHoraBadge hora={contato.horario || ""} />
           {contato.origem && <AtendimentoInfoBadge>{contato.origem}</AtendimentoInfoBadge>}
           {acaoLabel && <AtendimentoInfoBadge>{acaoLabel}</AtendimentoInfoBadge>}
-        </AtendimentoClientCard>
-      ))}
+          </AtendimentoClientCard>
+        );
+      })}
     </div>
   );
 }
