@@ -1280,7 +1280,7 @@ export default function Todos() {
             itens={filteredVendedores}
             tipo="vendedor"
             getNome={(v: any) => v.nome_fantasia || v.nome}
-            getSub={(v: any) => v.cnpj || v.email}
+            getSub={(v: any) => v.cnpj}
             getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
@@ -1294,7 +1294,7 @@ export default function Todos() {
             itens={filteredTransportadoras}
             tipo="transportadora"
             getNome={(v: any) => v.nome_fantasia || v.nome}
-            getSub={(v: any) => v.cnpj || v.email}
+            getSub={(v: any) => v.cnpj}
             getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
@@ -1308,7 +1308,7 @@ export default function Todos() {
             itens={filteredUsuarios}
             tipo="usuario"
             getNome={(u: any) => u.nome}
-            getSub={(u: any) => u.email}
+            getSub={() => null}
             getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
