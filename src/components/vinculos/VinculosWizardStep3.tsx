@@ -91,7 +91,7 @@ export function VinculosWizardStep3({
                 <TableRow>
                   <TableHead>Empresa</TableHead>
                   <TableHead>CNPJ</TableHead>
-                  {alterarUsuario && <TableHead>Usuário</TableHead>}
+                  {alterarUsuario && <TableHead>Gerente</TableHead>}
                   {alterarSegmento && <TableHead>Segmento</TableHead>}
                 </TableRow>
               </TableHeader>
