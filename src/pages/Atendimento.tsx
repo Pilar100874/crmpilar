@@ -67,7 +67,7 @@ import { canalDaAba, marcarPendencia, lerPendencias, EVENTO_FINALIZAR, pedirFina
 import { parseTituloCartao, ICONES_CANAL, ROTULOS_CANAL } from "@/lib/atendimento/tituloCartao";
 import { OrcamentosEmpresaList } from "@/components/atendimento/OrcamentosEmpresaList";
 import { AtendimentoEmailPanel } from "@/components/atendimento/AtendimentoEmailPanel";
-import { AtendimentoCardsDensityProvider, AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
+import { AtendimentoCardsDensityProvider, AtendimentoClientCard, useAtendimentoCardsCompactos } from "@/components/atendimento/AtendimentoClientCard";
 import { BotaoHistoricoCard } from "@/components/atendimento/BotaoHistoricoCard";
 import { CustomerHistoryTimeline } from "@/components/atendimento/agenda/CustomerHistoryTimeline";
 import { ConversaAgendaCard } from "@/components/atendimento/ConversaAgendaCard";
@@ -7991,6 +7991,7 @@ function MobileListContent({
   onRefreshEmails,
   onShowCustomerSearch,
 }: MobileListContentProps) {
+  const cardsCompactos = useAtendimentoCardsCompactos();
   const pendenciasAtendimento = usePendenciasAtendimento();
   const bloquearTrocaClientePendente = (novoClienteId: string | null | undefined): boolean => {
     const pendenteId = pendenciasAtendimento.find((id) => id && id !== novoClienteId);
@@ -8349,19 +8350,19 @@ function MobileListContent({
               setDiscadorModo(null);
               setSelectedTaskId(task.id);
             }}
-            className={`group relative min-h-[116px] rounded-lg cursor-pointer overflow-hidden border font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200 hover:-translate-y-0.5 ${
+            className={`group relative rounded-lg cursor-pointer overflow-hidden border font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200 hover:-translate-y-0.5 ${cardsCompactos ? 'min-h-[82px]' : 'min-h-[116px]'} ${
               selectedTaskId === task.id
                 ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/50"
                 : "bg-card border-border/70 hover:bg-muted/40 hover:border-primary/30 hover:shadow-md"
             } ${taskBloqueada ? "opacity-50 grayscale" : ""} ${taskPendente ? "ring-2 ring-destructive/60" : ""}`}
           >
-            <div className="flex items-start gap-3 p-3.5 pr-10">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
+            <div className={`flex items-start pr-10 ${cardsCompactos ? 'gap-2 p-2.5' : 'gap-3 p-3.5'}`}>
+              <div className={`relative flex shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle font-bold text-primary shadow-sm ${cardsCompactos ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm'}`}>
                 {(task.contact_name || parseTituloCartao(task.title).nome || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
                 <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-cardTitle font-bold text-[15px] leading-tight truncate">{parseTituloCartao(task.title).nome}</p>
+                <p className={`font-cardTitle font-bold leading-tight truncate ${cardsCompactos ? 'text-[13px]' : 'text-[15px]'}`}>{parseTituloCartao(task.title).nome}</p>
                 <p className="mt-0.5 text-xs font-medium text-muted-foreground truncate">{task.contact_name}</p>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <Badge variant="outline" className={`max-w-[110px] truncate px-1.5 py-0 text-[9px] font-semibold uppercase ${taskPendente ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-muted/60 text-muted-foreground'}`}>
@@ -8411,7 +8412,7 @@ function MobileListContent({
                       })()}
                     </div>
                  </div>
-                  <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
+                  <div className={`flex items-center gap-1.5 border-t border-border/60 ${cardsCompactos ? 'mt-1.5 pt-1.5' : 'mt-3 pt-2.5'}`}>
                     <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                     {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                       <button
