@@ -124,40 +124,72 @@ const MapaClientesView: React.FC = () => {
     };
   }, []);
 
-  // Update client markers - always show clients in compact map (ignore layer visibility)
+  // Update markers - empresas e/ou vendedores conforme a visão selecionada
   useEffect(() => {
     if (!markersLayerRef.current || !mapReady) return;
     markersLayerRef.current.clearLayers();
 
     const bounds = L.latLngBounds([]);
-    empresas.forEach(empresa => {
-      if (!empresa.latitude || !empresa.longitude) return;
 
-      const customIcon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-            <path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-6h6v6"/>
-          </svg>
-        </div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-
-      L.marker([empresa.latitude, empresa.longitude], { icon: customIcon })
-        .addTo(markersLayerRef.current!)
-        .bindPopup(`
-          <div class="p-2">
-            <strong>${empresa.nome_fantasia || empresa.nome}</strong>
-            ${empresa.endereco ? `<br/><small>${empresa.endereco}</small>` : ''}
-            ${empresa.cidade ? `<br/><small>${empresa.cidade}${empresa.estado ? ` - ${empresa.estado}` : ''}</small>` : ''}
-          </div>
-        `);
-      bounds.extend([empresa.latitude, empresa.longitude]);
+    const empresaIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+          <path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-6h6v6"/>
+        </svg>
+      </div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
     });
 
+    const vendedorIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background: #f97316; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4 0-8 2-8 5v3h16v-3c0-3-4-5-8-5z"/>
+        </svg>
+      </div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    if (viewMode !== 'vendedores') {
+      empresas.forEach(empresa => {
+        if (!empresa.latitude || !empresa.longitude) return;
+
+        L.marker([empresa.latitude, empresa.longitude], { icon: empresaIcon })
+          .addTo(markersLayerRef.current!)
+          .bindPopup(`
+            <div class="p-2">
+              <strong>${empresa.nome_fantasia || empresa.nome}</strong>
+              ${empresa.endereco ? `<br/><small>${empresa.endereco}</small>` : ''}
+              ${empresa.cidade ? `<br/><small>${empresa.cidade}${empresa.estado ? ` - ${empresa.estado}` : ''}</small>` : ''}
+            </div>
+          `);
+        bounds.extend([empresa.latitude, empresa.longitude]);
+      });
+    }
+
+    if (viewMode !== 'empresas') {
+      (vendedores as any[]).forEach(vendedor => {
+        if (!vendedor.latitude || !vendedor.longitude) return;
+
+        L.marker([vendedor.latitude, vendedor.longitude], { icon: vendedorIcon })
+          .addTo(markersLayerRef.current!)
+          .bindPopup(`
+            <div class="p-2">
+              <strong>${vendedor.nome_fantasia || vendedor.nome}</strong>
+              <br/><small>Vendedor</small>
+              ${vendedor.endereco ? `<br/><small>${vendedor.endereco}</small>` : ''}
+              ${vendedor.cidade ? `<br/><small>${vendedor.cidade}${vendedor.estado ? ` - ${vendedor.estado}` : ''}</small>` : ''}
+            </div>
+          `);
+        bounds.extend([vendedor.latitude, vendedor.longitude]);
+      });
+    }
+
     if (bounds.isValid()) mapRef.current?.fitBounds(bounds, { padding: [50, 50] });
-  }, [empresas, mapReady]);
+  }, [empresas, vendedores, viewMode, mapReady]);
 
   // Update unidades layer - disabled in compact map
   useEffect(() => {
