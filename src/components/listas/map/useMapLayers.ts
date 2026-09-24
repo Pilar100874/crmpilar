@@ -198,7 +198,21 @@ export const useMapLayers = () => {
         .map(v => v.empresa_id);
       filtered = filtered.filter(e => empresasDoUsuario.includes(e.id));
     }
-    
+
+    if (selectedVendedorId === 'none') {
+      const comVendedor = new Set(vinculos.filter(v => v.vendedor_id).map(v => v.empresa_id));
+      filtered = filtered.filter(e => !comVendedor.has(e.id));
+    } else if (selectedVendedorId !== 'all') {
+      const empresasDoVendedor = vinculos
+        .filter(v => v.vendedor_id === selectedVendedorId)
+        .map(v => v.empresa_id);
+      filtered = filtered.filter(e => empresasDoVendedor.includes(e.id));
+    }
+
+    if (selectedEmpresaId !== 'all') {
+      filtered = filtered.filter(e => e.id === selectedEmpresaId);
+    }
+
     return filtered;
   })();
 
@@ -254,6 +268,11 @@ export const useMapLayers = () => {
     setSelectedUsuarioId,
     selectedCnaes,
     setSelectedCnaes,
+    vendedores,
+    selectedEmpresaId,
+    setSelectedEmpresaId,
+    selectedVendedorId,
+    setSelectedVendedorId,
     getDemographicsData
   };
 };
