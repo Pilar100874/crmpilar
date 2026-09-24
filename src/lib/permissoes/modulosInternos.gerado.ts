@@ -311,7 +311,7 @@ export const MODULOS_INTERNOS_GERADOS: Record<string, ModuloInternoGerado[]> = {
     },
     {
       "id": "vinculos-segmento-prospect-usuario",
-      "label": "Segmento Prospect x Gerente"
+      "label": "Segmento Prospect x Gerente/Vendedor"
     },
     {
       "id": "mapa-clientes",
