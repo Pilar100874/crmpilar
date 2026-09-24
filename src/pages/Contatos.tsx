@@ -3371,6 +3371,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         open={!!substituicao}
         contato={substituicao?.contato || null}
         empresas={substituicao?.empresas || []}
+        estabelecimentoId={estabelecimentoId}
         modo={substituicao?.modo || 'inativar'}
         onCancel={() => setSubstituicao(null)}
         onConfirm={async (novo) => { if (substituicao) await (substituicao.modo === 'excluir' ? executarExclusao : executarInativacao)(substituicao.contato, novo); setSubstituicao(null); }}
