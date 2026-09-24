@@ -289,6 +289,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   });
   const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
   const [vinculoFilter, setVinculoFilter] = useState<'all' | 'empresa' | 'vendedor' | 'transportadora' | 'sem'>('all');
+  const [vinculoTab, setVinculoTab] = useState<'empresa' | 'transportadora' | 'vendedor'>('empresa');
 
 
   // Campos base obrigatórios de contato (sempre devem existir)
@@ -1476,6 +1477,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           estado: formData.state,
           cep: formData.cep,
           bairro: formData.neighborhood,
+          tipo_cliente: vinculoTab === 'empresa' ? 'B2B' : vinculoTab,
           custom_fields: {}
         };
 
@@ -1684,6 +1686,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           nome_fantasia,
           nome,
           cnpj,
+          tipo_cliente,
           custom_fields
         )
       `)
@@ -2941,25 +2944,33 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </TabsContent>
 
           <TabsContent value="cadastros-vinculados" className="p-0">
-            <Tabs defaultValue="empresa" className="w-full">
+            <Tabs value={vinculoTab} onValueChange={(v) => { setVinculoTab(v as any); setCriarNovaEmpresa(false); setEmpresasFiltradas([]); setBuscaEmpresa(""); }} className="w-full">
               <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
-                <TabsTrigger value="empresa" onClick={() => setCriarNovaEmpresa(false)} className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                <TabsTrigger value="empresa" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
                   <span className="inline-flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5" />
-                    <span>/</span>
+                    <span>Empresa</span>
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="transportadora" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5" />
-                    <span>/</span>
+                    <span>Transportadora</span>
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="vendedor" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5" />
-                    <span className="ml-1">Empresa / Transportadora / Vendedor</span>
+                    <span>Vendedor</span>
                   </span>
                 </TabsTrigger>
               </TabsList>
 
-          <TabsContent value="empresa" className="p-6">
+          <TabsContent value={vinculoTab} className="p-6">
             {/* Busca e Seleção de Empresa (topo) */}
             {!criarNovaEmpresa && (
               <Card className="p-4 mb-4">
-                <Label className="text-xs">Vincular Empresa</Label>
+                <Label className="text-xs">{vinculoTab === 'empresa' ? 'Vincular Empresa' : vinculoTab === 'transportadora' ? 'Vincular Transportadora' : 'Vincular Vendedor'}</Label>
                 <div className="flex gap-2 mt-2">
                   <Input
                     placeholder="Buscar por nome, CNPJ..."
@@ -2969,7 +2980,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       const valor = e.target.value;
                       setBuscaEmpresa(valor);
                       const termo = valor.trim().toLowerCase();
-                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
+                      const base = empresas.filter(emp =>
+                        (vinculoTab === 'empresa'
+                          ? !['vendedor', 'transportadora'].includes((emp as any).tipo_cliente)
+                          : (emp as any).tipo_cliente === vinculoTab) &&
+                        !empresasVinculadas.some(ev => ev.id === emp.id)
+                      );
                       if (!termo) {
                         setEmpresasFiltradas(base);
                       } else {
@@ -2998,7 +3014,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       setCriarNovaEmpresa(true);
                     }}
                   >
-                    + Nova
+                    {vinculoTab === 'vendedor' ? '+ Novo' : '+ Nova'}
                   </Button>
                 </div>
 
@@ -3026,14 +3042,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Card>
             )}
 
-            {/* Lista de Empresas Vinculadas (abaixo) */}
-            {empresasVinculadas.length > 0 && (
+            {/* Lista de Vinculadas (abaixo) */}
+            {empresasVinculadas.filter(ev => vinculoTab === 'empresa' ? !['vendedor', 'transportadora'].includes((ev as any).tipo_cliente) : (ev as any).tipo_cliente === vinculoTab).length > 0 && (
               <Card className="p-4 mb-4">
                 <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-                  Empresas Vinculadas
+                  {vinculoTab === 'empresa' ? 'Empresas Vinculadas' : vinculoTab === 'transportadora' ? 'Transportadoras Vinculadas' : 'Vendedores Vinculados'}
                 </h3>
                 <div className="space-y-2">
-                  {empresasVinculadas.map((empresa) => (
+                  {empresasVinculadas.filter(ev => vinculoTab === 'empresa' ? !['vendedor', 'transportadora'].includes((ev as any).tipo_cliente) : (ev as any).tipo_cliente === vinculoTab).map((empresa) => (
                     <div key={empresa.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50 cursor-pointer" onClick={() => {
                       const full = empresas.find(e => e.id === empresa.id) || empresa;
                       setViewingVinculo({
@@ -3110,7 +3126,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               <Card className="p-4 mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Cadastrar Empresa
+                    {vinculoTab === 'empresa' ? 'Cadastrar Empresa' : vinculoTab === 'transportadora' ? 'Cadastrar Transportadora' : 'Cadastrar Vendedor'}
                   </h3>
                   <Button
                     variant="ghost"
