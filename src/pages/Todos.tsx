@@ -958,20 +958,8 @@ export default function Todos() {
                 <tbody>
                   {todosItens.map(item => {
                     const isExpanded = expandedRows.has(item.id);
-                    const vinculosLista: any[] =
-                      item.type === 'contato' ? (contatoEmpresas[item.id] || [])
-                      : item.type === 'empresa' ? (empresaContatos[item.id] || [])
-                      : item.type === 'vendedor' ? (vendedorEmpresas[item.id] || [])
-                      : item.type === 'usuario' ? (usuarioEmpresas[item.id] || [])
-                      : [];
-                    const hasVinculos = vinculosLista.length > 0;
-                    const vinculosLabel =
-                      item.type === 'contato' ? 'Empresas Vinculadas:'
-                      : item.type === 'empresa' ? 'Contatos Vinculados:'
-                      : item.type === 'vendedor' ? 'Empresas atendidas por este vendedor:'
-                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste gerente:'
-                      : 'Vínculos:';
-
+                    const filhosNo = getFilhos(item.type as TipoNo, item.id);
+                    const hasVinculos = filhosNo.length > 0;
                     return (
                       <>
                         <tr key={`${item.type}-${item.id}`} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
@@ -1056,25 +1044,7 @@ export default function Todos() {
                         {isExpanded && hasVinculos && (
                           <tr>
                             <td colSpan={visibleTodosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
-                              <div className="ml-8">
-                                <p className="text-sm font-semibold text-foreground mb-3">
-                                  {vinculosLabel}
-                                </p>
-                                <div className="space-y-2">
-                                  {vinculosLista.map((v: any) => {
-                                    const isContato = item.type === 'empresa';
-                                    return (
-                                      <div key={v.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                        {isContato ? <User className="w-4 h-4 text-blue-500" /> : <Building2 className="w-4 h-4 text-purple-500" />}
-                                        <span className="font-medium">{isContato ? v.nome : v.nome_fantasia}</span>
-                                        {(v.cnpj || v.email) && (
-                                          <span className="text-muted-foreground text-xs">({v.cnpj || v.email})</span>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
+                              <ArvoreFilhos nos={filhosNo} getFilhos={getFilhos} caminho={new Set([item.id])} />
                             </td>
                           </tr>
                         )}
@@ -1163,7 +1133,8 @@ export default function Todos() {
                  <tbody>
                   {sortedContatos.map(contato => {
                     const isExpanded = expandedRows.has(contato.id);
-                    const hasEmpresas = (contatoEmpresas[contato.id]?.length || 0) > 0;
+                    const filhosNo = getFilhos('contato', contato.id);
+                    const hasEmpresas = filhosNo.length > 0;
 
                     return (
                       <>
@@ -1225,22 +1196,7 @@ export default function Todos() {
                         {isExpanded && hasEmpresas && (
                           <tr>
                             <td colSpan={visibleContatosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
-                              <div className="ml-8">
-                                <p className="text-sm font-semibold text-foreground mb-3">
-                                  Empresas Vinculadas:
-                                </p>
-                                <div className="space-y-2">
-                                  {contatoEmpresas[contato.id]?.map((emp: any) => (
-                                    <div key={emp.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                      <Building2 className="w-4 h-4 text-purple-500" />
-                                      <span className="font-medium">{emp.nome_fantasia}</span>
-                                      {emp.cnpj && (
-                                        <span className="text-muted-foreground text-xs">({emp.cnpj})</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                              <ArvoreFilhos nos={filhosNo} getFilhos={getFilhos} caminho={new Set([contato.id])} />
                             </td>
                           </tr>
                         )}
@@ -1329,7 +1285,8 @@ export default function Todos() {
                  <tbody>
                   {sortedEmpresas.map(empresa => {
                     const isExpanded = expandedRows.has(empresa.id);
-                    const hasContatos = (empresaContatos[empresa.id]?.length || 0) > 0;
+                    const filhosNo = getFilhos('empresa', empresa.id);
+                    const hasContatos = filhosNo.length > 0;
 
                     return (
                       <>
@@ -1412,22 +1369,7 @@ export default function Todos() {
                         {isExpanded && hasContatos && (
                           <tr>
                             <td colSpan={visibleEmpresasColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
-                              <div className="ml-8">
-                                <p className="text-sm font-semibold text-foreground mb-3">
-                                  Contatos Vinculados:
-                                </p>
-                                <div className="space-y-2">
-                                  {empresaContatos[empresa.id]?.map((cont: any) => (
-                                    <div key={cont.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                      <User className="w-4 h-4 text-blue-500" />
-                                      <span className="font-medium">{cont.nome}</span>
-                                      {cont.email && (
-                                        <span className="text-muted-foreground text-xs">({cont.email})</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                              <ArvoreFilhos nos={filhosNo} getFilhos={getFilhos} caminho={new Set([empresa.id])} />
                             </td>
                           </tr>
                         )}
@@ -1441,59 +1383,44 @@ export default function Todos() {
         </TabsContent>
 
         <TabsContent value="vendedores" className="flex-1 p-8 overflow-auto">
-          <SimpleListaComVinculos
+          <SimpleListaArvore
             titulo="vendedor"
             icone={<UserCog className="w-4 h-4 text-emerald-500" />}
             itens={filteredVendedores}
+            tipo="vendedor"
             getNome={(v: any) => v.nome_fantasia || v.nome}
             getSub={(v: any) => v.cnpj || v.email}
-            vinculos={vendedorEmpresas}
-            vinculoLabel="Empresas atendidas por este vendedor"
+            getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
-            renderVinculo={(emp: any) => (
-              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
-                <Building2 className="w-4 h-4 text-purple-500" />
-                <span className="font-medium">{emp.nome_fantasia}</span>
-                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
-              </div>
-            )}
           />
         </TabsContent>
 
         <TabsContent value="transportadoras" className="flex-1 p-8 overflow-auto">
-          <SimpleListaComVinculos
+          <SimpleListaArvore
             titulo="transportadora"
             icone={<Truck className="w-4 h-4 text-orange-500" />}
             itens={filteredTransportadoras}
+            tipo="transportadora"
             getNome={(v: any) => v.nome_fantasia || v.nome}
             getSub={(v: any) => v.cnpj || v.email}
-            vinculos={{}}
-            vinculoLabel=""
+            getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
-            renderVinculo={() => null}
           />
         </TabsContent>
 
         <TabsContent value="usuarios" className="flex-1 p-8 overflow-auto">
-          <SimpleListaComVinculos
-            titulo="usuário"
+          <SimpleListaArvore
+            titulo="gerente"
             icone={<Users className="w-4 h-4 text-indigo-500" />}
             itens={filteredUsuarios}
+            tipo="usuario"
             getNome={(u: any) => u.nome}
             getSub={(u: any) => u.email}
-            vinculos={usuarioEmpresas}
-            vinculoLabel="Empresas sob responsabilidade deste usuário"
+            getFilhos={getFilhos}
             expandedRows={expandedRows}
             toggleRow={toggleRow}
-            renderVinculo={(emp: any) => (
-              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
-                <Building2 className="w-4 h-4 text-purple-500" />
-                <span className="font-medium">{emp.nome_fantasia}</span>
-                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
-              </div>
-            )}
           />
         </TabsContent>
       </Tabs>
