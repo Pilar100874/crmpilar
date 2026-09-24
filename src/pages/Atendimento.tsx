@@ -8307,10 +8307,6 @@ function MobileListContent({
               if (bloquearTrocaClientePendente(task.contact_id)) return;
               setDiscadorModo(null);
               setSelectedTaskId(task.id);
-              setSelectedTaskData(task);
-              setSelectedAgendaContato(null);
-              setAgendaViewMode('default');
-              openDetailsPanel(setShowClientDetailsAgenda);
             }}
             className={`group relative min-h-[116px] rounded-lg cursor-pointer overflow-hidden border font-cardBody shadow-sm transition-[border-color,box-shadow,transform,background-color] duration-200 hover:-translate-y-0.5 ${
               selectedTaskId === task.id
