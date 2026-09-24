@@ -239,6 +239,37 @@ const MapaClientesView: React.FC = () => {
             </SelectContent>
           </Select>
 
+          <Select value={selectedEmpresaId} onValueChange={setSelectedEmpresaId}>
+            <SelectTrigger className="w-full sm:w-[200px] h-9">
+              <Building2 className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+              <SelectValue placeholder="Empresa" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Todas as empresas</SelectItem>
+              {empresasClientes.map((e: any) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.nome_fantasia || e.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedVendedorId} onValueChange={setSelectedVendedorId}>
+            <SelectTrigger className="w-full sm:w-[180px] h-9">
+              <User className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+              <SelectValue placeholder="Vendedor" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Todos os vendedores</SelectItem>
+              <SelectItem value="none">Sem vendedor</SelectItem>
+              {vendedores.map((v: any) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.nome_fantasia || v.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {empresasSemCoordenadas > 0 && (
             <Button 
               variant="outline" 
