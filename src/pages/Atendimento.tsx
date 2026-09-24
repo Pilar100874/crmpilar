@@ -2202,7 +2202,7 @@ export default function Atendimento() {
           customer_id: data.id,
           estabelecimento_id: estabId,
           canal: 'whatsapp',
-          status: 'active',
+          status: 'open',
           chat_status: 'novo',
           bot_active: false
         })
