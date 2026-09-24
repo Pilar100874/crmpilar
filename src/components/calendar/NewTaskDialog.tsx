@@ -359,17 +359,19 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     
     const searchTerm = searchQuery.toLowerCase();
 
-    // Para contatos
+    // Para contatos (inclui busca pelas empresas vinculadas)
     const nome = (contact.name || '').toLowerCase();
     const telefone = (contact.phone || '').toLowerCase();
     const email = (contact.email || '').toLowerCase();
     const cpfCnpj = (contact.customFields?.cpf_cnpj || '').toString().toLowerCase();
-    
+    const empresas = (contact.empresaNomes || []).join(' ').toLowerCase();
+
     return (
       nome.includes(searchTerm) ||
       telefone.includes(searchTerm) ||
       email.includes(searchTerm) ||
-      cpfCnpj.includes(searchTerm)
+      cpfCnpj.includes(searchTerm) ||
+      empresas.includes(searchTerm)
     );
   });
 
