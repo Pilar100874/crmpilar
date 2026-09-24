@@ -6236,7 +6236,7 @@ ${recentMessages}
                     return (
                     <div
                       key={task.id}
-                      className={`relative min-h-[106px] rounded-xl cursor-pointer transition-all duration-200 overflow-hidden border ${
+                      className={`group relative min-h-[116px] rounded-lg cursor-pointer font-cardBody transition-[border-color,box-shadow,transform,background-color] duration-200 overflow-hidden border shadow-sm hover:-translate-y-0.5 ${
                         selectedTaskId === task.id
                           ? "bg-primary/10 border-primary/40 shadow-md"
                           : semContato
@@ -6255,27 +6255,11 @@ ${recentMessages}
                       }}
                    >
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
-                      {task.linkedUsers && task.linkedUsers.length > 0 ? (
-                        <div 
-                          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center rounded-l-xl bg-primary"
-                        >
-                          <span className="text-[10px] font-semibold text-primary-foreground whitespace-nowrap transform -rotate-90 max-w-[88px] truncate">
-                            {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
-                          </span>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
-                            !vinculosCarregados ? 'bg-muted' : isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
-                          }`}
-                        >
-                          <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
-                            {!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente'}
-                          </span>
-                        </div>
-                      )}
-                      
-                      <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
+                      <div className="flex items-start gap-3 p-3.5 pr-10">
+                       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 font-cardTitle text-sm font-bold text-primary shadow-sm">
+                         {(task.customers?.customer_empresas?.[0]?.empresas?.nome_fantasia || task.customers?.customer_empresas?.[0]?.empresas?.nome || task.contact_name || 'C').split(/\s+/).filter(Boolean).slice(0, 2).map((parte: string) => parte.charAt(0)).join('').toUpperCase()}
+                         <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${taskPendente ? 'bg-destructive' : 'bg-success'}`} />
+                       </div>
                        <div className="flex-1 min-w-0">
                          {(() => {
                            const ce = task.customers?.customer_empresas || [];
@@ -6284,12 +6268,15 @@ ${recentMessages}
                            const contatoNome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title).nome.replace(/^tarefa\s*[:\-]?\s*/i, '');
                            return (
                              <>
-                               {empresaNome && <p className="font-bold text-base truncate">{empresaNome}</p>}
-                               <p className={empresaNome ? "text-sm font-medium text-muted-foreground truncate" : "font-bold text-base truncate"}>{contatoNome}</p>
+                               {empresaNome && <p className="font-cardTitle font-bold text-[15px] leading-tight truncate">{empresaNome}</p>}
+                               <p className={empresaNome ? "mt-0.5 text-xs font-medium text-muted-foreground truncate" : "font-cardTitle font-bold text-[15px] leading-tight truncate"}>{contatoNome}</p>
                              </>
                            );
                          })()}
-                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                           <Badge variant="outline" className={`max-w-[110px] truncate px-1.5 py-0 text-[9px] font-semibold uppercase ${taskPendente ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-muted/60 text-muted-foreground'}`}>
+                             {taskPendente ? 'Pendente' : task.linkedUsers?.[0]?.usuarios?.nome?.split(' ')[0] || (!vinculosCarregados ? '' : isLinkedToUser ? 'Meu Cliente' : isSameSegment ? 'Mesmo Seg.' : 'Cliente')}
+                           </Badge>
                            <AtendimentoHoraBadge hora={task.time || ""} />
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
@@ -6350,7 +6337,7 @@ ${recentMessages}
                                  })()}
                                 </div>
                            </div>
-                            <div className="mt-1.5 flex items-center gap-1.5">
+                            <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
                               <BotaoHistoricoCard clienteId={task.contact_id} clienteNome={task.contact_name} />
                               {task.contact_id && pendenciasAtendimento.includes(task.contact_id) && (
                                 <button
