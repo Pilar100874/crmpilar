@@ -5192,6 +5192,7 @@ ${recentMessages}
                 setActiveTab={trocarAba}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
+                indicadoresPorContato={indicadoresPorContato}
                 agendaViewMode={agendaViewMode}
                 setAgendaViewMode={setAgendaViewMode}
                 setFluxoInitialIndex={setFluxoInitialIndex}
