@@ -6266,13 +6266,23 @@ ${recentMessages}
                       
                       <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-10' : 'pl-4'}`}>
                        <div className="flex-1 min-w-0">
-                         <p className="font-bold text-base truncate">{parseTituloCartao(task.title).nome}</p>
-                         <p className="text-sm font-medium text-muted-foreground truncate">{task.contact_name}</p>
+                         {(() => {
+                           const ce = task.customers?.customer_empresas || [];
+                           const principal = ce.find((c: any) => c.is_primary) || ce[0];
+                           const empresaNome = principal?.empresas?.nome_fantasia || principal?.empresas?.nome;
+                           const contatoNome = task.contact_name || task.customers?.nome || parseTituloCartao(task.title).nome.replace(/^tarefa\s*[:\-]?\s*/i, '');
+                           return (
+                             <>
+                               {empresaNome && <p className="font-bold text-base truncate">{empresaNome}</p>}
+                               <p className={empresaNome ? "text-sm font-medium text-muted-foreground truncate" : "font-bold text-base truncate"}>{contatoNome}</p>
+                             </>
+                           );
+                         })()}
                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                            <AtendimentoHoraBadge hora={task.time || ""} />
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
-                               {task.origem}
+                               {task.origem === 'manual' ? 'Manual' : task.origem === 'novo_contato' ? 'Novo Contato' : task.origem}
                              </Badge>
                            )}
                            {/* Badge de usuários vinculados adicional */}

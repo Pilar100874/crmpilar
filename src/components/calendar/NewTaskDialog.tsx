@@ -77,6 +77,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       case "pedido_negociacao": return "hsl(35, 85%, 58%)";
       case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
       case "chat": return "hsl(260, 70%, 62%)";
+      case "manual": return "hsl(220, 15%, 45%)";
+      case "novo_contato": return "hsl(170, 65%, 42%)";
       default: return "hsl(0, 0%, 50%)";
     }
   };
@@ -91,7 +93,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [noTimeSet, setNoTimeSet] = useState(false);
-  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido" | "chat">("bot");
+  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido" | "chat" | "manual" | "novo_contato">("bot");
   const [emailTipo, setEmailTipo] = useState<"enviado" | "recebido">("enviado");
   const [pedidoTipo, setPedidoTipo] = useState<"orcamento" | "negociacao" | "aprovacao">("orcamento");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
@@ -1057,6 +1059,20 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                 <Label htmlFor="chat" className="text-sm cursor-pointer flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
                   Chat
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="manual" id="manual" />
+                <Label htmlFor="manual" className="text-sm cursor-pointer flex items-center gap-2">
+                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("manual") }} />
+                  Manual
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="novo_contato" id="novo_contato" />
+                <Label htmlFor="novo_contato" className="text-sm cursor-pointer flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("novo_contato") }} />
+                  Novo Contato
                 </Label>
               </div>
             </RadioGroup>

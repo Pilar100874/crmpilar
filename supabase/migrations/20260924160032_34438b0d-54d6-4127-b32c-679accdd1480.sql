@@ -1,0 +1,2 @@
+ALTER TABLE public.calendario_tarefas DROP CONSTRAINT IF EXISTS calendario_tarefas_origem_check;
+ALTER TABLE public.calendario_tarefas ADD CONSTRAINT calendario_tarefas_origem_check CHECK (origem IS NULL OR origem IN ('bot','campanha','ligacao','visita','email_enviado','email_recebido','pedido_orcamento','pedido_negociacao','pedido_aprovacao','manual','novo_contato') OR origem LIKE 'chat\_%');
