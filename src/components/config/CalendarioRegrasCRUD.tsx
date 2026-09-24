@@ -160,6 +160,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'deteccao_conflitos': 'Detecção de Conflitos',
       'realocacao_diaria_tarefas': 'Realocação Diária de Tarefas',
       'validacao_dia_todo': 'Regra do dia todo',
+      'substituir_contato_inativado': 'Substituir Contato Inativado',
     };
     return tipos[tipo] || tipo;
   };
@@ -176,6 +177,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'deteccao_conflitos': 'bg-cyan-500',
       'realocacao_diaria_tarefas': 'bg-green-500',
       'validacao_dia_todo': 'bg-indigo-500',
+      'substituir_contato_inativado': 'bg-teal-500',
     };
     return cores[tipo] || 'bg-gray-500';
   };
