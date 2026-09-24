@@ -751,6 +751,14 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             )}
           </div>
 
+          {!selectedContact && !editingTaskId ? (
+            <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 px-4 py-8 text-center">
+              <User className="mx-auto mb-2 h-6 w-6 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Selecione primeiro o contato da tarefa</p>
+              <p className="mt-1 text-xs text-muted-foreground">A data e as demais opções serão liberadas após a seleção.</p>
+            </div>
+          ) : (
+          <>
           {/* Lista de tarefas existentes do contato */}
           {selectedContact && contactExistingTasks.length > 0 && (
             <div className="space-y-2">
@@ -800,7 +808,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           )}
 
           {/* Grid de data e hora */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+          <div className={cn("space-y-3 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Data e Horário</Label>
               {editingTask?.dataOriginal && (
@@ -1009,7 +1017,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Origem da tarefa */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+          <div className={cn("space-y-3 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Origem da Tarefa</Label>
             <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
               <div className="flex items-center space-x-2">
@@ -1207,7 +1215,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           </div>
 
           {/* Observação */}
-          <div className="space-y-2 p-4 bg-muted/30 rounded-lg border">
+          <div className={cn("space-y-2 rounded-lg border p-4 transition-opacity", !selectedContact && !editingTaskId && "pointer-events-none opacity-40")} aria-disabled={!selectedContact && !editingTaskId}>
             <Label className="text-sm font-semibold">Observação (opcional)</Label>
             <Textarea
               placeholder="Adicione detalhes ou observações sobre a tarefa..."
@@ -1216,13 +1224,15 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               className="min-h-[100px] resize-y"
             />
           </div>
+          </>
+          )}
 
           {/* Botões de ação */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={() => onOpenChange(false)} size="default">
               Cancelar
             </Button>
-            <Button onClick={handleSave} size="default" className="min-w-[120px]">
+            <Button onClick={handleSave} disabled={!selectedContact} size="default" className="min-w-[120px]">
               {editingTaskId ? 'Atualizar' : 'Salvar Tarefa'}
             </Button>
           </div>
