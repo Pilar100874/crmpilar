@@ -29162,17 +29162,20 @@ export type Database = {
         Row: {
           id: string
           segmento_id: string
-          usuario_id: string
+          usuario_id: string | null
+          vendedor_id: string | null
         }
         Insert: {
           id?: string
           segmento_id: string
-          usuario_id: string
+          usuario_id?: string | null
+          vendedor_id?: string | null
         }
         Update: {
           id?: string
           segmento_id?: string
-          usuario_id?: string
+          usuario_id?: string | null
+          vendedor_id?: string | null
         }
         Relationships: [
           {
@@ -29187,6 +29190,13 @@ export type Database = {
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_segmentos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
