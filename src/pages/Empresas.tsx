@@ -1529,7 +1529,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   const handleAdicionarUsuariosVinculo = () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
-      toast.error("Selecione pelo menos um usuário");
+      toast.error("Selecione pelo menos um gerente");
       return;
     }
     setConfirmVinculoOpen(true);
@@ -1537,7 +1537,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   const executarVinculoUsuarios = async () => {
     if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
-      toast.error("Selecione pelo menos um usuário");
+      toast.error("Selecione pelo menos um gerente");
       return;
     }
     // Regra: vendedor só pode ter 1 gerente vinculado
@@ -1586,12 +1586,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }));
       const { error } = await supabase.from("empresa_vinculos").insert(rows);
       if (error) throw error;
-      toast.success("Usuários vinculados! Uma tarefa foi criada na agenda de hoje de cada usuário.");
+      toast.success("Gerentes vinculados! Uma tarefa foi criada na agenda de hoje de cada um.");
       setNovosUsuariosVinculo([]);
       setConfirmVinculoOpen(false);
       await fetchEmpresas(estabelecimentoId);
     } catch (error: any) {
-      toast.error("Erro ao vincular usuários: " + error.message);
+      toast.error("Erro ao vincular gerentes: " + error.message);
     }
   };
 
@@ -3230,7 +3230,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Segmentos de Prospect</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Segmentos usados especificamente para classificar prospects. Novos prospects trazidos via Cloud Code / Cursor / ChatGPT são automaticamente vinculados aqui pelo nome de segmento retornado pela IA. Use a tela <strong>Vínculo Segmento Prospect x Usuário</strong> para direcionar o atendimento desses segmentos a usuários.
+                    Segmentos usados especificamente para classificar prospects. Novos prospects trazidos via Cloud Code / Cursor / ChatGPT são automaticamente vinculados aqui pelo nome de segmento retornado pela IA. Use a tela <strong>Vínculo Segmento Prospect x Gerente/Vendedor</strong> para direcionar o atendimento desses segmentos a gerentes e vendedores.
                   </p>
                 </div>
 
@@ -3332,9 +3332,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               <Card className="p-6">
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Usuários do Sistema Vinculados</h3>
+                    <h3 className="text-lg font-semibold mb-2">Gerentes Vinculados</h3>
                     <p className="text-sm text-muted-foreground mb-6">
-                      Vincule usuários do sistema responsáveis por esta empresa.
+                      Vincule os gerentes responsáveis por esta empresa.
                     </p>
                   </div>
                   {editingEmpresa ? (() => {
@@ -3535,7 +3535,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       <div className="space-y-4">
                         <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
                             <FilteredCheckboxList
                               idPrefix="new-user"
                               items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
@@ -3547,18 +3547,18 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                     : novosUsuariosVinculo.filter((x) => x !== id)
                                 )
                               }
-                              searchPlaceholder="Buscar usuário..."
-                              emptyText="Nenhum usuário disponível."
+                              searchPlaceholder="Buscar gerente..."
+                              emptyText="Nenhum gerente disponível."
                             />
                             <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
                               <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Usuários Selecionados
+                              Adicionar Gerentes Selecionados
                             </Button>
                           </CardContent>
                         </Card>
 
                         <div>
-                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
+                          <h4 className="text-sm font-semibold mb-3">Gerentes Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
                               {vinculosUsuarios.map((v) => {
@@ -3567,7 +3567,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 return (
                                   <div key={v.id} className={`p-3 border rounded-lg flex items-center justify-between group transition-colors ${isAuto ? "bg-blue-500/5 border-blue-500/30" : "bg-muted/30 hover:border-primary/30"}`}>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
+                                      <p className="text-sm font-medium">{u?.nome || "Gerente não encontrado"}</p>
                                       {isAuto && (
                                         <Badge variant="outline" className="text-[10px] border-blue-500/50 text-blue-600 dark:text-blue-400" title={`Vinculado automaticamente por estar no vendedor ${nomeVendedorPorId(v.auto_via_vendedor_id)}`}>
                                           Auto · via {nomeVendedorPorId(v.auto_via_vendedor_id)}
@@ -3587,7 +3587,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             </div>
                           ) : (
                             <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
+                              <p className="text-sm text-muted-foreground">Nenhum gerente vinculado</p>
                             </div>
                           )}
                         </div>
@@ -3915,7 +3915,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar vínculo</AlertDialogTitle>
             <AlertDialogDescription>
-              Ao vincular {novosUsuariosVinculo.length === 1 ? "este usuário" : "estes usuários"} a esta empresa, será criada automaticamente uma tarefa na agenda de hoje de cada usuário vinculado. Deseja continuar?
+              Ao vincular {novosUsuariosVinculo.length === 1 ? "este gerente" : "estes gerentes"} a esta empresa, será criada automaticamente uma tarefa na agenda de hoje de cada gerente vinculado. Deseja continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
