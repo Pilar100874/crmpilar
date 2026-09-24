@@ -3225,6 +3225,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Button>
             </div>
           </TabsContent>
+          )}
           
             </Tabs>
           </TabsContent>
