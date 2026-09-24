@@ -77,7 +77,7 @@ const sections: TabSection[] = [
     id: 'geo',
     title: 'Geolocalização',
     items: [
-      { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
+      { id: 'mapa-clientes', label: 'Mapa', icon: MapPin, description: 'Visualização geográfica das empresas' },
     ],
   },
   {
