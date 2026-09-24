@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePendenciasAtendimento, ordenarPendentesPrimeiro } from "@/hooks/usePendenciasAtendimento";
 import { AtendimentoClientCard } from "@/components/atendimento/AtendimentoClientCard";
-import { AtendimentoCardIndicators } from "@/components/atendimento/AtendimentoCardIndicators";
+import { AtendimentoCardIndicators, type AtendimentoIndicatorData } from "@/components/atendimento/AtendimentoCardIndicators";
 import { AtendimentoHoraBadge, AtendimentoInfoBadge } from "@/components/atendimento/AtendimentoCardBadges";
 
 interface OrcamentosEmpresaListProps {
@@ -20,6 +20,7 @@ interface OrcamentosEmpresaListProps {
   onDelete?: (orcamentoId: string) => void;
   emailsNaoLidosPerEmail?: Record<string, number>;
   chatsNaoLidosPerPhone?: Record<string, number>;
+  indicadoresPorContato?: Map<string, AtendimentoIndicatorData>;
 }
 
 interface GrupoEmpresa {
@@ -39,6 +40,7 @@ export function OrcamentosEmpresaList({
   onDelete,
   emailsNaoLidosPerEmail = {},
   chatsNaoLidosPerPhone = {},
+  indicadoresPorContato,
 }: OrcamentosEmpresaListProps) {
   const pendencias = usePendenciasAtendimento();
   const grupos = useMemo<GrupoEmpresa[]>(() => {
@@ -94,6 +96,7 @@ export function OrcamentosEmpresaList({
         const email = String(grupo.orcamentos[0]?.customers?.email || "").toLowerCase();
         const telefone = String(grupo.orcamentos[0]?.customers?.telefone || "").replace(/\D/g, "");
         const diasAtraso = Number(tarefaAgenda?.diasAtraso || 0);
+        const indicadores = clienteId ? indicadoresPorContato?.get(clienteId) : undefined;
 
         return (
           <div key={grupo.id} className="space-y-1.5">
@@ -106,7 +109,7 @@ export function OrcamentosEmpresaList({
                 alternarGrupo(grupo.id);
                 onSelectEmpresa?.(grupo.orcamentos[0]);
               }}
-              indicators={<><AtendimentoCardIndicators diasAtraso={diasAtraso} emailsNaoLidos={emailsNaoLidosPerEmail[email] || 0} chatsPendentes={chatsNaoLidosPerPhone[telefone] || 0} orcamentosAbertos={grupo.orcamentos.length} />{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
+              indicators={<><AtendimentoCardIndicators {...(indicadores || { diasAtraso, emailsNaoLidos: emailsNaoLidosPerEmail[email] || 0, chatsPendentes: chatsNaoLidosPerPhone[telefone] || 0, orcamentosAbertos: grupo.orcamentos.length })} />{aberto ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}</>}
               historicoClienteId={clienteId}
               historicoClienteNome={grupo.contato}
             >

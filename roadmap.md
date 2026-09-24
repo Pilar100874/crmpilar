@@ -8,3 +8,8 @@
 - [x] Reorganizar atraso, e-mails, chats e orçamentos como indicadores compactos com ícones.
 - [x] Conferir os cartões do Chat e validar a compilação.
 - [x] Padronizar os indicadores da Agenda abaixo do nome e exibi-los somente como ícones.
+
+- [x] Unificar a fonte dos quatro indicadores por contato em todas as abas.
+- [x] Exibir os indicadores com ícone e número no mesmo padrão.
+- [x] Remover o ícone do canal ao lado de Finalizar.
+- [x] Validar Agenda, Chat e compilação.
