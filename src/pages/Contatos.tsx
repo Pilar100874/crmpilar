@@ -661,9 +661,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   useEffect(() => {
     loadContacts();
-  }, [page, sortConfig, searchFilters.unifiedSearch, tipoContatoFilter]);
+  }, [page, sortConfig, searchFilters.unifiedSearch, tipoContatoFilter, vinculoFilter]);
 
-  useEffect(() => { setPage(1); }, [searchFilters.unifiedSearch, tipoContatoFilter]);
+  useEffect(() => { setPage(1); }, [searchFilters.unifiedSearch, tipoContatoFilter, vinculoFilter]);
 
   // Salvar configuração de campos de empresa no Supabase
   useEffect(() => {
@@ -2317,6 +2317,19 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     <SelectItem value="all">Todos os contatos</SelectItem>
                     <SelectItem value="clientes">Somente clientes</SelectItem>
                     <SelectItem value="prospects">Somente prospects</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={vinculoFilter} onValueChange={(v: any) => setVinculoFilter(v)}>
+                  <SelectTrigger className="w-full md:w-[200px] h-9 sm:h-10 rounded-xl text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os vínculos</SelectItem>
+                    <SelectItem value="empresa">Com empresa</SelectItem>
+                    <SelectItem value="vendedor">Com vendedor</SelectItem>
+                    <SelectItem value="transportadora">Com transportadora</SelectItem>
+                    <SelectItem value="sem">Sem vínculo</SelectItem>
                   </SelectContent>
                 </Select>
 
